@@ -114,5 +114,6 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.*" />
     <PackageVersion Include="Verify.XunitV3" Version="30.*" />
     <PackageVersion Include="coverlet.collector" Version="10.*" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.*" />
   </ItemGroup>
 </Project>

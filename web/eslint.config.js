@@ -6,7 +6,7 @@ import typescript from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 
 export default [
-  { ignores: ["dist"] },
+  { ignores: ["dist", "dev-dist"] },
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {

@@ -3,7 +3,7 @@ using Sense.Modules.OccupationalSafety.Domain.HazardClassifications;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration.SeedData;
+namespace Sense.Tests.Unit.SeedData;
 
 /// <summary>
 /// senseik-015 (İSG modülü, Faz 0-1) demo seed smoke test: card senseik-015's merge_gate is "demo seed: tehlike

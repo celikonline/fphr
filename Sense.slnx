@@ -66,6 +66,7 @@
     <Project Path="tests/Sense.Tests.Integration/Sense.Tests.Integration.csproj" />
     <Project Path="tests/Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
     <Project Path="tests/Sense.Tests.TenantIsolation/Sense.Tests.TenantIsolation.csproj" />
+    <Project Path="tests/Sense.Tests.Unit/Sense.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/Sense.Modules.DataTransfer.Tests/Sense.Modules.DataTransfer.Tests.csproj" />

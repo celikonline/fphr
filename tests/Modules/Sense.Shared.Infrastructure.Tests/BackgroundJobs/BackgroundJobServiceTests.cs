@@ -10,7 +10,7 @@ using Sense.Shared.Infrastructure.Notifications;
 using Sense.Shared.Infrastructure.Observability;
 using Xunit;
 
-namespace Sense.Tests.Integration;
+namespace Sense.Shared.Infrastructure.Tests.BackgroundJobs;
 
 /// <summary>
 /// Integration tests for background job service.

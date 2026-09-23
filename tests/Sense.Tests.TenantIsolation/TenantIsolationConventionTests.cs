@@ -41,7 +41,7 @@ public sealed class TenantIsolationConventionTests
             // Act: Look for TenantId property
             var tenantIdProperty = entityType.GetProperty(
                 nameof(ITenantEntity.TenantId),
-                BindingFlags.Public | BindingFlags.IgnoreCase);
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
             tenantIdProperty.ShouldNotBeNull(
                 $"Entity {entityType.FullName} implements ITenantEntity but has no TenantId property");
@@ -221,17 +221,5 @@ public sealed class TenantIsolationConventionTests
     /// <summary>
     /// Helper to get all product assemblies (not test or framework assemblies).
     /// </summary>
-    private static List<Assembly> GetProductAssemblies()
-    {
-        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-        return loadedAssemblies
-            .Where(a =>
-            {
-                var name = a.GetName().Name ?? "";
-                return name.StartsWith("Sense.", StringComparison.Ordinal) &&
-                       !name.Contains("Test", StringComparison.OrdinalIgnoreCase);
-            })
-            .ToList();
-    }
+    private static List<Assembly> GetProductAssemblies() => ProductAssemblies.Load();
 }

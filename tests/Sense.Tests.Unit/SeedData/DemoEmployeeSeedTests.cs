@@ -5,7 +5,7 @@ using Sense.Modules.Organization.Domain.OrgUnits;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration.SeedData;
+namespace Sense.Tests.Unit.SeedData;
 
 /// <summary>
 /// H-04: before this fix every HR-role demo user (the fixed "ik@demo.local" account plus a couple of randomly

@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using Sense.Shared.Contracts.Messaging;
 using Shouldly;
 using Xunit;
 
@@ -11,6 +12,20 @@ namespace Sense.Tests.Contract;
 /// </summary>
 public sealed class SharedContractStructureTests
 {
+    /// <summary>
+    /// Marker interfaces exempt from the "port has members" rule: they carry meaning only through their type
+    /// (the result type parameter drives dispatcher/pipeline resolution), so they are empty by design, not by
+    /// accident. Every other port in Shared.Contracts must still declare at least one public member.
+    /// </summary>
+    private static readonly HashSet<Type> MemberlessMarkerInterfaces =
+    [
+        typeof(IRequest<>),
+        typeof(ICommand),
+        typeof(ICommand<>),
+        typeof(IQuery<>),
+        typeof(ICachedQuery<>),
+    ];
+
     /// <summary>
     /// Verifies that all public port interfaces (marked with name "I*") in Contracts assemblies
     /// are properly accessible and have defined members.
@@ -31,7 +46,7 @@ public sealed class SharedContractStructureTests
         portInterfaces.ShouldNotBeEmpty();
 
         // Each port should have at least one public method or property
-        foreach (var port in portInterfaces.Where(p => p.Namespace?.Contains("Contracts") == true))
+        foreach (var port in portInterfaces.Where(p => p.Namespace?.Contains("Contracts") == true && !MemberlessMarkerInterfaces.Contains(p)))
         {
             var members = port.GetMembers(BindingFlags.Public | BindingFlags.Instance);
             members.Length.ShouldBeGreaterThan(0, $"Port {port.FullName} has no public members");
@@ -117,11 +132,14 @@ public sealed class SharedContractStructureTests
         // Arrange
         var sharedContractsAssembly = typeof(Sense.Shared.Contracts.Context.ITenantContext).Assembly;
 
-        // Act: Find the IntegrationEvents type
-        var integrationEventsType = sharedContractsAssembly.GetType("Sense.Shared.Contracts.Events.IntegrationEvents");
+        // Act: Find the integration event contract types (interface + base record, both in Events/IntegrationEvents.cs)
+        foreach (var typeName in new[] { "Sense.Shared.Contracts.Events.IIntegrationEvent", "Sense.Shared.Contracts.Events.IntegrationEvent" })
+        {
+            var integrationEventType = sharedContractsAssembly.GetType(typeName);
 
-        // Assert: Type should exist
-        integrationEventsType.ShouldNotBeNull("IntegrationEvents should be defined in Shared.Contracts");
-        integrationEventsType.IsPublic.ShouldBeTrue();
+            // Assert: Type should exist and be public
+            integrationEventType.ShouldNotBeNull($"{typeName} should be defined in Shared.Contracts");
+            integrationEventType.IsPublic.ShouldBeTrue();
+        }
     }
 }

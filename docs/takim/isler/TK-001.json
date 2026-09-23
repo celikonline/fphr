@@ -1,0 +1,19 @@
+{
+  "id": "TK-001",
+  "baslik": "Test kapısını yeşile çek",
+  "durum": "calisiyor",
+  "sahip": "takim-orkestrator",
+  "dal": "a/takim-kapi-yesil",
+  "kabul": [
+    "`pnpm run lint` çıkış 0: web ESLint yapılandırması üretilmiş `web/dev-dist/**` klasörünü dışlıyor; `web/src` kuralları gevşetilmedi.",
+    "`dotnet test Sense.slnx` yardımcı kütüphane `tests/Sense.Tests.Shared`'ı test projesi gibi koşturmuyor (testhost.dll bulunamadı hatası yok).",
+    "Kapı dotnet test çıktısından koşan test sayısını ayrıştırabiliyor (durum 'ayristirilamadi' değil) — ör. İngilizce CLI çıktısı ya da `takim.json` → `kapi.desenler`; takım dosyası değişikliği insan onayıyla yapılır.",
+    "Kırmızı 10 testin her biri için kök neden yazıldı ve düzeltildi: Contract (PortInterfaces_ArePublicAndAccessible, IntegrationEventContracts_ArePublicAndAccessible), TenantIsolation (ModuleDbContexts_ExistAndFollowPattern, AllTenantEntities_HaveTenantIdProperty), Integration (AllIntegrationTests_HaveIntegrationTrait), Attendance (EmployeeAvailabilityFeaturesTests.Submit_ValidRequest_AddsAvailability), DataTransfer (TemplateWorkbookTests.Template_HasHeaders…, DataTransferIntegrationTests x2 — IUserProfileLookup DI eksik), Employee (EmployeeReportProviderTests.Turnover_ComputesRate…).",
+    "Testi geçsin diye assertion gevşetilmedi, test silinmedi/atlanmadı; başka oturumun commit'lenmemiş yarım değişikliğinden kaynaklanan hata düzeltilmez, handoff'ta 'İNSAN AKSİYONU:' olarak raporlanır.",
+    "Temiz ağaçta (yalnız bu dalın değişiklikleri) `node .claude/takim/betikler/test-kapisi.mjs` YEŞİL; ardından insan `--taban-guncelle` ile koşan test tabanını kaydeder."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "riskli_alan": true,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-001.md"
+}

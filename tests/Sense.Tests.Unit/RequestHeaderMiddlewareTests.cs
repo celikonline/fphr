@@ -7,7 +7,7 @@ using Serilog.Events;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration;
+namespace Sense.Tests.Unit;
 
 /// <summary>ClientContextMiddleware ve SecurityHeadersMiddleware: tam host açmadan doğrudan middleware çağrısıyla.</summary>
 public sealed class RequestHeaderMiddlewareTests

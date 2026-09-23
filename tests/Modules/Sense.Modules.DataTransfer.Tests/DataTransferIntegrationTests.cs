@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.DataTransfer.Application;
 using Sense.Modules.DataTransfer.Application.ImportJobs;
@@ -54,6 +55,12 @@ public sealed class DataTransferIntegrationTests : TestFixture
         services.AddSingleton<IDataScopeService>(_scope);
         services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
         services.AddSingleton<IUserAccountLookup, NoUserAccounts>();
+        // PaymentsService resolves salary-record creator names via Identity's IUserProfileLookup; the test host
+        // loads only Organization + Employee + DataTransfer, so an empty lookup stands in (same as PaymentsIntegrationTests).
+        var userProfiles = Substitute.For<IUserProfileLookup>();
+        userProfiles.GetAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, UserProfileInfo>());
+        services.AddSingleton(userProfiles);
     }
 
     protected override async Task OnDatabaseReadyAsync()
@@ -295,9 +302,10 @@ public sealed class DataTransferIntegrationTests : TestFixture
         var firstName = job.SourceColumns.Single(c => c.Header == "Given name");
         (firstName.SuggestedTargetKey, firstName.AutoMatched).ShouldBe(("firstName", true));
         // Every template column except the renamed "firstName" header maps itself by the hidden key row
-        // (41 = 36 + the 5 senseik-009/F-02 and senseik-010/F-03 columns: sicilNumarasi, nationality,
-        // foreignIdNumber, passportNumber, sgkOccupationCode).
-        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(41);
+        // (45 = 36 + the 5 senseik-009/F-02 and senseik-010/F-03 columns: sicilNumarasi, nationality,
+        // foreignIdNumber, passportNumber, sgkOccupationCode + the 4 G-01 bank block columns: bankIban,
+        // bankAccountType, bankName, bankCurrency).
+        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(45);
 
         await MapAsync(job, "Upsert", "SkipInvalidRows");
         var run = await RunAsync(job.Id);

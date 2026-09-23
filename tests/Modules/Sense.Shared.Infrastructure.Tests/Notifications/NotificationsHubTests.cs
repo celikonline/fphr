@@ -11,7 +11,7 @@ using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Notifications;
 using Xunit;
 
-namespace Sense.Tests.Integration;
+namespace Sense.Shared.Infrastructure.Tests.Notifications;
 
 /// <summary>
 /// Integration tests for NotificationsHub.

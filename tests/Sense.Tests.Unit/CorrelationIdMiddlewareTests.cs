@@ -5,7 +5,7 @@ using Sense.Shared.Infrastructure.Observability;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration;
+namespace Sense.Tests.Unit;
 
 /// <summary>
 /// CorrelationIdMiddleware: istek → yanıt başlığı → AsyncLocal bağlamı akışını, tam bir host açmadan
