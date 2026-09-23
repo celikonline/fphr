@@ -69,6 +69,8 @@
     "jest-expo": "^57.0.5",
     "metro-react-native-babel-preset": "^0.77.0",
     "prettier": "^3.9.6",
+    "react-test-renderer": "19.2.3",
+    "@types/react-test-renderer": "^19.3.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

@@ -11,7 +11,7 @@ import { openPersonEmail, openPersonPhone } from "@/screens/app/PeopleScreen";
  */
 describe("PeopleScreen contact helpers", () => {
   beforeEach(() => {
-    jest.spyOn(Linking, "openURL").mockClear().mockResolvedValue(true);
+    jest.spyOn(Linking, "openURL").mockClear().mockResolvedValue(undefined);
   });
 
   afterEach(() => {
