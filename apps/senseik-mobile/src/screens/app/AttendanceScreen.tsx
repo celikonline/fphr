@@ -62,6 +62,21 @@ function formatWorkedMinutes(minutes: number): string {
   return `${hours} sa ${remaining} dk`;
 }
 
+/**
+ * Fazla/eksik mesai: backend `AttendanceDayDto`'nun zaten döndürdüğü `plannedMinutes`/`workedMinutes`
+ * farkından türetilir (yeni bir backend/DTO alanı gerekmez). Planlı gün değilse (`plannedMinutes` 0,
+ * ör. resmi tatil/hafta sonu) veya fark yoksa gösterilecek bir şey olmadığı için `null` döner.
+ */
+export function formatOvertimeUndertime(
+  day: Pick<AttendanceDay, "workedMinutes" | "plannedMinutes">
+): string | null {
+  if (day.plannedMinutes <= 0) return null;
+  const diffMinutes = day.workedMinutes - day.plannedMinutes;
+  if (diffMinutes === 0) return null;
+  const label = diffMinutes > 0 ? "Fazla mesai" : "Eksik mesai";
+  return `${label}: ${formatWorkedMinutes(Math.abs(diffMinutes))}`;
+}
+
 export default function AttendanceScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [monthDate, setMonthDate] = useState(() => new Date());
@@ -162,6 +177,7 @@ export default function AttendanceScreen() {
       ) : (
         days.map((day) => {
           const anomalyFlags = parseAnomalyFlags(day.anomalies);
+          const overtimeText = formatOvertimeUndertime(day);
           return (
             <View key={day.id} style={styles.card}>
               <View style={styles.dayHeader}>
@@ -178,6 +194,7 @@ export default function AttendanceScreen() {
               <Text style={styles.cardSubtext}>
                 {formatWorkedMinutes(day.workedMinutes)} çalışıldı
               </Text>
+              {overtimeText && <Text style={styles.cardSubtext}>{overtimeText}</Text>}
             </View>
           );
         })
