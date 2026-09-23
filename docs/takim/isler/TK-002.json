@@ -1,0 +1,19 @@
+{
+  "id": "TK-002",
+  "baslik": "Announcements — takdir/teşekkür akış öğesi",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/announcements-takdir",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:23 (#73 Başlanmadı); docs/analysis/kolayik-video/11.7-yol-haritasi.md:111",
+  "kabul": [
+    "Bir çalışan başka bir çalışana kısa bir 'takdir/teşekkür' mesajı gönderebiliyor; mesaj Announcements akışında görünüyor.",
+    "Yatay pozisyon değişikliği kısmına DOKUNULMUYOR — kapsam dışı, ayrı iş.",
+    "Yeni entity/command/query mevcut Announcements deseniyle tutarlı (Api/Application/Domain/Infrastructure katmanları, modül yalnız *.Contracts üzerinden dışarıyla konuşur).",
+    "Yeni iş kuralı için sınır değerleri de dahil test yazıldı (boş mesaj, kendine gönderme, çok uzun mesaj vb.).",
+    "Modül test projesi (Sense.Modules.Announcements.Tests) tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY (genel test kapısı TK-001 ayrı işte düzeltiliyor, bu kart onu beklemez)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-002.md"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "TK-009",
+  "baslik": "Workflow — onay talebinde anlık onaycı listesi düzenleme",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/workflow-anlik-onayci",
+  "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:36 (#30 Kısmi — talep anında onaycı listesi düzenleme yok)",
+  "kabul": [
+    "Bir onay talebi oluşturulduktan sonra, o talebe özel olarak onaycı listesi tek seferlik düzenlenebiliyor (şablon değişmiyor).",
+    "Düzenleme yalnız talep henüz sonuçlanmamışken (bekleyen adımlarda) yapılabiliyor.",
+    "Yetki kontrolü: yalnız talep sahibi ya da yönetici yetkisi olan düzenleyebiliyor.",
+    "Sense.Modules.Workflow.Tests tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-009.md"
+}

@@ -1,7 +1,7 @@
 {
   "id": "TK-001",
   "baslik": "Test kapısını yeşile çek",
-  "durum": "calisiyor",
+  "durum": "birlesti",
   "sahip": "takim-orkestrator",
   "dal": "a/takim-kapi-yesil",
   "kabul": [
