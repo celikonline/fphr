@@ -1,0 +1,18 @@
+{
+  "id": "TK-014",
+  "baslik": "Leave - yonetici izin eklerken gun sayisini elle degistirme + bilgilendirme e-postasi",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/leave-yonetici-ekleme",
+  "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:30 (#24 - gun sayisini elle degistirme, calisani bilgilendirme e-postasi yok)",
+  "kabul": [
+    "Yonetici/HR bir calisan adina izin eklerken hesaplanan gun sayisini elle degistirebiliyor (izin turu kurallariyla celismedigi surece).",
+    "Izin yonetici tarafindan eklendiginde ilgili calisana bilgilendirme e-postasi/bildirimi gonderiliyor (Notifications Contracts uzerinden).",
+    "Var olan otomatik gun hesaplama ve normal (calisan tarafindan olusturulan) izin talebi akisi DEGISMEDI.",
+    "Sense.Modules.Leave.Tests tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-014.md"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "TK-023",
+  "baslik": "Recruitment - Admin-teklif sablonu rolu + ilan bazli erisim UI",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/recruitment-teklif-sablonu-rolu",
+  "kaynak": "docs/analysis/kolayik-video/faz6-durum-takibi.md:29 (#83 - Admin-teklif sablonu ayri rolu ve ilan bazli erisim UI yok)",
+  "kabul": [
+    "Recruitment icinde 'teklif sablonu yonetimi' icin ayri, dar kapsamli bir izin/rol anahtari eklendi (var olan genel Recruitment Admin izninden ayri).",
+    "Bir ilana (job posting) kimlerin erisebilecegini (Erisim listesi) gosteren/yoneten bir uc nokta/ekran var.",
+    "Identity modulune (SystemRoleDefinitions disinda) DOKUNULMADI - yalniz Recruitment kendi izin anahtarini tanimliyor, mevcut yetkilendirme pipeline'ini (AuthorizationBehaviour) kullaniyor.",
+    "Sense.Modules.Recruitment.Tests tek basina yesil, yeni izin/erisim testleri iceriyor."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY (yetkilendirmeye dokundugu icin ekstra dikkat, insan onayi onerilir)",
+  "riskli_alan": true,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-023.md"
+}

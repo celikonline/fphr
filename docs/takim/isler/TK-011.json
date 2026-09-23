@@ -1,0 +1,18 @@
+{
+  "id": "TK-011",
+  "baslik": "Training - katilim iptalinde kayit silinmesin, iptal gecmisi tutulsun",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/training-iptal-gecmisi",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:22 (#72 - katilim iptali kaydi siler, iptal gecmisi tutulmuyor)",
+  "kabul": [
+    "Bir egitim katilimi iptal edildiginde kayit veritabanindan silinmiyor; durumu 'iptal edildi' olarak isaretleniyor ve iptal tarihi/nedeni (varsa) saklaniyor.",
+    "Iptal edilen katilimlar raporlarda/listelerde ayirt edilebiliyor (mevcut aktif katilim sorgulari yanlislikla iptalleri saymiyor).",
+    "Var olan katilim olusturma/tamamlama akisi degismedi.",
+    "Ilgili Training modul test projesi tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-011.md"
+}

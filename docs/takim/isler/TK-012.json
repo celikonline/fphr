@@ -1,0 +1,18 @@
+{
+  "id": "TK-012",
+  "baslik": "Leave - izin turu sihirbazinda sunucu dogrulama hatalari alan bazli",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/leave-alan-bazli-hata",
+  "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:20 (#14 - sunucu tarafi dogrulama hatalari alan bazli gosterilmiyor)",
+  "kabul": [
+    "Izin turu sihirbazinin dogrulama (validation) hatalari artik hangi alanla ilgili oldugunu belirten bir alan adi/anahtari tasiyor (genel tek mesaj yerine).",
+    "Mevcut command/validator (FluentValidation ya da esdegeri) deseni genisletildi, yeni bir dogrulama kutuphanesi eklenmedi (YAGNI).",
+    "Gecersiz istekte HTTP yaniti hala ayni hata sozlesmesini (ApiResponse/ProblemDetails) kullaniyor, yalniz alan bilgisi eklendi.",
+    "Sense.Modules.Leave.Tests tek basina yesil, en az bir yeni test alan bazli hata donusunu dogruluyor."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-012.md"
+}

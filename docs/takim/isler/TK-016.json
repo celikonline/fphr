@@ -1,0 +1,18 @@
+{
+  "id": "TK-016",
+  "baslik": "Announcements - duyurularda zamanli yayin (ScheduledFor)",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/announcements-zamanli-yayin",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 242) - zamanli yayin (ScheduledFor/worker job) yok",
+  "kabul": [
+    "Bir duyuru olusturulurken isteğe bagli bir 'ScheduledFor' (gelecek tarih) alani verilebiliyor.",
+    "ScheduledFor verilmisse duyuru hemen degil, o tarihte/saatte yayina giriyor (mevcut Sense.Worker/Hangfire recurring job desenine uygun bir job ile).",
+    "ScheduledFor verilmemisse davranis DEGISMEDI (hemen yayinlanir).",
+    "Ilgili modul test projesi tek basina yesil, zamanlama mantigi icin FixedTimeProvider/test-dostu saat soyutlamasi kullanildi (gercek Thread.Sleep yok)."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-016.md"
+}

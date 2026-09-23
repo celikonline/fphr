@@ -1,0 +1,18 @@
+{
+  "id": "TK-018",
+  "baslik": "Assets - zimmet atama onay akisi eksik (As0)",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/assets-atama-onay",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 146) - As0: Assets atama onay akisi yok",
+  "kabul": [
+    "Bir zimmet atamasi, Workflow modulunun mevcut IWorkflowService.StartAsync deseniyle bir onay surecinden geciyor (dogrudan atanmiyor).",
+    "Onay verilmeden atama tamamlanmis sayilmiyor; onaylaninca zimmet calisana atanmis oluyor.",
+    "Workflow modulune yalniz *.Contracts uzerinden baglaniliyor.",
+    "Assets ve Workflow modul test projeleri tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-018.md"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "TK-019",
+  "baslik": "Employee - UpdateEmployeeHandler integration event yayinlamiyor",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/employee-update-event",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 186) - D5: UpdateEmployeeHandler hicbir integration event yayinlamiyor, EmployeeProfileChanged tetiklenmiyor",
+  "kabul": [
+    "HR bir calisanin bilgilerini (ornegin dogum tarihi, engellilik derecesi) UpdateEmployeeHandler ile guncelledikinde, IIntegrationEventOutbox.Enqueue ile bir EmployeeProfileChanged (ya da esdegeri mevcut) integration event'i yayinlaniyor.",
+    "Event, degisen alanlari ya da en azindan calisan kimligini tasiyor; mevcut tuketiciler (varsa) bunu isleyebiliyor.",
+    "Handler'in mevcut senkron davranisi (calisan kaydini guncelleme) DEGISMEDI, yalniz outbox'a kayit eklendi.",
+    "Sense.Modules.Employee.Tests tek basina yesil, yeni bir test event'in enqueue edildigini dogruluyor."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-019.md"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "TK-013",
+  "baslik": "Leave - bakiye hesaplamada RecalculateFrom tarih parametresi eksik",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/leave-recalculate-from",
+  "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:23 (#17 - RecalculateFrom tarih parametresi yok, 0 sonuc donuyor)",
+  "kabul": [
+    "Izne esas hak edis/kumulatif tahakkuk hesaplamasi artik bir 'RecalculateFrom' (baslangic tarihi) parametresi kabul ediyor.",
+    "Parametre verilmediginde eski davranis (mevcut varsayilan) DEGISMEDI.",
+    "Parametre verildiginde hesaplama o tarihten itibaren dogru sonuc donduruyor (0 donmuyor).",
+    "Sinir deger testleri: tarih gelecekte, tarih hicri/gecersiz, tarih bos.",
+    "Sense.Modules.Leave.Tests tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-013.md"
+}

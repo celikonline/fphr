@@ -1,0 +1,18 @@
+{
+  "id": "TK-017",
+  "baslik": "Assets - zimmet tutanagi PDF Documents'a otomatik dussun",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/assets-tutanak-documents",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:30/176 (#120 - tutanak Documents'a otomatik dusmuyor, HR elle yukluyor)",
+  "kabul": [
+    "Bir zimmet tutanagi (handover form) PDF olarak uretildiginde, otomatik olarak ilgili calisanin Documents kaydina (dosya + SourceRef) dusuyor.",
+    "HR'in elle yukleme adimi artik zorunlu degil (istege bagli kalabilir, ama otomatik yol calisiyor).",
+    "Documents modulune yalniz *.Contracts uzerinden yaziliyor (dogrudan DbContext erisimi yok).",
+    "Ilgili Assets/Documents test projeleri tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-017.md"
+}

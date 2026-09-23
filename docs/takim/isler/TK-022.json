@@ -1,0 +1,19 @@
+{
+  "id": "TK-022",
+  "baslik": "Leave - tek Talep butonu: politika bazli tur filtresi + tek modalda tur secimi",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/leave-tek-talep-butonu",
+  "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:38 (#42 - politika bazli tur filtresi yok, tek modal icinde tur secimi yok)",
+  "kabul": [
+    "Web'de tek bir 'Talep' butonu tiklandiginda, kullaniciya politikasina gore izin verilen turler bir tek modal icinde secenek olarak sunuluyor (ayri ayri buton/sayfa degil).",
+    "Kullaniciya izni olmayan (politika disi) izin turleri listelenmiyor.",
+    "Mobildeki '+' butonu KAPSAM DISI.",
+    "Var olan izin talebi olusturma API'si/akisi DEGISMEDI, yalniz web UI birlestirildi.",
+    "Ilgili component/hook icin en az bir yeni Vitest testi var, web test suite'i tek basina yesil."
+  ],
+  "birlestirme_kapisi": "web test suite YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-022.md"
+}

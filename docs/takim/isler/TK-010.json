@@ -1,0 +1,18 @@
+{
+  "id": "TK-010",
+  "baslik": "Onboarding — gorev sorumlusuna bildirim + rol koduna gore sorumlu atama",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/onboarding-bildirim",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:24 (#74 - gorev sorumlusuna bildirim yok, sorumlu kisi degil rol kodu olmali)",
+  "kabul": [
+    "Onboarding gorevi tamamlandiginda/atandiginda ilgili sorumluya (hr/it/manager/payroll rol kodu) bildirim gonderiliyor (Notifications modulu Contracts uzerinden).",
+    "Gorev sorumlulugu artik sabit bir kisi degil, rol kodu (hr/it/manager/payroll) ile temsil ediliyor; kod tenant'taki o roldeki kullanicilara/gruba cozuluyor.",
+    "Mevcut gorev atama/tamamlama akisi (TK-006'da eklenen self-servis dahil) bozulmadi.",
+    "Sense.Modules.Onboarding.Tests tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-010.md"
+}

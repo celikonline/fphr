@@ -1,0 +1,18 @@
+{
+  "id": "TK-015",
+  "baslik": "Announcements - etkinlik takviminde duzenleme (Update) eksik",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/announcements-etkinlik-guncelle",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:21 (#71 - etkinlik duzenleme yok, yalniz sil-yeniden olustur)",
+  "kabul": [
+    "Bir etkinlik (CompanyEvent) artik sil-yeniden olusturmadan, dogrudan bir Update komutuyla duzenlenebiliyor (baslik/tarih/aciklama vb.).",
+    "Var olan olusturma ve silme akislari DEGISMEDI.",
+    "Cok gunlu/saatli etkinlik, alt birim gorunurlugu gibi ayri backlog maddelerine (062) DOKUNULMUYOR - kapsam disi.",
+    "Sense.Modules.Announcements.Tests tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-015.md"
+}
