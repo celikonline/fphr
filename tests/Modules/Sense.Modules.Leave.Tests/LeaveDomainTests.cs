@@ -634,6 +634,80 @@ public sealed class LeaveBalanceEngineTests
         balance.TotalUsed.ShouldBe(17m);
     }
 
+    /// <summary>
+    /// TK-013: proves the fix for docs/analysis/kolayik-video/faz1b-durum-takibi.md #17 ("RecalculateFrom tarih
+    /// parametresi yok, 0 sonuç dönüyor") - passing a mid-timeline <c>recalculateFrom</c>, together with the earlier
+    /// generated rows as <c>preserved</c> input, must reproduce exactly the rows a full regeneration would have
+    /// produced from that point forward (never an empty/zero result for a valid date).
+    /// </summary>
+    [Fact]
+    public void Regenerate_WithRecalculateFrom_MatchesFullRegenerationFromThatPointForward()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+        var cutoff = new DateOnly(2022, 1, 1);
+
+        var full = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+
+        var partial = LeaveBalanceEngine.Regenerate(
+            type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: cutoff);
+
+        partial.ShouldNotBeEmpty();
+        partial.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+            .ShouldBe(full.Where(e => e.EffectiveDate >= cutoff).Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+    }
+
+    /// <summary>Acceptance #2: omitting the parameter (or passing null explicitly) must leave the previous, full-regeneration behavior unchanged.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromOmittedOrNull_BehavesLikeBeforeTheParameterExisted()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var withoutParameter = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+        var withExplicitNull = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: null);
+
+        withoutParameter.ShouldNotBeEmpty();
+        withExplicitNull.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+            .ShouldBe(withoutParameter.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+    }
+
+    /// <summary>Boundary: a future <c>recalculateFrom</c> (after <c>asOf</c>) produces no rows instead of throwing or fabricating data.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromInTheFuture_ReturnsNoRows()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var generated = LeaveBalanceEngine.Regenerate(
+            type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: asOf.AddYears(1));
+
+        generated.ShouldBeEmpty();
+    }
+
+    /// <summary>Boundary: a <c>recalculateFrom</c> at/before the accrual start date (e.g. <c>default(DateOnly)</c>, an "empty"/degenerate value) clamps to a full regeneration instead of erroring.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromAtOrBeforeAccrualStart_ClampsToFullRegeneration()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var full = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+
+        foreach (var invalid in new[] { default(DateOnly), start.AddYears(-5), start })
+        {
+            var generated = LeaveBalanceEngine.Regenerate(
+                type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: invalid);
+
+            generated.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+                .ShouldBe(full.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+        }
+    }
+
     [Fact]
     public void Project_CountsUsageByStartDate()
     {

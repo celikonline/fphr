@@ -795,6 +795,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.errors.preview_parameters_required" xml:space="preserve"><value>İzin türü, başlangıç ve bitiş tarihi zorunludur.</value></data>
   <data name="leave.errors.preview_range_too_large" xml:space="preserve"><value>Tarih aralığı en fazla {max} gün olabilir.</value></data>
+  <data name="leave.errors.recalculate_from_in_future" xml:space="preserve"><value>Yeniden hesaplama başlangıç tarihi gelecekte olamaz.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>Devamsızlık kayıtlarını görüntüleme</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Devamsızlık kayıtlarını yönetme</value></data>
