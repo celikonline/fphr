@@ -18,6 +18,9 @@ public static class WorkflowDomainErrors
     public const string RequestNoSteps = "workflow.request.no_steps";
     public const string RequestRequesterRequired = "workflow.request.requester_required";
 
+    /// <summary>TK-009: the approver list on a request may be edited once - a second edit attempt hits this.</summary>
+    public const string RequestApproversAlreadyEdited = "workflow.request.approvers_already_edited";
+
     public const string TaskNotFound = "workflow.task.not_found";
     public const string TaskNotCurrent = "workflow.task.not_current";
     public const string TaskNotPending = "workflow.task.not_pending";
