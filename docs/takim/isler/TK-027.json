@@ -1,7 +1,7 @@
 {
   "id": "TK-027",
   "baslik": "Mobil - vardiya goruntuleme (kendi+is arkadaslari) + musait olmama girisi",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-node",
   "dal": "takim/mobil-vardiya",
   "kaynak": "Kolay IK arastirmasi 2026-09-23 - vardiya ile calisan ekipler kendi+arkadas mesai planlarini goruyor, senseik-mobile'da hic yok",

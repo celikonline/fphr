@@ -1,7 +1,7 @@
 {
   "id": "TK-022",
   "baslik": "Leave - tek Talep butonu: politika bazli tur filtresi + tek modalda tur secimi",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-node",
   "dal": "takim/leave-tek-talep-butonu",
   "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:38 (#42 - politika bazli tur filtresi yok, tek modal icinde tur secimi yok)",

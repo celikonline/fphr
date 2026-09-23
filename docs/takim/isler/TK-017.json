@@ -1,7 +1,7 @@
 {
   "id": "TK-017",
   "baslik": "Assets - zimmet tutanagi PDF Documents'a otomatik dussun",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/assets-tutanak-documents",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:30/176 (#120 - tutanak Documents'a otomatik dusmuyor, HR elle yukluyor)",

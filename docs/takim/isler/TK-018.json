@@ -1,7 +1,7 @@
 {
   "id": "TK-018",
   "baslik": "Assets - zimmet atama onay akisi eksik (As0)",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/assets-atama-onay",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 146) - As0: Assets atama onay akisi yok",

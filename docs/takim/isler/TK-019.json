@@ -1,7 +1,7 @@
 {
   "id": "TK-019",
   "baslik": "Employee - UpdateEmployeeHandler integration event yayinlamiyor",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/employee-update-event",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 186) - D5: UpdateEmployeeHandler hicbir integration event yayinlamiyor, EmployeeProfileChanged tetiklenmiyor",

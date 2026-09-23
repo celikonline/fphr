@@ -1,7 +1,7 @@
 {
   "id": "TK-029",
   "baslik": "Mobil - puantaj ekranina mola/resmi tatil/fazla mesai kirilimi",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-node",
   "dal": "takim/mobil-puantaj-kirilim",
   "kaynak": "Kolay IK arastirmasi 2026-09-23 - tek ekranda giris-cikis+mola+tatil+eksik/fazla mesai, senseik-mobile'da yalniz giris-cikis+toplam sure var",

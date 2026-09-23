@@ -1,7 +1,7 @@
 {
   "id": "TK-020",
   "baslik": "Analytics - turnover gonullu/gonulsuz ayrilis kirilim eksik",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/analytics-turnover-kirilim",
   "kaynak": "docs/analysis/kolayik-video/faz7-durum-takibi.md (satir 14-15) - 99d1/99d2 turnover KPI ayrilis turune gore (gonullu/gonulsuz) kirilim yok",

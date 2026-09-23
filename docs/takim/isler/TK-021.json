@@ -1,7 +1,7 @@
 {
   "id": "TK-021",
   "baslik": "Recruitment - talep formu sablonlarina departman bazli alan ozellestirme",
-  "durum": "hazir",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/recruitment-departman-sablon",
   "kaynak": "docs/analysis/kolayik-video/faz6-durum-takibi.md:30 (#87 - departman bazli sablon/alan ozellestirme yok)",
