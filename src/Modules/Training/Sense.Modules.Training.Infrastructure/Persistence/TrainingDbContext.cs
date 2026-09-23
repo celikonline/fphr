@@ -77,16 +77,21 @@ public sealed class TrainingDbContext(DbContextOptions<TrainingDbContext> option
             b.Property(x => x.Status)
                 .HasConversion<string>();
 
+            b.Property(x => x.CancellationReason)
+                .HasMaxLength(1000);
+
             b.HasIndex(x => new { x.TenantId, x.TrainingProgramId })
                 .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId");
 
             b.HasIndex(x => new { x.TenantId, x.EmployeeId })
                 .HasDatabaseName("IX_Enrollments_TenantId_EmployeeId");
 
-            // One enrollment per (employee, program); CancelEnrollmentHandler hard-deletes on cancel, so re-enrollment
-            // after a cancellation is not blocked by this constraint. Backs TrainingErrors.DuplicateEnrollment.
+            // One ACTIVE enrollment per (employee, program). CancelEnrollmentHandler now keeps cancelled rows
+            // (roadmap #72 — iptal geçmişi tutulsun), so the uniqueness constraint is filtered to non-cancelled
+            // rows to allow re-enrollment after a cancellation. Backs TrainingErrors.DuplicateEnrollment.
             b.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.EmployeeId })
                 .IsUnique()
+                .HasFilter("status <> 'Cancelled'")
                 .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId_EmployeeId");
         });
 

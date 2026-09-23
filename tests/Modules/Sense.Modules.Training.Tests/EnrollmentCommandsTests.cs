@@ -210,7 +210,7 @@ public class EnrollmentCommandsTests
     }
 
     [Fact]
-    public async Task CancelEnrollment_ThatExists_Deletes()
+    public async Task CancelEnrollment_ThatExists_MarksCancelledWithoutDeleting()
     {
         var (tenant, tenantId) = NewTenant();
         var enrollment = Enrollment.Create(Guid.NewGuid(), tenantId, Guid.NewGuid()).Value;
@@ -218,9 +218,70 @@ public class EnrollmentCommandsTests
         enrollments.GetByIdAsync(tenantId, enrollment.Id, Arg.Any<CancellationToken>()).Returns(enrollment);
 
         var handler = new CancelEnrollmentHandler(enrollments, tenant);
-        var result = await handler.Handle(new CancelEnrollmentCommand(enrollment.Id), CancellationToken.None);
+        var result = await handler.Handle(new CancelEnrollmentCommand(enrollment.Id, "Program tarihi değişti"), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        await enrollments.Received(1).DeleteAsync(enrollment, Arg.Any<CancellationToken>());
+        Assert.Equal(EnrollmentStatus.Cancelled, enrollment.Status);
+        Assert.NotNull(enrollment.CancelledAt);
+        Assert.Equal("Program tarihi değişti", enrollment.CancellationReason);
+        await enrollments.Received(1).UpdateAsync(enrollment, Arg.Any<CancellationToken>());
+        await enrollments.DidNotReceive().DeleteAsync(Arg.Any<Enrollment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CancelEnrollment_ThatDoesNotExist_Fails()
+    {
+        var (tenant, tenantId) = NewTenant();
+        var enrollments = Substitute.For<IEnrollmentRepository>();
+        var handler = new CancelEnrollmentHandler(enrollments, tenant);
+
+        var result = await handler.Handle(new CancelEnrollmentCommand(Guid.NewGuid()), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("training.enrollment.not_found", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task CancelEnrollment_ThatIsAlreadyCancelled_Fails()
+    {
+        var (tenant, tenantId) = NewTenant();
+        var enrollment = Enrollment.Create(Guid.NewGuid(), tenantId, Guid.NewGuid()).Value;
+        enrollment.Cancel();
+        var enrollments = Substitute.For<IEnrollmentRepository>();
+        enrollments.GetByIdAsync(tenantId, enrollment.Id, Arg.Any<CancellationToken>()).Returns(enrollment);
+
+        var handler = new CancelEnrollmentHandler(enrollments, tenant);
+        var result = await handler.Handle(new CancelEnrollmentCommand(enrollment.Id), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("training.enrollment.already_cancelled", result.Error.Code);
+        await enrollments.DidNotReceive().UpdateAsync(Arg.Any<Enrollment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateEnrollment_WhenPriorEnrollmentInSameProgramWasCancelled_Succeeds()
+    {
+        var (tenant, tenantId) = NewTenant();
+        var programId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+
+        var programs = Substitute.For<ITrainingProgramRepository>();
+        programs.GetByIdAsync(tenantId, programId, Arg.Any<CancellationToken>())
+            .Returns(TrainingProgram.Create(tenantId, "Onboarding", null, TrainingCategory.Compliance, DateTime.UtcNow, null, null).Value);
+
+        var requirements = Substitute.For<ITrainingRequirementRepository>();
+
+        var cancelledEnrollment = Enrollment.Create(programId, tenantId, employeeId).Value;
+        cancelledEnrollment.Cancel("Değişiklik oldu");
+        var enrollments = Substitute.For<IEnrollmentRepository>();
+        enrollments.GetByEmployeeIdAsync(tenantId, employeeId, Arg.Any<CancellationToken>())
+            .Returns(new List<Enrollment> { cancelledEnrollment });
+
+        var handler = new CreateEnrollmentHandler(enrollments, programs, requirements, tenant);
+
+        var result = await handler.Handle(new CreateEnrollmentCommand(programId, employeeId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        await enrollments.Received(1).AddAsync(Arg.Any<Enrollment>(), Arg.Any<CancellationToken>());
     }
 }

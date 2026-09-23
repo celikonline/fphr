@@ -48,7 +48,7 @@ public sealed class CreateEnrollmentHandler(
         }
 
         var existing = await enrollments.GetByEmployeeIdAsync(tenant.TenantId, command.EmployeeId, cancellationToken);
-        if (existing.Any(e => e.TrainingProgramId == command.TrainingProgramId))
+        if (existing.Any(e => e.TrainingProgramId == command.TrainingProgramId && e.Status != EnrollmentStatus.Cancelled))
         {
             return TrainingErrors.DuplicateEnrollment;
         }
@@ -129,10 +129,14 @@ public sealed class CompleteEnrollmentHandler(IEnrollmentRepository enrollments,
 /// <summary>Katılımcı kaydını iptal et.</summary>
 [RequiresPermission("training.enrollments.manage")]
 public sealed record CancelEnrollmentCommand(
-    Guid EnrollmentId
+    Guid EnrollmentId,
+    string? Reason = null
 ) : ICommand;
 
-/// <summary>Katılımcı kaydını iptal et — İK/HR tarafından.</summary>
+/// <summary>
+/// Katılımcı kaydını iptal et — İK/HR tarafından. Kayıt silinmez; "iptal edildi" durumuna alınır ve iptal
+/// tarihi/nedeni saklanır (roadmap #72 — iptal geçmişi tutulsun).
+/// </summary>
 public sealed class CancelEnrollmentHandler(IEnrollmentRepository enrollments, ITenantContext tenant)
     : ICommandHandler<CancelEnrollmentCommand>
 {
@@ -144,7 +148,13 @@ public sealed class CancelEnrollmentHandler(IEnrollmentRepository enrollments, I
             return TrainingErrors.EnrollmentNotFound;
         }
 
-        await enrollments.DeleteAsync(enrollment, cancellationToken);
+        var result = enrollment.Cancel(command.Reason);
+        if (result.IsFailure)
+        {
+            return result.Error;
+        }
+
+        await enrollments.UpdateAsync(enrollment, cancellationToken);
         return Result.Success();
     }
 }
