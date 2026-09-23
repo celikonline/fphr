@@ -90,9 +90,17 @@ public static class LeaveBalanceEngine
     /// Regenerates Accrual and CarryOver rows from <paramref name="accrualStart"/> up to <paramref name="asOf"/>, keeping
     /// <paramref name="preserved"/> (Usage/ExtraGrant/Adjustment/OpeningBalance) as the input of each period's closing balance.
     /// </summary>
+    /// <param name="recalculateFrom">
+    /// Optional: only the rows dated on or after this date are returned. The full history is still walked internally (each
+    /// period's carry-over depends on the closing balance of the one before it, regardless of where the caller's interest
+    /// starts), so a row dated on/after <paramref name="recalculateFrom"/> is byte-for-byte identical to what a full
+    /// regeneration (recalculateFrom omitted) would have produced for that same date - never a spurious zero/short result.
+    /// A date at or before <paramref name="accrualStart"/> is equivalent to omitting the parameter; a date after
+    /// <paramref name="asOf"/> yields no rows.
+    /// </param>
     public static IReadOnlyList<LeaveLedgerEntry> Regenerate(
         LeaveType type, Guid tenantId, Guid employeeId, DateOnly accrualStart, DateOnly? birthDate, DateOnly asOf,
-        IReadOnlyCollection<LeaveLedgerEntry> preserved, StatutoryAnnualLeave? statutory)
+        IReadOnlyCollection<LeaveLedgerEntry> preserved, StatutoryAnnualLeave? statutory, DateOnly? recalculateFrom = null)
     {
         var generated = new List<LeaveLedgerEntry>();
         if (!type.HasBalance || asOf < accrualStart)
@@ -127,7 +135,7 @@ public static class LeaveBalanceEngine
             period = period.Next(type.AccrualBasis, accrualStart);
         }
 
-        return generated;
+        return recalculateFrom is { } from ? generated.Where(e => e.EffectiveDate >= from).ToList() : generated;
     }
 
     public static decimal CarryOverAmount(LeaveType type, decimal closingBalance) => type.CarryOverMode switch

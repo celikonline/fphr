@@ -35,8 +35,16 @@ public sealed class LeaveBalanceService(
     /// Regenerates Accrual/CarryOver rows of every PerYear type in the profile's rule set up to today. <paramref name="unsavedEntries"/>:
     /// rows added in the current unit of work (not yet visible to the ledger query) that must count as preserved input.
     /// </summary>
+    /// <param name="recalculateFrom">
+    /// Optional start date: when given, only generated rows dated on or after it are replaced - earlier generated rows are
+    /// left untouched in the ledger. The regeneration math itself still walks the whole history from the profile's
+    /// <see cref="EmployeeLeaveProfile.LeaveAccrualStartDate"/> (each period's carry-over depends on the one before it), so
+    /// the rows that do get rebuilt are identical to what a full recalculation would have produced for those same dates -
+    /// omitting the parameter reproduces the previous, unchanged full-rebuild behavior.
+    /// </param>
     public async Task RecalculateAsync(
-        EmployeeLeaveProfile profile, LeaveRuleSet ruleSet, CancellationToken cancellationToken, IReadOnlyCollection<LeaveLedgerEntry>? unsavedEntries = null)
+        EmployeeLeaveProfile profile, LeaveRuleSet ruleSet, CancellationToken cancellationToken,
+        IReadOnlyCollection<LeaveLedgerEntry>? unsavedEntries = null, DateOnly? recalculateFrom = null)
     {
         var existing = (await ledger.ListAsync(profile.EmployeeId, null, cancellationToken)).Concat(unsavedEntries ?? []).ToList();
         var statutoryValues = await legislation.ListAsync(
@@ -49,10 +57,12 @@ public sealed class LeaveBalanceService(
         foreach (var type in ruleSet.Types.Where(t => t.HasBalance))
         {
             var rows = existing.Where(e => e.LeaveTypeId == type.Id).ToList();
-            ledger.RemoveRange(rows.Where(r => r.IsGenerated));
+            var generatedRows = rows.Where(r => r.IsGenerated).ToList();
+            var toRemove = recalculateFrom is { } from ? generatedRows.Where(r => r.EffectiveDate >= from).ToList() : generatedRows;
+            ledger.RemoveRange(toRemove);
             var preserved = rows.Where(r => !r.IsGenerated).ToList();
             var generated = LeaveBalanceEngine.Regenerate(
-                type, profile.TenantId, profile.EmployeeId, profile.LeaveAccrualStartDate, profile.BirthDate, Today, preserved, statutory);
+                type, profile.TenantId, profile.EmployeeId, profile.LeaveAccrualStartDate, profile.BirthDate, Today, preserved, statutory, recalculateFrom);
             ledger.AddRange(generated);
         }
     }
