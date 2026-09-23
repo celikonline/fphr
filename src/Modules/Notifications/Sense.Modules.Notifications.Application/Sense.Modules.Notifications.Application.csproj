@@ -15,6 +15,8 @@
     <ProjectReference Include="../../Announcements/Sense.Modules.Announcements.Contracts/Sense.Modules.Announcements.Contracts.csproj" />
     <ProjectReference Include="../../Payroll/Sense.Modules.Payroll.Contracts/Sense.Modules.Payroll.Contracts.csproj" />
     <ProjectReference Include="../../Onboarding/Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
+    <!-- TK-014: consumes Leave.Contracts.Events.LeaveAddedOnBehalf. -->
+    <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

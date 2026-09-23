@@ -53,6 +53,7 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.RequestApproved, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.LeaveAddedOnBehalf, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.DocumentExpiryReminder, NotificationCategory.Reminder, InAppOnly, IsMandatory: false),
         // Missing the statutory SGK deadline is a legal breach, so this reminder cannot be switched off.
         new(NotificationTemplateKeys.OhsSgkNotificationDue, NotificationCategory.Reminder, InAppOnly, IsMandatory: true),

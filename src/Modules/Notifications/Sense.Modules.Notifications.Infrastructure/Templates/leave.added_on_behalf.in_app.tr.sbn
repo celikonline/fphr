@@ -1,0 +1,2 @@
+{{- subject = "Adınıza izin eklendi" -}}
+{{ leave_type_name }} izni eklendi: {{ start_date }} - {{ end_date }} ({{ days }} gün).

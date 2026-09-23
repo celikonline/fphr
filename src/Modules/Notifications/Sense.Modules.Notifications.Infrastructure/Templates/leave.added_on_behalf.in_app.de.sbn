@@ -1,0 +1,2 @@
+{{- subject = "Für Sie wurde Urlaub eingetragen" -}}
+{{ leave_type_name }} eingetragen: {{ start_date }} - {{ end_date }} ({{ days }} Tag(e)).
