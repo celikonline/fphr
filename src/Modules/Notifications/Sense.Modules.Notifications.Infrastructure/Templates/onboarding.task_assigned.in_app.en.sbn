@@ -1,0 +1,2 @@
+{{- subject = "New onboarding task" -}}
+The "{{ task_title }}" task has been assigned to your role.

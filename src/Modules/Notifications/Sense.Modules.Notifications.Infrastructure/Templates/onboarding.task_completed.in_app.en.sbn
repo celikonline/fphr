@@ -1,0 +1,2 @@
+{{- subject = "Onboarding task completed" -}}
+The "{{ task_title }}" task has been completed.

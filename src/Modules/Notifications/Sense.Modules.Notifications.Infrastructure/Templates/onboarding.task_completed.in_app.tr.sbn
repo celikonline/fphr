@@ -1,0 +1,2 @@
+{{- subject = "Oryantasyon görevi tamamlandı" -}}
+"{{ task_title }}" görevi tamamlandı.

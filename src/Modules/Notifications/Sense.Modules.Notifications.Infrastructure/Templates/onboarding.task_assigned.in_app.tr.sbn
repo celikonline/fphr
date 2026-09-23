@@ -1,0 +1,2 @@
+{{- subject = "Yeni oryantasyon görevi" -}}
+"{{ task_title }}" görevi rolünüze atandı.

@@ -4,6 +4,7 @@ using Sense.Modules.Onboarding.Application.Tasks;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -76,14 +77,21 @@ public sealed class MyOnboardingTasksTests
         var myTask = EmployeeOnboardingTask.Materialize(TenantId, CallerEmployeeId, template.Id, OnboardingStage.Onboarding, new DateOnly(2026, 10, 1));
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
         tasks.GetByIdAsync(myTask.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(myTask)));
+        var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
+        templates.GetByIdAsync(template.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(template)));
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
         var currentUser = CurrentUser(CallerEmployeeId, userId: CallerEmployeeId);
 
-        var handler = new CompleteMyTaskHandler(currentUser, tasks);
+        var handler = new CompleteMyTaskHandler(currentUser, tasks, templates, outbox);
         var result = await handler.Handle(new CompleteMyTaskCommand(myTask.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(EmployeeOnboardingTaskStatus.Completed);
         result.Value.CompletedBy.ShouldBe(CallerEmployeeId);
+        outbox.Received(1).Enqueue(Arg.Is<IIntegrationEvent>(e =>
+            e.GetType() == typeof(Sense.Modules.Onboarding.Contracts.Events.OnboardingTaskCompleted)
+            && ((Sense.Modules.Onboarding.Contracts.Events.OnboardingTaskCompleted)e).TaskId == myTask.Id
+            && ((Sense.Modules.Onboarding.Contracts.Events.OnboardingTaskCompleted)e).ResponsibleRoleCode == "hr"));
     }
 
     /// <summary>Yetki testi: bir çalışan başka bir çalışanın görevini kendi 'me' uç noktasından tamamlayamaz.</summary>
@@ -94,9 +102,11 @@ public sealed class MyOnboardingTasksTests
         var othersTask = EmployeeOnboardingTask.Materialize(TenantId, OtherEmployeeId, template.Id, OnboardingStage.Onboarding, new DateOnly(2026, 10, 1));
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
         tasks.GetByIdAsync(othersTask.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(othersTask)));
+        var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
         var currentUser = CurrentUser(CallerEmployeeId);
 
-        var handler = new CompleteMyTaskHandler(currentUser, tasks);
+        var handler = new CompleteMyTaskHandler(currentUser, tasks, templates, outbox);
         var result = await handler.Handle(new CompleteMyTaskCommand(othersTask.Id), CancellationToken.None);
 
         result.IsFailure.ShouldBeTrue();
@@ -108,7 +118,9 @@ public sealed class MyOnboardingTasksTests
     public async Task CompleteMyTask_CallerHasNoLinkedEmployee_ReturnsNotFound_AndDoesNotLoadTask()
     {
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
-        var handler = new CompleteMyTaskHandler(CurrentUser(employeeId: null), tasks);
+        var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var handler = new CompleteMyTaskHandler(CurrentUser(employeeId: null), tasks, templates, outbox);
 
         var result = await handler.Handle(new CompleteMyTaskCommand(Guid.NewGuid()), CancellationToken.None);
 
