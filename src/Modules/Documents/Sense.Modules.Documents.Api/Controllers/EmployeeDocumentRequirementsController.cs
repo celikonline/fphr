@@ -30,11 +30,12 @@ public sealed class EmployeeDocumentRequirementsController : ApiControllerBase
     public async Task<IActionResult> ListMine(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyDocumentRequirementsQuery(), ct));
 
-    /// <summary>Paged report of missing/uploaded/waived requirements across the tenant.</summary>
+    /// <summary>Paged report of missing/uploaded/waived requirements across the tenant, optionally filtered by employee name.</summary>
     [HttpGet("requirements/report")]
     [ProducesResponseType<PagedResult<MissingDocumentReportItemDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Report([FromQuery] DocumentRequirementStatus? status, [FromQuery] PagedQuery paging, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new GetMissingDocumentReportQuery(status, paging), ct));
+    public async Task<IActionResult> Report(
+        [FromQuery] DocumentRequirementStatus? status, [FromQuery] PagedQuery paging, [FromQuery] string? q, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMissingDocumentReportQuery(status, paging, q), ct));
 
     /// <summary>Waives a requirement with a mandatory reason.</summary>
     [HttpPost("requirements/{id:guid}/waive")]

@@ -88,9 +88,10 @@ public sealed class GetMyDocumentRequirementsHandler(
     }
 }
 
-/// <summary>Paged report of missing/uploaded/waived requirements across the tenant, with employee name and document type info.</summary>
+/// <summary>Paged report of missing/uploaded/waived requirements across the tenant, with employee name and document type info.
+/// <paramref name="Q"/> is an optional employee-name filter (first/last name, case-insensitive substring).</summary>
 [RequiresPermission("documents.requirements.view")]
-public sealed record GetMissingDocumentReportQuery(DocumentRequirementStatus? Status, PagedQuery Paging) : IQuery<PagedResult<MissingDocumentReportItemDto>>;
+public sealed record GetMissingDocumentReportQuery(DocumentRequirementStatus? Status, PagedQuery Paging, string? Q = null) : IQuery<PagedResult<MissingDocumentReportItemDto>>;
 
 public sealed class GetMissingDocumentReportHandler(
     IEmployeeDocumentRequirementRepository requirements,
@@ -103,7 +104,34 @@ public sealed class GetMissingDocumentReportHandler(
     {
         // null = kapsam kısıtı yok (Company); aksi halde yalnız görünür çalışanların gereksinimleri raporlanır.
         var visible = await dataScope.GetVisibleEmployeeIdsAsync(DocumentsPermissionKeys.RequirementsView, cancellationToken);
-        var (items, total) = await requirements.ListReportAsync(query.Status, query.Paging.Skip, query.Paging.PageSize, visible, cancellationToken);
+
+        // Documents şeması çalışan adını tutmaz (yalnız EmployeeId): "q" ile ada göre filtreleme, mevcut
+        // IEmployeeContactLookup sözleşmesi üzerinden adı eşleşen çalışan id'lerine indirgenip ListReportAsync'in
+        // zaten desteklediği employeeIds parametresine aktarılarak yapılır - Documents modülü Employee'ye doğrudan
+        // referans vermez.
+        IReadOnlyCollection<Guid>? scopeIds = visible;
+        IReadOnlyList<EmployeeContact>? matchedContacts = null;
+        if (!string.IsNullOrWhiteSpace(query.Q))
+        {
+            var (candidates, _) = await requirements.ListReportAsync(query.Status, 0, int.MaxValue, visible, cancellationToken);
+            var candidateEmployeeIds = candidates.Select(c => c.EmployeeId).Distinct().ToList();
+            var candidateContacts = candidateEmployeeIds.Count == 0
+                ? []
+                : await employeeContacts.GetContactsAsync(tenant.TenantId, candidateEmployeeIds, cancellationToken);
+
+            matchedContacts = candidateContacts
+                .Where(c => $"{c.FirstName} {c.LastName}".Contains(query.Q, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (matchedContacts.Count == 0)
+            {
+                return new PagedResult<MissingDocumentReportItemDto>([], query.Paging.Page, query.Paging.PageSize, 0);
+            }
+
+            scopeIds = matchedContacts.Select(c => c.EmployeeId).ToList();
+        }
+
+        var (items, total) = await requirements.ListReportAsync(query.Status, query.Paging.Skip, query.Paging.PageSize, scopeIds, cancellationToken);
 
         var typeMap = new Dictionary<Guid, DocumentTypeDefinition>();
         foreach (var typeId in items.Select(i => i.DocumentTypeId).Distinct())
@@ -116,7 +144,7 @@ public sealed class GetMissingDocumentReportHandler(
         }
 
         var employeeIds = items.Select(i => i.EmployeeId).Distinct().ToList();
-        var contacts = await employeeContacts.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken);
+        var contacts = matchedContacts ?? await employeeContacts.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken);
         var nameByEmployeeId = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
         var dtos = items
