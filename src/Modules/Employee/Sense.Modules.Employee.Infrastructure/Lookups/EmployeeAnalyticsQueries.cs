@@ -48,18 +48,34 @@ public sealed class EmployeeAnalyticsQueries(EmployeeDbContext context, IOrgUnit
 
     public async Task<TerminationCounts> GetTerminationCountsAsync(Guid tenantId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {
-        // Fetched client-side (just two nullable DateOnly columns): DayNumber arithmetic avoids relying on
-        // date-subtraction translation, and per-tenant termination volume in one period is small.
+        // Fetched client-side (a handful of small columns): DayNumber arithmetic avoids relying on date-subtraction
+        // translation, and per-tenant termination volume in one period is small.
         var terminations = await context.Employees.AsNoTracking().IgnoreAutoIncludes()
             .Where(e => e.TenantId == tenantId && e.TerminationDate != null && e.TerminationDate >= from && e.TerminationDate <= to)
-            .Select(e => new { e.HireDate, e.TerminationDate })
+            .Select(e => new { e.HireDate, e.TerminationDate, e.TerminationType })
             .ToListAsync(cancellationToken);
 
         var withinFirstSixMonths = terminations.Count(t =>
             t.HireDate is not null && t.TerminationDate!.Value.DayNumber - t.HireDate.Value.DayNumber < EarlyAttritionDays);
+        var voluntary = terminations.Count(t => t.TerminationType is { } type && IsVoluntary(type));
+        var involuntary = terminations.Count(t => t.TerminationType is { } type && !IsVoluntary(type));
 
-        return new TerminationCounts(terminations.Count, withinFirstSixMonths);
+        return new TerminationCounts(terminations.Count, withinFirstSixMonths, voluntary, involuntary);
     }
+
+    /// <summary>
+    /// TK-020 (roadmap #99d1 "gönüllü/gönülsüz kırılım"): classifies the existing <c>Employee.TerminationType</c>
+    /// (11.3.03 E5a, set on every termination - see <see cref="Employees.Employee.Terminate"/>) as employee-initiated
+    /// (voluntary) or not. <see cref="TerminationType.Resignation"/> (istifa) and
+    /// <see cref="TerminationType.EmployeeJustCause_Art24"/> (4857 md.24, işçinin haklı nedenle feshi - still the
+    /// employee's own decision to leave) are voluntary; the employer-initiated types
+    /// (<see cref="TerminationType.ValidCause_Art18"/>, <see cref="TerminationType.EmployerJustCause_Art25"/>),
+    /// <see cref="TerminationType.MutualRescission"/> (ikale) and <see cref="TerminationType.FixedTermExpiry"/> (not
+    /// the employee's choice to stay) are involuntary. This is a product/HR classification choice, not a legal
+    /// given - MutualRescission/FixedTermExpiry/Other are the ambiguous ones; see TK-020 handoff.
+    /// </summary>
+    private static bool IsVoluntary(TerminationType type) =>
+        type is TerminationType.Resignation or TerminationType.EmployeeJustCause_Art24;
 
     public async Task<IReadOnlyList<GenderByOrgUnitCount>> GetGenderByOrgUnitAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
