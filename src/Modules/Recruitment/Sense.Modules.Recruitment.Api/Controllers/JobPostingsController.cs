@@ -79,6 +79,12 @@ public sealed class JobPostingsController : ApiControllerBase
     public async Task<IActionResult> Archive(Guid id, [FromBody] ArchiveJobPostingRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ArchiveJobPostingCommand(id, request.Reason), ct));
 
+    /// <summary>Lists the user ids explicitly granted access to a posting (beyond the owner/hiring manager).</summary>
+    [HttpGet(ApiRoutes.IdParam + "/access")]
+    [ProducesResponseType<IReadOnlyList<Guid>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAccess(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetJobPostingAccessQuery(id), ct));
+
     /// <summary>Replaces a posting's explicit access list.</summary>
     [HttpPut(ApiRoutes.IdParam + "/access")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
