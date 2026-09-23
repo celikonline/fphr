@@ -144,6 +144,11 @@ export default function ProfileScreen() {
         <Text style={styles.supportRowChevron}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Goals")}>
+        <Text style={styles.supportRowText}>Hedeflerim</Text>
+        <Text style={styles.supportRowChevron}>›</Text>
+      </TouchableOpacity>
+
       <Text style={styles.sectionTitle}>Taleplerim</Text>
       {leaveRequestsError && (
         <View style={styles.errorBanner}>
