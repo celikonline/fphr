@@ -653,8 +653,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.request.not_found" xml:space="preserve"><value>Approval request not found.</value></data>
   <data name="workflow.request.not_pending" xml:space="preserve"><value>The approval request is no longer pending.</value></data>
   <data name="workflow.request.requester_not_found" xml:space="preserve"><value>Requester not found.</value></data>
+  <data name="workflow.request.approvers_already_edited" xml:space="preserve"><value>This request's approver list has already been edited once and cannot be edited again.</value></data>
+  <data name="workflow.request.edit_approvers_not_authorized" xml:space="preserve"><value>Only the requester or their manager can edit the approver list.</value></data>
   <data name="workflow.task.not_found" xml:space="preserve"><value>Approval task not found.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>This task is no longer the current step.</value></data>
+  <data name="workflow.task.not_pending" xml:space="preserve"><value>This task has already been decided and can no longer be edited.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>You cannot decide on your own request.</value></data>
   <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>A reason (comment) is required when rejecting a request.</value></data>

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Contracts.Events;
@@ -126,6 +127,84 @@ public sealed class CancelApprovalRequestHandler(IApprovalRequestRepository requ
 
         var result = existing.Value.Cancel(command.ActorEmployeeId, clock.GetUtcNow().UtcDateTime);
         return result.IsFailure ? result.Error : Result.Success();
+    }
+}
+
+/// <summary>One step's new approver for <see cref="EditApprovalRequestApproversCommand"/> - identity only, the task's IsRequired flag is left untouched.</summary>
+public sealed record ApprovalStepApproverEdit(int StepNumber, Guid ApproverEmployeeId);
+
+/// <summary>
+/// TK-009 "talep anında onaycı listesi düzenleme": reassigns the approver on one or more of a request's still-pending
+/// tasks (the source policy/template is never touched, and the request must not have been decided/cancelled yet).
+/// Public, caller-identity-dependent authorization (requester or the requester's direct manager) - checked in the
+/// handler like <see cref="GetApprovalStatusQuery"/>, not a flat [RequiresPermission].
+/// </summary>
+public sealed record EditApprovalRequestApproversCommand(
+    Guid ApprovalRequestId, Guid ActorEmployeeId, IReadOnlyList<ApprovalStepApproverEdit> Approvers) : ICommand;
+
+public sealed class EditApprovalRequestApproversValidator : AbstractValidator<EditApprovalRequestApproversCommand>
+{
+    public EditApprovalRequestApproversValidator()
+    {
+        RuleFor(x => x.ApprovalRequestId).NotEmpty();
+        RuleFor(x => x.ActorEmployeeId).NotEmpty();
+        RuleFor(x => x.Approvers).NotEmpty();
+        RuleForEach(x => x.Approvers).ChildRules(step =>
+        {
+            step.RuleFor(s => s.StepNumber).GreaterThan(0);
+            step.RuleFor(s => s.ApproverEmployeeId).NotEmpty();
+        });
+    }
+}
+
+public sealed class EditApprovalRequestApproversHandler(
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IEmployeeLookup employeeLookup,
+    IIntegrationEventOutbox outbox,
+    TimeProvider clock) : ICommandHandler<EditApprovalRequestApproversCommand>
+{
+    public async Task<Result> Handle(EditApprovalRequestApproversCommand command, CancellationToken cancellationToken)
+    {
+        var loaded = await requests.GetByIdAsync(command.ApprovalRequestId, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var request = loaded.Value;
+
+        var isRequester = request.RequesterEmployeeId == command.ActorEmployeeId;
+        var isManager = !isRequester
+            && await employeeLookup.GetManagerEmployeeIdAsync(tenant.TenantId, request.RequesterEmployeeId, cancellationToken) == command.ActorEmployeeId;
+        if (!isRequester && !isManager)
+        {
+            return Error.Rule(WorkflowErrors.EditApproversNotAuthorized);
+        }
+
+        foreach (var edit in command.Approvers)
+        {
+            if (!await employeeLookup.ExistsActiveAsync(tenant.TenantId, edit.ApproverEmployeeId, cancellationToken))
+            {
+                return Error.Validation(WorkflowErrors.PolicyStepApproverInvalid, (nameof(ApprovalStepApproverEdit.ApproverEmployeeId), edit.ApproverEmployeeId));
+            }
+        }
+
+        var wasCurrentStepEdited = command.Approvers.Any(a => a.StepNumber == request.CurrentStepNumber);
+        var edited = request.EditApprovers(
+            command.Approvers.Select(a => (a.StepNumber, a.ApproverEmployeeId)).ToList(), command.ActorEmployeeId, clock.GetUtcNow().UtcDateTime);
+        if (edited.IsFailure)
+        {
+            return edited.Error;
+        }
+
+        // The current task's assignee changed - let the newly-assigned approver know (same event Submit/Decide use).
+        if (wasCurrentStepEdited)
+        {
+            ApprovalDecisionEffects.EnqueueCurrentTaskAssigned(request, tenant.TenantId, outbox);
+        }
+
+        return Result.Success();
     }
 }
 

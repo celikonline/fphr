@@ -49,6 +49,13 @@ public sealed class ApprovalTask : TenantEntity<Guid>, IAuditLogged
 
     public string? DecisionUserAgent { get; private set; }
 
+    /// <summary>Reassigns this still-pending task to a different specific employee (TK-009 "talep anında onaycı listesi düzenleme") - the caller (ApprovalRequest.EditApprovers) already checked Status is Pending.</summary>
+    internal void ReassignApprover(Guid approverEmployeeId)
+    {
+        ApproverEmployeeId = approverEmployeeId;
+        FallbackRoleCode = null;
+    }
+
     internal void Decide(Guid decidingEmployeeId, ApprovalOutcome outcome, string? comment, bool wasOverride, ApprovalChannel channel, string? ipAddress, string? userAgent, DateTime now)
     {
         Status = outcome == ApprovalOutcome.Approved ? ApprovalTaskStatus.Approved : ApprovalTaskStatus.Rejected;

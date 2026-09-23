@@ -39,6 +39,7 @@ public enum ApprovalHistoryEventType
     Completed,
     Rejected,
     Cancelled,
+    ApproversEdited,
 }
 
 /// <summary>One resolved step to seed an <see cref="ApprovalRequest"/> with - either a specific employee or (no policy/manager resolved) a role queue.</summary>
@@ -245,6 +246,62 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
             CurrentStepNumber = stepNumber + 1;
         }
 
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// TK-009 "talep anında onaycı listesi düzenleme": reassigns one or more still-pending tasks to a different
+    /// specific employee - the source policy/template is never touched, only this request's own task snapshot. A
+    /// one-time operation per request (a second call fails with <see cref="WorkflowDomainErrors.RequestApproversAlreadyEdited"/>,
+    /// detected via <see cref="History"/> rather than a dedicated flag column), and only while the request itself is
+    /// Pending and every targeted task is still Pending (not yet decided). Caller/manager authorization is the
+    /// Application layer's job, same split as <see cref="Decide"/>.
+    /// </summary>
+    public Result EditApprovers(IReadOnlyList<(int StepNumber, Guid ApproverEmployeeId)> edits, Guid actorEmployeeId, DateTime now)
+    {
+        if (Status != ApprovalRequestStatus.Pending)
+        {
+            return Error.Rule(WorkflowDomainErrors.RequestNotPending);
+        }
+
+        if (edits.Count == 0)
+        {
+            return Error.Validation(WorkflowDomainErrors.RequestNoSteps);
+        }
+
+        if (_history.Any(h => h.EventType == ApprovalHistoryEventType.ApproversEdited))
+        {
+            return Error.Rule(WorkflowDomainErrors.RequestApproversAlreadyEdited);
+        }
+
+        var tasksToEdit = new List<ApprovalTask>(edits.Count);
+        foreach (var (stepNumber, approverEmployeeId) in edits)
+        {
+            var task = _tasks.SingleOrDefault(t => t.StepNumber == stepNumber);
+            if (task is null)
+            {
+                return Error.NotFound(WorkflowDomainErrors.TaskNotFound);
+            }
+
+            if (task.Status != ApprovalTaskStatus.Pending)
+            {
+                return Error.Rule(WorkflowDomainErrors.TaskNotPending);
+            }
+
+            if (approverEmployeeId == Guid.Empty)
+            {
+                return Error.Validation(WorkflowDomainErrors.PolicyStepApproverRequired);
+            }
+
+            tasksToEdit.Add(task);
+        }
+
+        foreach (var (task, edit) in tasksToEdit.Zip(edits))
+        {
+            task.ReassignApprover(edit.ApproverEmployeeId);
+        }
+
+        AddHistory(ApprovalHistoryEventType.ApproversEdited, CurrentStepNumber, actorEmployeeId, null, null, null, null, now, null);
         return Result.Success();
     }
 
