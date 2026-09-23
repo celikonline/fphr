@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { pushNotificationService } from "@/services/PushNotificationService";
+import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
 
-/** Tabs a push notification may request. Anything else is ignored. */
-const ALLOWED_PUSH_SCREENS = new Set(["Dashboard", "Attendance", "Leave", "Payroll", "Approvals", "Profile"]);
+/** How long the foreground in-app banner stays visible before auto-dismissing. */
+const FOREGROUND_BANNER_DURATION_MS = 4000;
 
 /**
  * Last validated push-navigation request. RootNavigator consumes and clears it after
@@ -18,7 +20,22 @@ export function consumePushNavigationTarget(): string | null {
   return target;
 }
 
+interface ForegroundBanner {
+  title: string;
+  body: string;
+}
+
 export default function App() {
+  const [foregroundBanner, setForegroundBanner] = useState<ForegroundBanner | null>(null);
+
+  useEffect(() => {
+    if (!foregroundBanner) {
+      return;
+    }
+    const timeoutId = setTimeout(() => setForegroundBanner(null), FOREGROUND_BANNER_DURATION_MS);
+    return () => clearTimeout(timeoutId);
+  }, [foregroundBanner]);
+
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -29,14 +46,21 @@ export default function App() {
           await pushNotificationService.registerPushToken();
         }
 
-        // Setup notification listeners. Notification bodies are never logged (PII).
+        // Setup notification listeners. Notification bodies are never logged (PII); the
+        // foreground banner only ever displays them to the signed-in user on their own device.
         pushNotificationService.setupNotificationListeners(
-          undefined,
-          response => {
-            // `data.screen` originates from the push sender: only allow known tab
-            // screens so a compromised sender can't deep-link into arbitrary routes.
-            const screen = response.notification.request.content.data?.screen;
-            if (typeof screen === "string" && ALLOWED_PUSH_SCREENS.has(screen)) {
+          (notification) => {
+            const { title, body } = notification.request.content;
+            if (title || body) {
+              setForegroundBanner({ title: title ?? "", body: body ?? "" });
+            }
+          },
+          (response) => {
+            // `data.screen`/`data.type` originate from the push sender: only known tab
+            // screens are ever returned, so a compromised sender can't deep-link into
+            // arbitrary routes.
+            const screen = resolvePushNavigationScreen(response.notification.request.content.data);
+            if (screen) {
               pushNavigationTarget = screen;
             }
           }
@@ -58,7 +82,38 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="light" />
+      {foregroundBanner && (
+        <View style={styles.banner} pointerEvents="none">
+          {foregroundBanner.title.length > 0 && (
+            <Text style={styles.bannerTitle}>{foregroundBanner.title}</Text>
+          )}
+          {foregroundBanner.body.length > 0 && (
+            <Text style={styles.bannerBody}>{foregroundBanner.body}</Text>
+          )}
+        </View>
+      )}
       <RootNavigator />
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  banner: {
+    position: "absolute",
+    top: 48,
+    left: 16,
+    right: 16,
+    zIndex: 100,
+    backgroundColor: "#1f2937",
+    borderRadius: 12,
+    padding: 12,
+  },
+  bannerTitle: {
+    color: "#ffffff",
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  bannerBody: {
+    color: "#e5e7eb",
+  },
+});
