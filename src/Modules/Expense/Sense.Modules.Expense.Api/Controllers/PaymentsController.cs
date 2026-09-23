@@ -16,4 +16,10 @@ public sealed class PaymentsController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<PaymentOverviewRow>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListMy(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyPaymentsOverviewQuery(), ct));
+
+    /// <summary>Çalışan kartı "Ödemeler" sekmesi: the same overview, scoped to one employee (HR/Finance).</summary>
+    [HttpGet("employee/{employeeId:guid}")]
+    [ProducesResponseType<IReadOnlyList<PaymentOverviewRow>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetForEmployee(Guid employeeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeePaymentsOverviewQuery(employeeId), ct));
 }

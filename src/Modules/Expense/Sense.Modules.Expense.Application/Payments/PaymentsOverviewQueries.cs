@@ -42,3 +42,39 @@ public sealed class GetMyPaymentsOverviewHandler(ICurrentUser currentUser, IExpe
         return Result.Success(rows);
     }
 }
+
+/// <summary>
+/// Çalışan kartı "Ödemeler" sekmesi: HR/Finance için tek bir çalışanın aynı projeksiyonu (11.3.8 tasarım kararı -
+/// yalnız Expense şemasını okur). Hem Harcama hem Avans görünürlüğü gerektiği için iki izin de aranır (bugün
+/// yalnız HR/Finance/Owner ikisine birden sahip; Manager yalnız "expense.claims.view" taşıdığından bu kartı göremez -
+/// bilinçli, ayrı bir "expense.payment.view" izni tanımlanana kadar).
+/// </summary>
+[RequiresPermission("expense.claims.view")]
+[RequiresPermission("expense.advances.view")]
+public sealed record GetEmployeePaymentsOverviewQuery(Guid EmployeeId) : IQuery<IReadOnlyList<PaymentOverviewRow>>, IScopedRequest
+{
+    public Guid? TargetEmployeeId => EmployeeId;
+}
+
+public sealed class GetEmployeePaymentsOverviewHandler(IExpenseClaimRepository claims, IAdvanceRequestRepository advances)
+    : IQueryHandler<GetEmployeePaymentsOverviewQuery, IReadOnlyList<PaymentOverviewRow>>
+{
+    public async Task<Result<IReadOnlyList<PaymentOverviewRow>>> Handle(GetEmployeePaymentsOverviewQuery query, CancellationToken cancellationToken)
+    {
+        var claimRows = (await claims.ListSubmittedByEmployeeAsync(query.EmployeeId, cancellationToken))
+            .Select(c => new PaymentOverviewRow(
+                PaymentKind.Expense,
+                DateOnly.FromDateTime(c.SubmittedAt ?? c.CreatedAt),
+                c.TotalAmount,
+                c.Items.Count > 0 ? c.Items[0].Currency : string.Empty,
+                c.Status.ToString(),
+                c.Id,
+                c.Description));
+
+        var advanceRows = (await advances.ListByEmployeeAsync(query.EmployeeId, cancellationToken))
+            .Select(a => new PaymentOverviewRow(PaymentKind.Advance, a.RequestedDate, a.Amount, a.Currency, a.Status.ToString(), a.Id, a.Description));
+
+        IReadOnlyList<PaymentOverviewRow> rows = claimRows.Concat(advanceRows).OrderByDescending(r => r.Date).ToList();
+        return Result.Success(rows);
+    }
+}

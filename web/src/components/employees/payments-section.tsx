@@ -54,6 +54,7 @@ import {
 import type { EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
 import { BANK_ACCOUNT_TYPE_OPTIONS, PAY_FREQUENCY_OPTIONS, SALARY_TYPE_OPTIONS } from "./employee-enum-options";
+import { ExpensePaymentsSection } from "./expense-payments-section";
 
 const READ_PERMISSION = "employee.employees.read";
 const SALARY_VIEW_PERMISSION = "employee.salary.view";
@@ -143,6 +144,7 @@ export function PaymentsSection({ employee }: { employee: EmployeeDetail }) {
     <Stack gap="lg">
       {showSalary && <SalarySection employee={employee} isOwnCard={isOwnCard} />}
       {showBank && <BankAccountsSection employee={employee} isOwnCard={isOwnCard} />}
+      <ExpensePaymentsSection employee={employee} isOwnCard={isOwnCard} />
     </Stack>
   );
 }
