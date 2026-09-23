@@ -51,6 +51,7 @@
     "@babel/preset-env": "^8.0.5",
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.1",
+    "@react-native/assets-registry": "^0.87.1",
     "@react-native/babel-preset": "^0.87.1",
     "@types/jest": "^30.0.0",
     "babel-preset-expo": "^58.0.0",
