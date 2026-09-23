@@ -159,4 +159,19 @@ describe("LeaveRequestDialog", () => {
     expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyStart)) as HTMLElement).id).toBe("leave-hour-start");
     expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyEnd)) as HTMLElement).id).toBe("leave-hour-end");
   });
+
+  it("offers only the caller-supplied (policy-allowed) types in a single type selector, not a button/page per type (TK-022)", async () => {
+    renderDialog({ types: [fullDayType, hourlyType] });
+
+    // Tek modal + tek "İzin türü" seçici: her tür için ayrı buton/sayfa yok, tek Select var.
+    const typeSelects = screen.getAllByRole("combobox", { name: trLeave.form.type });
+    expect(typeSelects).toHaveLength(1);
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+
+    fireEvent.click(typeSelects[0]);
+    const options = await screen.findAllByRole("option");
+    // Yalnız `types` prop'uyla (backend'in politika filtresinden geçmiş liste) verilen türler listeleniyor.
+    expect(options.map((option) => option.textContent)).toEqual([fullDayType.name, hourlyType.name]);
+    expect(screen.queryByText("Politika dışı izin türü")).toBeNull();
+  });
 });
