@@ -129,7 +129,14 @@ public sealed class GetWorkforceKpisHandler(
         // Approximation, consistent with CareerPathRatio: current active headcount stands in for the period's
         // average headcount (no point-in-time historical headcount query yet).
         var value = activeHeadcount == 0 ? 0m : Math.Round((decimal)terminations.Total / activeHeadcount, 4);
-        return new KpiResultDto(KpiKeys.TurnoverRate, "Turnover Rate", value, "ratio", from, to, []);
+        // TK-020: ayrılış türüne göre (gönüllü/gönülsüz) kırılım - share is each bucket's part of the period's
+        // terminations (terminations.Total), not of activeHeadcount, consistent with the other breakdown KPIs.
+        var breakdown = new List<KpiBreakdownDto>
+        {
+            ShareOf(nameof(terminations.Voluntary), terminations.Voluntary, terminations.Total),
+            ShareOf(nameof(terminations.Involuntary), terminations.Involuntary, terminations.Total),
+        };
+        return new KpiResultDto(KpiKeys.TurnoverRate, "Turnover Rate", value, "ratio", from, to, breakdown);
     }
 
     private static KpiResultDto BuildEarlyTurnoverRate(DateOnly from, DateOnly to, TerminationCounts terminations)

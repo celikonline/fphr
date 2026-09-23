@@ -161,6 +161,35 @@ public sealed class WorkforceKpiHandlerTests
         result.Value.Single(k => k.Key == KpiKeys.EarlyTurnoverRate).Value.ShouldBe(0.25m); // 1 / 4
     }
 
+    /// <summary>TK-020 (roadmap #99d1 "gönüllü/gönülsüz kırılım"): TURNOVER_RATE's breakdown surfaces the existing
+    /// TerminationCounts.Voluntary/Involuntary split unchanged - shares are of terminations.Total (8+3=11), not
+    /// activeHeadcount, matching the other breakdown KPIs. Counts kept at/above MinCellSize (5) so this isn't
+    /// tangled with small-cell suppression (covered separately in Breakdown_SuppressesCellsUnderMinCellSize_*).</summary>
+    [Fact]
+    public async Task TurnoverRate_BreaksDownByVoluntaryAndInvoluntary()
+    {
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(40);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>());
+        _employeeAnalytics.GetTerminationCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new TerminationCounts(Total: 13, WithinFirstSixMonths: 2, Voluntary: 8, Involuntary: 5));
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        var turnover = result.Value.Single(k => k.Key == KpiKeys.TurnoverRate);
+        turnover.Value.ShouldBe(0.325m); // total unchanged: 13 / 40
+        var voluntary = turnover.Breakdown.Single(b => b.Dimension == nameof(TerminationCounts.Voluntary));
+        voluntary.Count.ShouldBe(8);
+        voluntary.Share.ShouldBe(0.6154m); // 8 / 13
+        var involuntary = turnover.Breakdown.Single(b => b.Dimension == nameof(TerminationCounts.Involuntary));
+        involuntary.Count.ShouldBe(5);
+        involuntary.Share.ShouldBe(0.3846m); // 5 / 13
+    }
+
     [Fact]
     public async Task TurnoverRate_IsZero_WhenNoActiveEmployees()
     {
