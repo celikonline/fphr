@@ -7,6 +7,7 @@ using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Legislation;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Contracts.Legislation;
+using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
 
@@ -300,6 +301,42 @@ public sealed class LeaveTypeTests
             CarryOverMode: CarryOverMode.Limited)).Error.Code.ShouldBe(LeaveDomainErrors.TypeCarryOverLimitInvalid);
         set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
             SeniorityTiers: [new LeaveSeniorityTier(5, SeniorityComparison.GreaterThan, 6m)])).Error.Code.ShouldBe(LeaveDomainErrors.TypeSeniorityTiersOnlyAnnual);
+    }
+
+    [Fact]
+    public void Validation_ErrorsCarryFieldNameForWizardHighlighting()
+    {
+        var set = LeaveRuleSet.Create(TenantId, "Set").Value;
+
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, string.Empty, null, true, LeaveLimitType.Unlimited)).Error,
+            LeaveValidationFields.Name);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerRequest)).Error,
+            LeaveValidationFields.PerRequestMaxDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 0m)).Error,
+            LeaveValidationFields.AnnualDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            NegativeBalance: NegativeBalanceMode.Limited, NegativeBalanceLimitDays: 20m)).Error,
+            LeaveValidationFields.NegativeBalanceLimitDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            CarryOverMode: CarryOverMode.Limited)).Error,
+            LeaveValidationFields.CarryOverMaxDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.Unlimited,
+            MinConsecutiveDays: 5m, MaxConsecutiveDays: 2m)).Error,
+            LeaveValidationFields.MaxConsecutiveDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.Unlimited,
+            WaitingPeriodMonths: 25)).Error,
+            LeaveValidationFields.WaitingPeriodMonths);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            SeniorityTiers: [new LeaveSeniorityTier(5, SeniorityComparison.GreaterThan, 6m)])).Error,
+            LeaveValidationFields.SeniorityTiers);
+
+        return;
+
+        static void AssertField(Error error, string expectedField)
+        {
+            error.Args.ShouldNotBeNull();
+            error.Args![LeaveValidationFields.Key].ShouldBe(expectedField);
+        }
     }
 
     [Fact]
