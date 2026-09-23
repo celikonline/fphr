@@ -290,6 +290,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.10.0(jiti@2.7.0)(supports-color@8.1.1))
+      '@react-native/assets-registry':
+        specifier: ^0.87.1
+        version: 0.87.1(react-native@0.87.1(@babel/core@8.0.5)(@react-native-community/cli@13.6.9(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@8.0.5)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))
       '@react-native/babel-preset':
         specifier: ^0.87.1
         version: 0.87.1(@babel/core@8.0.5)(supports-color@8.1.1)
@@ -2929,6 +2932,12 @@ packages:
   '@react-native/asset-utils@0.87.1':
     resolution: {integrity: sha512-FeFnbn9ENPs7IVBzZt1bBWfiRGvT4q+CsWwXGFyKVW/1ol3ylBRuTtXBGHIAmcNN4fUR60nSXsCN19pzNHkPgA==}
     engines: {node: ^22.13.0 || ^24.3.0 || >= 26.0.0}
+
+  '@react-native/assets-registry@0.87.1':
+    resolution: {integrity: sha512-XmE1I4YM61ariwFMm9gAd5FnqztP89qDx1WVKJMQTxI/g+V8riuwJts33hsFkR0lC0Mj8oc+V4L/AXk3F9XseA==}
+    engines: {node: ^22.13.0 || ^24.3.0 || >= 26.0.0}
+    peerDependencies:
+      react-native: '*'
 
   '@react-native/babel-plugin-codegen@0.86.3':
     resolution: {integrity: sha512-O6Xza4JBGPIU8J7YbKTyBoYL4thpy8jMW/oaLDWdAyOwYHKIjK47pAL5HUEbOe2bWz2PEKjbYRF2ApkJv1ottQ==}
@@ -13182,6 +13191,10 @@ snapshots:
     optional: true
 
   '@react-native/asset-utils@0.87.1': {}
+
+  '@react-native/assets-registry@0.87.1(react-native@0.87.1(@babel/core@8.0.5)(@react-native-community/cli@13.6.9(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@8.0.5)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))':
+    dependencies:
+      react-native: 0.87.1(@babel/core@8.0.5)(@react-native-community/cli@13.6.9(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@8.0.5)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
 
   '@react-native/babel-plugin-codegen@0.86.3(@babel/core@8.0.5)(supports-color@8.1.1)':
     dependencies:

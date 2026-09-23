@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import type { CompositeNavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -30,7 +38,10 @@ function buildFields(profile: MyProfile): ProfileField[] {
   const fields: ProfileField[] = [];
   if (profile.titleName) fields.push({ label: "Unvan", value: profile.titleName });
   if (profile.departmentName) fields.push({ label: "Birim", value: profile.departmentName });
-  fields.push({ label: "İşe giriş tarihi", value: profile.hireDate ? formatDateOnly(profile.hireDate) : "—" });
+  fields.push({
+    label: "İşe giriş tarihi",
+    value: profile.hireDate ? formatDateOnly(profile.hireDate) : "—",
+  });
   fields.push({ label: "İş e-postası", value: profile.workEmail ?? "—" });
   const phone = profile.mobilePhone ?? profile.workPhone;
   if (phone) fields.push({ label: "Telefon", value: phone });
@@ -108,6 +119,11 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
+      <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("People")}>
+        <Text style={styles.supportRowText}>Kişiler</Text>
+        <Text style={styles.supportRowChevron}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Support")}>
         <Text style={styles.supportRowText}>Destek</Text>
         <Text style={styles.supportRowChevron}>›</Text>
@@ -119,60 +135,60 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   card: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    padding: spacing.lg
+    padding: spacing.lg,
   },
   name: {
     ...typography.h4,
     color: colors.text,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   fieldRow: {
-    marginTop: spacing.sm
+    marginTop: spacing.sm,
   },
   fieldLabel: {
     ...typography.caption,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   fieldValue: {
     ...typography.body,
     color: colors.text,
-    marginTop: 2
+    marginTop: 2,
   },
   emptyText: {
     ...typography.bodySm,
-    color: colors.textTertiary
+    color: colors.textTertiary,
   },
   errorBanner: {
     backgroundColor: "#fdecea",
     borderRadius: 8,
     padding: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   errorText: {
     ...typography.bodySm,
-    color: colors.error
+    color: colors.error,
   },
   supportRow: {
     flexDirection: "row",
@@ -183,14 +199,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.lg,
-    marginTop: spacing.lg
+    marginTop: spacing.lg,
   },
   supportRowText: {
     ...typography.body,
-    color: colors.text
+    color: colors.text,
   },
   supportRowChevron: {
     ...typography.h4,
-    color: colors.textTertiary
-  }
+    color: colors.textTertiary,
+  },
 });
