@@ -16,7 +16,12 @@ import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import { profileService, type MyProfile } from "@/services/ProfileService";
+import { leaveService, type LeaveRequest } from "@/services/LeaveService";
+import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
+
+/** Number of recent leave requests shown in the "Taleplerim" summary on the profile screen. */
+const RECENT_LEAVE_REQUEST_COUNT = 5;
 
 type ProfileNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabsParamList, "Profile">,
@@ -55,6 +60,8 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [recentLeaveRequests, setRecentLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [leaveRequestsError, setLeaveRequestsError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -72,14 +79,27 @@ export default function ProfileScreen() {
     }
   }, []);
 
+  const loadRecentLeaveRequests = useCallback(async () => {
+    setLeaveRequestsError(null);
+    try {
+      const requests = await leaveService.getMyRequests();
+      const sorted = [...requests].sort(
+        (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+      );
+      setRecentLeaveRequests(sorted.slice(0, RECENT_LEAVE_REQUEST_COUNT));
+    } catch {
+      setLeaveRequestsError("İzin talepleri yüklenemedi.");
+    }
+  }, []);
+
   useEffect(() => {
     setLoading(true);
-    void load().finally(() => setLoading(false));
-  }, [load]);
+    void Promise.all([load(), loadRecentLeaveRequests()]).finally(() => setLoading(false));
+  }, [load, loadRecentLeaveRequests]);
 
   async function onRefresh() {
     setRefreshing(true);
-    await load();
+    await Promise.all([load(), loadRecentLeaveRequests()]);
     setRefreshing(false);
   }
 
@@ -124,6 +144,24 @@ export default function ProfileScreen() {
         <Text style={styles.supportRowChevron}>›</Text>
       </TouchableOpacity>
 
+      <Text style={styles.sectionTitle}>Taleplerim</Text>
+      {leaveRequestsError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{leaveRequestsError}</Text>
+        </View>
+      )}
+      {!leaveRequestsError && recentLeaveRequests.length === 0 ? (
+        <Text style={styles.emptyText}>Henüz izin talebiniz yok.</Text>
+      ) : (
+        recentLeaveRequests.map((request) => (
+          <LeaveRequestListItem
+            key={request.id}
+            request={request}
+            onPress={() => navigation.navigate("Leave")}
+          />
+        ))
+      )}
+
       <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Support")}>
         <Text style={styles.supportRowText}>Destek</Text>
         <Text style={styles.supportRowChevron}>›</Text>
@@ -151,6 +189,12 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.text,
     marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    ...typography.h4,
+    color: colors.text,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
   },
   card: {
     backgroundColor: colors.white,
