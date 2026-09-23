@@ -39,6 +39,9 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IVisaSettingsRepository, VisaSettingsRepository>();
         services.AddScoped<IVisaSettingsProvider, VisaSettingsProvider>();
         services.AddScoped<IVisaDocumentDeliveryService, VisaDocumentDeliveryService>();
+        // Generic cross-module document delivery (Assets' zimmet tutanağı and any future module-generated file);
+        // also needs IFileStorage, same as the visa delivery service above.
+        services.AddScoped<ISystemDocumentDeliveryService, SystemDocumentDeliveryService>();
         // IReportProvider (MissingDocumentReportProvider) is registered in DocumentsModule.AddModule, not here: it
         // needs IStringLocalizer<SharedResource>, which only the API host (AddSenseWeb -> AddLocalization) provides.
         return services;

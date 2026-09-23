@@ -269,6 +269,16 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("size");
 
+                    b.Property<string>("SourceModule")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("source_module");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("source_ref");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)

@@ -93,6 +93,18 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
     /// ordinarily-uploaded documents.</summary>
     public Guid? VisaDocumentRequestId { get; private set; }
 
+    /// <summary>When this document was generated and delivered by another module (e.g. "Assets" for a zimmet
+    /// tutanağı), the producing module's name - generalizes <see cref="VisaDocumentRequestId"/>'s idea to any
+    /// module, not only Visa. Null for ordinarily-uploaded documents. See <see cref="SourceRef"/>.</summary>
+    public string? SourceModule { get; private set; }
+
+    /// <summary>Paired with <see cref="SourceModule"/>: the producing module's own record id (as a string, since
+    /// modules never share entity types across the boundary), e.g. the AssetId a zimmet tutanağı was rendered for.
+    /// Together they are the audit trail ("what produced this, and which record") and the idempotency key
+    /// <see cref="Sense.Modules.Documents.Domain.IDocumentRepository.FindBySourceAsync"/> looks up - re-delivering
+    /// for the same source replaces the previous copy instead of piling up duplicates.</summary>
+    public string? SourceRef { get; private set; }
+
     /// <summary>Creates a new document aggregate with Pending status.</summary>
     public static Result<Document> Create(
         Guid tenantId,
@@ -174,6 +186,55 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
         };
 
         return doc;
+    }
+
+    /// <summary>
+    /// Creates a document row for a file another module rendered itself (e.g. Assets' zimmet tutanağı PDF) and
+    /// already wrote to storage under <paramref name="fileKey"/> - the generic counterpart to
+    /// <see cref="CreateDeliveredCopy"/> (which is specific to visa template copies). Created directly
+    /// <see cref="DocumentStatus.Active"/>, same reasoning as <see cref="CreateDeliveredCopy"/>: there is no pending
+    /// presigned-upload step to confirm.
+    /// </summary>
+    public static Result<Document> CreateSystemGeneratedCopy(
+        Guid tenantId,
+        Guid employeeId,
+        string sourceModule,
+        string sourceRef,
+        string title,
+        string fileKey,
+        string contentType,
+        long size,
+        string bucketName)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Error.Validation("document.title_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileKey))
+        {
+            return Error.Validation("document.filekey_required");
+        }
+
+        if (employeeId == Guid.Empty)
+        {
+            return Error.Validation("document.uploader_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(sourceModule) || string.IsNullOrWhiteSpace(sourceRef))
+        {
+            return Error.Validation("document.source_required");
+        }
+
+        return new Document(
+            id: Guid.CreateVersion7(), tenantId, title, fileKey, contentType, size, uploadedBy: Guid.Empty)
+        {
+            BucketName = Guard.NotEmpty(bucketName),
+            EmployeeId = employeeId,
+            SourceModule = sourceModule,
+            SourceRef = sourceRef,
+            Status = DocumentStatus.Active,
+        };
     }
 
     /// <summary>Confirms upload: transitions to Active, records ETag.</summary>

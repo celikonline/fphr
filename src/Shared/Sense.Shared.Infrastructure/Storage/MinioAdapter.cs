@@ -347,6 +347,52 @@ public sealed class MinioAdapter : IFileStorage
         }
     }
 
+    /// <inheritdoc />
+    public async Task PutObjectAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        string contentType,
+        byte[] content,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = StartStorageActivity("document.put", tenantId, bucketName, key);
+
+        ValidateParameters(tenantId, bucketName, key);
+        Guard.NotEmpty(contentType, nameof(contentType));
+        Guard.NotNull(content, nameof(content));
+
+        var isolatedBucket = CreateBucketName(tenantId, bucketName);
+
+        try
+        {
+            var bucketExists = await _client.BucketExistsAsync(new BucketExistsArgs().WithBucket(isolatedBucket), cancellationToken);
+            if (!bucketExists)
+            {
+                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(isolatedBucket), cancellationToken);
+                _logger.LogInformation("Created bucket {Bucket} for tenant {TenantId}", isolatedBucket, tenantId);
+            }
+
+            using var stream = new MemoryStream(content, writable: false);
+            var putArgs = new PutObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key)
+                .WithStreamData(stream)
+                .WithObjectSize(content.Length)
+                .WithContentType(contentType);
+
+            await _client.PutObjectAsync(putArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Wrote {TenantId}/{BucketName}/{Key} ({Size} bytes)", tenantId, bucketName, key, content.Length);
+        }
+        catch (Exception ex) when (ex is not ArgumentException and not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Failed to write {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
+            throw new InvalidOperationException($"Failed to write file: {ex.Message}", ex);
+        }
+    }
+
     /// <summary>
     /// Opens a span for a document operation: only identity/metadata tags are attached (tenant, bucket, key), never content.
     /// Spans never leave this adapter to prevent cross-tenant data leaks.
