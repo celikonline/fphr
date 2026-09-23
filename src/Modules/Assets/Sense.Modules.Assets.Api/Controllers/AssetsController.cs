@@ -73,4 +73,12 @@ public sealed class AssetsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Retire(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new RetireAssetCommand(id), ct));
+
+    /// <summary>Zimmet tutanağı PDF; 404 when the asset doesn't exist or isn't currently assigned.</summary>
+    [HttpGet(ApiRoutes.IdParam + "/handover-form")]
+    public async Task<IActionResult> HandoverForm(Guid id, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new GetAssetHandoverFormQuery(id), ct);
+        return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
+    }
 }

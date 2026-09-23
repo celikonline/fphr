@@ -4,6 +4,7 @@ using Sense.Modules.Assets.Application.Assets;
 using Sense.Modules.Assets.Application.Categories;
 using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Assets.Domain;
+using Sense.Modules.Assets.Infrastructure.Documents;
 using Sense.Modules.Assets.Infrastructure.Lookups;
 using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
@@ -14,9 +15,11 @@ namespace Sense.Modules.Assets.Infrastructure;
 public static class AssetsServiceCollectionExtensions
 {
     /// <summary>
-    /// Services Assets needs (repos, provisioning, unit of work, cross-module IAssetLookup). Used by both the API
-    /// module (AssetsModule.AddModule) and Sense.Worker (so the outbox poller and IAssetLookup consumers resolve),
-    /// mirroring Expense's AddExpenseCoreServices.
+    /// Services Assets needs (repos, provisioning, unit of work, cross-module IAssetLookup/IAssetHandoverFormLookup).
+    /// Used by both the API module (AssetsModule.AddModule) and Sense.Worker (so the outbox poller and its consumers
+    /// resolve - including Documents' AssetAssignedDocumentRequirementHandler, which calls
+    /// IAssetHandoverFormLookup.RenderAsync from the worker-side outbox poller, hence IAssetHandoverFormProvider
+    /// must resolve there too), mirroring Expense's AddExpenseCoreServices.
     /// </summary>
     public static IServiceCollection AddAssetsCoreServices(this IServiceCollection services)
     {
@@ -24,7 +27,9 @@ public static class AssetsServiceCollectionExtensions
         services.AddScoped<IAssetRepository, AssetRepository>();
         services.AddScoped<IAssetsUnitOfWork>(sp => sp.GetRequiredService<AssetsDbContext>());
         services.AddScoped<AssetCategoryProvisioningService>();
+        services.AddScoped<IAssetHandoverFormProvider, AssetHandoverFormProvider>();
         services.AddScoped<IAssetLookup, AssetLookup>();
+        services.AddScoped<IAssetHandoverFormLookup, AssetHandoverFormLookup>();
         return services;
     }
 

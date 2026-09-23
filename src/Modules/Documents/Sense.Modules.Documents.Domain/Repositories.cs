@@ -23,6 +23,12 @@ public interface IDocumentRepository
     /// <summary>Documents the system copied into an employee's folder for a visa request (audit trail: <c>Document.VisaDocumentRequestId</c>).</summary>
     Task<IReadOnlyList<Document>> ListByVisaRequestAsync(Guid visaDocumentRequestId, CancellationToken cancellationToken = default);
 
+    /// <summary>The Active system-generated copy previously delivered for this (SourceModule, SourceRef) pair, if
+    /// any - the idempotency lookup a cross-module document delivery port uses so re-delivery (e.g. re-running the
+    /// AssetAssigned handler after an at-least-once outbox retry) replaces the previous copy instead of creating a
+    /// duplicate.</summary>
+    Task<Document?> FindBySourceAsync(string sourceModule, string sourceRef, CancellationToken cancellationToken = default);
+
     /// <summary>Counts documents for the current tenant.</summary>
     Task<int> CountByTenantAsync(CancellationToken cancellationToken = default);
 
