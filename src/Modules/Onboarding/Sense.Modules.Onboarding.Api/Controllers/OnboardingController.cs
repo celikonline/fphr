@@ -79,3 +79,20 @@ public sealed class OnboardingController : ApiControllerBase
     public async Task<IActionResult> Waive(Guid id, [FromBody] WaiveTaskRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new WaiveTaskCommand(id, request.Reason), ct));
 }
+
+/// <summary>Self-service: the caller's own onboarding/offboarding checklist ("Kendi görevlerim").</summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route("api/v{version:apiVersion}/onboarding/me")]
+[Authorize]
+public sealed class MyOnboardingController : ApiControllerBase
+{
+    [HttpGet("tasks")]
+    [ProducesResponseType<IReadOnlyList<OnboardingChecklistItemDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListMyTasks(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListMyOnboardingTasksQuery(), ct));
+
+    [HttpPost("tasks/" + ApiRoutes.IdParam + "/complete")]
+    [ProducesResponseType<EmployeeOnboardingTaskDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CompleteMyTask(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CompleteMyTaskCommand(id), ct));
+}

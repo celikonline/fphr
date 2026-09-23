@@ -1473,6 +1473,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="onboarding.templates.manage" xml:space="preserve"><value>Manage onboarding templates</value></data>
   <data name="onboarding.tasks.view" xml:space="preserve"><value>View onboarding tasks</value></data>
   <data name="onboarding.tasks.manage" xml:space="preserve"><value>Manage onboarding tasks</value></data>
+  <data name="onboarding.my.tasks" xml:space="preserve"><value>My onboarding tasks</value></data>
   <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Task template not found.</value></data>
   <data name="onboarding_task_template.title_required" xml:space="preserve"><value>A task title is required.</value></data>
   <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>The task title cannot exceed 200 characters.</value></data>
@@ -1480,6 +1481,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Task not found.</value></data>
   <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>The task is already completed or waived.</value></data>
   <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>A reason is required to waive the task.</value></data>
+  <data name="onboarding.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
+  <data name="onboarding.task.not_owner" xml:space="preserve"><value>This task does not belong to you.</value></data>
   <data name="ohs.services.view" xml:space="preserve"><value>View OHS services</value></data>
   <data name="ohs.services.manage" xml:space="preserve"><value>Manage OHS services</value></data>
   <data name="ohs_assignment.not_found" xml:space="preserve"><value>Record not found.</value></data>

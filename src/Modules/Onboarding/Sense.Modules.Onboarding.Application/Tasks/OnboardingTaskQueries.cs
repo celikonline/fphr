@@ -1,5 +1,7 @@
+using Sense.Modules.Onboarding.Application;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -71,4 +73,25 @@ public sealed class ListPendingOnboardingTasksHandler(
         ListPendingOnboardingTasksQuery query, CancellationToken cancellationToken) =>
         Result.Success(await OnboardingChecklist.ToItemsAsync(
             await tasks.ListPendingAsync(cancellationToken), templates, clock, cancellationToken));
+}
+
+/// <summary>Self-service: the caller's own checklist (every stage/status), due date order.</summary>
+[RequiresPermission("onboarding.my.tasks")]
+public sealed record ListMyOnboardingTasksQuery : IQuery<IReadOnlyList<OnboardingChecklistItemDto>>;
+
+public sealed class ListMyOnboardingTasksHandler(
+    ICurrentUser currentUser, IEmployeeOnboardingTaskRepository tasks, IOnboardingTaskTemplateRepository templates, TimeProvider clock)
+    : IQueryHandler<ListMyOnboardingTasksQuery, IReadOnlyList<OnboardingChecklistItemDto>>
+{
+    public async Task<Result<IReadOnlyList<OnboardingChecklistItemDto>>> Handle(
+        ListMyOnboardingTasksQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(OnboardingErrors.NoEmployeeForUser);
+        }
+
+        return Result.Success(await OnboardingChecklist.ToItemsAsync(
+            await tasks.ListByEmployeeAsync(employeeId, cancellationToken), templates, clock, cancellationToken));
+    }
 }

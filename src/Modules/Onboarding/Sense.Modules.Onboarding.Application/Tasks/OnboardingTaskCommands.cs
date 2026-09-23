@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Onboarding.Application;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
 using Sense.Shared.Contracts.Context;
@@ -113,5 +114,40 @@ public sealed class WaiveTaskHandler(ICurrentUser currentUser, IEmployeeOnboardi
 
         var waived = task.Value.Waive(command.Reason, currentUser.UserId ?? Guid.Empty);
         return waived.IsFailure ? waived.Error : EmployeeOnboardingTaskDto.From(task.Value);
+    }
+}
+
+/// <summary>Self-service: the caller completes one of their own materialized tasks.</summary>
+[RequiresPermission("onboarding.my.tasks")]
+public sealed record CompleteMyTaskCommand(Guid TaskId) : ICommand<EmployeeOnboardingTaskDto>;
+
+public sealed class CompleteMyTaskValidator : AbstractValidator<CompleteMyTaskCommand>
+{
+    public CompleteMyTaskValidator() => RuleFor(x => x.TaskId).NotEmpty();
+}
+
+public sealed class CompleteMyTaskHandler(ICurrentUser currentUser, IEmployeeOnboardingTaskRepository tasks)
+    : ICommandHandler<CompleteMyTaskCommand, EmployeeOnboardingTaskDto>
+{
+    public async Task<Result<EmployeeOnboardingTaskDto>> Handle(CompleteMyTaskCommand command, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(OnboardingErrors.NoEmployeeForUser);
+        }
+
+        var task = await tasks.GetByIdAsync(command.TaskId, cancellationToken);
+        if (task.IsFailure)
+        {
+            return task.Error;
+        }
+
+        if (task.Value.EmployeeId != employeeId)
+        {
+            return Error.Forbidden(OnboardingErrors.NotOwner);
+        }
+
+        var completed = task.Value.Complete(currentUser.UserId ?? Guid.Empty);
+        return completed.IsFailure ? completed.Error : EmployeeOnboardingTaskDto.From(task.Value);
     }
 }

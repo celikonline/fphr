@@ -1482,6 +1482,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="onboarding.templates.manage" xml:space="preserve"><value>Oryantasyon şablonu yönetimi</value></data>
   <data name="onboarding.tasks.view" xml:space="preserve"><value>Oryantasyon görevlerini görüntüleme</value></data>
   <data name="onboarding.tasks.manage" xml:space="preserve"><value>Oryantasyon görevi yönetimi</value></data>
+  <data name="onboarding.my.tasks" xml:space="preserve"><value>Kendi oryantasyon görevlerim</value></data>
   <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Görev şablonu bulunamadı.</value></data>
   <data name="onboarding_task_template.title_required" xml:space="preserve"><value>Görev başlığı zorunludur.</value></data>
   <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>Görev başlığı 200 karakteri aşamaz.</value></data>
@@ -1489,6 +1490,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Görev bulunamadı.</value></data>
   <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>Görev zaten tamamlanmış ya da muaf tutulmuş.</value></data>
   <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>Muaf tutma nedeni zorunludur.</value></data>
+  <data name="onboarding.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="onboarding.task.not_owner" xml:space="preserve"><value>Bu görev size ait değil.</value></data>
   <data name="ohs.services.view" xml:space="preserve"><value>İSG hizmetlerini görüntüleme</value></data>
   <data name="ohs.services.manage" xml:space="preserve"><value>İSG hizmetlerini yönetme</value></data>
   <data name="ohs_assignment.not_found" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
