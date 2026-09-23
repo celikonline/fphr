@@ -7,8 +7,8 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
 
-/// <summary>Request to create a job requisition.</summary>
-public sealed record CreateJobRequisitionRequest(string Title, Guid OrgUnitId, string EmploymentType, int HeadcountRequested, string Reason, string? Justification);
+/// <summary>Request to create a job requisition. EmploymentType/Reason may be omitted when the department's field template (roadmap #87) doesn't require them.</summary>
+public sealed record CreateJobRequisitionRequest(string Title, Guid OrgUnitId, string? EmploymentType, int HeadcountRequested, string? Reason, string? Justification);
 
 /// <summary>Job requisition management (Kolay İK "Talep formu"; R1 roadmap #87 - approval via Workflow).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -47,4 +47,16 @@ public sealed class JobRequisitionsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Cancel(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new CancelJobRequisitionCommand(id), ct));
+
+    /// <summary>A department's effective requisition field rules (roadmap #87 - which fields are shown/required); the original fixed behavior if the department has no customization.</summary>
+    [HttpGet("field-template/{orgUnitId:guid}")]
+    [ProducesResponseType<IReadOnlyList<RequisitionFieldRuleDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFieldTemplate(Guid orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetRequisitionFieldTemplateQuery(orgUnitId), ct));
+
+    /// <summary>Creates or replaces a department's requisition field customization (roadmap #87).</summary>
+    [HttpPut("field-template/{orgUnitId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetFieldTemplate(Guid orgUnitId, [FromBody] IReadOnlyList<RequisitionFieldRuleDto> rules, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetRequisitionFieldTemplateCommand(orgUnitId, rules), ct));
 }

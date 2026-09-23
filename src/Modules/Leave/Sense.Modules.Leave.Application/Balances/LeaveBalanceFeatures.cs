@@ -212,9 +212,13 @@ public sealed class AdjustLeaveBalanceHandler(
     }
 }
 
-/// <summary>Regenerates accruals and carry-overs of one employee (Usage/ExtraGrant/Adjustment rows are kept).</summary>
+/// <summary>
+/// Regenerates accruals and carry-overs of one employee (Usage/ExtraGrant/Adjustment rows are kept). <see cref="RecalculateFrom"/>:
+/// optional start date - only accruals/carry-overs from that date onward are rebuilt; omit it to rebuild from the profile's
+/// accrual start date (previous behavior).
+/// </summary>
 [RequiresPermission("leave.balances.recalculate")]
-public sealed record RecalculateLeaveBalancesCommand(Guid EmployeeId) : ICommand;
+public sealed record RecalculateLeaveBalancesCommand(Guid EmployeeId, DateOnly? RecalculateFrom = null) : ICommand;
 
 public sealed class RecalculateLeaveBalancesHandler(
     IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, LeaveBalanceService balances)
@@ -228,7 +232,12 @@ public sealed class RecalculateLeaveBalancesHandler(
             return loaded.Error;
         }
 
-        await balances.RecalculateAsync(loaded.Value.Profile, loaded.Value.RuleSet, cancellationToken);
+        if (command.RecalculateFrom > balances.Today)
+        {
+            return Error.Validation(LeaveErrors.RecalculateFromInFuture);
+        }
+
+        await balances.RecalculateAsync(loaded.Value.Profile, loaded.Value.RuleSet, cancellationToken, recalculateFrom: command.RecalculateFrom);
         return Result.Success();
     }
 }

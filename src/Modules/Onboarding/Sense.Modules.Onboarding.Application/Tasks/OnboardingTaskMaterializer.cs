@@ -1,5 +1,7 @@
+using Sense.Modules.Onboarding.Contracts.Events;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
+using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Onboarding.Application.Tasks;
 
@@ -7,6 +9,8 @@ namespace Sense.Modules.Onboarding.Application.Tasks;
 /// Creates one <see cref="EmployeeOnboardingTask"/> per active template of a stage for an employee. Shared by the
 /// HR command (<see cref="MaterializeTasksForEmployeeHandler"/>) and the hire/termination integration handlers.
 /// Idempotent: a template already materialized for the employee is skipped, so a redelivered event never duplicates rows.
+/// Enqueues an <see cref="OnboardingTaskAssigned"/> per created task so Notifications can tell the template's
+/// responsible role (hr/it/manager/payroll) about it.
 /// </summary>
 public static class OnboardingTaskMaterializer
 {
@@ -14,6 +18,7 @@ public static class OnboardingTaskMaterializer
         Guid tenantId,
         IOnboardingTaskTemplateRepository templates,
         IEmployeeOnboardingTaskRepository tasks,
+        IIntegrationEventOutbox outbox,
         Guid employeeId,
         OnboardingStage stage,
         DateOnly referenceDate,
@@ -31,6 +36,7 @@ public static class OnboardingTaskMaterializer
                 tenantId, employeeId, template.Id, stage, referenceDate.AddDays(template.DueDateOffsetDays));
             tasks.Add(task);
             created.Add(task);
+            outbox.Enqueue(new OnboardingTaskAssigned(tenantId, task.Id, employeeId, template.ResponsibleRoleCode, template.Title));
         }
 
         return created;

@@ -17,6 +17,9 @@ public static class LeaveErrors
     public const string PreviewRangeTooLarge = "leave.errors.preview_range_too_large";
     public const string AbsenceNotFound = "leave.absence.not_found";
 
+    /// <summary>TK-013: RecalculateFrom can't be a future date - recalculation only rebuilds accruals up to today.</summary>
+    public const string RecalculateFromInFuture = "leave.errors.recalculate_from_in_future";
+
     /// <summary>G-5-09: an Unexcused/Excused absence cannot be recorded on a date already covered by an Approved full-day leave.</summary>
     public const string AbsenceConflictsWithLeave = "leave.absence.conflicts_with_leave";
 

@@ -1,13 +1,17 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Contracts;
+using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Legislation;
+using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
 
@@ -65,12 +69,64 @@ public sealed class AssetEventDocumentRequirementHandlersTests
     {
         var (_, requirements, _, materialization) = Build(hasOpenAssets: true);
         var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
-        var handler = new AssetAssignedDocumentRequirementHandler(materialization, unitOfWork, TimeProvider.System);
+        // No PDF available for this asset id (e.g. a stale/redelivered event) - materialization must still happen.
+        var handoverForms = Substitute.For<IAssetHandoverFormLookup>();
+        handoverForms.RenderAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((ExportFileResult?)null);
+        var delivery = Substitute.For<ISystemDocumentDeliveryService>();
+        var handler = new AssetAssignedDocumentRequirementHandler(
+            materialization, handoverForms, delivery, unitOfWork, TimeProvider.System, NullLogger<AssetAssignedDocumentRequirementHandler>.Instance);
 
         await handler.Handle(new AssetAssigned(TenantId, Guid.NewGuid(), EmployeeId, IssuedAt), CancellationToken.None);
 
         requirements.Received(1).Add(Arg.Is<EmployeeDocumentRequirement>(r => r.EmployeeId == EmployeeId));
+        await delivery.DidNotReceive().DeliverGeneratedDocumentAsync(
+            Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AssetAssignedHandler_WhenHandoverFormRenders_DeliversItToDocuments()
+    {
+        var (_, _, _, materialization) = Build(hasOpenAssets: true);
+        var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
+        var assetId = Guid.NewGuid();
+        var form = new ExportFileResult("zimmet-tutanagi_ada-soyad.pdf", "application/pdf", [1, 2, 3]);
+        var handoverForms = Substitute.For<IAssetHandoverFormLookup>();
+        handoverForms.RenderAsync(TenantId, assetId, Arg.Any<CancellationToken>()).Returns(form);
+        var delivery = Substitute.For<ISystemDocumentDeliveryService>();
+        delivery.DeliverGeneratedDocumentAsync(
+                TenantId, EmployeeId, form.FileName, form.FileName, form.ContentType, form.Content, "Assets", assetId.ToString(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        var handler = new AssetAssignedDocumentRequirementHandler(
+            materialization, handoverForms, delivery, unitOfWork, TimeProvider.System, NullLogger<AssetAssignedDocumentRequirementHandler>.Instance);
+
+        await handler.Handle(new AssetAssigned(TenantId, assetId, EmployeeId, IssuedAt), CancellationToken.None);
+
+        await delivery.Received(1).DeliverGeneratedDocumentAsync(
+            TenantId, EmployeeId, form.FileName, form.FileName, form.ContentType, form.Content, "Assets", assetId.ToString(), Arg.Any<CancellationToken>());
+        await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task AssetAssignedHandler_WhenDeliveryFails_ThrowsForOutboxRetryAndDoesNotSave()
+    {
+        var (_, _, _, materialization) = Build(hasOpenAssets: true);
+        var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
+        var assetId = Guid.NewGuid();
+        var form = new ExportFileResult("zimmet-tutanagi_ada-soyad.pdf", "application/pdf", [1, 2, 3]);
+        var handoverForms = Substitute.For<IAssetHandoverFormLookup>();
+        handoverForms.RenderAsync(TenantId, assetId, Arg.Any<CancellationToken>()).Returns(form);
+        var delivery = Substitute.For<ISystemDocumentDeliveryService>();
+        delivery.DeliverGeneratedDocumentAsync(
+                Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Error.Failure("document.system_delivery_failed"));
+        var handler = new AssetAssignedDocumentRequirementHandler(
+            materialization, handoverForms, delivery, unitOfWork, TimeProvider.System, NullLogger<AssetAssignedDocumentRequirementHandler>.Instance);
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => handler.Handle(new AssetAssigned(TenantId, assetId, EmployeeId, IssuedAt), CancellationToken.None));
+
+        await unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]

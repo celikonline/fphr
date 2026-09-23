@@ -3,6 +3,8 @@ using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
@@ -75,7 +77,12 @@ public sealed class UpdateAssetHandler(IAssetRepository assets) : ICommandHandle
     }
 }
 
-/// <summary>Assigns an Unassigned asset to an employee; writes AssetAssigned to this module's own outbox (Documents reevaluates AssetHandoverForm from it).</summary>
+/// <summary>
+/// Requests assigning an Unassigned asset to an employee: starts a Workflow "AssetAssignment" approval process
+/// (TK-018) instead of assigning directly - the asset moves to PendingAssignment and only becomes Assigned once
+/// approved (see AssetAssignmentApprovalHandlers). Documents reevaluates AssetHandoverForm off AssetAssigned, which
+/// is now enqueued when the approval completes, not here.
+/// </summary>
 [RequiresPermission("assets.assets.manage")]
 public sealed record AssignAssetCommand(Guid AssetId, Guid EmployeeId, DateOnly IssuedAt) : ICommand;
 
@@ -88,8 +95,7 @@ public sealed class AssignAssetValidator : AbstractValidator<AssignAssetCommand>
     }
 }
 
-public sealed class AssignAssetHandler(
-    ITenantContext tenant, IAssetRepository assets, IIntegrationEventOutbox outbox, IEmployeeSalaryLookup employeeDates)
+public sealed class AssignAssetHandler(ITenantContext tenant, IAssetRepository assets, IEmployeeSalaryLookup employeeDates, IWorkflowService workflow)
     : ICommandHandler<AssignAssetCommand>
 {
     public async Task<Result> Handle(AssignAssetCommand command, CancellationToken cancellationToken)
@@ -119,13 +125,20 @@ public sealed class AssignAssetHandler(
             return Error.Conflict(AssetsDomainErrors.SerialNumberInUse);
         }
 
-        var assigned = asset.Assign(command.EmployeeId, command.IssuedAt);
-        if (assigned.IsFailure)
+        var requested = asset.RequestAssignment(command.EmployeeId, command.IssuedAt);
+        if (requested.IsFailure)
         {
-            return assigned;
+            return requested;
         }
 
-        outbox.Enqueue(new AssetAssigned(asset.TenantId, asset.Id, command.EmployeeId, command.IssuedAt));
+        // The receiving employee drives approver resolution (their manager approves), like SubmitLeaveRequest for the requester.
+        var approval = await workflow.StartAsync(ApprovalRequestTypes.AssetAssignment, asset.Id, command.EmployeeId, null, null, null, cancellationToken);
+        if (approval.IsFailure)
+        {
+            return approval.Error;
+        }
+
+        asset.AttachApproval(approval.Value);
         return Result.Success();
     }
 }

@@ -3,6 +3,7 @@ using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
+using Sense.Modules.Leave.Contracts.Events;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Balances;
 using Sense.Modules.Leave.Domain.Calendar;
@@ -24,24 +25,30 @@ namespace Sense.Modules.Leave.Application.Requests;
 /// <summary>
 /// İşlemler → İzin Ekle: a manager/HR adds leave for an employee in scope (Source = OnBehalf). With <c>BypassApproval</c>
 /// ("Onay sürecine dahil edilmeden onaylansın", needs leave.requests.bypass_approval) it is Approved at once and the Usage row
-/// is posted; otherwise the Workflow "Leave" approval starts as for self-service.
+/// is posted; otherwise the Workflow "Leave" approval starts as for self-service. <c>ManualDays</c> (m.24) lets the
+/// manager/HR override the auto-calculated day count; it still runs through the type's min/max/balance rules
+/// (<see cref="LeaveRequestRules.ValidateAsync"/>). Publishes <see cref="LeaveAddedOnBehalf"/> so the employee is notified.
 /// </summary>
 [RequiresPermission("leave.requests.create_on_behalf")]
 public sealed record CreateLeaveRequestOnBehalfCommand(
     Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
     TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null,
-    IReadOnlyList<Guid>? DocumentIds = null)
+    IReadOnlyList<Guid>? DocumentIds = null, decimal? ManualDays = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
 {
-    public CreateLeaveRequestOnBehalfValidator() => RuleFor(x => x.Description).MaximumLength(LeaveLimits.DescriptionMaxLength);
+    public CreateLeaveRequestOnBehalfValidator()
+    {
+        RuleFor(x => x.Description).MaximumLength(LeaveLimits.DescriptionMaxLength);
+        RuleFor(x => x.ManualDays).GreaterThan(0m).When(x => x.ManualDays is not null);
+    }
 }
 
 public sealed class CreateLeaveRequestOnBehalfHandler(
     ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, LeaveRequestRules rules, ILeaveRequestRepository requests,
     ILeaveRequestAttachmentRepository attachments, IDocumentAttachmentLookup documents, ILeaveLedgerRepository ledger, IWorkflowService workflow,
-    TimeProvider clock)
+    IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<CreateLeaveRequestOnBehalfCommand, LeaveRequestDto>
 {
     public async Task<Result<LeaveRequestDto>> Handle(CreateLeaveRequestOnBehalfCommand command, CancellationToken cancellationToken)
@@ -58,7 +65,7 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
 
         var valid = await rules.ValidateAsync(
             tenant.TenantId, command.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken,
-            requireSelfService: false, startTime: command.StartTime, endTime: command.EndTime, halfDayPeriod: command.HalfDayPeriod);
+            requireSelfService: false, startTime: command.StartTime, endTime: command.EndTime, halfDayPeriod: command.HalfDayPeriod, manualDays: command.ManualDays);
         if (valid.IsFailure)
         {
             return valid.Error;
@@ -122,6 +129,9 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
                 return attached.Error;
             }
         }
+
+        outbox.Enqueue(new LeaveAddedOnBehalf(
+            request.TenantId, request.Id, request.EmployeeId, request.LeaveTypeId, valid.Value.Type.Name, request.StartDate, request.EndDate, request.CalculatedDays));
 
         return LeaveRequestMapper.ToDto(request, valid.Value.Type.Name);
     }

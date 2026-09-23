@@ -72,6 +72,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         services.AddScoped<ICandidateRepository, CandidateRepository>();
         services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
         services.AddScoped<IJobRequisitionRepository, JobRequisitionRepository>();
+        services.AddScoped<IRequisitionFieldTemplateRepository, RequisitionFieldTemplateRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IRecruitmentFormTemplateRepository, RecruitmentFormTemplateRepository>();
         services.AddScoped<IRecruitmentFormResponseRepository, RecruitmentFormResponseRepository>();

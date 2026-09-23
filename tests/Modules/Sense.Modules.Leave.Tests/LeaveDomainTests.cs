@@ -7,6 +7,7 @@ using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Legislation;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Contracts.Legislation;
+using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
 
@@ -300,6 +301,42 @@ public sealed class LeaveTypeTests
             CarryOverMode: CarryOverMode.Limited)).Error.Code.ShouldBe(LeaveDomainErrors.TypeCarryOverLimitInvalid);
         set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
             SeniorityTiers: [new LeaveSeniorityTier(5, SeniorityComparison.GreaterThan, 6m)])).Error.Code.ShouldBe(LeaveDomainErrors.TypeSeniorityTiersOnlyAnnual);
+    }
+
+    [Fact]
+    public void Validation_ErrorsCarryFieldNameForWizardHighlighting()
+    {
+        var set = LeaveRuleSet.Create(TenantId, "Set").Value;
+
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, string.Empty, null, true, LeaveLimitType.Unlimited)).Error,
+            LeaveValidationFields.Name);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerRequest)).Error,
+            LeaveValidationFields.PerRequestMaxDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 0m)).Error,
+            LeaveValidationFields.AnnualDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            NegativeBalance: NegativeBalanceMode.Limited, NegativeBalanceLimitDays: 20m)).Error,
+            LeaveValidationFields.NegativeBalanceLimitDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            CarryOverMode: CarryOverMode.Limited)).Error,
+            LeaveValidationFields.CarryOverMaxDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.Unlimited,
+            MinConsecutiveDays: 5m, MaxConsecutiveDays: 2m)).Error,
+            LeaveValidationFields.MaxConsecutiveDays);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.Unlimited,
+            WaitingPeriodMonths: 25)).Error,
+            LeaveValidationFields.WaitingPeriodMonths);
+        AssertField(set.AddType(new LeaveTypeSettings(LeaveTypeCode.Custom, "X", null, true, LeaveLimitType.PerYear, AnnualDays: 10m,
+            SeniorityTiers: [new LeaveSeniorityTier(5, SeniorityComparison.GreaterThan, 6m)])).Error,
+            LeaveValidationFields.SeniorityTiers);
+
+        return;
+
+        static void AssertField(Error error, string expectedField)
+        {
+            error.Args.ShouldNotBeNull();
+            error.Args![LeaveValidationFields.Key].ShouldBe(expectedField);
+        }
     }
 
     [Fact]
@@ -632,6 +669,80 @@ public sealed class LeaveBalanceEngineTests
         balance.CurrentBalance.ShouldBe(11m);
         balance.TotalAccrued.ShouldBe(28m);
         balance.TotalUsed.ShouldBe(17m);
+    }
+
+    /// <summary>
+    /// TK-013: proves the fix for docs/analysis/kolayik-video/faz1b-durum-takibi.md #17 ("RecalculateFrom tarih
+    /// parametresi yok, 0 sonuç dönüyor") - passing a mid-timeline <c>recalculateFrom</c>, together with the earlier
+    /// generated rows as <c>preserved</c> input, must reproduce exactly the rows a full regeneration would have
+    /// produced from that point forward (never an empty/zero result for a valid date).
+    /// </summary>
+    [Fact]
+    public void Regenerate_WithRecalculateFrom_MatchesFullRegenerationFromThatPointForward()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+        var cutoff = new DateOnly(2022, 1, 1);
+
+        var full = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+
+        var partial = LeaveBalanceEngine.Regenerate(
+            type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: cutoff);
+
+        partial.ShouldNotBeEmpty();
+        partial.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+            .ShouldBe(full.Where(e => e.EffectiveDate >= cutoff).Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+    }
+
+    /// <summary>Acceptance #2: omitting the parameter (or passing null explicitly) must leave the previous, full-regeneration behavior unchanged.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromOmittedOrNull_BehavesLikeBeforeTheParameterExisted()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var withoutParameter = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+        var withExplicitNull = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: null);
+
+        withoutParameter.ShouldNotBeEmpty();
+        withExplicitNull.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+            .ShouldBe(withoutParameter.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+    }
+
+    /// <summary>Boundary: a future <c>recalculateFrom</c> (after <c>asOf</c>) produces no rows instead of throwing or fabricating data.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromInTheFuture_ReturnsNoRows()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var generated = LeaveBalanceEngine.Regenerate(
+            type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: asOf.AddYears(1));
+
+        generated.ShouldBeEmpty();
+    }
+
+    /// <summary>Boundary: a <c>recalculateFrom</c> at/before the accrual start date (e.g. <c>default(DateOnly)</c>, an "empty"/degenerate value) clamps to a full regeneration instead of erroring.</summary>
+    [Fact]
+    public void Regenerate_RecalculateFromAtOrBeforeAccrualStart_ClampsToFullRegeneration()
+    {
+        var type = AnnualType();
+        var start = new DateOnly(2020, 1, 1);
+        var asOf = new DateOnly(2023, 6, 1);
+
+        var full = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026);
+
+        foreach (var invalid in new[] { default(DateOnly), start.AddYears(-5), start })
+        {
+            var generated = LeaveBalanceEngine.Regenerate(
+                type, TenantId, EmployeeId, start, null, asOf, [], StatutoryAnnualLeave.Turkey2026, recalculateFrom: invalid);
+
+            generated.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList()
+                .ShouldBe(full.Select(e => (e.Type, e.EffectiveDate, e.Amount)).ToList());
+        }
     }
 
     [Fact]

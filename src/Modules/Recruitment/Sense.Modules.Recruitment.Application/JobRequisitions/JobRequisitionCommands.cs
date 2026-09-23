@@ -11,10 +11,14 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Application.JobRequisitions;
 
-/// <summary>Creates a job requisition in Draft status.</summary>
+/// <summary>
+/// Creates a job requisition in Draft status. EmploymentType/Reason are nullable so a department whose
+/// <see cref="RequisitionFieldTemplate"/> makes them optional can omit them (roadmap #87) - see
+/// <see cref="CreateJobRequisitionHandler"/> for how an omitted field is resolved.
+/// </summary>
 [RequiresPermission("recruitment.requisitions.manage")]
 public sealed record CreateJobRequisitionCommand(
-    string Title, Guid OrgUnitId, string EmploymentType, int HeadcountRequested, string Reason, string? Justification) : ICommand<Guid>;
+    string Title, Guid OrgUnitId, string? EmploymentType, int HeadcountRequested, string? Reason, string? Justification) : ICommand<Guid>;
 
 public sealed class CreateJobRequisitionValidator : AbstractValidator<CreateJobRequisitionCommand>
 {
@@ -22,13 +26,14 @@ public sealed class CreateJobRequisitionValidator : AbstractValidator<CreateJobR
     {
         RuleFor(x => x.Title).NotEmpty().MaximumLength(RecruitmentLimits.TitleMaxLength);
         RuleFor(x => x.OrgUnitId).NotEmpty();
-        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType), caseSensitive: false);
+        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType), caseSensitive: false).When(x => x.EmploymentType is not null);
         RuleFor(x => x.HeadcountRequested).GreaterThan(0);
-        RuleFor(x => x.Reason).IsEnumName(typeof(RequisitionReason), caseSensitive: false);
+        RuleFor(x => x.Reason).IsEnumName(typeof(RequisitionReason), caseSensitive: false).When(x => x.Reason is not null);
     }
 }
 
-public sealed class CreateJobRequisitionHandler(ITenantContext tenant, ICurrentUser currentUser, IJobRequisitionRepository requisitions, IOrgUnitLookup orgUnits)
+public sealed class CreateJobRequisitionHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IJobRequisitionRepository requisitions, IOrgUnitLookup orgUnits, IRequisitionFieldTemplateRepository fieldTemplates)
     : ICommandHandler<CreateJobRequisitionCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateJobRequisitionCommand command, CancellationToken cancellationToken)
@@ -43,9 +48,31 @@ public sealed class CreateJobRequisitionHandler(ITenantContext tenant, ICurrentU
             return Error.Validation(RecruitmentErrors.OrgUnitInvalid);
         }
 
+        var template = await fieldTemplates.FindByOrgUnitAsync(command.OrgUnitId, cancellationToken);
+
+        var employmentType = ResolveEnumField<RecruitmentEmploymentType>(
+            RequisitionFormField.EmploymentType, template, command.EmploymentType, RecruitmentDomainErrors.RequisitionEmploymentTypeRequired);
+        if (employmentType.IsFailure)
+        {
+            return employmentType.Error;
+        }
+
+        var reason = ResolveEnumField<RequisitionReason>(
+            RequisitionFormField.Reason, template, command.Reason, RecruitmentDomainErrors.RequisitionReasonRequired);
+        if (reason.IsFailure)
+        {
+            return reason.Error;
+        }
+
+        var justificationRule = RequisitionFieldTemplate.Resolve(RequisitionFormField.Justification, template);
+        if (justificationRule.IsRequired && string.IsNullOrWhiteSpace(command.Justification))
+        {
+            return Error.Validation(RecruitmentDomainErrors.RequisitionJustificationRequired);
+        }
+
         var created = JobRequisition.Create(
-            tenant.TenantId, command.Title, command.OrgUnitId, Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType, ignoreCase: true),
-            command.HeadcountRequested, Enum.Parse<RequisitionReason>(command.Reason, ignoreCase: true), command.Justification, employeeId);
+            tenant.TenantId, command.Title, command.OrgUnitId, employmentType.Value,
+            command.HeadcountRequested, reason.Value, command.Justification, employeeId);
         if (created.IsFailure)
         {
             return created.Error;
@@ -53,6 +80,31 @@ public sealed class CreateJobRequisitionHandler(ITenantContext tenant, ICurrentU
 
         requisitions.Add(created.Value);
         return created.Value.Id;
+    }
+
+    /// <summary>
+    /// A supplied value is always parsed as-is (already enum-validated by <see cref="CreateJobRequisitionValidator"/>).
+    /// An omitted value falls back to the department's rule: an error if the field is required there, otherwise the
+    /// template's configured <see cref="RequisitionFieldRule.DefaultValue"/> (an enum can't be left null, unlike
+    /// <see cref="RequisitionFormField.Justification"/>) - no department template means the original fixed
+    /// behavior (always required), matching pre-existing behavior exactly.
+    /// </summary>
+    private static Result<TEnum> ResolveEnumField<TEnum>(
+        RequisitionFormField field, RequisitionFieldTemplate? template, string? rawValue, string requiredErrorCode)
+        where TEnum : struct, Enum
+    {
+        if (!string.IsNullOrWhiteSpace(rawValue))
+        {
+            return Enum.Parse<TEnum>(rawValue, ignoreCase: true);
+        }
+
+        var rule = RequisitionFieldTemplate.Resolve(field, template);
+        if (rule.IsRequired)
+        {
+            return Error.Validation(requiredErrorCode);
+        }
+
+        return Enum.Parse<TEnum>(rule.DefaultValue!, ignoreCase: true);
     }
 }
 

@@ -17,6 +17,9 @@ export type AppStackParamList = {
   Settings: undefined;
   Support: undefined;
   CheckIn: undefined;
+  People: undefined;
+  Shift: undefined;
+  Goals: undefined;
 };
 
 export type MainTabsParamList = {

@@ -74,6 +74,7 @@ public sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(AssetsTables.StatusLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.CategoryId });
+        b.HasIndex(x => new { x.TenantId, x.ApprovalRequestId });
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => new { x.TenantId, x.AssignedEmployeeId });
 

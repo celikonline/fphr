@@ -1,8 +1,10 @@
 using NSubstitute;
 using Sense.Modules.Onboarding.Application.Tasks;
+using Sense.Modules.Onboarding.Contracts.Events;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -63,8 +65,9 @@ public sealed class OnboardingTaskCommandsTests
             .Returns([template]);
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
         tasks.FindAsync(EmployeeId, template.Id, Arg.Any<CancellationToken>()).Returns((EmployeeOnboardingTask?)null);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
 
-        var handler = new MaterializeTasksForEmployeeHandler(Tenant(), templates, tasks);
+        var handler = new MaterializeTasksForEmployeeHandler(Tenant(), templates, tasks, outbox);
         var referenceDate = new DateOnly(2026, 10, 1);
 
         var result = await handler.Handle(
@@ -73,6 +76,10 @@ public sealed class OnboardingTaskCommandsTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldHaveSingleItem().DueDate.ShouldBe(referenceDate.AddDays(-1));
         tasks.Received(1).Add(Arg.Is<EmployeeOnboardingTask>(t => t.EmployeeId == EmployeeId && t.TemplateId == template.Id));
+        outbox.Received(1).Enqueue(Arg.Is<IIntegrationEvent>(e =>
+            e.GetType() == typeof(OnboardingTaskAssigned)
+            && ((OnboardingTaskAssigned)e).EmployeeId == EmployeeId
+            && ((OnboardingTaskAssigned)e).ResponsibleRoleCode == "it"));
     }
 
     [Fact]
@@ -85,8 +92,9 @@ public sealed class OnboardingTaskCommandsTests
             .Returns([template]);
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
         tasks.FindAsync(EmployeeId, template.Id, Arg.Any<CancellationToken>()).Returns(existing);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
 
-        var handler = new MaterializeTasksForEmployeeHandler(Tenant(), templates, tasks);
+        var handler = new MaterializeTasksForEmployeeHandler(Tenant(), templates, tasks, outbox);
 
         var result = await handler.Handle(
             new MaterializeTasksForEmployeeCommand(EmployeeId, OnboardingStage.Onboarding, new DateOnly(2026, 10, 1)), CancellationToken.None);
@@ -94,6 +102,7 @@ public sealed class OnboardingTaskCommandsTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldBeEmpty();
         tasks.DidNotReceive().Add(Arg.Any<EmployeeOnboardingTask>());
+        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
     }
 
     [Fact]
@@ -103,16 +112,23 @@ public sealed class OnboardingTaskCommandsTests
         var task = EmployeeOnboardingTask.Materialize(TenantId, EmployeeId, template.Id, OnboardingStage.Onboarding, new DateOnly(2026, 10, 1));
         var tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
         tasks.GetByIdAsync(task.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(task)));
+        var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
+        templates.GetByIdAsync(template.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(template)));
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
         var currentUser = Substitute.For<ICurrentUser>();
         var completedBy = Guid.NewGuid();
         currentUser.UserId.Returns(completedBy);
 
-        var handler = new CompleteTaskHandler(currentUser, tasks);
+        var handler = new CompleteTaskHandler(currentUser, tasks, templates, outbox);
         var result = await handler.Handle(new CompleteTaskCommand(task.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(EmployeeOnboardingTaskStatus.Completed);
         result.Value.CompletedBy.ShouldBe(completedBy);
+        outbox.Received(1).Enqueue(Arg.Is<IIntegrationEvent>(e =>
+            e.GetType() == typeof(OnboardingTaskCompleted)
+            && ((OnboardingTaskCompleted)e).TaskId == task.Id
+            && ((OnboardingTaskCompleted)e).ResponsibleRoleCode == "it"));
     }
 
     [Fact]

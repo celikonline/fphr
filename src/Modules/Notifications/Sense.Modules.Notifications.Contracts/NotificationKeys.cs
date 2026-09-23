@@ -44,6 +44,15 @@ public static class NotificationTemplateKeys
 
     /// <summary>The employee: ücret pusulası PDF attached (Payroll.PayrollPeriodPaid).</summary>
     public const string PayslipReady = "payroll.payslip_ready";
+
+    /// <summary>Members of the task's responsible role (hr/it/manager/payroll): a checklist task was assigned to them (Onboarding.OnboardingTaskAssigned).</summary>
+    public const string OnboardingTaskAssigned = "onboarding.task_assigned";
+
+    /// <summary>Members of the task's responsible role: a checklist task was completed (Onboarding.OnboardingTaskCompleted).</summary>
+    public const string OnboardingTaskCompleted = "onboarding.task_completed";
+
+    /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
+    public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>

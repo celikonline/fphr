@@ -19,10 +19,13 @@ public static class ApprovalRequestTypes
     /// <summary>Recruitment's job requisition approval (Faz 6 R1, roadmap #87 "Requisition submit→approval→posting unlock").</summary>
     public const string Requisition = "Requisition";
 
+    /// <summary>Assets' zimmet assignment approval (TK-018, roadmap faz4 "As0").</summary>
+    public const string AssetAssignment = "AssetAssignment";
+
     public const int MaxLength = 50;
 
     /// <summary>Unit-assignable request types, in display order.</summary>
-    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition];
+    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment];
 
     /// <summary>True if <paramref name="requestType"/> follows the identifier rule above.</summary>
     public static bool IsWellFormed(string? requestType) =>

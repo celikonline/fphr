@@ -19,6 +19,9 @@ public enum NotificationCategory
 
     /// <summary>Payroll documents (ücret pusulası).</summary>
     Payroll,
+
+    /// <summary>Onboarding/offboarding checklist tasks assigned to a responsible role (hr/it/manager/payroll).</summary>
+    Onboarding,
 }
 
 /// <summary>
@@ -50,6 +53,7 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.RequestApproved, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.LeaveAddedOnBehalf, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.DocumentExpiryReminder, NotificationCategory.Reminder, InAppOnly, IsMandatory: false),
         // Missing the statutory SGK deadline is a legal breach, so this reminder cannot be switched off.
         new(NotificationTemplateKeys.OhsSgkNotificationDue, NotificationCategory.Reminder, InAppOnly, IsMandatory: true),
@@ -61,6 +65,8 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.EmployeeBirthday, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.AnnouncementPublished, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.OnboardingTaskAssigned, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
+        new(NotificationTemplateKeys.OnboardingTaskCompleted, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>

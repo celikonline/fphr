@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
@@ -17,36 +17,14 @@ import {
   leaveService,
   type EmployeeLeaveBalances,
   type LeaveRequest,
-  type LeaveRequestStatus,
-  type RequestableLeaveType
+  type RequestableLeaveType,
 } from "@/services/LeaveService";
+import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 
 /** `DateOnly` string the API expects ("yyyy-MM-dd"); today, as a sane default for the form. */
 function todayDateOnly(): string {
   return new Date().toISOString().slice(0, 10);
 }
-
-function formatDateOnly(value: string): string {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-const STATUS_LABELS: Record<LeaveRequestStatus, string> = {
-  pending: "Onay bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-  withdrawn: "Geri çekildi",
-  cancelled: "İptal edildi"
-};
-
-const STATUS_COLORS: Record<LeaveRequestStatus, string> = {
-  pending: colors.warning,
-  approved: colors.success,
-  rejected: colors.error,
-  withdrawn: colors.textTertiary,
-  cancelled: colors.textTertiary
-};
 
 export default function LeaveScreen() {
   const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
@@ -68,7 +46,7 @@ export default function LeaveScreen() {
       const [balancesResult, requestsResult, typesResult] = await Promise.all([
         leaveService.getMyBalances(),
         leaveService.getMyRequests(),
-        leaveService.getMyRequestableLeaveTypes()
+        leaveService.getMyRequestableLeaveTypes(),
       ]);
       setBalances(balancesResult);
       setRequests(requestsResult);
@@ -116,7 +94,7 @@ export default function LeaveScreen() {
         leaveTypeId: selectedTypeId,
         startDate,
         endDate,
-        description: description.trim().length > 0 ? description.trim() : null
+        description: description.trim().length > 0 ? description.trim() : null,
       });
       setDescription("");
       await loadAll();
@@ -181,7 +159,9 @@ export default function LeaveScreen() {
                     style={[styles.chip, selected && styles.chipSelected]}
                     onPress={() => setSelectedTypeId(type.id)}
                   >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{type.name}</Text>
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                      {type.name}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
@@ -197,7 +177,13 @@ export default function LeaveScreen() {
             />
 
             <Text style={styles.fieldLabel}>Bitiş tarihi (yyyy-aa-gg)</Text>
-            <TextInput style={styles.input} value={endDate} onChangeText={setEndDate} placeholder="2026-09-18" autoCapitalize="none" />
+            <TextInput
+              style={styles.input}
+              value={endDate}
+              onChangeText={setEndDate}
+              placeholder="2026-09-18"
+              autoCapitalize="none"
+            />
 
             <Text style={styles.fieldLabel}>
               Açıklama {selectedType?.requiresDescription ? "(zorunlu)" : "(opsiyonel)"}
@@ -230,19 +216,7 @@ export default function LeaveScreen() {
       {requests.length === 0 ? (
         <Text style={styles.emptyText}>Henüz izin talebiniz yok.</Text>
       ) : (
-        requests.map((request) => (
-          <View key={request.id} style={styles.card}>
-            <View style={styles.requestHeader}>
-              <Text style={styles.cardLabel}>{request.leaveTypeName ?? request.leaveTypeCode}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[request.status] }]}>
-                <Text style={styles.statusBadgeText}>{STATUS_LABELS[request.status]}</Text>
-              </View>
-            </View>
-            <Text style={styles.cardSubtext}>
-              {formatDateOnly(request.startDate)} – {formatDateOnly(request.endDate)} · {request.calculatedDays} gün
-            </Text>
-          </View>
-        ))
+        requests.map((request) => <LeaveRequestListItem key={request.id} request={request} />)
       )}
     </ScrollView>
   );
@@ -251,28 +225,28 @@ export default function LeaveScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
     ...typography.h4,
     color: colors.text,
     marginTop: spacing.xl,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   card: {
     backgroundColor: colors.white,
@@ -280,44 +254,44 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.lg,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   cardLabel: {
     ...typography.bodySm,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   cardValue: {
     ...typography.h4,
     color: colors.text,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   cardSubtext: {
     ...typography.bodyXs,
     color: colors.textTertiary,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   emptyText: {
     ...typography.bodySm,
-    color: colors.textTertiary
+    color: colors.textTertiary,
   },
   errorBanner: {
     backgroundColor: "#fdecea",
     borderRadius: 8,
     padding: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   errorText: {
     ...typography.bodySm,
-    color: colors.error
+    color: colors.error,
   },
   fieldLabel: {
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.md,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
   },
   chipRow: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   chip: {
     paddingVertical: spacing.sm,
@@ -326,18 +300,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginRight: spacing.sm,
-    backgroundColor: colors.gray50
+    backgroundColor: colors.gray50,
   },
   chipSelected: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary
+    borderColor: colors.primary,
   },
   chipText: {
     ...typography.bodySm,
-    color: colors.text
+    color: colors.text,
   },
   chipTextSelected: {
-    color: colors.white
+    color: colors.white,
   },
   input: {
     borderWidth: 1,
@@ -347,38 +321,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     ...typography.body,
     color: colors.text,
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
   },
   textArea: {
     minHeight: 72,
-    textAlignVertical: "top"
+    textAlignVertical: "top",
   },
   submitButton: {
     backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: spacing.md,
     alignItems: "center",
-    marginTop: spacing.lg
+    marginTop: spacing.lg,
   },
   submitButtonDisabled: {
-    opacity: 0.6
+    opacity: 0.6,
   },
   submitButtonText: {
     ...typography.button,
-    color: colors.white
+    color: colors.white,
   },
-  requestHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  statusBadge: {
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2
-  },
-  statusBadgeText: {
-    ...typography.caption,
-    color: colors.white
-  }
 });

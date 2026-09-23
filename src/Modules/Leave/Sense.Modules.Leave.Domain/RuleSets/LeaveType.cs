@@ -27,6 +27,23 @@ public sealed class LeaveSeniorityTier
         Comparison == SeniorityComparison.GreaterThan ? completedYears > AfterYears : completedYears >= AfterYears;
 }
 
+/// <summary>
+/// <see cref="LeaveTypeSettings.Validate"/> hatalarının hangi sihirbaz alanıyla ilgili olduğunu taşıyan
+/// <see cref="Error.Args"/> anahtarı/değerleri. Değerler web tarafındaki alan adlarıyla (camelCase) eşleşir.
+/// </summary>
+public static class LeaveValidationFields
+{
+    public const string Key = "field";
+    public const string Name = "name";
+    public const string PerRequestMaxDays = "perRequestMaxDays";
+    public const string AnnualDays = "annualDays";
+    public const string NegativeBalanceLimitDays = "negativeBalanceLimitDays";
+    public const string CarryOverMaxDays = "carryOverMaxDays";
+    public const string MaxConsecutiveDays = "maxConsecutiveDays";
+    public const string WaitingPeriodMonths = "waitingPeriodMonths";
+    public const string SeniorityTiers = "seniorityTiers";
+}
+
 /// <summary>The "Yeni Tür ve Kural Ekle" wizard field set (11.3.5 Alanlar), validated as one unit on save.</summary>
 public sealed record LeaveTypeSettings(
     LeaveTypeCode Code,
@@ -66,45 +83,45 @@ public sealed record LeaveTypeSettings(
     {
         if (string.IsNullOrWhiteSpace(Name) || Name.Length > LeaveLimits.NameMaxLength)
         {
-            return Error.Validation(LeaveDomainErrors.TypeNameRequired);
+            return Error.Validation(LeaveDomainErrors.TypeNameRequired, (LeaveValidationFields.Key, LeaveValidationFields.Name));
         }
 
         if (LimitType == LeaveLimitType.PerRequest && PerRequestMaxDays is not (>= 0.5m and <= LeaveLimits.MaxDays))
         {
-            return Error.Validation(LeaveDomainErrors.TypePerRequestMaxDaysInvalid);
+            return Error.Validation(LeaveDomainErrors.TypePerRequestMaxDaysInvalid, (LeaveValidationFields.Key, LeaveValidationFields.PerRequestMaxDays));
         }
 
         if (LimitType == LeaveLimitType.PerYear)
         {
             if (AnnualDays is not (> 0m and <= LeaveLimits.MaxDays))
             {
-                return Error.Validation(LeaveDomainErrors.TypeAnnualDaysInvalid);
+                return Error.Validation(LeaveDomainErrors.TypeAnnualDaysInvalid, (LeaveValidationFields.Key, LeaveValidationFields.AnnualDays));
             }
 
             if (NegativeBalance == NegativeBalanceMode.Limited && (NegativeBalanceLimitDays is not >= 0.5m || NegativeBalanceLimitDays > AnnualDays))
             {
-                return Error.Validation(LeaveDomainErrors.TypeNegativeBalanceLimitInvalid);
+                return Error.Validation(LeaveDomainErrors.TypeNegativeBalanceLimitInvalid, (LeaveValidationFields.Key, LeaveValidationFields.NegativeBalanceLimitDays));
             }
 
             if (CarryOverMode == CarryOverMode.Limited && CarryOverMaxDays is not > 0m)
             {
-                return Error.Validation(LeaveDomainErrors.TypeCarryOverLimitInvalid);
+                return Error.Validation(LeaveDomainErrors.TypeCarryOverLimitInvalid, (LeaveValidationFields.Key, LeaveValidationFields.CarryOverMaxDays));
             }
         }
 
         if (MinConsecutiveDays is { } min && MaxConsecutiveDays is { } max && min > max)
         {
-            return Error.Validation(LeaveDomainErrors.TypeConsecutiveDaysInvalid);
+            return Error.Validation(LeaveDomainErrors.TypeConsecutiveDaysInvalid, (LeaveValidationFields.Key, LeaveValidationFields.MaxConsecutiveDays));
         }
 
         if (WaitingPeriodMonths is < 0 or > LeaveLimits.MaxWaitingPeriodMonths)
         {
-            return Error.Validation(LeaveDomainErrors.TypeWaitingPeriodInvalid);
+            return Error.Validation(LeaveDomainErrors.TypeWaitingPeriodInvalid, (LeaveValidationFields.Key, LeaveValidationFields.WaitingPeriodMonths));
         }
 
         if (SeniorityTiers is { Count: > 0 } && Code != LeaveTypeCode.Annual)
         {
-            return Error.Validation(LeaveDomainErrors.TypeSeniorityTiersOnlyAnnual);
+            return Error.Validation(LeaveDomainErrors.TypeSeniorityTiersOnlyAnnual, (LeaveValidationFields.Key, LeaveValidationFields.SeniorityTiers));
         }
 
         return Result.Success();

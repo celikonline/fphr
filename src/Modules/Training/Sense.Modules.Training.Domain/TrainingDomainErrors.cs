@@ -13,6 +13,8 @@ public static class TrainingDomainErrors
 
     public static readonly Error AlreadyCompleted = Error.Conflict("training.enrollment.already_completed");
 
+    public static readonly Error AlreadyCancelled = Error.Conflict("training.enrollment.already_cancelled");
+
     public static readonly Error ProgramNotFound = Error.NotFound("training.program.not_found");
 
     public static readonly Error EnrollmentNotFound = Error.NotFound("training.enrollment.not_found");

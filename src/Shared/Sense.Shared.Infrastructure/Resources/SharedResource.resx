@@ -795,6 +795,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.errors.preview_parameters_required" xml:space="preserve"><value>İzin türü, başlangıç ve bitiş tarihi zorunludur.</value></data>
   <data name="leave.errors.preview_range_too_large" xml:space="preserve"><value>Tarih aralığı en fazla {max} gün olabilir.</value></data>
+  <data name="leave.errors.recalculate_from_in_future" xml:space="preserve"><value>Yeniden hesaplama başlangıç tarihi gelecekte olamaz.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>Devamsızlık kayıtlarını görüntüleme</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Devamsızlık kayıtlarını yönetme</value></data>
@@ -952,6 +953,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Yalnızca taslak veya onay bekleyen talep formu iptal edilebilir.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>Bağlı talep formu henüz onaylanmadığı için ilan yayınlanamaz.</value></data>
+  <data name="recruitment.requisition_field_template.rules_required" xml:space="preserve"><value>En az bir alan kuralı gereklidir.</value></data>
+  <data name="recruitment.requisition_field_template.duplicate_field" xml:space="preserve"><value>Bir alan için yalnızca bir kural tanımlanabilir.</value></data>
+  <data name="recruitment.requisition_field_template.required_field_must_be_visible" xml:space="preserve"><value>Zorunlu bir alan gizlenemez.</value></data>
+  <data name="recruitment.requisition_field_template.default_value_required" xml:space="preserve"><value>Zorunlu olmayan bir alan için geçerli bir varsayılan değer gereklidir.</value></data>
+  <data name="recruitment.requisition.employment_type_required" xml:space="preserve"><value>Çalışma şekli zorunludur.</value></data>
+  <data name="recruitment.requisition.reason_required" xml:space="preserve"><value>Talep gerekçesi zorunludur.</value></data>
+  <data name="recruitment.requisition.justification_required" xml:space="preserve"><value>Açıklama bu departman için zorunludur.</value></data>
   <data name="recruitment.tags.read" xml:space="preserve"><value>Etiket kataloğunu görüntüleme</value></data>
   <data name="recruitment.tags.manage" xml:space="preserve"><value>Etiket oluşturma veya devre dışı bırakma</value></data>
   <data name="recruitment.tag.not_found" xml:space="preserve"><value>Etiket bulunamadı.</value></data>
@@ -1212,6 +1220,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>Atanmış bir zimmet emekliye ayrılamaz; önce iade edilmelidir.</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>Bu seri numaralı cihaz şu anda başka bir çalışana zimmetli.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>İade tarihi zimmet veriliş tarihinden önce olamaz.</value></data>
+  <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>Bu zimmet ataması onay bekleyen durumda değil ya da farklı bir onay sürecine ait.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>Zimmet veriliş tarihi çalışanın işe giriş tarihinden önce olamaz.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>

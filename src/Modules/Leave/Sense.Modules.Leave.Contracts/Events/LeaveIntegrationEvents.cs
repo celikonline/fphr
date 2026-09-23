@@ -9,3 +9,12 @@ namespace Sense.Modules.Leave.Contracts.Events;
 public sealed record LeaveCancelled(
     Guid TenantId, Guid LeaveRequestId, Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, decimal Days, bool WasApproved)
     : IntegrationEvent(TenantId);
+
+/// <summary>
+/// Published (via Leave's outbox) when a manager/HR added a leave request on an employee's behalf (Source = OnBehalf),
+/// so Notifications can inform the employee. <c>LeaveTypeName</c> is denormalized at raise time so consumers don't need
+/// a Leave lookup contract just to display it.
+/// </summary>
+public sealed record LeaveAddedOnBehalf(
+    Guid TenantId, Guid LeaveRequestId, Guid EmployeeId, Guid LeaveTypeId, string LeaveTypeName, DateOnly StartDate, DateOnly EndDate, decimal Days)
+    : IntegrationEvent(TenantId);

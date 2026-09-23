@@ -80,8 +80,9 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     public async Task<IActionResult> Adjust(Guid employeeId, [FromBody] AdjustLeaveBalanceRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AdjustLeaveBalanceCommand(employeeId, request.LeaveTypeId, request.Days, request.EffectiveDate, request.Reason), ct));
 
+    /// <summary>TK-013: optional <paramref name="recalculateFrom"/> rebuilds accruals/carry-overs only from that date onward.</summary>
     [HttpPost("recalculate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Recalculate(Guid employeeId, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new RecalculateLeaveBalancesCommand(employeeId), ct));
+    public async Task<IActionResult> Recalculate(Guid employeeId, [FromQuery] DateOnly? recalculateFrom, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RecalculateLeaveBalancesCommand(employeeId, recalculateFrom), ct));
 }

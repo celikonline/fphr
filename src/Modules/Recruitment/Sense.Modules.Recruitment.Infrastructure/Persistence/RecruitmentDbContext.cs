@@ -43,6 +43,8 @@ public sealed class RecruitmentDbContext(DbContextOptions<RecruitmentDbContext> 
 
     public DbSet<AutomationRule> AutomationRules => Set<AutomationRule>();
 
+    public DbSet<RequisitionFieldTemplate> RequisitionFieldTemplates => Set<RequisitionFieldTemplate>();
+
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -68,6 +70,8 @@ internal static class RecruitmentTables
     public const string FormResponses = "form_responses";
     public const string FieldAnswers = "field_answers";
     public const string AutomationRules = "automation_rules";
+    public const string RequisitionFieldTemplates = "requisition_field_templates";
+    public const string RequisitionFieldTemplateRules = "requisition_field_template_rules";
 
     /// <summary>String length for enum-as-string columns (Status, EmploymentType, Stage...).</summary>
     public const int EnumCodeLength = 30;
@@ -259,6 +263,32 @@ public sealed class AutomationRuleConfiguration : IEntityTypeConfiguration<Autom
         b.Property(x => x.ToStage).HasConversion<string>().HasMaxLength(RecruitmentTables.EnumCodeLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.FromStage, x.ToStage, x.IsActive });
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class RequisitionFieldTemplateConfiguration : IEntityTypeConfiguration<RequisitionFieldTemplate>
+{
+    public void Configure(EntityTypeBuilder<RequisitionFieldTemplate> b)
+    {
+        b.ToTable(RecruitmentTables.RequisitionFieldTemplates);
+        b.HasKey(x => x.Id);
+
+        // At most one template per (tenant, department) - see RequisitionFieldTemplate's class doc.
+        b.HasIndex(x => new { x.TenantId, x.OrgUnitId }).IsUnique();
+
+        b.OwnsMany(x => x.Rules, r =>
+        {
+            r.ToTable(RecruitmentTables.RequisitionFieldTemplateRules);
+            r.WithOwner().HasForeignKey("TemplateId");
+            r.HasKey("TemplateId", nameof(RequisitionFieldRule.Field));
+
+            r.Property(x => x.Field).HasConversion<string>().HasMaxLength(RecruitmentTables.EnumCodeLength).IsRequired();
+            r.Property(x => x.DefaultValue).HasMaxLength(RecruitmentTables.EnumCodeLength);
+        });
+
+        b.Navigation(x => x.Rules).AutoInclude();
 
         b.Ignore(x => x.DomainEvents);
     }

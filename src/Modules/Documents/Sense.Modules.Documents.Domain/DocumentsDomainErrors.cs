@@ -11,6 +11,10 @@ public static class DocumentsDomainErrors
     public const string DocumentInvalidStatus = "document.invalid_status";
     public const string DocumentAlreadyDeleted = "document.already_deleted";
     public const string TenantNotAuthorized = "document.tenant_not_authorized";
+    public const string DocumentSourceRequired = "document.source_required";
+
+    /// <summary>Writing a module-generated file's bytes to storage failed (<c>ISystemDocumentDeliveryService</c>/<c>IFileStorage.PutObjectAsync</c>).</summary>
+    public const string SystemDocumentDeliveryFailed = "document.system_delivery_failed";
 
     // Document type catalog (11.7: "zorunlu ve koşullu özlük belgesi kuralları")
     public const string DocumentTypeNotFound = "document_type.not_found";

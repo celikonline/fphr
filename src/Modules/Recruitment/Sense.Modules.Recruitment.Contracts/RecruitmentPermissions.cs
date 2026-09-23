@@ -68,10 +68,20 @@ public static class RecruitmentPermissions
     public static readonly Permission AutomationRulesManage = new(
         "recruitment.automation_rules.manage", Module, "Otomasyon Kuralı Yönetimi", Group, "Süreç otomasyon kuralı oluşturma veya pasifleştirme");
 
+    /// <summary>
+    /// Dar kapsamlı, genel "recruitment.*" (Admin) izninden ayrı anahtar (roadmap #83, 11.3.11 §8/satır 96,101):
+    /// Kolay İK'daki "Admin − teklif şablonu" ikinci rolü Recruiter tabanlı her şeye erişir, yalnız bu anahtarı almaz.
+    /// Teklif şablonu (`EmailTemplate(Kind=Offer)`) henüz modellenmedi (R3) - bu anahtar o iş gelene kadar rol
+    /// ayrımını mümkün kılmak için önden tanımlanıyor.
+    /// </summary>
+    public static readonly Permission OfferTemplatesManage = new(
+        "recruitment.offer_templates.manage", Module, "Teklif Şablonu Yönetimi", Group, "Teklif şablonlarını görüntüleme veya düzenleme");
+
     public static IEnumerable<Permission> All =>
         [
             PostingsRead, PostingsCreate, PostingsUpdate, PostingsArchive, CandidatesRead, CandidatesManage,
             ApplicationsRead, ApplicationsManage, RequisitionsRead, RequisitionsManage, TagsRead, TagsManage,
             FormTemplatesRead, FormTemplatesManage, FormResponsesRead, FormResponsesSubmit, AutomationRulesRead, AutomationRulesManage,
+            OfferTemplatesManage,
         ];
 }

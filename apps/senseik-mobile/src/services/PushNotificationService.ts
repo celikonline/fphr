@@ -6,7 +6,8 @@ import { NotificationPayload } from "@/types";
 // Set notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true
   })
@@ -72,12 +73,8 @@ export class PushNotificationService {
   }
 
   removeNotificationListeners(): void {
-    if (this.listenerRef) {
-      Notifications.removeNotificationSubscription(this.listenerRef);
-    }
-    if (this.responseListenerRef) {
-      Notifications.removeNotificationSubscription(this.responseListenerRef);
-    }
+    this.listenerRef?.remove();
+    this.responseListenerRef?.remove();
   }
 
   async requestNotificationPermissions(): Promise<boolean> {
@@ -100,7 +97,7 @@ export class PushNotificationService {
           body: payload.body,
           data: payload.data || {}
         },
-        trigger: { seconds: 1 }
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1 }
       });
     } catch (error) {
       if (__DEV__) {

@@ -110,6 +110,15 @@ public interface IJobRequisitionRepository
     Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status, int take, CancellationToken cancellationToken = default);
 }
 
+/// <summary>RequisitionFieldTemplate aggregate repository - one template per (tenant, OrgUnit).</summary>
+public interface IRequisitionFieldTemplateRepository
+{
+    void Add(RequisitionFieldTemplate template);
+
+    /// <summary>Null when the department has no customized template (JobRequisition then keeps its default field behavior).</summary>
+    Task<RequisitionFieldTemplate?> FindByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
+}
+
 /// <summary>Tag aggregate repository.</summary>
 public interface ITagRepository
 {
