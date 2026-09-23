@@ -1,7 +1,7 @@
 {
   "id": "TK-010",
   "baslik": "Onboarding — gorev sorumlusuna bildirim + rol koduna gore sorumlu atama",
-  "durum": "hazir",
+  "durum": "calisiyor",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/onboarding-bildirim",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:24 (#74 - gorev sorumlusuna bildirim yok, sorumlu kisi degil rol kodu olmali)",

@@ -1,7 +1,7 @@
 {
   "id": "TK-011",
   "baslik": "Training - katilim iptalinde kayit silinmesin, iptal gecmisi tutulsun",
-  "durum": "hazir",
+  "durum": "calisiyor",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/training-iptal-gecmisi",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:22 (#72 - katilim iptali kaydi siler, iptal gecmisi tutulmuyor)",
