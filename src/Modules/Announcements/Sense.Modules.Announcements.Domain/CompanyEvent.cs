@@ -53,4 +53,32 @@ public sealed class CompanyEvent : TenantAggregateRoot<Guid>, IAuditLogged
             CreatedByUserId = createdByUserId,
         };
     }
+
+    /// <summary>Manuel etkinliği düzenle (senseik-027 takip: roadmap #71 - önceden yalnız sil-yeniden oluşturma
+    /// vardı). Sil-yeniden oluşturmanın aksine kimliği ve oluşturanı korur.</summary>
+    public Result Update(
+        string title, string? description, DateOnly eventDate, CompanyEventType type, Guid? visibilityOrgUnitId)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Length > CompanyEventLimits.TitleMaxLength)
+        {
+            return Error.Validation(CompanyEventDomainErrors.TitleRequired);
+        }
+
+        if (description is { Length: > 0 } && description.Length > CompanyEventLimits.DescriptionMaxLength)
+        {
+            return Error.Validation(CompanyEventDomainErrors.DescriptionTooLong);
+        }
+
+        if (type is CompanyEventType.Birthday or CompanyEventType.LeaveStart)
+        {
+            return Error.Validation(CompanyEventDomainErrors.TypeNotManual);
+        }
+
+        Title = title.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        EventDate = eventDate;
+        Type = type;
+        VisibilityOrgUnitId = visibilityOrgUnitId;
+        return Result.Success();
+    }
 }
