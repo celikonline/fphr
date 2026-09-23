@@ -943,6 +943,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Only a draft or pending requisition can be cancelled.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>The linked requisition has not been approved yet, so this posting cannot be published.</value></data>
+  <data name="recruitment.requisition_field_template.rules_required" xml:space="preserve"><value>At least one field rule is required.</value></data>
+  <data name="recruitment.requisition_field_template.duplicate_field" xml:space="preserve"><value>A field can only have one rule.</value></data>
+  <data name="recruitment.requisition_field_template.required_field_must_be_visible" xml:space="preserve"><value>A required field cannot be hidden.</value></data>
+  <data name="recruitment.requisition_field_template.default_value_required" xml:space="preserve"><value>An optional field needs a valid default value.</value></data>
+  <data name="recruitment.requisition.employment_type_required" xml:space="preserve"><value>Employment type is required.</value></data>
+  <data name="recruitment.requisition.reason_required" xml:space="preserve"><value>Requisition reason is required.</value></data>
+  <data name="recruitment.requisition.justification_required" xml:space="preserve"><value>Justification is required for this department.</value></data>
   <data name="recruitment.tags.read" xml:space="preserve"><value>View Tag Catalog</value></data>
   <data name="recruitment.tags.manage" xml:space="preserve"><value>Create or deactivate a tag</value></data>
   <data name="recruitment.tag.not_found" xml:space="preserve"><value>Tag not found.</value></data>

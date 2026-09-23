@@ -221,6 +221,15 @@ public sealed class JobRequisitionRepository(RecruitmentDbContext context) : IJo
     }
 }
 
+/// <summary>EF Core-backed RequisitionFieldTemplate repository (roadmap #87). One template per (tenant, OrgUnit), tenant isolation via ModuleDbContext's global query filter.</summary>
+public sealed class RequisitionFieldTemplateRepository(RecruitmentDbContext context) : IRequisitionFieldTemplateRepository
+{
+    public void Add(RequisitionFieldTemplate template) => context.RequisitionFieldTemplates.Add(template);
+
+    public async Task<RequisitionFieldTemplate?> FindByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default) =>
+        await context.RequisitionFieldTemplates.FirstOrDefaultAsync(t => t.OrgUnitId == orgUnitId, cancellationToken);
+}
+
 /// <summary>EF Core-backed Tag repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
 public sealed class TagRepository(RecruitmentDbContext context) : ITagRepository
 {
