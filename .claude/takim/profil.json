@@ -1,0 +1,522 @@
+{
+  "surum": 1,
+  "uretim": {
+    "arac": "kesif.mjs",
+    "arac_surum": "0.1.0",
+    "zaman": "2026-09-23T08:56:28.014Z"
+  },
+  "yiginlar": [
+    {
+      "ad": "dotnet",
+      "kok": ".",
+      "isaret": "Sense.slnx",
+      "cozum": "Sense.slnx"
+    },
+    {
+      "ad": "node",
+      "kok": ".",
+      "isaret": "package.json",
+      "paket_yoneticisi": "pnpm",
+      "workspaces": true
+    }
+  ],
+  "komutlar": {
+    "build": [
+      {
+        "komut": "dotnet build Sense.slnx",
+        "yigin": "dotnet",
+        "kok": ".",
+        "kaynak": "varsayilan:dotnet",
+        "dogrulandi": false
+      },
+      {
+        "komut": "pnpm run build",
+        "yigin": "node",
+        "kok": ".",
+        "kaynak": "package.json#scripts.build",
+        "dogrulandi": false
+      }
+    ],
+    "test": [
+      {
+        "komut": "dotnet test Sense.slnx",
+        "yigin": "dotnet",
+        "kok": ".",
+        "kaynak": "varsayilan:dotnet",
+        "dogrulandi": false
+      },
+      {
+        "komut": "pnpm test",
+        "yigin": "node",
+        "kok": ".",
+        "kaynak": "package.json#scripts.test",
+        "dogrulandi": false
+      }
+    ],
+    "lint": [
+      {
+        "komut": "pnpm run lint",
+        "yigin": "node",
+        "kok": ".",
+        "kaynak": "package.json#scripts.lint",
+        "dogrulandi": false
+      }
+    ],
+    "typecheck": [
+      {
+        "komut": "pnpm run type-check",
+        "yigin": "node",
+        "kok": ".",
+        "kaynak": "package.json#scripts.type-check",
+        "dogrulandi": false
+      }
+    ]
+  },
+  "test": {
+    "var": true,
+    "dosya_sayisi": 453,
+    "calistiricilar": [
+      "dotnet-test",
+      "jest",
+      "vitest"
+    ],
+    "taban_sayi": null
+  },
+  "moduller": [
+    {
+      "ad": "senseik-mobile",
+      "yol": "apps/senseik-mobile",
+      "tur": "workspace-paketi",
+      "dosya_sayisi": 45,
+      "commit_90gun": 32
+    },
+    {
+      "ad": "api-client",
+      "yol": "packages/api-client",
+      "tur": "workspace-paketi",
+      "dosya_sayisi": 2,
+      "commit_90gun": 5
+    },
+    {
+      "ad": "Analytics",
+      "yol": "src/Modules/Analytics",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 7,
+      "commit_90gun": 10
+    },
+    {
+      "ad": "Announcements",
+      "yol": "src/Modules/Announcements",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 64,
+      "commit_90gun": 14
+    },
+    {
+      "ad": "Assets",
+      "yol": "src/Modules/Assets",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 36,
+      "commit_90gun": 7
+    },
+    {
+      "ad": "Attendance",
+      "yol": "src/Modules/Attendance",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 95,
+      "commit_90gun": 35
+    },
+    {
+      "ad": "DataTransfer",
+      "yol": "src/Modules/DataTransfer",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 17,
+      "commit_90gun": 3
+    },
+    {
+      "ad": "Documents",
+      "yol": "src/Modules/Documents",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 82,
+      "commit_90gun": 45
+    },
+    {
+      "ad": "Employee",
+      "yol": "src/Modules/Employee",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 151,
+      "commit_90gun": 87
+    },
+    {
+      "ad": "Expense",
+      "yol": "src/Modules/Expense",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 43,
+      "commit_90gun": 13
+    },
+    {
+      "ad": "Identity",
+      "yol": "src/Modules/Identity",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 112,
+      "commit_90gun": 64
+    },
+    {
+      "ad": "Integrations",
+      "yol": "src/Modules/Integrations",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 26,
+      "commit_90gun": 4
+    },
+    {
+      "ad": "Leave",
+      "yol": "src/Modules/Leave",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 128,
+      "commit_90gun": 76
+    },
+    {
+      "ad": "Notifications",
+      "yol": "src/Modules/Notifications",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 34,
+      "commit_90gun": 8
+    },
+    {
+      "ad": "OccupationalSafety",
+      "yol": "src/Modules/OccupationalSafety",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 43,
+      "commit_90gun": 7
+    },
+    {
+      "ad": "Onboarding",
+      "yol": "src/Modules/Onboarding",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 21,
+      "commit_90gun": 6
+    },
+    {
+      "ad": "Organization",
+      "yol": "src/Modules/Organization",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 89,
+      "commit_90gun": 30
+    },
+    {
+      "ad": "Payroll",
+      "yol": "src/Modules/Payroll",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 140,
+      "commit_90gun": 44
+    },
+    {
+      "ad": "Performance",
+      "yol": "src/Modules/Performance",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 28,
+      "commit_90gun": 8
+    },
+    {
+      "ad": "Recruitment",
+      "yol": "src/Modules/Recruitment",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 73,
+      "commit_90gun": 24
+    },
+    {
+      "ad": "Reporting",
+      "yol": "src/Modules/Reporting",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 21,
+      "commit_90gun": 5
+    },
+    {
+      "ad": "Training",
+      "yol": "src/Modules/Training",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 36,
+      "commit_90gun": 10
+    },
+    {
+      "ad": "Workflow",
+      "yol": "src/Modules/Workflow",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 41,
+      "commit_90gun": 23
+    },
+    {
+      "ad": "Sense.Api",
+      "yol": "src/Sense.Api",
+      "tur": "dotnet-proje",
+      "dosya_sayisi": 28,
+      "commit_90gun": 73
+    },
+    {
+      "ad": "Sense.Migrator",
+      "yol": "src/Sense.Migrator",
+      "tur": "dotnet-proje",
+      "dosya_sayisi": 1,
+      "commit_90gun": 19
+    },
+    {
+      "ad": "Sense.Worker",
+      "yol": "src/Sense.Worker",
+      "tur": "dotnet-proje",
+      "dosya_sayisi": 1,
+      "commit_90gun": 42
+    },
+    {
+      "ad": "Shared",
+      "yol": "src/Shared",
+      "tur": "dotnet-modul",
+      "dosya_sayisi": 105,
+      "commit_90gun": 168
+    },
+    {
+      "ad": "Sense.Tests.Shared",
+      "yol": "tests/Sense.Tests.Shared",
+      "tur": "dotnet-proje",
+      "dosya_sayisi": 5,
+      "commit_90gun": 9
+    },
+    {
+      "ad": "web",
+      "yol": "web",
+      "tur": "workspace-paketi",
+      "dosya_sayisi": 397,
+      "commit_90gun": 295
+    }
+  ],
+  "boyut": {
+    "kaynak_dosya": 2228,
+    "katkici_90gun": 3
+  },
+  "riskler": [
+    {
+      "tur": "migration",
+      "kanitlar": [
+        "docs/agent-board/cards/senseik-054-attendance-pending-migration.json",
+        "src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Migrations/20260918082329_InitialAnnouncements.Designer.cs",
+        "src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Migrations/20260918082329_InitialAnnouncements.cs",
+        "src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Migrations/20260918184012_AddCompanyEvents.Designer.cs",
+        "src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Migrations/20260918184012_AddCompanyEvents.cs"
+      ],
+      "alanlar": [
+        "docs/agent-board/cards/senseik-054-attendance-pending-migration.json",
+        "src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Migrations/**",
+        "src/Modules/Assets/Sense.Modules.Assets.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/DataTransfer/Sense.Modules.DataTransfer.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Documents/Sense.Modules.Documents.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Employee/Sense.Modules.Employee.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Expense/Sense.Modules.Expense.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Identity/Sense.Modules.Identity.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Integrations/Sense.Modules.Integrations.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Notifications/Sense.Modules.Notifications.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/OccupationalSafety/Sense.Modules.OccupationalSafety.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Onboarding/Sense.Modules.Onboarding.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Organization/Sense.Modules.Organization.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Payroll/Sense.Modules.Payroll.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Performance/Sense.Modules.Performance.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Recruitment/Sense.Modules.Recruitment.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Reporting/Sense.Modules.Reporting.Infrastructure/Persistence/Migrations/**",
+        "src/Modules/Training/Sense.Modules.Training.Infrastructure/Migrations/**"
+      ]
+    },
+    {
+      "tur": "auth",
+      "kanitlar": [
+        "apps/senseik-mobile/src/__tests__/services/AuthService.test.ts",
+        "apps/senseik-mobile/src/hooks/useAuth.ts",
+        "apps/senseik-mobile/src/screens/auth/BiometricPromptScreen.tsx",
+        "apps/senseik-mobile/src/screens/auth/ForgotPasswordScreen.tsx",
+        "apps/senseik-mobile/src/screens/auth/LoginScreen.tsx"
+      ],
+      "alanlar": [
+        "apps/senseik-mobile/src/__tests__/services/AuthService.test.ts",
+        "apps/senseik-mobile/src/hooks/useAuth.ts",
+        "apps/senseik-mobile/src/screens/auth/**",
+        "apps/senseik-mobile/src/services/AuthService.ts",
+        "apps/senseik-mobile/src/store/authStore.ts",
+        "docs/agent-board/cards/senseik-052-route-authorization-guard.json",
+        "docs/analysis/kolayik-video/11.3.01-kimlik-ve-erisim.md",
+        "docs/handoffs/login-tenant-select-redesign.md",
+        "docs/handoffs/route-authorization-guard.md",
+        "docs/implementation/faz3-identity-auth-api-sozlesmesi.md",
+        "src/Modules/Identity/**",
+        "src/Sense.Api/AuthenticationExtensions.cs",
+        "src/Shared/Sense.Shared.Infrastructure/Messaging/Behaviours/AccessSettingsAuthorizationBehaviour.cs",
+        "src/Shared/Sense.Shared.Infrastructure/Messaging/Behaviours/AuthorizationBehaviour.cs",
+        "src/Shared/Sense.Shared.Kernel/ValueObjects/TcKimlik.cs",
+        "src/Shared/Sense.Shared.Web/Authorization/**",
+        "tests/Modules/Sense.Modules.Identity.Tests/**",
+        "tests/Sense.Tests.Integration/Identity/**",
+        "web/public/locales/de/auth.json",
+        "web/public/locales/en/auth.json"
+      ]
+    },
+    {
+      "tur": "para",
+      "kanitlar": [
+        "apps/senseik-mobile/src/screens/app/PayrollScreen.tsx",
+        "docs/agent-board/cards/senseik-019-bordro-tam.json",
+        "docs/agent-board/cards/senseik-034-payroll-closing-checklist-gaps.json",
+        "docs/analysis/kolayik-video/11.3.07-bordro-ekran-paritesi.md",
+        "docs/analysis/kolayik-video/11.3.07-bordro-mevcut-urun-iliskisi.md"
+      ],
+      "alanlar": [
+        "apps/senseik-mobile/src/screens/app/PayrollScreen.tsx",
+        "docs/agent-board/cards/senseik-019-bordro-tam.json",
+        "docs/agent-board/cards/senseik-034-payroll-closing-checklist-gaps.json",
+        "docs/analysis/kolayik-video/11.3.07-bordro-ekran-paritesi.md",
+        "docs/analysis/kolayik-video/11.3.07-bordro-mevcut-urun-iliskisi.md",
+        "docs/analysis/kolayik-video/11.3.07-bordro.md",
+        "docs/analysis/kolayik-video/bordro-veri-etki-kontrolu.md",
+        "docs/handoffs/payroll-full-engine.md",
+        "docs/handoffs/payroll-salary-registry.md",
+        "docs/implementation/faz7-payroll-export-sozlesmesi.md",
+        "src/Modules/Attendance/Sense.Modules.Attendance.Contracts/IAttendanceOvertimePayrollReader.cs",
+        "src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Lookups/AttendanceOvertimePayrollReader.cs",
+        "src/Modules/Employee/Sense.Modules.Employee.Api/Controllers/EmployeePaymentsController.cs",
+        "src/Modules/Employee/Sense.Modules.Employee.Application/Payments/**",
+        "src/Modules/Employee/Sense.Modules.Employee.Domain/Employees/Employee.Payments.cs",
+        "src/Modules/Expense/Sense.Modules.Expense.Api/Controllers/PaymentsController.cs",
+        "src/Modules/Expense/Sense.Modules.Expense.Application/Payments/**",
+        "src/Modules/Leave/Sense.Modules.Leave.Contracts/IOvertimePayrollReader.cs",
+        "src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Lookups/OvertimePayrollReader.cs",
+        "src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Persistence/Migrations/20260915210915_PayrollLegislationParameters.Designer.cs"
+      ]
+    },
+    {
+      "tur": "pii",
+      "kanitlar": [
+        "docs/analysis/kolayik-video/11.3.09-dosya-belge-kvkk-vize.md",
+        "docs/implementation/kvkk-imha-kaydi-sozlesmesi.md",
+        "src/Modules/Assets/Sense.Modules.Assets.Application/Import/AssetImportRowHandler.cs",
+        "src/Modules/Assets/Sense.Modules.Assets.Application/Import/AssetImportTemplate.cs",
+        "src/Modules/Attendance/Sense.Modules.Attendance.Application/Import/AttendanceImportRowHandler.cs"
+      ],
+      "alanlar": [
+        "docs/analysis/kolayik-video/11.3.09-dosya-belge-kvkk-vize.md",
+        "docs/implementation/kvkk-imha-kaydi-sozlesmesi.md",
+        "src/Modules/Assets/Sense.Modules.Assets.Application/Import/AssetImportRowHandler.cs",
+        "src/Modules/Assets/Sense.Modules.Assets.Application/Import/AssetImportTemplate.cs",
+        "src/Modules/Attendance/Sense.Modules.Attendance.Application/Import/AttendanceImportRowHandler.cs"
+      ]
+    },
+    {
+      "tur": "altyapi",
+      "kanitlar": [
+        ".github/workflows/codeql.yml",
+        ".github/workflows/main.yml",
+        ".github/workflows/pr.yml",
+        "docker-compose.yml",
+        "infra/docker-compose.yml"
+      ],
+      "alanlar": [
+        ".github/workflows/**",
+        "docker-compose.yml",
+        "infra/docker-compose.yml",
+        "k8s/**",
+        "src/Sense.Api/Dockerfile",
+        "src/Sense.Worker/Dockerfile",
+        "web/Dockerfile"
+      ]
+    }
+  ],
+  "git": {
+    "repo": true,
+    "varsayilan_dal": "main",
+    "calisma_dali": "dev",
+    "remote": true,
+    "depo_adi": "senseik",
+    "kirli": true,
+    "korumali_dallar": [
+      "main"
+    ]
+  },
+  "mevcut": {
+    "claude_md": true,
+    "memory_md": false,
+    "settings_json": true,
+    "agents": [],
+    "rules": [
+      ".claude/rules/ecc/common/agents.md",
+      ".claude/rules/ecc/common/code-review.md",
+      ".claude/rules/ecc/common/coding-style.md",
+      ".claude/rules/ecc/common/development-workflow.md",
+      ".claude/rules/ecc/common/git-workflow.md",
+      ".claude/rules/ecc/common/hooks.md",
+      ".claude/rules/ecc/common/patterns.md",
+      ".claude/rules/ecc/common/performance.md",
+      ".claude/rules/ecc/common/security.md",
+      ".claude/rules/ecc/common/testing.md",
+      ".claude/rules/ecc/csharp/coding-style.md",
+      ".claude/rules/ecc/csharp/hooks.md",
+      ".claude/rules/ecc/csharp/patterns.md",
+      ".claude/rules/ecc/csharp/security.md",
+      ".claude/rules/ecc/csharp/testing.md",
+      ".claude/rules/ecc/react/coding-style.md",
+      ".claude/rules/ecc/react/hooks.md",
+      ".claude/rules/ecc/react/patterns.md",
+      ".claude/rules/ecc/react/security.md",
+      ".claude/rules/ecc/react/testing.md",
+      ".claude/rules/ecc/typescript/coding-style.md",
+      ".claude/rules/ecc/typescript/hooks.md",
+      ".claude/rules/ecc/typescript/patterns.md",
+      ".claude/rules/ecc/typescript/security.md",
+      ".claude/rules/ecc/typescript/testing.md"
+    ],
+    "takim_kurulu": false,
+    "ci": [
+      ".github/workflows/codeql.yml",
+      ".github/workflows/main.yml",
+      ".github/workflows/pr.yml"
+    ]
+  },
+  "ortam": {
+    "platform": "win32",
+    "node": "24.19.0",
+    "npm": "11.17.0",
+    "pnpm": null,
+    "yarn": null,
+    "dotnet": "10.0.401",
+    "python": "3.13.15",
+    "go": null,
+    "git": "2.55.0",
+    "docker": "29.8.0"
+  },
+  "belirsizler": [
+    {
+      "alan": "git.korumali_dallar",
+      "soru": "Uzak depoda main için dal koruması (branch protection) açık mı? Kancalar yalnız kaza önleyicidir; asıl koruma odur.",
+      "oneri": "kontrol-et"
+    },
+    {
+      "alan": "taban_dal",
+      "soru": "Değişiklikler hangi dala birleştirilecek (gözden geçirici \"git diff <taban>...HEAD\" ile bakar)? Şu anki dal: dev.",
+      "oneri": "main"
+    },
+    {
+      "alan": "ortam.pnpm",
+      "soru": "node@. yığını için 'pnpm' bu makinede bulunamadı (proje 12.4.1 istiyor). Test kapısı bu yığının komutlarını koşturamaz (kapı 'dogrulanmadi' kalır).",
+      "oneri": "pnpm-kur"
+    }
+  ],
+  "karar": {
+    "olcutler": {
+      "Y": 2,
+      "A": 29,
+      "D": 2228,
+      "R": 4
+    },
+    "oneri": "L",
+    "kurulan": "M",
+    "gerekce": [
+      "A=29 > 10 → L",
+      "v1 L üretmez → M kurulur; eksikler: otonom döngü, worktree/şerit yönetimi",
+      "risk (migration, auth, para, pii, altyapi) → riskli-alan kuralı eklenir"
+    ]
+  }
+}

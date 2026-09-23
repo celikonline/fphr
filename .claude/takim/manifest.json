@@ -1,0 +1,106 @@
+{
+  "surum": 1,
+  "arac_surum": "0.1.0",
+  "kurulum_tarihi": "2026-09-23",
+  "dosyalar": {
+    ".claude/agents/takim-gelistirici-dotnet.md": {
+      "sha256": "01206cf11384a203c01ae4440b274fb3d817f41ce88ada392f4bda9979c234cf"
+    },
+    ".claude/agents/takim-gelistirici-node.md": {
+      "sha256": "e6e25d7bb15edd238c46207be9d03f4b65c3481de94fee69cd5ab01e95883bfc"
+    },
+    ".claude/agents/takim-gozden-gecirici.md": {
+      "sha256": "55866c1bd800141069459c0a5dafdb4854ced66e5f544a716cea71aff56448ce"
+    },
+    ".claude/agents/takim-orkestrator.md": {
+      "sha256": "59fccb48f80bfeac96d20aee1b11528679f5d5d54799cfb1b02961bb57a8f73f"
+    },
+    ".claude/rules/takim-calisma.md": {
+      "sha256": "c0a7e7df12d82b8cd7ddd41a7b491b554b89bdbbf110af2c983fdc7caa389287"
+    },
+    ".claude/rules/takim-riskli-alan.md": {
+      "sha256": "f6ed47c9063e36b5816066adf460352f631bb1b0d687def499a040c9356a1fdc"
+    },
+    ".claude/rules/takim-modul-sahiplik.md": {
+      "sha256": "a0e385cf197da2f547441fa91388b128b3065a71b43e56c4ada1018273a5eb60"
+    },
+    ".claude/takim/TAKIM.md": {
+      "sha256": "a47c9f55c92f4d8735025c3bd4790b5c7550534d738ecc441100b30f47dd1e81"
+    },
+    ".claude/takim/is-karti.json": {
+      "sha256": "bf9e682965da9c34cd25b5f51ee0b75cec728f80502d5ede82dd2febbbf278ae"
+    },
+    ".claude/takim/betikler/ortak.mjs": {
+      "sha256": "cc1dcb2d9be7ae14bc21f0b58954454cdd9bae187b8fee0add06256587c7b8c8"
+    },
+    ".claude/takim/betikler/kanca-komut.mjs": {
+      "sha256": "d249900a0ae841afcfeba6a39ff2d4bac71f786983b6958671cae5039372d016"
+    },
+    ".claude/takim/betikler/kanca-dosya.mjs": {
+      "sha256": "b7e011f2602454dd36414d9cc86252056f7d98d69257c3dbdac04b4e433afaf3"
+    },
+    ".claude/takim/betikler/test-kapisi.mjs": {
+      "sha256": "1c959b25d2ec0d4618ab7bc09b0e4d367b67cb243905b4acab6395321c5d5f5b"
+    },
+    ".claude/takim/betikler/kapi-dogrula.mjs": {
+      "sha256": "2de8feda94b964731f277cb1eccf3db7e3c4c217ea0b4cdde1a6cd0ae05e6577"
+    },
+    ".claude/takim/headless-settings.json": {
+      "sha256": "7a3779a59bbd152cd619f99fec4faa2f3b330cec3ca240912f29447f27358393"
+    },
+    ".claude/takim/profil.json": {
+      "sha256": "b0101be5c364b62a5de3475cf4440789e8f0a619b7d6499f05403955181e7560"
+    }
+  },
+  "birlestirmeler": {
+    "settings": {
+      "allow": [
+        "Bash(node .claude/takim/betikler/test-kapisi.mjs)",
+        "PowerShell(node .claude/takim/betikler/test-kapisi.mjs)",
+        "Bash(node .claude/takim/betikler/kapi-dogrula.mjs)",
+        "PowerShell(node .claude/takim/betikler/kapi-dogrula.mjs)",
+        "Bash(dotnet build Sense.slnx)",
+        "PowerShell(dotnet build Sense.slnx)",
+        "Bash(pnpm run build)",
+        "PowerShell(pnpm run build)",
+        "Bash(pnpm run lint)",
+        "PowerShell(pnpm run lint)",
+        "Bash(pnpm run type-check)",
+        "PowerShell(pnpm run type-check)",
+        "Bash(dotnet test Sense.slnx)",
+        "PowerShell(dotnet test Sense.slnx)",
+        "Bash(pnpm test)",
+        "PowerShell(pnpm test)"
+      ],
+      "deny": [
+        "Bash(git push --force:*)",
+        "PowerShell(git push --force:*)",
+        "Bash(git push -f:*)",
+        "PowerShell(git push -f:*)",
+        "Bash(git reset --hard:*)",
+        "PowerShell(git reset --hard:*)",
+        "Bash(git clean -fdx:*)",
+        "PowerShell(git clean -fdx:*)"
+      ],
+      "kancalar": [
+        "node \"$CLAUDE_PROJECT_DIR/.claude/takim/betikler/kanca-komut.mjs\"",
+        "node \"$CLAUDE_PROJECT_DIR/.claude/takim/betikler/kanca-dosya.mjs\""
+      ]
+    },
+    "yazilan_sha": {
+      ".claude/settings.json": "73714c5cba3ad3175f0cb73da7da10629be41e6bb9a2114d301125e8fc6be974",
+      "CLAUDE.md": "9f851575a777b78361959d99e7412940b79e474c9d115905f952366da2e758b8",
+      ".gitignore": "1b956faa6c176f2ef7cfa02bd9424e8305aed560ea7cd7fcbcbf4ff796078411"
+    }
+  },
+  "orijinaller": {
+    ".claude/settings.json": "{\n  \"$schema\": \"https://json.schemastore.org/claude-code-settings.json\",\n  \"extraKnownMarketplaces\": {\n    \"ecc\": {\n      \"source\": {\n        \"source\": \"github\",\n        \"repo\": \"affaan-m/ECC\"\n      }\n    }\n  },\n  \"enabledPlugins\": {\n    \"ecc@ecc\": true\n  }\n}\n",
+    "CLAUDE.md": "# SenseİK — agent notes\n\nHR/payroll SaaS. .NET 10 modular monolith (`src/Modules/*`, one schema + DbContext + migrations per module, modules talk only via `*.Contracts`), React web app (`web/`, Vite + react-router v7 + Mantine 9 + Tailwind v4 for layout; no shadcn/Radix — see `docs/implementation/mantine-gecis.md`), Expo mobile app (`apps/senseik-mobile`).\n\n## Toolchain (no dotnet on the dev hosts; node/pnpm work on the host)\n\n- .NET: `docker run --rm -v \"$PWD\":/src -v senseik-nuget:/root/.nuget/packages -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet <args>`. Do not pass `-p:UseAppHost=false` (xUnit v3 needs an app host). Testcontainers-based tests work this way.\n- Web: host `pnpm` works in `web/` — `pnpm exec tsc --noEmit`, `pnpm exec eslint src` (ESLint runs on the host now: `typescript` is aliased to `@typescript/typescript6` for tooling while `tsc` uses TypeScript 7 via `@typescript/native`), `pnpm exec vite build`. In Docker instead: `node:24-alpine`, `corepack enable` first; mount named volumes over `node_modules`, `web/node_modules`, `packages/api-client/node_modules`, `apps/senseik-mobile/node_modules` so host macOS builds don't mix in.\n- Commits run husky hooks (lint-staged: ESLint on staged web/mobile files, `dotnet format Sense.slnx --include` on staged `.cs` files). The host has no dotnet, so commit with a PATH that provides a `dotnet` shim running the SDK container with the repo mounted at the same absolute path (lint-staged passes absolute paths): `exec docker run --rm -v \"$PWD\":\"$PWD\" -v senseik-nuget:/root/.nuget/packages -w \"$PWD\" mcr.microsoft.com/dotnet/sdk:10.0 dotnet \"$@\"`.\n- Migrations: generate real EF migrations per module (`dotnet-ef` inside the SDK container, design-time factories exist in each module's Infrastructure).\n\n## Conventions that bite\n\n- API JSON: camelCase properties, `JsonStringEnumConverter(CamelCase)` (C# enums serialize as `\"active\"`), nulls omitted (`WhenWritingNull`) — web code must treat missing as null.\n- Register module handlers from the **Application** assembly in `AddModuleHandlers` (Contracts-assembly registration alone silently registers nothing; pass Domain/Contracts too so their domain/integration event types resolve in the outbox).\n- Integration events: raise them with `IIntegrationEventOutbox.Enqueue(...)` inside a command handler — the row lands in the module's outbox in the command transaction, and `OutboxProcessor` publishes it to `IEventBus`.\n- Error codes and permission names are localized in `src/Shared/Sense.Shared.Infrastructure/Resources/SharedResource{,.en}.resx`.\n- New permission keys reach existing tenants via `SystemRolePermissionSynchronizer` at API startup; add keys to `SystemRoleDefinitions` include lists.\n\n## Tracking and parallel work\n\n- Roadmap: `docs/analysis/kolayik-video/11.7-yol-haritasi.md`. Status docs: `faz0-durum-takibi.md`, `faz1a-durum-takibi.md` in the same folder — update them whenever an item's status changes, verified against code.\n- Two machines work in parallel per `docs/implementation/paralel-gelistirme-plani.md`: PC-A owns Identity/Organization/Employee/Documents/DataTransfer, `src/Shared/*`, web shell/settings/employee pages; PC-B owns Workflow/Notifications/Leave. Touch \"hot files\" (§5) append-only; branches `a/<topic>` / `b/<module>-<topic>`; `git fetch && git rebase origin/main` daily.\n",
+    ".gitignore": "# Claude Code agent worktrees (local scratch, never part of the repo)\n.claude/worktrees/\n\n# .NET\nbin/\nobj/\n*.user\n*.suo\n.vs/\n.idea/\n*.swp\nTestResults/\ncoverage/\n*.snupkg\nartifacts/\n\n# Node\nnode_modules/\ndist/\ndist-ssr/\n.vite/\n*.tsbuildinfo\n.pnpm-store/\npackage-lock.json\nyarn.lock\n.expo/\n.expo-shared/\nweb-build/\n\n# Env / secrets\n.env\n.env.*\n!.env.example\nappsettings.Local.json\n*.pfx\n*.pem\n\n# OS\n.DS_Store\nThumbs.db\ndesktop.ini\n\n# Logs\nlogs/\n*.log\n\n# Docker volumes\ninfra/.data/\n\n# Agent/tool artifacts (kept out of the repo on purpose; see 6cc399d which had to untrack them\n# after a `git add -A` swept them in). Remove these lines if AGENTS.md ever becomes a real doc.\n.codex/\nAGENTS.md\n"
+  },
+  "olusturulan_dizinler": [
+    ".claude/agents",
+    ".claude/takim",
+    ".claude/takim/betikler"
+  ]
+}

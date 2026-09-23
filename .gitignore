@@ -51,3 +51,5 @@ infra/.data/
 # after a `git add -A` swept them in). Remove these lines if AGENTS.md ever becomes a real doc.
 .codex/
 AGENTS.md
+# /takim-kur kanıt kayıtları
+.claude/takim/kanit/
