@@ -23,6 +23,7 @@ import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
 import ProfileScreen from "@/screens/app/ProfileScreen";
 import SupportScreen from "@/screens/app/SupportScreen";
 import CheckInScreen from "@/screens/app/CheckInScreen";
+import ShiftScreen from "@/screens/app/ShiftScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -124,6 +125,7 @@ function AppNavigator() {
         component={CheckInScreen}
         options={{ title: "Giriş / Çıkış" }}
       />
+      <AppStack.Screen name="Shift" component={ShiftScreen} options={{ title: "Vardiyalarım" }} />
     </AppStack.Navigator>
   );
 }

@@ -125,6 +125,10 @@ export default function AttendanceScreen() {
         <Text style={styles.checkInButtonText}>QR ile giriş / çıkış yap</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.shiftButton} onPress={() => navigation.navigate("Shift")}>
+        <Text style={styles.shiftButtonText}>Vardiyalarımı görüntüle</Text>
+      </TouchableOpacity>
+
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
@@ -193,6 +197,18 @@ const styles = StyleSheet.create({
   checkInButtonText: {
     ...typography.body,
     color: colors.white,
+    fontWeight: "600",
+  },
+  shiftButton: {
+    backgroundColor: colors.gray100,
+    borderRadius: 8,
+    padding: spacing.md,
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  shiftButtonText: {
+    ...typography.body,
+    color: colors.primary,
     fontWeight: "600",
   },
   container: {
