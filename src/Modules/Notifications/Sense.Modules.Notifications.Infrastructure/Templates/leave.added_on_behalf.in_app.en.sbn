@@ -1,0 +1,2 @@
+{{- subject = "A leave was added for you" -}}
+{{ leave_type_name }} leave added: {{ start_date }} - {{ end_date }} ({{ days }} day(s)).

@@ -44,6 +44,9 @@ public static class NotificationTemplateKeys
 
     /// <summary>The employee: ücret pusulası PDF attached (Payroll.PayrollPeriodPaid).</summary>
     public const string PayslipReady = "payroll.payslip_ready";
+
+    /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
+    public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>

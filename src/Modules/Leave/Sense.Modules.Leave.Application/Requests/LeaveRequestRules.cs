@@ -36,7 +36,7 @@ public sealed class LeaveRequestRules(
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
-        bool requireSelfService = true, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
+        bool requireSelfService = true, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null, decimal? manualDays = null)
     {
         if (end < start)
         {
@@ -96,6 +96,13 @@ public sealed class LeaveRequestRules(
             // Hourly/HalfDay still need the single day to be open (not a holiday/weekly rest the type doesn't count).
             var dayOpen = (await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct)).Days > 0m;
             days = !dayOpen ? 0m : type.Unit == LeaveUnit.Hourly ? LeavePartialDay.HourlyFraction(startTime!.Value, endTime!.Value) : LeavePartialDay.HalfDayFraction;
+        }
+
+        // Manager/HR entering leave on behalf may override the auto-calculated day count (m.24); every limit/balance
+        // check below then runs against the overridden value, so type rules (min/max/balance) still apply to it.
+        if (manualDays is { } overrideDays)
+        {
+            days = overrideDays;
         }
 
         if (days <= 0m)

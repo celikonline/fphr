@@ -450,6 +450,55 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task CreateOnBehalf_WithManualDays_OverridesCalculatedDays_AndPublishesLeaveAddedOnBehalf()
+    {
+        // TK-014: HR/manager may override the auto-calculated day count when adding leave on an employee's behalf;
+        // the override still has to respect the type's PerRequestMaxDays (Excuse: 2 days), and the employee gets notified.
+        var (tenantId, employeeId, _) = await HireAsync();
+        _currentUser.EmployeeId.Returns(employeeId);
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+
+        using var read = ServiceProvider!.CreateScope();
+        var excuseId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Excuse).Id;
+
+        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(
+                new CreateLeaveRequestOnBehalfCommand(employeeId, excuseId, monday, monday, "doktor randevusu", true, ManualDays: 2m), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        created.IsSuccess.ShouldBeTrue(created.IsFailure ? created.Error.Code : null);
+        created.Value.CalculatedDays.ShouldBe(2m);
+
+        using var verify = ServiceProvider!.CreateScope();
+        var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
+        (await db.Requests.SingleAsync(r => r.Id == created.Value.Id)).CalculatedDays.ShouldBe(2m);
+
+        var outbox = await db.OutboxMessages.Where(m => m.TenantId == tenantId).Select(m => m.Type).ToListAsync();
+        outbox.ShouldContain(t => t.EndsWith(nameof(Contracts.Events.LeaveAddedOnBehalf), StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateOnBehalf_WithManualDays_AbovePerRequestLimit_IsRejected()
+    {
+        var (tenantId, employeeId, _) = await HireAsync();
+        _currentUser.EmployeeId.Returns(employeeId);
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+
+        using var read = ServiceProvider!.CreateScope();
+        var excuseId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Excuse).Id;
+
+        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(
+                new CreateLeaveRequestOnBehalfCommand(employeeId, excuseId, monday, monday, "doktor randevusu", true, ManualDays: 3m), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        created.IsFailure.ShouldBeTrue();
+        created.Error.Code.ShouldBe(LeaveRequestErrors.AbovePerRequestLimit);
+    }
+
+    [Fact]
     public async Task Resubmission_RequiresOwnRejectedRequest()
     {
         var (tenantId, employeeId, annualId) = await HireAsync();

@@ -1,0 +1,3 @@
+{{- subject = "Adınıza izin eklendi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Yöneticiniz/İK, sizin adınıza <strong>{{ leave_type_name | html.escape }}</strong> izni ekledi: {{ start_date }} - {{ end_date }} ({{ days }} gün).</p>
