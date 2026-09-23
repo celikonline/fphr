@@ -53,6 +53,50 @@ public sealed class CreateCompanyEventHandler(
     }
 }
 
+/// <summary>Manuel şirket etkinliğini düzenle (senseik-027 / roadmap #71 - sil-yeniden oluşturma yerine).</summary>
+[RequiresPermission("announcements.events.manage")]
+public sealed record UpdateCompanyEventCommand(
+    Guid EventId,
+    string Title,
+    string? Description,
+    DateOnly EventDate,
+    CompanyEventType Type,
+    Guid? VisibilityOrgUnitId) : ICommand;
+
+public sealed class UpdateCompanyEventValidator : AbstractValidator<UpdateCompanyEventCommand>
+{
+    public UpdateCompanyEventValidator()
+    {
+        RuleFor(x => x.Title).NotEmpty().MaximumLength(CompanyEventLimits.TitleMaxLength);
+        RuleFor(x => x.Description).MaximumLength(CompanyEventLimits.DescriptionMaxLength);
+        RuleFor(x => x.Type).IsInEnum().Must(t => t is CompanyEventType.CompanyEvent or CompanyEventType.Meeting)
+            .WithMessage("Yalnızca CompanyEvent ve Meeting türleri manuel düzenlenebilir.");
+    }
+}
+
+public sealed class UpdateCompanyEventHandler(
+    ITenantContext tenant, ICompanyEventRepository events, IOrgUnitLookup orgUnits)
+    : ICommandHandler<UpdateCompanyEventCommand>
+{
+    public async Task<Result> Handle(UpdateCompanyEventCommand command, CancellationToken cancellationToken)
+    {
+        var companyEvent = await events.GetByIdAsync(tenant.TenantId, command.EventId, cancellationToken);
+        if (companyEvent is null)
+        {
+            return Error.NotFound(CompanyEventDomainErrors.NotFound);
+        }
+
+        if (command.VisibilityOrgUnitId is { } orgUnitId
+            && !await orgUnits.ExistsActiveAsync(tenant.TenantId, orgUnitId, cancellationToken))
+        {
+            return Error.Validation(AnnouncementsErrors.VisibilityOrgUnitNotFound);
+        }
+
+        return companyEvent.Update(
+            command.Title, command.Description, command.EventDate, command.Type, command.VisibilityOrgUnitId);
+    }
+}
+
 /// <summary>Manuel şirket etkinliğini sil (senseik-027).</summary>
 [RequiresPermission("announcements.events.manage")]
 public sealed record DeleteCompanyEventCommand(Guid EventId) : ICommand;
