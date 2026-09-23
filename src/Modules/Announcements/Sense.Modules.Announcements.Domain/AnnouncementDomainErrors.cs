@@ -26,6 +26,15 @@ public static class SupportDomainErrors
     public const string ResolutionRequired = "support_ticket.resolution_required";
 }
 
+/// <summary>Domain error codes for takdir/teşekkür (Recognition) messages (roadmap #73).</summary>
+public static class RecognitionDomainErrors
+{
+    public const string MessageRequired = "recognition.message_required";
+    public const string CannotRecognizeSelf = "recognition.cannot_recognize_self";
+    public const string SenderNotFound = "recognition.sender_not_found";
+    public const string ReceiverNotFound = "recognition.receiver_not_found";
+}
+
 /// <summary>Length limits shared by Announcements and Support entities.</summary>
 public static class AnnouncementsLimits
 {
@@ -41,4 +50,6 @@ public static class AnnouncementsLimits
     public const int BodyMaxLength = 10_000;
     public const int ResolutionMaxLength = 5_000;
     public const int SearchTermMaxLength = 200;
+    /// <summary>Takdir/teşekkür mesajı; "kısa" bir not olması istendiği için duyuru içeriğinden çok daha dar bir sınır.</summary>
+    public const int RecognitionMessageMaxLength = 300;
 }

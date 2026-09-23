@@ -1418,6 +1418,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>Dosya boyutu izin verilen sınırı aşıyor.</value></data>
   <data name="announcement_attachment.too_many" xml:space="preserve"><value>Bu duyuruya eklenebilecek azami dosya sayısına ulaşıldı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
+  <data name="recognition.message_required" xml:space="preserve"><value>Takdir mesajı gereklidir ve 300 karakteri aşamaz.</value></data>
+  <data name="recognition.cannot_recognize_self" xml:space="preserve"><value>Kendinize takdir mesajı gönderemezsiniz.</value></data>
+  <data name="recognition.sender_not_found" xml:space="preserve"><value>Takdir mesajı göndermek için bir çalışan kaydınız olmalı.</value></data>
+  <data name="recognition.receiver_not_found" xml:space="preserve"><value>Alıcı çalışan bulunamadı.</value></data>
   <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
   <data name="announcements.my.feed" xml:space="preserve"><value>Duyuru akışım</value></data>

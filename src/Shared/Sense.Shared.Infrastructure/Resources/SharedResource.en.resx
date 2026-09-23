@@ -1409,6 +1409,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>The file exceeds the allowed size.</value></data>
   <data name="announcement_attachment.too_many" xml:space="preserve"><value>This announcement has reached its maximum number of attachments.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Read record not found.</value></data>
+  <data name="recognition.message_required" xml:space="preserve"><value>A recognition message is required and cannot exceed 300 characters.</value></data>
+  <data name="recognition.cannot_recognize_self" xml:space="preserve"><value>You cannot send a recognition message to yourself.</value></data>
+  <data name="recognition.sender_not_found" xml:space="preserve"><value>You must have an employee record to send a recognition message.</value></data>
+  <data name="recognition.receiver_not_found" xml:space="preserve"><value>Recipient employee not found.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>A ticket subject is required and cannot exceed 200 characters.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Ticket content is required.</value></data>
   <data name="support_ticket.not_found" xml:space="preserve"><value>Support ticket not found.</value></data>

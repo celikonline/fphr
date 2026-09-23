@@ -73,3 +73,16 @@ public sealed class AnnouncementReadRecordRepository(AnnouncementsDbContext cont
             .Select(r => r.AnnouncementId)
             .ToListAsync(cancellationToken);
 }
+
+/// <summary>EF Core-backed Recognition repository.</summary>
+public sealed class RecognitionRepository(AnnouncementsDbContext context) : IRecognitionRepository
+{
+    public void Add(Recognition recognition) => context.Recognitions.Add(recognition);
+
+    public async Task<IReadOnlyList<Recognition>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default) =>
+        await context.Recognitions
+            .Where(r => r.TenantId == tenantId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+}

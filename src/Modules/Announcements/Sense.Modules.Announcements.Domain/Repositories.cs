@@ -75,3 +75,12 @@ public interface ICompanyEventRepository
     /// <summary>Every manual event whose EventDate falls in [from, to], regardless of visibility (callers filter).</summary>
     Task<IReadOnlyList<CompanyEvent>> GetInRangeAsync(Guid tenantId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Çalışanlar arası kısa takdir/teşekkür mesajı repository (roadmap #73).</summary>
+public interface IRecognitionRepository
+{
+    void Add(Recognition recognition);
+
+    /// <summary>En yeni <paramref name="take"/> mesaj, en yeni önce (Announcements akışına dahil edilir).</summary>
+    Task<IReadOnlyList<Recognition>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default);
+}
