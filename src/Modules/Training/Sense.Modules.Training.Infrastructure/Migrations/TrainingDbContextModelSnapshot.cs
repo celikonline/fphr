@@ -30,6 +30,15 @@ namespace Sense.Modules.Training.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("cancellation_reason");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
                     b.Property<string>("CertificateNumber")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -90,7 +99,8 @@ namespace Sense.Modules.Training.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "TrainingProgramId", "EmployeeId")
                         .IsUnique()
-                        .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId_EmployeeId");
+                        .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId_EmployeeId")
+                        .HasFilter("status <> 'Cancelled'");
 
                     b.ToTable("Enrollments", "training");
                 });

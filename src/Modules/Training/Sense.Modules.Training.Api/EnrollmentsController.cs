@@ -11,6 +11,8 @@ public sealed record CreateEnrollmentRequest(Guid TrainingProgramId, Guid Employ
 
 public sealed record CompleteEnrollmentRequest(string? CertificateNumber);
 
+public sealed record CancelEnrollmentRequest(string? Reason);
+
 /// <summary>Eğitim programı katılımcı kayıtları (roadmap #72: ön koşul tamamlanmadan kayıt reddedilir - bkz. CreateEnrollmentHandler).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/training/enrollments")]
@@ -45,6 +47,6 @@ public sealed class EnrollmentsController : ApiControllerBase
 
     [HttpPost(ApiRoutes.IdParam + "/cancel")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CancelEnrollmentCommand(id), ct));
+    public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelEnrollmentRequest? request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CancelEnrollmentCommand(id, request?.Reason), ct));
 }
