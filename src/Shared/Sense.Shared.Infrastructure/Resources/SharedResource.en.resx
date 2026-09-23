@@ -1055,6 +1055,25 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Equipment</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Bulk-import equipment (computers, phones, vehicles, etc.) assigned to employees.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Employees are matched by national id; a row with no matching active employee is an error.</value></data>
+  <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>A category name that doesn't exist yet is created automatically; matching against existing categories ignores case and whitespace.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>A filled-in return date makes the row a closed (already returned) item; leaving it blank makes it an open (currently held) item.</value></data>
+  <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Valid: still held by the employee.</value></data>
+  <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Valid: a returned, past item.</value></data>
+  <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>National id</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11-digit national id; the employee is matched by this number.</value></data>
+  <data name="import.column.assets.categoryName" xml:space="preserve"><value>Category</value></data>
+  <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Equipment category (e.g. Computer, Phone, Vehicle); created automatically if it doesn't exist.</value></data>
+  <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Serial number</value></data>
+  <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>The device's serial number, if any; the same category + serial number updates the existing item, otherwise a new item is created.</value></data>
+  <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Issue date</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>The date the equipment was issued to the employee (dd.MM.yyyy).</value></data>
+  <data name="import.column.assets.returnedAt" xml:space="preserve"><value>Return date</value></data>
+  <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>The date the equipment was returned (dd.MM.yyyy); left blank, the item is still considered open.</value></data>
+  <data name="import.column.assets.note" xml:space="preserve"><value>Description</value></data>
+  <data name="import.column.assets.note.description" xml:space="preserve"><value>Notable details about the item (brand/model etc.); optional.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>

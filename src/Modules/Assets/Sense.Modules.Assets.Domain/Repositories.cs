@@ -36,6 +36,9 @@ public interface IAssetRepository
     /// <summary>True when another asset (not <paramref name="excludeAssetId"/>) with the same serial number is currently Assigned - a physical item cannot be issued twice.</summary>
     Task<bool> IsSerialNumberAssignedElsewhereAsync(string serialNumber, Guid excludeAssetId, CancellationToken cancellationToken = default);
 
+    /// <summary>The existing asset in this category with this serial number, if any (import row matching - 11.3.08 md.67 "aynı kategori + seri no ile mevcut varlık kullanılır").</summary>
+    Task<Asset?> FindByCategoryAndSerialNumberAsync(Guid categoryId, string serialNumber, CancellationToken cancellationToken = default);
+
     /// <summary>True when an AssetUnreturnedAtTermination audit event for this asset+employee already exists in the module outbox (idempotency guard).</summary>
     Task<bool> HasUnreturnedTerminationAuditAsync(Guid tenantId, Guid assetId, Guid employeeId, CancellationToken cancellationToken = default);
 

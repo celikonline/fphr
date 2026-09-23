@@ -72,6 +72,11 @@ public sealed class AssetRepository(AssetsDbContext context) : IAssetRepository
             a => a.Id != excludeAssetId && a.Status == AssetStatus.Assigned && a.SerialNumber != null && a.SerialNumber.ToLower() == serialNumber.ToLower(),
             cancellationToken);
 
+    public async Task<Asset?> FindByCategoryAndSerialNumberAsync(Guid categoryId, string serialNumber, CancellationToken cancellationToken = default) =>
+        await context.Assets.FirstOrDefaultAsync(
+            a => a.CategoryId == categoryId && a.SerialNumber != null && a.SerialNumber.ToLower() == serialNumber.ToLower(),
+            cancellationToken);
+
     public async Task<bool> HasUnreturnedTerminationAuditAsync(Guid tenantId, Guid assetId, Guid employeeId, CancellationToken cancellationToken = default)
     {
         var typeName = EventTypeRegistry.NameOf(typeof(AssetUnreturnedAtTermination));
