@@ -1,7 +1,7 @@
 {
   "id": "TK-015",
   "baslik": "Announcements - etkinlik takviminde duzenleme (Update) eksik",
-  "durum": "birlesti",
+  "durum": "incelemede",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/announcements-etkinlik-guncelle",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:21 (#71 - etkinlik duzenleme yok, yalniz sil-yeniden olustur)",
@@ -13,6 +13,6 @@
   ],
   "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
   "riskli_alan": false,
-  "kanit": null,
+  "kanit": "web: eaee8091, PR #127",
   "handoff": "docs/takim/handoff/TK-015.md"
 }

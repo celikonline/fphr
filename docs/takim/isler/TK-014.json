@@ -1,7 +1,7 @@
 {
   "id": "TK-014",
   "baslik": "Leave - yonetici izin eklerken gun sayisini elle degistirme + bilgilendirme e-postasi",
-  "durum": "birlesti",
+  "durum": "incelemede",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/leave-yonetici-ekleme",
   "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:30 (#24 - gun sayisini elle degistirme, calisani bilgilendirme e-postasi yok)",
@@ -13,6 +13,6 @@
   ],
   "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
   "riskli_alan": false,
-  "kanit": null,
+  "kanit": "web: 81fe4794, PR #128",
   "handoff": "docs/takim/handoff/TK-014.md"
 }
