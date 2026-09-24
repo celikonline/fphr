@@ -1,13 +1,15 @@
 name: Workstation deploy
 
-# dev -> main PR merge edilince workstation'daki canlı senseik kurulumu
-# (~/uygulamalar/senseik) otomatik güncellenir. Runner: makinedeki
-# self-hosted "workstation" (label: senseik) — dışarıdan erişim gerekmez.
+# Workstation'daki canlı senseik kurulumunu (~/uygulamalar/senseik) main'e
+# eşitler. Runner: makinedeki self-hosted "workstation" (label: senseik) —
+# dışarıdan erişim gerekmez.
 
+# İnsan onayı olmadan CI/CD başlamaz: yalnız elle (Actions > Run workflow)
+# tetiklenir. Otomatik deploy'u geri açmak için aşağıdaki bloğu yorumdan çıkarın.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+  # push:
+  #   branches: [main]
 
 concurrency:
   group: workstation-deploy
