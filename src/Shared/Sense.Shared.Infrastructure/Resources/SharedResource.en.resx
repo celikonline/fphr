@@ -1435,6 +1435,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="announcement.already_archived" xml:space="preserve"><value>This announcement is already archived.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Announcement not found.</value></data>
   <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Only draft announcements can be edited.</value></data>
+  <data name="announcement.scheduled_for_must_be_future" xml:space="preserve"><value>The scheduled publish date/time must be in the future.</value></data>
   <data name="announcement_attachment.not_found" xml:space="preserve"><value>Attachment not found.</value></data>
   <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>This file type is not allowed.</value></data>
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>The file exceeds the allowed size.</value></data>

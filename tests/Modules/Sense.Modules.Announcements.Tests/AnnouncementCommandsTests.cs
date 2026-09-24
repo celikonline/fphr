@@ -29,6 +29,84 @@ public class AnnouncementCommandsTests
         repository.Received(1).Add(Arg.Is<Announcement>(a => a.TenantId == tenantId && a.Title == "Test Announcement"));
     }
 
+    /// <summary>TK-016: ScheduledFor verilirse duyuru taslak yerine Scheduled olarak oluşturulur (elle Publish gerekmez).</summary>
+    [Fact]
+    public async Task CreateAnnouncement_WithScheduledFor_ShouldBeScheduled_NotDraft()
+    {
+        var tenantId = Guid.NewGuid();
+        var scheduledFor = DateTime.UtcNow.AddDays(1);
+        var command = new CreateAnnouncementCommand("Test Announcement", "This is a test announcement", AnnouncementType.General, AnnouncementPriority.High, ScheduledFor: scheduledFor);
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+
+        var repository = Substitute.For<IAnnouncementRepository>();
+        Announcement? created = null;
+        repository.When(r => r.Add(Arg.Any<Announcement>())).Do(call => created = call.Arg<Announcement>());
+
+        var handler = new CreateAnnouncementHandler(tenant, repository);
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(created);
+        Assert.Equal(AnnouncementStatus.Scheduled, created!.Status);
+        Assert.Equal(scheduledFor, created.ScheduledFor);
+    }
+
+    /// <summary>TK-016 kabul kriteri #3: ScheduledFor verilmezse davranış değişmedi (taslak, elle Publish gerekir).</summary>
+    [Fact]
+    public async Task CreateAnnouncement_WithoutScheduledFor_ShouldStayDraft()
+    {
+        var tenantId = Guid.NewGuid();
+        var command = new CreateAnnouncementCommand("Test Announcement", "This is a test announcement", AnnouncementType.General, AnnouncementPriority.High);
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+
+        var repository = Substitute.For<IAnnouncementRepository>();
+        Announcement? created = null;
+        repository.When(r => r.Add(Arg.Any<Announcement>())).Do(call => created = call.Arg<Announcement>());
+
+        var handler = new CreateAnnouncementHandler(tenant, repository);
+        await handler.Handle(command, CancellationToken.None);
+
+        Assert.NotNull(created);
+        Assert.Equal(AnnouncementStatus.Draft, created!.Status);
+        Assert.Null(created.ScheduledFor);
+    }
+
+    /// <summary>TK-016: PublishScheduledAnnouncementsJob'ın çağırdığı domain metodu - zamanı gelmiş bir Scheduled duyuruyu yayınlar.</summary>
+    [Fact]
+    public void PublishScheduled_WhenScheduled_ShouldPublish()
+    {
+        var tenantId = Guid.NewGuid();
+        var scheduledFor = new DateTime(2026, 9, 25, 9, 0, 0, DateTimeKind.Utc);
+        var announcement = Announcement.Create(
+            tenantId, "Title", "Content", AnnouncementType.General, AnnouncementPriority.Normal, scheduledFor: scheduledFor).Value;
+        Assert.Equal(AnnouncementStatus.Scheduled, announcement.Status);
+
+        var now = scheduledFor.AddMinutes(1);
+        var result = announcement.PublishScheduled(now);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(AnnouncementStatus.Published, announcement.Status);
+        Assert.Equal(now, announcement.PublishedAt);
+    }
+
+    /// <summary>Zaten yayınlanmış/taslak bir duyuru için PublishScheduled çağrısı bir hata döner (yalnız Scheduled durumdan geçer).</summary>
+    [Fact]
+    public void PublishScheduled_WhenNotScheduled_ShouldFail()
+    {
+        var tenantId = Guid.NewGuid();
+        var announcement = Announcement.Create(tenantId, "Title", "Content", AnnouncementType.General, AnnouncementPriority.Normal).Value;
+
+        var result = announcement.PublishScheduled(DateTime.UtcNow);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(AnnouncementDomainErrors.CannotPublish, result.Error.Code);
+        Assert.Equal(AnnouncementStatus.Draft, announcement.Status);
+    }
+
     [Fact]
     public void CreateAnnouncementValidator_WithEmptyTitle_ShouldFail()
     {

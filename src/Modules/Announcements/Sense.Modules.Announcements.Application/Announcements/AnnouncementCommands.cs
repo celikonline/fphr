@@ -9,14 +9,17 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Announcements.Application.Announcements;
 
-/// <summary>Duyuru oluştur (taslak; İK/Admin tarafından).</summary>
+/// <summary>Duyuru oluştur (taslak; İK/Admin tarafından). <see cref="ScheduledFor"/> verilirse (gelecek tarih/saat) duyuru
+/// taslak yerine "Scheduled" olarak oluşturulur ve PublishScheduledAnnouncementsJob (TK-016) o zaman geldiğinde otomatik
+/// yayınlar - elle Publish çağrısı gerekmez.</summary>
 [RequiresPermission("announcements.announcements.manage")]
 public sealed record CreateAnnouncementCommand(
     string Title,
     string Content,
     AnnouncementType Type,
     AnnouncementPriority Priority,
-    string? TargetAudience = null) : ICommand<Guid>;
+    string? TargetAudience = null,
+    DateTime? ScheduledFor = null) : ICommand<Guid>;
 
 public sealed class CreateAnnouncementValidator : AbstractValidator<CreateAnnouncementCommand>
 {
@@ -29,6 +32,7 @@ public sealed class CreateAnnouncementValidator : AbstractValidator<CreateAnnoun
         RuleFor(x => x.Type).IsInEnum();
         RuleFor(x => x.Priority).IsInEnum();
         RuleFor(x => x.TargetAudience).MaximumLength(AnnouncementsLimits.TargetAudienceMaxLength);
+        RuleFor(x => x.ScheduledFor).Must(v => v is null || v > DateTime.UtcNow).WithMessage(AnnouncementDomainErrors.ScheduledForMustBeFuture);
     }
 }
 
@@ -40,7 +44,8 @@ public sealed class CreateAnnouncementHandler(ITenantContext tenant, IAnnounceme
 #pragma warning restore CS1998
     {
         var sanitizedContent = AnnouncementContentSanitizer.Sanitize(command.Content);
-        var created = Announcement.Create(tenant.TenantId, command.Title, sanitizedContent, command.Type, command.Priority, command.TargetAudience);
+        var created = Announcement.Create(
+            tenant.TenantId, command.Title, sanitizedContent, command.Type, command.Priority, command.TargetAudience, command.ScheduledFor);
         if (created.IsFailure)
         {
             return created.Error;
