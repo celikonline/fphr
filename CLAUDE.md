@@ -20,7 +20,7 @@ HR/payroll SaaS. .NET 10 modular monolith (`src/Modules/*`, one schema + DbConte
 ## Tracking and parallel work
 
 - Roadmap: `docs/analysis/kolayik-video/11.7-yol-haritasi.md`. Status docs: `faz0-durum-takibi.md`, `faz1a-durum-takibi.md` in the same folder — update them whenever an item's status changes, verified against code.
-- Two machines work in parallel per `docs/implementation/paralel-gelistirme-plani.md`: PC-A owns Identity/Organization/Employee/Documents/DataTransfer, `src/Shared/*`, web shell/settings/employee pages; PC-B owns Workflow/Notifications/Leave. Touch "hot files" (§5) append-only; branches `a/<topic>` / `b/<module>-<topic>`; `git fetch && git rebase origin/main` daily.
+- Single machine: all modules, web and mobile are developed on this machine (the PC-A/PC-B split in `docs/implementation/paralel-gelistirme-plani.md` is retired since 2026-09-24). Parallel sessions still share the working tree, so touch that plan's "hot files" (§5) append-only; branches `a/<topic>` (team cards: `takim/<topic>`); `git fetch && git rebase origin/main` daily.
 
 <!-- takim-kur:basla -->
 ## Ajan takımı (/takim-kur)

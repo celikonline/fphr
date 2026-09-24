@@ -4,9 +4,9 @@ Bu klasör, ECC `team-agent-orchestration` skill'inin beklediği **agent Kanban*
 depodaki kalıcı hali. Amaç: paralel çalışan ajanların çıktısı sohbette kalmasın,
 sahibi ve merge kapısı belli iş kalemlerine dönüşsün.
 
-Mevcut `docs/implementation/paralel-gelistirme-plani.md` (PC-A / PC-B sahipliği,
-sıcak dosyalar, dal adlandırma) **üst kural**dır. Board onu değiştirmez, üstüne
-görünürlük ekler.
+Mevcut `docs/implementation/paralel-gelistirme-plani.md` (sıcak dosyalar, git
+akışı) **üst kural**dır. Board onu değiştirmez, üstüne görünürlük ekler.
+PC-A / PC-B ayrımı 2026-09-24'ten beri geçersiz; tüm işler tek makinede.
 
 ## Kolonlar
 
@@ -33,10 +33,9 @@ Yeni kart: `cards/TEMPLATE.json` dosyasını kopyala, id'yi sıradaki numara yap
 
 | Şerit | Sahip | Alan | Dal öneki |
 |---|---|---|---|
-| PC-A | Identity, Organization, Employee, Documents, Recruitment, Expense, `src/Shared/*`, web kabuğu/ayarlar/çalışan sayfaları | `a/<konu>` |
-| PC-B | Workflow, Notifications, Leave + bunların web sayfaları | `b/<modül>-<konu>` |
+| Tek makine | Tüm modüller, web ve mobil | `a/<konu>` (takım kartları `takim/<konu>`) |
 
-Karşı tarafın alanına ihtiyaç → önce `*.Contracts`'a küçük, ayrı PR (contract-first).
+Başka modülün alanına ihtiyaç → önce `*.Contracts`'a küçük, ayrı PR (contract-first).
 Sıcak dosyalara (`ModuleCatalog.cs`, `Sense.Migrator/Program.cs`,
 `Sense.Worker/Program.cs`, `Sense.slnx`) dokunuş **append-only**.
 

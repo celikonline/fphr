@@ -1,5 +1,7 @@
 # Paralel Geliştirme Planı — İki Makine (PC-A / PC-B)
 
+> **Geçersiz (2026-09-24):** PC-B yok; tüm modüller, web ve mobil tek makinede geliştiriliyor. §1, §2, §3, §4, §7, §8'deki makine ayrımı ve sahiplik artık uygulanmaz. Aynı çalışma ağacını paralel oturumlar paylaştığı için §5 (sıcak dosyalara yalnız ekleme) ve §6 (git akışı) geçerli; dal öneki `a/<konu>` (takım kartları `takim/<konu>`).
+
 **Tarih:** 2026-09-15
 **Kaynaklar:** [11.7-yol-haritasi.md](../analysis/kolayik-video/11.7-yol-haritasi.md), [faz0-durum-takibi.md](../analysis/kolayik-video/faz0-durum-takibi.md), ADR [0001](../adr/0001-modular-monolith.md) (20 modül), [0003](../adr/0003-per-module-dbcontext.md) (modül başına DbContext)
 
