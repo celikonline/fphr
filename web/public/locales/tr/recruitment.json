@@ -44,7 +44,11 @@
     "closeSuccess": "İlan kapatıldı.",
     "archiveSuccess": "İlan arşivlendi.",
     "empty": "Henüz ilan yok.",
-    "viewDetail": "İlanı görüntüle"
+    "viewDetail": "İlanı görüntüle",
+    "access": "Erişim",
+    "accessHint": "Bu ilana, sahibi ve işe alım müdürü dışında kimlerin erişebileceğini yönetin.",
+    "accessEmpty": "Sahip ve işe alım müdürü dışında ek erişim tanımlanmadı.",
+    "accessSaved": "Erişim listesi güncellendi."
   },
   "postingDetail": {
     "careerLink": {
