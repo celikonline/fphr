@@ -35,7 +35,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) satır 39-51 (kalem #1-13
 **Bilinen açık noktalar / kararlar:**
 - Sistem rolü senkronizasyonu API başlangıcında sistem rollerindeki elle yapılmış izin değişikliklerini (Owner hariç) tanımlara geri çeker.
 - Onaylı destek (impersonation) oturumunda platform kullanıcısı kiracıda izin kontrolünden muaftır; bu oturumda `/identity/me` 401 döner (platform konsolu Faz 8).
-- `company-profile.tsx` (tüzel şirket bilgileri) ve `audit.service.ts` hâlâ localStorage mock — 13 kalemin dışında.
+- `company-profile.tsx` (tüzel şirket bilgileri) artık `@/services/company.service` üzerinden gerçek Organization API'sini kullanıyor (2026-09-23 TK-007 doğrulaması; component testi `a178cf81`). `audit.service.ts` hâlâ localStorage mock — 13 kalemin dışında.
 - Kod henüz commit edilmedi.
 
 ## Değişiklik geçmişi

@@ -1,7 +1,7 @@
 {
   "id": "TK-016",
   "baslik": "Announcements - duyurularda zamanli yayin (ScheduledFor)",
-  "durum": "birlesti",
+  "durum": "hazir",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/announcements-zamanli-yayin",
   "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md (satir 242) - zamanli yayin (ScheduledFor/worker job) yok",

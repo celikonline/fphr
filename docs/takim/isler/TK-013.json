@@ -1,7 +1,7 @@
 {
   "id": "TK-013",
   "baslik": "Leave - bakiye hesaplamada RecalculateFrom tarih parametresi eksik",
-  "durum": "calisiyor",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/leave-recalculate-from",
   "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:23 (#17 - RecalculateFrom tarih parametresi yok, 0 sonuc donuyor)",
