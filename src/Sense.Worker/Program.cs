@@ -257,6 +257,11 @@ builder.Services.AddModuleHandlers(
     typeof(AssetsDbContext).Assembly,
     typeof(Sense.Modules.Assets.Contracts.AssetsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AssetsDbContext>>();
+// The scan above includes the Assets Application assembly, so it also picks up the API-only AssignAssetHandler, which
+// (TK-018) submits to Workflow through IWorkflowService - registered only by the API host. The Worker never serves
+// commands, so drop it here or the host fails DI validation at startup (mirrors the Leave ledger query above).
+Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll<
+    Sense.Shared.Contracts.Messaging.ICommandHandler<Sense.Modules.Assets.Application.Assets.AssignAssetCommand>>(builder.Services);
 
 // Integrations (Faz 8 #61): consumes Employee's employee.* lifecycle events and turns them into outbound webhook
 // deliveries for tenants with an active subscription (see faz8-durum-takibi.md). Writes nothing to its own outbox
