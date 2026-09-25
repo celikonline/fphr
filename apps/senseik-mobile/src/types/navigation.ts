@@ -21,7 +21,7 @@ export type AppStackParamList = {
   Shift: undefined;
   Goals: undefined;
   PunchRequest: undefined;
-  PayslipDetail: undefined;
+  PayslipDetail: { payslip: import("@/services/PayslipService").MyPayslip };
 };
 
 export type MainTabsParamList = {
