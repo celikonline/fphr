@@ -64,6 +64,9 @@ public sealed class AttendanceModule : IModule
         services.AddScoped<IImportTemplate, Application.Terminals.TerminalCredentialImportTemplate>();
         services.AddScoped<IImportRowHandler, Application.Terminals.TerminalCredentialImportRowHandler>();
         services.AddScoped<Application.Terminals.ITerminalCredentialSaver, Infrastructure.Terminals.TerminalCredentialSaver>();
+        services.AddOptions<TerminalCredentials.TerminalCredentialThrottleOptions>()
+            .Bind(configuration.GetSection(TerminalCredentials.TerminalCredentialThrottleOptions.Section));
+        services.AddSingleton<TerminalCredentials.TerminalCredentialThrottle>();
         services.AddOptions<Application.Terminals.TerminalCredentialImportOptions>()
             .Bind(configuration.GetSection(Application.Terminals.TerminalCredentialImportOptions.Section));
     }

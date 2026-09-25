@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.DataTransfer.Application.ImportJobs;
@@ -36,6 +37,7 @@ public sealed class SensitiveImportTemplateTests : TestFixture
     private readonly SecretRowHandler _handler = new();
     private readonly PlainTemplate _plainTemplate = new();
     private readonly ShiftableClock _clock = new();
+    private readonly CapturingLoggerProvider _logs = new();
 
     protected override void ConfigureServices(IServiceCollection services)
     {
@@ -49,6 +51,7 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         services.AddSingleton<IImportTemplate>(_plainTemplate);
         services.AddSingleton<IImportRowHandler>(new PlainRowHandler());
         services.AddSingleton<TimeProvider>(_clock);
+        services.AddSingleton<ILoggerProvider>(_logs);
     }
 
     protected override async Task OnDatabaseReadyAsync() =>
@@ -145,6 +148,22 @@ public sealed class SensitiveImportTemplateTests : TestFixture
     }
 
     [Fact]
+    public async Task Sensitive_import_failure_log_contains_no_exception_message()
+    {
+        SetUser();
+        var job = await UploadAsync(File(("S-1", Secrets[0])));
+        await MapAsync(job);
+        _handler.Throw = true;
+        _handler.ThrowMessage = "duplicate key (tenant_id, kind, value)=(x, Pin, " + Secrets[0] + ")";
+
+        (await ExecuteCommandAsync(new RunImportJobCommand(job.Id))).Value.Status.ShouldBe("Failed");
+
+        var failure = _logs.Entries.Where(e => e.Contains(job.Id.ToString(), StringComparison.Ordinal)).ShouldHaveSingleItem();
+        failure.ShouldContain(nameof(InvalidOperationException));
+        _logs.Entries.ShouldAllBe(e => !e.Contains(Secrets[0]) && !e.Contains("duplicate key"));
+    }
+
+    [Fact]
     public async Task Sensitive_source_file_deleted_after_ttl_even_if_never_run()
     {
         var tenantId = SetUser();
@@ -188,22 +207,32 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         workbook.Worksheet(1).Cell(2, 2).GetString().ShouldBe("görünür");
     }
 
-    [Fact]
-    public async Task Sensitive_template_unrecognized_header_cells_are_masked()
+    [Theory]
+    [InlineData("tr-TR", "Sütun")]
+    [InlineData("en-US", "Column")]
+    public async Task Sensitive_template_unrecognized_header_cells_are_masked(string cultureName, string columnWord)
     {
         SetUser();
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo(cultureName);
+        try
+        {
+            // Başlık satırı olmayan dosya: 1. satırdaki değerler (PIN dahil) başlık sanılır. Yer tutucu istek kültüründe (tr/en).
+            var noHeader = await UploadAsync(File(["S-1", Secrets[0]], ("S-2", Secrets[1])));
+            var mixed = await UploadAsync(File([SecretTemplate.EmployeeHeader, Secrets[0]], ("S-2", Secrets[1])));
+            var plain = (await ExecuteCommandAsync(new CreateImportJobCommand(PlainTemplate.Code, "liste.xlsx", File(["S-1", Secrets[0]], ("S-2", Secrets[1]))))).Value;
 
-        // Başlık satırı olmayan dosya: 1. satırdaki değerler (PIN dahil) başlık sanılır.
-        var noHeader = await UploadAsync(File(["S-1", Secrets[0]], ("S-2", Secrets[1])));
-        var mixed = await UploadAsync(File([SecretTemplate.EmployeeHeader, Secrets[0]], ("S-2", Secrets[1])));
-        var plain = (await ExecuteCommandAsync(new CreateImportJobCommand(PlainTemplate.Code, "liste.xlsx", File(["S-1", Secrets[0]], ("S-2", Secrets[1]))))).Value;
-
-        noHeader.SourceColumns.Select(c => c.Header).ShouldBe(["Sütun 1", "Sütun 2"]);
-        mixed.SourceColumns.Select(c => c.Header).ShouldBe([SecretTemplate.EmployeeHeader, "Sütun 2"]);
-        mixed.SourceColumns[0].SuggestedTargetKey.ShouldBe(SecretTemplate.EmployeeKey);
-        plain.SourceColumns.Select(c => c.Header).ShouldBe(["S-1", Secrets[0]]);
-        (JsonSerializer.Serialize(noHeader) + JsonSerializer.Serialize(mixed) + await DataTransferRowsAsJsonAsync(onlyTemplate: SecretTemplate.Code))
-            .ShouldNotContain(Secrets[0]);
+            noHeader.SourceColumns.Select(c => c.Header).ShouldBe([$"{columnWord} 1", $"{columnWord} 2"]);
+            mixed.SourceColumns.Select(c => c.Header).ShouldBe([SecretTemplate.EmployeeHeader, $"{columnWord} 2"]);
+            mixed.SourceColumns[0].SuggestedTargetKey.ShouldBe(SecretTemplate.EmployeeKey);
+            plain.SourceColumns.Select(c => c.Header).ShouldBe(["S-1", Secrets[0]]);
+            (JsonSerializer.Serialize(noHeader) + JsonSerializer.Serialize(mixed) + await DataTransferRowsAsJsonAsync(onlyTemplate: SecretTemplate.Code))
+                .ShouldNotContain(Secrets[0]);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = previous;
+        }
     }
 
     [Fact]
@@ -357,6 +386,8 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         /// <summary>Modül işleyicisi patlarsa DataTransfer işi Failed'a çeker.</summary>
         public bool Throw { get; set; }
 
+        public string ThrowMessage { get; set; } = "module failure";
+
         /// <summary>Doluysa iş satır ayrıntısı olmadan bu kodla düşürülür (ImportBatchResult.FailureCode).</summary>
         public string? AbortCode { get; set; }
 
@@ -366,7 +397,7 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         {
             if (Throw)
             {
-                throw new InvalidOperationException("module failure");
+                throw new InvalidOperationException(ThrowMessage);
             }
 
             if (AbortCode is not null)
@@ -430,5 +461,30 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         public TimeSpan Shift { get; set; }
 
         public override DateTimeOffset GetUtcNow() => System.GetUtcNow() + Shift;
+    }
+
+    /// <summary>Tüm log kayıtlarını (biçimlenmiş ileti + varsa istisnanın tamamı) toplar.</summary>
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<string> _entries = new();
+
+        public IReadOnlyList<string> Entries => [.. _entries];
+
+        public ILogger CreateLogger(string categoryName) => new Logger(_entries);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class Logger(System.Collections.Concurrent.ConcurrentQueue<string> entries) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                entries.Enqueue(formatter(state, exception) + (exception is null ? string.Empty : " | " + exception));
+        }
     }
 }

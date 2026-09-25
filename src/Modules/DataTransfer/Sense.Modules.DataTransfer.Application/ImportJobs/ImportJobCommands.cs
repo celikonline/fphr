@@ -308,7 +308,8 @@ public sealed class RunImportJobHandler(
             return read.Error;
         }
 
-        if (ImportTemplateCatalog.HasSensitiveColumns(columns))
+        var sensitive = ImportTemplateCatalog.HasSensitiveColumns(columns);
+        if (sensitive)
         {
             // Secret values (e.g. terminal card/PIN) are not kept at rest once the rows have been handed over; saved with the job's outcome.
             jobs.RemoveSourceFile(file);
@@ -337,7 +338,16 @@ public sealed class RunImportJobHandler(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Nothing was saved by the module handler (single save at the end); record the failed run instead of losing the job.
-            logger.LogError(ex, "Import job {ImportJobId} ({TemplateCode}) failed", job.Id, job.TemplateCode);
+            if (sensitive)
+            {
+                // Sensitive values (e.g. a PIN digest in a unique-violation detail) could be in the message/stack: type only, no exception.
+                logger.LogError("Import job {ImportJobId} ({TemplateCode}) failed: {ExceptionType}", job.Id, job.TemplateCode, ex.GetType().FullName);
+            }
+            else
+            {
+                logger.LogError(ex, "Import job {ImportJobId} ({TemplateCode}) failed", job.Id, job.TemplateCode);
+            }
+
             job.Fail(DataTransferErrors.RunFailed, clock.GetUtcNow().UtcDateTime);
             return ImportJobDto.From(job);
         }
