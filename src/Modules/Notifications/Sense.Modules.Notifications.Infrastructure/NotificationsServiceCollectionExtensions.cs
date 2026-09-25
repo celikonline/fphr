@@ -53,6 +53,7 @@ public static class NotificationsServiceCollectionExtensions
         services.AddSingleton<INotificationTemplateRenderer, ScribanNotificationTemplateRenderer>();
         services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
         services.AddScoped<NotificationRecipientResolver>();
+        services.AddScoped<Sense.Modules.Notifications.Application.HrMessages.HrMessageDtoBuilder>();
         services.AddScoped<NotificationPublisher>();
 
         services.AddScoped<IEmailModelEnricher, ApprovalDecisionLinkEnricher>();

@@ -101,6 +101,18 @@ public sealed class HrMessageRepository(NotificationsDbContext context) : IHrMes
             .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetRecipientPreviewsAsync(
+        IReadOnlyCollection<Guid> messageIds, int take, CancellationToken cancellationToken = default)
+    {
+        var ids = messageIds.ToList();
+        var rows = await context.HrMessageRecipients.AsNoTracking()
+            .Where(r => ids.Contains(r.MessageId))
+            .GroupBy(r => r.MessageId)
+            .Select(g => new { g.Key, EmployeeIds = g.OrderBy(r => r.Id).Select(r => r.EmployeeId).Take(take).ToList() })
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(x => x.Key, x => (IReadOnlyList<Guid>)x.EmployeeIds);
+    }
+
     private static async Task<(IReadOnlyList<HrMessage> Items, long TotalCount)> PageAsync(
         IQueryable<HrMessage> query, int page, int pageSize, CancellationToken cancellationToken)
     {

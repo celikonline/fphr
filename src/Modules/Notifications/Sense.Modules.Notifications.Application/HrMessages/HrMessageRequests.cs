@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Notifications.Application.Publishing;
 using Sense.Modules.Notifications.Contracts;
 using Sense.Modules.Notifications.Domain;
@@ -37,7 +38,8 @@ public static class HrMessageSelection
 }
 
 public sealed record HrMessageDto(
-    Guid Id, Guid SenderUserId, string Subject, string Body, string Importance, IReadOnlyList<string> Channels, int RecipientCount, DateTime SentAt);
+    Guid Id, Guid SenderUserId, string Subject, string Body, string Importance, IReadOnlyList<string> Channels, int RecipientCount, DateTime SentAt,
+    string? SenderName = null, IReadOnlyList<string>? RecipientPreview = null);
 
 public sealed record HrMessagesPageDto(IReadOnlyList<HrMessageDto> Items, int Page, int PageSize, long TotalCount);
 
@@ -185,7 +187,42 @@ public sealed class ListMyOutboxValidator : AbstractValidator<ListMyOutboxQuery>
     }
 }
 
-public sealed class ListMyInboxHandler(ICurrentUser currentUser, IHrMessageRepository messages)
+/// <summary>Builds list DTOs with sender display name and a short recipient preview using batched lookups (no N+1).</summary>
+public sealed class HrMessageDtoBuilder(
+    ITenantContext tenant, IHrMessageRepository messages, IEmployeeContactLookup contacts, IUserProfileLookup profiles)
+{
+    public const int PreviewSize = 3;
+
+    public async Task<IReadOnlyList<HrMessageDto>> BuildAsync(IReadOnlyList<HrMessage> items, CancellationToken cancellationToken)
+    {
+        if (items.Count == 0)
+        {
+            return [];
+        }
+
+        var messageIds = items.Select(m => m.Id).ToList();
+        var counts = await messages.CountRecipientsAsync(messageIds, cancellationToken);
+        var previews = await messages.GetRecipientPreviewsAsync(messageIds, PreviewSize, cancellationToken);
+        var senders = await profiles.GetAsync(tenant.TenantId, items.Select(m => m.SenderUserId).Distinct().ToList(), cancellationToken);
+        var employeeIds = previews.Values.SelectMany(v => v).Distinct().ToList();
+        var names = employeeIds.Count == 0
+            ? []
+            : (await contacts.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken))
+                .ToDictionary(c => c.EmployeeId, c => ShortName(c.FirstName, c.LastName));
+
+        return items.Select(m => new HrMessageDto(
+            m.Id, m.SenderUserId, m.Subject, m.Body, m.IsHighPriority ? "high" : "normal",
+            m.Channels.Split(',', StringSplitOptions.RemoveEmptyEntries), counts.GetValueOrDefault(m.Id), m.CreatedAt,
+            senders.TryGetValue(m.SenderUserId, out var sender) ? sender.DisplayName : null,
+            previews.GetValueOrDefault(m.Id, []).Where(names.ContainsKey).Select(id => names[id]).ToList())).ToList();
+    }
+
+    /// <summary>"Ergün Erkan" becomes "Ergün E."</summary>
+    internal static string ShortName(string firstName, string lastName) =>
+        string.IsNullOrWhiteSpace(lastName) ? firstName.Trim() : $"{firstName.Trim()} {lastName.Trim()[0]}.";
+}
+
+public sealed class ListMyInboxHandler(ICurrentUser currentUser, IHrMessageRepository messages, HrMessageDtoBuilder dtoBuilder)
     : IQueryHandler<ListMyInboxQuery, HrMessagesPageDto>
 {
     public async Task<Result<HrMessagesPageDto>> Handle(ListMyInboxQuery query, CancellationToken cancellationToken)
@@ -196,16 +233,11 @@ public sealed class ListMyInboxHandler(ICurrentUser currentUser, IHrMessageRepos
         }
 
         var (items, total) = await messages.ListInboxAsync(userId, query.Page, query.PageSize, cancellationToken);
-        var counts = await messages.CountRecipientsAsync(items.Select(m => m.Id).ToList(), cancellationToken);
-        return new HrMessagesPageDto(items.Select(m => ToDto(m, counts)).ToList(), query.Page, query.PageSize, total);
+        return new HrMessagesPageDto(await dtoBuilder.BuildAsync(items, cancellationToken), query.Page, query.PageSize, total);
     }
-
-    internal static HrMessageDto ToDto(HrMessage m, IReadOnlyDictionary<Guid, int> counts) =>
-        new(m.Id, m.SenderUserId, m.Subject, m.Body, m.IsHighPriority ? "high" : "normal",
-            m.Channels.Split(',', StringSplitOptions.RemoveEmptyEntries), counts.GetValueOrDefault(m.Id), m.CreatedAt);
 }
 
-public sealed class ListMyOutboxHandler(ICurrentUser currentUser, IHrMessageRepository messages)
+public sealed class ListMyOutboxHandler(ICurrentUser currentUser, IHrMessageRepository messages, HrMessageDtoBuilder dtoBuilder)
     : IQueryHandler<ListMyOutboxQuery, HrMessagesPageDto>
 {
     public async Task<Result<HrMessagesPageDto>> Handle(ListMyOutboxQuery query, CancellationToken cancellationToken)
@@ -216,7 +248,6 @@ public sealed class ListMyOutboxHandler(ICurrentUser currentUser, IHrMessageRepo
         }
 
         var (items, total) = await messages.ListSentAsync(userId, query.Page, query.PageSize, cancellationToken);
-        var counts = await messages.CountRecipientsAsync(items.Select(m => m.Id).ToList(), cancellationToken);
-        return new HrMessagesPageDto(items.Select(m => ListMyInboxHandler.ToDto(m, counts)).ToList(), query.Page, query.PageSize, total);
+        return new HrMessagesPageDto(await dtoBuilder.BuildAsync(items, cancellationToken), query.Page, query.PageSize, total);
     }
 }

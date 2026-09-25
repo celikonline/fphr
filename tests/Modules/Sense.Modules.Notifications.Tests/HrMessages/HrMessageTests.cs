@@ -176,6 +176,59 @@ public sealed class HrMessageTests : TestFixture
         (await repo.ListSentAsync(userA, 1, 20)).TotalCount.ShouldBe(0);
     }
 
+    private async Task<HrMessagesPageDto> ListOutboxAsync(Guid tenantId, Guid sender)
+    {
+        _currentUser.UserId.Returns(sender);
+        using var scope = ServiceProvider!.CreateScope();
+        using var tenant = TenantContextSetter!.BeginScope(tenantId);
+        var handler = scope.ServiceProvider.GetRequiredService<IQueryHandler<ListMyOutboxQuery, HrMessagesPageDto>>();
+        return (await handler.Handle(new ListMyOutboxQuery(), CancellationToken.None)).Value;
+    }
+
+    [Fact]
+    public async Task List_includes_sender_name_and_recipient_preview()
+    {
+        var tenantId = Guid.NewGuid();
+        var sender = Guid.NewGuid();
+        var ids = Enumerable.Range(0, 5).Select(i => AddEmployee($"Kisi{i}").EmployeeId).ToList();
+        var noAccount = Guid.NewGuid();
+        _employees[noAccount] = new EmployeeContact(noAccount, "Nil", "Kaya", "nil@acme.test", null, null, "Active");
+        ids.Add(noAccount);
+        _directory.ResolveSelectionAsync(tenantId, Arg.Any<EmployeeSelection>(), Arg.Any<CancellationToken>()).Returns(ids);
+        (await RunAsync(tenantId, sender, Send(new EmployeeSelection(ids, null, null)))).IsSuccess.ShouldBeTrue();
+
+        var page = await ListOutboxAsync(tenantId, sender);
+
+        var dto = page.Items.ShouldHaveSingleItem();
+        dto.SenderName.ShouldBe("User");
+        dto.RecipientCount.ShouldBe(6);
+        dto.RecipientPreview!.Count.ShouldBe(3);
+        dto.RecipientPreview.ShouldAllBe(n => n.EndsWith(" T.", StringComparison.Ordinal) || n.EndsWith(" K.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Preview_uses_batched_lookup()
+    {
+        var tenantId = Guid.NewGuid();
+        var sender = Guid.NewGuid();
+        var (a, _) = AddEmployee("Ayse");
+        var (b, _) = AddEmployee("Mehmet");
+        _directory.ResolveSelectionAsync(tenantId, Arg.Any<EmployeeSelection>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<EmployeeSelection>(1).EmployeeIds!);
+        for (var i = 0; i < 3; i++)
+        {
+            (await RunAsync(tenantId, sender, Send(new EmployeeSelection([a, b], null, null)))).IsSuccess.ShouldBeTrue();
+        }
+
+        _contacts.ClearReceivedCalls();
+        _profiles.ClearReceivedCalls();
+        var page = await ListOutboxAsync(tenantId, sender);
+
+        page.Items.Count.ShouldBe(3);
+        await _contacts.Received(1).GetContactsAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>());
+        await _profiles.Received(1).GetAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Importance_high_marks_delivery_priority()
     {
