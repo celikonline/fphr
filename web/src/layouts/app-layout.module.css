@@ -45,3 +45,36 @@
 .navLink[aria-current="page"] .navSection {
   color: var(--mantine-primary-color-light-color) !important;
 }
+
+/* Planned ("Yakında") items: faded and inert, no cursor affordance. */
+.navLink[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Labels no longer truncate mid-word on longer Turkish compound terms (e.g. "İnsan Kaynakları"); they wrap onto
+   a second line instead of an ellipsis (senseik-11.10 bug report - width alone wasn't a robust fix). */
+.navLabel {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  text-align: left;
+}
+
+/* Thin scrollbar for the nav list: a full-width default scrollbar ate into the label column's
+   available space, cutting group names like "İnsan Kaynakları" short (senseik-11.10 bug report). */
+.navScroll {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.navScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.navScroll::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xl);
+}

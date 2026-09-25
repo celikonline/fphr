@@ -172,7 +172,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     renderAppLayout();
     const desktopSidebar = screen.getByTestId("sidebar-desktop");
 
-    expect(desktopSidebar.className).toContain("w-52");
+    expect(desktopSidebar.className).toContain("w-64");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 
@@ -184,7 +184,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     await user.click(screen.getByRole("button", { name: "Menüyü daralt" }));
 
     expect(desktopSidebar.className).toContain("w-14");
-    expect(desktopSidebar.className).not.toContain("w-52");
+    expect(desktopSidebar.className).not.toContain("w-64");
     expect(within(desktopSidebar).queryByText("Ana sayfa")).toBeNull();
     // Collapsed nav items stay reachable via their tooltip/aria-label instead of visible text.
     expect(within(desktopSidebar).getByLabelText("Ana sayfa")).toBeDefined();
@@ -198,7 +198,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     await user.click(screen.getByRole("button", { name: "Menüyü daralt" }));
     await user.click(screen.getByRole("button", { name: "Menüyü genişlet" }));
 
-    expect(desktopSidebar.className).toContain("w-52");
+    expect(desktopSidebar.className).toContain("w-64");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 

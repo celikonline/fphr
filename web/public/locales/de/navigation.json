@@ -25,7 +25,18 @@
     "back": "Zurück",
     "workflowInbox": "Genehmigungs-Posteingang",
     "sharedFiles": "Gemeinsame Dateien",
-    "platformTenants": "Unternehmen (Plattform)"
+    "platformTenants": "Unternehmen (Plattform)",
+    "comingSoon": "Demnächst",
+    "sidebarSearchPlaceholder": "Menü durchsuchen…"
+  },
+  "navGroups": {
+    "humanResources": "Personalwesen",
+    "timeManagement": "Zeitmanagement",
+    "leave": "Urlaub",
+    "expensePayroll": "Spesen und Lohn",
+    "performance": "Performance",
+    "recruitment": "Recruiting",
+    "employeeExperience": "Mitarbeitererlebnis"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   AppWindow,
   BarChart3,
+  Briefcase,
   Building2,
   CalendarDays,
   CalendarRange,
@@ -29,7 +30,9 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Sparkles,
   Target,
+  Timer,
   UserCircle,
   UserPlus,
   Users,
@@ -74,8 +77,8 @@ export interface NavItem {
   iconColor?: CorporateColorKey;
 }
 
-/** CSS var for a NavItem's icon accent, for use as the lucide icon's `color` prop or a styles override. */
-export function navIconColor(item: NavItem): string {
+/** CSS var for a NavItem's (or NavGroup's) icon accent, for use as the lucide icon's `color` prop or a styles override. */
+export function navIconColor(item: { iconColor?: CorporateColorKey }): string {
   return item.iconColor
     ? `var(--mantine-color-${item.iconColor}-6)`
     : "var(--mantine-primary-color-filled)";
@@ -778,4 +781,145 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
       },
     ],
   },
+];
+
+/** A collapsible group of related NAV_ITEMS/APP_LAUNCHER_ITEMS entries in the grouped sidebar (11.10). */
+export interface NavGroup {
+  key: string;
+  /** i18n key in the "navigation" namespace. */
+  labelKey: string;
+  icon: LucideIcon;
+  iconColor?: CorporateColorKey;
+  items: NavItem[];
+}
+
+/** One entry of the grouped sidebar: either a standalone NavItem or a NavGroup with its own sub-items. */
+export type NavEntry = NavItem | NavGroup;
+
+export function isNavGroup(entry: NavEntry): entry is NavGroup {
+  return "items" in entry;
+}
+
+function requireNavItem(key: string): NavItem {
+  const item = NAV_ITEMS.find((candidate) => candidate.key === key);
+  if (!item) throw new Error(`NAV_SECTIONS: "${key}" not found in NAV_ITEMS`);
+  return item;
+}
+
+function requireAppItem(key: string): NavItem {
+  const item = APP_LAUNCHER_ITEMS.find((candidate) => candidate.key === key);
+  if (!item) throw new Error(`NAV_SECTIONS: "${key}" not found in APP_LAUNCHER_ITEMS`);
+  return item;
+}
+
+/**
+ * Grouped, collapsible left sidebar (11.10): sections are separated by a divider in the UI; most sections hold a
+ * single NavGroup, a few hold standalone NavItems. Reuses NavItem objects from NAV_ITEMS/APP_LAUNCHER_ITEMS by key
+ * (never copies them) so permission/accessSetting/phase metadata stays a single source of truth.
+ */
+export const NAV_SECTIONS: NavEntry[][] = [
+  [requireNavItem("home"), requireNavItem("workflowInbox"), requireNavItem("requests")],
+  [
+    {
+      key: "humanResources",
+      labelKey: "navGroups.humanResources",
+      icon: Briefcase,
+      iconColor: "blue",
+      items: [
+        requireNavItem("employees"),
+        requireAppItem("orgChart"),
+        requireNavItem("sharedFiles"),
+        requireAppItem("onboarding"),
+        requireAppItem("assets"),
+        requireAppItem("ohs"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "timeManagement",
+      labelKey: "navGroups.timeManagement",
+      icon: Timer,
+      iconColor: "orange",
+      items: [
+        requireAppItem("timesheet"),
+        requireAppItem("selfCheckIn"),
+        requireAppItem("shifts"),
+        requireAppItem("teamTimesheet"),
+        requireAppItem("monthlyTimesheet"),
+        requireAppItem("shiftPlan"),
+        requireAppItem("liveBoard"),
+        requireAppItem("deviceLogImport"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "leave",
+      labelKey: "navGroups.leave",
+      icon: Palmtree,
+      iconColor: "teal",
+      items: [
+        requireNavItem("leaves"),
+        requireNavItem("calendar"),
+        requireNavItem("overtimes"),
+        requireNavItem("companyLedger"),
+        requireNavItem("leaveRules"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "expensePayroll",
+      labelKey: "navGroups.expensePayroll",
+      icon: Wallet,
+      iconColor: "navy",
+      items: [
+        requireAppItem("expenses"),
+        requireAppItem("expensePaymentsAdmin"),
+        requireAppItem("payroll"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "performance",
+      labelKey: "navGroups.performance",
+      icon: Target,
+      iconColor: "gold",
+      items: [
+        requireAppItem("performance"),
+        requireAppItem("performanceReviewCycles"),
+        requireAppItem("performanceTeamGoals"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "recruitment",
+      labelKey: "navGroups.recruitment",
+      icon: UserPlus,
+      iconColor: "gold",
+      items: [
+        requireAppItem("recruitment"),
+        requireAppItem("recruitmentCandidates"),
+        requireAppItem("recruitmentRequisitions"),
+      ],
+    },
+  ],
+  [
+    {
+      key: "employeeExperience",
+      labelKey: "navGroups.employeeExperience",
+      icon: Sparkles,
+      iconColor: "cyan",
+      items: [
+        requireAppItem("announcements"),
+        requireAppItem("companyCalendar"),
+        requireAppItem("training"),
+      ],
+    },
+  ],
+  [requireNavItem("reports"), requireNavItem("apps")],
+  [requireNavItem("settings"), requireNavItem("platformTenants")],
 ];

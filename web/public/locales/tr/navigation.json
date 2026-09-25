@@ -25,7 +25,18 @@
     "back": "Geri",
     "workflowInbox": "Onay kutusu",
     "sharedFiles": "Ortak dosyalar",
-    "platformTenants": "Şirketler (Platform)"
+    "platformTenants": "Şirketler (Platform)",
+    "comingSoon": "Yakında",
+    "sidebarSearchPlaceholder": "Menüde ara…"
+  },
+  "navGroups": {
+    "humanResources": "İnsan Kaynakları",
+    "timeManagement": "Zaman Yönetimi",
+    "leave": "İzin",
+    "expensePayroll": "Harcama ve Bordro",
+    "performance": "Performans",
+    "recruitment": "İşe Alım",
+    "employeeExperience": "Çalışan Deneyimi"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
