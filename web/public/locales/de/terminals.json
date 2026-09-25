@@ -1,5 +1,95 @@
 {
   "title": "Zeiterfassungsterminals",
   "subtitle": "Registrierte Stempelterminals",
-  "comingSoon": "Diese Ansicht folgt in Kürze."
+  "comingSoon": "Diese Ansicht folgt in Kürze.",
+  "tabs": {
+    "terminals": "Terminals",
+    "groups": "Gruppen",
+    "credentials": "Mitarbeiterkennungen"
+  },
+  "terminal": {
+    "new": "Neues Terminal",
+    "edit": "Bearbeiten",
+    "code": "Code",
+    "name": "Name",
+    "group": "Gruppe",
+    "noGroup": "Ohne Gruppe",
+    "direction": "Richtungsmodus",
+    "status": "Status",
+    "lastSeen": "Zuletzt gesehen",
+    "never": "Nie gesehen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren",
+    "empty": "Noch keine Terminals.",
+    "saved": "Terminal gespeichert.",
+    "saveFailed": "Terminal konnte nicht gespeichert werden.",
+    "loadFailed": "Terminals konnten nicht geladen werden.",
+    "codeRequired": "Code und Name sind erforderlich.",
+    "statusFailed": "Status konnte nicht geändert werden."
+  },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "directionMode": {
+    "both": "Kommen und Gehen",
+    "inOnly": "Nur Kommen",
+    "outOnly": "Nur Gehen"
+  },
+  "apiKey": {
+    "generate": "Schlüssel erneuern",
+    "title": "Terminal-API-Schlüssel",
+    "warning": "Dieser Schlüssel wird nicht erneut angezeigt. Kopieren Sie ihn jetzt und tragen Sie ihn am Terminal ein; der alte Schlüssel wird ungültig.",
+    "label": "API-Schlüssel",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen; Schlüssel manuell markieren und kopieren.",
+    "close": "Schließen",
+    "rotateConfirm": "Schlüssel erneuern? Der Schlüssel am Terminal funktioniert danach nicht mehr.",
+    "rotateFailed": "Schlüssel konnte nicht erneuert werden.",
+    "rotateAction": "Erneuern"
+  },
+  "group": {
+    "new": "Neue Gruppe",
+    "name": "Gruppenname",
+    "rename": "Umbenennen",
+    "delete": "Löschen",
+    "deleteConfirm": "Diese Gruppe löschen?",
+    "empty": "Noch keine Gruppen.",
+    "saved": "Gruppe gespeichert.",
+    "saveFailed": "Gruppe konnte nicht gespeichert werden.",
+    "deleted": "Gruppe gelöscht.",
+    "deleteFailed": "Gruppe konnte nicht gelöscht werden.",
+    "loadFailed": "Gruppen konnten nicht geladen werden.",
+    "deleteYes": "Ja, löschen"
+  },
+  "credential": {
+    "employee": "Mitarbeiter",
+    "pickEmployee": "Mitarbeiter auswählen",
+    "kind": "Art",
+    "value": "Wert",
+    "valueHint": "Der Wert wird nach dem Speichern nie wieder angezeigt.",
+    "add": "Kennung hinzufügen",
+    "status": "Status",
+    "masked": "Letzte 2 Zeichen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "activate": "Aktivieren",
+    "deactivate": "Deaktivieren",
+    "empty": "Dieser Mitarbeiter hat keine Kennungen.",
+    "saved": "Kennung hinzugefügt.",
+    "saveFailed": "Kennung konnte nicht hinzugefügt werden.",
+    "statusFailed": "Status konnte nicht geändert werden.",
+    "loadFailed": "Kennungen konnten nicht geladen werden.",
+    "import": "Aus Excel importieren",
+    "importSoon": "Demnächst",
+    "valueRequired": "Ein Wert ist erforderlich."
+  },
+  "credentialKind": {
+    "card": "Karte",
+    "pin": "PIN",
+    "externalId": "Externe ID"
+  }
 }
