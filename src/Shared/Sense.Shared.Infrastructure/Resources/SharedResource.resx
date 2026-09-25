@@ -1695,4 +1695,25 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>Bu terminal kimliği aktif olarak kullanılıyor; yeniden atamadan önce pasife alın.</value></data>
   <data name="problem.title.service_unavailable" xml:space="preserve"><value>Hizmet şu an kullanılamıyor</value></data>
   <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal kimlik (kart/PIN) işlemleri bu sunucuda yapılandırılmamış. Sistem yöneticinize başvurun.</value></data>
+  <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>Bu sicil numarasıyla bir çalışan bulunamadı.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>Çalışan işten ayrılmış; terminal kimliği tanımlanamaz.</value></data>
+  <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>PIN yalnız rakamlardan oluşmalı ve 6-8 haneli olmalıdır.</value></data>
+  <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>Kart numarası ya da harici kimlik en fazla 64 karakter olabilir.</value></data>
+  <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Tür Kart, PIN ya da Harici olmalıdır.</value></data>
+  <data name="import.template.terminalcredentials.name" xml:space="preserve"><value>Terminal kimlikleri</value></data>
+  <data name="import.template.terminalcredentials.description" xml:space="preserve"><value>Çalışanlara giriş-çıkış terminali kimliklerini (kart, PIN, harici kimlik) toplu tanımlayın.</value></data>
+  <data name="import.template.terminalcredentials.instruction.match" xml:space="preserve"><value>Çalışanlar sicil numarasıyla eşleştirilir; işten ayrılmış çalışana kimlik tanımlanamaz. Aynı çalışana aynı kimlik tekrar yüklenirse satır atlanır.</value></data>
+  <data name="import.template.terminalcredentials.instruction.format" xml:space="preserve"><value>Tür sütunu açılır listedir (Kart, PIN, Harici). PIN yalnız rakamlardan oluşur ve 6-8 hanelidir; kart numarası ve harici kimlik en fazla 64 karakterdir. Baştaki sıfırlar kaybolmasın diye Değer sütununu metin biçiminde girin.</value></data>
+  <data name="import.template.terminalcredentials.instruction.in_use" xml:space="preserve"><value>Başka bir çalışanda aktif olan kimlik atanamaz (satır hatası; PIN için genel ret); pasife alınmış kimlik yeni çalışana devredilir.</value></data>
+  <data name="import.template.terminalcredentials.instruction.security" xml:space="preserve"><value>Kimlik değerleri yalnız tek yönlü özet olarak saklanır; yüklenen dosya işlemden sonra silinir, sonuç dosyasında değerler yer almaz.</value></data>
+  <data name="import.template.terminalcredentials.sample.card" xml:space="preserve"><value>Doğru: kart numarası.</value></data>
+  <data name="import.template.terminalcredentials.sample.pin" xml:space="preserve"><value>Doğru: 6 haneli PIN.</value></data>
+  <data name="import.template.terminalcredentials.sample.invalid_pin" xml:space="preserve"><value>Hatalı: PIN harf içeremez ve en az 6 haneli olmalıdır.</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi" xml:space="preserve"><value>Sicil no</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi.description" xml:space="preserve"><value>Çalışanın sicil numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.terminalcredentials.kind" xml:space="preserve"><value>Tür</value></data>
+  <data name="import.column.terminalcredentials.kind.description" xml:space="preserve"><value>Kart, PIN ya da Harici (cihazdaki dış kimlik).</value></data>
+  <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Değer</value></data>
+  <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Kart numarası, PIN ya da harici kimlik; yalnız özet olarak saklanır.</value></data>
+  <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>Bu PIN tanımlanamadı; farklı bir PIN deneyin.</value></data>
 </root>

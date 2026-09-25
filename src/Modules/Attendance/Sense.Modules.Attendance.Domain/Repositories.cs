@@ -276,4 +276,8 @@ public interface ITerminalRepository
     /// <summary>Terminal okutmalarını toplu eşler: kiracı içindeki, değeri (HMAC özeti) listede olan aktif kimlikler.</summary>
     Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListActiveCredentialsByValuesAsync(
         Guid tenantId, IReadOnlyCollection<string> values, CancellationToken cancellationToken = default);
+
+    /// <summary>Kimlik tanımlama/içe aktarma (Z5.4): geçerli kiracıda değeri (HMAC özeti) listede olan aktif ya da pasif kimlikler (izlenen).</summary>
+    Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListCredentialsByValuesAsync(
+        IReadOnlyCollection<string> values, CancellationToken cancellationToken = default);
 }

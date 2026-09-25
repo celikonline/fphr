@@ -60,5 +60,8 @@ public sealed class AttendanceModule : IModule
         services.AddScoped<IImportRowHandler, ShiftPlanImportRowHandler>();
         // Z5.1 terminal okutma ucu: X-Terminal-Key kimlik doğrulama şeması + hız sınırı politikası (yalnız API).
         services.AddTerminalIngestEndpointSecurity(configuration);
+        // Z5.4 toplu terminal kimliği Excel şablonu "terminal-credentials" (değer sütunu gizli; pepper yoksa şablon 503).
+        services.AddScoped<IImportTemplate, Application.Terminals.TerminalCredentialImportTemplate>();
+        services.AddScoped<IImportRowHandler, Application.Terminals.TerminalCredentialImportRowHandler>();
     }
 }

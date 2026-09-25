@@ -566,4 +566,15 @@ public sealed class TerminalRepository(AttendanceDbContext context) : ITerminalR
             .Where(c => c.TenantId == tenantId && c.IsActive && values.Contains(c.Value))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<EmployeeTerminalCredential>> ListCredentialsByValuesAsync(
+        IReadOnlyCollection<string> values, CancellationToken cancellationToken = default)
+    {
+        if (values.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.EmployeeTerminalCredentials.Where(c => values.Contains(c.Value)).ToListAsync(cancellationToken);
+    }
 }

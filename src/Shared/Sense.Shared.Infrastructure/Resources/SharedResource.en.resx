@@ -1686,4 +1686,25 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>This terminal credential is in active use; deactivate it before reassigning.</value></data>
   <data name="problem.title.service_unavailable" xml:space="preserve"><value>Service unavailable</value></data>
   <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal credential (card/PIN) operations are not configured on this server. Contact your system administrator.</value></data>
+  <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>No employee was found with this registration number.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>The employee has left the company; a terminal credential cannot be assigned.</value></data>
+  <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>A PIN must consist of digits only and be 6-8 digits long.</value></data>
+  <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>A card number or external ID can be at most 64 characters.</value></data>
+  <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Type must be Kart (card), PIN or Harici (external ID).</value></data>
+  <data name="import.template.terminalcredentials.name" xml:space="preserve"><value>Terminal credentials</value></data>
+  <data name="import.template.terminalcredentials.description" xml:space="preserve"><value>Assign time clock terminal credentials (card, PIN, external ID) to employees in bulk.</value></data>
+  <data name="import.template.terminalcredentials.instruction.match" xml:space="preserve"><value>Employees are matched by registration number; terminated employees cannot receive credentials. Re-uploading the same credential for the same employee skips the row.</value></data>
+  <data name="import.template.terminalcredentials.instruction.format" xml:space="preserve"><value>The type column is a drop-down (Kart, PIN, Harici). A PIN consists of digits only and is 6-8 digits long; card numbers and external IDs are at most 64 characters. Enter the Value column as text so leading zeros are kept.</value></data>
+  <data name="import.template.terminalcredentials.instruction.in_use" xml:space="preserve"><value>A credential that is active for another employee cannot be assigned (row error; a generic rejection for PINs); a deactivated credential is transferred to the new employee.</value></data>
+  <data name="import.template.terminalcredentials.instruction.security" xml:space="preserve"><value>Credential values are stored only as a one-way digest; the uploaded file is deleted after the run and the result file contains no values.</value></data>
+  <data name="import.template.terminalcredentials.sample.card" xml:space="preserve"><value>Valid: card number.</value></data>
+  <data name="import.template.terminalcredentials.sample.pin" xml:space="preserve"><value>Valid: 6-digit PIN.</value></data>
+  <data name="import.template.terminalcredentials.sample.invalid_pin" xml:space="preserve"><value>Invalid: a PIN cannot contain letters and must be at least 6 digits.</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi" xml:space="preserve"><value>Registration no</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi.description" xml:space="preserve"><value>The employee's registration number (sicil no); employees are matched by it.</value></data>
+  <data name="import.column.terminalcredentials.kind" xml:space="preserve"><value>Type</value></data>
+  <data name="import.column.terminalcredentials.kind.description" xml:space="preserve"><value>Kart (card), PIN or Harici (external ID on the device).</value></data>
+  <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Value</value></data>
+  <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Card number, PIN or external ID; stored only as a digest.</value></data>
+  <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>This PIN cannot be assigned; try a different PIN.</value></data>
 </root>
