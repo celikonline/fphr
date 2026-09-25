@@ -26,6 +26,8 @@ import CheckInScreen from "@/screens/app/CheckInScreen";
 import PeopleScreen from "@/screens/app/PeopleScreen";
 import ShiftScreen from "@/screens/app/ShiftScreen";
 import GoalsScreen from "@/screens/app/GoalsScreen";
+import PunchRequestScreen from "@/screens/app/PunchRequestScreen";
+import PayslipDetailScreen from "@/screens/app/PayslipDetailScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -130,6 +132,16 @@ function AppNavigator() {
       <AppStack.Screen name="People" component={PeopleScreen} options={{ title: "Kişiler" }} />
       <AppStack.Screen name="Shift" component={ShiftScreen} options={{ title: "Vardiyalarım" }} />
       <AppStack.Screen name="Goals" component={GoalsScreen} options={{ title: "Hedeflerim" }} />
+      <AppStack.Screen
+        name="PunchRequest"
+        component={PunchRequestScreen}
+        options={{ title: "Kayıt talebi" }}
+      />
+      <AppStack.Screen
+        name="PayslipDetail"
+        component={PayslipDetailScreen}
+        options={{ title: "Bordro pusulası" }}
+      />
     </AppStack.Navigator>
   );
 }

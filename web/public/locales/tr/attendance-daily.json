@@ -1,0 +1,19 @@
+{
+  "dailyList": {
+    "title": "Günlük puantaj listesi",
+    "subtitle": "Seçilen günün duruma göre çalışan listesi"
+  },
+  "timeDashboard": {
+    "title": "Zaman panosu",
+    "subtitle": "Gelen, geç kalan, erken çıkan ve devamsız özeti"
+  },
+  "monthlyMatrix": {
+    "title": "Aylık puantaj matrisi",
+    "subtitle": "Çalışan x gün durum matrisi"
+  },
+  "punchRequests": {
+    "title": "Kayıt talepleri",
+    "subtitle": "Giriş/çıkış kaydı ekleme ve düzeltme talepleri"
+  },
+  "comingSoon": "Bu ekran yakında kullanıma açılacak."
+}

@@ -1,0 +1,19 @@
+{
+  "dailyList": {
+    "title": "Tägliche Anwesenheitsliste",
+    "subtitle": "Mitarbeitende des gewählten Tages nach Status"
+  },
+  "timeDashboard": {
+    "title": "Zeit-Dashboard",
+    "subtitle": "Übersicht: anwesend, verspätet, früher gegangen, abwesend"
+  },
+  "monthlyMatrix": {
+    "title": "Monatliche Anwesenheitsmatrix",
+    "subtitle": "Matrix Mitarbeitende x Tag"
+  },
+  "punchRequests": {
+    "title": "Stempelanträge",
+    "subtitle": "Anträge zum Nachtragen oder Korrigieren von Stempelungen"
+  },
+  "comingSoon": "Diese Ansicht folgt in Kürze."
+}

@@ -20,6 +20,8 @@ export type AppStackParamList = {
   People: undefined;
   Shift: undefined;
   Goals: undefined;
+  PunchRequest: undefined;
+  PayslipDetail: undefined;
 };
 
 export type MainTabsParamList = {

@@ -13,6 +13,7 @@ import ReportsPage from "./reports";
 import {
   getReportCatalog,
   listReportExecutions,
+  requestReport,
   type ReportCatalogItem,
   type ReportExecution,
 } from "@/services/reports.service";
@@ -21,7 +22,7 @@ vi.mock("@/services/reports.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/reports.service")>(
     "@/services/reports.service"
   );
-  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn() };
+  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn(), requestReport: vi.fn() };
 });
 
 // Everything except the KPI tab is allowed: the page then renders just the catalog + history.
@@ -172,5 +173,24 @@ describe("ReportsPage", () => {
 
     expect(await screen.findByRole("columnheader", { name: "Kategori" })).toBeInTheDocument();
     expect(window.localStorage.getItem("senseik.reports.catalogView")).toBe("grid");
+  });
+
+  it("PDF ve Excel biçim seçicisi format parametresini gönderir", async () => {
+    const user = userEvent.setup();
+    vi.mocked(requestReport).mockResolvedValue({
+      id: "exec-new",
+      reportKey: "employee.list",
+      status: "queued",
+      requestedAt: "2026-09-25T10:00:00Z",
+    });
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+
+    expect(screen.getByRole("radio", { name: "Excel" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "PDF" }));
+    await user.click(screen.getByRole("button", { name: "Rapor oluştur" }));
+
+    await waitFor(() => expect(requestReport).toHaveBeenCalled());
+    expect(vi.mocked(requestReport).mock.calls[0][1]).toMatchObject({ format: "pdf" });
   });
 });

@@ -74,7 +74,14 @@
     "recruitmentRequisitions": "Requisitions",
     "analytics": "Analytics",
     "workflowInbox": "Approval inbox",
-    "companyCalendar": "Event calendar"
+    "companyCalendar": "Event calendar",
+    "dailyList": "Daily attendance list",
+    "timeDashboard": "Time dashboard",
+    "shiftDefinitions": "Shift definitions",
+    "rotations": "Shift rotations",
+    "monthlyMatrix": "Monthly attendance matrix",
+    "punchRequests": "Punch requests",
+    "terminals": "Time clock terminals"
   },
   "settings": {
     "company": "Company and organization",
@@ -146,7 +153,9 @@
     "allSettings": "All settings",
     "subnavLabel": "Settings menu",
     "orgChart": "Org chart",
-    "orgChartDesc": "View the unit and employee hierarchy as a chart"
+    "orgChartDesc": "View the unit and employee hierarchy as a chart",
+    "delegations": "Approval delegations",
+    "delegationsDesc": "Delegate approval authority for a period"
   },
   "search": {
     "label": "Search screens",

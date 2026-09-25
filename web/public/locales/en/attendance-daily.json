@@ -1,0 +1,19 @@
+{
+  "dailyList": {
+    "title": "Daily attendance list",
+    "subtitle": "Employees for the selected day by status"
+  },
+  "timeDashboard": {
+    "title": "Time dashboard",
+    "subtitle": "Arrived, late, early leave and absent summary"
+  },
+  "monthlyMatrix": {
+    "title": "Monthly attendance matrix",
+    "subtitle": "Employee by day status matrix"
+  },
+  "punchRequests": {
+    "title": "Punch requests",
+    "subtitle": "Requests to add or correct clock-in/out records"
+  },
+  "comingSoon": "This screen is coming soon."
+}

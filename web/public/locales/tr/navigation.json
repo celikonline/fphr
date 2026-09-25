@@ -74,7 +74,14 @@
     "recruitmentRequisitions": "Talep formları",
     "analytics": "Analitik",
     "workflowInbox": "Onay kutusu",
-    "companyCalendar": "Etkinlik takvimi"
+    "companyCalendar": "Etkinlik takvimi",
+    "dailyList": "Günlük puantaj listesi",
+    "timeDashboard": "Zaman panosu",
+    "shiftDefinitions": "Vardiya tanımları",
+    "rotations": "Vardiya rotasyonları",
+    "monthlyMatrix": "Aylık puantaj matrisi",
+    "punchRequests": "Kayıt talepleri",
+    "terminals": "PDKS terminalleri"
   },
   "settings": {
     "company": "Şirket ve organizasyon",
@@ -146,7 +153,9 @@
     "allSettings": "Tüm ayarlar",
     "subnavLabel": "Ayarlar menüsü",
     "orgChart": "Organizasyon şeması",
-    "orgChartDesc": "Birim ve çalışan hiyerarşisini şema olarak görüntüleyin"
+    "orgChartDesc": "Birim ve çalışan hiyerarşisini şema olarak görüntüleyin",
+    "delegations": "Onay vekaletleri",
+    "delegationsDesc": "Onay yetkisini süreli olarak başkasına devretme"
   },
   "search": {
     "label": "Ekran ara",

@@ -83,6 +83,14 @@ const DeviceLogImportPage = lazy(() => import("@/pages/attendance/device-log-imp
 const ShiftPlanPage = lazy(() => import("@/pages/attendance/shift-plan"));
 const SelfCheckInPage = lazy(() => import("@/pages/attendance/self-check-in"));
 const LiveBoardPage = lazy(() => import("@/pages/attendance/live-board"));
+const DailyListPage = lazy(() => import("@/pages/attendance/daily-list"));
+const TimeDashboardPage = lazy(() => import("@/pages/attendance/time-dashboard"));
+const ShiftDefinitionsPage = lazy(() => import("@/pages/attendance/shift-definitions"));
+const RotationsPage = lazy(() => import("@/pages/attendance/rotations"));
+const MonthlyMatrixPage = lazy(() => import("@/pages/attendance/monthly-matrix"));
+const PunchRequestsPage = lazy(() => import("@/pages/attendance/punch-requests"));
+const TerminalsPage = lazy(() => import("@/pages/attendance/terminals"));
+const DelegationsPage = lazy(() => import("@/pages/settings/delegations"));
 const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
@@ -178,6 +186,14 @@ export default function App() {
             <Route path="attendance/shift-plan" element={<ShiftPlanPage />} />
             <Route path="attendance/self-check-in" element={<SelfCheckInPage />} />
             <Route path="attendance/live-board" element={<LiveBoardPage />} />
+            <Route path="attendance/daily/:status" element={<DailyListPage />} />
+            <Route path="attendance/time-dashboard" element={<TimeDashboardPage />} />
+            <Route path="attendance/shift-definitions" element={<ShiftDefinitionsPage />} />
+            <Route path="attendance/rotations" element={<RotationsPage />} />
+            <Route path="attendance/monthly-matrix" element={<MonthlyMatrixPage />} />
+            <Route path="attendance/punch-requests" element={<PunchRequestsPage />} />
+            <Route path="attendance/terminals" element={<TerminalsPage />} />
+            <Route path="settings/delegations" element={<DelegationsPage />} />
 
             <Route path="performance/goals" element={<MyGoalsPage />} />
             <Route path="performance/team-goals" element={<TeamGoalsPage />} />

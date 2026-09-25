@@ -51,6 +51,12 @@ i18n
       "ohs",
       "platform",
       "setup",
+      "attendance-daily",
+      "shifts",
+      "rotations",
+      "terminals",
+      "delegations",
+      "messages",
     ],
     interpolation: {
       escapeValue: false,
