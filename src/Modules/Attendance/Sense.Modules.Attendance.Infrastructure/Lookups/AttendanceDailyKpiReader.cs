@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Shifts;
@@ -10,9 +11,9 @@ namespace Sense.Modules.Attendance.Infrastructure.Lookups;
 /// <summary>
 /// Implements Attendance.Contracts.IAttendanceDailyKpiReader (Analytics zaman KPI'ları, zaman-devam Z1.3). Caller passes the
 /// already-scoped employee ids; this reader never resolves org structure. "Planlı" = the day carries a schedule snapshot
-/// (PlannedMinutes &gt; 0) or a published shift assignment; approved leave (Leave.Contracts, optional port) counts as on-leave.
+/// (PlannedMinutes &gt; 0) or a published <c>Work</c> shift assignment (weekly rest / rest day / public holiday rows are not planned days); approved leave (Leave.Contracts, optional port) counts as on-leave.
 /// </summary>
-public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, IApprovedLeaveDateLookup? leaveDates = null) : IAttendanceDailyKpiReader
+public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, ITenantLocalClock localClock, IApprovedLeaveDateLookup? leaveDates = null) : IAttendanceDailyKpiReader
 {
     public async Task<IReadOnlyList<DailyAttendanceTotalsDto>> DailyTotalsAsync(
         Guid tenantId, DateOnly from, DateOnly to, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct)
@@ -28,6 +29,7 @@ public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, IAppro
             .Select(d => new { d.EmployeeId, d.Date, d.PlannedMinutes, d.CheckIn, d.Anomalies })
             .ToListAsync(ct);
         var shifts = await PublishedShiftsAsync(tenantId, from, to, ids, ct);
+        var today = DateOnly.FromDateTime((await localClock.NowAsync(tenantId, ct)).Local);
         var leave = leaveDates is null
             ? []
             : (await leaveDates.GetApprovedLeaveDatesAsync(tenantId, from, to, ids, ct)).ToHashSet();
@@ -41,7 +43,8 @@ public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, IAppro
                 .Concat(shifts.Where(s => s.Date == date).Select(s => s.EmployeeId))
                 .ToHashSet();
             var onLeave = leave.Where(l => l.Date == date).Select(l => l.EmployeeId).ToHashSet();
-            var absent = planned.Count(e => !arrived.Contains(e) && !onLeave.Contains(e));
+            // Bugünden sonraki günler devamsızlık sayılmaz (henüz gelinmemiş).
+            var absent = date > today ? 0 : planned.Count(e => !arrived.Contains(e) && !onLeave.Contains(e));
 
             result.Add(new DailyAttendanceTotalsDto(
                 date,
@@ -89,9 +92,9 @@ public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, IAppro
             result.Add(new EmployeeAttendancePeriodDto(
                 employeeId,
                 mine.Count(d => (d.Anomalies & AttendanceAnomaly.LateArrival) != 0),
-                late.Sum(d => Math.Max((int)(d.CheckIn!.Value - d.PlannedStart!.Value).TotalMinutes, 0)),
+                late.Sum(d => MinutesAfter(d.CheckIn!.Value, d.PlannedStart!.Value)),
                 mine.Count(d => (d.Anomalies & AttendanceAnomaly.EarlyLeave) != 0),
-                early.Sum(d => Math.Max((int)(d.PlannedEnd!.Value - d.CheckOut!.Value).TotalMinutes, 0)),
+                early.Sum(d => MinutesAfter(d.PlannedEnd!.Value, d.CheckOut!.Value)),
                 mine.Sum(d => d.OvertimeMinutes),
                 myShifts.Count,
                 myShifts.Count(s => workedDays.Contains((employeeId, s.Date)))));
@@ -104,9 +107,22 @@ public sealed class AttendanceDailyKpiReader(AttendanceDbContext context, IAppro
         Guid tenantId, DateOnly from, DateOnly to, List<Guid> ids, CancellationToken ct)
     {
         var rows = await context.ShiftAssignments.AsNoTracking()
-            .Where(s => s.TenantId == tenantId && ids.Contains(s.EmployeeId) && s.Date >= from && s.Date <= to && s.Status == ShiftAssignmentStatus.Published)
+            .Where(s => s.TenantId == tenantId && ids.Contains(s.EmployeeId) && s.Date >= from && s.Date <= to && s.Status == ShiftAssignmentStatus.Published && s.DayType == ShiftDayType.Work)
             .Select(s => new { s.EmployeeId, s.Date })
             .ToListAsync(ct);
         return rows.Select(r => (r.EmployeeId, r.Date)).ToList();
+    }
+
+    /// <summary>
+    /// Minutes by which <paramref name="actual"/> is after <paramref name="reference"/> on the wall clock, as a difference
+    /// wrapped into (-12h, 12h] so a shift straddling midnight (22:00 start, 00:10 arrival) is 130 min late, not negative;
+    /// earlier-than-reference is 0.
+    /// </summary>
+    public static int MinutesAfter(TimeOnly actual, TimeOnly reference)
+    {
+        const int day = 24 * 60;
+        const int halfDay = day / 2;
+        var diff = ((((int)(actual - reference).TotalMinutes) % day) + day) % day;
+        return diff > halfDay ? 0 : diff;
     }
 }
