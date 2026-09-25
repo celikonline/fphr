@@ -478,6 +478,324 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.ToTable("monthly_timesheet_approvals", "attendance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.PunchRequests.PunchRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approval_request_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedPunchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_punch_id");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at_utc");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("direction");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_punch_requests");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_punch_requests_tenant_id");
+
+                    b.HasIndex("TenantId", "ApprovalRequestId")
+                        .HasDatabaseName("ix_punch_requests_tenant_id_approval_request_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .HasDatabaseName("ix_punch_requests_tenant_id_employee_id_work_date");
+
+                    b.ToTable("punch_requests", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Punches.Punch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DeleteReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at_utc");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by_user_id");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("direction");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_manual");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_ref");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid?>("TerminalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_punches");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_punches_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .HasDatabaseName("ix_punches_tenant_id_employee_id_work_date");
+
+                    b.HasIndex("TenantId", "EmployeeId", "OccurredAtUtc", "Direction", "Source")
+                        .IsUnique()
+                        .HasDatabaseName("ux_punches_tenant_employee_occurred_direction_source")
+                        .HasFilter("deleted_at_utc IS NULL");
+
+                    b.ToTable("punches", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Rotations.RotationAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<int>("OffsetDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("offset_days");
+
+                    b.Property<Guid>("RotationPatternId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rotation_pattern_id");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rotation_assignments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_rotation_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "RotationPatternId")
+                        .HasDatabaseName("ix_rotation_assignments_tenant_id_rotation_pattern_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "StartDate")
+                        .HasDatabaseName("ix_rotation_assignments_tenant_id_employee_id_start_date");
+
+                    b.ToTable("rotation_assignments", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Rotations.RotationPattern", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int>("CycleLengthDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("cycle_length_days");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Preset")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("preset");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rotation_patterns");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_rotation_patterns_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_rotation_patterns_tenant_id_code");
+
+                    b.ToTable("rotation_patterns", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.SelfCheckIns.SelfCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -572,6 +890,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date");
 
+                    b.Property<int>("DayType")
+                        .HasColumnType("integer")
+                        .HasColumnName("day_type");
+
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uuid")
                         .HasColumnName("employee_id");
@@ -601,6 +923,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
 
+                    b.Property<Guid?>("ShiftDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_definition_id");
+
                     b.Property<TimeOnly>("Start")
                         .HasColumnType("time without time zone")
                         .HasColumnName("start");
@@ -620,11 +946,132 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_shift_assignments_tenant_id");
 
+                    b.HasIndex("TenantId", "ShiftDefinitionId")
+                        .HasDatabaseName("ix_shift_assignments_tenant_id_shift_definition_id");
+
                     b.HasIndex("TenantId", "EmployeeId", "Date")
                         .IsUnique()
                         .HasDatabaseName("ix_shift_assignments_tenant_id_employee_id_date");
 
                     b.ToTable("shift_assignments", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BonusMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("bonus_minutes");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("ColorHex")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color_hex");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<int?>("EarlyArrivalOvertimeMaxMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("early_arrival_overtime_max_minutes");
+
+                    b.Property<int?>("EarlyArrivalOvertimeMinMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("early_arrival_overtime_min_minutes");
+
+                    b.Property<int>("EarlyLeaveToleranceMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("early_leave_tolerance_minutes");
+
+                    b.Property<int>("EndMinute")
+                        .HasColumnType("integer")
+                        .HasColumnName("end_minute");
+
+                    b.Property<int?>("FlexStartEarliestMinute")
+                        .HasColumnType("integer")
+                        .HasColumnName("flex_start_earliest_minute");
+
+                    b.Property<int?>("FlexStartLatestMinute")
+                        .HasColumnType("integer")
+                        .HasColumnName("flex_start_latest_minute");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int?>("LateDepartureOvertimeMaxMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("late_departure_overtime_max_minutes");
+
+                    b.Property<int?>("LateDepartureOvertimeMinMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("late_departure_overtime_min_minutes");
+
+                    b.Property<int>("LateToleranceMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("late_tolerance_minutes");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("StartMinute")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_minute");
+
+                    b.Property<bool>("StartsPreviousDay")
+                        .HasColumnType("boolean")
+                        .HasColumnName("starts_previous_day");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_definitions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_shift_definitions_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shift_definitions_tenant_id_code");
+
+                    b.ToTable("shift_definitions", "attendance");
                 });
 
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftPlanLock", b =>
@@ -694,6 +1141,55 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_shift_plan_locks_tenant_id_period_month");
 
                     b.ToTable("shift_plan_locks", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftPlanTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("PeriodLengthDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("period_length_days");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_plan_templates");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_shift_plan_templates_tenant_id");
+
+                    b.ToTable("shift_plan_templates", "attendance");
                 });
 
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftSettings", b =>
@@ -794,6 +1290,195 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_shift_settings_tenant_id");
 
                     b.ToTable("shift_settings", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Terminals.EmployeeTerminalCredential", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_terminal_credentials");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employee_terminal_credentials_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_employee_terminal_credentials_tenant_id_employee_id");
+
+                    b.HasIndex("TenantId", "Kind", "Value")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_terminal_credentials_tenant_id_kind_value");
+
+                    b.ToTable("employee_terminal_credentials", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Terminals.Terminal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ApiKeyHash")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("api_key_hash");
+
+                    b.Property<string>("ApiKeyPrefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("api_key_prefix");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DirectionMode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("direction_mode");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("LastSeenAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at_utc");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid?>("TerminalGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("terminal_group_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_terminals");
+
+                    b.HasIndex("ApiKeyPrefix")
+                        .HasDatabaseName("ix_terminals_api_key_prefix");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_terminals_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_terminals_tenant_id_code");
+
+                    b.ToTable("terminals", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Terminals.TerminalGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_terminal_groups");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_terminal_groups_tenant_id");
+
+                    b.ToTable("terminal_groups", "attendance");
                 });
 
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.WorkSchedules.EmployeeWorkScheduleAssignment", b =>
@@ -1103,6 +1788,106 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Rotations.RotationPattern", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Attendance.Domain.Rotations.RotationStep", "Steps", b1 =>
+                        {
+                            b1.Property<Guid>("RotationPatternId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("DayOffset");
+
+                            b1.Property<string>("DayType")
+                                .IsRequired();
+
+                            b1.Property<Guid?>("ShiftDefinitionId");
+
+                            b1.HasKey("RotationPatternId", "__synthesizedOrdinal")
+                                .HasName("pk_rotation_patterns");
+
+                            b1.ToTable("rotation_patterns", "attendance");
+
+                            b1
+                                .ToJson("steps")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RotationPatternId")
+                                .HasConstraintName("fk_rotation_patterns_rotation_patterns_rotation_pattern_id");
+                        });
+
+                    b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftDefinition", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Attendance.Domain.Shifts.ShiftBreak", "Breaks", b1 =>
+                        {
+                            b1.Property<Guid>("ShiftDefinitionId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("DurationMinutes");
+
+                            b1.Property<bool>("IsFlexible");
+
+                            b1.Property<int?>("StartMinute");
+
+                            b1.HasKey("ShiftDefinitionId", "__synthesizedOrdinal")
+                                .HasName("pk_shift_definitions");
+
+                            b1.ToTable("shift_definitions", "attendance");
+
+                            b1
+                                .ToJson("breaks")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ShiftDefinitionId")
+                                .HasConstraintName("fk_shift_definitions_shift_definitions_shift_definition_id");
+                        });
+
+                    b.Navigation("Breaks");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftPlanTemplate", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Attendance.Domain.Shifts.ShiftPlanTemplateEntry", "Entries", b1 =>
+                        {
+                            b1.Property<Guid>("ShiftPlanTemplateId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("DayOffset");
+
+                            b1.Property<string>("DayType")
+                                .IsRequired();
+
+                            b1.Property<Guid>("EmployeeId");
+
+                            b1.Property<Guid?>("ShiftDefinitionId");
+
+                            b1.HasKey("ShiftPlanTemplateId", "__synthesizedOrdinal")
+                                .HasName("pk_shift_plan_templates");
+
+                            b1.ToTable("shift_plan_templates", "attendance");
+
+                            b1
+                                .ToJson("entries")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ShiftPlanTemplateId")
+                                .HasConstraintName("fk_shift_plan_templates_shift_plan_templates_shift_plan_template");
+                        });
+
+                    b.Navigation("Entries");
                 });
 
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.WorkSchedules.WorkSchedule", b =>

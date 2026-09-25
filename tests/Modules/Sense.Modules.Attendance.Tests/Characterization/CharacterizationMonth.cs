@@ -1,14 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sense.Modules.Attendance.Application;
-using Sense.Modules.Attendance.Contracts;
-using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
-using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
-using Sense.Shared.Infrastructure.DependencyInjection;
-using Sense.Tests.Shared.Fixtures;
 
 namespace Sense.Modules.Attendance.Tests.Characterization;
 
@@ -66,25 +58,9 @@ internal static class CharacterizationMonth
         AttendanceDay.Record(tenantId, employeeId, Date(day), checkIn, checkOut, PlanStart, PlanEnd, PlannedMinutes, PlannedBreakMinutes, AttendanceDaySource.Manual);
 }
 
-/// <summary>Gerçek PostgreSQL (Testcontainers) üzerinde Attendance modülü; <see cref="AttendanceIntegrationTests"/> ile aynı kurulum.</summary>
-public abstract class AttendanceCharacterizationFixture : TestFixture
+/// <summary>Karakterizasyon testlerinin ortak kurulumu: migrate edilmiş Attendance + karışık ay tohumu.</summary>
+public abstract class AttendanceCharacterizationFixture : AttendancePostgresFixture
 {
-    protected override void ConfigureServices(IServiceCollection services)
-    {
-        var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
-        services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
-        services.AddAttendanceServices(configuration);
-        services.AddModuleHandlers(
-            AttendanceDbContext.SchemaName,
-            typeof(AttendanceErrors).Assembly,
-            typeof(AttendancePermissions).Assembly,
-            typeof(AttendanceDbContext).Assembly,
-            typeof(IWorkScheduleRepository).Assembly);
-    }
-
-    protected override async Task OnDatabaseReadyAsync() =>
-        await ServiceProvider!.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
-
     /// <summary>Varsayılan Pzt-Cum 09:00-18:00 çizelgesini açar ve karışık ayı kaydeder.</summary>
     protected async Task SeedMixedMonthAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken)
     {
