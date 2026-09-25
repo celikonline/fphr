@@ -4,7 +4,9 @@ using Microsoft.Extensions.Options;
 namespace Sense.Modules.Attendance.Application.Terminals;
 
 /// <summary>
-/// PIN kaba kuvvet koruması (Z5.1): terminal başına başarısız PIN kalemlerini kayan pencerede sayar. Bütçe (<see cref="TerminalIngestOptions.PinFailureBudget"/>)
+/// PIN kaba kuvvet koruması (Z5.1): terminal başına kayan pencerede FARKLI yanlış PIN özetlerini sayar (aynı yanlış değerin tekrarı - ör. çevrimdışı
+/// toplu gönderimin yeniden denemesi - pencere içinde tek sayılır ve süresini uzatmaz). Yalnız gerçekten yanlış (eşleşmeyen) PIN'ler yazılır; doğru
+/// PIN'ler engel sırasında da bütçeye yazılmaz, böylece meşru trafik engeli kendiliğinden uzatamaz. Bütçe (<see cref="TerminalIngestOptions.PinFailureBudget"/>)
 /// dolunca o terminalin PIN kalemleri çözülmeden reddedilir; engele geçişte terminal koduyla uyarı loglanır (kimlik değeri ASLA). Bellek içidir
 /// (süreç başına; şema değişikliği yok): yalnız kimliği doğrulanmış terminaller izlendiği için kayıt sayısı terminal sayısıyla sınırlıdır ve
 /// terminal başına en çok bütçe kadar zaman damgası tutulur. <see cref="LastSuspiciousAtUtc"/> yönetim listesinde ve nabızda "şüpheli deneme" işaretidir.
@@ -25,10 +27,13 @@ public sealed partial class TerminalCredentialFailureMonitor(
         }
     }
 
-    /// <summary>Bir başarısız PIN kalemi kaydeder; bütçe bu kayıtla doluyorsa (engele geçiş) uyarı loglar.</summary>
-    public void RecordFailure(TerminalIdentity terminal)
+    /// <summary>
+    /// Yanlış bir PIN'i (özetiyle) kaydeder; bu özet pencerede zaten sayıldıysa hiçbir şey yapmaz. Bütçe bu kayıtla doluyorsa (engele geçiş) uyarı loglar.
+    /// </summary>
+    public void RecordFailure(TerminalIdentity terminal, string credentialDigest)
     {
         ArgumentNullException.ThrowIfNull(terminal);
+        ArgumentException.ThrowIfNullOrEmpty(credentialDigest);
         var now = Now();
         bool becameBlocked;
         lock (_gate)
@@ -39,11 +44,17 @@ public sealed partial class TerminalCredentialFailureMonitor(
                 _terminals[terminal.TerminalId] = state;
             }
 
-            var wasBlocked = CountInWindow(state, now) >= _budget;
-            state.Failures.Enqueue(now);
+            Prune(state, now);
+            if (state.Failures.ContainsKey(credentialDigest))
+            {
+                return;
+            }
+
+            var wasBlocked = state.Failures.Count >= _budget;
+            state.Failures[credentialDigest] = now;
             while (state.Failures.Count > _budget)
             {
-                state.Failures.Dequeue();
+                state.Failures.Remove(state.Failures.MinBy(f => f.Value).Key);
             }
 
             var blocked = CountInWindow(state, now) >= _budget;
@@ -71,7 +82,16 @@ public sealed partial class TerminalCredentialFailureMonitor(
 
     private DateTime Now() => clock.GetUtcNow().UtcDateTime;
 
-    private int CountInWindow(State state, DateTime now) => state.Failures.Count(t => now - t < _window);
+    private int CountInWindow(State state, DateTime now) => state.Failures.Values.Count(t => now - t < _window);
+
+    /// <summary>Pencereden çıkmış kayıtları atar (en çok bütçe kadar kayıt var; maliyet sabit üst sınırlı).</summary>
+    private void Prune(State state, DateTime now)
+    {
+        foreach (var expired in state.Failures.Where(f => now - f.Value >= _window).Select(f => f.Key).ToList())
+        {
+            state.Failures.Remove(expired);
+        }
+    }
 
     [LoggerMessage(EventId = 5102, Level = LogLevel.Warning,
         Message = "Terminal {TerminalCode}: {Budget} failed PIN items within {WindowMinutes} min - PIN entry on this terminal is rejected until the window clears (possible brute force).")]
@@ -79,7 +99,8 @@ public sealed partial class TerminalCredentialFailureMonitor(
 
     private sealed class State
     {
-        public Queue<DateTime> Failures { get; } = new();
+        /// <summary>Yanlış PIN özeti → pencereye ilk girdiği an (en çok bütçe kadar kayıt).</summary>
+        public Dictionary<string, DateTime> Failures { get; } = new(StringComparer.Ordinal);
 
         public DateTime? LastSuspiciousAtUtc { get; set; }
     }

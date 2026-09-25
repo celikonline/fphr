@@ -182,21 +182,30 @@ public sealed class TerminalPunchIngest(
             return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, prepared.RejectReason);
         }
 
+        // Çözüm her kalem için (engelden bağımsız) yapılır; özet ve toplu DB araması zaten istek başında tüm kalemler içindir.
         var kind = item!.Credential!.Kind!.Value;
-        var isPin = kind == TerminalCredentialKind.Pin;
-        if (isPin && pinFailures.IsBlocked(terminal.TerminalId))
-        {
-            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.CredentialRejected);
-        }
+        var resolved = owners.TryGetValue((kind, digest), out var employeeId);
+        var failure = !resolved ? TerminalPunchRejectReasons.UnknownCredential
+            : !activeEmployees.Contains(employeeId) ? TerminalPunchRejectReasons.EmployeeNotActive
+            : null;
 
-        if (!owners.TryGetValue((kind, digest), out var employeeId))
+        if (kind == TerminalCredentialKind.Pin)
         {
-            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.UnknownCredential);
-        }
+            // Engel açıkken her PIN kalemi aynı yanıtı alır (doğru PIN sızmaz); bütçeye yalnız gerçekten yanlış olanlar yazılır.
+            var blocked = pinFailures.IsBlocked(terminal.TerminalId);
+            if (failure is not null || blocked)
+            {
+                if (failure is not null)
+                {
+                    pinFailures.RecordFailure(terminal, digest);
+                }
 
-        if (!activeEmployees.Contains(employeeId))
+                return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected);
+            }
+        }
+        else if (failure is not null)
         {
-            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.EmployeeNotActive);
+            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, failure);
         }
 
         var input = new PunchInput(
@@ -216,21 +225,6 @@ public sealed class TerminalPunchIngest(
             { Rejected: > 0 } => new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.PeriodLocked),
             _ => new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.NotRecorded),
         };
-    }
-
-    /// <summary>
-    /// Kimlik çözülemedi. PIN'de (düşük entropi) ayrıntı verilmez - bilinmeyen/pasif kimlik ve aktif olmayan çalışan tek <c>credential_rejected</c>
-    /// nedenine iner, böylece yanıt bir PIN'in var olup olmadığını sızdırmaz - ve başarısızlık bütçesine yazılır. Kart/dış kimlikte ayrıntılı neden kalır.
-    /// </summary>
-    private TerminalPunchItemResultDto CredentialFailure(TerminalIdentity terminal, int index, bool isPin, string reason)
-    {
-        if (!isPin)
-        {
-            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, reason);
-        }
-
-        pinFailures.RecordFailure(terminal);
-        return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected);
     }
 
     /// <summary>Kalemin ön işlemesi: kimlik özeti ya da (bozuk/çok eski kalemde) red nedeni.</summary>

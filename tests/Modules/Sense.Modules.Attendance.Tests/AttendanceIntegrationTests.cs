@@ -147,7 +147,16 @@ public sealed class AttendanceIntegrationTests : TestFixture
             .ToList();
         foreach (var port in ports)
         {
-            services.AddScoped(port, _ => Substitute.For([port], []));
+            // Sense ports are scoped in the API host; framework services the host itself provides (IHostEnvironment, DataProtection
+            // internals pulled in by the terminal auth scheme's AddAuthentication) are singletons there.
+            if (port.Namespace?.StartsWith("Sense.", StringComparison.Ordinal) == true)
+            {
+                services.AddScoped(port, _ => Substitute.For([port], []));
+            }
+            else
+            {
+                services.AddSingleton(port, _ => Substitute.For([port], []));
+            }
         }
     }
 

@@ -58,12 +58,15 @@ public sealed class TerminalRequestThrottle(IOptions<TerminalIngestRateLimitOpti
 /// <summary>
 /// IP başına BAŞARISIZ anahtar denemesi kovası (sabit pencere). Yalnız başarısız doğrulamalar yazılır; kova dolunca sonraki başarısız denemeler
 /// 429 alır, geçerli anahtarlı istekler (aynı proxy IP'sinden gelse de) etkilenmez. İzlenen IP sayısı <see cref="TerminalIngestRateLimitOptions.MaxTrackedIps"/>
-/// ile sınırlıdır: dolunca süresi geçmiş kovalar, o da yetmezse en eski pencere atılır.
+/// ile sınırlıdır. Temizlik amortize O(1)'dir: kovalar açılış sırasıyla bir kuyrukta tutulur (pencere başlangıçları zamanla artar, kuyruğun
+/// başı hep en eskidir); her yeni kovada baştan yalnız süresi geçenler, sınır doluysa en eski kova atılır - kilit altında tam tarama yok,
+/// dönen adreslerle (ör. IPv6) CPU şişirilemez. Kuyruktaki bayat girişler (aynı IP'nin yenilenmiş kovası) başa geldiğinde atlanır.
 /// </summary>
 public sealed class TerminalAuthFailureTracker(IOptions<TerminalIngestRateLimitOptions> options, TimeProvider clock)
 {
     private readonly Lock _gate = new();
     private readonly Dictionary<string, Bucket> _buckets = new(StringComparer.Ordinal);
+    private readonly Queue<(string Ip, Bucket Bucket)> _order = new();
     private readonly int _limit = Math.Max(1, options.Value.FailedAuthPermitLimit);
     private readonly int _maxTracked = Math.Max(1, options.Value.MaxTrackedIps);
     private readonly TimeSpan _window = options.Value.Window;
@@ -90,6 +93,7 @@ public sealed class TerminalAuthFailureTracker(IOptions<TerminalIngestRateLimitO
                 MakeRoom(now);
                 bucket = new Bucket(now);
                 _buckets[ip] = bucket;
+                _order.Enqueue((ip, bucket));
             }
 
             bucket.Failures++;
@@ -99,21 +103,19 @@ public sealed class TerminalAuthFailureTracker(IOptions<TerminalIngestRateLimitO
 
     private void MakeRoom(DateTime now)
     {
-        if (_buckets.Count < _maxTracked)
+        while (_order.TryPeek(out var oldest) && (now - oldest.Bucket.WindowStart >= _window || _buckets.Count >= _maxTracked || IsStale(oldest)))
         {
-            return;
-        }
-
-        foreach (var expired in _buckets.Where(b => now - b.Value.WindowStart >= _window).Select(b => b.Key).ToList())
-        {
-            _buckets.Remove(expired);
-        }
-
-        while (_buckets.Count >= _maxTracked)
-        {
-            _buckets.Remove(_buckets.MinBy(b => b.Value.WindowStart).Key);
+            _order.Dequeue();
+            if (!IsStale(oldest))
+            {
+                _buckets.Remove(oldest.Ip);
+            }
         }
     }
+
+    /// <summary>Kuyruk girişi artık o IP'nin güncel kovası değil (kova yenilenmiş ya da atılmış).</summary>
+    private bool IsStale((string Ip, Bucket Bucket) entry) =>
+        !_buckets.TryGetValue(entry.Ip, out var current) || !ReferenceEquals(current, entry.Bucket);
 
     private sealed class Bucket(DateTime windowStart)
     {

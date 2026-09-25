@@ -374,6 +374,80 @@ public sealed class TerminalPunchIngestTests
         _recorder.Received.ShouldHaveSingleItem();
     }
 
+    // Bütçe 3 (constructor). Yardımcı: farklı dakikalarda PIN kalemi (aynı PIN'in tekrarı recorder'da yoksayılmasın).
+    private static TerminalPunchItem Pin(string value, int minute) => Item(TerminalCredentialKind.Pin, value, Occurred.AddMinutes(minute));
+
+    private async Task BlockAsync() =>
+        (await Ingest().IngestAsync(_terminal, [Pin("0001", 0), Pin("0002", 0), Pin("0003", 0)], TestContext.Current.CancellationToken))
+            .Value.Rejected.ShouldBe(3);
+
+    [Fact]
+    public async Task Correct_pin_during_block_does_not_extend_budget()
+    {
+        await BlockAsync();
+        _clock.Advance(TimeSpan.FromMinutes(2));
+
+        var during = await Ingest().IngestAsync(_terminal, [Pin("4321", 1), Pin("4321", 2), Pin("4321", 3)], TestContext.Current.CancellationToken);
+        _clock.Advance(TimeSpan.FromMinutes(3) + TimeSpan.FromSeconds(1));
+
+        during.Value.Items.ShouldAllBe(i => i.Reason == TerminalPunchRejectReasons.CredentialRejected);
+        _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse("only the three wrong PINs at t=0 were budget failures; they left the window at t=5");
+    }
+
+    [Fact]
+    public async Task Repeated_same_wrong_pin_counts_once()
+    {
+        var result = await Ingest().IngestAsync(_terminal,
+            [Pin("0007", 0), Pin("0007", 1), Pin("0007", 2), Pin("0007", 3), Pin("0007", 4), Pin("4321", 5)], TestContext.Current.CancellationToken);
+
+        _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse();
+        result.Value.Items.Last().Status.ShouldBe(TerminalPunchItemStatus.Accepted);
+    }
+
+    [Fact]
+    public async Task Block_expires_after_window_even_with_correct_traffic()
+    {
+        await BlockAsync();
+        for (var minute = 1; minute <= 5; minute++)
+        {
+            _clock.Advance(TimeSpan.FromMinutes(1));
+            await Ingest().IngestAsync(_terminal, [Pin("4321", 10 + minute), Item(TerminalCredentialKind.Card, "04A1B2C3", Occurred.AddMinutes(10 + minute))],
+                TestContext.Current.CancellationToken);
+        }
+
+        _clock.Advance(TimeSpan.FromSeconds(1));
+        var after = await Ingest().IngestAsync(_terminal, [Pin("4321", 30)], TestContext.Current.CancellationToken);
+
+        after.Value.Accepted.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Response_identical_for_correct_and_wrong_pin_while_blocked()
+    {
+        await BlockAsync();
+        var inactive = EmployeeTerminalCredential.Create(_tenantId, Guid.NewGuid(), TerminalCredentialKind.Pin, _hasher.Digest(_tenantId, TerminalCredentialKind.Pin, "5555")).Value;
+        inactive.Deactivate();
+        _credentials.Add(inactive);
+
+        var result = await Ingest().IngestAsync(_terminal, [Pin("4321", 1), Pin("9876", 1), Pin("5555", 1)], TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => (i.Status, i.Reason)).Distinct().ShouldHaveSingleItem()
+            .ShouldBe((TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected));
+        _recorder.Received.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Offline_batch_retry_does_not_double_count()
+    {
+        TerminalPunchItem[] offlineBatch = [Pin("1110", 0), Pin("4321", 1), Pin("2220", 2)];
+
+        await Ingest().IngestAsync(_terminal, offlineBatch, TestContext.Current.CancellationToken);
+        var retry = await Ingest().IngestAsync(_terminal, offlineBatch, TestContext.Current.CancellationToken);
+
+        _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse("two distinct wrong PINs, sent twice, are two failures (budget 3)");
+        retry.Value.Items[1].Status.ShouldBe(TerminalPunchItemStatus.Ignored);
+    }
+
     private sealed record LogEntry(LogLevel Level, string Message);
 
     private sealed class CapturingLogger : ILogger<TerminalCredentialFailureMonitor>
