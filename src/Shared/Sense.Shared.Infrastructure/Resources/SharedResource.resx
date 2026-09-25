@@ -1635,4 +1635,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>Bu ay kapatıldığı için eksik kayıt talebi oluşturulamaz.</value></data>
   <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>Aynı zamana ait bekleyen bir eksik kayıt talebi zaten var.</value></data>
   <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Yalnız talebi oluşturan çalışan iptal edebilir.</value></data>
+  <data name="attendance.rotation.code_duplicate" xml:space="preserve"><value>Bu rotasyon kodu zaten kullanılıyor.</value></data>
+  <data name="attendance.rotation.inactive" xml:space="preserve"><value>Pasif rotasyon çalışanlara uygulanamaz.</value></data>
+  <data name="attendance.rotation_assignment.overlap" xml:space="preserve"><value>{employee} için bu tarih aralığında zaten bir rotasyon ataması var.</value></data>
 </root>

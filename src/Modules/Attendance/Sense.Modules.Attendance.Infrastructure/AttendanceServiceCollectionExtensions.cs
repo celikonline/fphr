@@ -66,6 +66,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PunchRequestApprovalSummaryProvider>();
         // Z3.1 toplu atama (B8): vardiya tanımı okuma; B2 aynı kaydı eklerse tekrar harmsızdır (son kayıt kazanır).
         services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        services.AddScoped<IRotationRepository, RotationRepository>();
         return services;
     }
 
