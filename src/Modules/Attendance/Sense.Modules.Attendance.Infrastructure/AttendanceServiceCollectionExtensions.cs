@@ -26,6 +26,8 @@ public static class AttendanceServiceCollectionExtensions
         // Raporlar menüsü katkıları (senseik-029) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlySummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
+        // Günlük puantaj listeleri (Z1.1): IDataScopeService/IOrgUnitLookup/ILeaveOnDateReader yalnız API'de var.
+        services.AddScoped<IDailyAttendanceQuery, Application.Daily.DailyAttendanceQuery>();
         return services;
     }
 

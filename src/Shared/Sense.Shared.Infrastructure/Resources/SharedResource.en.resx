@@ -1591,4 +1591,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
+  <data name="attendance.punch.reason_required" xml:space="preserve"><value>A reason is required to add or delete a punch.</value></data>
+  <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>This employee's month is approved and locked; punches cannot be added or deleted.</value></data>
+  <data name="attendance.punch.not_found" xml:space="preserve"><value>Punch not found.</value></data>
 </root>

@@ -28,4 +28,12 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>Manual punch add/delete needs a written reason.</summary>
+    public const string PunchReasonRequired = "attendance.punch.reason_required";
+
+    /// <summary>K6: the employee's month has an approved MonthlyTimesheetApproval; punches can no longer be added or deleted.</summary>
+    public const string PeriodLocked = "attendance.timesheet.period_locked";
+
+    public const string PunchNotFound = "attendance.punch.not_found";
 }

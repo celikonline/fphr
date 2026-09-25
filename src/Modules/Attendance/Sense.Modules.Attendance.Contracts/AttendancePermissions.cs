@@ -127,11 +127,15 @@ public static class AttendancePermissions
 
     // Zaman & Devam birleşik programı (W0-b). "attendance.*" Owner/HR/PayrollSpecialist/Timekeeper'a, "*.my.*" her tabana gider.
 
+    public const string DailyViewKey = "attendance.daily.view";
+
+    public const string PunchManageKey = "attendance.punch.manage";
+
     public static readonly Permission DailyView = new(
-        "attendance.daily.view", Module, "Günlük Puantajı Görüntüleme", Group, "Günlük geldi/geç/erken/devamsız/izinli listelerini görüntüleme");
+        DailyViewKey, Module, "Günlük Puantajı Görüntüleme", Group, "Günlük geldi/geç/erken/devamsız/izinli listelerini görüntüleme");
 
     public static readonly Permission PunchManage = new(
-        "attendance.punch.manage", Module, "Okutma Yönetimi", Group, "Elle okutma ekleme ve silme (gerekçeli)");
+        PunchManageKey, Module, "Okutma Yönetimi", Group, "Elle okutma ekleme ve silme (gerekçeli)");
 
     public static readonly Permission ShiftDefinitionView = new(
         "attendance.shiftdefinition.view", Module, "Vardiya Tanımlarını Görüntüleme", Group, "Vardiya tanımlarını (saat, tolerans, mola) görüntüleme");
