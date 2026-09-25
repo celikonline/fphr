@@ -40,6 +40,30 @@ public static class OnboardingCategoryProgress
     }
 }
 
+internal static class CategoryGuard
+{
+    /// <summary>A null id is fine (uncategorized). Otherwise the category must exist in the tenant (repositories are
+    /// tenant-filtered) and be active, unless it is the template's unchanged current category.</summary>
+    public static async Task<Result> EnsureUsableAsync(
+        IOnboardingCategoryRepository categories, Guid? categoryId, Guid? currentCategoryId, CancellationToken cancellationToken)
+    {
+        if (categoryId is not { } id)
+        {
+            return Result.Success();
+        }
+
+        var category = await categories.GetByIdAsync(id, cancellationToken);
+        if (category.IsFailure)
+        {
+            return Error.Validation(OnboardingDomainErrors.CategoryNotFound);
+        }
+
+        return category.Value.IsActive || currentCategoryId == id
+            ? Result.Success()
+            : Error.Validation(OnboardingDomainErrors.CategoryNotFound);
+    }
+}
+
 [RequiresPermission("onboarding.tasks.view")]
 public sealed record ListOnboardingCategoriesQuery : IQuery<IReadOnlyList<OnboardingCategoryDto>>;
 
@@ -121,4 +145,29 @@ public sealed class GetEmployeeCategoryProgressHandler(IEmployeeOnboardingTaskRe
         Result.Success(OnboardingCategoryProgress.Compute(
             await tasks.ListByEmployeeAsync(query.EmployeeId, cancellationToken),
             await categories.ListAsync(cancellationToken)));
+}
+
+/// <summary>Deletes a category; blocked while any template still uses it.</summary>
+[RequiresPermission("onboarding.templates.manage")]
+public sealed record DeleteOnboardingCategoryCommand(Guid CategoryId) : ICommand;
+
+public sealed class DeleteOnboardingCategoryHandler(IOnboardingCategoryRepository categories, IOnboardingTaskTemplateRepository templates)
+    : ICommandHandler<DeleteOnboardingCategoryCommand>
+{
+    public async Task<Result> Handle(DeleteOnboardingCategoryCommand command, CancellationToken cancellationToken)
+    {
+        var category = await categories.GetByIdAsync(command.CategoryId, cancellationToken);
+        if (category.IsFailure)
+        {
+            return category.Error;
+        }
+
+        if (await templates.AnyUsingCategoryAsync(command.CategoryId, cancellationToken))
+        {
+            return Error.Conflict(OnboardingDomainErrors.CategoryInUse);
+        }
+
+        categories.Remove(category.Value);
+        return Result.Success();
+    }
 }

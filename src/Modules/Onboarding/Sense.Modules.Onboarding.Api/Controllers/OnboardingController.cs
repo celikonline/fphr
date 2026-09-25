@@ -79,6 +79,11 @@ public sealed class OnboardingController : ApiControllerBase
     public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] SaveCategoryRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new UpdateOnboardingCategoryCommand(id, request.Name, request.SortOrder, request.IsActive), ct));
 
+    [HttpDelete("categories/" + ApiRoutes.IdParam)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteOnboardingCategoryCommand(id), ct));
+
     [HttpGet("template-sets")]
     [ProducesResponseType<IReadOnlyList<OnboardingTemplateSetDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListTemplateSets(CancellationToken ct) =>

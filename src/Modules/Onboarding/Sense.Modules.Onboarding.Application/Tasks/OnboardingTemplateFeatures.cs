@@ -40,7 +40,7 @@ public sealed class UpdateOnboardingTaskTemplateValidator : AbstractValidator<Up
     }
 }
 
-public sealed class UpdateOnboardingTaskTemplateHandler(IOnboardingTaskTemplateRepository templates)
+public sealed class UpdateOnboardingTaskTemplateHandler(IOnboardingTaskTemplateRepository templates, IOnboardingCategoryRepository categories)
     : ICommandHandler<UpdateOnboardingTaskTemplateCommand, OnboardingTaskTemplateDto>
 {
     public async Task<Result<OnboardingTaskTemplateDto>> Handle(
@@ -50,6 +50,13 @@ public sealed class UpdateOnboardingTaskTemplateHandler(IOnboardingTaskTemplateR
         if (template.IsFailure)
         {
             return template.Error;
+        }
+
+        var usable = await CategoryGuard.EnsureUsableAsync(
+            categories, command.CategoryId, template.Value.CategoryId, cancellationToken);
+        if (usable.IsFailure)
+        {
+            return usable.Error;
         }
 
         var updated = template.Value.Update(command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory,

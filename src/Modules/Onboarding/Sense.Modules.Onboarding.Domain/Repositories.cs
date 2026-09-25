@@ -10,6 +10,9 @@ public interface IOnboardingTaskTemplateRepository
 
     Task<Result<OnboardingTaskTemplate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>True when any template of the tenant references the category (blocks category deletion).</summary>
+    Task<bool> AnyUsingCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default);
+
     /// <summary>Every template of the tenant (active and inactive), stage then title order.</summary>
     Task<IReadOnlyList<OnboardingTaskTemplate>> ListAsync(CancellationToken cancellationToken = default);
 
@@ -44,6 +47,8 @@ public interface IEmployeeOnboardingTaskRepository
 public interface IOnboardingCategoryRepository
 {
     void Add(OnboardingCategory category);
+
+    void Remove(OnboardingCategory category);
 
     Task<Result<OnboardingCategory>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

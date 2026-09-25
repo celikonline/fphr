@@ -109,6 +109,12 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_task_templates_category_id",
+                schema: "onboarding",
+                table: "task_templates",
+                column: "category_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_employee_tasks_tenant_id_employee_id_template_set_id",
                 schema: "onboarding",
                 table: "employee_tasks",
@@ -137,11 +143,26 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
                 schema: "onboarding",
                 table: "template_sets",
                 columns: new[] { "tenant_id", "stage" });
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_task_templates_categories_category_id",
+                schema: "onboarding",
+                table: "task_templates",
+                column: "category_id",
+                principalSchema: "onboarding",
+                principalTable: "categories",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "fk_task_templates_categories_category_id",
+                schema: "onboarding",
+                table: "task_templates");
+
             migrationBuilder.DropTable(
                 name: "categories",
                 schema: "onboarding");
@@ -149,6 +170,11 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "template_sets",
                 schema: "onboarding");
+
+            migrationBuilder.DropIndex(
+                name: "ix_task_templates_category_id",
+                schema: "onboarding",
+                table: "task_templates");
 
             migrationBuilder.DropIndex(
                 name: "ix_employee_tasks_tenant_id_employee_id_template_set_id",

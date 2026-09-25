@@ -16,6 +16,9 @@ public sealed class OnboardingTaskTemplateRepository(OnboardingDbContext context
         return template is null ? Error.NotFound(OnboardingDomainErrors.TaskTemplateNotFound) : template;
     }
 
+    public async Task<bool> AnyUsingCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default) =>
+        await context.TaskTemplates.AnyAsync(t => t.CategoryId == categoryId, cancellationToken);
+
     public async Task<IReadOnlyList<OnboardingTaskTemplate>> ListAsync(CancellationToken cancellationToken = default) =>
         await context.TaskTemplates
             .OrderBy(t => t.Stage)
@@ -65,6 +68,8 @@ public sealed class EmployeeOnboardingTaskRepository(OnboardingDbContext context
 public sealed class OnboardingCategoryRepository(OnboardingDbContext context) : IOnboardingCategoryRepository
 {
     public void Add(OnboardingCategory category) => context.Categories.Add(category);
+
+    public void Remove(OnboardingCategory category) => context.Categories.Remove(category);
 
     public async Task<Result<OnboardingCategory>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {

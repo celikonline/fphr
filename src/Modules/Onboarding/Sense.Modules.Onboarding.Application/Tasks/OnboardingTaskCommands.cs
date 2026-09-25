@@ -26,21 +26,28 @@ public sealed class CreateOnboardingTaskTemplateValidator : AbstractValidator<Cr
     }
 }
 
-public sealed class CreateOnboardingTaskTemplateHandler(ITenantContext tenant, IOnboardingTaskTemplateRepository templates)
+public sealed class CreateOnboardingTaskTemplateHandler(
+    ITenantContext tenant, IOnboardingTaskTemplateRepository templates, IOnboardingCategoryRepository categories)
     : ICommandHandler<CreateOnboardingTaskTemplateCommand, OnboardingTaskTemplateDto>
 {
-    public Task<Result<OnboardingTaskTemplateDto>> Handle(CreateOnboardingTaskTemplateCommand command, CancellationToken cancellationToken)
+    public async Task<Result<OnboardingTaskTemplateDto>> Handle(CreateOnboardingTaskTemplateCommand command, CancellationToken cancellationToken)
     {
+        var usable = await CategoryGuard.EnsureUsableAsync(categories, command.CategoryId, currentCategoryId: null, cancellationToken);
+        if (usable.IsFailure)
+        {
+            return usable.Error;
+        }
+
         var created = OnboardingTaskTemplate.Create(
             tenant.TenantId, command.Stage, command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory,
             command.CategoryId, command.Importance, command.RequiresEDocument);
         if (created.IsFailure)
         {
-            return Task.FromResult(Result.Failure<OnboardingTaskTemplateDto>(created.Error));
+            return created.Error;
         }
 
         templates.Add(created.Value);
-        return Task.FromResult(Result.Success(OnboardingTaskTemplateDto.From(created.Value)));
+        return OnboardingTaskTemplateDto.From(created.Value);
     }
 }
 

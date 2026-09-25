@@ -13,7 +13,7 @@ using Sense.Modules.Onboarding.Infrastructure.Persistence;
 namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(OnboardingDbContext))]
-    [Migration("20260925115947_OnboardingCategoriesAndTemplateSets")]
+    [Migration("20260925124027_OnboardingCategoriesAndTemplateSets")]
     partial class OnboardingCategoriesAndTemplateSets
     {
         /// <inheritdoc />
@@ -266,6 +266,9 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_task_templates");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_task_templates_category_id");
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_task_templates_tenant_id");
@@ -523,6 +526,15 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "onboarding");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Onboarding.Domain.Tasks.OnboardingTaskTemplate", b =>
+                {
+                    b.HasOne("Sense.Modules.Onboarding.Domain.Tasks.OnboardingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_task_templates_categories_category_id");
                 });
 #pragma warning restore 612, 618
         }

@@ -56,6 +56,8 @@ public sealed class OnboardingTaskTemplateConfiguration : IEntityTypeConfigurati
         b.Property(x => x.ResponsibleRoleCode).HasMaxLength(OnboardingLimits.ResponsibleRoleCodeMaxLength).IsRequired();
         b.Property(x => x.Importance).HasConversion<string>().HasMaxLength(OnboardingTables.EnumLength).IsRequired()
             .HasDefaultValue(OnboardingImportance.Normal);
+        // Category in use cannot be deleted; existing (uncategorized) templates keep a null CategoryId.
+        b.HasOne<OnboardingCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => new { x.TenantId, x.Stage });
         b.Ignore(x => x.DomainEvents);
     }

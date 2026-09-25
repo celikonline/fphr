@@ -1560,7 +1560,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
-  <data name="onboarding_category.not_found" xml:space="preserve"><value>Kategori bulunamadı.</value></data>
+  <data name="onboarding.category_not_found" xml:space="preserve"><value>Kategori bulunamadı.</value></data>
   <data name="onboarding_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
   <data name="onboarding_category.name_too_long" xml:space="preserve"><value>Kategori adı 100 karakteri aşamaz.</value></data>
   <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Şablon seti bulunamadı.</value></data>
@@ -1570,4 +1570,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="onboarding_template_set.inactive" xml:space="preserve"><value>Şablon seti pasif.</value></data>
   <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>Set yalnızca aynı aşamadaki mevcut görev şablonlarını içerebilir.</value></data>
   <data name="onboarding_template_set.already_started" xml:space="preserve"><value>Bu şablon seti çalışan için zaten başlatılmış.</value></data>
+  <data name="onboarding.category_in_use" xml:space="preserve"><value>Kategori bir veya daha fazla görev şablonunda kullanıldığı için silinemez.</value></data>
 </root>

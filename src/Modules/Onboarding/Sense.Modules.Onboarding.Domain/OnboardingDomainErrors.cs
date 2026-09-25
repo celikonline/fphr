@@ -16,7 +16,8 @@ public static class OnboardingDomainErrors
 
     public const string EmployeeTaskWaiveReasonRequired = "employee_onboarding_task.waive_reason_required";
 
-    public const string CategoryNotFound = "onboarding_category.not_found";
+    public const string CategoryNotFound = "onboarding.category_not_found";
+    public const string CategoryInUse = "onboarding.category_in_use";
     public const string CategoryNameRequired = "onboarding_category.name_required";
     public const string CategoryNameTooLong = "onboarding_category.name_too_long";
 
