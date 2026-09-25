@@ -3,6 +3,9 @@ using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Punches;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
+using Sense.Modules.Attendance.Domain.Terminals;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
@@ -27,7 +30,16 @@ public sealed class LiveAttendanceBoardFeaturesTests
 
     public LiveAttendanceBoardFeaturesTests() => _tenant.TenantId.Returns(_tenantId);
 
-    private GetLiveAttendanceBoardHandler CreateHandler() => new(_tenant, _dataScope, _employees, _days, Clock);
+    private readonly IPunchRepository _punches = Substitute.For<IPunchRepository>();
+    private readonly ITerminalRepository _terminals = Substitute.For<ITerminalRepository>();
+
+    private GetLiveAttendanceBoardHandler CreateHandler()
+    {
+        _punches.ListForRangeAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Punch>());
+        _terminals.ListTerminalsAsync(Arg.Any<CancellationToken>()).Returns(new List<Terminal>());
+        return new(_tenant, _dataScope, _employees, _days, _punches, _terminals, Clock);
+    }
 
     [Fact]
     public async Task Handle_NoVisibleEmployees_ReturnsEmpty()

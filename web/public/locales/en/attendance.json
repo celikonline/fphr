@@ -32,7 +32,27 @@
     "status": "Status",
     "inside": "Inside",
     "outside": "Outside",
-    "empty": "No employees to show."
+    "empty": "No employees to show.",
+    "terminals": {
+      "title": "Terminals",
+      "online": "Online",
+      "offline": "Offline",
+      "inactive": "Inactive",
+      "todayCount": "Today: {{count}} punches",
+      "lastPunch": "Last punch",
+      "lastSeen": "Last seen",
+      "never": "Never seen",
+      "empty": "No registered terminals."
+    },
+    "lastPunch": "Last punch",
+    "sources": {
+      "manual": "Manual",
+      "import": "Import",
+      "device": "Device",
+      "selfService": "Self-service",
+      "request": "Request",
+      "terminal": "Terminal"
+    }
   },
   "empty": "No records for this period.",
   "genericError": "Something went wrong.",
