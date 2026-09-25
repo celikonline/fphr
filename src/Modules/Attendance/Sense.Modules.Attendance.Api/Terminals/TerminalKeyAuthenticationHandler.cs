@@ -55,6 +55,7 @@ public static class TerminalPrincipal
             new(TerminalKeyDefaults.TerminalIdClaim, terminal.TerminalId.ToString()),
             new(TerminalKeyDefaults.TenantIdClaim, terminal.TenantId.ToString()),
             new(TerminalKeyDefaults.DirectionModeClaim, ((int)terminal.DirectionMode).ToString(CultureInfo.InvariantCulture)),
+            new(TerminalKeyDefaults.CodeClaim, terminal.Code),
         };
         if (terminal.LocationId is { } location)
         {
@@ -72,12 +73,13 @@ public static class TerminalPrincipal
             || !Guid.TryParse(identity.FindFirst(TerminalKeyDefaults.TerminalIdClaim)?.Value, out var terminalId)
             || !Guid.TryParse(identity.FindFirst(TerminalKeyDefaults.TenantIdClaim)?.Value, out var tenantId)
             || !int.TryParse(identity.FindFirst(TerminalKeyDefaults.DirectionModeClaim)?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var mode)
-            || !Enum.IsDefined((TerminalDirectionMode)mode))
+            || !Enum.IsDefined((TerminalDirectionMode)mode)
+            || identity.FindFirst(TerminalKeyDefaults.CodeClaim)?.Value is not { Length: > 0 } code)
         {
             return null;
         }
 
         Guid? locationId = Guid.TryParse(identity.FindFirst(TerminalKeyDefaults.LocationIdClaim)?.Value, out var location) ? location : null;
-        return new TerminalIdentity(terminalId, tenantId, (TerminalDirectionMode)mode, locationId);
+        return new TerminalIdentity(terminalId, tenantId, (TerminalDirectionMode)mode, locationId, code);
     }
 }

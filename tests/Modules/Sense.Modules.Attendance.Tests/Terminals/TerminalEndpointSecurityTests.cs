@@ -31,7 +31,7 @@ public sealed class TerminalEndpointSecurityTests
 {
     private const string FakeJwtScheme = "Bearer";
     private readonly ITerminalKeyAuthenticator _authenticator = Substitute.For<ITerminalKeyAuthenticator>();
-    private readonly TerminalIdentity _terminal = new(Guid.NewGuid(), Guid.NewGuid(), TerminalDirectionMode.InOnly, Guid.NewGuid());
+    private readonly TerminalIdentity _terminal = new(Guid.NewGuid(), Guid.NewGuid(), TerminalDirectionMode.InOnly, Guid.NewGuid(), "GATE-1");
     private readonly string _validKey = TerminalApiKey.Generate().Key;
 
     public TerminalEndpointSecurityTests()
@@ -138,9 +138,12 @@ public sealed class TerminalEndpointSecurityTests
     }
 
     [Fact]
-    public async Task Tenant_scope_is_opened_from_the_authenticated_terminal()
+    public async Task Tenant_scope_and_audit_actor_come_from_the_authenticated_terminal()
     {
-        var services = new ServiceCollection().AddSingleton(Substitute.For<Sense.Shared.Contracts.Context.ITenantContextSetter>()).BuildServiceProvider();
+        var services = new ServiceCollection()
+            .AddSingleton(Substitute.For<Sense.Shared.Contracts.Context.ITenantContextSetter>())
+            .AddSingleton(Substitute.For<Sense.Shared.Contracts.Context.IAuditSourceAccessor>())
+            .BuildServiceProvider();
         var setter = services.GetRequiredService<Sense.Shared.Contracts.Context.ITenantContextSetter>();
         var context = NewContext(services);
         context.User = TerminalPrincipal.Create(_terminal, TerminalKeyDefaults.AuthenticationScheme);
@@ -150,12 +153,16 @@ public sealed class TerminalEndpointSecurityTests
 
         await new TerminalTenantScopeAttribute().OnResourceExecutionAsync(executing, () =>
         {
+            var user = new Sense.Shared.Infrastructure.Context.CurrentUserAccessor();
             ran = true;
+            (user.DisplayName, user.IsAuthenticated, user.UserId, user.IsPlatformAdmin, user.Roles.Count).ShouldBe(("terminal:GATE-1", false, (Guid?)null, false, 0));
             return Task.FromResult<Microsoft.AspNetCore.Mvc.Filters.ResourceExecutedContext>(null!);
         });
 
         ran.ShouldBeTrue();
+        new Sense.Shared.Infrastructure.Context.CurrentUserAccessor().DisplayName.ShouldBeNull();
         setter.Received(1).BeginScope(_terminal.TenantId, Arg.Any<string?>());
+        services.GetRequiredService<Sense.Shared.Contracts.Context.IAuditSourceAccessor>().Received(1).BeginScope(Sense.Shared.Contracts.Context.AuditSources.Api);
         new TerminalTenantScopeAttribute().Order.ShouldBe(int.MinValue);
     }
 

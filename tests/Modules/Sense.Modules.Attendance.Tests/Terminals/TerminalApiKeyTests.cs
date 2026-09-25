@@ -77,8 +77,8 @@ public sealed class TerminalApiKeyTests
         var a = await authenticator.AuthenticateAsync(keyA, TestContext.Current.CancellationToken);
         var neither = await authenticator.AuthenticateAsync(TerminalTestData.KeyWithPrefix("Samepfx0"), TestContext.Current.CancellationToken);
 
-        b.ShouldBe(new TerminalIdentity(terminalB.Id, tenantB, TerminalDirectionMode.OutOnly, null));
-        a.ShouldBe(new TerminalIdentity(terminalA.Id, _tenantId, TerminalDirectionMode.InOnly, null));
+        b.ShouldBe(new TerminalIdentity(terminalB.Id, tenantB, TerminalDirectionMode.OutOnly, null, "T-01"));
+        a.ShouldBe(new TerminalIdentity(terminalA.Id, _tenantId, TerminalDirectionMode.InOnly, null, "T-01"));
         neither.ShouldBeNull();
     }
 

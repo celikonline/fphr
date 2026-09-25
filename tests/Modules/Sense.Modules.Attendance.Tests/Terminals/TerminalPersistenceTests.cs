@@ -35,6 +35,7 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
         base.ConfigureServices(services);
         services.PostConfigure<TerminalSecurityOptions>(o => o.CredentialPepper = TerminalTestData.TestPepper);
         services.AddSingleton<IPunchRecorder>(_recorder);
+        services.AddSingleton(TerminalTestData.Contacts());
     }
 
     [Fact]
@@ -56,7 +57,7 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
             await db.SaveChangesAsync(ct);
 
             rotated = (await new RotateTerminalApiKeyHandler(repository).Handle(new RotateTerminalApiKeyCommand(created.TerminalId), ct)).Value;
-            digest = hasher.Hash(tenant, TerminalCredentialKind.Pin, "4711");
+            digest = hasher.Digest(tenant, TerminalCredentialKind.Pin, "4711");
             var credential = EmployeeTerminalCredential.Create(tenant, Guid.NewGuid(), TerminalCredentialKind.Pin, digest).Value;
             repository.AddCredential(credential);
             await db.SaveChangesAsync(ct);
@@ -94,7 +95,7 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
         var terminalA = await SaveTerminalAsync(tenantA, keyA, ct);
         var terminalB = await SaveTerminalAsync(tenantB, keyB, ct);
 
-        (await AuthenticateAsync(keyB, ct))!.ShouldBe(new TerminalIdentity(terminalB.Id, tenantB, TerminalDirectionMode.Both, null));
+        (await AuthenticateAsync(keyB, ct))!.ShouldBe(new TerminalIdentity(terminalB.Id, tenantB, TerminalDirectionMode.Both, null, "T-01"));
         (await AuthenticateAsync(keyA, ct))!.TenantId.ShouldBe(tenantA);
 
         using (TenantContextSetter!.BeginScope(tenantB))
@@ -146,9 +147,9 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
         var ct = TestContext.Current.CancellationToken;
         var (tenantA, tenantB) = (Guid.NewGuid(), Guid.NewGuid());
         var hasher = TerminalTestData.Hasher();
-        var digestA = hasher.Hash(tenantA, TerminalCredentialKind.Card, "04A1B2C3");
-        var digestB = hasher.Hash(tenantB, TerminalCredentialKind.Card, "04A1B2C3");
-        var inactiveDigest = hasher.Hash(tenantA, TerminalCredentialKind.Card, "OLD-CARD");
+        var digestA = hasher.Digest(tenantA, TerminalCredentialKind.Card, "04A1B2C3");
+        var digestB = hasher.Digest(tenantB, TerminalCredentialKind.Card, "04A1B2C3");
+        var inactiveDigest = hasher.Digest(tenantA, TerminalCredentialKind.Card, "OLD-CARD");
         var employeeA = Guid.NewGuid();
         await SaveCredentialAsync(tenantA, employeeA, digestA, active: true, ct);
         await SaveCredentialAsync(tenantB, Guid.NewGuid(), digestB, active: true, ct);
@@ -170,7 +171,7 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
         var employee = Guid.NewGuid();
         var key = TerminalApiKey.Generate().Key;
         var terminal = await SaveTerminalAsync(tenant, key, ct, TerminalDirectionMode.InOnly);
-        await SaveCredentialAsync(tenant, employee, TerminalTestData.Hasher().Hash(tenant, TerminalCredentialKind.Card, "04A1B2C3"), active: true, ct);
+        await SaveCredentialAsync(tenant, employee, TerminalTestData.Hasher().Digest(tenant, TerminalCredentialKind.Card, "04A1B2C3"), active: true, ct);
 
         var identity = (await AuthenticateAsync(key, ct))!;
         using var tenantScope = TenantContextSetter!.BeginScope(identity.TenantId);
@@ -185,6 +186,28 @@ public sealed class TerminalPersistenceTests : AttendancePostgresFixture
         _recorder.Received.Single().ShouldBe(new PunchInput(
             tenant, employee, new DateTime(2026, 9, 25, 7, 58, 0, DateTimeKind.Utc), PunchDirectionDto.In, PunchSourceDto.Terminal, null, terminal.Id, null, null, null,
             false, null, null));
+    }
+
+    [Fact]
+    public async Task Audit_actor_of_terminal_requests_is_the_terminal_code()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenant = Guid.NewGuid();
+        var key = TerminalApiKey.Generate().Key;
+        var terminal = await SaveTerminalAsync(tenant, key, ct);
+        var identity = (await AuthenticateAsync(key, ct))!;
+
+        using (TenantContextSetter!.BeginScope(tenant))
+        using (Sense.Shared.Infrastructure.Context.CurrentUserAccessor.Use(new Sense.Modules.Attendance.Api.Terminals.TerminalActor(identity)))
+        await using (var db = AuditedContext())
+        {
+            (await db.Terminals.SingleAsync(t => t.Id == terminal.Id, ct)).Deactivate();
+            await db.SaveChangesAsync(ct);
+        }
+
+        var audit = await RowsAsJsonAsync("audit_log_entries", ct);
+        audit.ShouldContain("\"actor\":\"terminal:T-01\"");
+        audit.ShouldNotContain("\"actor\":\"system\"");
     }
 
     private AttendanceDbContext AuditedContext()

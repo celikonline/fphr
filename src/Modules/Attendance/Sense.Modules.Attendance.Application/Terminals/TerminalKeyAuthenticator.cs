@@ -5,7 +5,8 @@ using Sense.Modules.Attendance.Domain.Terminals;
 namespace Sense.Modules.Attendance.Application.Terminals;
 
 /// <summary>Kimliği doğrulanmış terminal: kiracı yalnız buradan (eşleşen aktif terminalden) gelir, istek gövdesinden asla.</summary>
-public sealed record TerminalIdentity(Guid TerminalId, Guid TenantId, TerminalDirectionMode DirectionMode, Guid? LocationId);
+/// <see cref="Code"/> denetim kaydında aktör olarak görünür ("terminal:{Code}").
+public sealed record TerminalIdentity(Guid TerminalId, Guid TenantId, TerminalDirectionMode DirectionMode, Guid? LocationId, string Code);
 
 /// <summary>Okutma ucu kimlik doğrulaması (X-Terminal-Key): ham anahtar → eşleşen aktif terminal ya da null.</summary>
 public interface ITerminalKeyAuthenticator
@@ -50,7 +51,7 @@ public sealed class TerminalKeyAuthenticator(ITerminalRepository terminals) : IT
         }
 
         return match is { IsActive: true }
-            ? new TerminalIdentity(match.Id, match.TenantId, match.DirectionMode, match.LocationId)
+            ? new TerminalIdentity(match.Id, match.TenantId, match.DirectionMode, match.LocationId, match.Code)
             : null;
     }
 }

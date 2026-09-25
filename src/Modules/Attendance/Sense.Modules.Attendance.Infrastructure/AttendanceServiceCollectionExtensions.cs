@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
@@ -44,9 +44,10 @@ public static class AttendanceServiceCollectionExtensions
         services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
         services.AddHostedService<RecalculationHostedService>();
 
-        // Z5.1 terminal yönetimi + okutma ucu (T1, API-only). Kimlik (kart/PIN) özet pepper'ı gizli yapılandırmadan; yoksa API başlamaz.
-        services.AddOptions<TerminalSecurityOptions>().Bind(configuration.GetSection(TerminalSecurityOptions.Section)).ValidateOnStart();
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<TerminalSecurityOptions>, TerminalSecurityOptionsValidator>());
+        // Z5.1 terminal yönetimi + okutma ucu (T1, API-only). Kimlik (kart/PIN) özet pepper'ı gizli yapılandırmadan; zorunlu değil:
+        // yoksa API açılır, başlangıçta uyarı loglanır, yalnız kimlik işlemleri 503 döner (lazy doğrulama).
+        services.AddOptions<TerminalSecurityOptions>().Bind(configuration.GetSection(TerminalSecurityOptions.Section));
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, TerminalSecurityStartupCheck>());
         services.TryAddScoped<ITerminalRepository, TerminalRepository>();
         services.TryAddSingleton<ITerminalCredentialHasher, HmacTerminalCredentialHasher>();
         services.TryAddScoped<ITerminalKeyAuthenticator, TerminalKeyAuthenticator>();

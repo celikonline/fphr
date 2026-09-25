@@ -28,6 +28,9 @@ public enum ErrorType
 
     /// <summary>İstek hız sınırını aştı → 429.</summary>
     TooManyRequests = 8,
+
+    /// <summary>Gerekli bir sunucu yapılandırması/bağımlılığı yok, işlem şu an yapılamıyor → 503.</summary>
+    ServiceUnavailable = 9,
 }
 
 /// <summary>
@@ -55,6 +58,8 @@ public sealed record Error(string Code, ErrorType Type = ErrorType.Failure, IRea
     public static Error Payment(string code, params (string Key, object? Value)[] args) => new(code, ErrorType.Payment, ToArgs(args));
 
     public static Error Failure(string code, params (string Key, object? Value)[] args) => new(code, ErrorType.Failure, ToArgs(args));
+
+    public static Error ServiceUnavailable(string code, params (string Key, object? Value)[] args) => new(code, ErrorType.ServiceUnavailable, ToArgs(args));
 
     private static IReadOnlyDictionary<string, object?>? ToArgs((string Key, object? Value)[] args) =>
         args.Length == 0 ? null : args.ToDictionary(a => a.Key, a => a.Value, StringComparer.Ordinal);

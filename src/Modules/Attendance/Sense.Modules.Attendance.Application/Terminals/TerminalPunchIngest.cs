@@ -1,6 +1,7 @@
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Terminals;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.Terminals;
@@ -32,12 +33,17 @@ public sealed record TerminalHeartbeatDto(DateTime ServerTimeUtc);
 /// kiracı içinde HMAC özetiyle aktif bir kimliğe eşlenir; eşlenemeyen/bozuk kalem kalem bazında reddedilir, diğerleri işlenir. Kalemler
 /// <see cref="IPunchRecorder.RecordBatchAsync"/>'e TEK TEK verilir: sözleşme yalnız toplam sayıları döndürdüğünden kalem bazlı durum
 /// (kabul/yoksayıldı/reddedildi) ancak böyle kesin bilinir ve bir kalemin hatası (ör. gelecekteki okutma) diğerlerini geri almaz.
+/// Kimliği doğru olsa da çalışanı aktif olmayan (işten ayrılmış/askıda/taslak) kalem <c>employee_not_active</c> ile reddedilir.
 /// Recorder her çağrıda kendi değişikliklerini kaydeder; bu servis komut hattına (tek işlem) sokulmaz. Aynı okutmanın tekrar
 /// gönderilmesi hata değil "ignored" döner (idempotans recorder'dadır).
 /// </summary>
-public sealed class TerminalPunchIngest(ITerminalRepository terminals, ITerminalCredentialHasher hasher, IPunchRecorder recorder, TimeProvider clock)
+public sealed class TerminalPunchIngest(
+    ITerminalRepository terminals, ITerminalCredentialHasher hasher, IEmployeeContactLookup employees, IPunchRecorder recorder, TimeProvider clock)
 {
     public const int MaxItemsPerRequest = 500;
+
+    /// <summary>Yalnız bu durumdaki çalışanın okutması kabul edilir (EmployeeStatus.Active; taslak/askıda/işten ayrılmış reddedilir).</summary>
+    private const string ActiveEmployeeStatus = "Active";
 
     public async Task<Result<TerminalPunchBatchResultDto>> IngestAsync(
         TerminalIdentity terminal, IReadOnlyList<TerminalPunchItem?>? items, CancellationToken cancellationToken)
@@ -49,17 +55,35 @@ public sealed class TerminalPunchIngest(ITerminalRepository terminals, ITerminal
 
         await MarkSeenAsync(terminal, cancellationToken).ConfigureAwait(false);
 
-        var digests = items.Select(item => IsWellFormed(item) ? hasher.Hash(terminal.TenantId, item!.Credential!.Kind!.Value, item.Credential.Value!) : null).ToList();
+        // Kimlik çözümü pepper ister: yoksa istek düzeyinde 503 (anahtar doğrulaması ve son görülme yine yapılmıştır).
+        if (!hasher.IsAvailable)
+        {
+            return Error.ServiceUnavailable(TerminalErrors.CredentialPepperMissing);
+        }
+
+        var digests = new List<string?>(items.Count);
+        foreach (var item in items)
+        {
+            var digest = IsWellFormed(item) ? hasher.Hash(terminal.TenantId, item!.Credential!.Kind!.Value, item.Credential.Value!) : null;
+            if (digest is { IsFailure: true })
+            {
+                return digest.Error;
+            }
+
+            digests.Add(digest?.Value);
+        }
+
         var credentials = await terminals.ListActiveCredentialsByValuesAsync(
             terminal.TenantId, digests.OfType<string>().Distinct(StringComparer.Ordinal).ToList(), cancellationToken).ConfigureAwait(false);
-        var employees = credentials
+        var owners = credentials
             .Where(c => c.TenantId == terminal.TenantId && c.IsActive)
             .ToDictionary(c => (c.Kind, c.Value), c => c.EmployeeId);
+        var activeEmployees = await ActiveEmployeesAsync(terminal.TenantId, owners.Values, cancellationToken).ConfigureAwait(false);
 
         var results = new List<TerminalPunchItemResultDto>(items.Count);
         for (var index = 0; index < items.Count; index++)
         {
-            results.Add(await RecordAsync(terminal, index, items[index], digests[index], employees, cancellationToken).ConfigureAwait(false));
+            results.Add(await RecordAsync(terminal, index, items[index], digests[index], owners, activeEmployees, cancellationToken).ConfigureAwait(false));
         }
 
         return new TerminalPunchBatchResultDto(
@@ -106,6 +130,22 @@ public sealed class TerminalPunchIngest(ITerminalRepository terminals, ITerminal
         && credential.Value.Trim().Length <= EmployeeTerminalCredential.ValueMaxLength
         && occurred != default;
 
+    /// <summary>Kimliği çözülen çalışanlardan aktif olanlar - tek toplu sorgu (N+1 yok).</summary>
+    private async Task<IReadOnlySet<Guid>> ActiveEmployeesAsync(Guid tenantId, IEnumerable<Guid> employeeIds, CancellationToken cancellationToken)
+    {
+        var ids = employeeIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return new HashSet<Guid>();
+        }
+
+        var contacts = await employees.GetContactsAsync(tenantId, ids, cancellationToken).ConfigureAwait(false);
+        return contacts
+            .Where(c => string.Equals(c.Status, ActiveEmployeeStatus, StringComparison.OrdinalIgnoreCase))
+            .Select(c => c.EmployeeId)
+            .ToHashSet();
+    }
+
     private async Task<DateTime> MarkSeenAsync(TerminalIdentity terminal, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
@@ -115,16 +155,22 @@ public sealed class TerminalPunchIngest(ITerminalRepository terminals, ITerminal
 
     private async Task<TerminalPunchItemResultDto> RecordAsync(
         TerminalIdentity terminal, int index, TerminalPunchItem? item, string? digest,
-        IReadOnlyDictionary<(TerminalCredentialKind Kind, string Value), Guid> employees, CancellationToken cancellationToken)
+        IReadOnlyDictionary<(TerminalCredentialKind Kind, string Value), Guid> owners, IReadOnlySet<Guid> activeEmployees,
+        CancellationToken cancellationToken)
     {
         if (digest is null)
         {
             return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.InvalidItem);
         }
 
-        if (!employees.TryGetValue((item!.Credential!.Kind!.Value, digest), out var employeeId))
+        if (!owners.TryGetValue((item!.Credential!.Kind!.Value, digest), out var employeeId))
         {
             return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.UnknownCredential);
+        }
+
+        if (!activeEmployees.Contains(employeeId))
+        {
+            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.EmployeeNotActive);
         }
 
         var input = new PunchInput(

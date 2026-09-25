@@ -14,6 +14,12 @@ public static class TerminalErrors
 
     /// <summary>Okutma isteği 1..<see cref="TerminalPunchIngest.MaxItemsPerRequest"/> kalem taşımalı.</summary>
     public const string BatchSizeInvalid = "attendance.terminal_ingest.batch_size_invalid";
+
+    /// <summary>
+    /// Kimlik özeti pepper'ı (Attendance:Terminals:CredentialPepper) yapılandırılmamış: kimlik ekleme/içe aktarma/okutma çözümü 503 döner;
+    /// pepper gerektirmeyen uçlar (terminal/grup yönetimi, anahtar, nabız) çalışır. İleti yapılandırma ayrıntısı içermez.
+    /// </summary>
+    public const string CredentialPepperMissing = "attendance.terminal_credential.pepper_missing";
 }
 
 /// <summary>Okutma ucunun kalem bazlı red nedenleri (makine okur; çevrilmez).</summary>
@@ -21,6 +27,9 @@ public static class TerminalPunchRejectReasons
 {
     /// <summary>Kimlik (kart/PIN/dış kimlik) terminalin kiracısında aktif bir kimliğe eşlenmedi.</summary>
     public const string UnknownCredential = "unknown_credential";
+
+    /// <summary>Kimlik doğru ama çalışan aktif değil (işten ayrılmış, askıda, taslak ya da kaydı yok).</summary>
+    public const string EmployeeNotActive = "employee_not_active";
 
     /// <summary>Kalem eksik/bozuk: kimlik türü/değeri ya da okutma anı yok.</summary>
     public const string InvalidItem = "invalid_item";

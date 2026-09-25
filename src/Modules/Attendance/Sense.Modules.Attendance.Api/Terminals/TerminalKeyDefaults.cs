@@ -20,6 +20,11 @@ public static class TerminalKeyDefaults
 
     public const string LocationIdClaim = "sense:terminal_location";
 
+    public const string CodeClaim = "sense:terminal_code";
+
+    /// <summary>Denetim kaydındaki aktör adı öneki: "terminal:{kod}".</summary>
+    public const string AuditActorPrefix = "terminal:";
+
     /// <summary>Başarısızlık iletisi sabittir: anahtar, kiracı ya da terminal bilgisi içermez.</summary>
     public const string InvalidKeyMessage = "Invalid terminal key.";
 

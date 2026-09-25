@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Options;
+using NSubstitute;
 using Sense.Modules.Attendance.Application.Terminals;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain.Terminals;
 using Sense.Modules.Attendance.Infrastructure.Terminals;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Tests.Terminals;
@@ -26,8 +28,22 @@ internal static class TerminalTestData
     public static Terminal NewTerminal(Guid tenantId, string key, TerminalDirectionMode mode = TerminalDirectionMode.Both, string code = "T-01") =>
         Terminal.Create(tenantId, code, "Ana giriş", null, null, mode, TerminalApiKey.Hash(key), TerminalApiKey.PrefixOf(key)).Value;
 
-    public static HmacTerminalCredentialHasher Hasher(string pepper = TestPepper) =>
+    public static HmacTerminalCredentialHasher Hasher(string? pepper = TestPepper) =>
         new(Options.Create(new TerminalSecurityOptions { CredentialPepper = pepper }));
+
+    /// <summary>Pepper'lı hasher için özet (başarısızsa test patlar).</summary>
+    public static string Digest(this ITerminalCredentialHasher hasher, Guid tenantId, TerminalCredentialKind kind, string raw) =>
+        hasher.Hash(tenantId, kind, raw).Value;
+
+    /// <summary>İstenen çalışanları "Active" (ya da <paramref name="statuses"/>'taki durumla) döndüren kişi araması.</summary>
+    public static IEmployeeContactLookup Contacts(IReadOnlyDictionary<Guid, string>? statuses = null)
+    {
+        var lookup = Substitute.For<IEmployeeContactLookup>();
+        lookup.GetContactsAsync(default, default!, default).ReturnsForAnyArgs(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
+            .Select(id => new EmployeeContact(id, "Ad", "Soyad", null, null, null, statuses?.GetValueOrDefault(id) ?? "Active"))
+            .ToList());
+        return lookup;
+    }
 }
 
 /// <summary>

@@ -4,6 +4,7 @@ using Sense.Modules.Attendance.Application.Terminals;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Terminals;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -22,11 +23,14 @@ public sealed class TerminalPunchIngestTests
     private readonly FakePunchRecorder _recorder = new();
     private readonly ITerminalCredentialHasher _hasher = TerminalTestData.Hasher();
     private readonly List<EmployeeTerminalCredential> _credentials = [];
+    private readonly Dictionary<Guid, string> _employeeStatuses = [];
+    private readonly IEmployeeContactLookup _contacts;
     private readonly TerminalIdentity _terminal;
 
     public TerminalPunchIngestTests()
     {
-        _terminal = new TerminalIdentity(Guid.NewGuid(), _tenantId, TerminalDirectionMode.Both, Guid.NewGuid());
+        _contacts = TerminalTestData.Contacts(_employeeStatuses);
+        _terminal = new TerminalIdentity(Guid.NewGuid(), _tenantId, TerminalDirectionMode.Both, Guid.NewGuid(), "T-01");
         AddCredential(_tenantId, _employeeA, TerminalCredentialKind.Card, "04A1B2C3");
         AddCredential(_tenantId, _employeeB, TerminalCredentialKind.Pin, "4321");
         _terminals.ListActiveCredentialsByValuesAsync(default, default!, default).ReturnsForAnyArgs(call =>
@@ -37,10 +41,11 @@ public sealed class TerminalPunchIngestTests
         });
     }
 
-    private TerminalPunchIngest Ingest() => new(_terminals, _hasher, _recorder, new FakeTimeProvider(Now));
+    private TerminalPunchIngest Ingest(ITerminalCredentialHasher? hasher = null) =>
+        new(_terminals, hasher ?? _hasher, _contacts, _recorder, new FakeTimeProvider(Now));
 
     private void AddCredential(Guid tenantId, Guid employeeId, TerminalCredentialKind kind, string raw) =>
-        _credentials.Add(EmployeeTerminalCredential.Create(tenantId, employeeId, kind, _hasher.Hash(tenantId, kind, raw)).Value);
+        _credentials.Add(EmployeeTerminalCredential.Create(tenantId, employeeId, kind, _hasher.Digest(tenantId, kind, raw)).Value);
 
     private static TerminalPunchItem Item(TerminalCredentialKind? kind, string? value, DateTime? occurred = null, PunchDirectionDto? direction = null) =>
         new(new TerminalCredentialInput(kind, value), occurred ?? Occurred, direction);
@@ -88,7 +93,7 @@ public sealed class TerminalPunchIngestTests
     public async Task Foreign_tenant_credential_returned_by_a_faulty_lookup_is_still_not_used()
     {
         var otherTenant = Guid.NewGuid();
-        var foreign = EmployeeTerminalCredential.Create(otherTenant, Guid.NewGuid(), TerminalCredentialKind.Card, _hasher.Hash(_tenantId, TerminalCredentialKind.Card, "CAFE0002")).Value;
+        var foreign = EmployeeTerminalCredential.Create(otherTenant, Guid.NewGuid(), TerminalCredentialKind.Card, _hasher.Digest(_tenantId, TerminalCredentialKind.Card, "CAFE0002")).Value;
         _terminals.ListActiveCredentialsByValuesAsync(default, default!, default).ReturnsForAnyArgs([foreign]);
 
         var result = await Ingest().IngestAsync(_terminal, [Item(TerminalCredentialKind.Card, "CAFE0002")], TestContext.Current.CancellationToken);
@@ -201,5 +206,81 @@ public sealed class TerminalPunchIngestTests
             ]);
         (result.Value.Accepted, result.Value.Ignored, result.Value.Rejected).ShouldBe((1, 0, 7));
         _recorder.Received.Last().EmployeeId.ShouldBe(_employeeA);
+    }
+
+    [Fact]
+    public async Task Terminated_employee_credential_rejected_per_item()
+    {
+        var terminated = Guid.NewGuid();
+        var suspended = Guid.NewGuid();
+        AddCredential(_tenantId, terminated, TerminalCredentialKind.Card, "0BAD0001");
+        AddCredential(_tenantId, suspended, TerminalCredentialKind.Card, "0BAD0002");
+        _employeeStatuses[terminated] = "Terminated";
+        _employeeStatuses[suspended] = "Suspended";
+
+        var result = await Ingest().IngestAsync(_terminal,
+            [
+                Item(TerminalCredentialKind.Card, "0BAD0001"),
+                Item(TerminalCredentialKind.Card, "04A1B2C3"),
+                Item(TerminalCredentialKind.Card, "0BAD0002"),
+            ], TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => (i.Status, i.Reason)).ShouldBe(
+            [
+                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.EmployeeNotActive),
+                (TerminalPunchItemStatus.Accepted, (string?)null),
+                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.EmployeeNotActive),
+            ]);
+        _recorder.Received.Select(p => p.EmployeeId).ShouldBe([_employeeA]);
+        await _contacts.Received(1).GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Active_employee_accepted()
+    {
+        _employeeStatuses[_employeeA] = "active";
+
+        var result = await Ingest().IngestAsync(_terminal,
+            [Item(TerminalCredentialKind.Card, "04A1B2C3"), Item(TerminalCredentialKind.Pin, "4321", Occurred.AddMinutes(1))], TestContext.Current.CancellationToken);
+
+        result.Value.Accepted.ShouldBe(2);
+        await _contacts.Received(1).GetContactsAsync(
+            _tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 2 && ids.Contains(_employeeA) && ids.Contains(_employeeB)), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Employee_without_a_record_is_not_active()
+    {
+        var lookup = Substitute.For<IEmployeeContactLookup>();
+        lookup.GetContactsAsync(default, default!, default).ReturnsForAnyArgs([]);
+
+        var result = await new TerminalPunchIngest(_terminals, _hasher, lookup, _recorder, new FakeTimeProvider(Now))
+            .IngestAsync(_terminal, [Item(TerminalCredentialKind.Card, "04A1B2C3")], TestContext.Current.CancellationToken);
+
+        result.Value.Items.Single().Reason.ShouldBe(TerminalPunchRejectReasons.EmployeeNotActive);
+        _recorder.Received.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Ingest_with_credential_returns_503_item_or_request_level_without_pepper()
+    {
+        var result = await Ingest(TerminalTestData.Hasher(pepper: null)).IngestAsync(
+            _terminal, [Item(TerminalCredentialKind.Card, "04A1B2C3")], TestContext.Current.CancellationToken);
+
+        // İstek düzeyinde: tüm kalemler kimlik çözümü ister. Kimlik doğrulaması (anahtar) yapılmıştır, son görülme güncellenir.
+        result.Error.Type.ShouldBe(ErrorType.ServiceUnavailable);
+        result.Error.Code.ShouldBe(TerminalErrors.CredentialPepperMissing);
+        result.Error.Args.ShouldBeNull();
+        _recorder.Received.ShouldBeEmpty();
+        await _terminals.DidNotReceiveWithAnyArgs().ListActiveCredentialsByValuesAsync(default, default!, default);
+        await _terminals.Received(1).MarkTerminalSeenAsync(_tenantId, _terminal.TerminalId, Now, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Heartbeat_works_without_pepper()
+    {
+        var heartbeat = await Ingest(TerminalTestData.Hasher(pepper: null)).HeartbeatAsync(_terminal, TestContext.Current.CancellationToken);
+
+        heartbeat.Value.ServerTimeUtc.ShouldBe(Now);
     }
 }
