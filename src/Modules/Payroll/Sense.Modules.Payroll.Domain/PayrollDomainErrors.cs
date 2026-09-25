@@ -80,6 +80,9 @@ public static class PayrollDomainErrors
     public const string PayslipObjectionReasonInvalid = "payroll.errors.payslip_objection_reason_invalid";
     public const string PayslipObjectionNotPending = "payroll.errors.payslip_objection_not_pending";
 
+    /// <summary>Another request changed the payslip first (optimistic concurrency, xmin): e.g. two acknowledgements or acknowledge vs objection.</summary>
+    public const string PayslipConcurrentUpdate = "payroll.errors.payslip_concurrent_update";
+
     /// <summary>The signed-in user has no linked employee record, so there are no "my" payslips to act on.</summary>
     public const string NoEmployeeForUser = "payroll.errors.no_employee_for_user";
 }
@@ -114,4 +117,7 @@ public static class PayrollLimits
     public const int ClientIpMaxLength = 64;
 
     public const int UserAgentMaxLength = 512;
+
+    /// <summary>E2: the daily reminder only chases payslips published within this many days (no endless reminders for old periods).</summary>
+    public const int AcknowledgementReminderWindowDays = 90;
 }

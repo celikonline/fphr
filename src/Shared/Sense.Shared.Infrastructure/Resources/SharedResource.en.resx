@@ -1558,4 +1558,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>An objection reason is required and may be at most 1000 characters.</value></data>
   <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>There is no pending objection for this payslip.</value></data>
   <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Your user account is not linked to an employee record.</value></data>
+  <data name="payroll.errors.payslip_concurrent_update" xml:space="preserve"><value>The payslip was changed by another request at the same time; refresh and try again.</value></data>
 </root>

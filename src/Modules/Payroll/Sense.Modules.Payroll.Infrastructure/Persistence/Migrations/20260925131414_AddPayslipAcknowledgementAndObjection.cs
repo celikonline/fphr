@@ -86,6 +86,15 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                 table: "payslips",
                 type: "timestamp with time zone",
                 nullable: true);
+
+            migrationBuilder.AddColumn<uint>(
+                name: "xmin",
+                schema: "payroll",
+                table: "payslips",
+                type: "xid",
+                rowVersion: true,
+                nullable: false,
+                defaultValue: 0u);
         }
 
         /// <inheritdoc />
@@ -138,6 +147,11 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropColumn(
                 name: "published_at",
+                schema: "payroll",
+                table: "payslips");
+
+            migrationBuilder.DropColumn(
+                name: "xmin",
                 schema: "payroll",
                 table: "payslips");
         }

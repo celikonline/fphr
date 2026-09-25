@@ -12,7 +12,7 @@ using Sense.Modules.Payroll.Infrastructure.Persistence;
 namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PayrollDbContext))]
-    [Migration("20260925123724_AddPayslipAcknowledgementAndObjection")]
+    [Migration("20260925131414_AddPayslipAcknowledgementAndObjection")]
     partial class AddPayslipAcknowledgementAndObjection
     {
         /// <inheritdoc />
@@ -594,6 +594,12 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")

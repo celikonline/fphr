@@ -37,7 +37,7 @@ public sealed class PayslipReminderTests
         var service = new PayslipAcknowledgementReminderService(
             PayslipRepository(waiting, acknowledged, draft, objecting, rejectedObjection, underRevision), PeriodRepository(paid, reopened), outbox);
 
-        var count = await service.EnqueueRemindersAsync(TenantId, periodId: null, CancellationToken.None);
+        var count = await service.EnqueueRemindersAsync(TenantId, periodId: null, publishedSince: null, CancellationToken.None);
 
         count.ShouldBe(2);
         outbox.Received(1).Enqueue(Arg.Is<PayslipAcknowledgementReminderDue>(e =>
@@ -55,7 +55,7 @@ public sealed class PayslipReminderTests
         var outbox = Substitute.For<IIntegrationEventOutbox>();
 
         var count = await new PayslipAcknowledgementReminderService(PayslipRepository(acknowledged), PeriodRepository(paid), outbox)
-            .EnqueueRemindersAsync(TenantId, null, CancellationToken.None);
+            .EnqueueRemindersAsync(TenantId, null, null, CancellationToken.None);
 
         count.ShouldBe(0);
         outbox.DidNotReceiveWithAnyArgs().Enqueue(default!);
@@ -69,7 +69,7 @@ public sealed class PayslipReminderTests
         var outbox = Substitute.For<IIntegrationEventOutbox>();
         var unitOfWork = Substitute.For<IPayrollUnitOfWork>();
         var handler = new PayslipAcknowledgementReminderJobHandler(
-            new PayslipAcknowledgementReminderService(PayslipRepository(waiting), PeriodRepository(paid), outbox), unitOfWork);
+            new PayslipAcknowledgementReminderService(PayslipRepository(waiting), PeriodRepository(paid), outbox), unitOfWork, ClockAt(Now));
 
         handler.Handles.ShouldBe(JobType.PayslipAcknowledgementReminder);
         await handler.ExecuteAsync(new ScheduledJobContext(TenantId, "{}", Now), CancellationToken.None);
@@ -77,6 +77,25 @@ public sealed class PayslipReminderTests
 
         outbox.Received(1).Enqueue(Arg.Any<PayslipAcknowledgementReminderDue>());
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Reminder_job_targets_only_payslips_published_in_the_last_90_days()
+    {
+        var recentPeriod = PaidPeriod(8);
+        var oldPeriod = PaidPeriod(5);
+        var recent = PayslipOf(Guid.NewGuid(), recentPeriod, published: false);
+        recent.Publish(Now.AddDays(-PayrollLimits.AcknowledgementReminderWindowDays + 1));
+        var old = PayslipOf(Guid.NewGuid(), oldPeriod, published: false);
+        old.Publish(Now.AddDays(-PayrollLimits.AcknowledgementReminderWindowDays - 1));
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var handler = new PayslipAcknowledgementReminderJobHandler(
+            new PayslipAcknowledgementReminderService(PayslipRepository(recent, old), PeriodRepository(recentPeriod, oldPeriod), outbox),
+            Substitute.For<IPayrollUnitOfWork>(), ClockAt(Now));
+
+        await handler.ExecuteAsync(new ScheduledJobContext(TenantId, "{}", Now), CancellationToken.None);
+
+        outbox.Received(1).Enqueue(Arg.Is<PayslipAcknowledgementReminderDue>(e => e.Payslips.Single().PayslipId == recent.Id));
     }
 
     [Fact]

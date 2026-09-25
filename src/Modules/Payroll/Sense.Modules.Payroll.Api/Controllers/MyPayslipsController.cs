@@ -32,14 +32,15 @@ public sealed class MyPayslipsController : ApiControllerBase
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
 
+    /// <summary>"Onayla"; returns the updated row (same shape as the list).</summary>
     [HttpPost(ApiRoutes.IdParam + "/acknowledge")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<MyPayslipDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Acknowledge(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AcknowledgeMyPayslipCommand(id, UserAgent()), ct));
 
-    /// <summary>Files an objection; returns the id of the started approval request.</summary>
+    /// <summary>"İtiraz et" (starts the approval); returns the updated row (same shape as the list).</summary>
     [HttpPost(ApiRoutes.IdParam + "/object")]
-    [ProducesResponseType<PayslipObjectionSubmittedDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MyPayslipDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> FileObjection(Guid id, [FromBody] ObjectToPayslipRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ObjectToMyPayslipCommand(id, request.Reason, UserAgent()), ct));
 

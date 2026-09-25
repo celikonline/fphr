@@ -51,7 +51,7 @@ public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods
 public sealed record MarkPayrollPeriodPaidCommand(Guid PeriodId) : ICommand;
 
 public sealed class MarkPayrollPeriodPaidHandler(
-    IPayrollPeriodRepository periods, IPayslipRepository payslips, IIntegrationEventOutbox outbox, TimeProvider? clock = null)
+    IPayrollPeriodRepository periods, IPayslipRepository payslips, IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<MarkPayrollPeriodPaidCommand>
 {
     public async Task<Result> Handle(MarkPayrollPeriodPaidCommand command, CancellationToken cancellationToken)
@@ -69,7 +69,7 @@ public sealed class MarkPayrollPeriodPaidHandler(
         }
 
         var periodPayslips = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
-        var publishedAt = (clock ?? TimeProvider.System).GetUtcNow();
+        var publishedAt = clock.GetUtcNow();
         foreach (var payslip in periodPayslips)
         {
             payslip.Publish(publishedAt);

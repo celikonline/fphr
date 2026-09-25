@@ -82,6 +82,9 @@ internal static class PayrollTables
     public const int HashLength = 128;
     public const int ReasonCodeLength = 40;
     public const int CaseReferenceMaxLength = 100;
+
+    /// <summary>Shadow concurrency token mapped to PostgreSQL's xmin (Payslip).</summary>
+    public const string RowVersion = "RowVersion";
 }
 
 public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<PayrollPeriod>
@@ -121,6 +124,10 @@ public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
         b.Property(x => x.ObjectionStatus).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength).IsRequired().HasDefaultValue(PayslipObjectionStatus.None);
         b.Property(x => x.ObjectionReason).HasMaxLength(PayrollLimits.ObjectionReasonMaxLength);
         b.Ignore(x => x.AwaitsAcknowledgement);
+
+        // Optimistic concurrency on PostgreSQL's xmin system column (no schema change): two acknowledgements, or an
+        // acknowledgement racing an objection, cannot both win - the loser gets DbUpdateConcurrencyException (409).
+        b.Property<uint>(PayrollTables.RowVersion).HasColumnName("xmin").HasColumnType("xid").IsRowVersion();
 
         // K4: append-only evidence of earlier versions' acknowledgements/objections (Payslip.Recalculate archives them).
         b.Property(x => x.AcknowledgementHistory)

@@ -24,12 +24,15 @@ public sealed class PayslipAcknowledgementTests
         var period = PaidPeriod();
         var payslip = PayslipOf(Me, period);
         var handler = new AcknowledgeMyPayslipHandler(
-            CurrentEmployee(Me, "203.0.113.7"), PayslipRepository(payslip), PeriodRepository(period), ClockAt(Now));
+            CurrentEmployee(Me, "203.0.113.7"), PayslipRepository(payslip), PeriodRepository(period), Saver(), ClockAt(Now));
 
         var first = await handler.Handle(new AcknowledgeMyPayslipCommand(payslip.Id, "Mozilla/5.0 (Test)"), CancellationToken.None);
         var second = await handler.Handle(new AcknowledgeMyPayslipCommand(payslip.Id, "Other/1.0"), CancellationToken.None);
 
         first.IsSuccess.ShouldBeTrue();
+        first.Value.PayslipId.ShouldBe(payslip.Id);
+        first.Value.AcknowledgedAt.ShouldBe(Now);
+        first.Value.NetPay.ShouldBe(38_000m);
         payslip.AcknowledgedAt.ShouldBe(Now);
         payslip.AcknowledgedFromIp.ShouldBe("203.0.113.7");
         payslip.AcknowledgedUserAgent.ShouldBe("Mozilla/5.0 (Test)");
@@ -39,11 +42,25 @@ public sealed class PayslipAcknowledgementTests
     }
 
     [Fact]
+    public async Task Acknowledge_that_loses_the_save_race_is_a_conflict()
+    {
+        var period = PaidPeriod();
+        var payslip = PayslipOf(Me, period);
+        var lost = Saver(Sense.Shared.Kernel.Results.Error.Conflict(PayrollDomainErrors.PayslipConcurrentUpdate));
+
+        var result = await new AcknowledgeMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), lost, ClockAt(Now))
+            .Handle(new AcknowledgeMyPayslipCommand(payslip.Id, null), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipConcurrentUpdate);
+        result.Error.Type.ShouldBe(Sense.Shared.Kernel.Results.ErrorType.Conflict);
+    }
+
+    [Fact]
     public async Task Acknowledge_before_publish_fails()
     {
         var unpaid = OpenPeriod();
         var draft = PayslipOf(Me, unpaid, published: false);
-        var handler = new AcknowledgeMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(draft), PeriodRepository(unpaid), ClockAt(Now));
+        var handler = new AcknowledgeMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(draft), PeriodRepository(unpaid), Saver(), ClockAt(Now));
 
         var result = await handler.Handle(new AcknowledgeMyPayslipCommand(draft.Id, null), CancellationToken.None);
 
@@ -59,7 +76,7 @@ public sealed class PayslipAcknowledgementTests
         var period = PaidPeriod();
         var payslip = PayslipOf(Me, period);
         period.Reopen("Hatalı prim", Now);
-        var handler = new AcknowledgeMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), ClockAt(Now));
+        var handler = new AcknowledgeMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), Saver(), ClockAt(Now));
 
         var result = await handler.Handle(new AcknowledgeMyPayslipCommand(payslip.Id, null), CancellationToken.None);
 
@@ -83,7 +100,7 @@ public sealed class PayslipAcknowledgementTests
         var list = await new ListMyPayslipsHandler(me, payslips, periods).Handle(new ListMyPayslipsQuery(), CancellationToken.None);
         var document = await new ExportMyPayslipDocumentHandler(me, payslips, periods, documents, tenant)
             .Handle(new ExportMyPayslipDocumentQuery(theirs.Id), CancellationToken.None);
-        var acknowledge = await new AcknowledgeMyPayslipHandler(me, payslips, periods, ClockAt(Now))
+        var acknowledge = await new AcknowledgeMyPayslipHandler(me, payslips, periods, Saver(), ClockAt(Now))
             .Handle(new AcknowledgeMyPayslipCommand(theirs.Id, null), CancellationToken.None);
 
         list.Value.Select(p => p.PayslipId).ShouldBe([mine.Id]);

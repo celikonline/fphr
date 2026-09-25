@@ -32,9 +32,6 @@ public sealed record MyPayslipDto(
     DateTimeOffset? ObjectedAt,
     DateTimeOffset? ObjectionDecidedAt);
 
-/// <summary>The Workflow approval request started for an objection.</summary>
-public sealed record PayslipObjectionSubmittedDto(Guid Id);
-
 /// <summary>
 /// "Kendi bordrom" access rule shared by every E2 self-service handler: the payslip must belong to the caller's own
 /// employee record (anything else is reported as not found, never as forbidden, so ids of others cannot be probed) and
@@ -133,30 +130,44 @@ public sealed class ExportMyPayslipDocumentHandler(
 
 /// <summary>
 /// K4 "imza": the employee acknowledges one of their own published payslips - server time, the request IP and the
-/// client (User-Agent, passed by the API layer) are stored. Only once per payslip version.
+/// client (User-Agent, passed by the API layer) are stored. Only once per payslip version; the change is flushed at once
+/// so a concurrent acknowledgement/objection loses with 409 instead of overwriting the evidence. Returns the updated row.
 /// </summary>
 [RequiresPermission("payroll.my.payslip")]
-public sealed record AcknowledgeMyPayslipCommand(Guid PayslipId, string? UserAgent) : ICommand;
+public sealed record AcknowledgeMyPayslipCommand(Guid PayslipId, string? UserAgent) : ICommand<MyPayslipDto>;
 
 public sealed class AcknowledgeMyPayslipHandler(
-    ICurrentUser currentUser, IPayslipRepository payslips, IPayrollPeriodRepository periods, TimeProvider clock)
-    : ICommandHandler<AcknowledgeMyPayslipCommand>
+    ICurrentUser currentUser, IPayslipRepository payslips, IPayrollPeriodRepository periods, IPayslipChangeSaver saver, TimeProvider clock)
+    : ICommandHandler<AcknowledgeMyPayslipCommand, MyPayslipDto>
 {
-    public async Task<Result> Handle(AcknowledgeMyPayslipCommand command, CancellationToken cancellationToken)
+    public async Task<Result<MyPayslipDto>> Handle(AcknowledgeMyPayslipCommand command, CancellationToken cancellationToken)
     {
         var own = await MyPayslips.FindOwnPublishedAsync(currentUser, payslips, periods, command.PayslipId, cancellationToken);
-        return own.IsFailure
-            ? own.Error
-            : own.Value.Payslip.Acknowledge(clock.GetUtcNow(), currentUser.IpAddress, command.UserAgent);
+        if (own.IsFailure)
+        {
+            return own.Error;
+        }
+
+        var (payslip, period) = own.Value;
+        var acknowledged = payslip.Acknowledge(clock.GetUtcNow(), currentUser.IpAddress, command.UserAgent);
+        if (acknowledged.IsFailure)
+        {
+            return acknowledged.Error;
+        }
+
+        var saved = await saver.SaveAsync(cancellationToken);
+        return saved.IsFailure ? saved.Error : MyPayslips.ToDto(payslip, period);
     }
 }
 
 /// <summary>
 /// E2 itiraz: the employee objects to one of their own published, unacknowledged payslips; a Workflow
 /// "PayslipObjection" approval starts with the employee as requester (approval = objection accepted, spec §5.5).
+/// The pending objection is flushed before Workflow is called, so a lost race (409) never leaves an approval request
+/// behind. Returns the updated row.
 /// </summary>
 [RequiresPermission("payroll.my.payslip")]
-public sealed record ObjectToMyPayslipCommand(Guid PayslipId, string Reason, string? UserAgent) : ICommand<PayslipObjectionSubmittedDto>;
+public sealed record ObjectToMyPayslipCommand(Guid PayslipId, string Reason, string? UserAgent) : ICommand<MyPayslipDto>;
 
 public sealed class ObjectToMyPayslipValidator : AbstractValidator<ObjectToMyPayslipCommand>
 {
@@ -168,10 +179,11 @@ public sealed class ObjectToMyPayslipValidator : AbstractValidator<ObjectToMyPay
 }
 
 public sealed class ObjectToMyPayslipHandler(
-    ICurrentUser currentUser, IPayslipRepository payslips, IPayrollPeriodRepository periods, IWorkflowService workflow, TimeProvider clock)
-    : ICommandHandler<ObjectToMyPayslipCommand, PayslipObjectionSubmittedDto>
+    ICurrentUser currentUser, IPayslipRepository payslips, IPayrollPeriodRepository periods, IWorkflowService workflow,
+    IPayslipChangeSaver saver, TimeProvider clock)
+    : ICommandHandler<ObjectToMyPayslipCommand, MyPayslipDto>
 {
-    public async Task<Result<PayslipObjectionSubmittedDto>> Handle(ObjectToMyPayslipCommand command, CancellationToken cancellationToken)
+    public async Task<Result<MyPayslipDto>> Handle(ObjectToMyPayslipCommand command, CancellationToken cancellationToken)
     {
         var own = await MyPayslips.FindOwnPublishedAsync(currentUser, payslips, periods, command.PayslipId, cancellationToken);
         if (own.IsFailure)
@@ -179,23 +191,30 @@ public sealed class ObjectToMyPayslipHandler(
             return own.Error;
         }
 
-        var payslip = own.Value.Payslip;
+        var (payslip, period) = own.Value;
         var filed = payslip.FileObjection(command.Reason, clock.GetUtcNow());
         if (filed.IsFailure)
         {
             return filed.Error;
         }
 
+        var claimed = await saver.SaveAsync(cancellationToken);
+        if (claimed.IsFailure)
+        {
+            return claimed.Error;
+        }
+
         var approval = await workflow.StartAsync(
             ApprovalRequestTypes.PayslipObjection, payslip.Id, payslip.EmployeeId, null, currentUser.IpAddress, command.UserAgent, cancellationToken);
         if (approval.IsFailure)
         {
-            // Nothing is saved on failure (the command transaction rolls back), but keep the tracked entity consistent too.
+            // The claim above is already written in this transaction (which commits even on a failed result): undo it.
             payslip.WithdrawUnsubmittedObjection();
-            return approval.Error;
+            var undone = await saver.SaveAsync(cancellationToken);
+            return undone.IsFailure ? undone.Error : approval.Error;
         }
 
         payslip.AttachObjectionApproval(approval.Value);
-        return new PayslipObjectionSubmittedDto(approval.Value);
+        return MyPayslips.ToDto(payslip, period);
     }
 }

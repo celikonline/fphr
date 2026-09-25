@@ -33,11 +33,13 @@ public sealed class PayslipObjectionTests
         var period = PaidPeriod();
         var payslip = PayslipOf(Me, period);
         var workflow = Workflow(Result.Success(ApprovalRequestId));
-        var handler = new ObjectToMyPayslipHandler(CurrentEmployee(Me, "198.51.100.4"), PayslipRepository(payslip), PeriodRepository(period), workflow, ClockAt(Now));
+        var handler = new ObjectToMyPayslipHandler(CurrentEmployee(Me, "198.51.100.4"), PayslipRepository(payslip), PeriodRepository(period), workflow, Saver(), ClockAt(Now));
 
         var result = await handler.Handle(new ObjectToMyPayslipCommand(payslip.Id, "  Fazla mesai eksik  ", "UA/1"), CancellationToken.None);
 
-        result.Value.Id.ShouldBe(ApprovalRequestId);
+        result.Value.PayslipId.ShouldBe(payslip.Id);
+        result.Value.ObjectionStatus.ShouldBe(PayslipObjectionStatus.Pending);
+        result.Value.ObjectionReason.ShouldBe("Fazla mesai eksik");
         await workflow.Received(1).StartAsync(
             ApprovalRequestTypes.PayslipObjection, payslip.Id, Me, null, "198.51.100.4", "UA/1", Arg.Any<CancellationToken>());
         payslip.ObjectionStatus.ShouldBe(PayslipObjectionStatus.Pending);
@@ -53,11 +55,27 @@ public sealed class PayslipObjectionTests
         var theirs = PayslipOf(Guid.NewGuid(), period);
         var workflow = Workflow(Result.Success(ApprovalRequestId));
 
-        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(theirs), PeriodRepository(period), workflow, ClockAt(Now))
+        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(theirs), PeriodRepository(period), workflow, Saver(), ClockAt(Now))
             .Handle(new ObjectToMyPayslipCommand(theirs.Id, "Hatalı", null), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipNotFound);
         theirs.ObjectionStatus.ShouldBe(PayslipObjectionStatus.None);
+        await workflow.DidNotReceiveWithAnyArgs().StartAsync(default!, default, default, default, default, default, default);
+    }
+
+    [Fact]
+    public async Task Object_that_loses_the_save_race_starts_no_workflow()
+    {
+        var period = PaidPeriod();
+        var payslip = PayslipOf(Me, period);
+        var workflow = Workflow(Result.Success(ApprovalRequestId));
+        var lost = Saver(Error.Conflict(PayrollDomainErrors.PayslipConcurrentUpdate));
+
+        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), workflow, lost, ClockAt(Now))
+            .Handle(new ObjectToMyPayslipCommand(payslip.Id, "Hatalı", null), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipConcurrentUpdate);
+        result.Error.Type.ShouldBe(ErrorType.Conflict);
         await workflow.DidNotReceiveWithAnyArgs().StartAsync(default!, default, default, default, default, default, default);
     }
 
@@ -69,7 +87,7 @@ public sealed class PayslipObjectionTests
         payslip.Acknowledge(Now, "1.2.3.4", null);
         var workflow = Workflow(Result.Success(ApprovalRequestId));
 
-        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), workflow, ClockAt(Now))
+        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), workflow, Saver(), ClockAt(Now))
             .Handle(new ObjectToMyPayslipCommand(payslip.Id, "Hatalı", null), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipAlreadyAcknowledged);
@@ -83,11 +101,12 @@ public sealed class PayslipObjectionTests
         var payslip = PayslipOf(Me, period);
         var workflow = Workflow(Result.Failure<Guid>(Error.Validation("workflow.errors.no_approver")));
 
-        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), workflow, ClockAt(Now))
+        var result = await new ObjectToMyPayslipHandler(CurrentEmployee(Me), PayslipRepository(payslip), PeriodRepository(period), workflow, Saver(), ClockAt(Now))
             .Handle(new ObjectToMyPayslipCommand(payslip.Id, "Hatalı", null), CancellationToken.None);
 
         result.Error.Code.ShouldBe("workflow.errors.no_approver");
         payslip.ObjectionStatus.ShouldBe(PayslipObjectionStatus.None);
+        payslip.ObjectionReason.ShouldBeNull();
     }
 
     [Fact]

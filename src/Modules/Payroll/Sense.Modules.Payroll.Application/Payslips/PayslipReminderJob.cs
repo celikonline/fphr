@@ -16,10 +16,13 @@ namespace Sense.Modules.Payroll.Application.Payslips;
 /// </summary>
 public sealed class PayslipAcknowledgementReminderService(IPayslipRepository payslips, IPayrollPeriodRepository periods, IIntegrationEventOutbox outbox)
 {
-    /// <summary>Returns how many payslips were included (0 = nothing enqueued).</summary>
-    public async Task<int> EnqueueRemindersAsync(Guid tenantId, Guid? periodId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Returns how many payslips were included (0 = nothing enqueued). <paramref name="publishedSince"/> limits the pass
+    /// to recent publications (daily job); null = no limit (manual trigger for one period).
+    /// </summary>
+    public async Task<int> EnqueueRemindersAsync(Guid tenantId, Guid? periodId, DateTimeOffset? publishedSince, CancellationToken cancellationToken)
     {
-        var candidates = await payslips.ListPublishedUnacknowledgedAsync(periodId, cancellationToken);
+        var candidates = await payslips.ListPublishedUnacknowledgedAsync(periodId, publishedSince, cancellationToken);
         if (candidates.Count == 0)
         {
             return 0;
@@ -27,7 +30,7 @@ public sealed class PayslipAcknowledgementReminderService(IPayslipRepository pay
 
         var periodsById = (await periods.ListAllAsync(cancellationToken)).ToDictionary(p => p.Id);
         var due = candidates
-            .Where(p => p.AwaitsAcknowledgement)
+            .Where(p => p.AwaitsAcknowledgement && (publishedSince is null || p.PublishedAt >= publishedSince))
             .Select(p => (Payslip: p, Period: periodsById.GetValueOrDefault(p.PayrollPeriodId)))
             .Where(x => x.Period is not null && MyPayslips.IsPublished(x.Payslip, x.Period))
             .Select(x => new UnacknowledgedPayslip(x.Payslip.Id, x.Payslip.EmployeeId, x.Period!.Id, x.Period.Year, x.Period.Month))
@@ -44,9 +47,11 @@ public sealed class PayslipAcknowledgementReminderService(IPayslipRepository pay
 
 /// <summary>
 /// ADR-0004 handler for <see cref="JobType.PayslipAcknowledgementReminder"/> (Hangfire, Sense.Api): per-tenant daily
-/// pass over <see cref="PayslipAcknowledgementReminderService"/>.
+/// pass over <see cref="PayslipAcknowledgementReminderService"/>, limited to payslips published in the last
+/// <see cref="PayrollLimits.AcknowledgementReminderWindowDays"/> days (older periods are not chased forever).
 /// </summary>
-public sealed class PayslipAcknowledgementReminderJobHandler(PayslipAcknowledgementReminderService reminders, IPayrollUnitOfWork unitOfWork)
+public sealed class PayslipAcknowledgementReminderJobHandler(
+    PayslipAcknowledgementReminderService reminders, IPayrollUnitOfWork unitOfWork, TimeProvider clock)
     : IScheduledJobHandler
 {
     public JobType Handles => JobType.PayslipAcknowledgementReminder;
@@ -58,7 +63,8 @@ public sealed class PayslipAcknowledgementReminderJobHandler(PayslipAcknowledgem
             return;
         }
 
-        if (await reminders.EnqueueRemindersAsync(tenantId, periodId: null, ct) > 0)
+        var publishedSince = clock.GetUtcNow().AddDays(-PayrollLimits.AcknowledgementReminderWindowDays);
+        if (await reminders.EnqueueRemindersAsync(tenantId, periodId: null, publishedSince, ct) > 0)
         {
             await unitOfWork.SaveChangesAsync(ct);
         }
@@ -86,6 +92,6 @@ public sealed class SendPayslipAcknowledgementRemindersHandler(
             return Error.Validation(PayrollDomainErrors.PeriodNotPaid);
         }
 
-        return await reminders.EnqueueRemindersAsync(tenant.TenantId, period.Id, cancellationToken);
+        return await reminders.EnqueueRemindersAsync(tenant.TenantId, period.Id, publishedSince: null, cancellationToken);
     }
 }

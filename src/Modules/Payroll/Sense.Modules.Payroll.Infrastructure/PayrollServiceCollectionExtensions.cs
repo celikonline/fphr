@@ -77,6 +77,7 @@ public static class PayrollServiceCollectionExtensions
         // E2 bordro onay/itiraz: reminder collection (daily job + manual trigger) and the Workflow inbox summary of a
         // "PayslipObjection" request.
         services.AddScoped<PayslipAcknowledgementReminderService>();
+        services.AddScoped<IPayslipChangeSaver, PayslipChangeSaver>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PayslipObjectionApprovalSummaryProvider>();
         return services;
     }

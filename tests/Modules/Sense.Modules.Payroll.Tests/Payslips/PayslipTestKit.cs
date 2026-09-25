@@ -44,10 +44,11 @@ internal static class PayslipTestKit
 
         repository.ListByEmployeeAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult<IReadOnlyList<Payslip>>(payslips.Where(p => p.EmployeeId == call.Arg<Guid>()).ToList()));
-        repository.ListPublishedUnacknowledgedAsync(Arg.Any<Guid?>(), Arg.Any<CancellationToken>())
+        repository.ListPublishedUnacknowledgedAsync(Arg.Any<Guid?>(), Arg.Any<DateTimeOffset?>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult<IReadOnlyList<Payslip>>(payslips
                 .Where(p => p.PublishedAt != null && p.AcknowledgedAt == null)
-                .Where(p => call.Arg<Guid?>() is not { } periodId || p.PayrollPeriodId == periodId)
+                .Where(p => call.ArgAt<Guid?>(0) is not { } periodId || p.PayrollPeriodId == periodId)
+                .Where(p => call.ArgAt<DateTimeOffset?>(1) is not { } since || p.PublishedAt >= since)
                 .ToList()));
         return repository;
     }
@@ -62,6 +63,14 @@ internal static class PayslipTestKit
 
         repository.ListAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayrollPeriod>>(periods.ToList()));
         return repository;
+    }
+
+    /// <summary>A saver whose early flush always wins the optimistic-concurrency race (the DB race is covered by the integration tests).</summary>
+    public static Application.Payslips.IPayslipChangeSaver Saver(Sense.Shared.Kernel.Results.Result? outcome = null)
+    {
+        var saver = Substitute.For<Application.Payslips.IPayslipChangeSaver>();
+        saver.SaveAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(outcome ?? Sense.Shared.Kernel.Results.Result.Success()));
+        return saver;
     }
 
     public static ICurrentUser CurrentEmployee(Guid? employeeId, string? ipAddress = "203.0.113.7")
