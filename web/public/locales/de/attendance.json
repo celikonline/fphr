@@ -336,5 +336,34 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Planvorlagen",
+    "tabSave": "Vorlage speichern",
+    "tabApply": "Vorlage anwenden",
+    "tabImport": "Excel importieren",
+    "selectionEmpty": "Wählen Sie zugewiesene Zellen im Kalender aus.",
+    "selectionSummary": "{{entries}} Zuweisungen über {{days}} Tage werden gespeichert.",
+    "name": "Vorlagenname",
+    "save": "Vorlage speichern",
+    "saved": "Vorlage gespeichert.",
+    "noTemplates": "Keine gespeicherten Vorlagen.",
+    "pick": "Vorlage",
+    "days": "{{count}} Tage",
+    "startDate": "Startdatum",
+    "keepPublished": "Veröffentlichte behalten",
+    "overwritePublished": "Veröffentlichte überschreiben",
+    "apply": "Anwenden",
+    "applied": "{{count}} Zellen geplant.",
+    "importHint": "Vorlagendatei herunterladen, ausfüllen und hochladen; fehlerhafte Zeilen werden unten aufgelistet.",
+    "downloadTemplate": "Excel-Vorlage herunterladen",
+    "dropzoneTitle": "Excel/CSV-Datei ablegen oder auswählen",
+    "importing": "Import läuft…",
+    "invalidFile": "Ungültige Datei (nur .xlsx/.csv, max. 10 MB).",
+    "importSummary": "{{inserted}} Zeilen verarbeitet, {{errors}} fehlerhaft.",
+    "errorsHint": "Fehlerhafte Zeilen wurden übersprungen; korrigieren und erneut hochladen.",
+    "colRow": "Zeile",
+    "colKey": "Schlüssel",
+    "colError": "Fehler"
   }
 }
