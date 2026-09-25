@@ -406,6 +406,7 @@
     "brokenSequence": "Broken punch sequence (inconsistent in/out order or an odd number of punches)",
     "channelConflict": "Channel conflict (manual + device punches)",
     "noPlan": "Unplanned punch (no shift plan for that day)",
-    "nightShiftOverlap": "Night shift overlap (punch is close to both days)"
+    "nightShiftOverlap": "Night shift overlap (punch is close to both days)",
+    "ambiguousShift": "Ambiguous shift (punch matches more than one shift)"
   }
 }

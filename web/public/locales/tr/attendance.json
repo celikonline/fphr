@@ -406,6 +406,7 @@
     "brokenSequence": "Okutma sırası bozuk (giriş/çıkış dizilimi tutarsız veya tek sayıda okutma)",
     "channelConflict": "Kanal çakışması (elle + cihaz okutması)",
     "noPlan": "Plansız okutma (o gün için vardiya planı yok)",
-    "nightShiftOverlap": "Gece vardiyası çakışması (okutma iki güne de yakın)"
+    "nightShiftOverlap": "Gece vardiyası çakışması (okutma iki güne de yakın)",
+    "ambiguousShift": "Belirsiz vardiya (okutma birden fazla vardiyaya uyuyor)"
   }
 }

@@ -1,3 +1,4 @@
+import { incalculableReasonText } from "@/components/attendance/incalculable-hint";
 import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAttendanceErrorMessage } from "@/lib/attendance-error";
@@ -487,6 +488,7 @@ function DayStrip({
           formatDateOnly(day.date, i18n.language, { day: "2-digit", month: "short" }),
           hours,
           ...flags,
+          ...(day.incalculableReason ? [incalculableReasonText(t, day.incalculableReason)] : []),
         ].join(" · ");
         return (
           <Tooltip key={day.date} label={label} multiline maw={260}>
