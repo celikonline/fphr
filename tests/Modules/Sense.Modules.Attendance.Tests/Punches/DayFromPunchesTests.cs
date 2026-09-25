@@ -91,7 +91,7 @@ public sealed class DayFromPunchesTests
     [Fact]
     public void Rest_day_plan_is_not_incalculable()
     {
-        var r = DayFromPunches.Build(Punches("In,Out", "10:00,14:00"), PlannedDay.Rest);
+        var r = DayFromPunches.Build(Punches("In,Out", "10:00,14:00"), PunchPlanWindow.NoWindow);
 
         r.ShouldBe(new DayResult(new TimeOnly(10, 0), new TimeOnly(14, 0), 0, Incalculable: false, Overnight: false));
     }
@@ -148,4 +148,63 @@ public sealed class DayFromPunchesTests
         r.CheckIn.ShouldBe(new TimeOnly(9, 0));
         r.CheckOut.ShouldBeNull();
     }
+
+    [Fact]
+    public void Backfilled_break_pair_counts_while_it_is_the_only_break()
+    {
+        var punches = WithRefs(Punches("In,Out,In,Out", "09:00,12:30,13:30,18:00"), null, "backfill-break:d", "backfill-break:d", null);
+
+        DayFromPunches.Build(punches, Plan("09:00", "18:00", 60)).ActualBreakMinutes.ShouldBe(60);
+    }
+
+    [Fact]
+    public void Backfilled_break_pair_is_ignored_once_real_inner_punches_exist()
+    {
+        // Taşınmış gün (temsili 13:15-14:15 molası) + aynı günün gerçek ara okutmaları 12:30-13:30 → mola ikiye katlanmaz, gün hesaplanır.
+        var backfilled = WithRefs(Punches("In,Out,In,Out", "08:55,13:15,14:15,18:05"), "backfill:d", "backfill-break:d", "backfill-break:d", "backfill:d");
+        var real = Punches("Out,In", "12:30,13:30");
+
+        var r = DayFromPunches.Build([.. backfilled, .. real], Plan("09:00", "18:00", 60));
+
+        r.ShouldBe(new DayResult(new TimeOnly(8, 55), new TimeOnly(18, 5), 60, Incalculable: false, Overnight: false));
+    }
+
+    [Theory]
+    [InlineData("In,In,Out", IncalculableReason.BrokenSequence)]
+    [InlineData("In,Unknown,Out", IncalculableReason.UnknownDirection)]
+    public void Incalculable_day_carries_its_reason(string seq, IncalculableReason reason)
+    {
+        DayFromPunches.Build(Punches(seq, "09:00,10:00,18:00"), Plan("09:00", "18:00", 60)).Reason.ShouldBe(reason);
+    }
+
+    [Fact]
+    public void Punches_without_a_plan_explain_missing_plan()
+    {
+        DayFromPunches.Build(Punches("In,Out", "09:00,18:00"), plan: null).Reason.ShouldBe(IncalculableReason.NoPlan);
+    }
+
+    [Fact]
+    public void Manual_day_mixed_with_device_punches_is_a_channel_conflict()
+    {
+        // Elle 09:00-18:00 günü + cihazın 08:55 / 18:05 okutmaları → In,In,Out,Out.
+        var manual = Punches("In,Out", "09:00,18:00", source: PunchSource.Manual);
+        var device = Punches("In,Out", "08:55,18:05", source: PunchSource.Device);
+
+        var r = DayFromPunches.Build([.. manual, .. device], Plan("09:00", "18:00", 60));
+
+        r.Incalculable.ShouldBeTrue();
+        r.Reason.ShouldBe(IncalculableReason.ChannelConflict);
+    }
+
+    [Fact]
+    public void Calculable_day_has_no_reason()
+    {
+        DayFromPunches.Build(Punches("In,Out", "09:00,18:00"), Plan("09:00", "18:00", 60)).Reason.ShouldBe(IncalculableReason.None);
+    }
+
+    private static IReadOnlyList<Punch> WithRefs(IReadOnlyList<Punch> punches, params string?[] refs) =>
+        punches.Zip(refs, (p, r) => Sense.Modules.Attendance.Domain.Punches.Punch.Create(
+                p.TenantId, p.EmployeeId, p.OccurredAtUtc, p.WorkDate, p.Direction, p.Source, r, null, null, null, null, p.IsManual, null, null,
+                p.OccurredAtUtc).Value)
+            .ToList();
 }

@@ -8,6 +8,7 @@ using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Employee.Contracts;
@@ -41,6 +42,7 @@ public sealed class PunchChannelsTests
     private readonly IAttendanceUnitOfWork _unitOfWork = Substitute.For<IAttendanceUnitOfWork>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly InMemoryPunchRepository _punches = new();
+    private readonly IMonthlyTimesheetApprovalRepository _approvals = Substitute.For<IMonthlyTimesheetApprovalRepository>();
     private readonly List<AttendanceDay> _stored = [];
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
 
@@ -61,9 +63,12 @@ public sealed class PunchChannelsTests
             .Returns(call => Task.FromResult(_stored.FirstOrDefault(d => d.Date == call.ArgAt<DateOnly>(1))));
     }
 
-    private ImportDeviceLogsHandler DeviceHandler() => new(_tenant, _employeeLookup, _schedules, _days, _shiftSettings, _unitOfWork, _punches, _clock);
+    private ImportDeviceLogsHandler DeviceHandler() =>
+        new(_tenant, _employeeLookup, _schedules, _days, _shiftSettings, _unitOfWork, _punches, _clock, _approvals);
 
-    private RecordAttendanceHandler ManualHandler() => new(_days, _schedules, _tenant, _dataScope, _clock, _punches, _currentUser);
+    private RecordAttendanceHandler ManualHandler() => new(_days, _schedules, _tenant, _dataScope, _clock, _punches, _currentUser, _approvals);
+
+    private AttendanceImportRowHandler ExcelHandler() => new(_tenant, _employeeLookup, _schedules, _days, _unitOfWork, _punches, _clock, _approvals);
 
     private AttendanceDay Day => _stored.Where(d => d.Date == Date).ShouldHaveSingleItem();
 
@@ -161,7 +166,7 @@ public sealed class PunchChannelsTests
     [Fact]
     public async Task Excel_import_row_becomes_import_punches()
     {
-        var handler = new AttendanceImportRowHandler(_tenant, _employeeLookup, _schedules, _days, _unitOfWork, _punches, _clock);
+        var handler = ExcelHandler();
         var row = new ImportRow(2, new Dictionary<string, ImportCell>
         {
             [AttendanceImportColumns.NationalId] = new(NationalId),
@@ -187,7 +192,7 @@ public sealed class PunchChannelsTests
         var locationId = Guid.NewGuid();
         locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>()).Returns(new LocationGeofence(locationId, "HQ", null, null, null));
         QrCheckInHandler Handler(DateTime utc) =>
-            new(_tenant, _currentUser, locations, _days, _schedules, _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches);
+            new(_tenant, _currentUser, locations, _days, _schedules, _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals);
 
         await Handler(new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
         await Handler(new DateTime(2026, 9, 16, 6, 5, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
@@ -206,7 +211,9 @@ public sealed class PunchChannelsTests
         var locations = Substitute.For<ILocationLookup>();
         locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>()).Returns(new LocationGeofence(Guid.NewGuid(), "HQ", null, null, null));
         QrCheckInHandler Handler(DateTime utc) =>
-            new(_tenant, _currentUser, locations, _days, _schedules, _shiftSettings, Substitute.For<ISelfCheckInRepository>(), new FixedLocalClock(utc, utc.AddHours(3)), _punches);
+            new(
+                _tenant, _currentUser, locations, _days, _schedules, _shiftSettings, Substitute.For<ISelfCheckInRepository>(), new FixedLocalClock(utc, utc.AddHours(3)),
+                _punches, _approvals);
 
         await Handler(new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
         await Handler(new DateTime(2026, 9, 16, 14, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.Out), ct);
@@ -216,5 +223,136 @@ public sealed class PunchChannelsTests
         _punches.All.Single(p => p.IsDeleted).DeleteReason.ShouldNotBeNullOrWhiteSpace();
         Day.CheckOut.ShouldBe(new TimeOnly(18, 0));
         Day.Anomalies.ShouldBe(AttendanceAnomaly.None);
+    }
+
+    private void LockSeptember() =>
+        _approvals.FindAsync(_employeeId, new DateOnly(2026, 9, 1), Arg.Any<CancellationToken>())
+            .Returns(MonthlyTimesheetApproval.Approve(_tenantId, _employeeId, Date, DateTime.UtcNow, null));
+
+    private static ImportRow ExcelRow(int number, string date, string checkIn, string checkOut) =>
+        new(number, new Dictionary<string, ImportCell>
+        {
+            [AttendanceImportColumns.NationalId] = new(NationalId),
+            [AttendanceImportColumns.Date] = new(date),
+            [AttendanceImportColumns.CheckIn] = new(checkIn),
+            [AttendanceImportColumns.CheckOut] = new(checkOut),
+        });
+
+    [Fact]
+    public async Task Manual_record_in_a_locked_month_is_rejected()
+    {
+        LockSeptember();
+
+        var result = await ManualHandler().Handle(new RecordAttendanceCommand(_employeeId, Date, new TimeOnly(9, 0), new TimeOnly(18, 0)), ct);
+
+        result.Error.Code.ShouldBe(AttendanceErrors.PeriodLocked);
+        _punches.All.ShouldBeEmpty();
+        _stored.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Excel_row_in_a_locked_month_is_a_row_error_and_other_rows_still_apply()
+    {
+        LockSeptember();
+        var rows = new[] { ExcelRow(2, "2026-09-16", "09:00", "18:00"), ExcelRow(3, "2026-08-31", "09:00", "18:00") };
+
+        var result = await ExcelHandler().ProcessAsync(new ImportBatch(ImportMode.Upsert, ImportFailurePolicy.SkipInvalidRows, [AttendanceImportColumns.NationalId], rows), ct);
+
+        result.Applied.ShouldBeTrue();
+        var locked = result.Rows.Single(r => r.RowNumber == 2);
+        locked.Outcome.ShouldBe(ImportRowOutcome.Error);
+        locked.Errors.ShouldContain(e => e.Code == AttendanceErrors.PeriodLocked);
+        result.Rows.Single(r => r.RowNumber == 3).Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        _punches.Live.ShouldAllBe(p => p.WorkDate == new DateOnly(2026, 8, 31));
+    }
+
+    [Fact]
+    public async Task Excel_locked_row_blocks_an_all_or_nothing_batch()
+    {
+        LockSeptember();
+        var rows = new[] { ExcelRow(2, "2026-09-16", "09:00", "18:00"), ExcelRow(3, "2026-08-31", "09:00", "18:00") };
+
+        var result = await ExcelHandler().ProcessAsync(new ImportBatch(ImportMode.Upsert, ImportFailurePolicy.AllOrNothing, [AttendanceImportColumns.NationalId], rows), ct);
+
+        result.Applied.ShouldBeFalse();
+        _punches.All.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Device_rows_in_a_locked_month_are_skipped_with_the_reason()
+    {
+        LockSeptember();
+        var csv = Csv($"{NationalId};2026-09-16T08:55:00;in", $"{NationalId};2026-09-16T18:05:00;out", $"{NationalId};2026-08-31T09:00:00;in");
+
+        var result = await DeviceHandler().Handle(new ImportDeviceLogsCommand(csv), ct);
+
+        result.Value.Imported.ShouldBe(1);
+        result.Value.Skipped.ShouldBe(2);
+        result.Value.Errors.Where(e => e.Code == AttendanceErrors.PeriodLocked).Select(e => e.Line).ShouldBe([2, 3]);
+        _punches.Live.ShouldHaveSingleItem().WorkDate.ShouldBe(new DateOnly(2026, 8, 31));
+    }
+
+    [Fact]
+    public async Task Self_service_check_in_in_a_locked_month_is_rejected()
+    {
+        LockSeptember();
+        var locations = Substitute.For<ILocationLookup>();
+        var selfCheckIns = Substitute.For<ISelfCheckInRepository>();
+        locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>()).Returns(new LocationGeofence(Guid.NewGuid(), "HQ", null, null, null));
+        var utc = new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc);
+        var handler = new QrCheckInHandler(
+            _tenant, _currentUser, locations, _days, _schedules, _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals);
+
+        var result = await handler.Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
+
+        result.Error.Code.ShouldBe(AttendanceErrors.PeriodLocked);
+        _punches.All.ShouldBeEmpty();
+        selfCheckIns.DidNotReceive().Add(Arg.Any<SelfCheckIn>());
+    }
+
+    [Fact]
+    public async Task Manual_day_followed_by_device_punches_is_incalculable_and_explained_as_channel_conflict()
+    {
+        // İNSAN KARARI (I2): eskiden cihaz aktarımı elle girilmiş günün üzerine yazıyordu; artık iki kanalın okutmaları birlikte durur.
+        await ManualHandler().Handle(new RecordAttendanceCommand(_employeeId, Date, new TimeOnly(9, 0), new TimeOnly(18, 0)), ct);
+
+        await DeviceHandler().Handle(new ImportDeviceLogsCommand(Csv($"{NationalId};2026-09-16T08:55:00;in", $"{NationalId};2026-09-16T18:05:00;out")), ct);
+
+        Day.Anomalies.ShouldBe(AttendanceAnomaly.Incalculable);
+        _days.ListForEmployeeAsync(_employeeId, Date, Date, Arg.Any<CancellationToken>()).Returns(_stored.ToList());
+        var listed = await new ListAttendanceDaysHandler(_days, _dataScope, _punches, _tenant).Handle(new ListAttendanceDaysQuery(_employeeId, Date, Date), ct);
+        listed.Value.ShouldHaveSingleItem().IncalculableReason.ShouldBe(IncalculableReason.ChannelConflict);
+    }
+
+    [Fact]
+    public async Task Reimporting_real_break_on_a_backfilled_day_replaces_the_placeholder_break()
+    {
+        // Taşınmış gün: 08:55-18:05, PDKS molası 60 dk (gerçek ara saatler bilinmiyor → temsili çift). Aynı CSV'nin gerçek ara okutmalarıyla
+        // yeniden içe alınması günü hesaplanamaz yapmamalı ve molayı ikiye katlamamalı.
+        _stored.Add(AttendanceDay.Record(
+            _tenantId, _employeeId, Date, new TimeOnly(8, 55), new TimeOnly(18, 5), new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.Device,
+            actualBreakMinutes: 60));
+        var csv = Csv($"{NationalId};2026-09-16T08:55:00;in", $"{NationalId};2026-09-16T12:30:00;out", $"{NationalId};2026-09-16T13:30:00;in",
+            $"{NationalId};2026-09-16T18:05:00;out");
+
+        var result = await DeviceHandler().Handle(new ImportDeviceLogsCommand(csv), ct);
+
+        result.Value.Errors.ShouldBeEmpty();
+        Day.Anomalies.HasFlag(AttendanceAnomaly.Incalculable).ShouldBeFalse();
+        Day.ActualBreakMinutes.ShouldBe(60);
+        Day.CheckIn.ShouldBe(new TimeOnly(8, 55));
+        Day.CheckOut.ShouldBe(new TimeOnly(18, 5));
+        _punches.Live.Count(p => p.SourceRef?.StartsWith(LegacyDayPunches.BreakMarkerPrefix, StringComparison.Ordinal) == true).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Two_excel_rows_for_the_same_day_update_one_day_record()
+    {
+        var rows = new[] { ExcelRow(2, "2026-09-16", "09:00", "17:00"), ExcelRow(3, "2026-09-16", "09:00", "18:00") };
+
+        await ExcelHandler().ProcessAsync(new ImportBatch(ImportMode.Upsert, ImportFailurePolicy.SkipInvalidRows, [AttendanceImportColumns.NationalId], rows), ct);
+
+        Day.CheckOut.ShouldBe(new TimeOnly(18, 0));
+        _punches.Live.Count.ShouldBe(2);
     }
 }

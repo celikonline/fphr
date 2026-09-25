@@ -43,4 +43,7 @@ public static class AttendanceErrors
 
     /// <summary>IPunchRecorder girişi: kaynak referansı (SourceRef) izin verilen uzunluğu aşıyor - sessizce kesilmez.</summary>
     public const string PunchSourceRefTooLong = "attendance.punch.source_ref_too_long";
+
+    /// <summary>IPunchRecorder: okutmanın kiracısı ortam kiracısıyla (ITenantContext) aynı değil ya da toplu alım birden çok kiracı içeriyor.</summary>
+    public const string PunchTenantMismatch = "attendance.punch.tenant_mismatch";
 }

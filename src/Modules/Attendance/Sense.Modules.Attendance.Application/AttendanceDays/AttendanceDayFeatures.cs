@@ -14,7 +14,7 @@ namespace Sense.Modules.Attendance.Application.AttendanceDays;
 public sealed record AttendanceDayDto(
     Guid Id, Guid EmployeeId, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, TimeOnly? PlannedStart, TimeOnly? PlannedEnd,
     int PlannedMinutes, int WorkedMinutes, AttendanceAnomaly Anomalies, AttendanceResolutionState ResolutionState, AttendanceDaySource Source,
-    IReadOnlyList<AnomalyResolutionAction> AllowedActions);
+    IReadOnlyList<AnomalyResolutionAction> AllowedActions, IncalculableReason? IncalculableReason = null);
 
 internal static class AttendanceDayMapper
 {
@@ -62,7 +62,7 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 
 public sealed class RecordAttendanceHandler(
     IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock,
-    IPunchRepository punches, ICurrentUser currentUser)
+    IPunchRepository punches, ICurrentUser currentUser, IMonthlyTimesheetApprovalRepository approvals)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
     /// <summary>Elle kayıt günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe (Z0.1: elle kayıt okutmaya dönüşür).</summary>
@@ -84,7 +84,7 @@ public sealed class RecordAttendanceHandler(
 
         // Z0.1: elle kayıt Source=Manual okutmalara dönüşür; gün bu okutmalardan türetilir (ShiftSettings limitleri bugünkü gibi uygulanmaz).
         var zone = await localClock.GetTimeZoneAsync(tenant.TenantId, cancellationToken);
-        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, zone, now.Utc);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, approvals, zone, now.Utc);
         var result = await writer.ReplaceDayAsync(
             command.EmployeeId, command.Date, command.CheckIn, command.CheckOut, AttendanceDaySource.Manual, currentUser.UserId, ReplacedReason,
             limits: null, cancellationToken);
@@ -96,7 +96,7 @@ public sealed class RecordAttendanceHandler(
 [RequiresPermission("attendance.timesheet.view")]
 public sealed record ListAttendanceDaysQuery(Guid EmployeeId, DateOnly From, DateOnly To) : IQuery<IReadOnlyList<AttendanceDayDto>>;
 
-public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days, IDataScopeService dataScope)
+public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days, IDataScopeService dataScope, IPunchRepository punches, ITenantContext tenant)
     : IQueryHandler<ListAttendanceDaysQuery, IReadOnlyList<AttendanceDayDto>>
 {
     public async Task<Result<IReadOnlyList<AttendanceDayDto>>> Handle(ListAttendanceDaysQuery query, CancellationToken cancellationToken)
@@ -107,7 +107,28 @@ public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days, IDa
             return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
         }
 
-        return (await days.ListForEmployeeAsync(query.EmployeeId, query.From, query.To, cancellationToken)).Select(AttendanceDayMapper.ToDto).ToList();
+        var list = await days.ListForEmployeeAsync(query.EmployeeId, query.From, query.To, cancellationToken);
+        var dtos = new List<AttendanceDayDto>(list.Count);
+        foreach (var day in list)
+        {
+            var dto = AttendanceDayMapper.ToDto(day);
+            dtos.Add((day.Anomalies & AttendanceAnomaly.Incalculable) == 0
+                ? dto
+                : dto with { IncalculableReason = await ExplainAsync(day, cancellationToken) });
+        }
+
+        return dtos;
+    }
+
+    /// <summary>
+    /// Hesaplanamayan günün nedeni (ör. elle + cihaz kanal çakışması) günün okutmalarından sorgu anında türetilir - kalıcı alan yok. Okutmalar
+    /// hesaplanabilir çıkıyorsa gün, kalıcı olmayan gece vardiyası çakışması yüzünden işaretlenmiştir.
+    /// </summary>
+    private async Task<IncalculableReason> ExplainAsync(AttendanceDay day, CancellationToken cancellationToken)
+    {
+        var dayPunches = await punches.ListForDayAsync(tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
+        var reason = DayFromPunches.Build(dayPunches, PunchPlanWindow.NoWindow).Reason;
+        return reason == IncalculableReason.None ? IncalculableReason.NightShiftOverlap : reason;
     }
 }
 

@@ -36,4 +36,11 @@ internal sealed class InMemoryPunchRepository : IPunchRepository
 
     public Task<Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default) =>
         Task.FromResult(_punches.FirstOrDefault(p => p.TenantId == tenantId && p.Id == id));
+
+    public bool IsDuplicateKeyViolation(Exception exception) => exception is DuplicatePunchException;
+
+    public void Discard(Punch punch) => _punches.Remove(punch);
+
+    /// <summary>Kaydetme anında tekillik indeksi ihlalinin test eşi.</summary>
+    public sealed class DuplicatePunchException() : Exception("ux_punches_tenant_employee_occurred_direction_source");
 }

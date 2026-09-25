@@ -45,7 +45,7 @@ public sealed class QrCheckInValidator : AbstractValidator<QrCheckInCommand>
 public sealed class QrCheckInHandler(
     ITenantContext tenant, ICurrentUser currentUser, ILocationLookup locations, IAttendanceDayRepository days,
     IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock,
-    IPunchRepository punches)
+    IPunchRepository punches, IMonthlyTimesheetApprovalRepository approvals)
     : ICommandHandler<QrCheckInCommand, SelfCheckInResultDto>
 {
     public async Task<Result<SelfCheckInResultDto>> Handle(QrCheckInCommand command, CancellationToken cancellationToken)
@@ -72,7 +72,7 @@ public sealed class QrCheckInHandler(
         var audit = SelfCheckIn.RecordQr(
             tenant.TenantId, employeeId, now.Utc, command.Direction, location.LocationId, command.Latitude, command.Longitude, geofence.Value.Within);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            audit, now, new SelfCheckInPunch.Ports(days, punches, schedules, shiftSettings, clock), cancellationToken);
+            audit, now, new SelfCheckInPunch.Ports(days, punches, schedules, shiftSettings, clock, approvals), cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
@@ -100,7 +100,7 @@ public sealed class GpsCheckInValidator : AbstractValidator<GpsCheckInCommand>
 public sealed class GpsCheckInHandler(
     ITenantContext tenant, ICurrentUser currentUser, ILocationLookup locations, IAttendanceDayRepository days,
     IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock,
-    IPunchRepository punches)
+    IPunchRepository punches, IMonthlyTimesheetApprovalRepository approvals)
     : ICommandHandler<GpsCheckInCommand, SelfCheckInResultDto>
 {
     public async Task<Result<SelfCheckInResultDto>> Handle(GpsCheckInCommand command, CancellationToken cancellationToken)
@@ -133,7 +133,7 @@ public sealed class GpsCheckInHandler(
         var audit = SelfCheckIn.RecordGps(
             tenant.TenantId, employeeId, now.Utc, command.Direction, command.LocationId, command.Latitude, command.Longitude, withinGeofence);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            audit, now, new SelfCheckInPunch.Ports(days, punches, schedules, shiftSettings, clock), cancellationToken);
+            audit, now, new SelfCheckInPunch.Ports(days, punches, schedules, shiftSettings, clock, approvals), cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
@@ -223,7 +223,7 @@ internal static class SelfCheckInPunch
 
     public sealed record Ports(
         IAttendanceDayRepository Days, IPunchRepository Punches, IWorkScheduleReadService Schedules, IShiftSettingsRepository ShiftSettings,
-        ITenantLocalClock Clock);
+        ITenantLocalClock Clock, IMonthlyTimesheetApprovalRepository Approvals);
 
     public static async Task<Result<Applied>> ApplyAsync(SelfCheckIn audit, TenantLocalNow now, Ports ports, CancellationToken cancellationToken)
     {
@@ -239,7 +239,12 @@ internal static class SelfCheckInPunch
         }
 
         var zone = await ports.Clock.GetTimeZoneAsync(audit.TenantId, cancellationToken);
-        var writer = new PunchDayWriter(audit.TenantId, ports.Days, ports.Punches, ports.Schedules, zone, now.Utc);
+        var writer = new PunchDayWriter(audit.TenantId, ports.Days, ports.Punches, ports.Schedules, ports.Approvals, zone, now.Utc);
+        if (await writer.IsLockedAsync(audit.EmployeeId, date, cancellationToken))
+        {
+            return Error.Conflict(AttendanceErrors.PeriodLocked);
+        }
+
         var dayPunches = await writer.LoadDayAsync(audit.EmployeeId, date, seedLegacy: true, cancellationToken);
         var recorded = RecordPunch(writer, audit, date, dayPunches.Count > 0 ? dayPunches[^1] : null);
         if (recorded.IsFailure)

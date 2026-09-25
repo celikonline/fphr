@@ -32,7 +32,7 @@ public sealed record ImportDeviceLogsCommand(string FileContent) : ICommand<Devi
 public sealed class ImportDeviceLogsHandler(
     ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules,
     IAttendanceDayRepository days, IShiftSettingsRepository shiftSettings, IAttendanceUnitOfWork unitOfWork,
-    IPunchRepository punches, ITenantLocalClock clock)
+    IPunchRepository punches, ITenantLocalClock clock, IMonthlyTimesheetApprovalRepository approvals)
     : ICommandHandler<ImportDeviceLogsCommand, DeviceLogImportResultDto>
 {
     private sealed record Plan(int Line, Guid EmployeeId, DateOnly Date, DateTime Timestamp, DeviceLogDirection Direction);
@@ -77,13 +77,21 @@ public sealed class ImportDeviceLogsHandler(
         var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false));
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
         var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
-        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, zone, now.Utc);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, approvals, zone, now.Utc);
 
         var imported = 0;
         var anyChange = false;
         foreach (var group in plans.GroupBy(p => (p.EmployeeId, p.Date)))
         {
             var groupList = group.ToList();
+
+            // K6: onaylı aylık puantaj ayına ait satırlar işi bozmadan atlanır (satır numarası + neden raporlanır).
+            if (await writer.IsLockedAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false))
+            {
+                errors.AddRange(groupList.Select(plan => new DeviceLogImportErrorDto(plan.Line, AttendanceErrors.PeriodLocked, null)));
+                continue;
+            }
+
             if (await HasReversedPairAsync(groupList, overnightDates.Contains(group.Key), cancellationToken).ConfigureAwait(false))
             {
                 errors.AddRange(groupList.Select(plan => new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null)));

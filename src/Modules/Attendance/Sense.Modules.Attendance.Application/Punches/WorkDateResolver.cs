@@ -7,7 +7,7 @@ public readonly record struct WorkDateResolution(DateOnly Date, bool Ambiguous);
 
 /// <summary>
 /// Okutmanın ait olduğu puantaj günü (spec §5.1): aday günlerin plan penceresine (vardiya başlangıcı − 4 sa, bitişi + 4 sa; gece ve
-/// <see cref="PlannedDay.StartsPreviousDay"/> dahil) düşüyorsa o planın günü; birden çoğuna düşüyorsa başlangıcı yakın olan (eşitse
+/// <see cref="PunchPlanWindow.StartsPreviousDay"/> dahil) düşüyorsa o planın günü; birden çoğuna düşüyorsa başlangıcı yakın olan (eşitse
 /// belirsiz - en erken aday gün döner, <see cref="WorkDateResolution.Ambiguous"/> işaretli); hiçbirine düşmüyorsa yerel takvim günü.
 /// </summary>
 public static class WorkDateResolver
@@ -16,11 +16,11 @@ public static class WorkDateResolver
 
     private static readonly TimeSpan Padding = TimeSpan.FromHours(WindowPaddingHours);
 
-    public static DateOnly Resolve(Punch punch, IReadOnlyList<(DateOnly Date, PlannedDay? Plan)> candidates, TimeZoneInfo? zone = null) =>
+    public static DateOnly Resolve(Punch punch, IReadOnlyList<(DateOnly Date, PunchPlanWindow? Plan)> candidates, TimeZoneInfo? zone = null) =>
         ResolveDetailed(PunchTime.ToLocal(punch.OccurredAtUtc, zone), candidates).Date;
 
     /// <param name="local">Okutma anı, kiracının yerel duvar saatiyle.</param>
-    public static WorkDateResolution ResolveDetailed(DateTime local, IReadOnlyList<(DateOnly Date, PlannedDay? Plan)> candidates)
+    public static WorkDateResolution ResolveDetailed(DateTime local, IReadOnlyList<(DateOnly Date, PunchPlanWindow? Plan)> candidates)
     {
         var hits = candidates
             .Select(c => (c.Date, Bounds: c.Plan?.ShiftBounds(c.Date)))

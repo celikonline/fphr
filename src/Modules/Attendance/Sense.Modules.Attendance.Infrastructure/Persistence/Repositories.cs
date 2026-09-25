@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
@@ -326,6 +327,19 @@ public sealed class PunchRepository(AttendanceDbContext context) : IPunchReposit
 
     public Task<Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default) =>
         context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id, cancellationToken);
+
+    public bool IsDuplicateKeyViolation(Exception exception) =>
+        exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres }
+        && postgres.ConstraintName == AttendanceTables.PunchUniqueIndex;
+
+    public void Discard(Punch punch)
+    {
+        var entry = context.Entry(punch);
+        if (entry.State == EntityState.Added)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
 
     private IQueryable<Punch> Live(Guid tenantId) =>
         context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).Where(p => p.TenantId == tenantId && p.DeletedAtUtc == null);

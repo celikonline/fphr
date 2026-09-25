@@ -7,6 +7,7 @@ using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
+using Sense.Shared.Contracts.Context;
 using Shouldly;
 using Xunit;
 
@@ -28,6 +29,8 @@ public sealed class PunchRecorderTests
     private readonly IMonthlyTimesheetApprovalRepository _approvals = Substitute.For<IMonthlyTimesheetApprovalRepository>();
     private readonly IShiftSettingsRepository _shiftSettings = Substitute.For<IShiftSettingsRepository>();
     private readonly IAttendanceUnitOfWork _unitOfWork = Substitute.For<IAttendanceUnitOfWork>();
+    private readonly ITenantContext _tenantContext = Substitute.For<ITenantContext>();
+    private readonly ITenantContextSetter _tenantSetter = Substitute.For<ITenantContextSetter>();
     private readonly List<AttendanceDay> _addedDays = [];
     private readonly PunchRecorder recorder;
     private readonly CancellationToken ct = TestContext.Current.CancellationToken;
@@ -39,7 +42,9 @@ public sealed class PunchRecorderTests
         _days.When(d => d.Add(Arg.Any<AttendanceDay>())).Do(call => _addedDays.Add(call.Arg<AttendanceDay>()));
         _days.FindByEmployeeAndDateAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult(_addedDays.FirstOrDefault(d => d.Date == call.ArgAt<DateOnly>(1))));
-        recorder = new PunchRecorder(_punches, _days, _schedules, _approvals, _shiftSettings, Clock, _unitOfWork);
+        _tenantContext.IsResolved.Returns(true);
+        _tenantContext.TenantId.Returns(_tenantId);
+        recorder = new PunchRecorder(_punches, _days, _schedules, _approvals, _shiftSettings, Clock, _unitOfWork, _tenantContext, _tenantSetter);
     }
 
     private PunchInput Input(string utc, PunchDirectionDto direction, PunchSourceDto source = PunchSourceDto.Terminal, bool isManual = false) =>
@@ -105,7 +110,8 @@ public sealed class PunchRecorderTests
 
         var r = await recorder.RecordBatchAsync([Input("2026-08-31T06:00", PunchDirectionDto.In), Input("2026-09-01T06:00", PunchDirectionDto.In)], ct);
 
-        r.Value.ShouldBe(new PunchBatchResult(1, 1));
+        // Kilitli aya ait okutma yoksayılan (tekrar) değil, reddedilen sayılır.
+        r.Value.ShouldBe(new PunchBatchResult(1, 0, 1));
         _punches.Live.ShouldHaveSingleItem().WorkDate.ShouldBe(Day);
     }
 
@@ -187,6 +193,7 @@ public sealed class PunchRecorderTests
         r.IsFailure.ShouldBeTrue();
         r.Error.Code.ShouldBe(AttendanceDomainErrors.PunchInFuture);
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        _punches.All.ShouldBeEmpty("başarısız toplu alımın izlenen okutmaları bırakılır");
     }
 
     [Fact]
@@ -277,5 +284,94 @@ public sealed class PunchRecorderTests
         (await recorder.RecordAsync(badDirection, ct)).Error.Code.ShouldBe(AttendanceErrors.PunchDirectionInvalid);
         (await recorder.RecordBatchAsync([badSource], ct)).Error.Code.ShouldBe(AttendanceErrors.PunchSourceInvalid);
         _punches.All.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Punch_for_another_tenant_than_the_ambient_one_is_rejected()
+    {
+        var foreign = Input("2026-09-01T06:00", PunchDirectionDto.In) with { TenantId = Guid.NewGuid() };
+
+        (await recorder.RecordAsync(foreign, ct)).Error.Code.ShouldBe(AttendanceErrors.PunchTenantMismatch);
+        (await recorder.RecordBatchAsync([Input("2026-09-01T06:00", PunchDirectionDto.In), foreign], ct)).Error.Code.ShouldBe(AttendanceErrors.PunchTenantMismatch);
+        (await recorder.SoftDeleteAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "hatalı", ct)).Error.Code.ShouldBe(AttendanceErrors.PunchTenantMismatch);
+        _punches.All.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Without_an_ambient_tenant_the_recorder_opens_the_input_tenant_scope()
+    {
+        _tenantContext.IsResolved.Returns(false);
+        _tenantContext.TenantId.Returns(_ => throw new InvalidOperationException("tenant yok"));
+
+        var r = await recorder.RecordAsync(Input("2026-09-01T06:00", PunchDirectionDto.In), ct);
+
+        r.IsSuccess.ShouldBeTrue();
+        _tenantSetter.Received(1).BeginScope(_tenantId, Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task Batch_mixing_tenants_is_rejected_without_an_ambient_tenant()
+    {
+        _tenantContext.IsResolved.Returns(false);
+
+        var r = await recorder.RecordBatchAsync(
+            [Input("2026-09-01T06:00", PunchDirectionDto.In), Input("2026-09-01T07:00", PunchDirectionDto.In) with { TenantId = Guid.NewGuid() }], ct);
+
+        r.Error.Code.ShouldBe(AttendanceErrors.PunchTenantMismatch);
+        _punches.All.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Concurrent_insert_of_the_same_punch_is_ignored_not_an_error()
+    {
+        // ExistsAsync ile ekleme arasında başka bir istek aynı okutmayı kaydetti: tekillik ihlali yoksayma olur, ilk kaydın id'si döner.
+        var input = Input("2026-09-01T06:00", PunchDirectionDto.In);
+        var winner = Punch.Create(_tenantId, _employeeId, input.OccurredAtUtc, Day, PunchDirection.In, PunchSource.Terminal, "ref-1", null, null, null, null,
+            false, null, null, input.OccurredAtUtc).Value;
+        var raced = false;
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            if (raced)
+            {
+                return Task.FromResult(1);
+            }
+
+            raced = true;
+            _punches.Add(winner);
+            throw new InMemoryPunchRepository.DuplicatePunchException();
+        });
+
+        var r = await recorder.RecordAsync(input, ct);
+
+        r.IsSuccess.ShouldBeTrue();
+        r.Value.ShouldBe(winner.Id);
+        _punches.All.ShouldHaveSingleItem().ShouldBeSameAs(winner);
+    }
+
+    [Fact]
+    public async Task Concurrent_duplicate_inside_a_batch_is_counted_as_ignored()
+    {
+        var first = Input("2026-09-01T06:00", PunchDirectionDto.In);
+        var second = Input("2026-09-01T15:00", PunchDirectionDto.Out);
+        var winner = Punch.Create(_tenantId, _employeeId, first.OccurredAtUtc, Day, PunchDirection.In, PunchSource.Terminal, "ref-1", null, null, null, null,
+            false, null, null, first.OccurredAtUtc).Value;
+        var raced = false;
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            if (raced)
+            {
+                return Task.FromResult(1);
+            }
+
+            raced = true;
+            _punches.Add(winner);
+            throw new InMemoryPunchRepository.DuplicatePunchException();
+        });
+
+        var r = await recorder.RecordBatchAsync([first, second], ct);
+
+        r.Value.ShouldBe(new PunchBatchResult(1, 1));
+        _punches.All.Count.ShouldBe(2);
+        DayRecord(Day).CheckOut.ShouldBe(new TimeOnly(18, 0));
     }
 }

@@ -2,13 +2,13 @@ namespace Sense.Modules.Attendance.Application.Punches;
 
 /// <summary>
 /// Bir puantaj gününün planı (okutma → gün türetmesinin girdisi, spec §5.1). <see cref="Start"/>/<see cref="End"/> boşsa gün planlı
-/// ama çalışma günü değildir (hafta tatili); hiç plan yoksa (ne atama ne çizelge) çağıran <c>null</c> <see cref="PlannedDay"/> geçer.
+/// ama çalışma günü değildir (hafta tatili); hiç plan yoksa (ne atama ne çizelge) çağıran <c>null</c> <see cref="PunchPlanWindow"/> geçer.
 /// <see cref="End"/> ≤ <see cref="Start"/> gece vardiyasıdır; <see cref="StartsPreviousDay"/> vardiyanın bir önceki takvim gününde başladığını söyler.
 /// </summary>
-public sealed record PlannedDay(TimeOnly? Start, TimeOnly? End, int BreakMinutes, bool StartsPreviousDay = false)
+public sealed record PunchPlanWindow(TimeOnly? Start, TimeOnly? End, int BreakMinutes, bool StartsPreviousDay = false)
 {
     /// <summary>Planlı ama çalışılmayan gün (hafta tatili / çizelgede kapalı gün).</summary>
-    public static PlannedDay Rest { get; } = new(null, null, 0);
+    public static PunchPlanWindow NoWindow { get; } = new(null, null, 0);
 
     public bool IsWorkingDay => Start is not null && End is not null;
 

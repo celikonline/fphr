@@ -34,7 +34,8 @@ public sealed class ImportDeviceLogsHandlerTests
     }
 
     private ImportDeviceLogsHandler CreateHandler() =>
-        new(_tenant, _employeeLookup, _schedules, _days, _shiftSettings, _unitOfWork, new InMemoryPunchRepository(), new FixedLocalClock(DateTime.UtcNow));
+        new(_tenant, _employeeLookup, _schedules, _days, _shiftSettings, _unitOfWork, new InMemoryPunchRepository(), new FixedLocalClock(DateTime.UtcNow),
+            Substitute.For<IMonthlyTimesheetApprovalRepository>());
 
     [Fact]
     public async Task Handle_InAndOutPunchesSameDay_UpsertsSingleAttendanceDay()

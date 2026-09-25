@@ -17,7 +17,7 @@ namespace Sense.Modules.Attendance.Application.Import;
 /// </summary>
 public sealed class AttendanceImportRowHandler(
     ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules, IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork,
-    IPunchRepository punches, ITenantLocalClock clock)
+    IPunchRepository punches, ITenantLocalClock clock, IMonthlyTimesheetApprovalRepository approvals)
     : IImportRowHandler
 {
     /// <summary>İçe aktarılan satır günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe.</summary>
@@ -27,6 +27,10 @@ public sealed class AttendanceImportRowHandler(
 
     public async Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
     {
+        // Z0.1: her satır Source=Import okutmalara dönüşür ve günü (üzerine yazarak) yeniden türetir; K6 kilitli ay satır hatasıdır.
+        var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, approvals, zone, now.Utc);
         var employeeCache = new Dictionary<string, Guid?>(StringComparer.Ordinal);
         var results = new Dictionary<int, ImportRowResult>();
         var plans = new List<AttendanceImportPlan>();
@@ -64,6 +68,11 @@ public sealed class AttendanceImportRowHandler(
                 }
             }
 
+            if (errors.Count == 0 && employeeId is { } matched && date is { } day && await writer.IsLockedAsync(matched, day, cancellationToken).ConfigureAwait(false))
+            {
+                errors.Add(new ImportRowError(AttendanceImportColumns.Date, AttendanceErrors.PeriodLocked));
+            }
+
             if (errors.Count > 0 || employeeId is null || date is null)
             {
                 results[row.RowNumber] = new ImportRowResult(row.RowNumber, ImportRowOutcome.Error, nationalId, employeeId, errors);
@@ -83,10 +92,6 @@ public sealed class AttendanceImportRowHandler(
             return new ImportBatchResult(Ordered(batch, results), Applied: false);
         }
 
-        // Z0.1: her satır Source=Import okutmalara dönüşür ve günü (üzerine yazarak) yeniden türetir.
-        var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
-        var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
-        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, zone, now.Utc);
         var anyChange = false;
         foreach (var plan in plans)
         {

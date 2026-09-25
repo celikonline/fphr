@@ -41,7 +41,7 @@ public sealed class AttendanceDataScopeTests
     [Fact]
     public async Task ListAttendanceDays_InScope_ReturnsRows()
     {
-        var result = await new ListAttendanceDaysHandler(_days, _dataScope)
+        var result = await new ListAttendanceDaysHandler(_days, _dataScope, new InMemoryPunchRepository(), Substitute.For<ITenantContext>())
             .Handle(new ListAttendanceDaysQuery(_inScope, Monday, Monday.AddDays(6)), TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
@@ -50,7 +50,7 @@ public sealed class AttendanceDataScopeTests
     [Fact]
     public async Task ListAttendanceDays_OutOfScope_ReturnsForbiddenWithoutReadingData()
     {
-        var result = await new ListAttendanceDaysHandler(_days, _dataScope)
+        var result = await new ListAttendanceDaysHandler(_days, _dataScope, new InMemoryPunchRepository(), Substitute.For<ITenantContext>())
             .Handle(new ListAttendanceDaysQuery(_outOfScope, Monday, Monday.AddDays(6)), TestContext.Current.CancellationToken);
 
         result.IsFailure.ShouldBeTrue();
@@ -114,7 +114,7 @@ public sealed class AttendanceDataScopeTests
     {
         var handler = new RecordAttendanceHandler(
             _days, _schedules, Substitute.For<ITenantContext>(), _dataScope, new FixedLocalClock(DateTime.UtcNow), new InMemoryPunchRepository(),
-            Substitute.For<ICurrentUser>());
+            Substitute.For<ICurrentUser>(), Substitute.For<IMonthlyTimesheetApprovalRepository>());
 
         var result = await handler.Handle(
             new RecordAttendanceCommand(_outOfScope, Monday, new TimeOnly(9, 0), new TimeOnly(17, 0)), TestContext.Current.CancellationToken);

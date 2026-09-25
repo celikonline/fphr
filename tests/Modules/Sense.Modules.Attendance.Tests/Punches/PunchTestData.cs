@@ -36,7 +36,7 @@ internal static class PunchTestData
             Tenant, Employee, DateTime.SpecifyKind(at, DateTimeKind.Utc), workDate, direction, source, null, null, null, null, null,
             source == PunchSource.Manual, null, null, Now).Value;
 
-    public static PlannedDay Plan(string start, string end, int breakMinutes, bool startsPreviousDay = false) =>
+    public static PunchPlanWindow Plan(string start, string end, int breakMinutes, bool startsPreviousDay = false) =>
         new(TimeOnly.Parse(start, CultureInfo.InvariantCulture), TimeOnly.Parse(end, CultureInfo.InvariantCulture), breakMinutes, startsPreviousDay);
 
     private static PunchDirection Parse(string value) => Enum.Parse<PunchDirection>(value.Trim());

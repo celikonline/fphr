@@ -2,6 +2,7 @@ using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Shared.Kernel.Results;
@@ -11,18 +12,48 @@ namespace Sense.Modules.Attendance.Application.Punches;
 /// <summary>
 /// Okutma → gün yazma yolu (Z0.1): her giriş kanalı (elle, Excel, PDKS cihazı, self-servis, <see cref="IPunchRecorder"/>) önce
 /// <see cref="Punch"/> yazar, sonra günü okutmalardan (<see cref="DayFromPunches"/>) yeniden türetip <see cref="AttendanceDay"/>'e verir.
-/// Tek bir komut/iş boyunca kullanılır: henüz kaydedilmemiş okutmaları da bilir (EF sorguları eklenmiş ama kaydedilmemiş satırları
-/// döndürmez). Kaydetmez - çağıran kendi unit-of-work'ünü kaydeder.
+/// Tek bir komut/iş boyunca kullanılır: henüz kaydedilmemiş okutmaları ve yeni eklenen günleri de bilir (EF sorguları eklenmiş ama
+/// kaydedilmemiş satırları döndürmez). K6 kilidinin tek denetim noktasıdır (<see cref="IsLockedAsync"/>): onaylı aylık puantaj ayına yazan
+/// her kanal <see cref="AttendanceErrors.PeriodLocked"/> alır. Kaydetmez - çağıran kendi unit-of-work'ünü kaydeder.
 /// </summary>
 public sealed class PunchDayWriter(
-    Guid tenantId, IAttendanceDayRepository days, IPunchRepository punches, IWorkScheduleReadService schedules, TimeZoneInfo zone, DateTime nowUtc)
+    Guid tenantId, IAttendanceDayRepository days, IPunchRepository punches, IWorkScheduleReadService schedules,
+    IMonthlyTimesheetApprovalRepository approvals, TimeZoneInfo zone, DateTime nowUtc)
 {
     /// <summary>Taşıma (B1) ve eski günlerden türetilen okutmaların gerekçesi; geri alma (Down) bu değerle süzer.</summary>
     public const string LegacyReason = "Mevcut puantaj gününden taşındı";
 
     private readonly List<Punch> _pending = [];
+    private readonly Dictionary<(Guid EmployeeId, DateOnly Date), AttendanceDay> _createdDays = [];
+    private readonly Dictionary<(Guid EmployeeId, DateOnly Month), bool> _locks = [];
 
     public TimeZoneInfo Zone => zone;
+
+    public DateTime NowUtc => nowUtc;
+
+    /// <summary>K6: çalışanın bu gününün ayı için onaylı aylık puantaj var mı (onaylı ayda okutma eklenmez/silinmez, gün yeniden kurulmaz).</summary>
+    public async Task<bool> IsLockedAsync(Guid employeeId, DateOnly workDate, CancellationToken cancellationToken)
+    {
+        var month = MonthlyTimesheetApproval.NormalizeToMonthStart(workDate);
+        if (!_locks.TryGetValue((employeeId, month), out var locked))
+        {
+            locked = await approvals.FindAsync(employeeId, month, cancellationToken).ConfigureAwait(false) is not null;
+            _locks[(employeeId, month)] = locked;
+        }
+
+        return locked;
+    }
+
+    /// <summary>Bu yazıcının eklediği ama henüz kaydedilmemiş okutmaları izlemeden çıkarır (başarısız toplu alım, tekillik yarışı).</summary>
+    public void DiscardPending()
+    {
+        foreach (var punch in _pending)
+        {
+            punches.Discard(punch);
+        }
+
+        _pending.Clear();
+    }
 
     /// <summary>
     /// Günün silinmemiş okutmaları (kaydedilmişler + bu yazıcıyla eklenenler), zamana göre. <paramref name="seedLegacy"/> açıksa ve günün
@@ -37,7 +68,7 @@ public sealed class PunchDayWriter(
             return live;
         }
 
-        var legacy = await days.FindByEmployeeAndDateAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
+        var legacy = await FindDayAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
         if (legacy is null || (legacy.CheckIn is null && legacy.CheckOut is null))
         {
             return live;
@@ -78,6 +109,11 @@ public sealed class PunchDayWriter(
         Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut, AttendanceDaySource source, Guid? actorUserId, string replaceReason,
         ShiftLimits? limits, CancellationToken cancellationToken)
     {
+        if (await IsLockedAsync(employeeId, date, cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Conflict(AttendanceErrors.PeriodLocked);
+        }
+
         var punchSource = PunchTime.ToPunchSource(source);
         var wanted = new List<(DateTime Utc, PunchDirection Direction)>();
         if (checkIn is { } inTime)
@@ -127,15 +163,20 @@ public sealed class PunchDayWriter(
     public async Task<Result<AttendanceDay>> RebuildAsync(
         Guid employeeId, DateOnly workDate, AttendanceDaySource? source, ShiftLimits? limits, bool forceIncalculable, CancellationToken cancellationToken)
     {
+        if (await IsLockedAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Conflict(AttendanceErrors.PeriodLocked);
+        }
+
         var dayPunches = await LiveAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
         var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, employeeId, workDate, cancellationToken).ConfigureAwait(false);
 
         // PlannedDayResolver bugün "çizelge yok" ile "çalışma günü değil"i ayırt etmiyor: ikisi de hafta tatili (Rest) sayılır, böylece plansız
         // okutma bugünkü gibi UnplannedWork olur. "Hiç plan yok → Incalculable" kuralı (spec §5.1) çözümleyici bunu ayırt edince (B2) devreye girer.
-        var plan = start is not null && end is not null ? new PlannedDay(start, end, breakMinutes) : PlannedDay.Rest;
+        var plan = start is not null && end is not null ? new PunchPlanWindow(start, end, breakMinutes) : PunchPlanWindow.NoWindow;
         var result = DayFromPunches.Build(dayPunches, plan, zone);
 
-        var existing = await days.FindByEmployeeAndDateAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
+        var existing = await FindDayAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
         var daySource = source
             ?? (dayPunches.Count > 0 ? PunchTime.ToDaySource(dayPunches[^1].Source) : existing?.Source ?? AttendanceDaySource.Manual);
 
@@ -146,6 +187,7 @@ public sealed class PunchDayWriter(
                 tenantId, employeeId, workDate, result.CheckIn, result.CheckOut, start, end, minutes, breakMinutes, daySource, result.Overnight,
                 result.ActualBreakMinutes, limits);
             days.Add(day);
+            _createdDays[(employeeId, workDate)] = day;
         }
         else
         {
@@ -166,6 +208,12 @@ public sealed class PunchDayWriter(
 
         return day;
     }
+
+    /// <summary>Kayıtlı gün ya da bu yazıcının az önce eklediği (henüz kaydedilmemiş) gün - aynı gün iki kez eklenmez.</summary>
+    private async Task<AttendanceDay?> FindDayAsync(Guid employeeId, DateOnly workDate, CancellationToken cancellationToken) =>
+        _createdDays.TryGetValue((employeeId, workDate), out var created)
+            ? created
+            : await days.FindByEmployeeAndDateAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
 
     private void Track(Punch punch)
     {

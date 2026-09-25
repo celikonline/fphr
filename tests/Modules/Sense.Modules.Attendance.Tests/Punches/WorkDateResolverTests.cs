@@ -19,9 +19,9 @@ public sealed class WorkDateResolverTests
         var day1In = Punch(Dir.In, "2026-09-01T23:30");
         var day2Out = Punch(Dir.Out, "2026-09-02T05:50");
 
-        WorkDateResolver.Resolve(day1In, new[] { (Sep1, (PlannedDay?)plan) }).ShouldBe(Sep1);
+        WorkDateResolver.Resolve(day1In, new[] { (Sep1, (PunchPlanWindow?)plan) }).ShouldBe(Sep1);
         // pencere: start-4sa..end+4sa; Eylül 2 22:00 penceresine 05:50 düşmez
-        WorkDateResolver.Resolve(day2Out, new[] { (Sep1, (PlannedDay?)plan), (Sep2, (PlannedDay?)plan) }).ShouldBe(Sep1);
+        WorkDateResolver.Resolve(day2Out, new[] { (Sep1, (PunchPlanWindow?)plan), (Sep2, (PunchPlanWindow?)plan) }).ShouldBe(Sep1);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class WorkDateResolverTests
         // Eylül 2'nin vardiyası bir önceki gün 22:00'de başlar: 1 Eylül 21:50 okutması 2 Eylül'e aittir.
         var plan = Plan("22:00", "06:00", 30, startsPreviousDay: true);
 
-        var result = WorkDateResolver.ResolveDetailed(new DateTime(2026, 9, 1, 21, 50, 0), [(Sep1, PlannedDay.Rest), (Sep2, plan)]);
+        var result = WorkDateResolver.ResolveDetailed(new DateTime(2026, 9, 1, 21, 50, 0), [(Sep1, PunchPlanWindow.NoWindow), (Sep2, plan)]);
 
         result.ShouldBe(new WorkDateResolution(Sep2, Ambiguous: false));
     }
@@ -82,7 +82,7 @@ public sealed class WorkDateResolverTests
     [Fact]
     public void Rest_and_missing_plans_have_no_window()
     {
-        var result = WorkDateResolver.ResolveDetailed(new DateTime(2026, 9, 2, 1, 0, 0), [(Sep1, PlannedDay.Rest), (Sep2, null)]);
+        var result = WorkDateResolver.ResolveDetailed(new DateTime(2026, 9, 2, 1, 0, 0), [(Sep1, PunchPlanWindow.NoWindow), (Sep2, null)]);
 
         result.ShouldBe(new WorkDateResolution(Sep2, Ambiguous: false));
     }

@@ -3,29 +3,32 @@ using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
-using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.Punches;
 
 /// <summary>
 /// <see cref="IPunchRecorder"/> (Z0.1): okutmanın puantaj günü plan penceresinden çözülür (<see cref="WorkDateResolver"/>, gece vardiyası
-/// çakışması → Incalculable), K6 kilitli ay (onaylı aylık puantaj) reddedilir / toplu alımda atlanır, aynı tekillik anahtarı (Tenant,
-/// Employee, OccurredAtUtc, Direction, Source) hata değil yoksayma sayılır; etkilenen günler okutmalardan yeniden türetilir ve kaydedilir.
-/// Komut hattı dışından (entegrasyon olayı, terminal) da çağrılabildiği için her işlem kendi değişikliklerini kaydeder.
+/// çakışması → Incalculable), K6 kilitli ay (onaylı aylık puantaj) reddedilir / toplu alımda "reddedilen" sayılır, aynı tekillik anahtarı
+/// (Tenant, Employee, OccurredAtUtc µs, Direction, Source) hata değil yoksayma sayılır - eşzamanlı aynı okutmanın kaydetme anındaki tekillik
+/// ihlali dahil (bir kez yeniden denenir); etkilenen günler okutmalardan yeniden türetilir ve kaydedilir. Başarısız işlemde eklenen okutmalar
+/// değişiklik izlemeden çıkarılır.
+/// Kiracı: ortam kiracısı (<see cref="ITenantContext"/>) varsa girişin kiracısıyla aynı olmalıdır (değilse <see cref="AttendanceErrors.PunchTenantMismatch"/>);
+/// yoksa (entegrasyon olayı) girişin kiracısı için kapsam açılır. Toplu alım tek kiracılıdır. Komut hattı dışından da çağrılabildiği için her
+/// işlem kendi değişikliklerini kaydeder.
 /// </summary>
 public sealed class PunchRecorder(
     IPunchRepository punches, IAttendanceDayRepository days, IWorkScheduleReadService schedules, IMonthlyTimesheetApprovalRepository approvals,
-    IShiftSettingsRepository shiftSettings, ITenantLocalClock clock, IAttendanceUnitOfWork unitOfWork) : IPunchRecorder
+    IShiftSettingsRepository shiftSettings, ITenantLocalClock clock, IAttendanceUnitOfWork unitOfWork, ITenantContext tenantContext,
+    ITenantContextSetter tenantSetter) : IPunchRecorder
 {
+    private const int MaxSaveAttempts = 2;
+
     private readonly IPunchRepository _punches = punches;
-    private readonly IAttendanceDayRepository _days = days;
     private readonly IWorkScheduleReadService _schedules = schedules;
-    private readonly IMonthlyTimesheetApprovalRepository _approvals = approvals;
-    private readonly IShiftSettingsRepository _shiftSettings = shiftSettings;
-    private readonly ITenantLocalClock _clock = clock;
     private readonly IAttendanceUnitOfWork _unitOfWork = unitOfWork;
 
     private enum StageKind
@@ -39,85 +42,103 @@ public sealed class PunchRecorder(
 
     public async Task<Result<Guid>> RecordAsync(PunchInput input, CancellationToken ct)
     {
+        if (CheckTenant([input.TenantId]) is { } mismatch)
+        {
+            return mismatch;
+        }
+
+        using var scope = OpenTenantScope(input.TenantId);
         var session = await StartAsync(input.TenantId, ct).ConfigureAwait(false);
-        var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
-        if (staged.IsFailure)
+        for (var attempt = 1; ; attempt++)
         {
-            return staged.Error;
-        }
+            var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
+            if (staged.IsFailure || staged.Value.Kind == StageKind.Locked)
+            {
+                session.Writer.DiscardPending();
+                return staged.IsFailure ? staged.Error : Error.Conflict(AttendanceErrors.PeriodLocked);
+            }
 
-        switch (staged.Value.Kind)
-        {
-            case StageKind.Locked:
-                return Error.Conflict(AttendanceErrors.PeriodLocked);
-            case StageKind.Duplicate:
+            if (!session.HasChanges)
+            {
                 return staged.Value.PunchId;
-        }
+            }
 
-        var saved = await session.CommitAsync(ct).ConfigureAwait(false);
-        return saved.IsFailure ? saved.Error : staged.Value.PunchId;
+            var saved = await session.TryCommitAsync(attempt < MaxSaveAttempts, ct).ConfigureAwait(false);
+            if (saved is null)
+            {
+                continue;
+            }
+
+            return saved.IsFailure ? saved.Error : staged.Value.PunchId;
+        }
     }
 
     public async Task<Result<PunchBatchResult>> RecordBatchAsync(IReadOnlyList<PunchInput> inputs, CancellationToken ct)
     {
-        var sessions = new Dictionary<Guid, Session>();
-        var accepted = 0;
-        var ignored = 0;
-        foreach (var input in inputs)
+        if (inputs.Count == 0)
         {
-            if (!sessions.TryGetValue(input.TenantId, out var session))
-            {
-                session = await StartAsync(input.TenantId, ct).ConfigureAwait(false);
-                sessions[input.TenantId] = session;
-            }
-
-            var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
-            if (staged.IsFailure)
-            {
-                return staged.Error;
-            }
-
-            if (staged.Value.Kind == StageKind.Added)
-            {
-                accepted++;
-            }
-            else
-            {
-                ignored++;
-            }
+            return new PunchBatchResult(0, 0);
         }
 
-        foreach (var session in sessions.Values)
+        if (CheckTenant(inputs.Select(i => i.TenantId)) is { } mismatch)
         {
-            var rebuilt = await session.RebuildAsync(ct).ConfigureAwait(false);
-            if (rebuilt.IsFailure)
+            return mismatch;
+        }
+
+        var tenantId = inputs[0].TenantId;
+        using var scope = OpenTenantScope(tenantId);
+        var session = await StartAsync(tenantId, ct).ConfigureAwait(false);
+        for (var attempt = 1; ; attempt++)
+        {
+            var counts = new Dictionary<StageKind, int> { [StageKind.Added] = 0, [StageKind.Duplicate] = 0, [StageKind.Locked] = 0 };
+            foreach (var input in inputs)
             {
-                return rebuilt.Error;
+                var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
+                if (staged.IsFailure)
+                {
+                    session.Writer.DiscardPending();
+                    return staged.Error;
+                }
+
+                counts[staged.Value.Kind]++;
             }
-        }
 
-        if (accepted > 0)
-        {
-            await _unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
-        }
+            var result = new PunchBatchResult(counts[StageKind.Added], counts[StageKind.Duplicate], counts[StageKind.Locked]);
+            if (!session.HasChanges)
+            {
+                return result;
+            }
 
-        return new PunchBatchResult(accepted, ignored);
+            var saved = await session.TryCommitAsync(attempt < MaxSaveAttempts, ct).ConfigureAwait(false);
+            if (saved is null)
+            {
+                continue;
+            }
+
+            return saved.IsFailure ? saved.Error : result;
+        }
     }
 
     public async Task<Result> SoftDeleteAsync(Guid tenantId, Guid punchId, Guid userId, string reason, CancellationToken ct)
     {
+        if (CheckTenant([tenantId]) is { } mismatch)
+        {
+            return mismatch;
+        }
+
+        using var scope = OpenTenantScope(tenantId);
         var punch = await _punches.FindByIdAsync(tenantId, punchId, ct).ConfigureAwait(false);
         if (punch is null)
         {
             return Error.NotFound(AttendanceErrors.PunchNotFound);
         }
 
-        if (await IsLockedAsync(punch.EmployeeId, punch.WorkDate, ct).ConfigureAwait(false))
+        var session = await StartAsync(tenantId, ct).ConfigureAwait(false);
+        if (await session.Writer.IsLockedAsync(punch.EmployeeId, punch.WorkDate, ct).ConfigureAwait(false))
         {
             return Error.Conflict(AttendanceErrors.PeriodLocked);
         }
 
-        var session = await StartAsync(tenantId, ct).ConfigureAwait(false);
         var deleted = session.Writer.SoftDelete(punch, userId, reason);
         if (deleted.IsFailure)
         {
@@ -125,26 +146,35 @@ public sealed class PunchRecorder(
         }
 
         session.Touch(punch.EmployeeId, punch.WorkDate, source: null, ambiguous: false);
-        return await session.CommitAsync(ct).ConfigureAwait(false);
+        return await session.TryCommitAsync(retryOnDuplicate: false, ct).ConfigureAwait(false) ?? Result.Success();
     }
+
+    private Error? CheckTenant(IEnumerable<Guid> tenantIds)
+    {
+        var distinct = tenantIds.Distinct().ToList();
+        var mismatch = distinct.Count != 1 || (tenantContext.IsResolved && tenantContext.TenantId != distinct[0]);
+        return mismatch ? Error.Forbidden(AttendanceErrors.PunchTenantMismatch) : null;
+    }
+
+    /// <summary>Ortam kiracısı yoksa (entegrasyon olayı, arka plan işi) okutmanın kiracısı için açık kapsam; varsa hiçbir şey (null).</summary>
+    private IDisposable? OpenTenantScope(Guid tenantId) => tenantContext.IsResolved ? null : tenantSetter.BeginScope(tenantId);
 
     private async Task<Session> StartAsync(Guid tenantId, CancellationToken ct)
     {
-        var zone = await _clock.GetTimeZoneAsync(tenantId, ct).ConfigureAwait(false);
-        var now = await _clock.NowAsync(tenantId, ct).ConfigureAwait(false);
-        var limits = AttendanceDayUpsert.ToShiftLimits(await _shiftSettings.FindAsync(ct).ConfigureAwait(false));
-        return new Session(this, tenantId, new PunchDayWriter(tenantId, _days, _punches, _schedules, zone, now.Utc), now.Utc, limits);
+        var zone = await clock.GetTimeZoneAsync(tenantId, ct).ConfigureAwait(false);
+        var now = await clock.NowAsync(tenantId, ct).ConfigureAwait(false);
+        var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(ct).ConfigureAwait(false));
+        return new Session(this, tenantId, new PunchDayWriter(tenantId, days, _punches, _schedules, approvals, zone, now.Utc), now.Utc, limits);
     }
 
-    private async Task<bool> IsLockedAsync(Guid employeeId, DateOnly workDate, CancellationToken ct) =>
-        await _approvals.FindAsync(employeeId, MonthlyTimesheetApproval.NormalizeToMonthStart(workDate), ct).ConfigureAwait(false) is not null;
-
-    /// <summary>Tek kiracı için bir kayıt işlemi: yeni okutmalar, dokunulan günler ve plan/kilit önbellekleri.</summary>
+    /// <summary>Tek kiracı için bir kayıt işlemi: yeni okutmalar, dokunulan günler ve plan önbelleği.</summary>
     private sealed class Session(PunchRecorder owner, Guid tenantId, PunchDayWriter writer, DateTime nowUtc, ShiftLimits limits)
     {
         private readonly Dictionary<(Guid EmployeeId, DateTime OccurredAtUtc, PunchDirection Direction, PunchSource Source), Guid> _seen = [];
         private readonly Dictionary<(Guid EmployeeId, DateOnly WorkDate), (AttendanceDaySource? Source, bool Ambiguous)> _touched = [];
-        private readonly Dictionary<(Guid EmployeeId, DateOnly Date), PlannedDay> _plans = [];
+        private readonly Dictionary<(Guid EmployeeId, DateOnly Date), PunchPlanWindow> _plans = [];
+
+        public bool HasChanges => _touched.Count > 0;
 
         public PunchDayWriter Writer => writer;
 
@@ -166,7 +196,7 @@ public sealed class PunchRecorder(
 
             var local = PunchTime.ToLocal(occurredAtUtc, writer.Zone);
             var resolution = WorkDateResolver.ResolveDetailed(local, await CandidatesAsync(input.EmployeeId, DateOnly.FromDateTime(local), ct).ConfigureAwait(false));
-            if (await owner.IsLockedAsync(input.EmployeeId, resolution.Date, ct).ConfigureAwait(false))
+            if (await writer.IsLockedAsync(input.EmployeeId, resolution.Date, ct).ConfigureAwait(false))
             {
                 return new Staged(StageKind.Locked, Guid.Empty);
             }
@@ -214,29 +244,44 @@ public sealed class PunchRecorder(
             return Result.Success();
         }
 
-        public async Task<Result> CommitAsync(CancellationToken ct)
+        /// <summary>
+        /// Dokunulan günleri yeniden kurar ve kaydeder. Kaydetme eşzamanlı aynı okutma yüzünden tekillik ihlaliyle düşerse ve
+        /// <paramref name="retryOnDuplicate"/> açıksa bu işlemin okutmaları bırakılır ve null döner - çağıran girişleri yeniden sahneler
+        /// (artık kayıtlı olan okutma yoksayılır). Dokunulan günler korunur ki yeniden kurulsunlar.
+        /// </summary>
+        public async Task<Result?> TryCommitAsync(bool retryOnDuplicate, CancellationToken ct)
         {
             var rebuilt = await RebuildAsync(ct).ConfigureAwait(false);
             if (rebuilt.IsFailure)
             {
+                writer.DiscardPending();
                 return rebuilt;
             }
 
-            await owner._unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
-            return Result.Success();
+            try
+            {
+                await owner._unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
+                return Result.Success();
+            }
+            catch (Exception ex) when (retryOnDuplicate && owner._punches.IsDuplicateKeyViolation(ex))
+            {
+                writer.DiscardPending();
+                _seen.Clear();
+                return null;
+            }
         }
 
         /// <summary>Yerel takvim gününün bir öncesi, kendisi ve sonrası (sonraki günün vardiyası önceki akşam başlayabilir).</summary>
-        private async Task<IReadOnlyList<(DateOnly Date, PlannedDay? Plan)>> CandidatesAsync(Guid employeeId, DateOnly localDate, CancellationToken ct)
+        private async Task<IReadOnlyList<(DateOnly Date, PunchPlanWindow? Plan)>> CandidatesAsync(Guid employeeId, DateOnly localDate, CancellationToken ct)
         {
-            var candidates = new List<(DateOnly Date, PlannedDay? Plan)>();
+            var candidates = new List<(DateOnly Date, PunchPlanWindow? Plan)>();
             for (var offset = -1; offset <= 1; offset++)
             {
                 var date = localDate.AddDays(offset);
                 if (!_plans.TryGetValue((employeeId, date), out var plan))
                 {
                     var (start, end, _, breakMinutes) = await PlannedDayResolver.ResolveAsync(owner._schedules, employeeId, date, ct).ConfigureAwait(false);
-                    plan = start is not null && end is not null ? new PlannedDay(start, end, breakMinutes) : PlannedDay.Rest;
+                    plan = start is not null && end is not null ? new PunchPlanWindow(start, end, breakMinutes) : PunchPlanWindow.NoWindow;
                     _plans[(employeeId, date)] = plan;
                 }
 

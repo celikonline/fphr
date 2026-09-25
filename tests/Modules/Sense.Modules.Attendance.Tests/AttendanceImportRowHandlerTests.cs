@@ -33,7 +33,8 @@ public sealed class AttendanceImportRowHandlerTests
     }
 
     private AttendanceImportRowHandler CreateHandler() =>
-        new(_tenant, _employeeLookup, _schedules, _days, _unitOfWork, new InMemoryPunchRepository(), new FixedLocalClock(DateTime.UtcNow));
+        new(_tenant, _employeeLookup, _schedules, _days, _unitOfWork, new InMemoryPunchRepository(), new FixedLocalClock(DateTime.UtcNow),
+            Substitute.For<IMonthlyTimesheetApprovalRepository>());
 
     private static ImportRow Row(int rowNumber, string? nationalId, string? date, string? checkIn, string? checkOut)
     {
