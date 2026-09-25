@@ -43,6 +43,12 @@ public sealed class ImportTemplateCatalog(
         return template is null ? Error.NotFound(DataTransferErrors.TemplateNotFound) : Result.Success(template);
     }
 
+    /// <summary>The template's <see cref="IImportTemplateReadiness"/> check (e.g. 503 when a secret its rows need is missing); success when it has none.</summary>
+    public static Result CheckReady(IImportTemplate template) => template is IImportTemplateReadiness readiness ? readiness.CheckReady() : Result.Success();
+
+    /// <summary>True when any column holds secret values (<see cref="ImportColumn.IsSensitive"/>): no samples, no file kept after the run, outcome-only result file.</summary>
+    public static bool HasSensitiveColumns(IEnumerable<ImportColumn> columns) => columns.Any(c => c.IsSensitive);
+
     public Result<IImportRowHandler> FindHandler(string code)
     {
         var handler = handlers.FirstOrDefault(h => string.Equals(h.TemplateCode, code, StringComparison.OrdinalIgnoreCase));
@@ -150,8 +156,12 @@ public static class ColumnAutoMapper
         return suggestions;
     }
 
-    /// <summary>Source columns with up to three sample values; fully empty columns (no header, key or data) are left out.</summary>
-    public static IReadOnlyList<ImportSourceColumn> BuildSourceColumns(Spreadsheet sheet, bool hasKeyRow, IReadOnlyList<LocalizedImportColumn> columns)
+    /// <summary>
+    /// Source columns with up to three sample values (none when <paramref name="includeSamples"/> is false - templates with sensitive
+    /// columns, whose values must not be copied into the job); fully empty columns (no header, key or data) are left out.
+    /// </summary>
+    public static IReadOnlyList<ImportSourceColumn> BuildSourceColumns(
+        Spreadsheet sheet, bool hasKeyRow, IReadOnlyList<LocalizedImportColumn> columns, bool includeSamples = true)
     {
         var keyRow = hasKeyRow ? sheet.Rows.FirstOrDefault(r => r.RowNumber == KeyRowNumber) : null;
         var dataRows = DataRows(sheet, hasKeyRow);
@@ -162,8 +172,9 @@ public static class ColumnAutoMapper
         for (var i = 0; i < count; i++)
         {
             var header = i < sheet.Headers.Count ? sheet.Headers[i].Trim() : string.Empty;
-            var samples = dataRows.Select(r => r.Cell(i)).Where(c => !c.IsEmpty).Take(Shared.Contracts.Import.ImportLimits.SampleCount).Select(c => c.Text ?? string.Empty).ToList();
-            if (header.Length == 0 && samples.Count == 0 && suggestions[i].TargetKey is null)
+            var values = dataRows.Select(r => r.Cell(i)).Where(c => !c.IsEmpty).Take(Shared.Contracts.Import.ImportLimits.SampleCount).Select(c => c.Text ?? string.Empty).ToList();
+            var samples = includeSamples ? values : [];
+            if (header.Length == 0 && values.Count == 0 && suggestions[i].TargetKey is null)
             {
                 continue;
             }

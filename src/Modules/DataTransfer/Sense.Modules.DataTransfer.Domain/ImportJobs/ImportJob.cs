@@ -275,4 +275,7 @@ public interface IImportJobRepository
     Task<ImportJob?> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<ImportSourceFile?> GetSourceFileAsync(Guid importJobId, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the uploaded file (on save) - templates with sensitive columns keep no copy of the file once the job has run.</summary>
+    void RemoveSourceFile(ImportSourceFile sourceFile);
 }

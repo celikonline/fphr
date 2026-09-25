@@ -23,6 +23,10 @@ public sealed class ImportJobRepository(DataTransferDbContext context) : IImport
     public Task<ImportSourceFile?> GetSourceFileAsync(Guid importJobId, CancellationToken cancellationToken = default) =>
         context.ImportSourceFiles.AsNoTracking().FirstOrDefaultAsync(f => f.ImportJobId == importJobId, cancellationToken);
 
+    /// <summary>The file is read untracked; an instance still tracked from the upload in the same context is the one removed.</summary>
+    public void RemoveSourceFile(ImportSourceFile sourceFile) =>
+        context.ImportSourceFiles.Remove(context.ImportSourceFiles.Local.FirstOrDefault(f => f.Id == sourceFile.Id) ?? sourceFile);
+
     public Task<PagedResult<ImportJob>> ListAsync(PagedQuery paging, CancellationToken ct) =>
         context.ImportJobs.AsNoTracking()
             .OrderByDescending(j => j.CreatedAt).ThenByDescending(j => j.Id)

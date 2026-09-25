@@ -53,6 +53,13 @@ public sealed class CreateImportJobHandler(
             return authorized.Error;
         }
 
+        // Checked before the file is stored: a template that cannot process rows (e.g. missing server secret) never keeps an upload.
+        var ready = ImportTemplateCatalog.CheckReady(template);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
+        }
+
         var fileName = Path.GetFileName(command.FileName.Trim());
         var extension = Path.GetExtension(fileName);
         ImportFileFormat format;
@@ -99,7 +106,8 @@ public sealed class CreateImportJobHandler(
             return Error.Rule(DataTransferErrors.FileEmpty);
         }
 
-        var sourceColumns = ColumnAutoMapper.BuildSourceColumns(sheet, hasKeyRow, columns);
+        var sourceColumns = ColumnAutoMapper.BuildSourceColumns(
+            sheet, hasKeyRow, columns, includeSamples: !ImportTemplateCatalog.HasSensitiveColumns(columns.Select(c => c.Column)));
         var job = ImportJob.Create(
             tenant.TenantId, template.Code, fileName, format, hasKeyRow, dataRowCount, sourceColumns, currentUser.UserId, currentUser.DisplayName);
         var contentType = format == ImportFileFormat.Xlsx ? FileDownload.XlsxContentType : CsvContentType;
@@ -152,6 +160,12 @@ public sealed class SaveImportJobMappingHandler(IImportJobRepository jobs, Impor
         if (authorized.IsFailure)
         {
             return authorized.Error;
+        }
+
+        var ready = ImportTemplateCatalog.CheckReady(template);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
         }
 
         var mode = Enum.Parse<ImportJobMode>(command.Mode, ignoreCase: true);
@@ -259,6 +273,13 @@ public sealed class RunImportJobHandler(
             return authorized.Error;
         }
 
+        // Whole-request failure before any row reaches the module handler (e.g. 503 when the template's server secret is missing).
+        var ready = ImportTemplateCatalog.CheckReady(template.Value);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
+        }
+
         // Org levels may have changed since mapping: drop targets that no longer exist and re-check required columns.
         var columns = await template.Value.GetColumnsAsync(cancellationToken);
         var keys = columns.Select(c => c.Key).ToHashSet(StringComparer.Ordinal);
@@ -278,6 +299,12 @@ public sealed class RunImportJobHandler(
         if (read.IsFailure)
         {
             return read.Error;
+        }
+
+        if (ImportTemplateCatalog.HasSensitiveColumns(columns))
+        {
+            // Secret values (e.g. terminal card/PIN) are not kept at rest once the rows have been handed over; saved with the job's outcome.
+            jobs.RemoveSourceFile(file);
         }
 
         var rows = ColumnAutoMapper.DataRows(read.Value, job.HasKeyRow)

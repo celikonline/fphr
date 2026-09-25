@@ -1,3 +1,5 @@
+using Sense.Shared.Kernel.Results;
+
 namespace Sense.Shared.Contracts.Import;
 
 /// <summary>How matched/unmatched rows are handled (Faz 0: no InsertOnly).</summary>
@@ -51,6 +53,9 @@ public enum ImportRowOutcome
 /// <summary>
 /// One template column. <see cref="Key"/> is written to the template's hidden key row and used for auto-mapping.
 /// Static columns carry a resource key (<see cref="HeaderKey"/>); dynamic columns (e.g. org unit levels) carry tenant data as <see cref="HeaderText"/>.
+/// <see cref="IsSensitive"/> marks secret values (e.g. terminal card numbers/PINs): a template with any sensitive column gets no
+/// source-column samples, its uploaded file is deleted once the job has run, and its result file carries only row outcomes
+/// (row number, match key, outcome, errors) - never the uploaded cell values.
 /// </summary>
 public sealed record ImportColumn(
     string Key,
@@ -60,7 +65,8 @@ public sealed record ImportColumn(
     ImportColumnRequirement Requirement,
     bool IsMatchKey = false,
     IReadOnlyList<string>? Options = null,
-    string? DescriptionKey = null)
+    string? DescriptionKey = null,
+    bool IsSensitive = false)
 {
     /// <summary>Must be mapped before a job can run ("IMPORT_UNMAPPED_REQUIRED").</summary>
     public bool IsBlocking => IsMatchKey || Requirement == ImportColumnRequirement.Always;
@@ -166,4 +172,14 @@ public static class ImportLimits
     public const long MaxFileSizeBytes = 10 * 1024 * 1024;
     public const int MaxRows = 20_000;
     public const int SampleCount = 3;
+}
+
+/// <summary>
+/// Optional capability of an <see cref="IImportTemplate"/>: a readiness check the DataTransfer module runs before accepting an
+/// upload, saving a mapping and running a job. A failure is returned for the whole request (e.g. 503 ServiceUnavailable when a
+/// server secret the row handler needs is not configured) - no file is stored and no row is processed.
+/// </summary>
+public interface IImportTemplateReadiness
+{
+    Result CheckReady();
 }
