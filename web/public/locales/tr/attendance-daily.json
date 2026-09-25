@@ -124,7 +124,41 @@
   },
   "punchRequests": {
     "title": "Kayıt talepleri",
-    "subtitle": "Giriş/çıkış kaydı ekleme ve düzeltme talepleri"
+    "subtitle": "Giriş/çıkış kaydı ekleme ve düzeltme talepleri",
+    "tabMine": "Taleplerim",
+    "tabAll": "Tüm talepler",
+    "new": "Yeni talep",
+    "formTitle": "Eksik kayıt talebi",
+    "date": "Tarih",
+    "time": "Saat",
+    "direction": "Yön",
+    "in": "Giriş",
+    "out": "Çıkış",
+    "reason": "Gerekçe",
+    "reasonPlaceholder": "Kaydın neden eksik olduğunu açıklayın",
+    "submit": "Talep gönder",
+    "cancelForm": "Vazgeç",
+    "futureBlocked": "Gelecek bir zaman için talep oluşturulamaz.",
+    "reasonRequired": "Gerekçe zorunludur.",
+    "required": "Tarih ve saat zorunludur.",
+    "submitted": "Talebiniz gönderildi.",
+    "cancel": "İptal et",
+    "cancelled": "Talep iptal edildi.",
+    "cancelConfirm": "Bu talep iptal edilsin mi?",
+    "empty": "Henüz talep yok.",
+    "employee": "Çalışan",
+    "occurredAt": "Kayıt zamanı",
+    "status": "Durum",
+    "statuses": {
+      "pending": "Bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    },
+    "loadError": "Talepler yüklenemedi.",
+    "allStatuses": "Tümü",
+    "unknownEmployee": "Bilinmeyen çalışan",
+    "decidedAt": "Karar: {{date}}"
   },
   "comingSoon": "Bu ekran yakında kullanıma açılacak."
 }

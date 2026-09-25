@@ -124,7 +124,41 @@
   },
   "punchRequests": {
     "title": "Punch requests",
-    "subtitle": "Requests to add or correct clock-in/out records"
+    "subtitle": "Requests to add or correct clock-in/out records",
+    "tabMine": "My requests",
+    "tabAll": "All requests",
+    "new": "New request",
+    "formTitle": "Missing punch request",
+    "date": "Date",
+    "time": "Time",
+    "direction": "Direction",
+    "in": "Clock in",
+    "out": "Clock out",
+    "reason": "Reason",
+    "reasonPlaceholder": "Explain why the punch is missing",
+    "submit": "Submit request",
+    "cancelForm": "Cancel",
+    "futureBlocked": "You cannot request a punch for a future time.",
+    "reasonRequired": "A reason is required.",
+    "required": "Date and time are required.",
+    "submitted": "Your request was submitted.",
+    "cancel": "Withdraw",
+    "cancelled": "Request withdrawn.",
+    "cancelConfirm": "Withdraw this request?",
+    "empty": "No requests yet.",
+    "employee": "Employee",
+    "occurredAt": "Punch time",
+    "status": "Status",
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "loadError": "Could not load requests.",
+    "allStatuses": "All",
+    "unknownEmployee": "Unknown employee",
+    "decidedAt": "Decision: {{date}}"
   },
   "comingSoon": "This screen is coming soon."
 }
