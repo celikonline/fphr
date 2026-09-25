@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart } from "lucide-react";
 import { Alert, Card, Loader, Stack, Text, Title } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission } from "@/components/permission-guard";
-import { TimeKpiSevenDay } from "@/components/attendance/time-kpi-seven-day";
+import { TimeKpiSevenDay, sevenDayRange } from "@/components/attendance/time-kpi-seven-day";
 import { TimeKpiLateEarly, TimeKpiOvertime, TimeKpiRate } from "@/components/attendance/time-kpi-groups";
 import {
   getAttendanceSevenDay,
@@ -20,17 +20,18 @@ export default function TimeDashboardPage() {
   const { t, i18n } = useTranslation(["attendance-daily"]);
   const allowed = useAnyPermission(["attendance.dashboard.view"]);
   const [groupBy, setGroupBy] = useState<OvertimeGroupBy>("branch");
+  const range = useMemo(() => sevenDayRange(), []);
   const locale = i18n.language === "tr" ? "tr-TR" : i18n.language === "de" ? "de-DE" : "en-US";
 
-  const sevenDay = useQuery({ queryKey: ["analytics", "time", "attendance-7d"], queryFn: () => getAttendanceSevenDay(), enabled: allowed });
-  const lateEarly = useQuery({ queryKey: ["analytics", "time", "late-early"], queryFn: () => getLateEarlyByUnit(), enabled: allowed });
+  const sevenDay = useQuery({ queryKey: ["analytics", "time", "attendance-7d", range], queryFn: () => getAttendanceSevenDay(range), enabled: allowed });
+  const lateEarly = useQuery({ queryKey: ["analytics", "time", "late-early", range], queryFn: () => getLateEarlyByUnit(range), enabled: allowed });
   const overtime = useQuery({
-    queryKey: ["analytics", "time", "overtime", groupBy],
-    queryFn: () => getOvertimeByGroup(groupBy),
+    queryKey: ["analytics", "time", "overtime", groupBy, range],
+    queryFn: () => getOvertimeByGroup(groupBy, range),
     placeholderData: (previous) => previous,
     enabled: allowed,
   });
-  const rate = useQuery({ queryKey: ["analytics", "time", "shift-rate"], queryFn: () => getShiftAttendanceRate(), enabled: allowed });
+  const rate = useQuery({ queryKey: ["analytics", "time", "shift-rate", range], queryFn: () => getShiftAttendanceRate(range), enabled: allowed });
 
   if (!allowed) return <NoAccess />;
 

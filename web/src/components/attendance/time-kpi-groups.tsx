@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { BarChart } from "@mantine/charts";
-import { Card, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import { Card, Group, SegmentedControl, Stack, Table, Text, Title } from "@mantine/core";
 import type {
   LateEarlyByUnitRow,
   OvertimeByGroupRow,
@@ -15,6 +15,32 @@ const hours = (minutes: number) => Math.round((minutes / MINUTES_PER_HOUR) * 10)
 const CHART_ROW_HEIGHT = 36;
 const CHART_MIN_HEIGHT = 160;
 const chartHeight = (rows: number) => Math.max(CHART_MIN_HEIGHT, rows * CHART_ROW_HEIGHT + 60);
+
+/** Text alternative for a chart: colour alone never carries the values. */
+function ValueTable({ label, headers, rows }: { label: string; headers: string[]; rows: (string | number)[][] }) {
+  return (
+    <Table.ScrollContainer minWidth={240}>
+      <Table striped withTableBorder aria-label={label}>
+        <Table.Thead>
+          <Table.Tr>
+            {headers.map((h) => (
+              <Table.Th key={h}>{h}</Table.Th>
+            ))}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {rows.map((cells, i) => (
+            <Table.Tr key={i}>
+              {cells.map((c, j) => (
+                <Table.Td key={j}>{c}</Table.Td>
+              ))}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
+  );
+}
 
 export function TimeKpiLateEarly({ rows }: { rows: LateEarlyByUnitRow[] }) {
   const { t } = useTranslation(["attendance-daily"]);
@@ -40,6 +66,18 @@ export function TimeKpiLateEarly({ rows }: { rows: LateEarlyByUnitRow[] }) {
               { name: "late", color: "orange.6", label: t("attendance-daily:timeDashboard.status.late") },
               { name: "earlyLeave", color: "violet.6", label: t("attendance-daily:timeDashboard.status.earlyLeave") },
             ]}
+            aria-hidden="true"
+          />
+        )}
+        {rows.length > 0 && (
+          <ValueTable
+            label={t("attendance-daily:timeDashboard.lateEarly.title")}
+            headers={[
+              t("attendance-daily:timeDashboard.unit"),
+              t("attendance-daily:timeDashboard.status.late"),
+              t("attendance-daily:timeDashboard.status.earlyLeave"),
+            ]}
+            rows={rows.map((r) => [r.orgUnitName, r.lateCount, r.earlyLeaveCount])}
           />
         )}
       </Stack>
@@ -81,8 +119,16 @@ export function TimeKpiOvertime({ rows, groupBy, onGroupByChange }: OvertimeProp
             data={data}
             dataKey="group"
             orientation="vertical"
-            unit=" h"
+            unit={` ${t("attendance-daily:timeDashboard.overtime.hoursUnit")}`}
             series={[{ name: "hours", color: "indigo.6", label: t("attendance-daily:timeDashboard.overtime.hours") }]}
+            aria-hidden="true"
+          />
+        )}
+        {rows.length > 0 && (
+          <ValueTable
+            label={t("attendance-daily:timeDashboard.overtime.title")}
+            headers={[t(`attendance-daily:timeDashboard.groupBy.${groupBy}`), t("attendance-daily:timeDashboard.overtime.hours")]}
+            rows={data.map((d) => [d.group, d.hours])}
           />
         )}
       </Stack>

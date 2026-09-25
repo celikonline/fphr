@@ -23,12 +23,13 @@
       "hint": "Veri olmayan günler sıfır olarak gösterilir."
     },
     "lateEarly": {
-      "title": "Birim bazında geç kalma / erken çıkma (kişi sayısı)"
+      "title": "Birim bazında geç kalma / erken çıkma (olay sayısı)"
     },
     "overtime": {
       "title": "Gruplara göre fazla mesai",
       "groupBy": "Gruplama",
-      "hours": "Saat"
+      "hours": "Saat",
+      "hoursUnit": "sa"
     },
     "groupBy": {
       "branch": "Şube",
@@ -39,7 +40,8 @@
     "rate": {
       "title": "Vardiya devam oranı",
       "detail": "{{worked}} / {{planned}} planlı vardiya günü"
-    }
+    },
+    "unit": "Birim"
   },
   "monthlyMatrix": {
     "title": "Aylık puantaj matrisi",

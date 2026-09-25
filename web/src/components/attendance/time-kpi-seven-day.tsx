@@ -21,6 +21,12 @@ const SERIES: { name: SeriesKey; color: string }[] = [
   { name: "onLeave", color: "blue.6" },
 ];
 
+/** Last 7 local calendar days as ISO dates; sent to the API so client and server agree on the window. */
+export function sevenDayRange(today: Date = new Date()): { from: string; to: string } {
+  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (SEVEN_DAY_SPAN - 1));
+  return { from: toDateOnly(from), to: toDateOnly(today) };
+}
+
 /** The API omits days with no data; the chart still shows the last 7 calendar days with zeros. */
 export function fillSevenDays(rows: DailyAttendanceTotals[], today: Date = new Date()): DailyAttendanceTotals[] {
   const byDate = new Map(rows.map((r) => [r.date, r]));

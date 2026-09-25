@@ -23,12 +23,13 @@
       "hint": "Tage ohne Daten werden als null angezeigt."
     },
     "lateEarly": {
-      "title": "Verspätung / frühes Gehen nach Einheit (Personen)"
+      "title": "Verspätung / frühes Gehen nach Einheit (Anzahl Ereignisse)"
     },
     "overtime": {
       "title": "Überstunden nach Gruppe",
       "groupBy": "Gruppieren nach",
-      "hours": "Stunden"
+      "hours": "Stunden",
+      "hoursUnit": "Std"
     },
     "groupBy": {
       "branch": "Filiale",
@@ -39,7 +40,8 @@
     "rate": {
       "title": "Schichtanwesenheitsquote",
       "detail": "{{worked}} / {{planned}} geplante Schichttage"
-    }
+    },
+    "unit": "Einheit"
   },
   "monthlyMatrix": {
     "title": "Monatliche Anwesenheitsmatrix",

@@ -9,7 +9,8 @@ import { MantineProvider } from "@mantine/core";
 import trAttendanceDaily from "../../../public/locales/tr/attendance-daily.json";
 import TimeDashboardPage from "./time-dashboard";
 import { useAuthStore } from "@/store/auth.store";
-import { toDateOnly } from "@/lib/dates";
+import { formatDateOnly, toDateOnly } from "@/lib/dates";
+import { sevenDayRange } from "@/components/attendance/time-kpi-seven-day";
 import {
   getAttendanceSevenDay,
   getLateEarlyByUnit,
@@ -97,7 +98,42 @@ describe("TimeDashboardPage", () => {
     renderPage();
     const table = await screen.findByRole("table", { name: /7 gün/i });
     await waitFor(() => expect(within(table).getAllByRole("row")).toHaveLength(8)); // header + 7 days
-    expect(within(table).getAllByText("0").length).toBeGreaterThan(0);
+    const rowFor = (n: number) =>
+      within(table)
+        .getAllByRole("row")
+        .find((r) => within(r).queryByText(formatDateOnly(daysAgo(n), "tr", { day: "2-digit", month: "short" })));
+    const cells = (n: number) => within(rowFor(n)!).getAllByRole("cell").map((c) => c.textContent);
+    // date, planned, arrived, late, earlyLeave, absent, onLeave
+    expect(cells(1).slice(1)).toEqual(["0", "0", "0", "0", "0", "0"]);
+    expect(cells(6).slice(1)).toEqual(["0", "0", "0", "0", "0", "0"]);
+    expect(cells(0).slice(1)).toEqual(["10", "8", "1", "0", "1", "1"]);
+    expect(cells(3).slice(1)).toEqual(["10", "9", "0", "0", "0", "1"]);
+  });
+
+  it("sends_client_seven_day_range_to_endpoints", async () => {
+    vi.mocked(getAttendanceSevenDay).mockResolvedValue([]);
+    renderPage();
+    const range = { from: daysAgo(6), to: daysAgo(0) };
+    expect(sevenDayRange(new Date())).toEqual(range);
+    await waitFor(() => expect(getAttendanceSevenDay).toHaveBeenCalledWith(range));
+    await waitFor(() => expect(getLateEarlyByUnit).toHaveBeenCalledWith(range));
+    await waitFor(() => expect(getOvertimeByGroup).toHaveBeenCalledWith("branch", range));
+    await waitFor(() => expect(getShiftAttendanceRate).toHaveBeenCalledWith(range));
+  });
+
+  it("group_charts_have_text_alternative_tables", async () => {
+    vi.mocked(getAttendanceSevenDay).mockResolvedValue([
+      { date: daysAgo(0), planned: 1, arrived: 1, late: 0, earlyLeave: 0, absent: 0, onLeave: 0 },
+    ]);
+    renderPage();
+    const lateEarly = await screen.findByRole("table", { name: /geç kalma/i });
+    const lateRows = within(lateEarly).getAllByRole("row");
+    expect(lateRows).toHaveLength(2);
+    expect(within(lateRows[1]).getAllByRole("cell").map((c) => c.textContent)).toEqual(["Ankara", "3", "1"]);
+    const overtime = await screen.findByRole("table", { name: /fazla mesai/i });
+    const otRows = within(overtime).getAllByRole("row");
+    expect(otRows).toHaveLength(2);
+    expect(within(otRows[1]).getAllByRole("cell").map((c) => c.textContent)).toEqual(["Ankara", "2"]);
   });
 
   it("group_by_switch_refetches", async () => {
@@ -105,9 +141,9 @@ describe("TimeDashboardPage", () => {
       { date: daysAgo(0), planned: 1, arrived: 1, late: 0, earlyLeave: 0, absent: 0, onLeave: 0 },
     ]);
     renderPage();
-    await waitFor(() => expect(getOvertimeByGroup).toHaveBeenCalledWith("branch"));
+    await waitFor(() => expect(getOvertimeByGroup).toHaveBeenCalledWith("branch", expect.anything()));
     await userEvent.click(await screen.findByText("Unvan"));
-    await waitFor(() => expect(getOvertimeByGroup).toHaveBeenCalledWith("title"));
+    await waitFor(() => expect(getOvertimeByGroup).toHaveBeenCalledWith("title", expect.anything()));
   });
 
   it("empty_scope_shows_empty_state", async () => {

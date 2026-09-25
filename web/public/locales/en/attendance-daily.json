@@ -23,12 +23,13 @@
       "hint": "Days without data are shown as zero."
     },
     "lateEarly": {
-      "title": "Late / early leave by unit (headcount)"
+      "title": "Late / early leave by unit (count of occurrences)"
     },
     "overtime": {
       "title": "Overtime by group",
       "groupBy": "Group by",
-      "hours": "Hours"
+      "hours": "Hours",
+      "hoursUnit": "h"
     },
     "groupBy": {
       "branch": "Branch",
@@ -39,7 +40,8 @@
     "rate": {
       "title": "Shift attendance rate",
       "detail": "{{worked}} / {{planned}} planned shift days"
-    }
+    },
+    "unit": "Unit"
   },
   "monthlyMatrix": {
     "title": "Monthly attendance matrix",
