@@ -89,7 +89,38 @@
   },
   "monthlyMatrix": {
     "title": "Monthly attendance matrix",
-    "subtitle": "Employee by day status matrix"
+    "subtitle": "Employee by day status matrix",
+    "locked": "Period locked",
+    "empty": "No employees to show.",
+    "legend": "Status codes",
+    "short": {
+      "absent": "A",
+      "missing": "M",
+      "overtime": "OT",
+      "full": "F",
+      "weeklyRest": "WR",
+      "restDay": "RD",
+      "paidLeave": "PL",
+      "unpaidLeave": "UL",
+      "otherLeave": "OL",
+      "publicHoliday": "PH",
+      "incalculable": "?",
+      "none": "-"
+    },
+    "codes": {
+      "absent": "Absent",
+      "missing": "Missing",
+      "overtime": "Overtime",
+      "full": "Full",
+      "weeklyRest": "Weekly rest",
+      "restDay": "Rest day",
+      "paidLeave": "Paid leave",
+      "unpaidLeave": "Unpaid leave",
+      "otherLeave": "Other leave",
+      "publicHoliday": "Public holiday",
+      "incalculable": "Incalculable",
+      "none": "No data"
+    }
   },
   "punchRequests": {
     "title": "Punch requests",
