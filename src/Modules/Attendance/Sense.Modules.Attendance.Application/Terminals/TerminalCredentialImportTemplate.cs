@@ -74,9 +74,10 @@ public sealed class TerminalCredentialImportTemplate(ITerminalCredentialHasher h
 
     public IReadOnlyList<ImportSampleRow> GetSampleRows(IReadOnlyList<ImportColumn> columns) =>
     [
-        Sample(true, "S-1001", TerminalCredentialImportColumns.CardToken, "04A1B2C3D4", "sample.card"),
-        Sample(true, "S-1002", TerminalCredentialImportColumns.PinToken, "048215", "sample.pin"),
-        Sample(false, "S-1003", TerminalCredentialImportColumns.PinToken, "12A", "sample.invalid_pin"),
+        // Değer sütununa gerçek görünümlü kimlik yazılmaz (şablon dosyası paylaşılır/kopyalanır): yalnız biçim açıklaması.
+        Sample(true, "S-1001", TerminalCredentialImportColumns.CardToken, "(kart numarası)", "sample.card"),
+        Sample(true, "S-1002", TerminalCredentialImportColumns.PinToken, "(6-8 rakam)", "sample.pin"),
+        Sample(false, "S-1003", TerminalCredentialImportColumns.PinToken, "(harf içeren PIN)", "sample.invalid_pin"),
     ];
 
     public Result CheckReady() => hasher.IsAvailable ? Result.Success() : Error.ServiceUnavailable(TerminalErrors.CredentialPepperMissing);

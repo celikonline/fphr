@@ -30,6 +30,9 @@ public enum ImportJobRowOutcome
     Updated = 1,
     Skipped = 2,
     Error = 3,
+
+    /// <summary>Applied, insert/update not disclosed (secret values, see Shared ImportRowOutcome.Processed).</summary>
+    Processed = 4,
 }
 
 public enum ImportFileFormat

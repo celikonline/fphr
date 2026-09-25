@@ -1687,7 +1687,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="problem.title.service_unavailable" xml:space="preserve"><value>Service unavailable</value></data>
   <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal credential (card/PIN) operations are not configured on this server. Contact your system administrator.</value></data>
   <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>No employee was found with this registration number.</value></data>
-  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>The employee has left the company; a terminal credential cannot be assigned.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>The employee was not found or has left the company; a terminal credential cannot be assigned.</value></data>
   <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>A PIN must consist of digits only and be 6-8 digits long.</value></data>
   <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>A card number or external ID can be at most 64 characters.</value></data>
   <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Type must be Kart (card), PIN or Harici (external ID).</value></data>
@@ -1707,4 +1707,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Value</value></data>
   <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Card number, PIN or external ID; stored only as a digest.</value></data>
   <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>This PIN cannot be assigned; try a different PIN.</value></data>
+  <data name="import.outcome.Processed" xml:space="preserve"><value>Processed</value></data>
+  <data name="import.column.masked_header" xml:space="preserve"><value>Column {n}</value></data>
+  <data name="attendance.terminal_credential.import_aborted" xml:space="preserve"><value>Too many PINs could not be assigned; the import was stopped and no credential was saved. Review the file and try again.</value></data>
 </root>

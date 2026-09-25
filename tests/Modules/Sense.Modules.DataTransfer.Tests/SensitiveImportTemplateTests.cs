@@ -189,6 +189,42 @@ public sealed class SensitiveImportTemplateTests : TestFixture
     }
 
     [Fact]
+    public async Task Sensitive_template_unrecognized_header_cells_are_masked()
+    {
+        SetUser();
+
+        // Başlık satırı olmayan dosya: 1. satırdaki değerler (PIN dahil) başlık sanılır.
+        var noHeader = await UploadAsync(File(["S-1", Secrets[0]], ("S-2", Secrets[1])));
+        var mixed = await UploadAsync(File([SecretTemplate.EmployeeHeader, Secrets[0]], ("S-2", Secrets[1])));
+        var plain = (await ExecuteCommandAsync(new CreateImportJobCommand(PlainTemplate.Code, "liste.xlsx", File(["S-1", Secrets[0]], ("S-2", Secrets[1]))))).Value;
+
+        noHeader.SourceColumns.Select(c => c.Header).ShouldBe(["Sütun 1", "Sütun 2"]);
+        mixed.SourceColumns.Select(c => c.Header).ShouldBe([SecretTemplate.EmployeeHeader, "Sütun 2"]);
+        mixed.SourceColumns[0].SuggestedTargetKey.ShouldBe(SecretTemplate.EmployeeKey);
+        plain.SourceColumns.Select(c => c.Header).ShouldBe(["S-1", Secrets[0]]);
+        (JsonSerializer.Serialize(noHeader) + JsonSerializer.Serialize(mixed) + await DataTransferRowsAsJsonAsync(onlyTemplate: SecretTemplate.Code))
+            .ShouldNotContain(Secrets[0]);
+    }
+
+    [Fact]
+    public async Task Module_abort_fails_job_without_row_details()
+    {
+        SetUser();
+        var job = await UploadAsync(File(("S-1", Secrets[0]), ("S-2", Secrets[1])));
+        await MapAsync(job);
+        _handler.AbortCode = "test.secret.too_many_rejects";
+
+        var run = (await ExecuteCommandAsync(new RunImportJobCommand(job.Id))).Value;
+
+        (run.Status, run.InsertedCount, run.ErrorCount).ShouldBe(("Failed", 0, 0));
+        (await ExecuteQueryAsync(new ListImportJobRowsQuery(job.Id, null, new PagedQuery()))).Value.TotalCount.ShouldBe(0);
+        (await SourceFileExistsAsync(job.Id)).ShouldBeFalse();
+        var stored = await ServiceProvider!.GetRequiredService<DataTransferDbContext>().ImportJobs.AsNoTracking()
+            .SingleAsync(j => j.Id == job.Id, TestContext.Current.CancellationToken);
+        stored.FailureCode.ShouldBe("test.secret.too_many_rejects");
+    }
+
+    [Fact]
     public void Cleanup_job_registered_and_scheduled()
     {
         var seed = BackgroundJobSeeding.GetDefaultSeeds().Where(s => s.JobType == JobType.ImportSensitiveSourceCleanup).ShouldHaveSingleItem();
@@ -230,26 +266,30 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
     }
 
-    private async Task<string> DataTransferRowsAsJsonAsync()
+    private async Task<string> DataTransferRowsAsJsonAsync(string? onlyTemplate = null)
     {
         await using var connection = new NpgsqlConnection(ServiceProvider!.GetRequiredService<IConfiguration>().GetConnectionString("Database"));
         await connection.OpenAsync();
         var all = new List<string>();
         foreach (var table in new[] { "import_jobs", "import_job_rows" })
         {
-            await using var command = new NpgsqlCommand($"SELECT coalesce(string_agg(row_to_json(t)::text, '|'), '') FROM datatransfer.{table} t", connection);
+            var filter = onlyTemplate is null || table != "import_jobs" ? string.Empty : " WHERE t.template_code = @code";
+            await using var command = new NpgsqlCommand($"SELECT coalesce(string_agg(row_to_json(t)::text, '|'), '') FROM datatransfer.{table} t{filter}", connection);
+            command.Parameters.AddWithValue("code", onlyTemplate ?? string.Empty);
             all.Add((string)(await command.ExecuteScalarAsync())!);
         }
 
         return string.Join('|', all);
     }
 
-    private static byte[] File(params (string Employee, string Secret)[] rows)
+    private static byte[] File(params (string Employee, string Secret)[] rows) => File([SecretTemplate.EmployeeHeader, SecretTemplate.SecretHeader], rows);
+
+    private static byte[] File(string[] headers, params (string Employee, string Secret)[] rows)
     {
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add("Veri");
-        sheet.Cell(1, 1).Value = SecretTemplate.EmployeeHeader;
-        sheet.Cell(1, 2).Value = SecretTemplate.SecretHeader;
+        sheet.Cell(1, 1).Value = headers[0];
+        sheet.Cell(1, 2).Value = headers[1];
         for (var i = 0; i < rows.Length; i++)
         {
             sheet.Cell(i + 2, 1).Value = rows[i].Employee;
@@ -317,6 +357,9 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         /// <summary>Modül işleyicisi patlarsa DataTransfer işi Failed'a çeker.</summary>
         public bool Throw { get; set; }
 
+        /// <summary>Doluysa iş satır ayrıntısı olmadan bu kodla düşürülür (ImportBatchResult.FailureCode).</summary>
+        public string? AbortCode { get; set; }
+
         public string TemplateCode => SecretTemplate.Code;
 
         public Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
@@ -324,6 +367,11 @@ public sealed class SensitiveImportTemplateTests : TestFixture
             if (Throw)
             {
                 throw new InvalidOperationException("module failure");
+            }
+
+            if (AbortCode is not null)
+            {
+                return Task.FromResult(new ImportBatchResult([], Applied: false, FailureCode: AbortCode));
             }
 
             var results = batch.Rows.Select(row =>

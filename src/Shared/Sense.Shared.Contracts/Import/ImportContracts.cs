@@ -48,6 +48,12 @@ public enum ImportRowOutcome
     Updated = 1,
     Skipped = 2,
     Error = 3,
+
+    /// <summary>
+    /// Applied without saying whether it was an insert, an update or a no-op - for secret values (e.g. terminal PINs) where that
+    /// distinction would reveal whether the value already existed. Counted with the job's inserted rows.
+    /// </summary>
+    Processed = 4,
 }
 
 /// <summary>
@@ -125,8 +131,12 @@ public sealed record ImportRowError(string? Column, string Code, IReadOnlyDictio
 
 public sealed record ImportRowResult(int RowNumber, ImportRowOutcome Outcome, string? MatchKey, Guid? TargetEntityId, IReadOnlyList<ImportRowError> Errors);
 
-/// <summary>Per-row results; <see cref="Applied"/> is false when nothing was persisted (e.g. AllOrNothing with errors).</summary>
-public sealed record ImportBatchResult(IReadOnlyList<ImportRowResult> Rows, bool Applied);
+/// <summary>
+/// Per-row results; <see cref="Applied"/> is false when nothing was persisted (e.g. AllOrNothing with errors). <see cref="FailureCode"/>
+/// (resource key) aborts the whole job: nothing was persisted, the job fails with this code and no row outcomes are recorded - for
+/// cases where per-row details must not be disclosed (e.g. too many rejected PINs in one terminal credential import).
+/// </summary>
+public sealed record ImportBatchResult(IReadOnlyList<ImportRowResult> Rows, bool Applied, string? FailureCode = null);
 
 /// <summary>
 /// Validates and applies a template's rows inside the owning module. The handler persists its own changes through its

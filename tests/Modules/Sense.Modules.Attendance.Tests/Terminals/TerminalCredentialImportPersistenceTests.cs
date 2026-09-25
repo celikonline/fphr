@@ -49,8 +49,8 @@ public sealed class TerminalCredentialImportPersistenceTests : AttendancePostgre
         var first = await ImportAsync(employees, ct, Row(2, "S-1", "Kart", Card), Row(3, "S-1", "PIN", Pin));
         var again = await ImportAsync(employees, ct, Row(2, "S-1", "Kart", Card.ToLowerInvariant()), Row(3, "S-1", "PIN", Pin));
 
-        first.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Inserted, ImportRowOutcome.Inserted]);
-        again.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Skipped, ImportRowOutcome.Skipped]);
+        first.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Inserted, ImportRowOutcome.Processed]);
+        again.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Skipped, ImportRowOutcome.Processed]);
 
         // Kart kaybedildi → pasif; aynı kart yeni çalışana içe aktarmayla devredilir (aynı kayıt, yeni kayıt yok).
         await using (var db = AuditedContext())
@@ -101,11 +101,44 @@ public sealed class TerminalCredentialImportPersistenceTests : AttendancePostgre
         found.Select(c => (c.TenantId, c.Value, c.IsActive)).ShouldBe([(tenantA, digestA, false)]);
     }
 
+    [Fact]
+    public async Task Concurrent_duplicate_insert_is_mapped_to_conflict_and_keeps_the_transaction_usable()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenant = Guid.NewGuid();
+        SetCurrentUser(tenant, Guid.NewGuid(), "hr@example.com", new HashSet<string>(["HR"]));
+
+        foreach (var (kind, raw, expected) in new[]
+        {
+            (TerminalCredentialKind.Card, Card, Sense.Shared.Kernel.Results.Error.Conflict(Sense.Modules.Attendance.Domain.AttendanceDomainErrors.TerminalCredentialInUse)),
+            (TerminalCredentialKind.Pin, Pin, Sense.Shared.Kernel.Results.Error.Rule(TerminalCredentialErrors.Rejected)),
+        })
+        {
+            var digest = TerminalTestData.Hasher().Digest(tenant, kind, raw);
+            await using var winner = AuditedContext();
+            await using var loser = AuditedContext();
+            loser.EmployeeTerminalCredentials.Add(EmployeeTerminalCredential.Create(tenant, Guid.NewGuid(), kind, digest).Value);
+            winner.EmployeeTerminalCredentials.Add(EmployeeTerminalCredential.Create(tenant, Guid.NewGuid(), kind, digest).Value);
+            await winner.SaveChangesAsync(ct);
+
+            Sense.Shared.Kernel.Results.Result? saved = null;
+            await loser.ExecuteInTransactionAsync(async token => saved = await new TerminalCredentialSaver(loser).SaveAsync(kind, token), ct);
+
+            saved!.Error.ShouldBe(expected);
+            loser.ChangeTracker.Entries<EmployeeTerminalCredential>().ShouldBeEmpty();
+        }
+
+        await using var read = AuditedContext();
+        (await read.EmployeeTerminalCredentials.CountAsync(ct)).ShouldBe(2);
+    }
+
     private async Task<ImportBatchResult> ImportAsync(IEmployeeLookup employees, CancellationToken ct, params ImportRow[] rows)
     {
         using var importScope = AuditSource!.BeginScope(AuditSources.Import);
         await using var db = AuditedContext();
-        var handler = new TerminalCredentialImportRowHandler(TenantContextAccessor!, employees, new TerminalRepository(db), TerminalTestData.Hasher(), db);
+        var handler = new TerminalCredentialImportRowHandler(
+            TenantContextAccessor!, employees, new FakeTerminalDataScope(), new TerminalRepository(db), TerminalTestData.Hasher(),
+            Microsoft.Extensions.Options.Options.Create(new TerminalCredentialImportOptions()), db);
         return await handler.ProcessAsync(
             new ImportBatch(ImportMode.Upsert, ImportFailurePolicy.SkipInvalidRows,
                 [TerminalCredentialImportColumns.SicilNumarasi, TerminalCredentialImportColumns.Kind, TerminalCredentialImportColumns.Value], rows),

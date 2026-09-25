@@ -37,6 +37,8 @@ public sealed class CreateImportJobHandler(
     private const string CsvExtension = ".csv";
     private const string CsvContentType = "text/csv";
     private const string MaxArg = "max";
+    private const string MaskedHeaderKey = "import.column.masked_header";
+    private const string ColumnArg = "n";
 
     public async Task<Result<ImportJobDto>> Handle(CreateImportJobCommand command, CancellationToken cancellationToken)
     {
@@ -106,8 +108,13 @@ public sealed class CreateImportJobHandler(
             return Error.Rule(DataTransferErrors.FileEmpty);
         }
 
+        var sensitive = ImportTemplateCatalog.HasSensitiveColumns(columns.Select(c => c.Column));
+        var culture = ImportCultures.Resolve(null);
         var sourceColumns = ColumnAutoMapper.BuildSourceColumns(
-            sheet, hasKeyRow, columns, includeSamples: !ImportTemplateCatalog.HasSensitiveColumns(columns.Select(c => c.Column)));
+            sheet, hasKeyRow, columns, includeSamples: !sensitive,
+            maskUnrecognizedHeader: sensitive
+                ? n => catalog.Text(MaskedHeaderKey, culture, new Dictionary<string, string> { [ColumnArg] = n.ToString(CultureInfo.InvariantCulture) })
+                : null);
         var job = ImportJob.Create(
             tenant.TenantId, template.Code, fileName, format, hasKeyRow, dataRowCount, sourceColumns, currentUser.UserId, currentUser.DisplayName);
         var contentType = format == ImportFileFormat.Xlsx ? FileDownload.XlsxContentType : CsvContentType;
@@ -335,6 +342,13 @@ public sealed class RunImportJobHandler(
             return ImportJobDto.From(job);
         }
 
+        if (result.FailureCode is { } failureCode)
+        {
+            // The module aborted the whole job without row details (nothing was persisted there); no row outcomes are recorded.
+            job.Fail(failureCode, clock.GetUtcNow().UtcDateTime);
+            return ImportJobDto.From(job);
+        }
+
         jobs.AddRows(result.Rows.Select(r => ImportJobRow.Create(
             job.TenantId,
             job.Id,
@@ -345,7 +359,8 @@ public sealed class RunImportJobHandler(
             r.Errors.Select(e => new ImportJobRowError(e.Column, e.Code, e.Args)).ToList())));
 
         var counts = new ImportJobCounts(
-            result.Rows.Count(r => r.Outcome == ImportRowOutcome.Inserted),
+            // Processed rows (insert/update deliberately not disclosed) are counted with the inserted ones: no separate column.
+            result.Rows.Count(r => r.Outcome is ImportRowOutcome.Inserted or ImportRowOutcome.Processed),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Updated),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Skipped),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Error));

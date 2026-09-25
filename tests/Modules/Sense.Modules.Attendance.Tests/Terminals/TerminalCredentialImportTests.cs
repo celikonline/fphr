@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Terminals;
@@ -35,6 +37,7 @@ public sealed class TerminalCredentialImportTests
     private readonly IAttendanceUnitOfWork _unitOfWork = Substitute.For<IAttendanceUnitOfWork>();
     private readonly List<EmployeeTerminalCredential> _added = [];
     private readonly List<EmployeeTerminalCredential> _stored = [];
+    private readonly FakeTerminalDataScope _scope = new();
 
     public TerminalCredentialImportTests()
     {
@@ -52,7 +55,7 @@ public sealed class TerminalCredentialImportTests
         var result = await Handler().ProcessAsync(Batch(Row(2, Sicil, "PIN", Pin)), TestContext.Current.CancellationToken);
 
         var row = result.Rows.ShouldHaveSingleItem();
-        row.Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        row.Outcome.ShouldBe(ImportRowOutcome.Processed);
         row.MatchKey.ShouldBe(Sicil);
         var credential = _added.ShouldHaveSingleItem();
         credential.Value.ShouldBe(Digest(TerminalCredentialKind.Pin, Pin));
@@ -75,7 +78,7 @@ public sealed class TerminalCredentialImportTests
             Batch(Row(2, Sicil, "Kart", "04a1b2c3d4"), Row(3, Sicil, "PIN", Pin), Row(4, Sicil, "pin", " 471193 ")),
             TestContext.Current.CancellationToken);
 
-        result.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Skipped, ImportRowOutcome.Inserted, ImportRowOutcome.Skipped]);
+        result.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Skipped, ImportRowOutcome.Processed, ImportRowOutcome.Processed]);
         _added.ShouldHaveSingleItem().Kind.ShouldBe(TerminalCredentialKind.Pin);
         _stored[0].EmployeeId.ShouldBe(_employeeId);
     }
@@ -156,7 +159,7 @@ public sealed class TerminalCredentialImportTests
         var row = result.Rows.ShouldHaveSingleItem();
         if (expectedError is null)
         {
-            row.Outcome.ShouldBe(ImportRowOutcome.Inserted);
+            row.Outcome.ShouldBe(kind == "PIN" ? ImportRowOutcome.Processed : ImportRowOutcome.Inserted);
             return;
         }
 
@@ -214,7 +217,7 @@ public sealed class TerminalCredentialImportTests
 
         result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Error);
         result.Rows[0].Errors.ShouldBe([new ImportRowError(TerminalCredentialImportColumns.SicilNumarasi, TerminalCredentialErrors.EmployeeNotFound)]);
-        result.Rows[1].Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        result.Rows[1].Outcome.ShouldBe(ImportRowOutcome.Processed);
         result.Applied.ShouldBeTrue();
     }
 
@@ -299,10 +302,96 @@ public sealed class TerminalCredentialImportTests
         template.GetSampleRows(columns).Count.ShouldBe(3);
     }
 
-    private TerminalCredentialImportRowHandler Handler(ITerminalCredentialHasher? hasher = null) =>
-        new(_tenant, _employees, _terminals, hasher ?? TerminalTestData.Hasher(), _unitOfWork);
+    [Fact]
+    public async Task Import_row_for_out_of_scope_employee_reports_employee_not_found()
+    {
+        _employees.FindBySicilNumarasiAsync(_tenantId, "S-LEFT", Arg.Any<CancellationToken>()).Returns(new EmployeeSicilMatch(Guid.NewGuid(), IsTerminated: true));
+        _scope.Visible = new HashSet<Guid> { _employeeId };
 
-    private AddEmployeeTerminalCredentialHandler AddHandler() => new(_terminals, TerminalTestData.Hasher(), TerminalTestData.Contacts(), _tenant);
+        var result = await Handler().ProcessAsync(
+            Batch(Row(2, OtherSicil, "Kart", Card), Row(3, "S-LEFT", "PIN", Pin), Row(4, Sicil, "Kart", Card)), TestContext.Current.CancellationToken);
+
+        // Kapsam dışı çalışan: var olmayan sicil ile aynı hata (işten ayrılmış olduğu da sızmaz).
+        var notFound = new ImportRowError(TerminalCredentialImportColumns.SicilNumarasi, TerminalCredentialErrors.EmployeeNotFound);
+        result.Rows[0].Errors.ShouldBe([notFound]);
+        result.Rows[1].Errors.ShouldBe([notFound]);
+        result.Rows[2].Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        _added.ShouldHaveSingleItem().EmployeeId.ShouldBe(_employeeId);
+        _scope.AskedPermissions.ShouldBe([AttendancePermissions.TerminalManage.Key]);
+    }
+
+    [Fact]
+    public async Task Pin_rejects_over_limit_abort_whole_job()
+    {
+        var pins = Enumerable.Range(0, 7).Select(i => $"90000{i}").ToList();
+        _stored.AddRange(pins.Take(6).Select(p => Stored(_otherEmployeeId, TerminalCredentialKind.Pin, p, active: true)));
+        ImportRow[] rows = [Row(2, Sicil, "Kart", Card), .. pins.Select((p, i) => Row(i + 3, Sicil, "PIN", p))];
+
+        var atLimit = await Handler(maxPinRejects: 6).ProcessAsync(Batch(rows), TestContext.Current.CancellationToken);
+        atLimit.FailureCode.ShouldBeNull();
+        atLimit.Rows.Count(r => r.Errors.Any(e => e.Code == TerminalCredentialErrors.Rejected)).ShouldBe(6);
+        _added.Clear();
+        _unitOfWork.ClearReceivedCalls();
+
+        var result = await Handler().ProcessAsync(Batch(rows), TestContext.Current.CancellationToken);
+
+        (result.FailureCode, result.Applied).ShouldBe((TerminalCredentialErrors.ImportAborted, false));
+        result.Rows.ShouldBeEmpty();
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        // 6. ret işi durdurur: sonraki (7. geçerli) PIN hiç denenmez.
+        _added.ShouldNotContain(c => c.Value == Digest(TerminalCredentialKind.Pin, pins[6]));
+        JsonSerializer.Serialize(result).ShouldNotContain(_otherEmployeeId.ToString());
+    }
+
+    [Fact]
+    public async Task Pin_results_do_not_reveal_reassign_vs_insert()
+    {
+        var lost = Stored(_otherEmployeeId, TerminalCredentialKind.Pin, "700001", active: false);
+        _stored.AddRange([lost, Stored(_employeeId, TerminalCredentialKind.Pin, "700002", active: true)]);
+
+        var result = await Handler().ProcessAsync(
+            Batch(Row(2, Sicil, "PIN", "700000"), Row(3, Sicil, "PIN", "700001"), Row(4, Sicil, "PIN", "700002")), TestContext.Current.CancellationToken);
+
+        // Yeni, başkasından devralınan ve zaten sahip olunan PIN aynı biçimde raporlanır.
+        result.Rows.Select(r => (r.Outcome, r.MatchKey, r.Errors.Count)).ShouldBe(
+            [(ImportRowOutcome.Processed, Sicil, 0), (ImportRowOutcome.Processed, Sicil, 0), (ImportRowOutcome.Processed, Sicil, 0)]);
+        (lost.EmployeeId, lost.IsActive).ShouldBe((_employeeId, true));
+    }
+
+    [Fact]
+    public async Task Card_results_unchanged()
+    {
+        _stored.AddRange([Stored(_otherEmployeeId, TerminalCredentialKind.Card, "C-LOST", active: false), Stored(_employeeId, TerminalCredentialKind.Card, "C-MINE", active: true)]);
+
+        var result = await Handler().ProcessAsync(
+            Batch(Row(2, Sicil, "Kart", "C-NEW"), Row(3, Sicil, "Kart", "C-LOST"), Row(4, Sicil, "Kart", "C-MINE"), Row(5, Sicil, "Harici", "X-NEW")),
+            TestContext.Current.CancellationToken);
+
+        result.Rows.Select(r => r.Outcome).ShouldBe([ImportRowOutcome.Inserted, ImportRowOutcome.Updated, ImportRowOutcome.Skipped, ImportRowOutcome.Inserted]);
+    }
+
+    [Fact]
+    public async Task Sample_sheet_contains_no_credential_like_values()
+    {
+        var template = new TerminalCredentialImportTemplate(TerminalTestData.Hasher());
+        var samples = template.GetSampleRows(await template.GetColumnsAsync(TestContext.Current.CancellationToken));
+
+        samples.Count.ShouldBe(3);
+        foreach (var value in samples.Select(s => s.Values[TerminalCredentialImportColumns.Value]))
+        {
+            value.ShouldStartWith("(");
+            value.ShouldEndWith(")");
+            Regex.IsMatch(value, "[0-9A-Fa-f]{4,}").ShouldBeFalse(value);
+            TerminalCredentialRules.FormatError(TerminalCredentialKind.Pin, value).ShouldNotBeNull();
+        }
+    }
+
+    private TerminalCredentialImportRowHandler Handler(ITerminalCredentialHasher? hasher = null, int maxPinRejects = TerminalCredentialImportOptions.DefaultMaxPinRejectsPerImport) =>
+        new(_tenant, _employees, _scope, _terminals, hasher ?? TerminalTestData.Hasher(),
+            Options.Create(new TerminalCredentialImportOptions { MaxPinRejectsPerImport = maxPinRejects }), _unitOfWork);
+
+    private AddEmployeeTerminalCredentialHandler AddHandler() =>
+        new(_terminals, TerminalTestData.Hasher(), TerminalCredentialTestDoubles.ActiveEmployees(_employeeId), _scope, TerminalCredentialTestDoubles.Saver(), _tenant);
 
     private string Digest(TerminalCredentialKind kind, string raw) => TerminalTestData.Hasher().Digest(_tenantId, kind, raw);
 

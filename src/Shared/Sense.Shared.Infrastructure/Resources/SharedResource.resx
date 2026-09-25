@@ -1696,7 +1696,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="problem.title.service_unavailable" xml:space="preserve"><value>Hizmet şu an kullanılamıyor</value></data>
   <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal kimlik (kart/PIN) işlemleri bu sunucuda yapılandırılmamış. Sistem yöneticinize başvurun.</value></data>
   <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>Bu sicil numarasıyla bir çalışan bulunamadı.</value></data>
-  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>Çalışan işten ayrılmış; terminal kimliği tanımlanamaz.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>Çalışan bulunamadı ya da işten ayrılmış; terminal kimliği tanımlanamaz.</value></data>
   <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>PIN yalnız rakamlardan oluşmalı ve 6-8 haneli olmalıdır.</value></data>
   <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>Kart numarası ya da harici kimlik en fazla 64 karakter olabilir.</value></data>
   <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Tür Kart, PIN ya da Harici olmalıdır.</value></data>
@@ -1716,4 +1716,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Değer</value></data>
   <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Kart numarası, PIN ya da harici kimlik; yalnız özet olarak saklanır.</value></data>
   <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>Bu PIN tanımlanamadı; farklı bir PIN deneyin.</value></data>
+  <data name="import.outcome.Processed" xml:space="preserve"><value>İşlendi</value></data>
+  <data name="import.column.masked_header" xml:space="preserve"><value>Sütun {n}</value></data>
+  <data name="attendance.terminal_credential.import_aborted" xml:space="preserve"><value>Çok sayıda PIN tanımlanamadı; içe aktarma durduruldu ve hiçbir kimlik kaydedilmedi. Dosyayı gözden geçirip tekrar deneyin.</value></data>
 </root>

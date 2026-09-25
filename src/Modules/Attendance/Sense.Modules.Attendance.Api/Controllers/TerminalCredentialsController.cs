@@ -25,7 +25,7 @@ public sealed class TerminalCredentialsController : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<TerminalCredentialDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] Guid employeeId, CancellationToken ct) =>
+    public async Task<IActionResult> List([FromQuery] Guid? employeeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListEmployeeTerminalCredentialsQuery(employeeId), ct));
 
     /// <summary>Kimlik ekler; yeni (ya da aynı çalışanda zaten var olan) kaydın kimliğini döner. Başka çalışanda aktifse 409.</summary>

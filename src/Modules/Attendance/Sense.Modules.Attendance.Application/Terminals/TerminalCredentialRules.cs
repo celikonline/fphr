@@ -27,6 +27,9 @@ public static class TerminalCredentialErrors
     /// entropili PIN'in kiracıda "başkasında var" olduğunu açıkça söylememek için (T1 güvenlik incelemesi, kaba kuvvet riski). Kart/harici için in_use kalır.
     /// </summary>
     public const string Rejected = "attendance.terminal_credential.rejected";
+
+    /// <summary>İçe aktarma, PIN ret sınırı (<see cref="TerminalCredentialImportOptions.MaxPinRejectsPerImport"/>) aşıldığı için bütünüyle durduruldu.</summary>
+    public const string ImportAborted = "attendance.terminal_credential.import_aborted";
 }
 
 /// <summary>Kimliğin bir çalışana bağlanma sonucu.</summary>
