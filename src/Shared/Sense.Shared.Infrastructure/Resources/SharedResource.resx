@@ -1693,4 +1693,56 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>Okutma kaynak referansı en fazla 200 karakter olabilir.</value></data>
   <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>Okutmanın kiracısı işlem yapılan kiracıyla uyuşmuyor.</value></data>
   <data name="attendance.day.concurrent_update" xml:space="preserve"><value>Puantaj günü aynı anda başka bir işlemle değiştirildi; lütfen tekrar deneyin.</value></data>
+  <data name="report.col.employeeName" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="report.col.checkIn" xml:space="preserve"><value>Giriş</value></data>
+  <data name="report.col.checkOut" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="report.col.workedMinutes" xml:space="preserve"><value>Çalışılan dakika</value></data>
+  <data name="report.col.overtimeMinutes" xml:space="preserve"><value>Fazla mesai dakikası</value></data>
+  <data name="report.col.anomalies" xml:space="preserve"><value>Uyuşmazlıklar</value></data>
+  <data name="report.col.unassignedDayCount" xml:space="preserve"><value>Atanmamış gün sayısı</value></data>
+  <data name="report.col.firstUnassignedDate" xml:space="preserve"><value>İlk atanmamış gün</value></data>
+  <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Hesaplanamayanlar</value></data>
+  <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>Vardiya atanmayanlar</value></data>
+  <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Günlük durum listesi</value></data>
+  <data name="report.anomaly.noData" xml:space="preserve"><value>Veri yok</value></data>
+  <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Giriş eksik</value></data>
+  <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Çıkış eksik</value></data>
+  <data name="report.anomaly.lateArrival" xml:space="preserve"><value>Geç giriş</value></data>
+  <data name="report.anomaly.earlyLeave" xml:space="preserve"><value>Erken çıkış</value></data>
+  <data name="report.anomaly.lateLeave" xml:space="preserve"><value>Geç çıkış</value></data>
+  <data name="report.anomaly.overwork" xml:space="preserve"><value>Fazla çalışma</value></data>
+  <data name="report.anomaly.underwork" xml:space="preserve"><value>Eksik çalışma</value></data>
+  <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Plansız çalışma</value></data>
+  <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>İzinli günde çalışma</value></data>
+  <data name="report.anomaly.incalculable" xml:space="preserve"><value>Hesaplanamadı</value></data>
+  <data name="report.col.occurredAt" xml:space="preserve"><value>Okutma zamanı</value></data>
+  <data name="report.col.direction" xml:space="preserve"><value>Yön</value></data>
+  <data name="report.col.enteredBy" xml:space="preserve"><value>Giriş yapan</value></data>
+  <data name="report.col.reason" xml:space="preserve"><value>Gerekçe</value></data>
+  <data name="report.col.deleted" xml:space="preserve"><value>Silindi</value></data>
+  <data name="report.col.deletedBy" xml:space="preserve"><value>Silen</value></data>
+  <data name="report.col.deleteReason" xml:space="preserve"><value>Silme gerekçesi</value></data>
+  <data name="report.col.firstIn" xml:space="preserve"><value>İlk giriş</value></data>
+  <data name="report.col.lastPunch" xml:space="preserve"><value>Son okutma</value></data>
+  <data name="report.col.terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.col.sequence" xml:space="preserve"><value>Sıra</value></data>
+  <data name="report.col.time" xml:space="preserve"><value>Zaman</value></data>
+  <data name="report.col.breakCount" xml:space="preserve"><value>Mola sayısı</value></data>
+  <data name="report.col.totalBreakMinutes" xml:space="preserve"><value>Toplam mola (dk)</value></data>
+  <data name="report.col.longestBreakMinutes" xml:space="preserve"><value>En uzun mola (dk)</value></data>
+  <data name="report.col.plannedBreakMinutes" xml:space="preserve"><value>Planlı mola (dk)</value></data>
+  <data name="report.col.breakDifferenceMinutes" xml:space="preserve"><value>Fark (dk)</value></data>
+  <data name="report.sheet.attendanceManualEntries" xml:space="preserve"><value>Elle girilen kayıtlar</value></data>
+  <data name="report.sheet.attendanceCurrentlyInside" xml:space="preserve"><value>İçerdekiler</value></data>
+  <data name="report.sheet.attendanceBreaks" xml:space="preserve"><value>Mola</value></data>
+  <data name="report.sheet.attendanceIntermediatePunches" xml:space="preserve"><value>Ara kayıtlar</value></data>
+  <data name="report.enum.PunchSource.Manual" xml:space="preserve"><value>Elle</value></data>
+  <data name="report.enum.PunchSource.Import" xml:space="preserve"><value>İçe aktarma</value></data>
+  <data name="report.enum.PunchSource.Device" xml:space="preserve"><value>Cihaz</value></data>
+  <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self servis</value></data>
+  <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Talep</value></data>
+  <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>Giriş</value></data>
+  <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Yönsüz</value></data>
 </root>

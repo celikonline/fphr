@@ -193,4 +193,36 @@ describe("ReportsPage", () => {
     await waitFor(() => expect(requestReport).toHaveBeenCalled());
     expect(vi.mocked(requestReport).mock.calls[0][1]).toMatchObject({ format: "pdf" });
   });
+
+  it("Select parametresini çizer ve seçimi rapor isteğine yansıtır (format ayrıca çizilmez)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getReportCatalog).mockResolvedValue([
+      {
+        key: "attendance.time.daily_status",
+        categoryKey: "time",
+        parameters: [
+          { key: "status", kind: "select", isRequired: true, options: ["late", "absent"] },
+          { key: "format", kind: "select", isRequired: false, options: ["xlsx", "pdf"] },
+        ],
+      },
+    ]);
+    vi.mocked(requestReport).mockResolvedValue({
+      id: "exec-new",
+      reportKey: "attendance.time.daily_status",
+      status: "queued",
+      requestedAt: "2026-09-25T10:00:00Z",
+    });
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: /Günlük durum listeleri/ }));
+
+    expect(screen.getByRole("button", { name: "Rapor oluştur" })).toBeDisabled();
+    await user.click(screen.getAllByLabelText("Durum *")[0]);
+    await user.click(await screen.findByText("Devamsızlar"));
+    await user.click(screen.getByRole("radio", { name: "PDF" }));
+    await user.click(screen.getByRole("button", { name: "Rapor oluştur" }));
+
+    await waitFor(() => expect(requestReport).toHaveBeenCalled());
+    expect(vi.mocked(requestReport).mock.calls[0][1]).toEqual({ status: "absent", format: "pdf" });
+    expect(screen.queryByLabelText(/^Biçim|^format/i)).not.toBeInTheDocument();
+  });
 });

@@ -22,6 +22,7 @@ public static class ReportParameterValidation
                 ReportParameterKind.Month => ValidateInt(descriptor, parameters, 1, 12),
                 ReportParameterKind.DateRange => ValidateDateRange(descriptor, parameters),
                 ReportParameterKind.Boolean => ValidateBool(descriptor, parameters),
+                ReportParameterKind.Select => ValidateSelect(descriptor, parameters),
                 _ => Result.Success(),
             };
 
@@ -89,5 +90,17 @@ public static class ReportParameterValidation
         }
 
         return descriptor.IsRequired && value is null ? Error.Validation(ReportingErrors.ParameterRequired) : Result.Success();
+    }
+
+    private static Result ValidateSelect(ReportParameterDescriptor descriptor, IReadOnlyDictionary<string, string> parameters)
+    {
+        if (!ReportParameters.Has(parameters, descriptor.Key))
+        {
+            return descriptor.IsRequired ? Error.Validation(ReportingErrors.ParameterRequired) : Result.Success();
+        }
+
+        var value = parameters[descriptor.Key].Trim();
+        var allowed = descriptor.Options is null || descriptor.Options.Contains(value, StringComparer.OrdinalIgnoreCase);
+        return allowed ? Result.Success() : Error.Validation(ReportingErrors.ParameterInvalid);
     }
 }
