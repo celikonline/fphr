@@ -12,6 +12,27 @@ export const NOTE_CONTENT_MAX = 512;
 export type EmployeeNoteImportance = "low" | "normal" | "high";
 export const NOTE_IMPORTANCES: EmployeeNoteImportance[] = ["low", "normal", "high"];
 
+export const NOTE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Mirrors EmployeeNoteUploadPolicy: extension and declared content type must agree. */
+const ALLOWED_TYPES_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  txt: "text/plain",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
+
+/** Client-side pre-check of an attachment; null when acceptable. */
+export function validateNoteAttachment(file: File): "size" | "type" | null {
+  if (file.size <= 0 || file.size > NOTE_ATTACHMENT_MAX_BYTES) return "size";
+  const dot = file.name.lastIndexOf(".");
+  const expected = dot > 0 ? ALLOWED_TYPES_BY_EXTENSION[file.name.slice(dot + 1).toLowerCase()] : undefined;
+  return expected && file.type.toLowerCase() === expected ? null : "type";
+}
+
 export interface EmployeeNoteAttachment {
   fileName: string;
   contentType: string;

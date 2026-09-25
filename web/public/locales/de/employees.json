@@ -871,6 +871,12 @@
     "deleted": "Notiz gelöscht.",
     "loadError": "Notizen konnten nicht geladen werden.",
     "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
-    "confirmDelete": "Diese Notiz löschen?"
+    "confirmDelete": "Diese Notiz löschen?",
+    "attachmentFailed": "Notiz gespeichert, Anhang konnte nicht hochgeladen werden — bitte erneut versuchen.",
+    "fileInvalid": {
+      "size": "Die Datei darf höchstens 10 MB groß sein.",
+      "type": "Nur PDF-, PNG-, JPG-, TXT-, DOCX- und XLSX-Dateien können angehängt werden."
+    },
+    "truncated": "Die ersten {{count}} Notizen werden angezeigt."
   }
 }

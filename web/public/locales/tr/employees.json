@@ -871,6 +871,12 @@
     "deleted": "Not silindi.",
     "loadError": "Notlar yüklenemedi.",
     "actionFailed": "İşlem tamamlanamadı.",
-    "confirmDelete": "Bu not silinsin mi?"
+    "confirmDelete": "Bu not silinsin mi?",
+    "attachmentFailed": "Not kaydedildi, ek yüklenemedi — tekrar deneyin.",
+    "fileInvalid": {
+      "size": "Dosya 10 MB'tan büyük olamaz.",
+      "type": "Yalnız PDF, PNG, JPG, TXT, DOCX ve XLSX dosyaları eklenebilir."
+    },
+    "truncated": "İlk {{count}} not gösteriliyor."
   }
 }

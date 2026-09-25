@@ -18,6 +18,7 @@ import {
   Title,
 } from "@mantine/core";
 import { usePermission } from "@/components/permission-guard";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -30,6 +31,7 @@ import {
   listEmployeeNotes,
   updateEmployeeNote,
   uploadNoteAttachment,
+  validateNoteAttachment,
   type EmployeeNote,
   type EmployeeNoteImportance,
 } from "@/services/employee-notes.service";
@@ -48,6 +50,7 @@ export function EmployeeNotesCard({ employeeId }: { employeeId: string }) {
   const queryClient = useQueryClient();
   // undefined = dialog closed, null = creating, note = editing.
   const [editing, setEditing] = useState<EmployeeNote | null | undefined>(undefined);
+  const [deleting, setDeleting] = useState<EmployeeNote | null>(null);
 
   const query = useQuery({
     queryKey: ["employee-notes", employeeId],
@@ -77,6 +80,7 @@ export function EmployeeNotesCard({ employeeId }: { employeeId: string }) {
   if (!canView) return null;
 
   const notes = query.data?.items ?? [];
+  const truncated = (query.data?.totalCount ?? 0) > notes.length;
 
   return (
     <Card withBorder padding="lg">
@@ -97,6 +101,11 @@ export function EmployeeNotesCard({ employeeId }: { employeeId: string }) {
       {query.isSuccess && notes.length === 0 && (
         <Text size="sm" c="dimmed">
           {t("employees:employeeNotes.empty")}
+        </Text>
+      )}
+      {truncated && (
+        <Text size="xs" c="dimmed" mb="xs">
+          {t("employees:employeeNotes.truncated", { count: notes.length })}
         </Text>
       )}
       <Stack gap="sm">
@@ -131,11 +140,7 @@ export function EmployeeNotesCard({ employeeId }: { employeeId: string }) {
                     size="compact-xs"
                     variant="default"
                     color="red"
-                    loading={remove.isPending && remove.variables === note.id}
-                    onClick={() => {
-                      if (window.confirm(t("employees:employeeNotes.confirmDelete")))
-                        remove.mutate(note.id);
-                    }}
+                    onClick={() => setDeleting(note)}
                   >
                     {t("employees:employeeNotes.delete")}
                   </Button>
@@ -145,6 +150,18 @@ export function EmployeeNotesCard({ employeeId }: { employeeId: string }) {
           </Card>
         ))}
       </Stack>
+      <ConfirmModal
+        opened={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title={t("employees:employeeNotes.delete")}
+        message={t("employees:employeeNotes.confirmDelete")}
+        confirmLabel={t("employees:employeeNotes.delete")}
+        danger
+        onConfirm={async () => {
+          if (deleting) await remove.mutateAsync(deleting.id).catch(() => undefined);
+          setDeleting(null);
+        }}
+      />
       {editing !== undefined && (
         <NoteDialog
           employeeId={employeeId}
@@ -171,20 +188,40 @@ interface NoteDialogProps {
 
 function NoteDialog({ employeeId, note, onClose, onSaved, onError }: NoteDialogProps) {
   const { t } = useTranslation(["employees", "common"]);
+  const queryClient = useQueryClient();
+  // Becomes the created note when its attachment upload fails, so a retry updates instead of creating a duplicate.
+  const [current, setCurrent] = useState<EmployeeNote | null>(note);
   const [title, setTitle] = useState(note?.title ?? "");
   const [content, setContent] = useState(note?.content ?? "");
   const [importance, setImportance] = useState<EmployeeNoteImportance>(note?.importance ?? "normal");
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [removeFile, setRemoveFile] = useState(false);
+
+  const pickFile = (picked: File | null) => {
+    const problem = picked ? validateNoteAttachment(picked) : null;
+    setFileError(problem ? t(`employees:employeeNotes.fileInvalid.${problem}`) : null);
+    setFile(picked && !problem ? picked : null);
+  };
 
   const save = useMutation({
     mutationFn: async () => {
       const input = { title: title.trim(), content, importance };
-      const saved = note
-        ? await updateEmployeeNote(note.id, input)
+      const saved = current
+        ? await updateEmployeeNote(current.id, input)
         : await createEmployeeNote(employeeId, input);
-      if (file) await uploadNoteAttachment(saved.id, file);
-      else if (removeFile && note) await deleteNoteAttachment(note.id);
+      setCurrent(saved);
+      if (file) {
+        try {
+          await uploadNoteAttachment(saved.id, file);
+        } catch (error) {
+          setFile(null);
+          void queryClient.invalidateQueries({ queryKey: ["employee-notes", employeeId] });
+          throw new AttachmentUploadError(error);
+        }
+      } else if (removeFile && current?.attachment) {
+        await deleteNoteAttachment(current.id);
+      }
     },
     onSuccess: () => {
       toast({
@@ -194,14 +231,24 @@ function NoteDialog({ employeeId, note, onClose, onSaved, onError }: NoteDialogP
       });
       onSaved();
     },
-    onError,
+    onError: (error) => {
+      if (error instanceof AttachmentUploadError) {
+        toast({
+          variant: "destructive",
+          title: t("common:error"),
+          description: t("employees:employeeNotes.attachmentFailed"),
+        });
+        return;
+      }
+      onError(error);
+    },
   });
 
   return (
     <Modal
       opened
       onClose={onClose}
-      title={t(note ? "employees:employeeNotes.edit" : "employees:employeeNotes.add")}
+      title={t(current ? "employees:employeeNotes.edit" : "employees:employeeNotes.add")}
     >
       <Stack gap="sm">
         <TextInput
@@ -228,18 +275,23 @@ function NoteDialog({ employeeId, note, onClose, onSaved, onError }: NoteDialogP
             label: t(`employees:employeeNotes.importances.${value}`),
           }))}
         />
-        <Input.Wrapper id="employee-note-file" label={t("employees:employeeNotes.attach")}>
+        <Input.Wrapper
+          id="employee-note-file"
+          label={t("employees:employeeNotes.attach")}
+          error={fileError}
+        >
           <Input
             id="employee-note-file"
             type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.txt,.docx,.xlsx"
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              setFile(event.currentTarget.files?.[0] ?? null)
+              pickFile(event.currentTarget.files?.[0] ?? null)
             }
           />
         </Input.Wrapper>
-        {note?.attachment && !file && !removeFile && (
+        {current?.attachment && !file && !removeFile && (
           <Group gap="xs">
-            <Text size="sm">{note.attachment.fileName}</Text>
+            <Text size="sm">{current.attachment.fileName}</Text>
             <Button size="compact-xs" variant="default" onClick={() => setRemoveFile(true)}>
               {t("employees:employeeNotes.removeAttachment")}
             </Button>
@@ -249,11 +301,22 @@ function NoteDialog({ employeeId, note, onClose, onSaved, onError }: NoteDialogP
           <Button variant="default" onClick={onClose}>
             {t("employees:employeeNotes.cancel")}
           </Button>
-          <Button onClick={() => save.mutate()} disabled={!title.trim()} loading={save.isPending}>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={!title.trim() || save.isPending}
+            loading={save.isPending}
+          >
             {t("employees:employeeNotes.save")}
           </Button>
         </Group>
       </Stack>
     </Modal>
   );
+}
+
+/** Marks a failure of the attachment step after the note itself was already saved. */
+class AttachmentUploadError extends Error {
+  constructor(readonly cause: unknown) {
+    super("attachment upload failed");
+  }
 }

@@ -871,6 +871,12 @@
     "deleted": "Note deleted.",
     "loadError": "Notes could not be loaded.",
     "actionFailed": "The action could not be completed.",
-    "confirmDelete": "Delete this note?"
+    "confirmDelete": "Delete this note?",
+    "attachmentFailed": "Note saved, but the attachment could not be uploaded — try again.",
+    "fileInvalid": {
+      "size": "The file cannot be larger than 10 MB.",
+      "type": "Only PDF, PNG, JPG, TXT, DOCX and XLSX files can be attached."
+    },
+    "truncated": "Showing the first {{count}} notes."
   }
 }

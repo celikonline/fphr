@@ -10,6 +10,7 @@ import trCommon from "../../../public/locales/tr/common.json";
 import { EmployeeNotesCard } from "./employee-notes-card";
 import {
   createEmployeeNote,
+  updateEmployeeNote,
   uploadNoteAttachment,
   type EmployeeNote,
 } from "@/services/employee-notes.service";
@@ -51,7 +52,7 @@ vi.mock("@/services/employee-notes.service", async () => {
       hasPrevious: false,
     }),
     createEmployeeNote: vi.fn().mockResolvedValue({ ...NOTE, id: "n2" }),
-    updateEmployeeNote: vi.fn(),
+    updateEmployeeNote: vi.fn().mockResolvedValue({ ...NOTE, id: "n2" }),
     deleteEmployeeNote: vi.fn(),
     uploadNoteAttachment: vi.fn().mockResolvedValue({ ...NOTE, id: "n2" }),
     deleteNoteAttachment: vi.fn(),
@@ -111,6 +112,7 @@ describe("EmployeeNotesCard", () => {
     permissions.granted = new Set(["employee.notes.view", "employee.notes.manage"]);
     vi.mocked(createEmployeeNote).mockClear();
     vi.mocked(uploadNoteAttachment).mockClear();
+    vi.mocked(updateEmployeeNote).mockClear();
   });
 
   it("notes_hidden_without_permission", () => {
@@ -144,5 +146,37 @@ describe("EmployeeNotesCard", () => {
       })
     );
     await waitFor(() => expect(uploadNoteAttachment).toHaveBeenCalledWith("n2", file));
+  });
+
+  it("retry after a failed attachment updates the created note instead of creating another", async () => {
+    vi.mocked(uploadNoteAttachment).mockRejectedValueOnce(new Error("boom"));
+    const user = userEvent.setup();
+    renderCard();
+    await screen.findByText("Performans görüşmesi");
+    await user.click(screen.getByRole("button", { name: "Not ekle" }));
+    await user.type(await screen.findByLabelText(/^Başlık/), "Yeni not");
+    await user.upload(
+      screen.getByLabelText("Dosya ekle"),
+      new File(["x"], "rapor.pdf", { type: "application/pdf" })
+    );
+    await user.click(screen.getByRole("button", { name: "Kaydet" }));
+    await waitFor(() => expect(uploadNoteAttachment).toHaveBeenCalledTimes(1));
+    await user.click(await screen.findByRole("button", { name: "Kaydet" }));
+    await waitFor(() => expect(updateEmployeeNote).toHaveBeenCalledWith("n2", expect.anything()));
+    expect(createEmployeeNote).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an oversized or disallowed attachment before upload", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    renderCard();
+    await screen.findByText("Performans görüşmesi");
+    await user.click(screen.getByRole("button", { name: "Not ekle" }));
+    const input = await screen.findByLabelText("Dosya ekle");
+    const big = new File(["x"], "büyük.pdf", { type: "application/pdf" });
+    Object.defineProperty(big, "size", { value: 11 * 1024 * 1024 });
+    await user.upload(input, big);
+    expect(await screen.findByText(/10 MB/)).toBeTruthy();
+    await user.upload(input, new File(["x"], "virus.exe", { type: "application/x-msdownload" }));
+    expect(await screen.findByText(/Yalnız PDF/)).toBeTruthy();
   });
 });
