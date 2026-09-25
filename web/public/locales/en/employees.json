@@ -851,7 +851,8 @@
     "clear": "Clear selection",
     "empty": "No employees match the filter.",
     "loadMore": "Show more",
-    "confirm": "Confirm selection"
+    "confirm": "Confirm selection",
+    "overLimit": "At most {{max}} invitees can be selected; currently {{count}}."
   },
   "onboardingCard": {
     "title": "Onboarding / offboarding process",

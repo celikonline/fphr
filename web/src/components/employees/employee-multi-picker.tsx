@@ -19,6 +19,8 @@ interface EmployeeMultiPickerProps {
   onConfirm: (selection: EmployeeSelection) => void;
   /** Filter the picker starts with. */
   initialFilter?: EmployeeFilter;
+  /** Optional cap: shows a live "count/max" warning and disables confirm while the selection exceeds it. */
+  maxSelection?: number;
 }
 
 /**
@@ -26,7 +28,7 @@ interface EmployeeMultiPickerProps {
  * "select all matching" (filter + excluded ids). Explicit picks survive filter changes; a
  * "select all" is tied to its filter, so changing the filter resets it.
  */
-export default function EmployeeMultiPicker({ onConfirm, initialFilter }: EmployeeMultiPickerProps) {
+export default function EmployeeMultiPicker({ onConfirm, initialFilter, maxSelection }: EmployeeMultiPickerProps) {
   const { t } = useTranslation(["employees", "common"]);
   const [filter, setFilter] = useState<EmployeeFilter>(initialFilter ?? {});
   const [debouncedFilter, setDebouncedFilter] = useState(filter);
@@ -89,6 +91,8 @@ export default function EmployeeMultiPicker({ onConfirm, initialFilter }: Employ
     });
   }
 
+  const overLimit = maxSelection !== undefined && selectedCount > maxSelection;
+
   function confirm() {
     if (selectedCount === 0) return;
     onConfirm(
@@ -146,9 +150,14 @@ export default function EmployeeMultiPicker({ onConfirm, initialFilter }: Employ
           </Button>
         )}
       </Paper>
+      {overLimit && (
+        <Text size="sm" c="red" role="alert" data-testid="multi-picker-limit">
+          {t("employees:multiPicker.overLimit", { max: maxSelection, count: selectedCount })}
+        </Text>
+      )}
       <Group justify="space-between">
         <Group gap="xs">
-          <Badge variant="light">
+          <Badge variant="light" color={overLimit ? "red" : undefined}>
             {selection.mode === "all"
               ? t("employees:multiPicker.allSelectedExcluding", { count: selection.excluded.size })
               : t("employees:multiPicker.selectedCount", { count: selectedCount })}
@@ -157,7 +166,7 @@ export default function EmployeeMultiPicker({ onConfirm, initialFilter }: Employ
             {t("employees:multiPicker.clear")}
           </Button>
         </Group>
-        <Button disabled={selectedCount === 0} onClick={confirm}>
+        <Button disabled={selectedCount === 0 || overLimit} onClick={confirm}>
           {t("employees:multiPicker.confirm")}
         </Button>
       </Group>

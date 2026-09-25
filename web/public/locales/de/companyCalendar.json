@@ -28,10 +28,48 @@
     "type": "Typ",
     "visibility": "Sichtbarkeit",
     "visibilityAll": "Ganzes Unternehmen",
-    "visibilityOrgUnit": "Eine bestimmte Einheit"
+    "visibilityOrgUnit": "Eine bestimmte Einheit",
+    "category": "Veranstaltungskategorie",
+    "categoryNone": "Keine Kategorie",
+    "allDay": "Ganztägig",
+    "startsAt": "Beginn",
+    "endsAt": "Ende",
+    "mode": "Veranstaltungsform",
+    "location": "Ort",
+    "onlineUrl": "Online-Link",
+    "invitees": "Eingeladene",
+    "inviteeCount": "{{count}} Eingeladene",
+    "selectInvitees": "Eingeladene auswählen",
+    "clearInvitees": "Leeren",
+    "notifyInvitees": "Eingeladene benachrichtigen"
   },
   "errors": {
     "titleRequired": "Ein Veranstaltungstitel ist erforderlich.",
-    "generic": "Die Veranstaltung konnte nicht gespeichert werden."
-  }
+    "generic": "Die Veranstaltung konnte nicht gespeichert werden.",
+    "locationRequired": "Für Veranstaltungen vor Ort ist ein Ort erforderlich.",
+    "onlineUrlRequired": "Für Online-Veranstaltungen ist ein gültiger http(s)-Link erforderlich.",
+    "endsBeforeStarts": "Das Ende darf nicht vor dem Beginn liegen.",
+    "tooManyInvitees": "Es können höchstens {{max}} Eingeladene ausgewählt werden; aktuell {{count}}.",
+    "noInvitees": "Die Auswahl enthält keine Mitarbeitenden."
+  },
+  "edit": "Veranstaltung bearbeiten",
+  "updated": "Veranstaltung aktualisiert.",
+  "mode": {
+    "none": "Nicht angegeben",
+    "onsite": "Vor Ort",
+    "online": "Online"
+  },
+  "categories": {
+    "manage": "Kategorien verwalten",
+    "add": "Kategorie hinzufügen",
+    "name": "Kategoriename",
+    "color": "Farbe",
+    "save": "Kategorie speichern",
+    "cancel": "Abbrechen",
+    "edit": "Kategorie {{name}} bearbeiten",
+    "delete": "Kategorie {{name}} löschen",
+    "genericError": "Die Kategorieaktion konnte nicht abgeschlossen werden."
+  },
+  "editEvent": "Veranstaltung bearbeiten: {{name}}",
+  "deleteEvent": "Veranstaltung löschen: {{name}}"
 }
