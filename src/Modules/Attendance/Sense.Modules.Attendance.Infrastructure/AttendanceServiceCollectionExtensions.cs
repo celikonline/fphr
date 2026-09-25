@@ -60,7 +60,8 @@ public static class AttendanceServiceCollectionExtensions
         // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
         services.AddScoped<NonWorkingDayResolver>();
         services.AddScoped<IRotationRepository, RotationRepository>();
-        services.AddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        // TryAdd: başka şerit de kaydederse birleşmede çift kayıt olmaz.
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>(services);
         return services;
     }
 

@@ -6,7 +6,7 @@ namespace Sense.Modules.Attendance.Application.Rotations;
 /// <summary>Hazır kalıbın döngü uzunluğu ve adımları; <see cref="RotationPattern.Create"/> girdisi olarak kullanılır.</summary>
 public sealed record RotationPresetDefinition(RotationPreset Preset, int CycleLengthDays, IReadOnlyList<RotationStep> Steps);
 
-/// <summary>Hazır rotasyon kalıpları (karar): dinlenme günleri <see cref="ShiftDayType.RestDay"/>, vardiyalar slot sırasıyla verilir.</summary>
+/// <summary>Hazır rotasyon kalıpları (karar): dinlenme günleri <see cref="ShiftDayType.WeeklyRest"/>, vardiyalar slot sırasıyla verilir.</summary>
 public static class RotationPresets
 {
     /// <summary>2×12: [gündüz, gece, dinlenme, dinlenme] - döngü 4.</summary>
@@ -31,7 +31,7 @@ public static class RotationPresets
 
         for (var i = 0; i < restDays; i++)
         {
-            steps.Add(RotationStep.Of(steps.Count, null, ShiftDayType.RestDay));
+            steps.Add(RotationStep.Of(steps.Count, null, ShiftDayType.WeeklyRest));
         }
 
         return new RotationPresetDefinition(preset, steps.Count, steps);

@@ -30,7 +30,7 @@ public sealed class RotationExpanderTests
 
         days.Select(d => (d.ShiftDefinitionId, d.DayType)).ToList().ShouldBe(
         [
-            ((Guid?)Day, ShiftDayType.Work), (Night, ShiftDayType.Work), (null, ShiftDayType.RestDay), (null, ShiftDayType.RestDay), (Day, ShiftDayType.Work),
+            ((Guid?)Day, ShiftDayType.Work), (Night, ShiftDayType.Work), (null, ShiftDayType.WeeklyRest), (null, ShiftDayType.WeeklyRest), (Day, ShiftDayType.Work),
         ]);
     }
 
@@ -40,7 +40,7 @@ public sealed class RotationExpanderTests
         var days = RotationExpander.Expand(Pattern(RotationPresets.ThreeByEight(Day, Evening, Night)), Start, 0, Start, Start.AddDays(3));
 
         days.Select(d => d.ShiftDefinitionId).ToList().ShouldBe([Day, Evening, Night, null]);
-        days[3].DayType.ShouldBe(ShiftDayType.RestDay);
+        days[3].DayType.ShouldBe(ShiftDayType.WeeklyRest);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public sealed class RotationExpanderTests
         var days = RotationExpander.Expand(Pattern(RotationPresets.TwoByTwelve(Day, Night)), Start, 1, Start, Start.AddDays(1));
 
         days[0].ShiftDefinitionId.ShouldBe(Night);
-        days[1].DayType.ShouldBe(ShiftDayType.RestDay);
+        days[1].DayType.ShouldBe(ShiftDayType.WeeklyRest);
     }
 
     [Fact]
@@ -128,7 +128,8 @@ public sealed class ApplyRotationHandlerTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.CreatedCount.ShouldBe(2);
         result.Value.SkippedLockedMonths.ShouldBe(["2026-08"]);
-        _shifts.Received(2).Add(Arg.Is<ShiftAssignment>(a => a.Status == ShiftAssignmentStatus.Draft && a.Date.Month == 9 && a.DayType == ShiftDayType.RestDay));
+        _shifts.Received(2).Add(Arg.Is<ShiftAssignment>(a => a.Status == ShiftAssignmentStatus.Draft && a.Date.Month == 9 && a.DayType == ShiftDayType.WeeklyRest));
+        result.Value.SkippedPublishedDates.ShouldBeEmpty();
         _rotations.Received(1).AddAssignment(Arg.Any<RotationAssignment>());
     }
 
@@ -158,5 +159,51 @@ public sealed class ApplyRotationHandlerTests
         result.Error.Args!["employee"].ShouldBe("Ayşe Yılmaz");
         _rotations.DidNotReceive().AddAssignment(Arg.Any<RotationAssignment>());
         _shifts.DidNotReceive().Add(Arg.Any<ShiftAssignment>());
+    }
+
+    [Fact]
+    public async Task Apply_writes_weeklyrest_dayType_without_hours_for_off_steps()
+    {
+        var result = await CreateHandler().Handle(
+            new ApplyRotationCommand(_pattern.Id, [_employeeId], Start, Start.AddDays(1), 2), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _shifts.Received(2).Add(Arg.Is<ShiftAssignment>(a =>
+            a.DayType == ShiftDayType.WeeklyRest && a.ShiftDefinitionId == null && a.ShiftMinutes == 0 && a.Start == a.End && a.BreakMinutes == 0));
+    }
+
+    [Fact]
+    public async Task Apply_reports_published_days_as_skipped_not_created()
+    {
+        var published = ShiftAssignment.Create(_tenantId, _employeeId, Start, new TimeOnly(9, 0), new TimeOnly(17, 0), 0, false, null).Value;
+        published.Publish(DateTime.UtcNow);
+        _shifts.ListForRangeAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>())
+            .Returns(new List<ShiftAssignment> { published });
+
+        var result = await CreateHandler().Handle(
+            new ApplyRotationCommand(_pattern.Id, [_employeeId], Start, Start.AddDays(1), 0), TestContext.Current.CancellationToken);
+
+        result.Value.CreatedCount.ShouldBe(1);
+        result.Value.SkippedPublishedDates.ShouldBe(["2026-08-30"]);
+    }
+
+    [Fact]
+    public async Task Overlap_message_lists_up_to_five_names_then_plus_n()
+    {
+        var ids = Enumerable.Range(0, 7).Select(_ => Guid.NewGuid()).ToList();
+        foreach (var id in ids)
+        {
+            _lookup.ExistsActiveAsync(_tenantId, id, Arg.Any<CancellationToken>()).Returns(true);
+        }
+
+        _rotations.ListAssignmentsOverlappingAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>())
+            .Returns(ids.Select(id => RotationAssignment.Create(_tenantId, id, _pattern.Id, Start, null, 0).Value).ToList());
+        _directory.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(ids.Select((id, i) => new EmployeeContact(id, "Ad" + i, "Soyad", null, null, null, "active")).ToList());
+
+        var result = await CreateHandler().Handle(
+            new ApplyRotationCommand(_pattern.Id, ids, Start, Start.AddDays(3), 0), TestContext.Current.CancellationToken);
+
+        result.Error.Args!["employee"].ShouldBe("Ad0 Soyad, Ad1 Soyad, Ad2 Soyad, Ad3 Soyad, Ad4 Soyad +2");
     }
 }

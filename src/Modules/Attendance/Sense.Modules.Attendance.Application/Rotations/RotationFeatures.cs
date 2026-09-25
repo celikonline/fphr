@@ -19,13 +19,13 @@ public static class RotationErrors
     public const string AssignmentOverlap = "attendance.rotation_assignment.overlap";
 }
 
-/// <summary>Adım DTO'su: <c>DayType</c> web sözleşmesinde yalnız "work" | "off" (off = <see cref="ShiftDayType.RestDay"/>).</summary>
+/// <summary>Adım DTO'su: <c>DayType</c> web sözleşmesinde yalnız "work" | "off" (off = <see cref="ShiftDayType.WeeklyRest"/>).</summary>
 public sealed record RotationStepDto(int DayOffset, Guid? ShiftDefinitionId, string DayType);
 
 public sealed record RotationPatternDto(
     Guid Id, string Code, string Name, RotationPreset Preset, int CycleLengthDays, IReadOnlyList<RotationStepDto> Steps, bool IsActive);
 
-public sealed record ApplyRotationResult(int CreatedCount, IReadOnlyList<string> SkippedLockedMonths);
+public sealed record ApplyRotationResult(int CreatedCount, IReadOnlyList<string> SkippedLockedMonths, IReadOnlyList<string> SkippedPublishedDates);
 
 internal static class RotationMapper
 {
@@ -49,7 +49,7 @@ internal static class RotationMapper
             var dayType = dto.DayType switch
             {
                 WorkDayType => (ShiftDayType?)ShiftDayType.Work,
-                OffDayType => ShiftDayType.RestDay,
+                OffDayType => ShiftDayType.WeeklyRest,
                 _ => null,
             };
             if (dayType is null || (dayType == ShiftDayType.Work && dto.ShiftDefinitionId is null))
@@ -205,10 +205,13 @@ public sealed class ApplyRotationHandler(
     IShiftPlanLockRepository locks, IEmployeeLookup employeeLookup, IEmployeeDirectory directory, IDataScopeService dataScope)
     : ICommandHandler<ApplyRotationCommand, ApplyRotationResult>
 {
+    /// <summary>
+    /// Bitiş tarihi verilmeyen (süresiz) atamada taslak vardiyaların üretileceği gün sayısı (başlangıçtan itibaren).
+    /// Süresiz atama kaydı kalır; sonrasını üretmek için kalıp yeniden uygulanmaz, ileriki tarihler ayrıca planlanmalıdır.
+    /// </summary>
     public const int OpenEndedHorizonDays = 90;
 
-    private static readonly TimeOnly OffDayStart = new(0, 0);
-    private static readonly TimeOnly OffDayEnd = new(0, 1);
+    private const int OverlapNamesShown = 5;
 
     public async Task<Result<ApplyRotationResult>> Handle(ApplyRotationCommand command, CancellationToken cancellationToken)
     {
@@ -266,6 +269,7 @@ public sealed class ApplyRotationHandler(
         var existing = (await shifts.ListForRangeAsync(command.StartDate, horizonEnd, employeeIds, cancellationToken))
             .ToDictionary(a => (a.EmployeeId, a.Date));
 
+        var skippedPublished = new List<string>();
         var planned = new List<(Guid EmployeeId, DateOnly Date, Guid? ShiftId, ShiftDayType DayType, ShiftDefinition? Definition)>();
         foreach (var employeeId in employeeIds)
         {
@@ -273,6 +277,12 @@ public sealed class ApplyRotationHandler(
             {
                 if (existing.TryGetValue((employeeId, day.Date), out var current) && current.Status == ShiftAssignmentStatus.Published)
                 {
+                    var text = day.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+                    if (!skippedPublished.Contains(text))
+                    {
+                        skippedPublished.Add(text);
+                    }
+
                     continue;
                 }
 
@@ -296,7 +306,7 @@ public sealed class ApplyRotationHandler(
             shifts.Add(created);
         }
 
-        return new ApplyRotationResult(planned.Count, skippedMonths);
+        return new ApplyRotationResult(planned.Count, skippedMonths, skippedPublished);
     }
 
     private Result<List<ShiftAssignment>> BuildAssignments(
@@ -306,44 +316,58 @@ public sealed class ApplyRotationHandler(
         var toAdd = new List<ShiftAssignment>();
         foreach (var (employeeId, date, shiftId, dayType, definition) in planned)
         {
-            var (start, end, breakMinutes, isNight) = TimesOf(definition);
-            if (existing.TryGetValue((employeeId, date), out var current))
+            existing.TryGetValue((employeeId, date), out var current);
+            var applied = current is null
+                ? CreateAssignment(employeeId, date, shiftId, dayType, definition)
+                : UpdateAssignment(current, shiftId, dayType, definition);
+            if (applied.IsFailure)
             {
-                var updated = current.Update(start, end, breakMinutes, isNight, current.Note);
-                var plan = updated.IsSuccess ? current.SetPlan(shiftId, dayType) : updated;
-                if (plan.IsFailure)
-                {
-                    return plan.Error;
-                }
-
-                continue;
+                return applied.Error;
             }
 
-            var created = ShiftAssignment.Create(tenant.TenantId, employeeId, date, start, end, breakMinutes, isNight, null);
-            if (created.IsFailure)
+            if (current is null)
             {
-                return created.Error;
+                toAdd.Add(applied.Value);
             }
-
-            var planned2 = created.Value.SetPlan(shiftId, dayType);
-            if (planned2.IsFailure)
-            {
-                return planned2.Error;
-            }
-
-            toAdd.Add(created.Value);
         }
 
         return toAdd;
     }
 
-    private static (TimeOnly Start, TimeOnly End, int BreakMinutes, bool IsNight) TimesOf(ShiftDefinition? definition)
+    private Result<ShiftAssignment> CreateAssignment(Guid employeeId, DateOnly date, Guid? shiftId, ShiftDayType dayType, ShiftDefinition? definition)
     {
         if (definition is null)
         {
-            return (OffDayStart, OffDayEnd, 0, false);
+            return ShiftAssignment.CreateDayOff(tenant.TenantId, employeeId, date, dayType);
         }
 
+        var (start, end, breakMinutes, isNight) = TimesOf(definition);
+        var created = ShiftAssignment.Create(tenant.TenantId, employeeId, date, start, end, breakMinutes, isNight, null);
+        if (created.IsFailure)
+        {
+            return created;
+        }
+
+        var planned = created.Value.SetPlan(shiftId, dayType);
+        return planned.IsFailure ? planned.Error : created;
+    }
+
+    private static Result<ShiftAssignment> UpdateAssignment(ShiftAssignment current, Guid? shiftId, ShiftDayType dayType, ShiftDefinition? definition)
+    {
+        if (definition is null)
+        {
+            var off = current.ApplyDayOff(dayType);
+            return off.IsFailure ? off.Error : current;
+        }
+
+        var (start, end, breakMinutes, isNight) = TimesOf(definition);
+        var updated = current.Update(start, end, breakMinutes, isNight, current.Note);
+        var plan = updated.IsSuccess ? current.SetPlan(shiftId, dayType) : updated;
+        return plan.IsFailure ? plan.Error : current;
+    }
+
+    private static (TimeOnly Start, TimeOnly End, int BreakMinutes, bool IsNight) TimesOf(ShiftDefinition definition)
+    {
         var start = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(definition.StartMinute));
         var end = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(definition.EndMinute));
         if (start == end && definition.DurationMinutes is { } duration)
@@ -404,9 +428,17 @@ public sealed class ApplyRotationHandler(
             return Result.Success();
         }
 
-        var conflicting = overlapping[0].EmployeeId;
-        var contacts = await directory.GetContactsAsync(tenant.TenantId, [conflicting], cancellationToken);
-        var name = contacts.Count > 0 ? $"{contacts[0].FirstName} {contacts[0].LastName}".Trim() : conflicting.ToString();
+        var conflicting = overlapping.Select(o => o.EmployeeId).Distinct().ToList();
+        var contacts = (await directory.GetContactsAsync(tenant.TenantId, conflicting, cancellationToken)).ToDictionary(c => c.EmployeeId);
+        var names = conflicting
+            .Select(id => contacts.TryGetValue(id, out var c) ? $"{c.FirstName} {c.LastName}".Trim() : id.ToString())
+            .ToList();
+        var name = string.Join(", ", names.Take(OverlapNamesShown));
+        if (names.Count > OverlapNamesShown)
+        {
+            name += $" +{names.Count - OverlapNamesShown}";
+        }
+
         return Error.Conflict(RotationErrors.AssignmentOverlap, ("employee", name));
     }
 }
