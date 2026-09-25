@@ -384,6 +384,12 @@ public sealed class PunchRequestRepository(AttendanceDbContext context) : IPunch
             .Where(r => r.EmployeeId == employeeId && r.WorkDate >= from && r.WorkDate <= to)
             .OrderBy(r => r.WorkDate).ThenBy(r => r.OccurredAtUtc)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PunchRequest>> ListAsync(PunchRequestStatus? status, CancellationToken cancellationToken = default) =>
+        await context.PunchRequests
+            .Where(r => status == null || r.Status == status)
+            .OrderByDescending(r => r.OccurredAtUtc)
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class ShiftPlanTemplateRepository(AttendanceDbContext context) : IShiftPlanTemplateRepository

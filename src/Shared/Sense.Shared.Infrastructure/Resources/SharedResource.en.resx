@@ -1591,4 +1591,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>The month is closed, so a missing punch request cannot be created.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>A pending missing punch request for the same time already exists.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Only the requesting employee can cancel the request.</value></data>
 </root>

@@ -1600,4 +1600,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>Bu ay kapatıldığı için eksik kayıt talebi oluşturulamaz.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>Aynı zamana ait bekleyen bir eksik kayıt talebi zaten var.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Yalnız talebi oluşturan çalışan iptal edebilir.</value></data>
 </root>

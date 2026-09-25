@@ -184,6 +184,9 @@ public interface IPunchRequestRepository
     Task<PunchRequests.PunchRequest?> FindByApprovalRequestIdAsync(Guid approvalRequestId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<PunchRequests.PunchRequest>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Yönetici listesi: tenant'ın talepleri, isteğe bağlı durum süzgeciyle, en yeni önce.</summary>
+    Task<IReadOnlyList<PunchRequests.PunchRequest>> ListAsync(PunchRequests.PunchRequestStatus? status, CancellationToken cancellationToken = default);
 }
 
 public interface IShiftPlanTemplateRepository
