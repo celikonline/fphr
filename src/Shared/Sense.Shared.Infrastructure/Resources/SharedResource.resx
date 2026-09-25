@@ -1577,6 +1577,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>Fazla mesai en az/en çok süreleri geçersiz.</value></data>
   <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>Mola tanımı geçersiz.</value></data>
   <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>Gün türü geçersiz.</value></data>
+  <data name="attendance.shift.definition_required" xml:space="preserve"><value>Çalışma günü için vardiya tanımı seçilmelidir.</value></data>
   <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Eksik kayıt talebi bulunamadı.</value></data>
   <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>Eksik kayıt talebi için gerekçe zorunludur (en fazla 1000 karakter).</value></data>
   <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>Talep yönü giriş ya da çıkış olmalıdır.</value></data>
@@ -1600,4 +1601,55 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="import.template.shiftplan.name" xml:space="preserve"><value>Vardiya planı</value></data>
+  <data name="import.template.shiftplan.description" xml:space="preserve"><value>Çalışanların günlük vardiya planını (vardiya kodu ya da hafta tatili/dinlenme/resmi tatil) toplu yükleyin.</value></data>
+  <data name="import.template.shiftplan.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; aynı çalışan ve gün için tekrar yüklenen satır önceki planın üzerine yazar.</value></data>
+  <data name="import.template.shiftplan.instruction.code" xml:space="preserve"><value>Vardiya kodu sütunu açılır listedir: vardiya tanımı kodlarından ya da WEEKLY_REST, REST_DAY, PUBLIC_HOLIDAY değerlerinden birini seçin.</value></data>
+  <data name="import.template.shiftplan.instruction.locked" xml:space="preserve"><value>Kilitli aydaki günler ve yayınlanmış vardiyalar değiştirilmez; bu satırlar hatalı sayılır.</value></data>
+  <data name="import.template.shiftplan.sample.valid" xml:space="preserve"><value>Doğru: tanımlı bir vardiya kodu.</value></data>
+  <data name="import.template.shiftplan.sample.rest" xml:space="preserve"><value>Doğru: hafta tatili günü.</value></data>
+  <data name="import.template.shiftplan.sample.invalid_code" xml:space="preserve"><value>Hatalı: tanımlı olmayan vardiya kodu.</value></data>
+  <data name="import.column.shiftplan.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.shiftplan.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.shiftplan.date" xml:space="preserve"><value>Tarih</value></data>
+  <data name="import.column.shiftplan.date.description" xml:space="preserve"><value>Plan günü (GG.AA.YYYY).</value></data>
+  <data name="import.column.shiftplan.shiftCode" xml:space="preserve"><value>Vardiya kodu</value></data>
+  <data name="import.column.shiftplan.shiftCode.description" xml:space="preserve"><value>Vardiya tanımı kodu ya da WEEKLY_REST / REST_DAY / PUBLIC_HOLIDAY.</value></data>
+  <data name="documents.sharedfile_types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="shared_file_type.not_found" xml:space="preserve"><value>Paylaşılan dosya tipi bulunamadı.</value></data>
+  <data name="shared_file_type.name_required" xml:space="preserve"><value>Paylaşılan dosya tipi adı zorunludur.</value></data>
+  <data name="shared_file_type.name_too_long" xml:space="preserve"><value>Paylaşılan dosya tipi adı en fazla 100 karakter olabilir.</value></data>
+  <data name="shared_file_type.name_taken" xml:space="preserve"><value>Bu adla bir paylaşılan dosya tipi zaten var.</value></data>
+  <data name="shared_file_type.inactive" xml:space="preserve"><value>Pasif bir paylaşılan dosya tipi seçilemez.</value></data>
+  <data name="shared_company_file.nothing_to_download" xml:space="preserve"><value>İndirilecek, görüntüleme yetkiniz olan bir dosya bulunamadı.</value></data>
+  <data name="shared_company_file.zip_too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya indirilebilir.</value></data>
+  <data name="payslip_import.files_required" xml:space="preserve"><value>En az bir PDF veya zip dosyası yükleyin.</value></data>
+  <data name="payslip_import.too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya yüklenebilir.</value></data>
+  <data name="company_event.ends_before_starts" xml:space="preserve"><value>Bitiş, başlangıçtan önce olamaz.</value></data>
+  <data name="company_event.online_url_required" xml:space="preserve"><value>Online etkinlik için geçerli bir http(s) bağlantısı gereklidir.</value></data>
+  <data name="company_event.location_required" xml:space="preserve"><value>Yüz yüze etkinlik için konum gereklidir.</value></data>
+  <data name="company_event.location_too_long" xml:space="preserve"><value>Konum 300 karakteri aşamaz.</value></data>
+  <data name="company_event.category_not_found" xml:space="preserve"><value>Seçilen etkinlik kategorisi bulunamadı.</value></data>
+  <data name="company_event.invitee_not_found" xml:space="preserve"><value>Davetlilerden biri veya birkaçı bulunamadı.</value></data>
+  <data name="company_event_category.name_required" xml:space="preserve"><value>Kategori adı gereklidir ve 60 karakteri aşamaz.</value></data>
+  <data name="company_event_category.color_invalid" xml:space="preserve"><value>Renk #RRGGBB biçiminde olmalıdır.</value></data>
+  <data name="company_event_category.in_use" xml:space="preserve"><value>Bu kategori etkinliklerde kullanıldığı için silinemez.</value></data>
+  <data name="company_event_category.duplicate_name" xml:space="preserve"><value>Bu adla bir kategori zaten var.</value></data>
+  <data name="onboarding.category_not_found" xml:space="preserve"><value>Kategori bulunamadı.</value></data>
+  <data name="onboarding_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
+  <data name="onboarding_category.name_too_long" xml:space="preserve"><value>Kategori adı 100 karakteri aşamaz.</value></data>
+  <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Şablon seti bulunamadı.</value></data>
+  <data name="onboarding_template_set.name_required" xml:space="preserve"><value>Şablon seti adı zorunludur.</value></data>
+  <data name="onboarding_template_set.name_too_long" xml:space="preserve"><value>Şablon seti adı 150 karakteri aşamaz.</value></data>
+  <data name="onboarding_template_set.empty" xml:space="preserve"><value>Şablon seti en az bir görev şablonu içermelidir.</value></data>
+  <data name="onboarding_template_set.inactive" xml:space="preserve"><value>Şablon seti pasif.</value></data>
+  <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>Set yalnızca aynı aşamadaki mevcut görev şablonlarını içerebilir.</value></data>
+  <data name="onboarding_template_set.already_started" xml:space="preserve"><value>Bu şablon seti çalışan için zaten başlatılmış.</value></data>
+  <data name="onboarding.category_in_use" xml:space="preserve"><value>Kategori bir veya daha fazla görev şablonunda kullanıldığı için silinemez.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>Bu ay kapatıldığı için eksik kayıt talebi oluşturulamaz.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>Aynı zamana ait bekleyen bir eksik kayıt talebi zaten var.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Yalnız talebi oluşturan çalışan iptal edebilir.</value></data>
+  <data name="attendance.rotation.code_duplicate" xml:space="preserve"><value>Bu rotasyon kodu zaten kullanılıyor.</value></data>
+  <data name="attendance.rotation.inactive" xml:space="preserve"><value>Pasif rotasyon çalışanlara uygulanamaz.</value></data>
+  <data name="attendance.rotation_assignment.overlap" xml:space="preserve"><value>{employee} için bu tarih aralığında zaten bir rotasyon ataması var.</value></data>
 </root>

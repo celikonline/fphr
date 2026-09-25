@@ -96,7 +96,7 @@ export default function EmployeeMultiPicker({ onConfirm, initialFilter }: Employ
         ? { employeeIds: [...selection.picked.keys()], filter: null, excludedEmployeeIds: null }
         : {
             employeeIds: null,
-            filter: { ...debouncedFilter, includeTerminated: debouncedFilter.includeTerminated ?? null },
+            filter: { ...debouncedFilter, includeTerminated: debouncedFilter.includeTerminated ?? false },
             excludedEmployeeIds: [...selection.excluded],
           }
     );

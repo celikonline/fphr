@@ -201,5 +201,67 @@
       "gross": "Brüt",
       "net": "Net"
     }
+  },
+  "myPayslips": {
+    "title": "Bordrolarım",
+    "empty": "Henüz yayınlanmış bir bordronuz yok.",
+    "actionError": "İşlem tamamlanamadı.",
+    "acknowledge": "Onayla",
+    "object": "İtiraz et",
+    "objectTitle": "Bordroya itiraz",
+    "reasonLabel": "İtiraz gerekçesi",
+    "reasonRequired": "Gerekçe zorunludur.",
+    "submitObjection": "İtirazı gönder",
+    "columns": {
+      "period": "Dönem",
+      "gross": "Brüt ücret",
+      "net": "Net ücret",
+      "status": "Durum"
+    },
+    "state": {
+      "awaiting": "Onay bekliyor",
+      "acknowledged": "Onaylandı",
+      "pending": "İtiraz inceleniyor",
+      "accepted": "İtiraz kabul edildi",
+      "rejected": "İtiraz reddedildi"
+    },
+    "pendingHint": "İtirazınız inceleniyor"
+  },
+  "payslipImport": {
+    "title": "Dış bordro PDF yükleme",
+    "subtitle": "Dışarıda hazırlanan bordro PDF'lerini (veya zip) sicil numarasına göre çalışan belgelerine dağıtın.",
+    "formatHint": "Dosya adı biçimi: <sicil>_<YYYY-MM>.pdf (ör. 1001_2026-08.pdf). Zip içindeki PDF'ler de işlenir.",
+    "selectFiles": "Dosya seç",
+    "selected": "{{count}} dosya seçildi",
+    "upload": "Yükle ve dağıt",
+    "uploading": "Yükleniyor...",
+    "summary": "{{imported}} / {{total}} dosya çalışan belgesine eklendi.",
+    "uploadFailed": "Yükleme başarısız.",
+    "columns": {
+      "file": "Dosya",
+      "status": "Durum",
+      "period": "Dönem",
+      "reason": "Açıklama"
+    },
+    "status": {
+      "imported": "Eşleşti",
+      "unmatched": "Eşleşmedi",
+      "duplicate": "Çift",
+      "terminated": "Ayrılmış çalışan",
+      "skipped": "Atlandı",
+      "failed": "Hata",
+      "notPdf": "PDF değil"
+    },
+    "reasons": {
+      "not_pdf": "PDF değil",
+      "invalid_file_name": "Dosya adı <sicil>_<YYYY-MM>.pdf biçiminde değil",
+      "zip_entry_too_large": "Zip girdisi çok büyük",
+      "zip_corrupt": "Zip dosyası bozuk",
+      "zip_too_many_entries": "Zip içinde çok fazla dosya var",
+      "unknown_registration": "Sicil numarası bulunamadı",
+      "terminated_employee": "Çalışan işten ayrılmış",
+      "duplicate_registration": "Aynı sicil/dönem için birden fazla dosya",
+      "delivery_failed": "Belge teslim edilemedi"
+    }
   }
 }

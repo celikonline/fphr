@@ -109,3 +109,63 @@ export async function completeOnboardingTask(id: string): Promise<void> {
 export async function waiveOnboardingTask(id: string, reason: string): Promise<void> {
   await apiClient.post(`${BASE}/tasks/${id}/waive`, { reason });
 }
+
+/** E5 (B15): task importance, category, named template sets. */
+export type OnboardingImportance = "normal" | "high" | "critical";
+
+/** `OnboardingCategoryDto`. */
+export interface OnboardingCategory {
+  id: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/** `OnboardingCategoryProgressDto`; categoryId is missing for uncategorized tasks (nulls omitted). */
+export interface OnboardingCategoryProgress {
+  categoryId?: string | null;
+  name: string;
+  done: number;
+  total: number;
+  percent: number;
+}
+
+/** `OnboardingTemplateSetDto`. */
+export interface OnboardingTemplateSet {
+  id: string;
+  stage: OnboardingStage;
+  name: string;
+  templateIds: string[];
+  isActive: boolean;
+}
+
+export async function listOnboardingTemplateSets(): Promise<OnboardingTemplateSet[]> {
+  const { data } = await apiClient.get<OnboardingTemplateSet[]>(`${BASE}/template-sets`);
+  return data;
+}
+
+export async function listOnboardingCategories(): Promise<OnboardingCategory[]> {
+  const { data } = await apiClient.get<OnboardingCategory[]>(`${BASE}/categories`);
+  return data;
+}
+
+export async function getEmployeeCategoryProgress(
+  employeeId: string
+): Promise<OnboardingCategoryProgress[]> {
+  const { data } = await apiClient.get<OnboardingCategoryProgress[]>(
+    `${BASE}/employees/${employeeId}/category-progress`
+  );
+  return data;
+}
+
+/** Starts a named template set for the employee (once per set). */
+export async function startOnboardingProcess(
+  employeeId: string,
+  templateSetId: string,
+  referenceDate: string
+): Promise<void> {
+  await apiClient.post(`${BASE}/employees/${employeeId}/start-process`, {
+    templateSetId,
+    referenceDate,
+  });
+}

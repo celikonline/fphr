@@ -74,6 +74,8 @@ public interface IShiftAssignmentRepository
 {
     void Add(ShiftAssignment assignment);
 
+    void Remove(ShiftAssignment assignment);
+
     Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<ShiftAssignment?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
@@ -184,6 +186,9 @@ public interface IPunchRequestRepository
     Task<PunchRequests.PunchRequest?> FindByApprovalRequestIdAsync(Guid approvalRequestId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<PunchRequests.PunchRequest>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Yönetici listesi: tenant'ın talepleri, isteğe bağlı durum süzgeciyle, en yeni önce.</summary>
+    Task<IReadOnlyList<PunchRequests.PunchRequest>> ListAsync(PunchRequests.PunchRequestStatus? status, CancellationToken cancellationToken = default);
 }
 
 public interface IShiftPlanTemplateRepository

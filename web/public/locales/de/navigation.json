@@ -81,7 +81,8 @@
     "rotations": "Schichtrotationen",
     "monthlyMatrix": "Monatliche Anwesenheitsmatrix",
     "punchRequests": "Stempelanträge",
-    "terminals": "Zeiterfassungsterminals"
+    "terminals": "Zeiterfassungsterminals",
+    "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen"
   },
   "settings": {
     "company": "Unternehmen und Organisation",

@@ -1,5 +1,51 @@
 {
   "title": "Onay vekaletleri",
   "subtitle": "Onay yetkisini süreli olarak başkasına devretme",
-  "comingSoon": "Bu ekran yakında kullanıma açılacak."
+  "info": "Vekalet süresince vekil, sizin onay gelen kutunuzu görür ve karar verebilir; karar \"sizin adınıza\" kaydedilir. Vekalet geri alınabilir.",
+  "form": {
+    "title": "Yeni vekalet",
+    "delegate": "Vekil",
+    "delegatePlaceholder": "Çalışan seçin",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "submit": "Vekalet ver",
+    "delegator": "Asil"
+  },
+  "list": {
+    "title": "Vekaletlerim",
+    "empty": "Henüz vekalet yok.",
+    "delegate": "Vekil",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "status": "Durum",
+    "revoke": "Geri al",
+    "unknown": "Bilinmeyen çalışan",
+    "delegator": "Asil"
+  },
+  "status": {
+    "active": "Aktif",
+    "scheduled": "Planlandı",
+    "expired": "Süresi doldu",
+    "revoked": "Geri alındı"
+  },
+  "errors": {
+    "endBeforeStart": "Bitiş tarihi başlangıçtan önce olamaz.",
+    "self": "Kendinize vekalet veremezsiniz.",
+    "required": "Vekil ve tarih aralığı zorunludur.",
+    "generic": "İşlem tamamlanamadı."
+  },
+  "toast": {
+    "created": "Vekalet oluşturuldu.",
+    "revoked": "Vekalet geri alındı."
+  },
+  "tabs": {
+    "mine": "Vekaletlerim",
+    "admin": "Tüm vekaletler"
+  },
+  "confirm": {
+    "title": "Vekalet geri alınsın mı?",
+    "description": "Vekil, bu vekalet kapsamındaki onayları artık göremez ve karar veremez. Geçmiş kararlar korunur.",
+    "action": "Evet, geri al"
+  },
+  "adminInfo": "Yönetici olarak herhangi bir çalışan adına vekalet tanımlayabilir veya vekaleti geri alabilirsiniz."
 }

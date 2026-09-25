@@ -21,7 +21,9 @@
     "button": "Neue:n Mitarbeitende:n hinzufügen",
     "title": "Neue:n Mitarbeitende:n hinzufügen",
     "description": "Vor- und Nachname genügen; die übrigen Angaben können Sie später auf der Mitarbeiterkarte ergänzen.",
-    "success": "Mitarbeitende:r angelegt."
+    "success": "Mitarbeitende:r angelegt.",
+    "sendCredentials": "Zugangsdaten per E-Mail senden",
+    "inviteFailed": "Einladung konnte nicht gesendet werden: {{message}}"
   },
   "filters": {
     "orgUnit": "Einheit",
@@ -347,7 +349,9 @@
       "leave": "Urlaub",
       "overtime": "Überstunden",
       "other": "Sonstiges",
-      "account": "Konto"
+      "account": "Konto",
+      "onboarding": "Onboarding",
+      "notes": "Notizen"
     },
     "tabNotes": {
       "leave": "Urlaubssalden und -anträge erscheinen hier, sobald das Urlaubsmodul verfügbar ist.",
@@ -410,7 +414,8 @@
     "outcome": {
       "sent": "Einladung gesendet",
       "resent": "Einladung erneut gesendet",
-      "alreadyactive": "Das Konto ist bereits aktiv"
+      "alreadyactive": "Das Konto ist bereits aktiv",
+      "notrequested": "Zugangsdaten wurden nicht gesendet."
     },
     "sentTo": "Gesendet an: {{email}}"
   },
@@ -847,5 +852,50 @@
     "empty": "Keine Mitarbeitenden entsprechen dem Filter.",
     "loadMore": "Mehr anzeigen",
     "confirm": "Auswahl bestätigen"
+  },
+  "onboardingCard": {
+    "title": "On-/Offboarding-Prozess",
+    "progress": "Fortschritt je Kategorie",
+    "uncategorized": "Ohne Kategorie",
+    "none": "Für diese Person wurden keine Aufgaben gestartet.",
+    "startTitle": "Prozess starten",
+    "set": "Vorlagenset",
+    "setPlaceholder": "Set auswählen",
+    "referenceDate": "Stichtag",
+    "start": "Prozess starten",
+    "started": "Prozess gestartet.",
+    "noSets": "Keine aktiven Vorlagensets."
+  },
+  "employeeNotes": {
+    "title": "Mitarbeiternotizen",
+    "empty": "Noch keine Notizen.",
+    "add": "Notiz hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "noteTitle": "Titel",
+    "content": "Inhalt",
+    "importance": "Wichtigkeit",
+    "importances": {
+      "low": "Niedrig",
+      "normal": "Normal",
+      "high": "Hoch"
+    },
+    "attachment": "Anhang",
+    "attach": "Datei anhängen",
+    "removeAttachment": "Anhang entfernen",
+    "author": "Hinzugefügt von",
+    "saved": "Notiz gespeichert.",
+    "deleted": "Notiz gelöscht.",
+    "loadError": "Notizen konnten nicht geladen werden.",
+    "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+    "confirmDelete": "Diese Notiz löschen?",
+    "attachmentFailed": "Notiz gespeichert, Anhang konnte nicht hochgeladen werden — bitte erneut versuchen.",
+    "fileInvalid": {
+      "size": "Die Datei darf höchstens 10 MB groß sein.",
+      "type": "Nur PDF-, PNG-, JPG-, TXT-, DOCX- und XLSX-Dateien können angehängt werden."
+    },
+    "truncated": "Die ersten {{count}} Notizen werden angezeigt."
   }
 }

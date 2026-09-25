@@ -1,5 +1,55 @@
 {
   "title": "Vardiya rotasyonları",
   "subtitle": "Dönüşümlü vardiya düzenleri",
-  "comingSoon": "Bu ekran yakında kullanıma açılacak."
+  "patterns": "Kalıplar",
+  "assign": "Atama",
+  "newPattern": "Yeni kalıp",
+  "code": "Kod",
+  "name": "Ad",
+  "preset": "Hazır kalıp",
+  "presets": {
+    "custom": "Özel",
+    "twoByTwelve": "2×12",
+    "threeByEight": "3×8",
+    "fourBySix": "4×6"
+  },
+  "cycleLength": "Döngü uzunluğu (gün)",
+  "steps": "Adımlar",
+  "stepDay": "{{n}}. gün",
+  "dayType": "Gün türü",
+  "dayTypes": {
+    "work": "Çalışma",
+    "off": "İzin"
+  },
+  "shift": "Vardiya",
+  "addStep": "Adım ekle",
+  "removeStep": "Adımı sil",
+  "save": "Kaydet",
+  "saved": "Kalıp kaydedildi.",
+  "pattern": "Kalıp",
+  "employees": "Çalışanlar",
+  "pickEmployee": "Çalışan ekle",
+  "startDate": "Başlangıç",
+  "endDate": "Bitiş (isteğe bağlı)",
+  "offsetDays": "Kaydırma (gün)",
+  "apply": "Ata",
+  "noPatterns": "Henüz kalıp yok.",
+  "result": "{{count}} taslak vardiya ataması oluşturuldu.",
+  "skippedTitle": "Kilitli aylar nedeniyle atlananlar",
+  "skippedMonth": "{{month}} dönemi kilitli; bu ay için atama yapılmadı.",
+  "overlapTitle": "Çakışan atama",
+  "genericError": "İşlem tamamlanamadı.",
+  "slots": {
+    "day": "Gündüz vardiyası",
+    "night": "Gece vardiyası",
+    "morning": "Sabah vardiyası",
+    "evening": "Akşam vardiyası",
+    "s1": "Vardiya 1 (6 saat)",
+    "s2": "Vardiya 2 (6 saat)",
+    "s3": "Vardiya 3 (6 saat)",
+    "s4": "Vardiya 4 (6 saat)"
+  },
+  "shiftsRequired": "Tüm çalışma adımlarına vardiya seçin.",
+  "endBeforeStart": "Bitiş tarihi başlangıçtan önce olamaz.",
+  "offsetTooLarge": "Kaydırma döngü uzunluğundan küçük olmalı."
 }

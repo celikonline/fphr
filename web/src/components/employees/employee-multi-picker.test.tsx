@@ -101,7 +101,7 @@ describe("EmployeeMultiPicker", () => {
     const selection = onConfirm.mock.calls[0]![0];
     expect(selection.employeeIds).toBeNull();
     expect(selection.excludedEmployeeIds).toEqual(["b"]);
-    expect(selection.filter).toMatchObject({ includeTerminated: null });
+    expect(selection.filter).toMatchObject({ includeTerminated: false });
   });
 
   it("keeps_selected_when_filter_changes", async () => {

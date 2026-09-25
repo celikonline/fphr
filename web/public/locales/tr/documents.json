@@ -164,7 +164,32 @@
       "downloadFailed": "İndirme bağlantısı alınamadı.",
       "quotaExceeded": "Bu dosya yüklendiğinde depolama kotası aşılır.",
       "rolesRequired": "Role kısıtlı görünürlük için en az bir rol seçilmelidir."
-    }
+    },
+    "typeColumn": "Tür",
+    "mobileColumn": "Mobilde",
+    "noType": "Türsüz",
+    "typeFilter": "Türe göre filtrele",
+    "allTypes": "Tüm türler",
+    "mobileOnlyFilter": "Yalnız mobilde görünenler",
+    "mobileToggle": "{{name}} mobilde görünsün",
+    "selectRow": "{{name}} seç",
+    "selectAll": "Tümünü seç",
+    "zipDownload": "ZIP indir",
+    "zipDownloadCount": "ZIP indir ({{count}})",
+    "zipFileName": "ortak-dosyalar.zip",
+    "classifyFailed": "Dosya sınıflandırması kaydedilemedi.",
+    "zipFailed": "ZIP indirilemedi.",
+    "manageTypes": "Türleri yönet",
+    "typesTitle": "Dosya türleri",
+    "typeName": "Tür adı",
+    "typeMobileDefault": "Varsayılan olarak mobilde görünsün",
+    "typeAdd": "Tür ekle",
+    "typeActivate": "Etkinleştir",
+    "typeDeactivate": "Pasifleştir",
+    "typeInactive": "Pasif",
+    "typesFailed": "Tür işlemi başarısız.",
+    "typeField": "Tür",
+    "mobileField": "Mobil uygulamada görünsün"
   },
   "visa": {
     "my": {

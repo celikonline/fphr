@@ -117,7 +117,7 @@ public static class DocumentsPermissions
 
     /// <summary>Manage the shared-file type catalog (E8: "mobilde görünsün" flag, type names).</summary>
     public static readonly Permission SharedFilesTypesManage = new(
-        "documents.sharedfiles.types.manage",
+        "documents.sharedfile_types.manage",
         Module,
         "Paylaşılan Dosya Tiplerini Yönetme",
         "Belgeler",
