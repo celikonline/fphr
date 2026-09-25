@@ -7,7 +7,9 @@ using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Shared.Contracts.Audit;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -50,6 +52,8 @@ public sealed class AttendanceModule : IModule
         services.AddScoped<IImportTemplate, AttendanceImportTemplate>();
         services.AddScoped<IImportRowHandler, AttendanceImportRowHandler>();
 
+        // K7: vardiya dönemi otomatik kilit işi (JobType.ShiftPeriodAutoLock) - seed'lenmişti ama işleyicisi yoktu.
+        services.AddScoped<IScheduledJobHandler, ShiftPeriodAutoLockJobHandler>();
         // Vardiya planı Excel şablonu "shift-plan" (Z3.2)
         services.AddScoped<IImportTemplate, ShiftPlanImportTemplate>();
         services.AddScoped<IImportRowHandler, ShiftPlanImportRowHandler>();

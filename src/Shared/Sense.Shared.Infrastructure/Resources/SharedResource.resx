@@ -1607,6 +1607,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="attendance.recalculation.range_invalid" xml:space="preserve"><value>Yeniden hesaplama aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
+  <data name="attendance.recalculation.range_too_long" xml:space="preserve"><value>Yeniden hesaplama aralığı en fazla 366 gün olabilir.</value></data>
+  <data name="attendance.recalculation.job_not_found" xml:space="preserve"><value>Yeniden hesaplama işi bulunamadı.</value></data>
   <data name="import.template.shiftplan.name" xml:space="preserve"><value>Vardiya planı</value></data>
   <data name="import.template.shiftplan.description" xml:space="preserve"><value>Çalışanların günlük vardiya planını (vardiya kodu ya da hafta tatili/dinlenme/resmi tatil) toplu yükleyin.</value></data>
   <data name="import.template.shiftplan.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; aynı çalışan ve gün için tekrar yüklenen satır önceki planın üzerine yazar.</value></data>

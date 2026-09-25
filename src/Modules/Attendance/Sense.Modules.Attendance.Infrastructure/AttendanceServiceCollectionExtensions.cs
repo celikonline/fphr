@@ -5,12 +5,14 @@ using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
+using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.PunchRequests;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
@@ -30,6 +32,14 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
         // Günlük puantaj listeleri (Z1.1): IDataScopeService/IOrgUnitLookup/ILeaveOnDateReader yalnız API'de var.
         services.AddScoped<IDailyAttendanceQuery, Application.Daily.DailyAttendanceQuery>();
+
+        // Zaman-devam Z0.3: yeniden hesaplama (API-only: IEmployeeDirectory Worker'da yok). IDayRebuilder: I0 şeridi punch tabanlı gerçeğiyle değiştirir (bkz. ExistingRecordDayRebuilder).
+        services.AddScoped<IDayRebuilder, ExistingRecordDayRebuilder>();
+        services.AddScoped<RecalculationExecutor>();
+        services.AddSingleton<RecalculationJobStore>();
+        services.AddSingleton<AttendanceDayRecalculator>();
+        services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
+        services.AddHostedService<RecalculationHostedService>();
         return services;
     }
 
@@ -72,6 +82,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IRotationRepository, RotationRepository>();
         // Z0.2 vardiya kataloğu + K2 plan çözümleme (B2).
         // TryAdd: B9 (rotasyon) da aynı repository'yi kaydeder; birleşmede çift kayıt olmasın.
+        services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
         services.TryAddScoped<IPlannedDayResolver, PlannedDayResolver>();
         return services;
     }
