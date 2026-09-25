@@ -1577,6 +1577,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>Fazla mesai en az/en çok süreleri geçersiz.</value></data>
   <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>Mola tanımı geçersiz.</value></data>
   <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>Gün türü geçersiz.</value></data>
+  <data name="attendance.shift.definition_required" xml:space="preserve"><value>Çalışma günü için vardiya tanımı seçilmelidir.</value></data>
   <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Eksik kayıt talebi bulunamadı.</value></data>
   <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>Eksik kayıt talebi için gerekçe zorunludur (en fazla 1000 karakter).</value></data>
   <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>Talep yönü giriş ya da çıkış olmalıdır.</value></data>

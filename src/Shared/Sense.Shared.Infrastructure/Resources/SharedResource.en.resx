@@ -1568,6 +1568,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>The overtime minimum/maximum minutes are invalid.</value></data>
   <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>The break definition is invalid.</value></data>
   <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>The day type is invalid.</value></data>
+  <data name="attendance.shift.definition_required" xml:space="preserve"><value>A shift definition must be selected for a work day.</value></data>
   <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Missing punch request not found.</value></data>
   <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>A reason is required for a missing punch request (at most 1000 characters).</value></data>
   <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>The request direction must be in or out.</value></data>

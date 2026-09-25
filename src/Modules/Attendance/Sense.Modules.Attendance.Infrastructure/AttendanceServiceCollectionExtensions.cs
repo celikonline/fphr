@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
@@ -63,6 +64,8 @@ public static class AttendanceServiceCollectionExtensions
         // Eksik kayıt talebi (Z2.1, B6).
         services.AddScoped<IPunchRequestRepository, PunchRequestRepository>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PunchRequestApprovalSummaryProvider>();
+        // Z3.1 toplu atama (B8): vardiya tanımı okuma; B2 aynı kaydı eklerse tekrar harmsızdır (son kayıt kazanır).
+        services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
         return services;
     }
 

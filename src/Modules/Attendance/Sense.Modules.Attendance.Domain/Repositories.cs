@@ -74,6 +74,8 @@ public interface IShiftAssignmentRepository
 {
     void Add(ShiftAssignment assignment);
 
+    void Remove(ShiftAssignment assignment);
+
     Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<ShiftAssignment?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);

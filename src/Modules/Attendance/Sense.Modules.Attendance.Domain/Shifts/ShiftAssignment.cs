@@ -59,6 +59,11 @@ public sealed class ShiftAssignment : TenantAggregateRoot<Guid>
     {
         get
         {
+            if (DayType != ShiftDayType.Work)
+            {
+                return 0;
+            }
+
             var span = End.ToTimeSpan() - Start.ToTimeSpan();
             if (span <= TimeSpan.Zero)
             {
@@ -120,6 +125,36 @@ public sealed class ShiftAssignment : TenantAggregateRoot<Guid>
 
         ShiftDefinitionId = shiftDefinitionId;
         DayType = dayType;
+        return Result.Success();
+    }
+
+    /// <summary>Çalışma günü olmayan (hafta tatili/dinlenme/resmi tatil) gün: saat alanı tutulmaz (00:00, mola yok, süre 0).</summary>
+    public static Result<ShiftAssignment> CreateDayOff(Guid tenantId, Guid employeeId, DateOnly date, ShiftDayType dayType)
+    {
+        var assignment = new ShiftAssignment(Guid.CreateVersion7(), tenantId, employeeId, date, TimeOnly.MinValue, TimeOnly.MinValue.AddMinutes(1), 0, false, null);
+        var applied = assignment.ApplyDayOff(dayType);
+        return applied.IsFailure ? applied.Error : assignment;
+    }
+
+    /// <summary>Mevcut günü çalışma günü olmayan bir türe çevirir; saatler sıfırlanır, vardiya tanımı bağı kalkar.</summary>
+    public Result ApplyDayOff(ShiftDayType dayType)
+    {
+        if (dayType == ShiftDayType.Work)
+        {
+            return Error.Validation(AttendanceDomainErrors.ShiftDayTypeInvalid);
+        }
+
+        var planned = SetPlan(null, dayType);
+        if (planned.IsFailure)
+        {
+            return planned;
+        }
+
+        Start = TimeOnly.MinValue;
+        End = TimeOnly.MinValue;
+        BreakMinutes = 0;
+        IsNight = false;
+        Note = null;
         return Result.Success();
     }
 
