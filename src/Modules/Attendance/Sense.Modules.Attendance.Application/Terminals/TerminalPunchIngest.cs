@@ -67,6 +67,11 @@ public sealed class TerminalPunchIngest(
             return Error.ServiceUnavailable(TerminalErrors.CredentialPepperMissing);
         }
 
+        // Engel açıksa PIN kalemleri hiçbir çözüm sorgusuna girmez (özet yok, kimlik/çalışan araması yok): doğru ve yanlış aday için yapılan iş -
+        // dolayısıyla yanıt süresi - aynıdır. Engel bu istekte (bütçe dolunca) açılırsa, o istekte engelden SONRAKİ PIN kalemleri zaten çözülmüştür;
+        // bu kalemlerin yanıtı aynıdır (pin_entry_blocked) ama isteğin süresi yine adaylara bağlıdır → sızıntı en çok engele giren tek istek
+        // (pencere başına bir istek) ile sınırlıdır.
+        var pinBlocked = pinFailures.IsBlocked(terminal.TerminalId);
         var oldest = now.AddDays(-Math.Max(1, options.Value.MaxPunchAgeDays));
         var prepared = new List<Prepared>(items.Count);
         foreach (var item in items)
@@ -83,6 +88,12 @@ public sealed class TerminalPunchIngest(
                 continue;
             }
 
+            if (pinBlocked && item.Credential!.Kind == TerminalCredentialKind.Pin)
+            {
+                prepared.Add(new Prepared(null, TerminalPunchRejectReasons.PinEntryBlocked));
+                continue;
+            }
+
             var digest = hasher.Hash(terminal.TenantId, item.Credential!.Kind!.Value, item.Credential.Value!);
             if (digest.IsFailure)
             {
@@ -92,9 +103,10 @@ public sealed class TerminalPunchIngest(
             prepared.Add(new Prepared(digest.Value, null));
         }
 
-        var credentials = await terminals.ListActiveCredentialsByValuesAsync(
-            terminal.TenantId, prepared.Select(p => p.Digest).OfType<string>().Distinct(StringComparer.Ordinal).ToList(), cancellationToken)
-            .ConfigureAwait(false);
+        var digests = prepared.Select(p => p.Digest).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        IReadOnlyList<EmployeeTerminalCredential> credentials = digests.Count == 0
+            ? []
+            : await terminals.ListActiveCredentialsByValuesAsync(terminal.TenantId, digests, cancellationToken).ConfigureAwait(false);
         var owners = credentials
             .Where(c => c.TenantId == terminal.TenantId && c.IsActive)
             .ToDictionary(c => (c.Kind, c.Value), c => c.EmployeeId);
@@ -183,7 +195,7 @@ public sealed class TerminalPunchIngest(
             return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, prepared.RejectReason);
         }
 
-        // Çözüm her kalem için (engelden bağımsız) yapılır; özet ve toplu DB araması zaten istek başında tüm kalemler içindir.
+        // Buraya gelen kalemler istek başında toplu çözülmüştür (istek başında engel açıksa PIN kalemleri buraya hiç gelmez).
         var kind = item!.Credential!.Kind!.Value;
         var resolved = owners.TryGetValue((kind, digest), out var employeeId);
         var failure = !resolved ? TerminalPunchRejectReasons.UnknownCredential
@@ -192,7 +204,8 @@ public sealed class TerminalPunchIngest(
 
         if (kind == TerminalCredentialKind.Pin)
         {
-            // Engel açıkken her PIN kalemi aynı yanıtı alır ve hiçbiri bütçeye yazılmaz (doğru PIN ne yanıttan ne engel süresinden sızar).
+            // Engel bu istekte açıldıysa sonraki PIN kalemleri aynı yanıtı alır ve bütçeye yazılmaz (doğru PIN ne yanıttan ne engel süresinden
+            // sızar; süre farkı yalnız bu tek istekte - bkz. IngestAsync).
             switch (pinFailures.Evaluate(terminal, digest, isFailure: failure is not null))
             {
                 case PinGateOutcome.Blocked:

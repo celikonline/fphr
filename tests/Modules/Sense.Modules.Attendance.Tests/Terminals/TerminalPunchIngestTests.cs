@@ -141,7 +141,10 @@ public sealed class TerminalPunchIngestTests
         first.Value.Accepted.ShouldBe(1);
         retry.Value.Ignored.ShouldBe(1);
         _recorder.Received[2].OccurredAtUtc.ShouldBe(DateTime.SpecifyKind(unspecified, DateTimeKind.Utc));
-        TerminalPunchIngest.NormalizeOccurredAt(new DateTimeOffset(Occurred).ToLocalTime().DateTime).ShouldBe(Occurred);
+        // Saat dilimi/kültürden bağımsız: yerel saat kullanılmaz. Kind=Unspecified UTC kabul edilir; kırpma µs'ye (10 tick) yapılır.
+        var normalized = TerminalPunchIngest.NormalizeOccurredAt(new DateTime(Occurred.Ticks + 19, DateTimeKind.Unspecified));
+        normalized.Kind.ShouldBe(DateTimeKind.Utc);
+        normalized.Ticks.ShouldBe(Occurred.Ticks + 10);
     }
 
     [Theory]
@@ -486,6 +489,59 @@ public sealed class TerminalPunchIngestTests
         }
 
         BlockEnds(_monitor).Single().ShouldBe(entered + TimeSpan.FromMinutes(5));
+    }
+
+    [Fact]
+    public async Task Blocked_batches_with_and_without_correct_candidate_perform_identical_lookups()
+    {
+        await BlockAsync();
+        var ct = TestContext.Current.CancellationToken;
+
+        var withCorrect = await CountLookupsAsync(() => Ingest().IngestAsync(_terminal, [Pin("4321", 1), Pin("7001", 1)], ct));
+        var allWrong = await CountLookupsAsync(() => Ingest().IngestAsync(_terminal, [Pin("7002", 1), Pin("7003", 1)], ct));
+
+        withCorrect.ShouldBe(allWrong);
+        withCorrect.ShouldBe((0, 0));
+    }
+
+    [Fact]
+    public async Task Blocked_pin_items_are_not_resolved()
+    {
+        await BlockAsync();
+        _terminals.ClearReceivedCalls();
+
+        var result = await Ingest().IngestAsync(_terminal, [Pin("4321", 1)], TestContext.Current.CancellationToken);
+
+        result.Value.Items.Single().Reason.ShouldBe(TerminalPunchRejectReasons.PinEntryBlocked);
+        await _terminals.DidNotReceiveWithAnyArgs().ListActiveCredentialsByValuesAsync(default, default!, default);
+        await _contacts.DidNotReceiveWithAnyArgs().GetContactsAsync(default, default!, default);
+        _recorder.Received.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Card_items_still_resolve_while_pin_blocked()
+    {
+        await BlockAsync();
+        _terminals.ClearReceivedCalls();
+        var cardDigest = _hasher.Digest(_tenantId, TerminalCredentialKind.Card, "04A1B2C3");
+
+        var result = await Ingest().IngestAsync(_terminal, [Item(TerminalCredentialKind.Card, "04A1B2C3"), Pin("4321", 1)], TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => (i.Status, i.Reason)).ShouldBe(
+            [(TerminalPunchItemStatus.Accepted, (string?)null), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.PinEntryBlocked)]);
+        await _terminals.Received(1).ListActiveCredentialsByValuesAsync(
+            _tenantId, Arg.Is<IReadOnlyCollection<string>>(v => v.Count == 1 && v.Contains(cardDigest)), Arg.Any<CancellationToken>());
+        _recorder.Received.Select(p => p.EmployeeId).ShouldBe([_employeeA]);
+    }
+
+    /// <summary>Bir isteğin kimlik çözüm sorgusu sayıları: (kimlik araması, çalışan durumu araması).</summary>
+    private async Task<(int Credentials, int Contacts)> CountLookupsAsync(Func<Task> ingest)
+    {
+        _terminals.ClearReceivedCalls();
+        _contacts.ClearReceivedCalls();
+        await ingest();
+        return (_terminals.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(ITerminalRepository.ListActiveCredentialsByValuesAsync)),
+            _contacts.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IEmployeeContactLookup.GetContactsAsync)));
     }
 
     /// <summary>

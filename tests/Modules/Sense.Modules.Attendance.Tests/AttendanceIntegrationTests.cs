@@ -127,11 +127,6 @@ public sealed class AttendanceIntegrationTests : TestFixture
     }
 
     /// <summary>
-    /// Ports other modules register in the API host (Employee, Organization, Leave, Workflow, Identity...): every interface an
-    /// Attendance registration's constructor needs that is neither registered nor Attendance's own gets a substitute - so a missing
-    /// Attendance registration still fails validation. Optional parameters (default value) are left alone.
-    /// </summary>
-    /// <summary>
     /// Framework ports whose host lifetime makes a singleton substitute safe: IHostEnvironment (host singleton), IStringLocalizer&lt;T&gt;
     /// (host transient via AddLocalization - consumable from any lifetime), IRegistryPolicyResolver (DataProtection; not registered on
     /// Linux, the host then uses the other KeyManagementOptionsSetup constructor).
@@ -146,6 +141,11 @@ public sealed class AttendanceIntegrationTests : TestFixture
     /// <summary>Resolved by the container itself - never substituted.</summary>
     private static readonly Type[] ContainerBuiltIns = [typeof(IServiceProvider), typeof(IServiceScopeFactory)];
 
+    /// <summary>
+    /// Ports other modules register in the API host (Employee, Organization, Leave, Workflow, Identity...): every interface an
+    /// Attendance registration's constructor needs that is neither registered nor Attendance's own gets a substitute - so a missing
+    /// Attendance registration still fails validation. Optional parameters (default value) are left alone.
+    /// </summary>
     private static void AddOtherModulePorts(IServiceCollection services)
     {
         var registered = services.Select(d => d.ServiceType).ToHashSet();
