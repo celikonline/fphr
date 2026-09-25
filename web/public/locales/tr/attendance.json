@@ -249,7 +249,32 @@
     "unlockTitle": "Dönem kilidini aç",
     "unlockReasonLabel": "Gerekçe",
     "unlockReasonRequired": "Kilidi açma gerekçesi zorunludur.",
-    "unlocked": "Dönem kilidi açıldı."
+    "unlocked": "Dönem kilidi açıldı.",
+    "paletteTitle": "Vardiya paleti",
+    "paletteHint": "Bir vardiyayı ya da gün tipini hücreye sürükleyin; ya da hücreleri seçip tıklayın.",
+    "paletteEmpty": "Tanımlı vardiya yok.",
+    "dayTypeTitle": "Gün tipleri",
+    "dayType": {
+      "work": "Çalışma",
+      "weeklyRest": "Haftalık izin",
+      "restDay": "Dinlenme günü",
+      "publicHoliday": "Resmi tatil"
+    },
+    "selectedCells": "{{count}} hücre seçili",
+    "clearSelection": "Seçimi temizle",
+    "clearShifts": "Seçili vardiyaları sil",
+    "clearShiftsTitle": "Vardiyaları sil",
+    "clearShiftsDescription": "{{count}} hücredeki vardiyalar silinecek. Onaylıyor musunuz?",
+    "unassignedOnly": "Vardiyasız çalışanlar",
+    "unassignedEmpty": "Bu haftada vardiyasız çalışan yok.",
+    "totalsLabel": "Toplam",
+    "totalHours": "{{hours}} sa",
+    "totalHoursMinutes": "{{hours}} sa {{minutes}} dk",
+    "totalMinutes": "{{minutes}} dk",
+    "totalPeople": "{{count}} kişi",
+    "bulkDone": "{{count}} hücre güncellendi.",
+    "bulkSkipped": "{{count}} hücre atlandı (kilitli dönem veya yayınlanmış vardiya).",
+    "lockedEditHint": "Dönem kilitli; vardiya düzenlenemez."
   },
   "myAvailability": {
     "title": "Müsaitliğim",
