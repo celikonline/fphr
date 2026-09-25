@@ -1551,4 +1551,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="employee.note_not_found" xml:space="preserve"><value>Note not found.</value></data>
+  <data name="employee.note_title_required" xml:space="preserve"><value>The note title is required.</value></data>
+  <data name="employee.note_title_too_long" xml:space="preserve"><value>The note title can be at most 255 characters.</value></data>
+  <data name="employee.note_content_too_long" xml:space="preserve"><value>The note content can be at most 512 characters.</value></data>
+  <data name="employee.note_importance_invalid" xml:space="preserve"><value>Invalid note importance.</value></data>
+  <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Invalid attachment information.</value></data>
+  <data name="employee.note_attachment_too_large" xml:space="preserve"><value>The attachment can be at most 10 MB.</value></data>
+  <data name="employee.note_attachment_not_found" xml:space="preserve"><value>The note has no attachment.</value></data>
 </root>

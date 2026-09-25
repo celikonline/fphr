@@ -1560,4 +1560,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="employee.note_not_found" xml:space="preserve"><value>Not bulunamadı.</value></data>
+  <data name="employee.note_title_required" xml:space="preserve"><value>Not başlığı zorunludur.</value></data>
+  <data name="employee.note_title_too_long" xml:space="preserve"><value>Not başlığı en fazla 255 karakter olabilir.</value></data>
+  <data name="employee.note_content_too_long" xml:space="preserve"><value>Not içeriği en fazla 512 karakter olabilir.</value></data>
+  <data name="employee.note_importance_invalid" xml:space="preserve"><value>Geçersiz not önem düzeyi.</value></data>
+  <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Geçersiz ek dosya bilgisi.</value></data>
+  <data name="employee.note_attachment_too_large" xml:space="preserve"><value>Ek dosya en fazla 10 MB olabilir.</value></data>
+  <data name="employee.note_attachment_not_found" xml:space="preserve"><value>Notun ek dosyası yok.</value></data>
 </root>
