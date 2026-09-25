@@ -133,6 +133,7 @@ function daysFixture(): TeamWeekRow[] {
           workedMinutes: 0,
           status: "unresolved",
           anomalies: ["missingCheckIn"],
+          incalculableReason: "ambiguousShift",
         },
       ],
     },
@@ -212,6 +213,19 @@ describe("MonthlyTimesheetPage", () => {
     expect(strip.querySelector('[data-tone="leaveConflict"]')).not.toBeNull();
     expect(strip.querySelector('[data-tone="issue"]')).not.toBeNull();
     expect(strip.querySelector('[data-tone="ok"]')).not.toBeNull();
+  });
+
+  it("shows the incalculable reason in the day chip label when the backend sends one", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Ayşe Yılmaz");
+
+    await user.click(await screen.findByRole("button", { name: /Ayşe Yılmaz gün detayını/ }));
+
+    const strip = await screen.findByTestId("day-strip");
+    const labelled = strip.querySelectorAll('[aria-label*="Hesaplanamaz: "]');
+    expect(labelled).toHaveLength(1);
+    expect(labelled[0].getAttribute("aria-label")).toContain(trAttendance.incalculableReason.ambiguousShift);
   });
 
   it("asks for confirmation before approve-all and then calls the service for the visible month", async () => {

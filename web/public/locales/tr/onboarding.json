@@ -92,6 +92,7 @@
     "name": "Ad",
     "sortOrder": "Sıra",
     "delete": "Sil",
+    "confirmDelete": "\"{{name}}\" kategorisi silinsin mi?",
     "uncategorized": "Kategorisiz"
   },
   "sets": {

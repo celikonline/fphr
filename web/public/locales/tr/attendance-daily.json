@@ -45,8 +45,7 @@
     "genericError": "İşlem sırasında bir hata oluştu.",
     "prevPage": "Önceki sayfa",
     "nextPage": "Sonraki sayfa",
-    "minutes": "{{count}} dk",
-    "unassigned": "Atanmamış"
+    "minutes": "{{count}} dk"
   },
   "timeDashboard": {
     "title": "Zaman panosu",

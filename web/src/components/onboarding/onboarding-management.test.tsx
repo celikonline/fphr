@@ -174,11 +174,27 @@ describe("onboarding management", () => {
     wrap(<OnboardingCategories />);
     await screen.findByText("Belgeler");
     await user.click(screen.getByRole("button", { name: "Sil" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Sil" }));
     await waitFor(() =>
       expect(toastSpy).toHaveBeenCalledWith(
         expect.objectContaining({ variant: "destructive", description: detail })
       )
     );
+  });
+
+  it("category_delete_asks_for_confirmation_first", async () => {
+    vi.mocked(service.deleteOnboardingCategory).mockResolvedValue(undefined as never);
+    const user = userEvent.setup();
+    wrap(<OnboardingCategories />);
+    await screen.findByText("Belgeler");
+    await user.click(screen.getByRole("button", { name: "Sil" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/"Belgeler" kategorisi silinsin mi\?/)).toBeInTheDocument();
+    expect(service.deleteOnboardingCategory).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Sil" }));
+    await waitFor(() => expect(service.deleteOnboardingCategory).toHaveBeenCalled());
+    expect(vi.mocked(service.deleteOnboardingCategory).mock.calls[0]![0]).toBe("c1");
   });
 
   it("set_order_is_preserved_on_save", async () => {

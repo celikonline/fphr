@@ -25,6 +25,7 @@ import {
 import { CalendarPlus, ChevronLeft, ChevronRight, Clock, Coffee, EyeOff, Moon, Pencil, Users } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import { incalculableReasonText } from "@/components/attendance/incalculable-hint";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useLeaveName } from "@/components/leave/leave-shared";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -74,6 +75,10 @@ function dailyWorkTooltips(day: TeamWeekDay, t: TFunction): string[] {
 
   if (day.nightLimitExceeded) {
     tooltips.push(t("attendance:teamTimesheet.nightLimitExceeded"));
+  }
+
+  if (day.incalculableReason) {
+    tooltips.push(incalculableReasonText(t, day.incalculableReason));
   }
 
   return tooltips;
@@ -342,8 +347,9 @@ function TeamWeekCell({ day, onClick, label: t }: { day: TeamWeekDay; onClick?: 
           <Tooltip label={dailyWorkTooltipText} multiline maw={220}>
             <Badge
               size="xs"
-              color={day.dailyLimitExceeded || day.nightLimitExceeded ? "orange" : "gray"}
+              color={day.dailyLimitExceeded || day.nightLimitExceeded || day.incalculableReason ? "orange" : "gray"}
               variant="outline"
+              aria-label={dailyWorkTooltipText}
               leftSection={day.nightMinutes > 0 ? <Moon className="h-3 w-3" /> : <Coffee className="h-3 w-3" />}
             >
               {" "}

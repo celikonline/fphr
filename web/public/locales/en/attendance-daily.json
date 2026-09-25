@@ -45,8 +45,7 @@
     "genericError": "Something went wrong.",
     "prevPage": "Previous page",
     "nextPage": "Next page",
-    "minutes": "{{count}} min",
-    "unassigned": "Unassigned"
+    "minutes": "{{count}} min"
   },
   "timeDashboard": {
     "title": "Time dashboard",

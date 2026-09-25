@@ -45,8 +45,7 @@
     "genericError": "Es ist ein Fehler aufgetreten.",
     "prevPage": "Vorherige Seite",
     "nextPage": "Nächste Seite",
-    "minutes": "{{count}} Min.",
-    "unassigned": "Nicht zugewiesen"
+    "minutes": "{{count}} Min."
   },
   "timeDashboard": {
     "title": "Zeit-Dashboard",

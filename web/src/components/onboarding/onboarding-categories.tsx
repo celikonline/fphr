@@ -14,6 +14,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -33,6 +34,7 @@ export default function OnboardingCategories() {
   const { t } = useTranslation(["onboarding", "common"]);
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<OnboardingCategory | "new" | null>(null);
+  const [deleting, setDeleting] = useState<OnboardingCategory | null>(null);
   const query = useQuery({ queryKey: CATEGORIES_KEY, queryFn: listOnboardingCategories });
   const refresh = () => void queryClient.invalidateQueries({ queryKey: CATEGORIES_KEY });
   const notifyError = (error: unknown) =>
@@ -92,7 +94,7 @@ export default function OnboardingCategories() {
                       variant="subtle"
                       color="red"
                       loading={deleteMutation.isPending && deleteMutation.variables === category.id}
-                      onClick={() => deleteMutation.mutate(category.id)}
+                      onClick={() => setDeleting(category)}
                     >
                       {t("onboarding:categories.delete")}
                     </Button>
@@ -103,6 +105,17 @@ export default function OnboardingCategories() {
           </Table.Tbody>
         </Table>
       )}
+      <ConfirmModal
+        opened={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title={t("onboarding:categories.delete")}
+        message={t("onboarding:categories.confirmDelete", { name: deleting?.name ?? "" })}
+        confirmLabel={t("onboarding:categories.delete")}
+        danger
+        onConfirm={async () => {
+          if (deleting) await deleteMutation.mutateAsync(deleting.id).catch(() => undefined);
+        }}
+      />
       {editing && (
         <CategoryDialog
           category={editing === "new" ? null : editing}

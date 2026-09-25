@@ -92,6 +92,7 @@
     "name": "Name",
     "sortOrder": "Reihenfolge",
     "delete": "Löschen",
+    "confirmDelete": "Kategorie \"{{name}}\" löschen?",
     "uncategorized": "Ohne Kategorie"
   },
   "sets": {

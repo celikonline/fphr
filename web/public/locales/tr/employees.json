@@ -852,7 +852,7 @@
     "empty": "Filtreye uyan çalışan bulunamadı.",
     "loadMore": "Daha fazla göster",
     "confirm": "Seçimi onayla",
-    "overLimit": "En fazla {{max}} davetli seçilebilir; şu an {{count}}."
+    "overLimit": "En fazla {{max}} kişi seçilebilir; şu an {{count}}."
   },
   "onboardingCard": {
     "title": "İşe alış / çıkış süreci",

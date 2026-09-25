@@ -406,6 +406,7 @@
     "brokenSequence": "Fehlerhafte Stempelfolge (inkonsistente Kommen/Gehen-Reihenfolge oder ungerade Anzahl)",
     "channelConflict": "Kanalkonflikt (manuelle + Gerätestempelung)",
     "noPlan": "Ungeplante Stempelung (kein Schichtplan für diesen Tag)",
-    "nightShiftOverlap": "Nachtschicht-Überschneidung (Stempelung liegt nahe an beiden Tagen)"
+    "nightShiftOverlap": "Nachtschicht-Überschneidung (Stempelung liegt nahe an beiden Tagen)",
+    "ambiguousShift": "Mehrdeutige Schicht (Stempelung passt zu mehreren Schichten)"
   }
 }
