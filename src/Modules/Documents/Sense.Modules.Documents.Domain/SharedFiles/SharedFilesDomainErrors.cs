@@ -15,6 +15,16 @@ public static class SharedFilesDomainErrors
 
     /// <summary>Uploading the file (at its declared size) would push the tenant's shared-file storage usage past its quota.</summary>
     public const string QuotaExceeded = "shared_company_file.quota_exceeded";
+
+    public const string TypeNotFound = "shared_file_type.not_found";
+    public const string TypeNameRequired = "shared_file_type.name_required";
+    public const string TypeNameTooLong = "shared_file_type.name_too_long";
+    public const string TypeNameTaken = "shared_file_type.name_taken";
+    public const string TypeInactive = "shared_file_type.inactive";
+
+    /// <summary>Zip download selected no file the caller may see.</summary>
+    public const string NothingToDownload = "shared_company_file.nothing_to_download";
+    public const string ZipTooManyFiles = "shared_company_file.zip_too_many_files";
 }
 
 /// <summary>Domain constants and limits for shared company files.</summary>

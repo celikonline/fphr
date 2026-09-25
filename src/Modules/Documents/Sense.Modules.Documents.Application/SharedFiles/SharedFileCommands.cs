@@ -18,7 +18,9 @@ public sealed record InitiateSharedFileUploadCommand(
     string ContentType,
     long FileSizeBytes,
     SharedFileVisibility Visibility = SharedFileVisibility.Everyone,
-    IReadOnlyList<string>? AllowedRoles = null) : ICommand<InitiateSharedFileUploadResponse>;
+    IReadOnlyList<string>? AllowedRoles = null,
+    Guid? TypeId = null,
+    bool? VisibleOnMobile = null) : ICommand<InitiateSharedFileUploadResponse>;
 
 public sealed class InitiateSharedFileUploadValidator : AbstractValidator<InitiateSharedFileUploadCommand>
 {
@@ -40,7 +42,8 @@ public sealed class InitiateSharedFileUploadHandler(
     ITenantContext tenant,
     ICurrentUser currentUser,
     ISharedCompanyFileRepository files,
-    ILogger<InitiateSharedFileUploadHandler> logger) : ICommandHandler<InitiateSharedFileUploadCommand, InitiateSharedFileUploadResponse>
+    ILogger<InitiateSharedFileUploadHandler> logger,
+    ISharedFileTypeRepository? types = null) : ICommandHandler<InitiateSharedFileUploadCommand, InitiateSharedFileUploadResponse>
 {
     public async Task<Result<InitiateSharedFileUploadResponse>> Handle(InitiateSharedFileUploadCommand command, CancellationToken cancellationToken)
     {
@@ -49,6 +52,26 @@ public sealed class InitiateSharedFileUploadHandler(
         if (quota.WouldExceed(command.FileSizeBytes))
         {
             return Error.Validation(SharedFilesDomainErrors.QuotaExceeded, ("usedBytes", usedBytes), ("quotaBytes", SharedFilesLimits.DefaultQuotaBytes));
+        }
+
+        // E8: an explicit "mobilde görünsün" wins; otherwise the file inherits its type's default.
+        var visibleOnMobile = command.VisibleOnMobile ?? false;
+        if (command.TypeId is { } typeId)
+        {
+            var type = types is null
+                ? Error.NotFound(SharedFilesDomainErrors.TypeNotFound)
+                : await types.GetByIdAsync(typeId, cancellationToken);
+            if (type.IsFailure)
+            {
+                return type.Error;
+            }
+
+            if (!type.Value.IsActive)
+            {
+                return Error.Rule(SharedFilesDomainErrors.TypeInactive);
+            }
+
+            visibleOnMobile = command.VisibleOnMobile ?? type.Value.VisibleOnMobile;
         }
 
         try
@@ -88,6 +111,7 @@ public sealed class InitiateSharedFileUploadHandler(
                 return file.Error;
             }
 
+            file.Value.Classify(command.TypeId, visibleOnMobile);
             files.Add(file.Value);
 
             return new InitiateSharedFileUploadResponse(
