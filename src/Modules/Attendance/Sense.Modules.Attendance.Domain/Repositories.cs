@@ -165,6 +165,8 @@ public interface IShiftDefinitionRepository
 {
     void Add(ShiftDefinition definition);
 
+    void Remove(ShiftDefinition definition);
+
     Task<Result<ShiftDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ShiftDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
@@ -173,6 +175,13 @@ public interface IShiftDefinitionRepository
 
     /// <summary>Kod tenant içinde tekil mi (<paramref name="excludeId"/> güncellenen tanımın kendisi).</summary>
     Task<bool> CodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default);
+
+    /// <summary>"Geçmişe uygula" etki alanı: bu tanımlardan birine bağlı, tarihi [from, to] içindeki vardiya atamaları.</summary>
+    Task<IReadOnlyList<ShiftAssignment>> ListAssignmentsUsingAsync(
+        IReadOnlyCollection<Guid> definitionIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>shift_definition_id FK'sız (uygulama bütünlüğü): bir atama, rotasyon adımı ya da plan şablonu hücresi bu tanıma bağlı mı.</summary>
+    Task<bool> IsInUseAsync(Guid definitionId, CancellationToken cancellationToken = default);
 }
 
 public interface IPunchRequestRepository

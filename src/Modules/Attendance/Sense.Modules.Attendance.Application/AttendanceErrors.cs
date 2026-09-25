@@ -28,4 +28,10 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>Z0.2: another shift definition of the tenant already uses this code.</summary>
+    public const string ShiftDefinitionCodeDuplicate = "attendance.shift_definition.code_duplicate";
+
+    /// <summary>Z0.2: a definition referenced by an assignment, rotation step or plan template cannot be deleted, only deactivated.</summary>
+    public const string ShiftDefinitionInUse = "attendance.shift_definition.in_use";
 }

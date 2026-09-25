@@ -1600,4 +1600,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="attendance.shift_definition.code_duplicate" xml:space="preserve"><value>Bu vardiya kodu başka bir vardiya tanımında kullanılıyor.</value></data>
+  <data name="attendance.shift_definition.in_use" xml:space="preserve"><value>Bu vardiya tanımı atamalarda, rotasyonlarda ya da plan şablonlarında kullanılıyor; silinemez, yalnız pasife alınabilir.</value></data>
 </root>

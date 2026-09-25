@@ -1,8 +1,10 @@
 using FluentValidation;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
+using Sense.Modules.Attendance.Application.ShiftDefinitions;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -26,25 +28,101 @@ internal static class AttendanceDayMapper
 }
 
 /// <summary>
-/// Resolves the WorkSchedule day in effect on <paramref name="date"/> into the (PlannedStart, PlannedEnd, PlannedMinutes,
-/// BreakMinutes) tuple <see cref="AttendanceDay"/> snapshots at record time.
+/// The plan one employee-day is calculated against (snapshot into <see cref="AttendanceDay"/> at record time).
+/// <see cref="Start"/>/<see cref="End"/> null = not a working day (schedule off day or a non-<see cref="ShiftDayType.Work"/> assignment).
+/// <see cref="Rules"/> is the <see cref="ShiftDefinition"/> rule set (tolerances, overtime thresholds, bonus) when the day is
+/// planned through one. <see cref="IsAmbiguous"/>: a dynamic shift had two equally close candidates (spec §9, Incalculable adayı).
 /// </summary>
-internal static class PlannedDayResolver
+public sealed record PlannedDay(
+    TimeOnly? Start,
+    TimeOnly? End,
+    int PlannedMinutes,
+    int BreakMinutes,
+    bool StartsPreviousDay = false,
+    ShiftRules? Rules = null,
+    Guid? ShiftDefinitionId = null,
+    ShiftDayType DayType = ShiftDayType.Work,
+    bool IsAmbiguous = false)
 {
-    public static async Task<(TimeOnly? Start, TimeOnly? End, int Minutes, int BreakMinutes)> ResolveAsync(
+    public bool IsWorkingDay => Start is not null && End is not null;
+
+    public static PlannedDay NonWorking(ShiftDayType dayType = ShiftDayType.Work) => new(null, null, 0, 0, DayType: dayType);
+}
+
+/// <summary>Plan çözümleme (K2): see <see cref="PlannedDayResolver"/>.</summary>
+public interface IPlannedDayResolver
+{
+    /// <summary><paramref name="firstIn"/> is the day's first check-in, needed by flexible (K1) and dynamic (K1) shifts.</summary>
+    Task<PlannedDay> ResolveAsync(Guid employeeId, DateOnly date, TimeOnly? firstIn = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// K2 önceliği: o günün <see cref="ShiftAssignment"/>'ı varsa o (gün türü <see cref="ShiftDayType.Work"/> değilse saatleri yok
+/// sayılır; <see cref="ShiftAssignment.ShiftDefinitionId"/> varsa tanımın saatleri + kural seti, dinamik tanımda ilk girişe en yakın
+/// dinamik tanım; tanımsız eski atamada satırın kendi saatleri) → yoksa <see cref="IWorkScheduleReadService"/> günü. Uses the
+/// tenant-filtered repositories, so it runs inside a tenant context.
+/// </summary>
+public sealed class PlannedDayResolver(
+    IWorkScheduleReadService schedules, IShiftAssignmentRepository assignments, IShiftDefinitionRepository definitions) : IPlannedDayResolver
+{
+    public async Task<PlannedDay> ResolveAsync(Guid employeeId, DateOnly date, TimeOnly? firstIn = null, CancellationToken cancellationToken = default)
+    {
+        var assignment = await assignments.FindByEmployeeAndDateAsync(employeeId, date, cancellationToken).ConfigureAwait(false);
+        if (assignment is null)
+        {
+            return await FromScheduleAsync(schedules, employeeId, date, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (assignment.DayType != ShiftDayType.Work)
+        {
+            return PlannedDay.NonWorking(assignment.DayType);
+        }
+
+        return await FromDefinitionAsync(assignment.ShiftDefinitionId, firstIn, cancellationToken).ConfigureAwait(false)
+            ?? ShiftRuleEvaluator.FromAssignment(assignment);
+    }
+
+    /// <summary>The WorkSchedule day in effect on <paramref name="date"/> (pre-Z0.2 behavior, still the K2 fallback).</summary>
+    public static async Task<PlannedDay> FromScheduleAsync(
         IWorkScheduleReadService schedules, Guid employeeId, DateOnly date, CancellationToken cancellationToken)
     {
-        var day = await schedules.GetForDateAsync(employeeId, date, cancellationToken);
+        var day = await schedules.GetForDateAsync(employeeId, date, cancellationToken).ConfigureAwait(false);
         if (!day.IsWorkingDay || day.Start is null || day.End is null)
         {
-            return (null, null, 0, 0);
+            return PlannedDay.NonWorking();
         }
 
         var breakMinutes = day.BreakStart is not null && day.BreakEnd is not null
             ? (int)(day.BreakEnd.Value.ToTimeSpan() - day.BreakStart.Value.ToTimeSpan()).TotalMinutes
             : 0;
         var plannedMinutes = Math.Max((int)(day.End.Value.ToTimeSpan() - day.Start.Value.ToTimeSpan()).TotalMinutes - breakMinutes, 0);
-        return (day.Start, day.End, plannedMinutes, breakMinutes);
+        return new PlannedDay(day.Start, day.End, plannedMinutes, breakMinutes);
+    }
+
+    /// <summary>Null when the assignment has no definition or it no longer exists (then the assignment's own hours apply).</summary>
+    private async Task<PlannedDay?> FromDefinitionAsync(Guid? definitionId, TimeOnly? firstIn, CancellationToken cancellationToken)
+    {
+        if (definitionId is null)
+        {
+            return null;
+        }
+
+        var found = await definitions.GetByIdAsync(definitionId.Value, cancellationToken).ConfigureAwait(false);
+        if (found.IsFailure)
+        {
+            return null;
+        }
+
+        var definition = found.Value;
+        if (definition.Type != ShiftType.Dynamic || firstIn is not { } first)
+        {
+            return ShiftRuleEvaluator.Plan(definition, firstIn);
+        }
+
+        var match = DynamicShiftMatcher.Match(await definitions.ListAsync(includeInactive: false, cancellationToken).ConfigureAwait(false), first);
+        return match.IsAmbiguous
+            ? ShiftRuleEvaluator.Plan(definition, firstIn) with { IsAmbiguous = true }
+            : ShiftRuleEvaluator.Plan(match.Definition ?? definition, firstIn);
     }
 }
 
@@ -60,7 +138,7 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 }
 
 public sealed class RecordAttendanceHandler(
-    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock)
+    IAttendanceDayRepository days, IPlannedDayResolver planner, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordAttendanceCommand command, CancellationToken cancellationToken)
@@ -78,7 +156,7 @@ public sealed class RecordAttendanceHandler(
         }
 
         var result = await AttendanceDayUpsert.UpsertAsync(
-            days, schedules, tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut,
+            days, planner, tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut,
             AttendanceDaySource.Manual, overnight: false, cancellationToken);
         return result.IsFailure ? result.Error : result.Value.Id;
     }
