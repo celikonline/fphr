@@ -74,7 +74,7 @@ public sealed class CompanyEventTimeZoneTests
         var from = new DateOnly(2026, 9, 1);
         var to = new DateOnly(2026, 9, 30);
         var events = Substitute.For<ICompanyEventRepository>();
-        events.GetInRangeAsync(TenantId, from, to, Arg.Any<CancellationToken>()).Returns(new List<CompanyEvent> { late, outside });
+        events.GetInRangeAsync(TenantId, from.AddDays(-1), to.AddDays(1), Arg.Any<CancellationToken>()).Returns(new List<CompanyEvent> { late, outside });
         var directory = Substitute.For<IEmployeeDirectory>();
         directory.ListActiveEmployeeIdsAsync(TenantId, Arg.Any<CancellationToken>()).Returns(new List<Guid>());
         var leaveStarts = Substitute.For<ILeaveStartDateReader>();

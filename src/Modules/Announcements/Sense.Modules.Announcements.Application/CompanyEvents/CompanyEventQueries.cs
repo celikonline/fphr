@@ -64,7 +64,8 @@ public sealed class GetCompanyCalendarHandler(
     private async Task<IReadOnlyList<CompanyCalendarEntryDto>> BuildManualEntriesAsync(
         GetCompanyCalendarQuery query, Guid? visibilityOrgUnitId, CancellationToken cancellationToken)
     {
-        var all = await events.GetInRangeAsync(tenant.TenantId, query.From, query.To, cancellationToken);
+        // The repository overlaps by UTC day; pad one day each side (zone offsets are < 24h) and trim exactly on tenant-local days below.
+        var all = await events.GetInRangeAsync(tenant.TenantId, query.From.AddDays(-1), query.To.AddDays(1), cancellationToken);
         var zone = await CompanyEventLocalDay.ZoneAsync(timeZones, tenant.TenantId, cancellationToken);
         return all
             .Where(e => OverlapsLocalRange(e, query.From, query.To, zone))
@@ -76,7 +77,7 @@ public sealed class GetCompanyCalendarHandler(
             .ToList();
     }
 
-    /// <summary>The repository over-fetches by a day on each side; the exact overlap is decided on tenant-local days.
+    /// <summary>The query over-fetches by a day on each side; the exact overlap is decided on tenant-local days.
     /// All-day (floating) and un-backfilled rows keep their stored dates; timed rows end on the local day of EndsAt.</summary>
     private static bool OverlapsLocalRange(CompanyEvent e, DateOnly from, DateOnly to, TimeZoneInfo zone)
     {

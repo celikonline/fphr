@@ -13,20 +13,17 @@ public sealed class CompanyEventRepository(AnnouncementsDbContext context) : ICo
     public async Task<CompanyEvent?> GetByIdAsync(Guid tenantId, Guid eventId, CancellationToken cancellationToken = default) =>
         await context.CompanyEvents.Include(e => e.Invitees).FirstOrDefaultAsync(e => e.Id == eventId && e.TenantId == tenantId, cancellationToken);
 
-    /// <summary>Events overlapping [from-1d, to+1d] (padded for tenant-local days; see below): start before the day after <paramref name="to"/> and end (or start, when open-ended) on/after <paramref name="from"/>.
+    /// <summary>Events overlapping [from, to]: start before the day after <paramref name="to"/> and end (or start, when open-ended) on/after <paramref name="from"/>.
     /// Rows not yet backfilled (StartsAt null) fall back to EventDate.</summary>
     public async Task<IReadOnlyList<CompanyEvent>> GetInRangeAsync(Guid tenantId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {
-        // Timed events overlap by tenant-local day, so pad one day each side (zone offsets are < 24h); the query handler trims exactly.
-        var paddedFrom = from.AddDays(-1);
-        var paddedTo = to.AddDays(1);
-        var fromStart = DateTime.SpecifyKind(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-        var toExclusive = DateTime.SpecifyKind(to.AddDays(2).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+        var fromStart = DateTime.SpecifyKind(from.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
+        var toExclusive = DateTime.SpecifyKind(to.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
         return await context.CompanyEvents
             .Include(e => e.Invitees)
             .Where(e => e.TenantId == tenantId
                 && (e.StartsAt == null
-                    ? e.EventDate >= paddedFrom && e.EventDate <= paddedTo
+                    ? e.EventDate >= from && e.EventDate <= to
                     : e.StartsAt < toExclusive && (e.EndsAt ?? e.StartsAt) >= fromStart))
             .OrderBy(e => e.EventDate)
             .ThenBy(e => e.StartsAt)
