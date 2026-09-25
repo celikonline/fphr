@@ -42,7 +42,7 @@ Bu liste, `.claude/takim/TAKIM.md` "riskli alan" kuralı gereği insan kararı i
 - Manager rolüne eklenen izinler: `attendance.punch.manage`, `attendance.punchrequest.manage`, `employee.notes.manage`.
 - Identity davet akışı: `sendCredentials` bayrağı (varsayılan true). Web'de çalışan oluşturmada anahtar varsayılan AÇIK ve `identity.users.invite` iznine bağlı.
 - Altyapı: ingress-nginx arkasında `UseForwardedHeaders` + `KnownNetworks` yapılandırılmamış; terminal ucunda IP sınırı bu yüzden yalnız BAŞARISIZ kimlik denemelerini sınırlıyor (T1 tur 2). Doğru istemci IP'si için proxy yapılandırması gerekir.
-- T1 (terminal ucu, henüz yazılmadı): anahtar yalnız hash, sabit zamanlı karşılaştırma, kimlik değeri HMAC özeti, hız sınırı (bağlayıcı gereksinimler ledger'da).
+- T1 (terminal ucu, yazıldı; iki güvenlik turu): anahtar yalnız SHA-256 özeti, sabit zamanlı karşılaştırma, kimlik değeri HMAC özeti (pepper lazy: eksikse API açılır, kimlik işlemleri 503), IP sınırı yalnız başarısız denemelere, terminal başına PIN başarısızlık bütçesi (bellek içi), okutma yaşı sınırı 45 gün. Açık: askıya alınmış/kapalı kiracının terminal anahtarı hâlâ çalışır (Identity'de `ITenantStatusLookup` yok; takip işi).
 
 ## E. Bordro / ürün
 - B12: B12 öncesi ödenmiş dönemlere `published_at` geriye dönük yazılmadı (o bordrolar "Bordrolarım"da görünmez) — doldurulsun mu?
