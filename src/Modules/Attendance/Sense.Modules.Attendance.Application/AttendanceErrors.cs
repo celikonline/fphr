@@ -57,4 +57,16 @@ public static class AttendanceErrors
     public const string PeriodLocked = "attendance.timesheet.period_locked";
 
     public const string PunchNotFound = "attendance.punch.not_found";
+
+    /// <summary>IPunchRecorder girişi: okutma yönü tanımlı değerlerden biri değil.</summary>
+    public const string PunchDirectionInvalid = "attendance.punch.direction_invalid";
+
+    /// <summary>IPunchRecorder girişi: okutma kaynağı tanımlı değerlerden biri değil.</summary>
+    public const string PunchSourceInvalid = "attendance.punch.source_invalid";
+
+    /// <summary>IPunchRecorder girişi: kaynak referansı (SourceRef) izin verilen uzunluğu aşıyor - sessizce kesilmez.</summary>
+    public const string PunchSourceRefTooLong = "attendance.punch.source_ref_too_long";
+
+    /// <summary>IPunchRecorder: okutmanın kiracısı ortam kiracısıyla (ITenantContext) aynı değil ya da toplu alım birden çok kiracı içeriyor.</summary>
+    public const string PunchTenantMismatch = "attendance.punch.tenant_mismatch";
 }

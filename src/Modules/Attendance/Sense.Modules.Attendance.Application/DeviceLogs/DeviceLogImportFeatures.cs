@@ -1,7 +1,11 @@
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Punches;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -16,17 +20,19 @@ public sealed record DeviceLogImportErrorDto(int Line, string Code, string? Valu
 public sealed record DeviceLogImportResultDto(int Imported, int Skipped, IReadOnlyList<DeviceLogImportErrorDto> Errors);
 
 /// <summary>
-/// S-11 PDKS cihaz/turnike CSV içe alma (ACİL KARAR 16:52): her satır tek bir "in"/"out" damgasıdır; aynı çalışan+gün
-/// için toplanan damgalardan tek bir <see cref="AttendanceDay"/> (en erken "in" = check-in, en geç "out" = check-out)
-/// türetilir - mevcut manuel/Excel kaydıyla aynı upsert kalıbı, kaynağı <see cref="AttendanceDaySource.Device"/>. Bozuk satırlar
-/// dosyanın tamamını reddetmez, tek tek atlanır (satır numarası + hata koduyla raporlanır).
+/// S-11 PDKS cihaz/turnike CSV içe alma (ACİL KARAR 16:52): her satır tek bir "in"/"out" damgasıdır ve (Z0.1) bir ham okutma
+/// (<see cref="Domain.Punches.Punch"/>, kaynağı Device) olarak saklanır; çalışan+günün <see cref="AttendanceDay"/>'i o günün tüm
+/// okutmalarından türetilir (ilk "in" = check-in, son "out" = check-out, ara Out→In = gerçek mola; bozuk yön sırası Incalculable).
+/// Aynı damga önceki bir aktarımda zaten varsa yeniden yazılmaz (idempotent). Bozuk satırlar dosyanın tamamını reddetmez, tek tek
+/// atlanır (satır numarası + hata koduyla raporlanır).
 /// </summary>
 [RequiresPermission(AttendancePermissions.TimesheetImportKey)]
 public sealed record ImportDeviceLogsCommand(string FileContent) : ICommand<DeviceLogImportResultDto>;
 
 public sealed class ImportDeviceLogsHandler(
-    ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules,
-    IAttendanceDayRepository days, IShiftSettingsRepository shiftSettings, IAttendanceUnitOfWork unitOfWork)
+    ITenantContext tenant, IEmployeeLookup employeeLookup, IPlannedDayResolver planner,
+    IAttendanceDayRepository days, IShiftSettingsRepository shiftSettings, IAttendanceUnitOfWork unitOfWork,
+    IPunchRepository punches, ITenantLocalClock clock, IMonthlyTimesheetApprovalRepository approvals)
     : ICommandHandler<ImportDeviceLogsCommand, DeviceLogImportResultDto>
 {
     private sealed record Plan(int Line, Guid EmployeeId, DateOnly Date, DateTime Timestamp, DeviceLogDirection Direction);
@@ -69,56 +75,48 @@ public sealed class ImportDeviceLogsHandler(
 
         var overnightDates = await ReassignNightShiftPunchesAsync(plans, days, cancellationToken).ConfigureAwait(false);
         var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false));
+        var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, planner, approvals, zone, now.Utc);
 
         var imported = 0;
         var anyChange = false;
         foreach (var group in plans.GroupBy(p => (p.EmployeeId, p.Date)))
         {
-            var isOvernight = overnightDates.Contains(group.Key);
             var groupList = group.ToList();
-            var ins = groupList.Where(p => p.Direction == DeviceLogDirection.In).ToList();
-            var outs = groupList.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
-            var batchCheckIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : (TimeOnly?)null;
-            var batchCheckOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : (TimeOnly?)null;
 
-            var existing = await days.FindByEmployeeAndDateAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
-
-            // G-6-22: PDKS exports commonly arrive in separate partial batches (e.g. only the "out" punch, the "in"
-            // having already landed in an earlier import). A direction missing from *this* batch must not erase the
-            // day's already-recorded field - fall back to the existing value instead of writing null over it.
-            var checkIn = batchCheckIn ?? existing?.CheckIn;
-            var checkOut = batchCheckOut ?? existing?.CheckOut;
-
-            if (!isOvernight && checkIn is not null && checkOut is not null && checkOut <= checkIn)
+            // K6: onaylı aylık puantaj ayına ait satırlar işi bozmadan atlanır (satır numarası + neden raporlanır).
+            if (await writer.IsLockedAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false))
             {
-                foreach (var plan in group)
-                {
-                    errors.Add(new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null));
-                }
-
+                errors.AddRange(groupList.Select(plan => new DeviceLogImportErrorDto(plan.Line, AttendanceErrors.PeriodLocked, null)));
                 continue;
             }
 
-            // G-02 mola tespiti (kart senseik-014 §1): ilk "in" ile son "out" arasındaki ara Out→In çiftleri gerçek
-            // moladır. Bu batch tek yönlü bir kısmi import ise (yalnız "out") 0 çıkar - önceki gözlemi ezmesin diye
-            // daha önce kaydedilmiş değere düşülür (aynı G-6-22 kalıbı).
-            var computedBreak = ComputeActualBreakMinutes(groupList);
-            var actualBreakMinutes = computedBreak > 0 ? computedBreak : existing?.ActualBreakMinutes ?? 0;
-
-            var upserted = await AttendanceDayUpsert.UpsertAsync(
-                days, schedules, tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut,
-                AttendanceDaySource.Device, isOvernight, cancellationToken, actualBreakMinutes, limits).ConfigureAwait(false);
-            if (upserted.IsFailure)
+            if (await HasReversedPairAsync(groupList, overnightDates.Contains(group.Key), cancellationToken).ConfigureAwait(false))
             {
-                foreach (var plan in group)
-                {
-                    errors.Add(new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null));
-                }
-
+                errors.AddRange(groupList.Select(plan => new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null)));
                 continue;
             }
 
-            imported += group.Count();
+            // G-6-22: PDKS exports commonly arrive in separate partial batches (e.g. only the "out" punch, the "in" having already
+            // landed in an earlier import). Z0.1 ile bu doğal: gün, önceki aktarımların okutmalarıyla birlikte yeniden türetilir (okutması
+            // olmayan eski bir günün giriş/çıkışı da önce okutmaya çevrilir) - bu batch'te olmayan yön önceki değeri ezmez.
+            var dayPunches = await writer.LoadDayAsync(group.Key.EmployeeId, group.Key.Date, seedLegacy: true, cancellationToken).ConfigureAwait(false);
+            var failed = AddPunches(writer, groupList, dayPunches, zone, errors);
+            if (failed)
+            {
+                continue;
+            }
+
+            var rebuilt = await writer.RebuildAsync(
+                group.Key.EmployeeId, group.Key.Date, AttendanceDaySource.Device, limits, forceIncalculable: false, cancellationToken).ConfigureAwait(false);
+            if (rebuilt.IsFailure)
+            {
+                errors.AddRange(groupList.Select(plan => new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null)));
+                continue;
+            }
+
+            imported += groupList.Count;
             anyChange = true;
         }
 
@@ -189,31 +187,49 @@ public sealed class ImportDeviceLogsHandler(
     }
 
     /// <summary>
-    /// G-02 mola tespiti (kart senseik-014 §1): sorts the group chronologically, then sums every Out→In gap strictly
-    /// between the first "in" and the last "out" - the same "ilk in / son out" window the check-in/check-out derivation
-    /// above already uses. Punches outside that window (duplicates, stray badges) don't contribute.
+    /// Bugünkü doğrulama korunur: bu batch'in en erken "in"i / en geç "out"u (yoksa günün kayıtlı giriş/çıkışı) gece vardiyası
+    /// değilken ters sıradaysa (çıkış ≤ giriş) grubun hiçbir satırı yazılmaz - bozuk cihaz verisi okutma olarak da saklanmaz.
     /// </summary>
-    private static int ComputeActualBreakMinutes(List<Plan> group)
+    private async Task<bool> HasReversedPairAsync(List<Plan> group, bool isOvernight, CancellationToken cancellationToken)
     {
-        var ordered = group.OrderBy(p => p.Timestamp).ToList();
-        var firstIn = ordered.FirstOrDefault(p => p.Direction == DeviceLogDirection.In);
-        var lastOut = ordered.LastOrDefault(p => p.Direction == DeviceLogDirection.Out);
-        if (firstIn is null || lastOut is null || lastOut.Timestamp <= firstIn.Timestamp)
+        if (isOvernight)
         {
-            return 0;
+            return false;
         }
 
-        var inner = ordered.Where(p => p.Timestamp > firstIn.Timestamp && p.Timestamp < lastOut.Timestamp).ToList();
-        var total = 0;
-        for (var i = 0; i < inner.Count - 1; i++)
+        var ins = group.Where(p => p.Direction == DeviceLogDirection.In).ToList();
+        var outs = group.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
+        var existing = await days.FindByEmployeeAndDateAsync(group[0].EmployeeId, group[0].Date, cancellationToken).ConfigureAwait(false);
+        var checkIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : existing?.CheckIn;
+        var checkOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : existing?.CheckOut;
+        return checkIn is not null && checkOut is not null && checkOut <= checkIn;
+    }
+
+    /// <summary>
+    /// Her satır bir okutma (yerel damga kiracı dilimiyle UTC'ye çevrilir). Günde aynı damga+yön zaten kayıtlıysa (aynı dosyanın ikinci
+    /// aktarımı) yeniden eklenmez. Okutma kurulamazsa satır hatayla raporlanır ve grubun günü yeniden türetilmez.
+    /// </summary>
+    private static bool AddPunches(PunchDayWriter writer, List<Plan> group, IReadOnlyList<Punch> dayPunches, TimeZoneInfo zone, List<DeviceLogImportErrorDto> errors)
+    {
+        var failed = false;
+        foreach (var plan in group)
         {
-            if (inner[i].Direction == DeviceLogDirection.Out && inner[i + 1].Direction == DeviceLogDirection.In)
+            var occurredAtUtc = Punch.NormalizeOccurredAt(PunchTime.ToUtc(plan.Timestamp, zone));
+            var direction = plan.Direction == DeviceLogDirection.In ? PunchDirection.In : PunchDirection.Out;
+            if (dayPunches.Any(p => p.OccurredAtUtc == occurredAtUtc && p.Direction == direction && p.Source == PunchSource.Device))
             {
-                total += (int)(inner[i + 1].Timestamp - inner[i].Timestamp).TotalMinutes;
+                continue;
+            }
+
+            // Cihaz aktarımında ileri tarih kontrolü bugüne kadar yoktu; okutmanın kendi anına göre doğrulanır (davranış korunur).
+            var added = writer.Add(plan.EmployeeId, occurredAtUtc, plan.Date, direction, PunchSource.Device, null, null, null, null, null, false, null, null, occurredAtUtc);
+            if (added.IsFailure)
+            {
+                errors.Add(new DeviceLogImportErrorDto(plan.Line, added.Error.Code, null));
+                failed = true;
             }
         }
 
-        return total;
+        return failed;
     }
-
 }

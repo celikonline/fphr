@@ -1679,4 +1679,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.message.recipients_required" xml:space="preserve"><value>Select at least one recipient for the message.</value></data>
   <data name="notifications.messagegroup.not_found" xml:space="preserve"><value>Message group not found.</value></data>
   <data name="notifications.messagegroup.name_taken" xml:space="preserve"><value>A message group with this name already exists.</value></data>
+  <data name="attendance.punch.direction_invalid" xml:space="preserve"><value>The punch direction is invalid.</value></data>
+  <data name="attendance.punch.source_invalid" xml:space="preserve"><value>The punch source is invalid.</value></data>
+  <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>The punch source reference can be at most 200 characters.</value></data>
+  <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>The punch belongs to a different tenant than the current one.</value></data>
 </root>

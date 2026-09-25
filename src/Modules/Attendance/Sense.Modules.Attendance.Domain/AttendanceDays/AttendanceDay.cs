@@ -109,6 +109,27 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     }
 
     /// <summary>
+    /// Hesaplanamayan gün (zaman-devam Z0.4, spec §5.1): okutmalardan güvenilir bir giriş/çıkış çifti kurulamadı. Çalışma süreleri,
+    /// gece/limit/fazla mesai değerleri sıfırlanır ve tek bayrak <see cref="AttendanceAnomaly.Incalculable"/> kalır - bordro/FM okuyucuları
+    /// bu günden süre almaz. <see cref="Record"/>/<see cref="UpdateRecord"/> (türetilmiş giriş/çıkışla) hemen ardından çağrılır; gösterim için
+    /// CheckIn/CheckOut korunur. Elle düzeltme (Çalışılan saat) ya da yok sayma ile çözülür.
+    /// </summary>
+    public void MarkIncalculable()
+    {
+        WorkedMinutes = 0;
+        NetWorkedMinutes = 0;
+        BreakMinutesApplied = 0;
+        NightMinutes = 0;
+        OvertimeMinutes = 0;
+        DailyLimitExceeded = false;
+        NightLimitExceeded = false;
+        OverrideWorkedMinutes = null;
+        OverrideReason = null;
+        Anomalies = AttendanceAnomaly.Incalculable;
+        ResolutionState = AttendanceResolutionState.Unresolved;
+    }
+
+    /// <summary>
     /// "Çalışılan saat" resolution (11.3.6 Az çalışma → Çalışılan saat): overrides <see cref="WorkedMinutes"/> for
     /// reporting and resolves the day without touching CheckIn/CheckOut. Also used as the manual-correction action
     /// for missing/unplanned-data anomalies that have no Overwork/Underwork flag.
@@ -170,6 +191,12 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     /// </summary>
     public void ApplyLeaveOverlap(bool overlapsApprovedLeave)
     {
+        // Hesaplanamayan günde başka bayrak konmaz (spec §5.1).
+        if ((Anomalies & AttendanceAnomaly.Incalculable) != 0)
+        {
+            return;
+        }
+
         var shouldFlag = overlapsApprovedLeave && (CheckIn is not null || CheckOut is not null);
         var currentlyFlagged = (Anomalies & AttendanceAnomaly.WorkedWhileOnLeave) != 0;
         if (shouldFlag == currentlyFlagged)

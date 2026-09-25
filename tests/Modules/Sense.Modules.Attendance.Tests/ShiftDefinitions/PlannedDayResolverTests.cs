@@ -137,7 +137,7 @@ public sealed class PlannedDayResolverTests
         AttendanceDay? recorded = null;
         days.Add(Arg.Do<AttendanceDay>(d => recorded = d));
 
-        var result = await new RecordAttendanceHandler(days, _resolver, tenant, dataScope, new FixedLocalClock(new DateTime(2026, 9, 2, 8, 0, 0, DateTimeKind.Utc)))
+        var result = await new RecordAttendanceHandler(days, _resolver, tenant, dataScope, new FixedLocalClock(new DateTime(2026, 9, 2, 8, 0, 0, DateTimeKind.Utc)), new InMemoryPunchRepository(), Substitute.For<ICurrentUser>(), Substitute.For<IMonthlyTimesheetApprovalRepository>())
             .Handle(new RecordAttendanceCommand(_employeeId, Day, new TimeOnly(9, 0), new TimeOnly(18, 0)), TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
@@ -159,7 +159,7 @@ public sealed class PlannedDayResolverTests
         AttendanceDay? recorded = null;
         days.Add(Arg.Do<AttendanceDay>(d => recorded = d));
 
-        await new RecordAttendanceHandler(days, _resolver, tenant, dataScope, new FixedLocalClock(new DateTime(2026, 9, 2, 8, 0, 0, DateTimeKind.Utc)))
+        await new RecordAttendanceHandler(days, _resolver, tenant, dataScope, new FixedLocalClock(new DateTime(2026, 9, 2, 8, 0, 0, DateTimeKind.Utc)), new InMemoryPunchRepository(), Substitute.For<ICurrentUser>(), Substitute.For<IMonthlyTimesheetApprovalRepository>())
             .Handle(new RecordAttendanceCommand(_employeeId, Day, new TimeOnly(9, 8), new TimeOnly(18, 0)), TestContext.Current.CancellationToken);
 
         recorded.ShouldNotBeNull().Anomalies.HasFlag(AttendanceAnomaly.LateArrival).ShouldBeFalse();

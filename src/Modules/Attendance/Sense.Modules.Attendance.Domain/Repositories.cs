@@ -164,6 +164,15 @@ public interface IPunchRepository
     Task<bool> ExistsAsync(
         Guid tenantId, Guid employeeId, DateTime occurredAtUtc, PunchDirection direction, Punches.PunchSource source,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Kimliğe göre okutma (silinmiş olsa da döner - silme/denetim akışı kendisi karar verir); açık <paramref name="tenantId"/> ile süzülür.</summary>
+    Task<Punches.Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Kaydetme hatası okutma tekillik indeksinin ihlali mi (eşzamanlı aynı okutma - hata değil, yoksayma).</summary>
+    bool IsDuplicateKeyViolation(Exception exception);
+
+    /// <summary>Eklenmiş ama kaydedilmemiş bir okutmayı değişiklik izlemeden çıkarır (başarısız toplu alım / tekillik yarışı sonrası).</summary>
+    void Discard(Punches.Punch punch);
 }
 
 public interface IShiftDefinitionRepository

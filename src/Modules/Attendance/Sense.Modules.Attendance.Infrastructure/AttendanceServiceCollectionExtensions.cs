@@ -85,6 +85,9 @@ public static class AttendanceServiceCollectionExtensions
         // TryAdd: B9 (rotasyon) da aynı repository'yi kaydeder; birleşmede çift kayıt olmasın.
         services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
         services.TryAddScoped<IPlannedDayResolver, PlannedDayResolver>();
+        // Zaman-devam B1 (Z0.1): ham okutma deposu + tek yazma yolu. TryAdd: aynı dalgada başka şeritler de depoyu kaydedebilir.
+        services.TryAddScoped<IPunchRepository, PunchRepository>();
+        services.TryAddScoped<IPunchRecorder, Application.Punches.PunchRecorder>();
         return services;
     }
 
