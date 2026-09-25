@@ -23,7 +23,9 @@ public sealed record SharedFileListItemDto(
     DateTime UploadedAt,
     Guid UploadedBy,
     string Visibility,
-    IReadOnlyList<string> AllowedRoles);
+    IReadOnlyList<string> AllowedRoles,
+    Guid? TypeId = null,
+    bool VisibleOnMobile = false);
 
 /// <summary>Single file detail with a presigned download URL.</summary>
 public sealed record SharedFileDetailDto(

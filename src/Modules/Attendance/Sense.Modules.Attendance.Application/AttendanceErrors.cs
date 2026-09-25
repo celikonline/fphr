@@ -37,4 +37,13 @@ public static class AttendanceErrors
 
     /// <summary>Zaman-devam Z0.3: no recalculation job with this id for the tenant (or it was lost on restart).</summary>
     public const string RecalculationJobNotFound = "attendance.recalculation.job_not_found";
+
+    /// <summary>Z2.1: the employee's month is closed (approved monthly timesheet, K6), so no missing-punch request can be raised for it.</summary>
+    public const string PunchRequestPeriodLocked = "attendance.punch_request.period_locked";
+
+    /// <summary>Z2.1: a pending request for the same employee/time/direction already exists.</summary>
+    public const string PunchRequestDuplicate = "attendance.punch_request.duplicate";
+
+    /// <summary>Z2.1: only the requesting employee can cancel a request.</summary>
+    public const string PunchRequestNotOwner = "attendance.punch_request.not_owner";
 }

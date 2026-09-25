@@ -1,5 +1,62 @@
 {
   "title": "Vardiya tanımları",
   "subtitle": "Vardiya saatleri ve mola süreleri",
-  "comingSoon": "Bu ekran yakında kullanıma açılacak."
+  "comingSoon": "Bu ekran yakında kullanıma açılacak.",
+  "new": "Yeni vardiya",
+  "saved": "Vardiya kaydedildi.",
+  "savedApplied": "Vardiya kaydedildi; geçmiş günler yeniden hesaplanacak.",
+  "saveFailed": "Vardiya kaydedilemedi.",
+  "type": {
+    "fixed": "Sabit",
+    "flexible": "Esnek",
+    "dynamic": "Dinamik"
+  },
+  "typeHint": {
+    "fixed": "Belirli başlangıç ve bitiş saati.",
+    "flexible": "Sabit süre; giriş saati pencere içinde serbest.",
+    "dynamic": "Okutmaya en yakın başlangıçlı vardiya otomatik seçilir."
+  },
+  "list": {
+    "hours": "Saatler",
+    "status": "Durum",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "empty": "Henüz vardiya tanımı yok.",
+    "flexHours": "{{minutes}} dk (esnek)"
+  },
+  "form": {
+    "code": "Kod",
+    "name": "Ad",
+    "color": "Renk",
+    "type": "Tür",
+    "required": "Zorunlu alan",
+    "overnight": "Gece vardiyası: {{start}} – ertesi gün {{end}}",
+    "startsPreviousDay": "Önceki gün başlar",
+    "duration": "Vardiya süresi (dk)",
+    "flexEarliest": "En erken giriş",
+    "flexLatest": "En geç giriş",
+    "breaks": "Molalar",
+    "addBreak": "Mola ekle",
+    "removeBreak": "Molayı sil",
+    "noBreaks": "Mola tanımlı değil.",
+    "breakStart": "Başlangıç",
+    "breakDuration": "Süre (dk)",
+    "breakFlexible": "Serbest",
+    "lateTolerance": "Geç kalma toleransı (dk)",
+    "earlyLeaveTolerance": "Erken çıkış toleransı (dk)",
+    "bonus": "Ek süre (dk)",
+    "earlyOtMin": "Erken giriş FM min (dk)",
+    "earlyOtMax": "Erken giriş FM maks (dk)",
+    "lateOtMin": "Geç çıkış FM min (dk)",
+    "lateOtMax": "Geç çıkış FM maks (dk)",
+    "active": "Aktif",
+    "cancel": "Vazgeç",
+    "save": "Kaydet",
+    "saveApplyPast": "Kaydet ve geçmişe uygula"
+  },
+  "timeline": {
+    "start": "Başlangıç saati",
+    "end": "Bitiş saati"
+  },
+  "recalculating": "{{count}} atama yeniden hesaplanacak."
 }

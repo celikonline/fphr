@@ -21,7 +21,9 @@
     "button": "Add new employee",
     "title": "Add new employee",
     "description": "First and last name are enough; you can complete the rest later on the employee card.",
-    "success": "Employee created."
+    "success": "Employee created.",
+    "sendCredentials": "Send login details by e-mail",
+    "inviteFailed": "Invitation could not be sent: {{message}}"
   },
   "filters": {
     "orgUnit": "Unit",
@@ -347,7 +349,9 @@
       "leave": "Leave",
       "overtime": "Overtime",
       "other": "Other",
-      "account": "Account"
+      "account": "Account",
+      "onboarding": "Onboarding",
+      "notes": "Notes"
     },
     "tabNotes": {
       "leave": "Leave balances and requests appear here once the Leave module is available.",
@@ -410,7 +414,8 @@
     "outcome": {
       "sent": "Invitation sent",
       "resent": "Invitation resent",
-      "alreadyactive": "Account is already active"
+      "alreadyactive": "Account is already active",
+      "notrequested": "Login details were not sent."
     },
     "sentTo": "Sent to: {{email}}"
   },
@@ -847,5 +852,50 @@
     "empty": "No employees match the filter.",
     "loadMore": "Show more",
     "confirm": "Confirm selection"
+  },
+  "onboardingCard": {
+    "title": "Onboarding / offboarding process",
+    "progress": "Category progress",
+    "uncategorized": "Uncategorized",
+    "none": "No tasks started for this employee.",
+    "startTitle": "Start process",
+    "set": "Template set",
+    "setPlaceholder": "Select a set",
+    "referenceDate": "Reference date",
+    "start": "Start process",
+    "started": "Process started.",
+    "noSets": "No active template sets."
+  },
+  "employeeNotes": {
+    "title": "Employee notes",
+    "empty": "No notes yet.",
+    "add": "Add note",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noteTitle": "Title",
+    "content": "Content",
+    "importance": "Importance",
+    "importances": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "attachment": "Attachment",
+    "attach": "Attach file",
+    "removeAttachment": "Remove attachment",
+    "author": "Added by",
+    "saved": "Note saved.",
+    "deleted": "Note deleted.",
+    "loadError": "Notes could not be loaded.",
+    "actionFailed": "The action could not be completed.",
+    "confirmDelete": "Delete this note?",
+    "attachmentFailed": "Note saved, but the attachment could not be uploaded — try again.",
+    "fileInvalid": {
+      "size": "The file cannot be larger than 10 MB.",
+      "type": "Only PDF, PNG, JPG, TXT, DOCX and XLSX files can be attached."
+    },
+    "truncated": "Showing the first {{count}} notes."
   }
 }

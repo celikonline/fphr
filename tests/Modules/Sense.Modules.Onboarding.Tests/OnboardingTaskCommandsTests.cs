@@ -30,7 +30,7 @@ public sealed class OnboardingTaskCommandsTests
     public async Task CreateTaskTemplate_ValidInput_AddsToRepository()
     {
         var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
-        var handler = new CreateOnboardingTaskTemplateHandler(Tenant(), templates);
+        var handler = new CreateOnboardingTaskTemplateHandler(Tenant(), templates, Substitute.For<IOnboardingCategoryRepository>());
 
         var result = await handler.Handle(
             new CreateOnboardingTaskTemplateCommand(OnboardingStage.Onboarding, "Oryantasyon eğitimi", "hr", 3, true),
@@ -45,7 +45,7 @@ public sealed class OnboardingTaskCommandsTests
     public async Task CreateTaskTemplate_EmptyTitle_Fails_AndDoesNotAdd()
     {
         var templates = Substitute.For<IOnboardingTaskTemplateRepository>();
-        var handler = new CreateOnboardingTaskTemplateHandler(Tenant(), templates);
+        var handler = new CreateOnboardingTaskTemplateHandler(Tenant(), templates, Substitute.For<IOnboardingCategoryRepository>());
 
         var result = await handler.Handle(
             new CreateOnboardingTaskTemplateCommand(OnboardingStage.Onboarding, " ", "hr", 3, true),

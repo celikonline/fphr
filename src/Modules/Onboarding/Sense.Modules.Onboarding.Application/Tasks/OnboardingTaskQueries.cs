@@ -22,7 +22,10 @@ public sealed record OnboardingChecklistItemDto(
     bool IsOverdue,
     DateTime? CompletedAt,
     string? WaivedReason,
-    DateTime? WaivedAt);
+    DateTime? WaivedAt,
+    Guid? CategoryId = null,
+    OnboardingImportance Importance = OnboardingImportance.Normal,
+    bool RequiresEDocument = false);
 
 internal static class OnboardingChecklist
 {
@@ -39,7 +42,8 @@ internal static class OnboardingChecklist
                 return new OnboardingChecklistItemDto(
                     task.Id, task.EmployeeId, task.TemplateId, template?.Title ?? string.Empty,
                     template?.ResponsibleRoleCode ?? string.Empty, template?.IsMandatory ?? false, task.Stage, task.DueDate,
-                    task.Status, task.IsOverdue(today), task.CompletedAt, task.WaivedReason, task.WaivedAt);
+                    task.Status, task.IsOverdue(today), task.CompletedAt, task.WaivedReason, task.WaivedAt,
+                    task.CategoryId, task.Importance, task.RequiresEDocument);
             })
             .OrderBy(i => i.DueDate)
             .ThenBy(i => i.Title, StringComparer.CurrentCulture)

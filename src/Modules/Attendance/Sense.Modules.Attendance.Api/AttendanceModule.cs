@@ -54,5 +54,8 @@ public sealed class AttendanceModule : IModule
 
         // K7: vardiya dönemi otomatik kilit işi (JobType.ShiftPeriodAutoLock) - seed'lenmişti ama işleyicisi yoktu.
         services.AddScoped<IScheduledJobHandler, ShiftPeriodAutoLockJobHandler>();
+        // Vardiya planı Excel şablonu "shift-plan" (Z3.2)
+        services.AddScoped<IImportTemplate, ShiftPlanImportTemplate>();
+        services.AddScoped<IImportRowHandler, ShiftPlanImportRowHandler>();
     }
 }

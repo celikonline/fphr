@@ -1,5 +1,55 @@
 {
   "title": "Schichtrotationen",
   "subtitle": "Wechselschichtmuster",
-  "comingSoon": "Diese Ansicht folgt in Kürze."
+  "patterns": "Muster",
+  "assign": "Zuweisung",
+  "newPattern": "Neues Muster",
+  "code": "Code",
+  "name": "Name",
+  "preset": "Vorlage",
+  "presets": {
+    "custom": "Individuell",
+    "twoByTwelve": "2×12",
+    "threeByEight": "3×8",
+    "fourBySix": "4×6"
+  },
+  "cycleLength": "Zykluslänge (Tage)",
+  "steps": "Schritte",
+  "stepDay": "Tag {{n}}",
+  "dayType": "Tagesart",
+  "dayTypes": {
+    "work": "Arbeit",
+    "off": "Frei"
+  },
+  "shift": "Schicht",
+  "addStep": "Schritt hinzufügen",
+  "removeStep": "Schritt entfernen",
+  "save": "Speichern",
+  "saved": "Muster gespeichert.",
+  "pattern": "Muster",
+  "employees": "Mitarbeitende",
+  "pickEmployee": "Mitarbeitende hinzufügen",
+  "startDate": "Beginn",
+  "endDate": "Ende (optional)",
+  "offsetDays": "Versatz (Tage)",
+  "apply": "Zuweisen",
+  "noPatterns": "Noch keine Muster.",
+  "result": "{{count}} Schichtzuweisungen als Entwurf erstellt.",
+  "skippedTitle": "Wegen gesperrter Monate übersprungen",
+  "skippedMonth": "Der Zeitraum {{month}} ist gesperrt; für diesen Monat wurde nichts zugewiesen.",
+  "overlapTitle": "Überschneidende Zuweisung",
+  "genericError": "Der Vorgang konnte nicht abgeschlossen werden.",
+  "slots": {
+    "day": "Tagschicht",
+    "night": "Nachtschicht",
+    "morning": "Frühschicht",
+    "evening": "Spätschicht",
+    "s1": "Schicht 1 (6 Std.)",
+    "s2": "Schicht 2 (6 Std.)",
+    "s3": "Schicht 3 (6 Std.)",
+    "s4": "Schicht 4 (6 Std.)"
+  },
+  "shiftsRequired": "Wählen Sie für jeden Arbeitsschritt eine Schicht.",
+  "endBeforeStart": "Das Enddatum darf nicht vor dem Beginn liegen.",
+  "offsetTooLarge": "Der Versatz muss kleiner als die Zykluslänge sein."
 }

@@ -43,23 +43,36 @@ public sealed class OnboardingTaskTemplate : TenantAggregateRoot<Guid>, IAuditLo
 
     public bool IsActive { get; private set; } = true;
 
+    /// <summary>Optional grouping category; null for templates created before categories existed.</summary>
+    public Guid? CategoryId { get; private set; }
+
+    public OnboardingImportance Importance { get; private set; } = OnboardingImportance.Normal;
+
+    /// <summary>The task is fulfilled by an e-document (e-evrak) step.</summary>
+    public bool RequiresEDocument { get; private set; }
+
     public static Result<OnboardingTaskTemplate> Create(
-        Guid tenantId, OnboardingStage stage, string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory)
+        Guid tenantId, OnboardingStage stage, string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory,
+        Guid? categoryId = null, OnboardingImportance importance = OnboardingImportance.Normal, bool requiresEDocument = false)
     {
         var template = new OnboardingTaskTemplate(Guid.CreateVersion7(), tenantId, stage);
-        var applied = template.Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory);
+        var applied = template.Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory, categoryId, importance, requiresEDocument);
         return applied.IsFailure ? applied.Error : template;
     }
 
     /// <summary>Editable fields only - <see cref="Stage"/> is fixed at creation (a template's aşaması doesn't change).</summary>
-    public Result Update(string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory) =>
-        Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory);
+    public Result Update(
+        string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory,
+        Guid? categoryId = null, OnboardingImportance importance = OnboardingImportance.Normal, bool requiresEDocument = false) =>
+        Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory, categoryId, importance, requiresEDocument);
 
     public void Activate() => IsActive = true;
 
     public void Deactivate() => IsActive = false;
 
-    private Result Apply(string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory)
+    private Result Apply(
+        string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory,
+        Guid? categoryId, OnboardingImportance importance, bool requiresEDocument)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -80,6 +93,9 @@ public sealed class OnboardingTaskTemplate : TenantAggregateRoot<Guid>, IAuditLo
         ResponsibleRoleCode = responsibleRoleCode.Trim();
         DueDateOffsetDays = dueDateOffsetDays;
         IsMandatory = isMandatory;
+        CategoryId = categoryId;
+        Importance = importance;
+        RequiresEDocument = requiresEDocument;
         return Result.Success();
     }
 }
