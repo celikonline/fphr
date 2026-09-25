@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Host'ta dotnet yok: SDK container'ı, derleme slotu semaforu üzerinden.
+exec "$(dirname "$0")/slot.sh" docker run --rm -v "$PWD":"$PWD" -v senseik-nuget:/root/.nuget/packages \
+  -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal \
+  --add-host=host.docker.internal:host-gateway -w "$PWD" mcr.microsoft.com/dotnet/sdk:10.0 dotnet "$@"

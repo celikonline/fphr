@@ -1,0 +1,12 @@
+{
+  "id": "W0-c",
+  "baslik": "Web/mobil iskelet",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/W0-c",
+  "kabul": ["docs/superpowers/plans/2026-09-25-zaman-devam-birlesik.md icindeki Task W0-c adimlari ve testleri"],
+  "birlestirme_kapisi": "test kapisi YESIL + kanit GECERLI + gozden gecirici ONAY (+ riskli alanda insan onayi)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/W0-c.md"
+}
