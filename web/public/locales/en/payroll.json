@@ -201,5 +201,42 @@
       "gross": "Gross",
       "net": "Net"
     }
+  },
+  "payslipImport": {
+    "title": "External payslip PDF upload",
+    "subtitle": "Distribute externally prepared payslip PDFs (or a zip) to employee documents by registration number.",
+    "formatHint": "File name format: <registration>_<YYYY-MM>.pdf (e.g. 1001_2026-08.pdf). PDFs inside a zip are processed too.",
+    "selectFiles": "Select files",
+    "selected": "{{count}} file(s) selected",
+    "upload": "Upload and distribute",
+    "uploading": "Uploading...",
+    "summary": "{{imported}} of {{total}} files were added to employee documents.",
+    "uploadFailed": "Upload failed.",
+    "columns": {
+      "file": "File",
+      "status": "Status",
+      "period": "Period",
+      "reason": "Details"
+    },
+    "status": {
+      "imported": "Matched",
+      "unmatched": "Unmatched",
+      "duplicate": "Duplicate",
+      "terminated": "Terminated employee",
+      "skipped": "Skipped",
+      "failed": "Failed",
+      "notPdf": "Not a PDF"
+    },
+    "reasons": {
+      "not_pdf": "Not a PDF",
+      "invalid_file_name": "File name is not <registration>_<YYYY-MM>.pdf",
+      "zip_entry_too_large": "Zip entry is too large",
+      "zip_corrupt": "Zip file is corrupt",
+      "zip_too_many_entries": "Zip contains too many files",
+      "unknown_registration": "Registration number not found",
+      "terminated_employee": "Employee has left the company",
+      "duplicate_registration": "Multiple files for the same registration/period",
+      "delivery_failed": "Document could not be delivered"
+    }
   }
 }

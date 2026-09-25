@@ -44,6 +44,7 @@ import {
   FileStack,
   FileWarning,
   Upload,
+  FileUp,
   FolderOpen,
   HardHat,
   ClipboardCheck,
@@ -531,6 +532,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["attendance.terminal.view"],
     iconColor: "orange",
   },
+  {
+    key: "payslipImport",
+    labelKey: "apps.payslipImport",
+    path: "/app/payroll/payslip-import",
+    icon: FileUp,
+    permissions: ["payroll.payslip.import"],
+    iconColor: "navy",
+  },
 ];
 
 export interface SettingsLink {
@@ -950,6 +959,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
         requireAppItem("expenses"),
         requireAppItem("expensePaymentsAdmin"),
         requireAppItem("payroll"),
+        requireAppItem("payslipImport"),
       ],
     },
   ],

@@ -81,7 +81,8 @@
     "rotations": "Shift rotations",
     "monthlyMatrix": "Monthly attendance matrix",
     "punchRequests": "Punch requests",
-    "terminals": "Time clock terminals"
+    "terminals": "Time clock terminals",
+    "payslipImport": "External payslip PDF upload"
   },
   "settings": {
     "company": "Company and organization",

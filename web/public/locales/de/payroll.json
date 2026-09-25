@@ -201,5 +201,42 @@
       "gross": "Brutto",
       "net": "Netto"
     }
+  },
+  "payslipImport": {
+    "title": "Externe Gehaltsabrechnungs-PDFs hochladen",
+    "subtitle": "Extern erstellte Gehaltsabrechnungen (PDF oder Zip) anhand der Personalnummer den Mitarbeiterdokumenten zuordnen.",
+    "formatHint": "Dateiname: <Personalnummer>_<JJJJ-MM>.pdf (z. B. 1001_2026-08.pdf). PDFs in einer Zip-Datei werden ebenfalls verarbeitet.",
+    "selectFiles": "Dateien auswählen",
+    "selected": "{{count}} Datei(en) ausgewählt",
+    "upload": "Hochladen und verteilen",
+    "uploading": "Wird hochgeladen...",
+    "summary": "{{imported}} von {{total}} Dateien wurden zu Mitarbeiterdokumenten hinzugefügt.",
+    "uploadFailed": "Upload fehlgeschlagen.",
+    "columns": {
+      "file": "Datei",
+      "status": "Status",
+      "period": "Zeitraum",
+      "reason": "Details"
+    },
+    "status": {
+      "imported": "Zugeordnet",
+      "unmatched": "Nicht zugeordnet",
+      "duplicate": "Doppelt",
+      "terminated": "Ausgeschiedener Mitarbeiter",
+      "skipped": "Übersprungen",
+      "failed": "Fehler",
+      "notPdf": "Kein PDF"
+    },
+    "reasons": {
+      "not_pdf": "Kein PDF",
+      "invalid_file_name": "Dateiname entspricht nicht <Personalnummer>_<JJJJ-MM>.pdf",
+      "zip_entry_too_large": "Zip-Eintrag ist zu groß",
+      "zip_corrupt": "Zip-Datei ist beschädigt",
+      "zip_too_many_entries": "Zip enthält zu viele Dateien",
+      "unknown_registration": "Personalnummer nicht gefunden",
+      "terminated_employee": "Mitarbeiter ist ausgeschieden",
+      "duplicate_registration": "Mehrere Dateien für dieselbe Personalnummer/Zeitraum",
+      "delivery_failed": "Dokument konnte nicht zugestellt werden"
+    }
   }
 }
