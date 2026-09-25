@@ -10,6 +10,7 @@
     "employee": "Mitarbeiter",
     "leave": "Urlaub",
     "finance": "Finanzen",
+    "time": "Zeit & Anwesenheit",
     "other": "Sonstige"
   },
   "catalogView": {
@@ -136,6 +137,17 @@
     "from": "Von",
     "to": "Bis",
     "includeTerminated": "Ausgeschiedene Mitarbeiter einbeziehen",
+    "status": "Status",
+    "statusOptions": {
+      "incalculable": "Nicht berechenbar",
+      "arrived": "Gekommen",
+      "late": "Verspätet",
+      "earlyLeave": "Früh gegangen",
+      "absent": "Abwesend",
+      "overtime": "Überstunden",
+      "undertime": "Minusstunden",
+      "onLeave": "Im Urlaub"
+    },
     "presets": {
       "thisMonth": "Dieser Monat",
       "lastMonth": "Letzter Monat",

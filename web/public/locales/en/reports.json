@@ -10,6 +10,7 @@
     "employee": "Employee",
     "leave": "Leave",
     "finance": "Finance",
+    "time": "Time & attendance",
     "other": "Other"
   },
   "catalogView": {
@@ -136,6 +137,17 @@
     "from": "From",
     "to": "To",
     "includeTerminated": "Include terminated employees",
+    "status": "Status",
+    "statusOptions": {
+      "incalculable": "Incalculable",
+      "arrived": "Arrived",
+      "late": "Late arrivals",
+      "earlyLeave": "Early leavers",
+      "absent": "Absent",
+      "overtime": "Overtime",
+      "undertime": "Undertime",
+      "onLeave": "On leave"
+    },
     "presets": {
       "thisMonth": "This month",
       "lastMonth": "Last month",

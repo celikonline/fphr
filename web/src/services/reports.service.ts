@@ -19,16 +19,18 @@ const REPORTS_BASE = "/v1/reports";
 export type ReportExecutionStatus = "queued" | "running" | "succeeded" | "failed";
 
 /** `ReportCategories` (Reporting.Contracts); menu order is this array's order. */
-export const REPORT_CATEGORY_KEYS = ["administrative", "employee", "leave", "finance"] as const;
+export const REPORT_CATEGORY_KEYS = ["administrative", "employee", "leave", "finance", "time"] as const;
 export type ReportCategoryKey = (typeof REPORT_CATEGORY_KEYS)[number];
 
 /** `ReportParameterKind` (camelCase enum JSON). */
-export type ReportParameterKind = "orgUnits" | "year" | "month" | "dateRange" | "boolean";
+export type ReportParameterKind = "orgUnits" | "year" | "month" | "dateRange" | "boolean" | "select";
 
 export interface ReportParameter {
   key: string;
   kind: ReportParameterKind;
   isRequired: boolean;
+  /** Allowed values of a `select` parameter (omitted by the API for other kinds); labels: `reports:params.{key}Options.{value}`. */
+  options?: string[] | null;
 }
 
 /** Wire keys shared with `ReportParameterKeys`; a `dateRange` parameter is sent as `from` + `to`. */
@@ -39,6 +41,8 @@ export const REPORT_PARAMETER_KEYS = {
   from: "from",
   to: "to",
   includeTerminated: "includeTerminated",
+  status: "status",
+  format: "format",
 } as const;
 
 export interface ReportCatalogItem {

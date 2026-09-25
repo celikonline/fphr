@@ -10,6 +10,7 @@
     "employee": "Çalışan",
     "leave": "İzinler",
     "finance": "Finans",
+    "time": "Zaman ve devam",
     "other": "Diğer"
   },
   "catalogView": {
@@ -136,6 +137,17 @@
     "from": "Başlangıç",
     "to": "Bitiş",
     "includeTerminated": "İşten ayrılanları dahil et",
+    "status": "Durum",
+    "statusOptions": {
+      "incalculable": "Hesaplanamayanlar",
+      "arrived": "Gelenler",
+      "late": "Geç gelenler",
+      "earlyLeave": "Erken çıkanlar",
+      "absent": "Devamsızlar",
+      "overtime": "Fazla mesai",
+      "undertime": "Eksik mesai",
+      "onLeave": "İzinliler"
+    },
     "presets": {
       "thisMonth": "Bu ay",
       "lastMonth": "Geçen ay",

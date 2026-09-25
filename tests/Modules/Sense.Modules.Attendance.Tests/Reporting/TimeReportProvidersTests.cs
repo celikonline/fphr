@@ -10,6 +10,7 @@ using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Modules.Attendance.Infrastructure.Reporting;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Reporting.Application;
 using Sense.Modules.Reporting.Contracts;
 using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Paging;
@@ -224,6 +225,54 @@ public sealed class TimeReportProvidersTests
     {
         await Should.ThrowAsync<InvalidOperationException>(() =>
             DailyLists().GenerateAsync(TenantId, Params(("date", "2026-09-21"), ("status", "nonsense")), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void DailyStatus_announces_status_and_format_as_select_parameters()
+    {
+        var parameters = DailyLists().Parameters;
+
+        var status = parameters.Single(p => p.Key == "status");
+        status.Kind.ShouldBe(ReportParameterKind.Select);
+        status.IsRequired.ShouldBeTrue();
+        status.Options.ShouldBe(["incalculable", "arrived", "late", "earlyLeave", "absent", "overtime", "undertime", "onLeave"]);
+        var format = parameters.Single(p => p.Key == "format");
+        format.Kind.ShouldBe(ReportParameterKind.Select);
+        format.Options.ShouldBe(["xlsx", "pdf"]);
+    }
+
+    [Fact]
+    public void Invalid_status_returns_validation_error()
+    {
+        var result = ReportParameterValidation.Validate(DailyLists().Parameters, Params(("status", "nonsense")));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ParameterInvalid);
+    }
+
+    [Fact]
+    public void Missing_status_returns_validation_error()
+    {
+        var result = ReportParameterValidation.Validate(DailyLists().Parameters, Params(("date", "2026-09-21")));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ParameterRequired);
+    }
+
+    [Fact]
+    public void Valid_status_and_format_pass_validation()
+    {
+        ReportParameterValidation.Validate(DailyLists().Parameters, Params(("status", "earlyLeave"), ("format", "pdf"))).IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Anomalies_column_uses_localized_labels()
+    {
+        QueryReturns(DailyStatus.Late, DailyRow(Guid.NewGuid(), "Ayşe Yılmaz"));
+
+        var file = await DailyLists().GenerateAsync(TenantId, Params(("date", "2026-09-21"), ("status", "late")), TestContext.Current.CancellationToken);
+
+        FirstSheet(file).Cell(2, 7).GetString().ShouldBe("Geç giriş");
     }
 
     // ---- Vardiya atanmayanlar ----

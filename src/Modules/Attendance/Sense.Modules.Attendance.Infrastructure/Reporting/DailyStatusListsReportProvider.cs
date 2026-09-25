@@ -22,6 +22,7 @@ public sealed class DailyStatusListsReportProvider(
 {
     public const string ReportKey = "attendance.time.daily_status";
     public const string StatusParameterKey = "status";
+    private const string FormatParameterKey = "format";
 
     public string Key => ReportKey;
 
@@ -29,7 +30,15 @@ public sealed class DailyStatusListsReportProvider(
 
     public string? RequiredPermission => "attendance.daily.view";
 
-    public IReadOnlyList<ReportParameterDescriptor> Parameters => DailyStatusReportSupport.DateParameters;
+    public IReadOnlyList<ReportParameterDescriptor> Parameters { get; } =
+    [
+        .. DailyStatusReportSupport.DateParameters,
+        new(StatusParameterKey, ReportParameterKind.Select, IsRequired: true, Options: StatusOptions),
+        new(FormatParameterKey, ReportParameterKind.Select, Options: ["xlsx", "pdf"]),
+    ];
+
+    private static readonly string[] StatusOptions =
+        [.. Enum.GetValues<DailyStatus>().Select(s => char.ToLowerInvariant(s.ToString()[0]) + s.ToString()[1..])];
 
     public async Task<ReportFileResult> GenerateAsync(Guid tenantId, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken)
     {

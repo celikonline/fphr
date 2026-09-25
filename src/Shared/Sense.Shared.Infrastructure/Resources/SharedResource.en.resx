@@ -1690,4 +1690,15 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Incalculable</value></data>
   <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>No shift assigned</value></data>
   <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Daily status list</value></data>
+  <data name="report.anomaly.noData" xml:space="preserve"><value>No data</value></data>
+  <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Missing check-in</value></data>
+  <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Missing check-out</value></data>
+  <data name="report.anomaly.lateArrival" xml:space="preserve"><value>Late arrival</value></data>
+  <data name="report.anomaly.earlyLeave" xml:space="preserve"><value>Early leave</value></data>
+  <data name="report.anomaly.lateLeave" xml:space="preserve"><value>Late leave</value></data>
+  <data name="report.anomaly.overwork" xml:space="preserve"><value>Overwork</value></data>
+  <data name="report.anomaly.underwork" xml:space="preserve"><value>Underwork</value></data>
+  <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Unplanned work</value></data>
+  <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>Worked while on leave</value></data>
+  <data name="report.anomaly.incalculable" xml:space="preserve"><value>Incalculable</value></data>
 </root>

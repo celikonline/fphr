@@ -1699,4 +1699,15 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Hesaplanamayanlar</value></data>
   <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>Vardiya atanmayanlar</value></data>
   <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Günlük durum listesi</value></data>
+  <data name="report.anomaly.noData" xml:space="preserve"><value>Veri yok</value></data>
+  <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Giriş eksik</value></data>
+  <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Çıkış eksik</value></data>
+  <data name="report.anomaly.lateArrival" xml:space="preserve"><value>Geç giriş</value></data>
+  <data name="report.anomaly.earlyLeave" xml:space="preserve"><value>Erken çıkış</value></data>
+  <data name="report.anomaly.lateLeave" xml:space="preserve"><value>Geç çıkış</value></data>
+  <data name="report.anomaly.overwork" xml:space="preserve"><value>Fazla çalışma</value></data>
+  <data name="report.anomaly.underwork" xml:space="preserve"><value>Eksik çalışma</value></data>
+  <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Plansız çalışma</value></data>
+  <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>İzinli günde çalışma</value></data>
+  <data name="report.anomaly.incalculable" xml:space="preserve"><value>Hesaplanamadı</value></data>
 </root>

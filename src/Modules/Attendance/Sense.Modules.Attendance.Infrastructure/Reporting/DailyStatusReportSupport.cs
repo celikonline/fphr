@@ -90,7 +90,7 @@ internal static class DailyStatusReportSupport
             .Select(r => (IReadOnlyList<object?>)new List<object?>
             {
                 r.EmployeeName, r.Date, r.CheckIn?.ToString(TimeFormat), r.CheckOut?.ToString(TimeFormat),
-                r.WorkedMinutes, r.OvertimeMinutes, string.Join(", ", r.Anomalies), r.LeaveType,
+                r.WorkedMinutes, r.OvertimeMinutes, string.Join(", ", r.Anomalies.Select(a => localizer["report.anomaly." + a].Value)), r.LeaveType,
             })
             .ToList();
 
