@@ -32,7 +32,27 @@
     "status": "Durum",
     "inside": "İçeride",
     "outside": "Dışarıda",
-    "empty": "Görüntülenecek çalışan yok."
+    "empty": "Görüntülenecek çalışan yok.",
+    "terminals": {
+      "title": "Terminaller",
+      "online": "Çevrimiçi",
+      "offline": "Çevrimdışı",
+      "inactive": "Pasif",
+      "todayCount": "Bugün: {{count}} okutma",
+      "lastPunch": "Son okutma",
+      "lastSeen": "Son görülme",
+      "never": "Hiç görülmedi",
+      "empty": "Kayıtlı terminal yok."
+    },
+    "lastPunch": "Son okutma",
+    "sources": {
+      "manual": "Manuel",
+      "import": "İçe aktarma",
+      "device": "Cihaz",
+      "selfService": "Kendi okutması",
+      "request": "Talep",
+      "terminal": "Terminal"
+    }
   },
   "empty": "Bu dönemde kayıt yok.",
   "genericError": "İşlem sırasında bir hata oluştu.",

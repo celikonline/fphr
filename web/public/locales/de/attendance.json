@@ -32,7 +32,27 @@
     "status": "Status",
     "inside": "Anwesend",
     "outside": "Abwesend",
-    "empty": "Keine Mitarbeitenden anzuzeigen."
+    "empty": "Keine Mitarbeitenden anzuzeigen.",
+    "terminals": {
+      "title": "Terminals",
+      "online": "Online",
+      "offline": "Offline",
+      "inactive": "Inaktiv",
+      "todayCount": "Heute: {{count}} Stempelungen",
+      "lastPunch": "Letzte Stempelung",
+      "lastSeen": "Zuletzt gesehen",
+      "never": "Nie gesehen",
+      "empty": "Keine registrierten Terminals."
+    },
+    "lastPunch": "Letzte Stempelung",
+    "sources": {
+      "manual": "Manuell",
+      "import": "Import",
+      "device": "Gerät",
+      "selfService": "Selbstbedienung",
+      "request": "Antrag",
+      "terminal": "Terminal"
+    }
   },
   "empty": "Für diesen Zeitraum gibt es keine Einträge.",
   "genericError": "Etwas ist schiefgelaufen.",
