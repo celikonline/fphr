@@ -35,6 +35,8 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
 
     public DbSet<EmployeePhoto> EmployeePhotos => Set<EmployeePhoto>();
 
+    public DbSet<EmployeeNote> EmployeeNotes => Set<EmployeeNote>();
+
     /// <summary>senseik-049: employee.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
