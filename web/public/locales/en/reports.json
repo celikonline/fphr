@@ -83,6 +83,20 @@
           "label": "Month-end closing (accountant) report",
           "description": "The monthly timesheet summary plus paid, unpaid and sick leave days, whether the month is approved and the approval date."
         }
+      },
+      "time": {
+        "incalculable": {
+          "label": "Incalculable",
+          "description": "Employees whose timesheet could not be calculated on the selected day(s)."
+        },
+        "no_shift_assigned": {
+          "label": "No shift assigned",
+          "description": "Employees with planned working days in the date range but no shift assignment, with the count of unassigned days."
+        },
+        "daily_status": {
+          "label": "Daily status lists",
+          "description": "Arrived, late, early leave, absent, overtime, undertime, on leave and incalculable lists for the selected status and day."
+        }
       }
     },
     "recruitment": {

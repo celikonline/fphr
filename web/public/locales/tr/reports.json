@@ -83,6 +83,20 @@
           "label": "Ay sonu kapatma (mali müşavir) raporu",
           "description": "Aylık puantaj özetine ek olarak ücretli, ücretsiz ve raporlu izin günleri ile ayın onaylanıp onaylanmadığı ve onay tarihi."
         }
+      },
+      "time": {
+        "incalculable": {
+          "label": "Hesaplanamayanlar",
+          "description": "Seçilen gün(ler)de puantajı hesaplanamayan çalışanlar."
+        },
+        "no_shift_assigned": {
+          "label": "Vardiya atanmayanlar",
+          "description": "Tarih aralığında planlı çalışma günü olup vardiya ataması bulunmayan çalışanlar, atanmamış gün sayısı ile."
+        },
+        "daily_status": {
+          "label": "Günlük durum listeleri",
+          "description": "Gelenler, geç gelenler, erken çıkanlar, devamsızlar, fazla mesai, eksik mesai, izinliler ve hesaplanamayanlar listesi; seçilen durum ve gün için."
+        }
       }
     },
     "recruitment": {

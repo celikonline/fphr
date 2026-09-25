@@ -83,6 +83,20 @@
           "label": "Monatsabschlussbericht (Steuerberater)",
           "description": "Die monatliche Zeiterfassungsübersicht plus bezahlte, unbezahlte und Krankheitstage sowie ob und wann der Monat genehmigt wurde."
         }
+      },
+      "time": {
+        "incalculable": {
+          "label": "Nicht berechenbar",
+          "description": "Mitarbeiter, deren Zeiterfassung an den gewählten Tagen nicht berechnet werden konnte."
+        },
+        "no_shift_assigned": {
+          "label": "Ohne Schichtzuweisung",
+          "description": "Mitarbeiter mit geplanten Arbeitstagen im Zeitraum, aber ohne Schichtzuweisung, mit Anzahl der nicht zugewiesenen Tage."
+        },
+        "daily_status": {
+          "label": "Tägliche Statuslisten",
+          "description": "Listen für gekommen, verspätet, früh gegangen, abwesend, Überstunden, Minusstunden, im Urlaub und nicht berechenbar für den gewählten Status und Tag."
+        }
       }
     },
     "recruitment": {

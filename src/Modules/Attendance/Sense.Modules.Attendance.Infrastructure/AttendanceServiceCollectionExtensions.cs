@@ -40,6 +40,10 @@ public static class AttendanceServiceCollectionExtensions
         services.AddSingleton<AttendanceDayRecalculator>();
         services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
         services.AddHostedService<RecalculationHostedService>();
+        // Zaman raporları (Z4.1a, R1): günlük sorgu + vardiya planı okuyucuları yalnız API'de var.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IncalculableReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.NoShiftAssignedReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.DailyStatusListsReportProvider>();
         return services;
     }
 
