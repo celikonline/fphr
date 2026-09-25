@@ -1551,4 +1551,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="onboarding_category.not_found" xml:space="preserve"><value>Category not found.</value></data>
+  <data name="onboarding_category.name_required" xml:space="preserve"><value>A category name is required.</value></data>
+  <data name="onboarding_category.name_too_long" xml:space="preserve"><value>The category name cannot exceed 100 characters.</value></data>
+  <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Template set not found.</value></data>
+  <data name="onboarding_template_set.name_required" xml:space="preserve"><value>A template set name is required.</value></data>
+  <data name="onboarding_template_set.name_too_long" xml:space="preserve"><value>The template set name cannot exceed 150 characters.</value></data>
+  <data name="onboarding_template_set.empty" xml:space="preserve"><value>A template set must contain at least one task template.</value></data>
+  <data name="onboarding_template_set.inactive" xml:space="preserve"><value>The template set is inactive.</value></data>
+  <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>A set can only contain existing task templates of the same stage.</value></data>
+  <data name="onboarding_template_set.already_started" xml:space="preserve"><value>This template set has already been started for the employee.</value></data>
 </root>

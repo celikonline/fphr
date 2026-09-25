@@ -13,7 +13,8 @@ namespace Sense.Modules.Onboarding.Application.Tasks;
 
 [RequiresPermission("onboarding.templates.manage")]
 public sealed record CreateOnboardingTaskTemplateCommand(
-    OnboardingStage Stage, string Title, string ResponsibleRoleCode, int DueDateOffsetDays, bool IsMandatory)
+    OnboardingStage Stage, string Title, string ResponsibleRoleCode, int DueDateOffsetDays, bool IsMandatory,
+    Guid? CategoryId = null, OnboardingImportance Importance = OnboardingImportance.Normal, bool RequiresEDocument = false)
     : ICommand<OnboardingTaskTemplateDto>;
 
 public sealed class CreateOnboardingTaskTemplateValidator : AbstractValidator<CreateOnboardingTaskTemplateCommand>
@@ -31,7 +32,8 @@ public sealed class CreateOnboardingTaskTemplateHandler(ITenantContext tenant, I
     public Task<Result<OnboardingTaskTemplateDto>> Handle(CreateOnboardingTaskTemplateCommand command, CancellationToken cancellationToken)
     {
         var created = OnboardingTaskTemplate.Create(
-            tenant.TenantId, command.Stage, command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory);
+            tenant.TenantId, command.Stage, command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory,
+            command.CategoryId, command.Importance, command.RequiresEDocument);
         if (created.IsFailure)
         {
             return Task.FromResult(Result.Failure<OnboardingTaskTemplateDto>(created.Error));

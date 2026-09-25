@@ -27,7 +27,8 @@ public sealed class ListOnboardingTaskTemplatesHandler(IOnboardingTaskTemplateRe
 
 [RequiresPermission("onboarding.templates.manage")]
 public sealed record UpdateOnboardingTaskTemplateCommand(
-    Guid TemplateId, string Title, string ResponsibleRoleCode, int DueDateOffsetDays, bool IsMandatory)
+    Guid TemplateId, string Title, string ResponsibleRoleCode, int DueDateOffsetDays, bool IsMandatory,
+    Guid? CategoryId = null, OnboardingImportance Importance = OnboardingImportance.Normal, bool RequiresEDocument = false)
     : ICommand<OnboardingTaskTemplateDto>;
 
 public sealed class UpdateOnboardingTaskTemplateValidator : AbstractValidator<UpdateOnboardingTaskTemplateCommand>
@@ -51,7 +52,8 @@ public sealed class UpdateOnboardingTaskTemplateHandler(IOnboardingTaskTemplateR
             return template.Error;
         }
 
-        var updated = template.Value.Update(command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory);
+        var updated = template.Value.Update(command.Title, command.ResponsibleRoleCode, command.DueDateOffsetDays, command.IsMandatory,
+            command.CategoryId, command.Importance, command.RequiresEDocument);
         return updated.IsFailure ? updated.Error : OnboardingTaskTemplateDto.From(template.Value);
     }
 }

@@ -31,8 +31,31 @@ public interface IEmployeeOnboardingTaskRepository
     /// <c>MaterializeTasksForEmployee</c> idempotent (does not re-create rows on repeated calls).</summary>
     Task<EmployeeOnboardingTask?> FindAsync(Guid employeeId, Guid templateId, CancellationToken cancellationToken = default);
 
+    /// <summary>True when any task of the employee was created by starting the given template set.</summary>
+    Task<bool> AnyForSetAsync(Guid employeeId, Guid templateSetId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<EmployeeOnboardingTask>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>Every still-Pending task of the tenant (HR's open to-do list).</summary>
     Task<IReadOnlyList<EmployeeOnboardingTask>> ListPendingAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>Tenant-scoped onboarding category repository.</summary>
+public interface IOnboardingCategoryRepository
+{
+    void Add(OnboardingCategory category);
+
+    Task<Result<OnboardingCategory>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OnboardingCategory>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>Tenant-scoped named template set repository.</summary>
+public interface IOnboardingTemplateSetRepository
+{
+    void Add(OnboardingTemplateSet set);
+
+    Task<Result<OnboardingTemplateSet>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OnboardingTemplateSet>> ListAsync(CancellationToken cancellationToken = default);
 }
