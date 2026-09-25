@@ -1,0 +1,6 @@
+{{- subject = "Einspruch gegen Gehaltsabrechnung angenommen: " + employee_name -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Der Einspruch von {{ employee_name | html.escape }} gegen die Gehaltsabrechnung {{ period }} wurde angenommen. Die Abrechnung muss korrigiert werden.</p>
+{{~ if action_url ~}}
+{{ button "Lohnabrechnung öffnen" action_url }}
+{{~ end ~}}

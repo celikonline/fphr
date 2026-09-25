@@ -1,0 +1,2 @@
+{{- subject = "Payslip objection accepted: " + employee_name -}}
+The {{ period }} payslip needs to be corrected.

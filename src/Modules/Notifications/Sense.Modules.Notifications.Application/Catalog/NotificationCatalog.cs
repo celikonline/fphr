@@ -73,6 +73,7 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.HrMessage, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.CompanyEventInvitation, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.ApprovalDelegationAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipObjectionAccepted, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>

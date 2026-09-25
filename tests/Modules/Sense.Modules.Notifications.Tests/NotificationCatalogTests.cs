@@ -24,6 +24,7 @@ public sealed class NotificationCatalogTests
         NotificationTemplateKeys.HrMessage,
         NotificationTemplateKeys.CompanyEventInvitation,
         NotificationTemplateKeys.ApprovalDelegationAssigned,
+        NotificationTemplateKeys.PayslipObjectionAccepted,
     };
 
     [Theory]
