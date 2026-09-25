@@ -21,7 +21,9 @@
     "button": "Add new employee",
     "title": "Add new employee",
     "description": "First and last name are enough; you can complete the rest later on the employee card.",
-    "success": "Employee created."
+    "success": "Employee created.",
+    "sendCredentials": "Send login details by e-mail",
+    "inviteFailed": "Employee created but login details could not be sent."
   },
   "filters": {
     "orgUnit": "Unit",
@@ -410,7 +412,8 @@
     "outcome": {
       "sent": "Invitation sent",
       "resent": "Invitation resent",
-      "alreadyactive": "Account is already active"
+      "alreadyactive": "Account is already active",
+      "notrequested": "Login details were not sent."
     },
     "sentTo": "Sent to: {{email}}"
   },

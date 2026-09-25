@@ -11,10 +11,12 @@ import trEmployees from "../../../public/locales/tr/employees.json";
 import trCommon from "../../../public/locales/tr/common.json";
 import CreateEmployeeDialog from "./create-employee-dialog";
 import { createEmployee } from "@/services/employees.service";
+import { inviteEmployee } from "@/services/invitations.service";
 
 // N-2 (ik-surec-testi-bulgu-raporu-2026-09-20): a duplicate work e-mail must be reported on the "İş e-postası"
 // field, not only in the toast that disappears after a few seconds.
 vi.mock("@/services/employees.service", () => ({ createEmployee: vi.fn() }));
+vi.mock("@/services/invitations.service", () => ({ inviteEmployee: vi.fn() }));
 vi.mock("./org-unit-select", () => ({ default: () => null }));
 vi.mock("./employee-picker", () => ({ default: () => null }));
 
@@ -63,6 +65,7 @@ function createTestI18n() {
 }
 
 function renderDialog() {
+  vi.clearAllMocks();
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -98,5 +101,60 @@ describe("CreateEmployeeDialog", () => {
 
     await user.type(workEmail, "x");
     await waitFor(() => expect(workEmail.getAttribute("aria-invalid")).not.toBe("true"));
+  });
+
+  async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>, buttonName: string) {
+    await user.type(document.getElementById("new-emp-firstName")!, "Ayşe");
+    await user.type(document.getElementById("new-emp-lastName")!, "Demir");
+    await user.click(screen.getByRole("button", { name: buttonName }));
+  }
+
+  it("credentials_switch_sent_in_payload: sendCredentials follows the switch", async () => {
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-1" } as never);
+    vi.mocked(inviteEmployee).mockResolvedValue({
+      employeeId: "emp-1",
+      outcome: "NotRequested",
+      sentToEmail: null,
+      emailSource: null,
+    });
+    const user = userEvent.setup();
+    renderDialog();
+
+    const toggle = screen.getByRole("switch", { name: trEmployees.create.sendCredentials });
+    expect((toggle as HTMLInputElement).checked).toBe(true);
+    await user.click(toggle);
+    await fillAndSubmit(user, trCommon.save);
+
+    await waitFor(() => expect(inviteEmployee).toHaveBeenCalledWith("emp-1", { sendCredentials: false }));
+  });
+
+  it("sends sendCredentials true by default", async () => {
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-2" } as never);
+    vi.mocked(inviteEmployee).mockResolvedValue({
+      employeeId: "emp-2",
+      outcome: "Sent",
+      sentToEmail: "a@b.c",
+      emailSource: "Work",
+    });
+    renderDialog();
+    await fillAndSubmit(userEvent.setup(), trCommon.save);
+
+    await waitFor(() => expect(inviteEmployee).toHaveBeenCalledWith("emp-2", { sendCredentials: true }));
+  });
+
+  it("save_and_new_resets_form_keeps_modal: keeps dialog open with empty fields", async () => {
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-3" } as never);
+    vi.mocked(inviteEmployee).mockResolvedValue({
+      employeeId: "emp-3",
+      outcome: "Sent",
+      sentToEmail: "a@b.c",
+      emailSource: "Work",
+    });
+    renderDialog();
+    await fillAndSubmit(userEvent.setup(), trCommon.saveAndNew);
+
+    await waitFor(() => expect(createEmployee).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect((document.getElementById("new-emp-firstName") as HTMLInputElement).value).toBe(""));
+    expect(screen.getByRole("dialog")).not.toBeNull();
   });
 });
