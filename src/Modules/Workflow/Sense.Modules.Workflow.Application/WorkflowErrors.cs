@@ -21,5 +21,7 @@ public static class WorkflowErrors
     public const string TokenExpired = "workflow.token.expired";
     public const string TokenAlreadyUsed = "workflow.token.already_used";
 
+    public const string DelegationEmployeeInvalid = "workflow.delegation.employee_invalid";
+
     public const string RequesterNotFound = "workflow.request.requester_not_found";
 }

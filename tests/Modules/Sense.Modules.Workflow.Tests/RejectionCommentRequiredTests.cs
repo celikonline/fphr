@@ -80,7 +80,8 @@ public sealed class RejectionCommentRequiredTests
         repo.GetByTaskIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Result.Success(request));
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(_tenantId);
-        var handler = new DecideApprovalTaskHandler(tenant, repo, Substitute.For<IRoleAssignmentLookup>(), Substitute.For<IIntegrationEventOutbox>(), TimeProvider.System);
+        var handler = new DecideApprovalTaskHandler(tenant, repo, Substitute.For<IRoleAssignmentLookup>(), Substitute.For<IIntegrationEventOutbox>(), TimeProvider.System,
+            new Sense.Modules.Workflow.Application.Delegations.DelegationResolver(Substitute.For<Sense.Modules.Workflow.Domain.IApprovalDelegationRepository>()));
 
         var result = await handler.Handle(
             new DecideApprovalTaskCommand(request.Tasks.Single().Id, _approver, ApprovalOutcome.Rejected, "  ", ApprovalChannel.Web, null, null), CancellationToken.None);

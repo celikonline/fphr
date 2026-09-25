@@ -1,6 +1,7 @@
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Application.ApprovalRequests;
+using Sense.Modules.Workflow.Application.Delegations;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
@@ -25,9 +26,10 @@ public sealed class ListInboxHandlerTests
     private readonly IApprovalRequestRepository _requests = Substitute.For<IApprovalRequestRepository>();
     private readonly IRoleAssignmentLookup _roleAssignments = Substitute.For<IRoleAssignmentLookup>();
     private readonly IEmployeeDirectory _employeeDirectory = Substitute.For<IEmployeeDirectory>();
+    private readonly IApprovalDelegationRepository _delegations = Substitute.For<IApprovalDelegationRepository>();
 
     private ListInboxHandler HandlerWithProviders(params IApprovalRequestSummaryProvider[] providers) =>
-        new(_currentUser, _tenant, _requests, _roleAssignments, _employeeDirectory, providers);
+        new(_currentUser, _tenant, _requests, _roleAssignments, _employeeDirectory, providers, new DelegationResolver(_delegations), TimeProvider.System);
 
     private ListInboxHandler Handler => HandlerWithProviders();
 
@@ -49,7 +51,7 @@ public sealed class ListInboxHandlerTests
             null, null, null, false, true, submittedAt, null, null).Value;
         var task = request.Tasks.Single();
 
-        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns([task]);
         _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(request)));
         _employeeDirectory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
@@ -82,7 +84,7 @@ public sealed class ListInboxHandlerTests
             null, null, null, false, true, submittedAt, null, null).Value;
         var task = request.Tasks.Single();
 
-        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns([task]);
         _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(request)));
         _employeeDirectory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
@@ -121,7 +123,7 @@ public sealed class ListInboxHandlerTests
             null, null, null, false, true, submittedAt, null, null).Value;
         var task = request.Tasks.Single();
 
-        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns([task]);
         _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(request)));
         _employeeDirectory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
