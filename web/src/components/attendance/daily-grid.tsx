@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { ActionIcon, Alert, Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Textarea, Tooltip } from "@mantine/core";
+import { useLeaveName } from "@/components/leave/leave-shared";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { DailyAttendanceRow, ManualPunchInput, PunchDirection } from "@/services/attendance-daily.service";
 
@@ -21,7 +22,8 @@ type Dialog =
 
 /** Employee rows of one daily status tab, with manual punch add/delete dialogs (reason mandatory). */
 export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }: DailyGridProps) {
-  const { t } = useTranslation(["attendance-daily"]);
+  const { t } = useTranslation(["attendance-daily", "attendance"]);
+  const leaveName = useLeaveName();
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [reason, setReason] = useState("");
   const [time, setTime] = useState("09:00");
@@ -109,9 +111,9 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
                 <Table.Td>{row.overtimeMinutes > 0 ? t("attendance-daily:dailyList.minutes", { count: row.overtimeMinutes }) : "—"}</Table.Td>
                 <Table.Td>
                   <Group gap={4}>
-                    {row.leaveType && <Badge variant="light" color="blue">{row.leaveType}</Badge>}
+                    {row.leaveType && <Badge variant="light" color="blue">{leaveName(row.leaveType)}</Badge>}
                     {row.anomalies.map((a) => (
-                      <Badge key={a} variant="light" color="orange">{a}</Badge>
+                      <Badge key={a} variant="light" color="orange">{t(`attendance:anomaly.${a}`, { defaultValue: a })}</Badge>
                     ))}
                   </Group>
                 </Table.Td>

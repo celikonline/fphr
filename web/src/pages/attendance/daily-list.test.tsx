@@ -9,6 +9,8 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import trDaily from "../../../public/locales/tr/attendance-daily.json";
+import trAttendance from "../../../public/locales/tr/attendance.json";
+import trLeave from "../../../public/locales/tr/leave.json";
 import trCommon from "../../../public/locales/tr/common.json";
 import DailyListPage from "./daily-list";
 import { useAuthStore } from "@/store/auth.store";
@@ -41,6 +43,7 @@ beforeAll(() => {
       addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false,
     }),
   });
+  Element.prototype.scrollIntoView = () => {};
   window.ResizeObserver = class {
     observe() {}
     unobserve() {}
@@ -103,8 +106,8 @@ beforeEach(async () => {
     await i18next.init({
       lng: "tr",
       fallbackLng: "tr",
-      ns: ["attendance-daily", "common"],
-      resources: { tr: { "attendance-daily": trDaily, common: trCommon } },
+      ns: ["attendance-daily", "attendance", "leave", "common"],
+      resources: { tr: { "attendance-daily": trDaily, attendance: trAttendance, leave: trLeave, common: trCommon } },
       interpolation: { escapeValue: false },
     });
   }
@@ -153,7 +156,33 @@ describe("DailyListPage", () => {
     await user.type(within(dialog).getByLabelText(new RegExp(trDaily.dailyList.reason)), "Terminal arızası");
     await user.click(within(dialog).getByRole("button", { name: trDaily.dailyList.save }));
     await waitFor(() => expect(addManualPunch).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(addManualPunch).mock.calls[0][0]).toMatchObject({ employeeId: "emp-1", reason: "Terminal arızası" });
+    const body = vi.mocked(addManualPunch).mock.calls[0][0];
+    expect(body).toMatchObject({ employeeId: "emp-1", reason: "Terminal arızası", direction: "in" });
+    expect(body.occurredAtUtc).toBe(new Date(`${TODAY}T09:00:00`).toISOString());
+  });
+
+  it("manual_punch_sends_selected_direction", async () => {
+    const user = userEvent.setup();
+    renderPage("/app/attendance/daily/arrived");
+    await screen.findByText("Ayşe Yılmaz");
+    await user.click(screen.getByRole("button", { name: trDaily.dailyList.addPunch }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByLabelText(trDaily.dailyList.direction));
+    await user.click(await screen.findByRole("option", { name: trDaily.dailyList.dirOut, hidden: true }));
+    await user.type(within(dialog).getByLabelText(new RegExp(trDaily.dailyList.reason)), "x");
+    await user.click(within(dialog).getByRole("button", { name: trDaily.dailyList.save }));
+    await waitFor(() => expect(addManualPunch).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(addManualPunch).mock.calls[0][0].direction).toBe("out");
+  });
+
+  it("shows_translated_anomaly_and_leave_labels", async () => {
+    vi.mocked(listDaily).mockResolvedValue(
+      paged([{ ...row, anomalies: ["lateArrival"], leaveType: "leave.type.annual" }]),
+    );
+    renderPage("/app/attendance/daily/late");
+    expect(await screen.findByText(trAttendance.anomaly.lateArrival)).toBeInTheDocument();
+    expect(screen.queryByText("lateArrival")).not.toBeInTheDocument();
+    expect(screen.getByText(trLeave.names.type_annual)).toBeInTheDocument();
   });
 
   it("delete_punch_confirms_and_sends_reason", async () => {
