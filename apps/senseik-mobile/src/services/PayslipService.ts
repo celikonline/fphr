@@ -34,9 +34,9 @@ export function canAcknowledge(payslip: MyPayslip): boolean {
   );
 }
 
-/** İtiraz yayınlanmış bordroda ve açık bir itiraz yokken yapılabilir. */
+/** Backend sürüm başına tek itiraza izin verir: yayınlanmış, onaysız ve itirazı hiç olmayan bordroda aktif. */
 export function canObject(payslip: MyPayslip): boolean {
-  return Boolean(payslip.publishedAt) && payslip.objectionStatus !== "pending";
+  return Boolean(payslip.publishedAt) && !payslip.acknowledgedAt && !payslip.objectionStatus;
 }
 
 /** İtirazda gerekçe zorunlu; boş/boşluk gerekçe reddedilir. Geçerliyse kırpılmış gerekçeyi döndürür. */

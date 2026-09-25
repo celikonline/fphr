@@ -80,5 +80,11 @@ describe("PayslipService", () => {
       expect(canObject({ ...base, objectionStatus: "pending" })).toBe(false);
       expect(canObject({ ...base, publishedAt: null })).toBe(false);
     });
+
+    it("objection is blocked after a resolved objection or an acknowledgement (one per version)", () => {
+      expect(canObject({ ...base, objectionStatus: "accepted" })).toBe(false);
+      expect(canObject({ ...base, objectionStatus: "rejected" })).toBe(false);
+      expect(canObject({ ...base, acknowledgedAt: "2026-09-02T08:00:00Z" })).toBe(false);
+    });
   });
 });
