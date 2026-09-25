@@ -38,5 +38,18 @@
   "skippedTitle": "Skipped because of locked months",
   "skippedMonth": "Period {{month}} is locked; nothing was assigned for that month.",
   "overlapTitle": "Overlapping assignment",
-  "genericError": "The operation could not be completed."
+  "genericError": "The operation could not be completed.",
+  "slots": {
+    "day": "Day shift",
+    "night": "Night shift",
+    "morning": "Morning shift",
+    "evening": "Evening shift",
+    "s1": "Shift 1 (6 h)",
+    "s2": "Shift 2 (6 h)",
+    "s3": "Shift 3 (6 h)",
+    "s4": "Shift 4 (6 h)"
+  },
+  "shiftsRequired": "Select a shift for every work step.",
+  "endBeforeStart": "The end date cannot be before the start date.",
+  "offsetTooLarge": "The offset must be smaller than the cycle length."
 }

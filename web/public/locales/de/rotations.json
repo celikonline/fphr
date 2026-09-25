@@ -38,5 +38,18 @@
   "skippedTitle": "Wegen gesperrter Monate übersprungen",
   "skippedMonth": "Der Zeitraum {{month}} ist gesperrt; für diesen Monat wurde nichts zugewiesen.",
   "overlapTitle": "Überschneidende Zuweisung",
-  "genericError": "Der Vorgang konnte nicht abgeschlossen werden."
+  "genericError": "Der Vorgang konnte nicht abgeschlossen werden.",
+  "slots": {
+    "day": "Tagschicht",
+    "night": "Nachtschicht",
+    "morning": "Frühschicht",
+    "evening": "Spätschicht",
+    "s1": "Schicht 1 (6 Std.)",
+    "s2": "Schicht 2 (6 Std.)",
+    "s3": "Schicht 3 (6 Std.)",
+    "s4": "Schicht 4 (6 Std.)"
+  },
+  "shiftsRequired": "Wählen Sie für jeden Arbeitsschritt eine Schicht.",
+  "endBeforeStart": "Das Enddatum darf nicht vor dem Beginn liegen.",
+  "offsetTooLarge": "Der Versatz muss kleiner als die Zykluslänge sein."
 }

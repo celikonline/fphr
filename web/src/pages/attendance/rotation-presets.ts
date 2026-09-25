@@ -1,19 +1,38 @@
 import type { RotationPreset, RotationStep } from "@/services/attendance-rotations.service";
 
-type PresetDayTypes = readonly ("work" | "off")[];
+/** Step in the editor: `slot` is a UI-only label key for the shift the user maps to it (not sent to the API). */
+export interface EditableRotationStep extends RotationStep {
+  slot?: string;
+}
 
-/** Day pattern per ready-made preset; shift definitions are mapped by the user afterwards. */
-const PRESET_DAY_TYPES: Record<Exclude<RotationPreset, "custom">, PresetDayTypes> = {
-  // 2x12: day shift, night shift, two days off.
-  twoByTwelve: ["work", "work", "off", "off"],
-  // 3x8: morning, evening, night.
-  threeByEight: ["work", "work", "work"],
-  // 4x6: four consecutive 6-hour shifts.
-  fourBySix: ["work", "work", "work", "work"],
+type PresetKey = Exclude<RotationPreset, "custom">;
+
+const OFF = "off";
+
+/** Ready-made cycles: work slots (shift to be picked by the user) and rest days. */
+const PRESET_SLOTS: Record<PresetKey, readonly string[]> = {
+  twoByTwelve: ["day", "night", OFF, OFF],
+  threeByEight: ["morning", "evening", "night", OFF],
+  fourBySix: ["s1", "s2", "s3", "s4", OFF],
 };
 
-export const PRESET_KEYS = Object.keys(PRESET_DAY_TYPES) as Exclude<RotationPreset, "custom">[];
+export const PRESET_KEYS = Object.keys(PRESET_SLOTS) as PresetKey[];
 
-export function presetSteps(preset: Exclude<RotationPreset, "custom">): RotationStep[] {
-  return PRESET_DAY_TYPES[preset].map((dayType, dayOffset) => ({ dayOffset, dayType }));
+export function presetSteps(preset: PresetKey): EditableRotationStep[] {
+  return PRESET_SLOTS[preset].map((slot, dayOffset) =>
+    slot === OFF ? { dayOffset, dayType: "off" } : { dayOffset, dayType: "work", slot }
+  );
+}
+
+/** Every work step must reference a shift definition before the pattern can be saved. */
+export function allWorkStepsHaveShift(steps: readonly RotationStep[]): boolean {
+  return steps.every((s) => s.dayType === "off" || Boolean(s.shiftDefinitionId));
+}
+
+export function toRequestSteps(steps: readonly EditableRotationStep[]): RotationStep[] {
+  return steps.map(({ dayOffset, dayType, shiftDefinitionId }) => ({
+    dayOffset,
+    dayType,
+    ...(dayType === "work" && shiftDefinitionId ? { shiftDefinitionId } : {}),
+  }));
 }

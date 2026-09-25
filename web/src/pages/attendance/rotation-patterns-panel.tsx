@@ -10,9 +10,8 @@ import {
   saveRotation,
   type RotationDayType,
   type RotationPreset,
-  type RotationStep,
 } from "@/services/attendance-rotations.service";
-import { PRESET_KEYS, presetSteps } from "./rotation-presets";
+import { PRESET_KEYS, allWorkStepsHaveShift, presetSteps, toRequestSteps, type EditableRotationStep } from "./rotation-presets";
 
 export const ROTATIONS_KEY = ["attendance", "rotations"] as const;
 
@@ -30,8 +29,9 @@ export default function RotationPatternsPanel({ canManage }: Props) {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [preset, setPreset] = useState<RotationPreset>("custom");
-  const [steps, setSteps] = useState<RotationStep[]>([]);
+  const [steps, setSteps] = useState<EditableRotationStep[]>([]);
 
+  const shiftsComplete = allWorkStepsHaveShift(steps);
   const shiftOptions = (shifts.data ?? [])
     .filter((s) => s.id)
     .map((s) => ({ value: s.id as string, label: s.name }));
@@ -42,16 +42,16 @@ export default function RotationPatternsPanel({ canManage }: Props) {
     if (next !== "custom") setSteps(presetSteps(next));
   }
 
-  function updateStep(index: number, patch: Partial<RotationStep>) {
+  function updateStep(index: number, patch: Partial<EditableRotationStep>) {
     setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...patch } : s)));
   }
 
-  function reindex(list: RotationStep[]): RotationStep[] {
+  function reindex(list: EditableRotationStep[]): EditableRotationStep[] {
     return list.map((s, dayOffset) => ({ ...s, dayOffset }));
   }
 
   const save = useMutation({
-    mutationFn: () => saveRotation(null, { code: code.trim(), name: name.trim(), preset, cycleLengthDays: steps.length, steps }),
+    mutationFn: () => saveRotation(null, { code: code.trim(), name: name.trim(), preset, cycleLengthDays: steps.length, steps: toRequestSteps(steps) }),
     onSuccess: () => {
       toast({ variant: "success", description: t("rotations:saved") });
       setEditing(false);
@@ -117,7 +117,7 @@ export default function RotationPatternsPanel({ canManage }: Props) {
                 />
                 {step.dayType === "work" && (
                   <Select
-                    aria-label={t("rotations:shift")}
+                    aria-label={step.slot ? t(`rotations:slots.${step.slot}`) : t("rotations:shift")}
                     placeholder={t("rotations:shift")}
                     data={shiftOptions}
                     value={step.shiftDefinitionId ?? null}
@@ -129,11 +129,16 @@ export default function RotationPatternsPanel({ canManage }: Props) {
                 </Button>
               </Group>
             ))}
+            {!shiftsComplete && (
+              <Text size="xs" c="dimmed">
+                {t("rotations:shiftsRequired")}
+              </Text>
+            )}
             <Group>
               <Button variant="light" onClick={() => setSteps((c) => reindex([...c, { dayOffset: c.length, dayType: "work" }]))}>
                 {t("rotations:addStep")}
               </Button>
-              <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!code.trim() || !name.trim() || steps.length === 0}>
+              <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!code.trim() || !name.trim() || steps.length === 0 || !shiftsComplete}>
                 {t("rotations:save")}
               </Button>
             </Group>

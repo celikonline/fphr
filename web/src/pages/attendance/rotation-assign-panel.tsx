@@ -42,6 +42,9 @@ export default function RotationAssignPanel({ canManage }: Props) {
     onSuccess: setResult,
     onError: (error) => setConflict(getApiErrorMessage(error, t("rotations:genericError"))),
   });
+  const cycleLength = (patterns.data ?? []).find((p) => p.id === patternId)?.cycleLengthDays;
+  const endBeforeStart = Boolean(startDate && endDate && endDate < startDate);
+  const offsetTooLarge = cycleLength !== undefined && offsetDays >= cycleLength;
   const isOverlap = apply.isError && getApiErrorStatus(apply.error) === 409;
 
   return (
@@ -77,8 +80,8 @@ export default function RotationAssignPanel({ canManage }: Props) {
         </div>
         <Group grow align="flex-start">
           <TextInput type="date" label={t("rotations:startDate")} value={startDate} onChange={(e) => setStartDate(e.currentTarget.value)} required />
-          <TextInput type="date" label={t("rotations:endDate")} value={endDate} onChange={(e) => setEndDate(e.currentTarget.value)} />
-          <NumberInput label={t("rotations:offsetDays")} value={offsetDays} min={0} allowDecimal={false} onChange={(v) => setOffsetDays(Number(v) || 0)} />
+          <TextInput type="date" label={t("rotations:endDate")} value={endDate} onChange={(e) => setEndDate(e.currentTarget.value)} error={endBeforeStart ? t("rotations:endBeforeStart") : undefined} />
+          <NumberInput label={t("rotations:offsetDays")} value={offsetDays} min={0} allowDecimal={false} onChange={(v) => setOffsetDays(Number(v) || 0)} error={offsetTooLarge ? t("rotations:offsetTooLarge") : undefined} />
         </Group>
         {conflict && (
           <Alert color="red" title={isOverlap ? t("rotations:overlapTitle") : undefined} role="alert">
@@ -103,7 +106,7 @@ export default function RotationAssignPanel({ canManage }: Props) {
           <Button
             onClick={() => apply.mutate()}
             loading={apply.isPending}
-            disabled={!canManage || !patternId || employees.length === 0 || !startDate}
+            disabled={!canManage || !patternId || employees.length === 0 || !startDate || endBeforeStart || offsetTooLarge}
           >
             {t("rotations:apply")}
           </Button>

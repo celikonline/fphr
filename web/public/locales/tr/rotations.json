@@ -38,5 +38,18 @@
   "skippedTitle": "Kilitli aylar nedeniyle atlananlar",
   "skippedMonth": "{{month}} dönemi kilitli; bu ay için atama yapılmadı.",
   "overlapTitle": "Çakışan atama",
-  "genericError": "İşlem tamamlanamadı."
+  "genericError": "İşlem tamamlanamadı.",
+  "slots": {
+    "day": "Gündüz vardiyası",
+    "night": "Gece vardiyası",
+    "morning": "Sabah vardiyası",
+    "evening": "Akşam vardiyası",
+    "s1": "Vardiya 1 (6 saat)",
+    "s2": "Vardiya 2 (6 saat)",
+    "s3": "Vardiya 3 (6 saat)",
+    "s4": "Vardiya 4 (6 saat)"
+  },
+  "shiftsRequired": "Tüm çalışma adımlarına vardiya seçin.",
+  "endBeforeStart": "Bitiş tarihi başlangıçtan önce olamaz.",
+  "offsetTooLarge": "Kaydırma döngü uzunluğundan küçük olmalı."
 }
