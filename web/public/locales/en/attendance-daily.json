@@ -49,7 +49,43 @@
   },
   "timeDashboard": {
     "title": "Time dashboard",
-    "subtitle": "Arrived, late, early leave and absent summary"
+    "subtitle": "Arrived, late, early leave and absent summary",
+    "date": "Date",
+    "planned": "Planned",
+    "noData": "No data",
+    "emptyScope": "No data to show for this scope.",
+    "error": "Could not load time indicators.",
+    "status": {
+      "arrived": "Arrived",
+      "late": "Late",
+      "earlyLeave": "Early leave",
+      "absent": "Absent",
+      "onLeave": "On leave"
+    },
+    "sevenDay": {
+      "title": "Attendance, last 7 days",
+      "hint": "Days without data are shown as zero."
+    },
+    "lateEarly": {
+      "title": "Late / early leave by unit (count of occurrences)"
+    },
+    "overtime": {
+      "title": "Overtime by group",
+      "groupBy": "Group by",
+      "hours": "Hours",
+      "hoursUnit": "h"
+    },
+    "groupBy": {
+      "branch": "Branch",
+      "unit": "Unit",
+      "team": "Team",
+      "title": "Title"
+    },
+    "rate": {
+      "title": "Shift attendance rate",
+      "detail": "{{worked}} / {{planned}} planned shift days"
+    },
+    "unit": "Unit"
   },
   "monthlyMatrix": {
     "title": "Monthly attendance matrix",
