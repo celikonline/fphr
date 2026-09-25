@@ -201,5 +201,28 @@
       "gross": "Brüt",
       "net": "Net"
     }
+  },
+  "myPayslips": {
+    "title": "Bordrolarım",
+    "empty": "Henüz yayınlanmış bir bordronuz yok.",
+    "actionError": "İşlem tamamlanamadı.",
+    "acknowledge": "Onayla",
+    "object": "İtiraz et",
+    "objectTitle": "Bordroya itiraz",
+    "reasonLabel": "İtiraz gerekçesi",
+    "reasonRequired": "Gerekçe zorunludur.",
+    "submitObjection": "İtirazı gönder",
+    "columns": {
+      "period": "Dönem",
+      "net": "Net ücret",
+      "status": "Durum"
+    },
+    "state": {
+      "awaiting": "Onay bekliyor",
+      "acknowledged": "Onaylandı",
+      "pending": "İtiraz inceleniyor",
+      "accepted": "İtiraz kabul edildi",
+      "rejected": "İtiraz reddedildi"
+    }
   }
 }

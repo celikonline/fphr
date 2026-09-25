@@ -201,5 +201,28 @@
       "gross": "Gross",
       "net": "Net"
     }
+  },
+  "myPayslips": {
+    "title": "My payslips",
+    "empty": "You have no published payslips yet.",
+    "actionError": "The action could not be completed.",
+    "acknowledge": "Acknowledge",
+    "object": "Object",
+    "objectTitle": "Object to payslip",
+    "reasonLabel": "Reason for objection",
+    "reasonRequired": "A reason is required.",
+    "submitObjection": "Submit objection",
+    "columns": {
+      "period": "Period",
+      "net": "Net pay",
+      "status": "Status"
+    },
+    "state": {
+      "awaiting": "Awaiting acknowledgement",
+      "acknowledged": "Acknowledged",
+      "pending": "Objection under review",
+      "accepted": "Objection accepted",
+      "rejected": "Objection rejected"
+    }
   }
 }

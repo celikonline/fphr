@@ -201,5 +201,28 @@
       "gross": "Brutto",
       "net": "Netto"
     }
+  },
+  "myPayslips": {
+    "title": "Meine Lohnabrechnungen",
+    "empty": "Sie haben noch keine veröffentlichten Lohnabrechnungen.",
+    "actionError": "Die Aktion konnte nicht abgeschlossen werden.",
+    "acknowledge": "Bestätigen",
+    "object": "Widersprechen",
+    "objectTitle": "Lohnabrechnung widersprechen",
+    "reasonLabel": "Begründung des Widerspruchs",
+    "reasonRequired": "Eine Begründung ist erforderlich.",
+    "submitObjection": "Widerspruch senden",
+    "columns": {
+      "period": "Zeitraum",
+      "net": "Nettolohn",
+      "status": "Status"
+    },
+    "state": {
+      "awaiting": "Bestätigung ausstehend",
+      "acknowledged": "Bestätigt",
+      "pending": "Widerspruch in Prüfung",
+      "accepted": "Widerspruch angenommen",
+      "rejected": "Widerspruch abgelehnt"
+    }
   }
 }
