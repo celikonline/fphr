@@ -852,7 +852,7 @@
     "empty": "Keine Mitarbeitenden entsprechen dem Filter.",
     "loadMore": "Mehr anzeigen",
     "confirm": "Auswahl bestätigen",
-    "overLimit": "Es können höchstens {{max}} Eingeladene ausgewählt werden; aktuell {{count}}."
+    "overLimit": "Es können höchstens {{max}} ausgewählt werden; aktuell {{count}}."
   },
   "onboardingCard": {
     "title": "On-/Offboarding-Prozess",

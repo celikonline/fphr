@@ -49,7 +49,7 @@ function page(items: ReturnType<typeof person>[], totalCount = items.length) {
   return { items, totalCount, page: 1, pageSize: 50 } as never;
 }
 
-function renderPicker(onConfirm = vi.fn()) {
+function renderPicker(onConfirm = vi.fn(), maxSelection?: number) {
   const i18n = i18next.createInstance();
   void i18n.init({
     lng: "tr",
@@ -65,7 +65,7 @@ function renderPicker(onConfirm = vi.fn()) {
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
-          <EmployeeMultiPicker onConfirm={onConfirm} />
+          <EmployeeMultiPicker onConfirm={onConfirm} maxSelection={maxSelection} />
         </MantineProvider>
       </QueryClientProvider>
     </I18nextProvider>,
@@ -131,5 +131,47 @@ describe("EmployeeMultiPicker", () => {
     renderPicker();
     await screen.findByText(trEmployees.multiPicker.empty);
     expect(confirmButton()).toBeDisabled();
+  });
+
+  describe("maxSelection", () => {
+    it("shows_the_live_count_and_no_warning_while_within_the_limit", async () => {
+      const user = userEvent.setup();
+      const onConfirm = renderPicker(vi.fn(), 2);
+      await user.click(await screen.findByRole("checkbox", { name: "Ayşe" }));
+      await user.click(screen.getByRole("checkbox", { name: "Bora" }));
+      expect(screen.getByText(trEmployees.multiPicker.selectedCount.replace("{{count}}", "2"))).toBeInTheDocument();
+      expect(screen.queryByTestId("multi-picker-limit")).toBeNull();
+      await user.click(confirmButton());
+      expect(onConfirm).toHaveBeenCalledWith({ employeeIds: ["a", "b"], filter: null, excludedEmployeeIds: null });
+    });
+
+    it("warns_in_red_and_locks_confirm_when_the_selection_exceeds_the_limit", async () => {
+      const user = userEvent.setup();
+      const onConfirm = renderPicker(vi.fn(), 2);
+      await user.click(await screen.findByRole("checkbox", { name: "Ayşe" }));
+      await user.click(screen.getByRole("checkbox", { name: "Bora" }));
+      await user.click(screen.getByRole("checkbox", { name: "Can" }));
+      const warning = screen.getByTestId("multi-picker-limit");
+      expect(warning).toHaveTextContent(
+        trEmployees.multiPicker.overLimit.replace("{{max}}", "2").replace("{{count}}", "3"),
+      );
+      expect(warning).toHaveAttribute("role", "alert");
+      expect(confirmButton()).toBeDisabled();
+      await user.click(confirmButton());
+      expect(onConfirm).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("checkbox", { name: "Can" }));
+      expect(screen.queryByTestId("multi-picker-limit")).toBeNull();
+      expect(confirmButton()).toBeEnabled();
+    });
+
+    it("behaves_unchanged_without_the_prop", async () => {
+      const user = userEvent.setup();
+      renderPicker();
+      await user.click(await screen.findByRole("checkbox", { name: "Ayşe" }));
+      await user.click(screen.getByRole("checkbox", { name: "Bora" }));
+      await user.click(screen.getByRole("checkbox", { name: "Can" }));
+      expect(screen.queryByTestId("multi-picker-limit")).toBeNull();
+      expect(confirmButton()).toBeEnabled();
+    });
   });
 });
