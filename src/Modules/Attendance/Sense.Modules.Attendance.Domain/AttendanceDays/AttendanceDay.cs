@@ -243,7 +243,9 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
         // G-02 puantaj hesaplama motoru (kart senseik-014): mola/gece/limit/fazla mesai vekili DailyWorkCalculator'a
         // delege edilir - legacy WorkedMinutes (üstte) hâlâ Overwork/Underwork anomali kıyaslaması için korunur.
-        var dailyWork = DailyWorkCalculator.Calculate(new DailyWorkInput(checkIn, checkOut, overnight, actualBreakMinutes, plannedMinutes, shiftLimits ?? ShiftLimits.None));
+        var limits = shiftLimits ?? ShiftLimits.None;
+        var dailyWork = DailyWorkCalculator.Calculate(
+            new DailyWorkInput(checkIn, checkOut, overnight, actualBreakMinutes, plannedMinutes, limits, plannedStart, plannedEnd));
         NetWorkedMinutes = dailyWork.NetWorkedMinutes;
         BreakMinutesApplied = dailyWork.BreakMinutesApplied;
         NightMinutes = dailyWork.NightMinutes;
@@ -271,12 +273,13 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
                 anomalies |= AttendanceAnomaly.MissingCheckOut;
             }
 
-            if (checkIn > plannedStart)
+            // Z0.2: vardiya tanımı toleransları (kural yoksa tolerans 0 = önceki kesin karşılaştırma).
+            if (DailyWorkCalculator.IsLateArrival(checkIn, plannedStart, limits.Rules))
             {
                 anomalies |= AttendanceAnomaly.LateArrival;
             }
 
-            if (checkOut is not null && checkOut < plannedEnd)
+            if (DailyWorkCalculator.IsEarlyLeave(checkOut, plannedEnd, limits.Rules))
             {
                 anomalies |= AttendanceAnomaly.EarlyLeave;
             }

@@ -8,22 +8,48 @@ namespace Sense.Modules.Attendance.Domain.AttendanceDays;
 /// row) so the Domain project never depends on a repository. <see cref="None"/> is the fallback used when no
 /// <see cref="Shifts.ShiftSettings"/> row was resolved (mirrors <see cref="Shifts.ShiftSettings.CreateDefault"/>'s daily
 /// limit, but with night work off - the same posture the previous behavior had before this type existed).
+/// <see cref="Rules"/> is the day's <see cref="ShiftDefinition"/> rule set (Z0.2), null when the plan has none (legacy behavior).
 /// </summary>
 public readonly record struct ShiftLimits(
-    int MaxDailyMinutes, bool NightWorkEnabled, TimeOnly? NightWorkStart, TimeOnly? NightWorkEnd, int? NightWorkMaxMinutes)
+    int MaxDailyMinutes, bool NightWorkEnabled, TimeOnly? NightWorkStart, TimeOnly? NightWorkEnd, int? NightWorkMaxMinutes, ShiftRules? Rules = null)
 {
     public static ShiftLimits None => new(ShiftSettings.DefaultMaxDailyMinutes, false, null, null, null);
 }
 
-/// <summary>Everything <see cref="DailyWorkCalculator.Calculate"/> needs for one day; <see cref="CheckIn"/>/<see cref="CheckOut"/> null means no attendance recorded.</summary>
+/// <summary>
+/// Vardiya tanımı kural seti (zaman-devam Z0.2, spec §5.2): geç kalma / erken çıkma toleransı, giriş (erken gelme) ve çıkış
+/// (geç kalma) tarafı fazla mesai eşikleri (min altı atılır, maks'ta kesilir; null = eşik/tavan yok) ve net çalışmaya eklenen
+/// bonus süre. Snapshot of the <see cref="ShiftDefinition"/> fields at calculation time.
+/// </summary>
+public readonly record struct ShiftRules(
+    int LateToleranceMinutes,
+    int EarlyLeaveToleranceMinutes,
+    int? EarlyArrivalOvertimeMinMinutes,
+    int? EarlyArrivalOvertimeMaxMinutes,
+    int? LateDepartureOvertimeMinMinutes,
+    int? LateDepartureOvertimeMaxMinutes,
+    int BonusMinutes)
+{
+    public static ShiftRules From(ShiftDefinition definition) =>
+        new(definition.LateToleranceMinutes, definition.EarlyLeaveToleranceMinutes, definition.EarlyArrivalOvertimeMinMinutes,
+            definition.EarlyArrivalOvertimeMaxMinutes, definition.LateDepartureOvertimeMinMinutes, definition.LateDepartureOvertimeMaxMinutes,
+            definition.BonusMinutes);
+}
+
+/// <summary>
+/// Everything <see cref="DailyWorkCalculator.Calculate"/> needs for one day; <see cref="CheckIn"/>/<see cref="CheckOut"/> null means no
+/// attendance recorded. <see cref="PlannedStart"/>/<see cref="PlannedEnd"/> are only used by the rule-based (per side) overtime.
+/// </summary>
 public readonly record struct DailyWorkInput(
-    TimeOnly? CheckIn, TimeOnly? CheckOut, bool Overnight, int ActualBreakMinutes, int PlannedMinutes, ShiftLimits Limits);
+    TimeOnly? CheckIn, TimeOnly? CheckOut, bool Overnight, int ActualBreakMinutes, int PlannedMinutes, ShiftLimits Limits,
+    TimeOnly? PlannedStart = null, TimeOnly? PlannedEnd = null);
 
 /// <summary>
 /// Computed facts for one day (11.3.6 G-02 "puantaj hesaplama motoru"). All zero/false when the day has no
-/// check-in/check-out. <see cref="OvertimeMinutes"/> is a **daily proxy** (worked − planned, floored at 0) - the
-/// legally exact figure needs the weekly/denkleştirme view (<see cref="Equalization.EqualizationPeriod"/>) and is not
-/// this type's job.
+/// check-in/check-out. <see cref="OvertimeMinutes"/> is a **daily proxy** (worked − planned, floored at 0; with
+/// <see cref="ShiftRules"/> the sum of the early-arrival and late-departure sides after their min/max) - the legally exact
+/// figure needs the weekly/denkleştirme view (<see cref="Equalization.EqualizationPeriod"/>) and is not this type's job.
+/// <see cref="NetWorkedMinutes"/> includes <see cref="ShiftRules.BonusMinutes"/>; limit checks use the actually worked time.
 /// </summary>
 public readonly record struct DailyWorkResult(
     int NetWorkedMinutes, int BreakMinutesApplied, int NightMinutes, bool DailyLimitExceeded, bool NightLimitExceeded, int OvertimeMinutes)
@@ -82,9 +108,58 @@ public static class DailyWorkCalculator
 
         var dailyLimitExceeded = input.Limits.MaxDailyMinutes > 0 && net > input.Limits.MaxDailyMinutes;
         var nightLimitExceeded = input.Limits.NightWorkEnabled && input.Limits.NightWorkMaxMinutes is { } maxNight && nightMinutes > maxNight;
-        var overtimeMinutes = Math.Max(net - input.PlannedMinutes, 0);
+        var overtimeMinutes = input.Limits.Rules is { } rules && input.PlannedStart is { } plannedStart && input.PlannedEnd is { } plannedEnd
+            ? RuleOvertimeMinutes(input.CheckIn.Value, grossMinutes, plannedStart, plannedEnd, rules)
+            : Math.Max(net - input.PlannedMinutes, 0);
+        var bonusMinutes = input.Limits.Rules?.BonusMinutes ?? 0;
 
-        return new DailyWorkResult(net, breakApplied, nightMinutes, dailyLimitExceeded, nightLimitExceeded, overtimeMinutes);
+        return new DailyWorkResult(net + bonusMinutes, breakApplied, nightMinutes, dailyLimitExceeded, nightLimitExceeded, overtimeMinutes);
+    }
+
+    /// <summary>
+    /// Geç kalma (spec §5.2): <c>CheckIn &gt; start + LateTolerance</c>. Without rules the tolerance is 0, which is exactly the
+    /// legacy <c>checkIn &gt; plannedStart</c> comparison (same-day time-of-day arithmetic, no midnight wrap).
+    /// </summary>
+    public static bool IsLateArrival(TimeOnly? checkIn, TimeOnly? plannedStart, ShiftRules? rules) =>
+        checkIn is { } actual && plannedStart is { } planned
+        && (actual.ToTimeSpan() - planned.ToTimeSpan()).TotalMinutes > (rules?.LateToleranceMinutes ?? 0);
+
+    /// <summary>Erken çıkma (spec §5.2): <c>CheckOut &lt; end − EarlyLeaveTolerance</c>; tolerance 0 without rules (legacy comparison).</summary>
+    public static bool IsEarlyLeave(TimeOnly? checkOut, TimeOnly? plannedEnd, ShiftRules? rules) =>
+        checkOut is { } actual && plannedEnd is { } planned
+        && (planned.ToTimeSpan() - actual.ToTimeSpan()).TotalMinutes > (rules?.EarlyLeaveToleranceMinutes ?? 0);
+
+    /// <summary>
+    /// Kural setli fazla mesai: giriş tarafı (plandan erken gelinen dakikalar) ve çıkış tarafı (plandan sonra kalınan dakikalar)
+    /// ayrı sayılır; bir taraf min eşiğinin altındaysa atılır, maks'ı aşıyorsa kesilir. Offsets are measured on a timeline
+    /// anchored at the planned start (check-in within ±12h of it), so night shifts crossing midnight work too.
+    /// </summary>
+    public static int RuleOvertimeMinutes(TimeOnly checkIn, int grossMinutes, TimeOnly plannedStart, TimeOnly plannedEnd, ShiftRules rules)
+    {
+        var checkInOffset = SignedMinutesBetween(plannedStart, checkIn);
+        var plannedLength = WrappedMinutesBetween(plannedStart, plannedEnd);
+        var earlyArrival = Math.Max(-checkInOffset, 0);
+        var lateDeparture = Math.Max(checkInOffset + grossMinutes - plannedLength, 0);
+        return CountedSide(earlyArrival, rules.EarlyArrivalOvertimeMinMinutes, rules.EarlyArrivalOvertimeMaxMinutes)
+            + CountedSide(lateDeparture, rules.LateDepartureOvertimeMinMinutes, rules.LateDepartureOvertimeMaxMinutes);
+    }
+
+    private static int CountedSide(int excessMinutes, int? minMinutes, int? maxMinutes) =>
+        excessMinutes <= 0 || excessMinutes < (minMinutes ?? 0) ? 0 : Math.Min(excessMinutes, maxMinutes ?? int.MaxValue);
+
+    /// <summary><paramref name="to"/> − <paramref name="from"/> folded into (−720, 720] minutes.</summary>
+    private static int SignedMinutesBetween(TimeOnly from, TimeOnly to)
+    {
+        var diff = (int)(to.ToTimeSpan() - from.ToTimeSpan()).TotalMinutes;
+        var half = AttendanceLimits.MaxMinutesPerDay / 2;
+        return diff > half ? diff - AttendanceLimits.MaxMinutesPerDay : diff <= -half ? diff + AttendanceLimits.MaxMinutesPerDay : diff;
+    }
+
+    /// <summary>Planned span in (0, 1440] minutes; an end at or before the start crosses midnight.</summary>
+    private static int WrappedMinutesBetween(TimeOnly start, TimeOnly end)
+    {
+        var diff = (int)(end.ToTimeSpan() - start.ToTimeSpan()).TotalMinutes;
+        return diff <= 0 ? diff + AttendanceLimits.MaxMinutesPerDay : diff;
     }
 
     /// <summary>Same wrap-past-midnight rule <see cref="AttendanceDay"/> already used for its legacy WorkedMinutes.</summary>

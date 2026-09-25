@@ -31,7 +31,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlySummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
 
-        // Zaman-devam Z0.3: yeniden hesaplama (API-only: IEmployeeDirectory Worker'da yok). IDayRebuilder, B1/B2 birleşince punch tabanlı gerçeğiyle değiştirilir.
+        // Zaman-devam Z0.3: yeniden hesaplama (API-only: IEmployeeDirectory Worker'da yok). IDayRebuilder: I0 şeridi punch tabanlı gerçeğiyle değiştirir (bkz. ExistingRecordDayRebuilder).
         services.AddScoped<IDayRebuilder, ExistingRecordDayRebuilder>();
         services.AddScoped<RecalculationExecutor>();
         services.AddSingleton<RecalculationJobStore>();
@@ -78,6 +78,10 @@ public static class AttendanceServiceCollectionExtensions
         // Z3.1 toplu atama (B8): vardiya tanımı okuma; B2 aynı kaydı eklerse tekrar harmsızdır (son kayıt kazanır).
         services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
         services.AddScoped<IRotationRepository, RotationRepository>();
+        // Z0.2 vardiya kataloğu + K2 plan çözümleme (B2).
+        // TryAdd: B9 (rotasyon) da aynı repository'yi kaydeder; birleşmede çift kayıt olmasın.
+        services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        services.TryAddScoped<IPlannedDayResolver, PlannedDayResolver>();
         return services;
     }
 

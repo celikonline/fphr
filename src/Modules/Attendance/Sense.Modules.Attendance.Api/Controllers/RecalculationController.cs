@@ -16,14 +16,14 @@ public sealed class RecalculationController : ApiControllerBase
 {
     public sealed record RecalculationRequest(DateOnly From, DateOnly To, IReadOnlyCollection<Guid>? EmployeeIds);
 
-    public sealed record RecalculationJobDto(Guid JobId);
+    public sealed record RecalculationJobDto(Guid JobId, int SkippedOutOfScope);
 
     [HttpPost]
     [ProducesResponseType<RecalculationJobDto>(StatusCodes.Status202Accepted)]
     public async Task<IActionResult> Enqueue([FromBody] RecalculationRequest request, CancellationToken ct)
     {
         var result = await Dispatcher.Send(new EnqueueRecalculationCommand(request.From, request.To, request.EmployeeIds), ct);
-        return result.IsSuccess ? Accepted(new RecalculationJobDto(result.Value)) : Problem(result.Error);
+        return result.IsSuccess ? Accepted(new RecalculationJobDto(result.Value.JobId, result.Value.SkippedOutOfScope)) : Problem(result.Error);
     }
 
     [HttpGet("{jobId:guid}")]

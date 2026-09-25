@@ -164,6 +164,12 @@ public sealed partial class ShiftDefinition : TenantAggregateRoot<Guid>, IAuditL
         return Result.Success();
     }
 
+    /// <summary>
+    /// "Kaydet &amp; Geçmişe Uygula": kaydedilen kuralların <paramref name="appliedFrom"/>'dan itibaren geçmiş günlere uygulandığını
+    /// bildirir (<see cref="ShiftDefinitionChanged"/>). Yeniden hesaplamayı uygulama katmanı kuyruğa alır.
+    /// </summary>
+    public void MarkAppliedToPast(DateOnly appliedFrom) => Raise(new ShiftDefinitionChanged(Id, appliedFrom, TenantId));
+
     public void Activate() => IsActive = true;
 
     public void Deactivate() => IsActive = false;
@@ -239,3 +245,9 @@ public sealed partial class ShiftDefinition : TenantAggregateRoot<Guid>, IAuditL
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex ColorHexPattern();
 }
+
+/// <summary>
+/// Bir vardiya tanımının kuralları <see cref="AppliedFrom"/>'dan itibaren geçmişe uygulandı (Z0.2 "Kaydet &amp; Geçmişe Uygula").
+/// Bilgilendirme olayıdır: etkilenen aralığın yeniden hesaplaması komutta zaten kuyruğa alınır, dinleyiciler tekrar kuyruğa almamalı.
+/// </summary>
+public sealed record ShiftDefinitionChanged(Guid DefinitionId, DateOnly AppliedFrom, Guid TenantId) : DomainEvent;

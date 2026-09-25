@@ -14,8 +14,14 @@ namespace Sense.Modules.Attendance.Infrastructure.Jobs;
 /// A restart loses queued/in-flight jobs - callers re-queue, the run is idempotent.
 /// </summary>
 public sealed partial class AttendanceDayRecalculator(
-    IServiceScopeFactory scopes, RecalculationJobStore store, ILogger<AttendanceDayRecalculator> logger) : IAttendanceDayRecalculator
+    IServiceScopeFactory scopes, RecalculationJobStore store, TimeProvider clock, ILogger<AttendanceDayRecalculator> logger) : IAttendanceDayRecalculator
 {
+    /// <summary>
+    /// The enqueuing command (e.g. "Kaydet &amp; Geçmişe Uygula") may not have committed yet when it queues the job; waiting before the
+    /// first read lets its transaction finish so the fresh scope sees the new definitions.
+    /// </summary>
+    public static readonly TimeSpan StartDelay = TimeSpan.FromSeconds(3);
+
     private readonly Channel<Guid> _queue = Channel.CreateUnbounded<Guid>(new UnboundedChannelOptions { SingleReader = true });
 
     public ChannelReader<Guid> Queue => _queue.Reader;
@@ -38,6 +44,15 @@ public sealed partial class AttendanceDayRecalculator(
     {
         var job = store.FindById(jobId);
         if (job is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Task.Delay(StartDelay, clock, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
         {
             return;
         }

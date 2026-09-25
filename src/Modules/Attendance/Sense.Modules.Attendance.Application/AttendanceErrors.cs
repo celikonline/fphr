@@ -46,4 +46,10 @@ public static class AttendanceErrors
 
     /// <summary>Z2.1: only the requesting employee can cancel a request.</summary>
     public const string PunchRequestNotOwner = "attendance.punch_request.not_owner";
+
+    /// <summary>Z0.2: another shift definition of the tenant already uses this code.</summary>
+    public const string ShiftDefinitionCodeDuplicate = "attendance.shift_definition.code_duplicate";
+
+    /// <summary>Z0.2: a definition referenced by an assignment, rotation step or plan template cannot be deleted, only deactivated.</summary>
+    public const string ShiftDefinitionInUse = "attendance.shift_definition.in_use";
 }

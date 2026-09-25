@@ -17,9 +17,16 @@ public interface IDayRebuilder
     Task<AttendanceDay?> RebuildAsync(Guid tenantId, Guid employeeId, DateOnly date, CancellationToken cancellationToken);
 }
 
-/// <summary>Re-derives an existing day's plan/anomalies from its stored check-in/out (no punches involved).</summary>
+/// <summary>
+/// Re-derives an existing day's plan/anomalies from its stored check-in/out (no punches involved), through the same
+/// <see cref="AttendanceDays.IPlannedDayResolver"/> + <see cref="AttendanceDays.AttendanceDayUpsert"/> path check-in channels use, so
+/// the ShiftDefinition rule set (tolerances, overtime thresholds) is applied.
+/// I0 CONNECTION POINT: the punch-based rebuild (B1 DayFromPunches) replaces this class behind <see cref="IDayRebuilder"/>
+/// (DI line in AttendanceServiceCollectionExtensions.AddAttendanceServices) - derive check-in/out from
+/// IPunchRepository.ListForDayAsync, then call AttendanceDayUpsert.UpsertAsync(days, planner, ...) the same way.
+/// </summary>
 public sealed class ExistingRecordDayRebuilder(
-    IAttendanceDayRepository days, Contracts.IWorkScheduleReadService schedules, IShiftSettingsRepository settings) : IDayRebuilder
+    IAttendanceDayRepository days, AttendanceDays.IPlannedDayResolver planner, IShiftSettingsRepository settings) : IDayRebuilder
 {
     public async Task<AttendanceDay?> RebuildAsync(Guid tenantId, Guid employeeId, DateOnly date, CancellationToken cancellationToken)
     {
@@ -29,11 +36,11 @@ public sealed class ExistingRecordDayRebuilder(
             return null;
         }
 
-        var (start, end, minutes, breakMinutes) = await AttendanceDays.PlannedDayResolver.ResolveAsync(schedules, employeeId, date, cancellationToken).ConfigureAwait(false);
         var limits = AttendanceDays.AttendanceDayUpsert.ToShiftLimits(await settings.FindAsync(cancellationToken).ConfigureAwait(false));
         var overnight = existing.CheckIn is { } checkIn && existing.CheckOut is { } checkOut && checkOut <= checkIn;
-        var result = existing.UpdateRecord(
-            existing.CheckIn, existing.CheckOut, start, end, minutes, breakMinutes, existing.Source, overnight, existing.ActualBreakMinutes, limits);
-        return result.IsFailure ? null : existing;
+        var result = await AttendanceDays.AttendanceDayUpsert.UpsertAsync(
+            days, planner, tenantId, employeeId, date, existing.CheckIn, existing.CheckOut, existing.Source, overnight, cancellationToken,
+            existing.ActualBreakMinutes, limits).ConfigureAwait(false);
+        return result.IsFailure ? null : result.Value;
     }
 }
