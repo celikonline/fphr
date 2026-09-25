@@ -53,5 +53,10 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saveApplyPast": "Speichern und auf Vergangenheit anwenden"
-  }
+  },
+  "timeline": {
+    "start": "Startzeit",
+    "end": "Endzeit"
+  },
+  "recalculating": "{{count}} Zuweisungen werden neu berechnet."
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Slider, Text } from "@mantine/core";
 import type { ShiftBreak } from "@/services/attendance-shift-definitions.service";
 
@@ -37,7 +38,7 @@ interface ShiftTimelineProps {
 
 const pct = (minute: number) => `${(minute / DAY_MINUTES) * 100}%`;
 
-/** 24 saatlik, 15 dakika adımlı zaman çizelgesi; gece vardiyası sarmalı gösterilir. */
+/** 24 saatlik (bitişte 00:00 = gece yarısı; kaydırıcı 23:45'te biter),, 15 dakika adımlı zaman çizelgesi; gece vardiyası sarmalı gösterilir. */
 export default function ShiftTimeline({
   startMinute,
   endMinute,
@@ -47,6 +48,7 @@ export default function ShiftTimeline({
   disabled,
   onChange,
 }: ShiftTimelineProps) {
+  const { t } = useTranslation(["shifts"]);
   const segments = hideEnd ? [] : shiftSegments(startMinute, endMinute);
   return (
     <div className="space-y-3">
@@ -87,8 +89,8 @@ export default function ShiftTimeline({
         {hideEnd ? "" : ` – ${formatMinute(endMinute)}`}
       </Text>
       <Slider
-        aria-label="start"
-        thumbLabel="start"
+        aria-label={t("shifts:timeline.start")}
+        thumbLabel={t("shifts:timeline.start")}
         min={0}
         max={DAY_MINUTES - STEP_MINUTES}
         step={STEP_MINUTES}
@@ -99,8 +101,8 @@ export default function ShiftTimeline({
       />
       {!hideEnd && (
         <Slider
-          aria-label="end"
-          thumbLabel="end"
+          aria-label={t("shifts:timeline.end")}
+          thumbLabel={t("shifts:timeline.end")}
           min={0}
           max={DAY_MINUTES - STEP_MINUTES}
           step={STEP_MINUTES}

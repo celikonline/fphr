@@ -53,5 +53,10 @@
     "cancel": "Cancel",
     "save": "Save",
     "saveApplyPast": "Save and apply to past"
-  }
+  },
+  "timeline": {
+    "start": "Start time",
+    "end": "End time"
+  },
+  "recalculating": "{{count}} assignments will be recalculated."
 }

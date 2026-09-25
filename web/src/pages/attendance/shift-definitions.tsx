@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Card, ColorSwatch, Group, Table, Text, Title } from "@mantine/core";
+import { Alert, Badge, Button, Card, ColorSwatch, Group, Table, Text, Title } from "@mantine/core";
 import { Clock, Plus } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
@@ -14,7 +14,9 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import {
   listShiftDefinitions,
   saveShiftDefinition,
+  setShiftDefinitionActive,
   type ShiftDefinition,
+  type ShiftDefinitionSaveResult,
 } from "@/services/attendance-shift-definitions.service";
 
 const QUERY_KEY = ["attendance", "shift-definitions"];
@@ -30,15 +32,26 @@ export default function ShiftDefinitionsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<ShiftDefinition | null>(null);
 
-  const query = useQuery({ queryKey: QUERY_KEY, queryFn: listShiftDefinitions, enabled: canView });
+  const query = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => listShiftDefinitions({ includeInactive: true }),
+    enabled: canView,
+  });
+  const [lastResult, setLastResult] = useState<ShiftDefinitionSaveResult | null>(null);
   const save = useMutation({
-    mutationFn: (args: { dto: ShiftDefinition; applyToPast: boolean }) =>
-      saveShiftDefinition(args.dto, { applyToPast: args.applyToPast }),
-    onSuccess: async (_d, args) => {
-      toast({
-        variant: "success",
-        description: t(args.applyToPast ? "shifts:savedApplied" : "shifts:saved"),
-      });
+    mutationFn: async (args: { dto: ShiftDefinition; applyToPast: boolean }) => {
+      const result = await saveShiftDefinition(args.dto, { applyToPast: args.applyToPast });
+      const wasActive = args.dto.id
+        ? (query.data?.find((d) => d.id === args.dto.id)?.isActive ?? true)
+        : true;
+      if (args.dto.isActive !== wasActive)
+        await setShiftDefinitionActive(result.id, args.dto.isActive);
+      return result;
+    },
+    onSuccess: async (result, args) => {
+      toast({ variant: "success", description: t("shifts:saved") });
+      // recalculationJobId is kept for the B3 status endpoint (GET v1/attendance/recalculation/{jobId}).
+      setLastResult(args.applyToPast ? result : null);
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -71,6 +84,12 @@ export default function ShiftDefinitionsPage() {
           </Button>
         )}
       </Group>
+
+      {lastResult && !editing && (
+        <Alert color="blue" withCloseButton onClose={() => setLastResult(null)}>
+          {t("shifts:recalculating", { count: lastResult.affectedAssignmentCount })}
+        </Alert>
+      )}
 
       {editing ? (
         <Card withBorder padding="lg" radius="md">

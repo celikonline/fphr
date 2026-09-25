@@ -88,14 +88,14 @@ describe("ShiftDefinitionForm", () => {
 
   it("flexible_hides_fixed_end: flexible shows duration and window, hides end", async () => {
     await renderForm(vi.fn(), { ...emptyShiftDefinition(), type: "flexible" });
-    expect(screen.queryByRole("slider", { name: "end" })).toBeNull();
+    expect(screen.queryByRole("slider", { name: "Bitiş saati" })).toBeNull();
     expect(screen.getByLabelText("Vardiya süresi (dk)")).toBeInTheDocument();
     expect(screen.getByLabelText("En erken giriş")).toBeInTheDocument();
   });
 
   it("fixed shows end slider and no flexible fields", async () => {
     await renderForm();
-    expect(screen.getByRole("slider", { name: "end" })).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Bitiş saati" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Vardiya süresi (dk)")).toBeNull();
   });
 });

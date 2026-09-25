@@ -53,5 +53,10 @@
     "cancel": "Vazgeç",
     "save": "Kaydet",
     "saveApplyPast": "Kaydet ve geçmişe uygula"
-  }
+  },
+  "timeline": {
+    "start": "Başlangıç saati",
+    "end": "Bitiş saati"
+  },
+  "recalculating": "{{count}} atama yeniden hesaplanacak."
 }

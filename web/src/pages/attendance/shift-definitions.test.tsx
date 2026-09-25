@@ -11,18 +11,28 @@ import trCommon from "../../../public/locales/tr/common.json";
 import ShiftDefinitionsPage from "./shift-definitions";
 import { useAuthStore } from "@/store/auth.store";
 import { emptyShiftDefinition } from "@/components/attendance/shift-definition-form";
-import { listShiftDefinitions, saveShiftDefinition } from "@/services/attendance-shift-definitions.service";
+import {
+  listShiftDefinitions,
+  saveShiftDefinition,
+  setShiftDefinitionActive,
+} from "@/services/attendance-shift-definitions.service";
 
 vi.mock("@/services/attendance-shift-definitions.service", () => ({
   listShiftDefinitions: vi.fn(),
   saveShiftDefinition: vi.fn(),
+  setShiftDefinitionActive: vi.fn(),
 }));
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
 
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }),
+    value: (q: string) => ({
+      matches: false,
+      media: q,
+      addEventListener() {},
+      removeEventListener() {},
+    }),
   });
   window.ResizeObserver = class {
     observe() {}
@@ -46,19 +56,26 @@ async function renderPage(granted: string[]) {
   });
   render(
     <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
         <MantineProvider>
           <ShiftDefinitionsPage />
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
 
 describe("ShiftDefinitionsPage", () => {
   beforeEach(() => {
     vi.mocked(listShiftDefinitions).mockResolvedValue([existing]);
-    vi.mocked(saveShiftDefinition).mockResolvedValue(existing);
+    vi.mocked(saveShiftDefinition).mockResolvedValue({
+      id: "s1",
+      recalculationJobId: "j1",
+      affectedAssignmentCount: 7,
+    });
+    vi.mocked(setShiftDefinitionActive).mockResolvedValue();
   });
 
   it("save_and_apply_past_calls_service_with_flag", async () => {
@@ -67,8 +84,28 @@ describe("ShiftDefinitionsPage", () => {
     await user.click(await screen.findByText("Gündüz"));
     await user.click(await screen.findByRole("button", { name: "Kaydet ve geçmişe uygula" }));
     await waitFor(() =>
-      expect(saveShiftDefinition).toHaveBeenCalledWith(expect.objectContaining({ id: "s1" }), { applyToPast: true }),
+      expect(saveShiftDefinition).toHaveBeenCalledWith(expect.objectContaining({ id: "s1" }), {
+        applyToPast: true,
+      })
     );
+  });
+
+  it("lists inactive definitions for management and shows the affected count", async () => {
+    const user = userEvent.setup();
+    await renderPage(["attendance.shiftdefinition.view", "attendance.shiftdefinition.manage"]);
+    await user.click(await screen.findByText("Gündüz"));
+    await user.click(await screen.findByRole("button", { name: "Kaydet ve geçmişe uygula" }));
+    expect(listShiftDefinitions).toHaveBeenCalledWith({ includeInactive: true });
+    expect(await screen.findByText("7 atama yeniden hesaplanacak.")).toBeInTheDocument();
+  });
+
+  it("deactivation goes through the active endpoint, not the save body", async () => {
+    const user = userEvent.setup();
+    await renderPage(["attendance.shiftdefinition.view", "attendance.shiftdefinition.manage"]);
+    await user.click(await screen.findByText("Gündüz"));
+    await user.click(screen.getByRole("switch", { name: "Aktif" }));
+    await user.click(screen.getByRole("button", { name: "Kaydet" }));
+    await waitFor(() => expect(setShiftDefinitionActive).toHaveBeenCalledWith("s1", false));
   });
 
   it("read-only users cannot create or edit", async () => {

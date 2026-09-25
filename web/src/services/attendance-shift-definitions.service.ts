@@ -38,26 +38,51 @@ export interface ShiftDefinition {
   lateDepartureOvertimeMinMinutes?: number | null;
   lateDepartureOvertimeMaxMinutes?: number | null;
   bonusMinutes: number;
+  /** Yalnız okunur; değiştirmek için setShiftDefinitionActive (kayıt gövdesinde gönderilmez). */
   isActive: boolean;
 }
+
+/** Kayıt gövdesi: sunucu IsActive/Id kabul etmez. */
+export type ShiftDefinitionInput = Omit<ShiftDefinition, "id" | "isActive">;
 
 export interface SaveShiftDefinitionOptions {
   /** Daha önce planlanmış geçmiş günleri yeni tanımla yeniden hesaplat. */
   applyToPast: boolean;
 }
 
-export async function listShiftDefinitions(): Promise<ShiftDefinition[]> {
-  const { data } = await apiClient.get<ShiftDefinition[]>(BASE);
+/** PUT yanıtı (ShiftDefinitionSaveResultDto); POST için affectedAssignmentCount 0 olarak doldurulur. */
+export interface ShiftDefinitionSaveResult {
+  id: string;
+  recalculationJobId?: string | null;
+  affectedAssignmentCount: number;
+}
+
+/** Varsayılan yalnız aktifler (palet); yönetim sayfası includeInactive ister. */
+export async function listShiftDefinitions(options?: {
+  includeInactive?: boolean;
+}): Promise<ShiftDefinition[]> {
+  const { data } = await apiClient.get<ShiftDefinition[]>(BASE, {
+    params: options?.includeInactive ? { includeInactive: true } : undefined,
+  });
   return data;
 }
 
 export async function saveShiftDefinition(
   dto: ShiftDefinition,
-  { applyToPast }: SaveShiftDefinitionOptions,
-): Promise<ShiftDefinition> {
-  const params = { applyToPast };
-  const { data } = dto.id
-    ? await apiClient.put<ShiftDefinition>(`${BASE}/${dto.id}`, dto, { params })
-    : await apiClient.post<ShiftDefinition>(BASE, dto, { params });
-  return data;
+  { applyToPast }: SaveShiftDefinitionOptions
+): Promise<ShiftDefinitionSaveResult> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, isActive, ...body } = dto;
+  if (id) {
+    const { data } = await apiClient.put<ShiftDefinitionSaveResult>(`${BASE}/${id}`, body, {
+      params: { applyToPast },
+    });
+    return data;
+  }
+  const { data } = await apiClient.post<string>(BASE, body);
+  return { id: data, affectedAssignmentCount: 0 };
+}
+
+export async function setShiftDefinitionActive(id: string, isActive: boolean): Promise<void> {
+  await apiClient.put(`${BASE}/${id}/active`, { isActive });
 }

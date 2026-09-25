@@ -1,7 +1,10 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { I18nextProvider } from "react-i18next";
+import i18next from "i18next";
 import { MantineProvider } from "@mantine/core";
+import trShifts from "../../../public/locales/tr/shifts.json";
 import ShiftTimeline, { formatMinute, shiftSegments, snapToStep } from "./shift-timeline";
 
 beforeAll(() => {
@@ -45,12 +48,24 @@ describe("shift timeline helpers", () => {
 });
 
 describe("ShiftTimeline", () => {
-  const wrap = (ui: React.ReactElement) => render(<MantineProvider>{ui}</MantineProvider>);
+  const i18n = i18next.createInstance();
+  void i18n.init({
+    lng: "tr",
+    resources: { tr: { shifts: trShifts } },
+    defaultNS: "shifts",
+    react: { useSuspense: false },
+  });
+  const wrap = (ui: React.ReactElement) =>
+    render(
+      <I18nextProvider i18n={i18n}>
+        <MantineProvider>{ui}</MantineProvider>
+      </I18nextProvider>
+    );
 
   it("timeline_snaps_to_15_minutes: keyboard step moves 15 minutes", () => {
     const onChange = vi.fn();
     wrap(<ShiftTimeline startMinute={480} endMinute={1020} breaks={[]} onChange={onChange} />);
-    const start = screen.getByRole("slider", { name: "start" });
+    const start = screen.getByRole("slider", { name: "Başlangıç saati" });
     fireEvent.keyDown(start, { key: "ArrowRight" });
     expect(onChange).toHaveBeenCalledWith({ startMinute: 495, endMinute: 1020 });
   });
@@ -64,7 +79,7 @@ describe("ShiftTimeline", () => {
     wrap(
       <ShiftTimeline startMinute={480} endMinute={1020} breaks={[]} hideEnd onChange={() => {}} />
     );
-    expect(screen.queryByRole("slider", { name: "end" })).toBeNull();
-    expect(screen.getByRole("slider", { name: "start" })).toBeInTheDocument();
+    expect(screen.queryByRole("slider", { name: "Bitiş saati" })).toBeNull();
+    expect(screen.getByRole("slider", { name: "Başlangıç saati" })).toBeInTheDocument();
   });
 });
