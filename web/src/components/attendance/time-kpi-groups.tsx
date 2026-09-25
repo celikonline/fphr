@@ -44,7 +44,8 @@ function ValueTable({ label, headers, rows }: { label: string; headers: string[]
 
 export function TimeKpiLateEarly({ rows }: { rows: LateEarlyByUnitRow[] }) {
   const { t } = useTranslation(["attendance-daily"]);
-  const data = rows.map((r) => ({ unit: r.orgUnitName, late: r.lateCount, earlyLeave: r.earlyLeaveCount }));
+  const unitName = (r: LateEarlyByUnitRow) => (r.orgUnitId ? r.orgUnitName : t("attendance-daily:timeDashboard.unassigned"));
+  const data = rows.map((r) => ({ unit: unitName(r), late: r.lateCount, earlyLeave: r.earlyLeaveCount }));
   return (
     <Card withBorder padding="md">
       <Stack gap="sm">
@@ -77,7 +78,7 @@ export function TimeKpiLateEarly({ rows }: { rows: LateEarlyByUnitRow[] }) {
               t("attendance-daily:timeDashboard.status.late"),
               t("attendance-daily:timeDashboard.status.earlyLeave"),
             ]}
-            rows={rows.map((r) => [r.orgUnitName, r.lateCount, r.earlyLeaveCount])}
+            rows={rows.map((r) => [unitName(r), r.lateCount, r.earlyLeaveCount])}
           />
         )}
       </Stack>
