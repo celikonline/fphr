@@ -44,6 +44,13 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IncalculableReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.NoShiftAssignedReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.DailyStatusListsReportProvider>();
+        // Okutma tabanlı zaman raporları (Z4.1b, R2).
+        services.TryAddScoped<Reporting.IPunchReportReader, Reporting.PunchReportReader>();
+        services.TryAddScoped<ITerminalRepository, TerminalRepository>(); // Terminal adı sütunu; Z5.1 aynı kaydı eklerse TryAdd çakışmaz.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.ManualEntriesReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.CurrentlyInsideReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.BreaksReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IntermediatePunchesReportProvider>();
         return services;
     }
 

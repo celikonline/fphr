@@ -97,6 +97,22 @@
         "daily_status": {
           "label": "Tägliche Statuslisten",
           "description": "Listen für gekommen, verspätet, früh gegangen, abwesend, Überstunden, Minusstunden, im Urlaub und nicht berechenbar für den gewählten Status und Tag."
+        },
+        "manual_entries": {
+          "label": "Manuelle Einträge",
+          "description": "Manuell oder per Antrag erfasste Stempelungen im Zeitraum; gelöschte Einträge mit löschender Person und Begründung."
+        },
+        "currently_inside": {
+          "label": "Aktuell anwesend",
+          "description": "Mitarbeitende, deren letzte Stempelung heute ein Eintritt ist, also aktuell anwesend (Momentaufnahme)."
+        },
+        "breaks": {
+          "label": "Pausen",
+          "description": "Anzahl sowie Gesamt- und Längstdauer der Pausen aus den Aus-Ein-Lücken des Tages, mit Abweichung zur geplanten Pause."
+        },
+        "intermediate_punches": {
+          "label": "Zwischenstempelungen",
+          "description": "Stempelungen außer dem ersten Eintritt und dem letzten Austritt des Tages."
         }
       }
     },

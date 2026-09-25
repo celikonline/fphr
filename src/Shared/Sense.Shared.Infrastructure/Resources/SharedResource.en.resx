@@ -1701,4 +1701,34 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Unplanned work</value></data>
   <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>Worked while on leave</value></data>
   <data name="report.anomaly.incalculable" xml:space="preserve"><value>Incalculable</value></data>
+  <data name="report.col.occurredAt" xml:space="preserve"><value>Punch time</value></data>
+  <data name="report.col.direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="report.col.enteredBy" xml:space="preserve"><value>Entered by</value></data>
+  <data name="report.col.reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="report.col.deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="report.col.deletedBy" xml:space="preserve"><value>Deleted by</value></data>
+  <data name="report.col.deleteReason" xml:space="preserve"><value>Delete reason</value></data>
+  <data name="report.col.firstIn" xml:space="preserve"><value>First in</value></data>
+  <data name="report.col.lastPunch" xml:space="preserve"><value>Last punch</value></data>
+  <data name="report.col.terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.col.sequence" xml:space="preserve"><value>Sequence</value></data>
+  <data name="report.col.time" xml:space="preserve"><value>Time</value></data>
+  <data name="report.col.breakCount" xml:space="preserve"><value>Break count</value></data>
+  <data name="report.col.totalBreakMinutes" xml:space="preserve"><value>Total break (min)</value></data>
+  <data name="report.col.longestBreakMinutes" xml:space="preserve"><value>Longest break (min)</value></data>
+  <data name="report.col.plannedBreakMinutes" xml:space="preserve"><value>Planned break (min)</value></data>
+  <data name="report.col.breakDifferenceMinutes" xml:space="preserve"><value>Difference (min)</value></data>
+  <data name="report.sheet.attendanceManualEntries" xml:space="preserve"><value>Manual entries</value></data>
+  <data name="report.sheet.attendanceCurrentlyInside" xml:space="preserve"><value>Currently inside</value></data>
+  <data name="report.sheet.attendanceBreaks" xml:space="preserve"><value>Breaks</value></data>
+  <data name="report.sheet.attendanceIntermediatePunches" xml:space="preserve"><value>Intermediate punches</value></data>
+  <data name="report.enum.PunchSource.Manual" xml:space="preserve"><value>Manual</value></data>
+  <data name="report.enum.PunchSource.Import" xml:space="preserve"><value>Import</value></data>
+  <data name="report.enum.PunchSource.Device" xml:space="preserve"><value>Device</value></data>
+  <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self service</value></data>
+  <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Request</value></data>
+  <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>In</value></data>
+  <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Out</value></data>
+  <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Unknown</value></data>
 </root>

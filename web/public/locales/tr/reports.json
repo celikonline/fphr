@@ -97,6 +97,22 @@
         "daily_status": {
           "label": "Günlük durum listeleri",
           "description": "Gelenler, geç gelenler, erken çıkanlar, devamsızlar, fazla mesai, eksik mesai, izinliler ve hesaplanamayanlar listesi; seçilen durum ve gün için."
+        },
+        "manual_entries": {
+          "label": "Elle girilen kayıtlar",
+          "description": "Tarih aralığında elle veya talep yoluyla girilmiş okutmalar; silinmiş kayıtlar silen kullanıcı ve gerekçesiyle gösterilir."
+        },
+        "currently_inside": {
+          "label": "İçerdekiler",
+          "description": "Bugün son okutması giriş olan, yani şu an içeride görünen çalışanlar (anlık görüntü)."
+        },
+        "breaks": {
+          "label": "Mola",
+          "description": "Gün içindeki çıkış-giriş boşluklarından hesaplanan mola sayısı, toplam ve en uzun mola ile planlı mola farkı."
+        },
+        "intermediate_punches": {
+          "label": "Ara kayıtlar",
+          "description": "Günün ilk girişi ile son çıkışı dışında kalan ara okutmalar."
         }
       }
     },

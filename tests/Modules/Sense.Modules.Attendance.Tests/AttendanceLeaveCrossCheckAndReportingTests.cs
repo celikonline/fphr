@@ -75,6 +75,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         services.TryAddSingleton(Substitute.For<IPunchRepository>()); // B1 birleşmeden önce IPunchRepository kaydı yok; birleşince gerçek kayıt (TryAdd) korunur.
         services.TryAddSingleton(Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton(Substitute.For<Sense.Modules.Identity.Contracts.IUserProfileLookup>()); // Z4.1b: Elle Girilen Kayıtlar sağlayıcısı katalogda çözülebilsin.
         services.AddSingleton(Substitute.For<IEmployeeDirectory>()); // Z4.1a: günlük sorguya dayanan zaman raporu sağlayıcıları katalogda çözülebilsin.
 
         _orgUnits.ListActiveTypesAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns([CompanyLevel]);

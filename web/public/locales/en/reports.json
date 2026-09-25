@@ -97,6 +97,22 @@
         "daily_status": {
           "label": "Daily status lists",
           "description": "Arrived, late, early leave, absent, overtime, undertime, on leave and incalculable lists for the selected status and day."
+        },
+        "manual_entries": {
+          "label": "Manual entries",
+          "description": "Punches entered manually or through requests in the date range; deleted entries are shown with who deleted them and why."
+        },
+        "currently_inside": {
+          "label": "Currently inside",
+          "description": "Employees whose latest punch today is an entry, i.e. currently inside (live snapshot)."
+        },
+        "breaks": {
+          "label": "Breaks",
+          "description": "Break count, total and longest break from out-in gaps during the day, with the difference to the planned break."
+        },
+        "intermediate_punches": {
+          "label": "Intermediate punches",
+          "description": "Punches other than the first entry and the last exit of the day."
         }
       }
     },
