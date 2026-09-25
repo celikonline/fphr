@@ -45,6 +45,12 @@ internal static class DailyStatusReportSupport
         return [DateOnly.FromDateTime((await clock.NowAsync(tenantId, cancellationToken)).Local)];
     }
 
+    /// <summary>True when the requested from/to range is longer than <see cref="MaxDays"/> and <see cref="ResolveDaysAsync"/> cut it.</summary>
+    public static bool IsRangeTruncated(IReadOnlyDictionary<string, string> parameters) =>
+        ReportParameters.GetDate(parameters, ReportParameterKeys.Date) is null
+        && ReportParameters.GetDateRange(parameters) is { } range
+        && range.To.DayNumber - range.From.DayNumber + 1 > MaxDays;
+
     public static async Task<IReadOnlyList<DailyAttendanceRowDto>> LoadAsync(
         IDailyAttendanceQuery query, Guid tenantId, IReadOnlyList<DateOnly> days, DailyStatus status,
         IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken)
@@ -97,9 +103,20 @@ internal static class DailyStatusReportSupport
         var sheet = localizer.Sheet(sheetKey);
         var first = days[0];
         var last = days[^1];
+        var period = AttendanceReportPdfExport.FormatPeriod(first, last);
+        if (IsRangeTruncated(parameters))
+        {
+            // The requested range was cut to MaxDays: say so in the PDF period line and as a closing Excel row.
+            var note = localizer["report.note.daily_range_truncated", MaxDays].Value;
+            period = $"{period} ({note})";
+            if (!AttendanceReportPdfExport.IsPdfRequested(parameters))
+            {
+                data.Add([note, .. new object?[columns.Length - 1]]);
+            }
+        }
+
         return AttendanceReportPdfExport.Produce(
-            parameters, exporter, pdfWriter, sheet, $"{sheet} {first:yyyy-MM-dd}", columns, data,
-            AttendanceReportPdfExport.FormatPeriod(first, last), cancellationToken);
+            parameters, exporter, pdfWriter, sheet, $"{sheet} {first:yyyy-MM-dd}", columns, data, period, cancellationToken);
     }
 
     private static async Task<IReadOnlyList<DailyAttendanceRowDto>> ReadAllPagesAsync(

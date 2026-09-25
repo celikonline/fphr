@@ -115,6 +115,25 @@ public sealed class TimeReportProvidersTests
     }
 
     [Fact]
+    public async Task Daily_range_over_31_days_notes_truncation_in_excel_and_pdf()
+    {
+        QueryReturns(DailyStatus.Incalculable, DailyRow(Guid.NewGuid(), "Ayşe Yılmaz"));
+
+        var excel = await Incalculable().GenerateAsync(
+            TenantId, Params(("from", "2026-08-01"), ("to", "2026-09-30")), TestContext.Current.CancellationToken);
+        var pdf = await Incalculable().GenerateAsync(
+            TenantId, Params(("from", "2026-08-01"), ("to", "2026-09-30"), ("format", "pdf")), TestContext.Current.CancellationToken);
+        var within = await Incalculable().GenerateAsync(
+            TenantId, Params(("from", "2026-08-01"), ("to", "2026-08-31")), TestContext.Current.CancellationToken);
+
+        var sheet = FirstSheet(excel);
+        sheet.LastRowUsed()!.Cell(1).GetString().ShouldBe("İlk 31 gün gösterildi");
+        sheet.RowsUsed().Count().ShouldBe(1 + 31 + 1); // header + 31 daily rows + note
+        FirstSheet(within).RowsUsed().Count().ShouldBe(1 + 31);
+        ShouldBePdf(pdf);
+    }
+
+    [Fact]
     public async Task Incalculable_Pdf_when_format_pdf()
     {
         QueryReturns(DailyStatus.Incalculable, DailyRow(Guid.NewGuid(), "Ayşe Yılmaz"));

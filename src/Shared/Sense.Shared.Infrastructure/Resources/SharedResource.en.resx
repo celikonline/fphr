@@ -1695,6 +1695,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Incalculable</value></data>
   <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>No shift assigned</value></data>
   <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Daily status list</value></data>
+  <data name="report.note.daily_range_truncated" xml:space="preserve"><value>First {0} days shown</value></data>
   <data name="report.anomaly.noData" xml:space="preserve"><value>No data</value></data>
   <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Missing check-in</value></data>
   <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Missing check-out</value></data>
