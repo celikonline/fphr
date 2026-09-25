@@ -1,5 +1,57 @@
 {
   "title": "Schichtdefinitionen",
   "subtitle": "Schichtzeiten und Pausendauer",
-  "comingSoon": "Diese Ansicht folgt in Kürze."
+  "comingSoon": "Diese Ansicht folgt in Kürze.",
+  "new": "Neue Schicht",
+  "saved": "Schicht gespeichert.",
+  "savedApplied": "Schicht gespeichert; vergangene Tage werden neu berechnet.",
+  "saveFailed": "Schicht konnte nicht gespeichert werden.",
+  "type": {
+    "fixed": "Fest",
+    "flexible": "Flexibel",
+    "dynamic": "Dynamisch"
+  },
+  "typeHint": {
+    "fixed": "Feste Start- und Endzeit.",
+    "flexible": "Feste Dauer; Beginn frei innerhalb eines Fensters.",
+    "dynamic": "Die Schicht mit dem nächstliegenden Beginn zur Stempelung wird automatisch gewählt."
+  },
+  "list": {
+    "hours": "Zeiten",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "empty": "Noch keine Schichtdefinitionen.",
+    "flexHours": "{{minutes}} Min. (flexibel)"
+  },
+  "form": {
+    "code": "Code",
+    "name": "Name",
+    "color": "Farbe",
+    "type": "Typ",
+    "required": "Pflichtfeld",
+    "overnight": "Nachtschicht: {{start}} – nächster Tag {{end}}",
+    "startsPreviousDay": "Beginnt am Vortag",
+    "duration": "Schichtdauer (Min.)",
+    "flexEarliest": "Frühester Beginn",
+    "flexLatest": "Spätester Beginn",
+    "breaks": "Pausen",
+    "addBreak": "Pause hinzufügen",
+    "removeBreak": "Pause entfernen",
+    "noBreaks": "Keine Pausen definiert.",
+    "breakStart": "Beginn",
+    "breakDuration": "Dauer (Min.)",
+    "breakFlexible": "Frei",
+    "lateTolerance": "Toleranz Verspätung (Min.)",
+    "earlyLeaveTolerance": "Toleranz frühes Gehen (Min.)",
+    "bonus": "Zusatzzeit (Min.)",
+    "earlyOtMin": "Früh kommen Ü-Std. min (Min.)",
+    "earlyOtMax": "Früh kommen Ü-Std. max (Min.)",
+    "lateOtMin": "Spät gehen Ü-Std. min (Min.)",
+    "lateOtMax": "Spät gehen Ü-Std. max (Min.)",
+    "active": "Aktiv",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saveApplyPast": "Speichern und auf Vergangenheit anwenden"
+  }
 }

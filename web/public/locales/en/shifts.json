@@ -1,5 +1,57 @@
 {
   "title": "Shift definitions",
   "subtitle": "Shift times and break durations",
-  "comingSoon": "This screen is coming soon."
+  "comingSoon": "This screen is coming soon.",
+  "new": "New shift",
+  "saved": "Shift saved.",
+  "savedApplied": "Shift saved; past days will be recalculated.",
+  "saveFailed": "Could not save the shift.",
+  "type": {
+    "fixed": "Fixed",
+    "flexible": "Flexible",
+    "dynamic": "Dynamic"
+  },
+  "typeHint": {
+    "fixed": "Fixed start and end time.",
+    "flexible": "Fixed duration; start time is free within a window.",
+    "dynamic": "The shift starting closest to the punch is picked automatically."
+  },
+  "list": {
+    "hours": "Hours",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "empty": "No shift definitions yet.",
+    "flexHours": "{{minutes}} min (flexible)"
+  },
+  "form": {
+    "code": "Code",
+    "name": "Name",
+    "color": "Color",
+    "type": "Type",
+    "required": "Required",
+    "overnight": "Overnight shift: {{start}} – next day {{end}}",
+    "startsPreviousDay": "Starts on the previous day",
+    "duration": "Shift duration (min)",
+    "flexEarliest": "Earliest start",
+    "flexLatest": "Latest start",
+    "breaks": "Breaks",
+    "addBreak": "Add break",
+    "removeBreak": "Remove break",
+    "noBreaks": "No breaks defined.",
+    "breakStart": "Start",
+    "breakDuration": "Duration (min)",
+    "breakFlexible": "Flexible",
+    "lateTolerance": "Late tolerance (min)",
+    "earlyLeaveTolerance": "Early-leave tolerance (min)",
+    "bonus": "Bonus time (min)",
+    "earlyOtMin": "Early arrival OT min (min)",
+    "earlyOtMax": "Early arrival OT max (min)",
+    "lateOtMin": "Late departure OT min (min)",
+    "lateOtMax": "Late departure OT max (min)",
+    "active": "Active",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveApplyPast": "Save and apply to past"
+  }
 }

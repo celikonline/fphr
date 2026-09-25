@@ -1,23 +1,48 @@
 /**
- * Vardiya tanımları (attendance.shiftdefinition.view/manage). Skeleton: the lane that builds the page refines the DTO
- * against the real controller; the function names are the contract consumed by the F lanes.
+ * Vardiya tanımları (attendance.shiftdefinition.view/manage). Controller: v1/attendance/shift-definitions.
+ * Alan adları spec §4 `ShiftDefinition` ile birebir; enum'lar camelCase string, null alanlar yanıtta yoktur.
  */
 import { apiClient } from "@senseik/api-client";
 
 const BASE = "/v1/attendance/shift-definitions";
 
+export type ShiftType = "fixed" | "flexible" | "dynamic";
+
+export interface ShiftBreak {
+  /** Gün başından dakika; yoksa mola serbest yerleşir. */
+  startMinute?: number | null;
+  durationMinutes: number;
+  isFlexible: boolean;
+}
+
 export interface ShiftDefinition {
   id?: string;
+  code: string;
   name: string;
-  /** "HH:mm:ss". */
-  startTime: string;
-  endTime: string;
-  breakMinutes: number;
-  isActive?: boolean;
+  colorHex: string;
+  type: ShiftType;
+  /** Gün başından dakika (0-1439). */
+  startMinute: number;
+  /** endMinute <= startMinute ise vardiya gece yarısını aşar. */
+  endMinute: number;
+  startsPreviousDay: boolean;
+  /** Yalnız Flexible. */
+  durationMinutes?: number | null;
+  flexStartEarliestMinute?: number | null;
+  flexStartLatestMinute?: number | null;
+  breaks: ShiftBreak[];
+  lateToleranceMinutes: number;
+  earlyLeaveToleranceMinutes: number;
+  earlyArrivalOvertimeMinMinutes?: number | null;
+  earlyArrivalOvertimeMaxMinutes?: number | null;
+  lateDepartureOvertimeMinMinutes?: number | null;
+  lateDepartureOvertimeMaxMinutes?: number | null;
+  bonusMinutes: number;
+  isActive: boolean;
 }
 
 export interface SaveShiftDefinitionOptions {
-  /** Re-plan already-planned past days with the new definition. */
+  /** Daha önce planlanmış geçmiş günleri yeni tanımla yeniden hesaplat. */
   applyToPast: boolean;
 }
 
