@@ -1,0 +1,8 @@
+{{-
+if message_subject
+  subject = message_subject
+else
+  subject = "New HR message"
+end
+-}}
+{{ if message_body }}{{ message_body }}{{ else }}Click to read the HR message.{{ end }}

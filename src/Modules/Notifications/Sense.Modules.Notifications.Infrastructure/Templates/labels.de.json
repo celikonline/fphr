@@ -6,6 +6,8 @@
     "ExpenseClaim": "Spesen",
     "Overtime": "Überstunden",
     "Requisition": "Stellenanforderung",
-    "VisaDocument": "Visadokument"
+    "VisaDocument": "Visadokument",
+    "AttendancePunch": "Fehlende Stempelung",
+    "PayslipObjection": "Gehaltsabrechnungs-Einspruch"
   }
 }

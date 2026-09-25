@@ -1,0 +1,6 @@
+{{- subject = "Your new payslip has been uploaded" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Your payslip has been added to your documents.</p>
+{{~ if action_url ~}}
+{{ button "Open my documents" action_url }}
+{{~ end ~}}

@@ -94,7 +94,10 @@ public static class SystemRoleDefinitions
              "attendance.timesheet.resolve", "attendance.timesheet.approve", "attendance.shift.plan", "attendance.shift.publish",
              "expense.claims.view", "expense.claims.approve", "expense.categories.view", "employee.*.view", "organization.*.view",
              "performance.team.*", "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*",
-             "reports.team.*", "documents.*.view", .. PermissionPatterns.SelfService],
+             "reports.team.*", "documents.*.view",
+             // Zaman & devam: elle okutma, eksik kayıt talepleri ve çalışan notları (ekip kapsamı).
+             "attendance.punch.manage", "attendance.punchrequest.manage", "employee.notes.manage",
+             .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Employee, DataScope.Self,

@@ -1,0 +1,2 @@
+{{- subject = "Einladung: " + event_title -}}
+Klicken Sie für die Details der Veranstaltung.

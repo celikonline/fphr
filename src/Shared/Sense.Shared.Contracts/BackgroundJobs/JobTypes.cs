@@ -37,4 +37,10 @@ public enum JobType
 
     /// <summary>Daily birthday greetings: publishes the employees whose birthday is today (Employee module).</summary>
     EmployeeBirthdayGreeting = 11,
+
+    /// <summary>Payroll (E2): remind employees whose paid payslip is still unacknowledged. Handler + seed are added by the Payroll lane.</summary>
+    PayslipAcknowledgementReminder = 12,
+
+    /// <summary>Attendance (Zaman &amp; Devam): remind employees/managers about days with a missing or incalculable punch. Handler + seed are added by the Attendance lane.</summary>
+    AttendanceMissingPunchReminder = 13,
 }

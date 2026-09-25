@@ -129,10 +129,17 @@ public static class EmployeePermissions
     public static readonly Permission ProfileSelfEdit = new(
         ProfileSelfEditKey, Module, "Kendi Profilimi Düzenleme", Group, "Kendi iletişim alanlarınızı ve çalışan tarafından düzenlenebilir özel alanlarınızı düzenleme");
 
+    public static readonly Permission NotesView = new(
+        "employee.notes.view", Module, "Çalışan Notlarını Görüntüleme", Group, "Çalışan kartındaki İK/yönetici notlarını görüntüleme");
+
+    public static readonly Permission NotesManage = new(
+        "employee.notes.manage", Module, "Çalışan Notu Yönetimi", Group, "Çalışan notu ekleme, düzenleme ve silme");
+
     /// <summary>All Employee module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
             BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, UnionView, UnionManage, SubcontractorManage, ProfileSelfEdit,
+            NotesView, NotesManage,
         ];
 }
