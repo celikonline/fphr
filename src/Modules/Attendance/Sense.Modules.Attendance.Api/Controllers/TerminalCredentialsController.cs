@@ -15,7 +15,7 @@ public sealed record AddTerminalCredentialRequest(Guid EmployeeId, TerminalCrede
 
 /// <summary>
 /// Çalışan terminal kimlikleri (zaman-devam Z5.4): listele (yalnız tür + durum + oluşturulma; değer/özet ASLA dönmez), ekle (değer yalnız
-/// istekte, HMAC özetiyle saklanır; pepper yoksa 503), pasifleştir. Toplu tanımlama: DataTransfer şablonu <c>terminal-credentials</c>.
+/// istekte, HMAC özetiyle saklanır; pepper yoksa 503), yeniden etkinleştir, pasifleştir. Toplu tanımlama: DataTransfer şablonu <c>terminal-credentials</c>.
 /// İzinler komutlarda: attendance.terminal.view / attendance.terminal.manage.
 /// </summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -33,6 +33,12 @@ public sealed class TerminalCredentialsController : ApiControllerBase
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Add([FromBody] AddTerminalCredentialRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AddEmployeeTerminalCredentialCommand(request.EmployeeId, request.Kind, request.Value), ct));
+
+    /// <summary>Pasif kimliği aynı çalışanda yeniden etkinleştirir (özet değişmez). İşten ayrılmış çalışan → 422.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/activate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ActivateEmployeeTerminalCredentialCommand(id), ct));
 
     [HttpPost(ApiRoutes.IdParam + "/deactivate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

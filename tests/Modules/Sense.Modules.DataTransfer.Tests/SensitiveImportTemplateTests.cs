@@ -7,9 +7,11 @@ using Npgsql;
 using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.DataTransfer.Application.ImportJobs;
 using Sense.Modules.DataTransfer.Infrastructure.Persistence;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Infrastructure.BackgroundJobs;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
@@ -21,7 +23,8 @@ namespace Sense.Modules.DataTransfer.Tests;
 /// <summary>
 /// Gizli sütunlu şablonlar (ör. Attendance "terminal-credentials": kart/PIN) gerçek PostgreSQL'de: örnek değer saklanmaz, yüklenen dosya iş
 /// koşunca silinir, sonuç dosyası yalnız satır sonucunu taşır; şablon hazır değilse (sunucu sırrı yok) yükleme/eşleme/çalıştırma tek seferde 503
-/// döner ve hiçbir satır modül işleyicisine gitmez.
+/// döner ve hiçbir satır modül işleyicisine gitmez. Kaynak dosya ayrıca iş başarısız olunca da silinir; hiç çalıştırılmayan işin dosyası
+/// saklama süresi (TTL, varsayılan 24 saat) dolunca zamanlanmış temizleme işiyle silinir. Gizli sütunsuz şablonlar dosyalarını korur.
 /// </summary>
 [Collection("PostgreSQL")]
 [Trait("Category", "Integration")]
@@ -31,6 +34,8 @@ public sealed class SensitiveImportTemplateTests : TestFixture
 
     private readonly SecretTemplate _template = new();
     private readonly SecretRowHandler _handler = new();
+    private readonly PlainTemplate _plainTemplate = new();
+    private readonly ShiftableClock _clock = new();
 
     protected override void ConfigureServices(IServiceCollection services)
     {
@@ -41,6 +46,9 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
         services.AddSingleton<IImportTemplate>(_template);
         services.AddSingleton<IImportRowHandler>(_handler);
+        services.AddSingleton<IImportTemplate>(_plainTemplate);
+        services.AddSingleton<IImportRowHandler>(new PlainRowHandler());
+        services.AddSingleton<TimeProvider>(_clock);
     }
 
     protected override async Task OnDatabaseReadyAsync() =>
@@ -106,6 +114,106 @@ public sealed class SensitiveImportTemplateTests : TestFixture
         run.Error.Type.ShouldBe(ErrorType.ServiceUnavailable);
         _handler.ReceivedSecrets.ShouldBeEmpty();
         (await ExecuteQueryAsync(new GetImportJobQuery(job.Id))).Value.Status.ShouldBe("Mapped");
+    }
+
+    [Fact]
+    public async Task Sensitive_source_file_deleted_when_job_completes()
+    {
+        SetUser();
+        var job = await UploadAsync(File(("S-1", Secrets[0])));
+        await MapAsync(job);
+        (await SourceFileExistsAsync(job.Id)).ShouldBeTrue();
+
+        var run = (await ExecuteCommandAsync(new RunImportJobCommand(job.Id))).Value;
+
+        run.Status.ShouldBe("Completed");
+        (await SourceFileExistsAsync(job.Id)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Sensitive_source_file_deleted_when_job_fails()
+    {
+        SetUser();
+        var job = await UploadAsync(File(("S-1", Secrets[0])));
+        await MapAsync(job);
+        _handler.Throw = true;
+
+        var run = (await ExecuteCommandAsync(new RunImportJobCommand(job.Id))).Value;
+
+        run.Status.ShouldBe("Failed");
+        (await SourceFileExistsAsync(job.Id)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Sensitive_source_file_deleted_after_ttl_even_if_never_run()
+    {
+        var tenantId = SetUser();
+        var uploaded = await UploadAsync(File(("S-1", Secrets[0])));
+        var mapped = await UploadAsync(File(("S-2", Secrets[1])));
+        await MapAsync(mapped);
+
+        _clock.Shift = TimeSpan.FromHours(23);
+        await RunCleanupAsync(tenantId);
+        (await SourceFileExistsAsync(uploaded.Id)).ShouldBeTrue();
+        (await SourceFileExistsAsync(mapped.Id)).ShouldBeTrue();
+
+        _clock.Shift = TimeSpan.FromHours(24) + TimeSpan.FromMinutes(1);
+        await RunCleanupAsync(tenantId);
+        (await SourceFileExistsAsync(uploaded.Id)).ShouldBeFalse();
+        (await SourceFileExistsAsync(mapped.Id)).ShouldBeFalse();
+
+        // Dosyası silinmiş iş artık çalıştırılamaz (anlaşılır hata; satır işlenmez).
+        (await ExecuteCommandAsync(new RunImportJobCommand(mapped.Id))).IsFailure.ShouldBeTrue();
+        _handler.ReceivedSecrets.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Non_sensitive_templates_keep_source_file()
+    {
+        var tenantId = SetUser();
+        var result = await ExecuteCommandAsync(new CreateImportJobCommand(PlainTemplate.Code, "liste.xlsx", File(("S-1", "görünür"))));
+        var job = result.Value;
+        job.SourceColumns.First().Samples.ShouldBe(["S-1"]);
+        await MapAsync(job);
+        (await ExecuteCommandAsync(new RunImportJobCommand(job.Id))).Value.Status.ShouldBe("Completed");
+        var neverRun = (await ExecuteCommandAsync(new CreateImportJobCommand(PlainTemplate.Code, "liste2.xlsx", File(("S-2", "x"))))).Value;
+
+        _clock.Shift = TimeSpan.FromDays(30);
+        await RunCleanupAsync(tenantId);
+
+        (await SourceFileExistsAsync(job.Id)).ShouldBeTrue();
+        (await SourceFileExistsAsync(neverRun.Id)).ShouldBeTrue();
+        var resultFile = (await ExecuteQueryAsync(new DownloadImportResultQuery(job.Id, "tr"))).Value;
+        using var workbook = new XLWorkbook(new MemoryStream(resultFile.Content));
+        workbook.Worksheet(1).Cell(2, 2).GetString().ShouldBe("görünür");
+    }
+
+    [Fact]
+    public void Cleanup_job_registered_and_scheduled()
+    {
+        var seed = BackgroundJobSeeding.GetDefaultSeeds().Where(s => s.JobType == JobType.ImportSensitiveSourceCleanup).ShouldHaveSingleItem();
+        seed.JobName.ShouldBe("ImportSensitiveSourceCleanup");
+        seed.CronExpression.ShouldBe("20 * * * *");
+
+        using var scope = ServiceProvider!.CreateScope();
+        scope.ServiceProvider.GetServices<IScheduledJobHandler>().Where(h => h.Handles == JobType.ImportSensitiveSourceCleanup).ShouldHaveSingleItem();
+        ServiceProvider!.GetRequiredService<Microsoft.Extensions.Options.IOptions<ImportRetentionOptions>>().Value.SensitiveSourceFileTtlHours.ShouldBe(24);
+    }
+
+    private async Task RunCleanupAsync(Guid tenantId)
+    {
+        using var scope = ServiceProvider!.CreateScope();
+        var handler = scope.ServiceProvider.GetServices<IScheduledJobHandler>().Single(h => h.Handles == JobType.ImportSensitiveSourceCleanup);
+        await handler.ExecuteAsync(new ScheduledJobContext(tenantId, "{}", _clock.GetUtcNow()), TestContext.Current.CancellationToken);
+    }
+
+    private async Task<bool> SourceFileExistsAsync(Guid jobId)
+    {
+        await using var connection = new NpgsqlConnection(ServiceProvider!.GetRequiredService<IConfiguration>().GetConnectionString("Database"));
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new NpgsqlCommand("SELECT count(*) FROM datatransfer.import_source_files WHERE import_job_id = @id", connection);
+        command.Parameters.AddWithValue("id", jobId);
+        return (long)(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken))! > 0;
     }
 
     private async Task<ImportJobDto> UploadAsync(byte[] content)
@@ -206,10 +314,18 @@ public sealed class SensitiveImportTemplateTests : TestFixture
     {
         public List<string> ReceivedSecrets { get; } = [];
 
+        /// <summary>Modül işleyicisi patlarsa DataTransfer işi Failed'a çeker.</summary>
+        public bool Throw { get; set; }
+
         public string TemplateCode => SecretTemplate.Code;
 
         public Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
         {
+            if (Throw)
+            {
+                throw new InvalidOperationException("module failure");
+            }
+
             var results = batch.Rows.Select(row =>
             {
                 var secret = row.Get(SecretTemplate.SecretKey)!.Text!;
@@ -221,5 +337,50 @@ public sealed class SensitiveImportTemplateTests : TestFixture
             }).ToList();
             return Task.FromResult(new ImportBatchResult(results, Applied: true));
         }
+    }
+
+    /// <summary>Gizli sütunu olmayan test şablonu (mevcut davranış: örnekler, kaynak dosya ve kaynak hücreli sonuç dosyası korunur).</summary>
+    private sealed class PlainTemplate : IImportTemplate
+    {
+        public const string Code = "test.plain";
+
+        string IImportTemplate.Code => Code;
+
+        public string NameKey => "test.plain.name";
+
+        public string DescriptionKey => "test.plain.description";
+
+        public string RequiredPermission => "test.plain.import";
+
+        public IReadOnlyList<ImportMode> SupportedModes { get; } = [ImportMode.Upsert];
+
+        public IReadOnlyList<string> InstructionKeys { get; } = [];
+
+        public Task<IReadOnlyList<ImportColumn>> GetColumnsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ImportColumn>>(
+            [
+                new(SecretTemplate.EmployeeKey, null, SecretTemplate.EmployeeHeader, ImportColumnDataType.Text, ImportColumnRequirement.Always, IsMatchKey: true),
+                new(SecretTemplate.SecretKey, null, SecretTemplate.SecretHeader, ImportColumnDataType.Text, ImportColumnRequirement.Always),
+            ]);
+
+        public IReadOnlyList<ImportSampleRow> GetSampleRows(IReadOnlyList<ImportColumn> columns) => [];
+    }
+
+    private sealed class PlainRowHandler : IImportRowHandler
+    {
+        public string TemplateCode => PlainTemplate.Code;
+
+        public Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ImportBatchResult(
+                batch.Rows.Select(r => new ImportRowResult(r.RowNumber, ImportRowOutcome.Inserted, r.Get(SecretTemplate.EmployeeKey)?.Text, Guid.NewGuid(), [])).ToList(),
+                Applied: true));
+    }
+
+    /// <summary>Sistem saati + <see cref="Shift"/>: TTL'i beklemeden ileri sarmak için.</summary>
+    private sealed class ShiftableClock : TimeProvider
+    {
+        public TimeSpan Shift { get; set; }
+
+        public override DateTimeOffset GetUtcNow() => System.GetUtcNow() + Shift;
     }
 }

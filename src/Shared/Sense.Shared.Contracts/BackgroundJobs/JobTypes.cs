@@ -43,4 +43,7 @@ public enum JobType
 
     /// <summary>Attendance (Zaman &amp; Devam): remind employees/managers about days with a missing or incalculable punch. Handler + seed are added by the Attendance lane.</summary>
     AttendanceMissingPunchReminder = 13,
+
+    /// <summary>DataTransfer (Z5.4, T2): delete uploaded import files of templates with sensitive columns (card/PIN) past their TTL or once the job has finished.</summary>
+    ImportSensitiveSourceCleanup = 14,
 }

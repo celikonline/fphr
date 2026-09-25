@@ -87,6 +87,53 @@ public sealed class AddEmployeeTerminalCredentialHandler(
     }
 }
 
+/// <summary>
+/// Pasif kimliği AYNI çalışanda yeniden etkinleştirir (F15 "aktif et"); özet değişmez, idempotent. İşten ayrılmış çalışanın kimliği
+/// etkinleştirilemez (<see cref="TerminalCredentialErrors.EmployeeNotActive"/>). Aynı (tür, özet) başka çalışanda aktifse ekleme kuralı:
+/// kart/harici <see cref="AttendanceDomainErrors.TerminalCredentialInUse"/>, PIN genel <see cref="TerminalCredentialErrors.Rejected"/> (tekil indeks
+/// bunu normalde engeller; savunma amaçlı). Başka çalışana devir bu uçla değil, aynı değerle ekleme/içe aktarmayla yapılır.
+/// </summary>
+[RequiresPermission("attendance.terminal.manage")]
+public sealed record ActivateEmployeeTerminalCredentialCommand(Guid CredentialId) : ICommand;
+
+public sealed class ActivateEmployeeTerminalCredentialHandler(ITerminalRepository terminals, IEmployeeContactLookup employees, ITenantContext tenant)
+    : ICommandHandler<ActivateEmployeeTerminalCredentialCommand>
+{
+    private const string TerminatedStatus = "Terminated";
+
+    public async Task<Result> Handle(ActivateEmployeeTerminalCredentialCommand command, CancellationToken cancellationToken)
+    {
+        var found = await terminals.GetCredentialByIdAsync(command.CredentialId, cancellationToken);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        var credential = found.Value;
+        if (credential.IsActive)
+        {
+            return Result.Success();
+        }
+
+        var employee = (await employees.GetContactsAsync(tenant.TenantId, [credential.EmployeeId], cancellationToken))
+            .FirstOrDefault(e => e.EmployeeId == credential.EmployeeId);
+        if (employee is null || employee.Status == TerminatedStatus)
+        {
+            return Error.Rule(TerminalCredentialErrors.EmployeeNotActive);
+        }
+
+        var activeElsewhere = (await terminals.ListCredentialsByValuesAsync([credential.Value], cancellationToken))
+            .Any(c => c.Id != credential.Id && c.Kind == credential.Kind && c.IsActive);
+        if (activeElsewhere)
+        {
+            return TerminalCredentialRules.InUseBySomeoneElse(credential.Kind);
+        }
+
+        credential.Activate();
+        return Result.Success();
+    }
+}
+
 /// <summary>Kimliği pasife alır (kayıp kart vb.); idempotent. Pasif kimlik okutmada eşlenmez, sonra aynı ya da başka çalışana yeniden atanabilir.</summary>
 [RequiresPermission("attendance.terminal.manage")]
 public sealed record DeactivateEmployeeTerminalCredentialCommand(Guid CredentialId) : ICommand;

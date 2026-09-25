@@ -278,4 +278,10 @@ public interface IImportJobRepository
 
     /// <summary>Deletes the uploaded file (on save) - templates with sensitive columns keep no copy of the file once the job has run.</summary>
     void RemoveSourceFile(ImportSourceFile sourceFile);
+
+    /// <summary>
+    /// Deletes (immediately, current tenant) the uploaded files of jobs whose template is one of <paramref name="templateCodes"/> and that
+    /// have finished (Completed/CompletedWithErrors/Failed) or were uploaded before <paramref name="uploadedBefore"/>. Returns the count.
+    /// </summary>
+    Task<int> DeleteSourceFilesAsync(IReadOnlyCollection<string> templateCodes, DateTime uploadedBefore, CancellationToken cancellationToken = default);
 }

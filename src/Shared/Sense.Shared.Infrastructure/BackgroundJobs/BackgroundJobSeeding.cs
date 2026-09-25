@@ -107,6 +107,18 @@ public static class BackgroundJobSeeding
             Description = "Remind employees to acknowledge or object to their published payslips",
             Payload = "{}"
         };
+
+        // Z5.4 (T2): per-tenant hourly sweep deleting uploaded import files of templates with sensitive columns (terminal card/PIN)
+        // once their job finished or DataTransfer:Import:SensitiveSourceFileTtlHours (default 24) after upload
+        // (DataTransfer SensitiveImportSourceCleanupJobHandler). Hourly, so a file lives at most TTL + 1 hour.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "ImportSensitiveSourceCleanup",
+            JobType = JobType.ImportSensitiveSourceCleanup,
+            CronExpression = "20 * * * *", // every hour at :20
+            Description = "Delete uploaded import files with sensitive values (card/PIN) past their retention",
+            Payload = "{}"
+        };
     }
 }
 

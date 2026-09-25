@@ -90,7 +90,8 @@ public static class TerminalCredentialRules
         return reassigned.IsFailure ? reassigned.Error : (TerminalCredentialAssignment.Reassigned, existing);
     }
 
-    private static Error InUseBySomeoneElse(TerminalCredentialKind kind) =>
+    /// <summary>Kimlik başka çalışanda aktif: kart/harici 409 in_use, PIN genel ret (sahip bilgisi yok).</summary>
+    public static Error InUseBySomeoneElse(TerminalCredentialKind kind) =>
         kind == TerminalCredentialKind.Pin ? Error.Rule(TerminalCredentialErrors.Rejected) : Error.Conflict(AttendanceDomainErrors.TerminalCredentialInUse);
 
     private static bool IsPin(string value) => value.Length is >= PinMinLength and <= PinMaxLength && value.All(char.IsAsciiDigit);

@@ -164,6 +164,44 @@ public sealed class TerminalCredentialManagementTests
     }
 
     [Fact]
+    public async Task Activate_reactivates_inactive_credential_of_the_same_employee_without_changing_digest()
+    {
+        var credential = Stored(_employeeId, TerminalCredentialKind.Pin, Pin, active: false);
+        var digest = credential.Value;
+        _stored.Add(credential);
+        _terminals.GetCredentialByIdAsync(credential.Id, Arg.Any<CancellationToken>()).Returns(credential);
+        var handler = ActivateHandler();
+        var ct = TestContext.Current.CancellationToken;
+
+        (await handler.Handle(new ActivateEmployeeTerminalCredentialCommand(credential.Id), ct)).IsSuccess.ShouldBeTrue();
+        (credential.IsActive, credential.EmployeeId, credential.Value).ShouldBe((true, _employeeId, digest));
+        (await handler.Handle(new ActivateEmployeeTerminalCredentialCommand(credential.Id), ct)).IsSuccess.ShouldBeTrue();
+        typeof(ActivateEmployeeTerminalCredentialCommand).GetCustomAttribute<RequiresPermissionAttribute>()!.Permission.ShouldBe(AttendancePermissions.TerminalManage.Key);
+        typeof(TerminalCredentialsController).GetMethod(nameof(TerminalCredentialsController.Activate))!.GetCustomAttribute<HttpPostAttribute>()!.Template.ShouldBe("{id:guid}/activate");
+    }
+
+    [Fact]
+    public async Task Activate_rejects_terminated_employee_and_same_digest_active_elsewhere()
+    {
+        var terminated = Guid.NewGuid();
+        var ofTerminated = Stored(terminated, TerminalCredentialKind.Card, "C-1", active: false);
+        _terminals.GetCredentialByIdAsync(ofTerminated.Id, Arg.Any<CancellationToken>()).Returns(ofTerminated);
+        // Tekil indeks aynı özetin ikinci kaydını engeller; yine de başka çalışanda aktif kopya görülürse ekleme kuralı uygulanır.
+        var pin = Stored(_employeeId, TerminalCredentialKind.Pin, Pin, active: false);
+        var card = Stored(_employeeId, TerminalCredentialKind.Card, "C-2", active: false);
+        _stored.AddRange([pin, card, Stored(Guid.NewGuid(), TerminalCredentialKind.Pin, Pin, active: true), Stored(Guid.NewGuid(), TerminalCredentialKind.Card, "C-2", active: true)]);
+        _terminals.GetCredentialByIdAsync(pin.Id, Arg.Any<CancellationToken>()).Returns(pin);
+        _terminals.GetCredentialByIdAsync(card.Id, Arg.Any<CancellationToken>()).Returns(card);
+        var handler = ActivateHandler(new Dictionary<Guid, string> { [terminated] = "Terminated" });
+        var ct = TestContext.Current.CancellationToken;
+
+        (await handler.Handle(new ActivateEmployeeTerminalCredentialCommand(ofTerminated.Id), ct)).Error.ShouldBe(Error.Rule(TerminalCredentialErrors.EmployeeNotActive));
+        (await handler.Handle(new ActivateEmployeeTerminalCredentialCommand(pin.Id), ct)).Error.ShouldBe(Error.Rule(TerminalCredentialErrors.Rejected));
+        (await handler.Handle(new ActivateEmployeeTerminalCredentialCommand(card.Id), ct)).Error.ShouldBe(Error.Conflict(AttendanceDomainErrors.TerminalCredentialInUse));
+        new[] { ofTerminated, pin, card }.ShouldAllBe(c => !c.IsActive);
+    }
+
+    [Fact]
     public async Task Deactivate_on_employee_terminated_event()
     {
         var card = Stored(_employeeId, TerminalCredentialKind.Card, "C-1", active: true);
@@ -211,6 +249,18 @@ public sealed class TerminalCredentialManagementTests
         using var scope = provider.CreateScope();
         scope.ServiceProvider.GetServices<IIntegrationEventHandler<EmployeeTerminated>>()
             .ShouldHaveSingleItem().ShouldBeOfType<EmployeeTerminatedTerminalCredentialsHandler>();
+    }
+
+    private ActivateEmployeeTerminalCredentialHandler ActivateHandler(IReadOnlyDictionary<Guid, string>? statuses = null) =>
+        new(_terminals, Contacts(statuses), _tenant);
+
+    private IEmployeeContactLookup Contacts(IReadOnlyDictionary<Guid, string>? statuses)
+    {
+        var contacts = Substitute.For<IEmployeeContactLookup>();
+        contacts.GetContactsAsync(default, default!, default).ReturnsForAnyArgs(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
+            .Select(id => new EmployeeContact(id, "Ad", "Soyad", null, null, null, statuses?.GetValueOrDefault(id) ?? "Active"))
+            .ToList());
+        return contacts;
     }
 
     private AddEmployeeTerminalCredentialHandler AddHandler(IReadOnlyDictionary<Guid, string>? statuses = null)
