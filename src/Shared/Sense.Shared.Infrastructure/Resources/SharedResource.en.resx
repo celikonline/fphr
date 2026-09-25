@@ -1622,4 +1622,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>A set can only contain existing task templates of the same stage.</value></data>
   <data name="onboarding_template_set.already_started" xml:space="preserve"><value>This template set has already been started for the employee.</value></data>
   <data name="onboarding.category_in_use" xml:space="preserve"><value>The category is used by one or more task templates and cannot be deleted.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>The month is closed, so a missing punch request cannot be created.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>A pending missing punch request for the same time already exists.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Only the requesting employee can cancel the request.</value></data>
 </root>

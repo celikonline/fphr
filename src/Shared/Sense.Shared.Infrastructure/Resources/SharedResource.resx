@@ -1631,4 +1631,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>Set yalnızca aynı aşamadaki mevcut görev şablonlarını içerebilir.</value></data>
   <data name="onboarding_template_set.already_started" xml:space="preserve"><value>Bu şablon seti çalışan için zaten başlatılmış.</value></data>
   <data name="onboarding.category_in_use" xml:space="preserve"><value>Kategori bir veya daha fazla görev şablonunda kullanıldığı için silinemez.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>Bu ay kapatıldığı için eksik kayıt talebi oluşturulamaz.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>Aynı zamana ait bekleyen bir eksik kayıt talebi zaten var.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Yalnız talebi oluşturan çalışan iptal edebilir.</value></data>
 </root>
