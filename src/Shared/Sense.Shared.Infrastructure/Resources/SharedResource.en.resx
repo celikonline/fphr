@@ -1551,4 +1551,44 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="attendance.punch.in_future" xml:space="preserve"><value>The punch time cannot be in the future.</value></data>
+  <data name="attendance.punch.employee_required" xml:space="preserve"><value>An employee is required.</value></data>
+  <data name="attendance.punch.work_date_invalid" xml:space="preserve"><value>The work date does not match the punch time.</value></data>
+  <data name="attendance.punch.coordinates_invalid" xml:space="preserve"><value>Invalid location: latitude and longitude must be given together and within range.</value></data>
+  <data name="attendance.punch.reason_too_long" xml:space="preserve"><value>The reason can be at most 1000 characters.</value></data>
+  <data name="attendance.punch.delete_reason_required" xml:space="preserve"><value>A reason is required to delete a punch.</value></data>
+  <data name="attendance.punch.already_deleted" xml:space="preserve"><value>The punch has already been deleted.</value></data>
+  <data name="attendance.shift_definition.not_found" xml:space="preserve"><value>Shift definition not found.</value></data>
+  <data name="attendance.shift_definition.code_required" xml:space="preserve"><value>A shift code is required (at most 50 characters).</value></data>
+  <data name="attendance.shift_definition.name_required" xml:space="preserve"><value>A shift name is required.</value></data>
+  <data name="attendance.shift_definition.color_invalid" xml:space="preserve"><value>The color must be in #RRGGBB format.</value></data>
+  <data name="attendance.shift_definition.time_range_invalid" xml:space="preserve"><value>The shift start and end times are invalid.</value></data>
+  <data name="attendance.shift_definition.flexible_window_invalid" xml:space="preserve"><value>A flexible shift needs a valid duration and start window; other types must leave these fields empty.</value></data>
+  <data name="attendance.shift_definition.tolerance_invalid" xml:space="preserve"><value>Tolerance and bonus minutes must be between 0 and 1440.</value></data>
+  <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>The overtime minimum/maximum minutes are invalid.</value></data>
+  <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>The break definition is invalid.</value></data>
+  <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>The day type is invalid.</value></data>
+  <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Missing punch request not found.</value></data>
+  <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>A reason is required for a missing punch request (at most 1000 characters).</value></data>
+  <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>The request direction must be in or out.</value></data>
+  <data name="attendance.punch_request.not_pending" xml:space="preserve"><value>The request is no longer pending.</value></data>
+  <data name="attendance.shift_template.not_found" xml:space="preserve"><value>Shift template not found.</value></data>
+  <data name="attendance.shift_template.name_required" xml:space="preserve"><value>A template name is required.</value></data>
+  <data name="attendance.shift_template.period_invalid" xml:space="preserve"><value>The template period must be between 1 and 62 days.</value></data>
+  <data name="attendance.shift_template.entry_invalid" xml:space="preserve"><value>The template entries are invalid or duplicated.</value></data>
+  <data name="attendance.rotation.not_found" xml:space="preserve"><value>Rotation not found.</value></data>
+  <data name="attendance.rotation.code_required" xml:space="preserve"><value>A rotation code is required (at most 50 characters).</value></data>
+  <data name="attendance.rotation.name_required" xml:space="preserve"><value>A rotation name is required.</value></data>
+  <data name="attendance.rotation.cycle_invalid" xml:space="preserve"><value>The rotation cycle must be between 1 and 56 days.</value></data>
+  <data name="attendance.rotation.step_invalid" xml:space="preserve"><value>The rotation steps are invalid or duplicated.</value></data>
+  <data name="attendance.rotation_assignment.not_found" xml:space="preserve"><value>Rotation assignment not found.</value></data>
+  <data name="attendance.rotation_assignment.range_invalid" xml:space="preserve"><value>The rotation assignment dates or offset are invalid.</value></data>
+  <data name="attendance.terminal.not_found" xml:space="preserve"><value>Terminal not found.</value></data>
+  <data name="attendance.terminal.code_required" xml:space="preserve"><value>A terminal code is required (at most 50 characters).</value></data>
+  <data name="attendance.terminal.name_required" xml:space="preserve"><value>A terminal name and direction mode are required.</value></data>
+  <data name="attendance.terminal.api_key_required" xml:space="preserve"><value>The terminal API key is invalid.</value></data>
+  <data name="attendance.terminal_group.not_found" xml:space="preserve"><value>Terminal group not found.</value></data>
+  <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
+  <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
+  <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
 </root>

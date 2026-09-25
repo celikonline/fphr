@@ -1560,4 +1560,44 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="attendance.punch.in_future" xml:space="preserve"><value>Okutma zamanı ileri bir tarih olamaz.</value></data>
+  <data name="attendance.punch.employee_required" xml:space="preserve"><value>Çalışan seçilmelidir.</value></data>
+  <data name="attendance.punch.work_date_invalid" xml:space="preserve"><value>Puantaj günü okutma zamanıyla uyumlu değil.</value></data>
+  <data name="attendance.punch.coordinates_invalid" xml:space="preserve"><value>Konum bilgisi geçersiz: enlem ve boylam birlikte ve geçerli aralıkta olmalıdır.</value></data>
+  <data name="attendance.punch.reason_too_long" xml:space="preserve"><value>Gerekçe en fazla 1000 karakter olabilir.</value></data>
+  <data name="attendance.punch.delete_reason_required" xml:space="preserve"><value>Okutmayı silmek için gerekçe zorunludur.</value></data>
+  <data name="attendance.punch.already_deleted" xml:space="preserve"><value>Okutma zaten silinmiş.</value></data>
+  <data name="attendance.shift_definition.not_found" xml:space="preserve"><value>Vardiya tanımı bulunamadı.</value></data>
+  <data name="attendance.shift_definition.code_required" xml:space="preserve"><value>Vardiya kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.shift_definition.name_required" xml:space="preserve"><value>Vardiya adı zorunludur.</value></data>
+  <data name="attendance.shift_definition.color_invalid" xml:space="preserve"><value>Renk #RRGGBB biçiminde olmalıdır.</value></data>
+  <data name="attendance.shift_definition.time_range_invalid" xml:space="preserve"><value>Vardiya başlangıç ve bitiş saatleri geçersiz.</value></data>
+  <data name="attendance.shift_definition.flexible_window_invalid" xml:space="preserve"><value>Esnek vardiya için süre ve giriş penceresi geçerli olmalıdır; diğer tiplerde bu alanlar boş bırakılır.</value></data>
+  <data name="attendance.shift_definition.tolerance_invalid" xml:space="preserve"><value>Tolerans ve bonus süreleri 0 ile 1440 dakika arasında olmalıdır.</value></data>
+  <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>Fazla mesai en az/en çok süreleri geçersiz.</value></data>
+  <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>Mola tanımı geçersiz.</value></data>
+  <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>Gün türü geçersiz.</value></data>
+  <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Eksik kayıt talebi bulunamadı.</value></data>
+  <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>Eksik kayıt talebi için gerekçe zorunludur (en fazla 1000 karakter).</value></data>
+  <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>Talep yönü giriş ya da çıkış olmalıdır.</value></data>
+  <data name="attendance.punch_request.not_pending" xml:space="preserve"><value>Talep artık beklemede değil.</value></data>
+  <data name="attendance.shift_template.not_found" xml:space="preserve"><value>Vardiya şablonu bulunamadı.</value></data>
+  <data name="attendance.shift_template.name_required" xml:space="preserve"><value>Şablon adı zorunludur.</value></data>
+  <data name="attendance.shift_template.period_invalid" xml:space="preserve"><value>Şablon dönemi 1 ile 62 gün arasında olmalıdır.</value></data>
+  <data name="attendance.shift_template.entry_invalid" xml:space="preserve"><value>Şablon satırları geçersiz ya da tekrarlı.</value></data>
+  <data name="attendance.rotation.not_found" xml:space="preserve"><value>Rotasyon bulunamadı.</value></data>
+  <data name="attendance.rotation.code_required" xml:space="preserve"><value>Rotasyon kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.rotation.name_required" xml:space="preserve"><value>Rotasyon adı zorunludur.</value></data>
+  <data name="attendance.rotation.cycle_invalid" xml:space="preserve"><value>Rotasyon döngüsü 1 ile 56 gün arasında olmalıdır.</value></data>
+  <data name="attendance.rotation.step_invalid" xml:space="preserve"><value>Rotasyon adımları geçersiz ya da tekrarlı.</value></data>
+  <data name="attendance.rotation_assignment.not_found" xml:space="preserve"><value>Rotasyon ataması bulunamadı.</value></data>
+  <data name="attendance.rotation_assignment.range_invalid" xml:space="preserve"><value>Rotasyon ataması tarihleri ya da kaydırma günü geçersiz.</value></data>
+  <data name="attendance.terminal.not_found" xml:space="preserve"><value>Terminal bulunamadı.</value></data>
+  <data name="attendance.terminal.code_required" xml:space="preserve"><value>Terminal kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.terminal.name_required" xml:space="preserve"><value>Terminal adı ve yön modu zorunludur.</value></data>
+  <data name="attendance.terminal.api_key_required" xml:space="preserve"><value>Terminal API anahtarı geçersiz.</value></data>
+  <data name="attendance.terminal_group.not_found" xml:space="preserve"><value>Terminal grubu bulunamadı.</value></data>
+  <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
+  <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
+  <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
 </root>
