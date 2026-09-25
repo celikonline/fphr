@@ -6,6 +6,8 @@ import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
+import { MemoryRouter } from "react-router";
+import trDataTransfer from "../../../public/locales/tr/dataTransfer.json";
 import trTerminals from "../../../public/locales/tr/terminals.json";
 import enTerminals from "../../../public/locales/en/terminals.json";
 import deTerminals from "../../../public/locales/de/terminals.json";
@@ -69,7 +71,7 @@ function terminal(over: Partial<Terminal> = {}): Terminal {
     name: "Ana kapı",
     directionMode: "both",
     isActive: true,
-    online: true,
+    isOnline: true,
     lastSeenAtUtc: "2026-09-25T08:00:00Z",
     ...over,
   };
@@ -87,9 +89,9 @@ beforeEach(() => {
   vi.mocked(svc.listTerminals).mockResolvedValue([terminal()]);
   vi.mocked(svc.listTerminalGroups).mockResolvedValue([{ id: "g1", name: "Merkez" }]);
   vi.mocked(svc.listEmployeeCredentials).mockResolvedValue([]);
-  vi.mocked(svc.rotateTerminalApiKey).mockResolvedValue({ id: "t1", apiKey: SECRET_KEY });
-  vi.mocked(svc.createTerminal).mockResolvedValue({ id: "t2", apiKey: SECRET_KEY });
-  vi.mocked(svc.createTerminalGroup).mockResolvedValue({ id: "g2", name: "Depo" });
+  vi.mocked(svc.rotateTerminalApiKey).mockResolvedValue({ terminalId: "t1", apiKey: SECRET_KEY, apiKeyPrefix: "sk_live_" });
+  vi.mocked(svc.createTerminal).mockResolvedValue({ terminalId: "t2", apiKey: SECRET_KEY, apiKeyPrefix: "sk_live_" });
+  vi.mocked(svc.createTerminalGroup).mockResolvedValue("g2");
   vi.mocked(svc.renameTerminalGroup).mockResolvedValue();
   vi.mocked(svc.deleteTerminalGroup).mockResolvedValue();
   vi.mocked(svc.addEmployeeCredential).mockResolvedValue();
@@ -97,15 +99,17 @@ beforeEach(() => {
 
 afterEach(() => vi.clearAllMocks());
 
+let lastQueryClient: QueryClient;
+
 function renderPage(lng = "tr") {
   const instance = i18next.createInstance();
   void instance.init({
     lng,
     fallbackLng: "tr",
     defaultNS: "terminals",
-    ns: ["terminals", "common"],
+    ns: ["terminals", "common", "dataTransfer"],
     resources: {
-      tr: { terminals: trTerminals, common: trCommon },
+      tr: { terminals: trTerminals, common: trCommon, dataTransfer: trDataTransfer },
       en: { terminals: enTerminals, common: trCommon },
       de: { terminals: deTerminals, common: trCommon },
     },
@@ -113,11 +117,14 @@ function renderPage(lng = "tr") {
     react: { useSuspense: false },
   });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  lastQueryClient = queryClient;
   return render(
     <I18nextProvider i18n={instance}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider env="test">
-          <TerminalsPage />
+          <MemoryRouter>
+            <TerminalsPage />
+          </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
     </I18nextProvider>,
@@ -153,12 +160,55 @@ describe("TerminalsPage", () => {
     expect(document.body.textContent).not.toContain(SECRET_KEY);
     expect(JSON.stringify({ ...localStorage })).not.toContain(SECRET_KEY);
     expect(window.location.href).not.toContain(SECRET_KEY);
+    // The raw key must not linger in the mutation cache (gcTime is minutes) either.
+    expect(JSON.stringify(lastQueryClient.getMutationCache().getAll().map((m) => m.state.data ?? null))).not.toContain(
+      SECRET_KEY,
+    );
+  });
+
+  it("create_key_not_kept_in_mutation_cache: created terminal key is handed to the dialog only", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: /Yeni terminal/ }));
+    await user.type(await screen.findByLabelText(/Kod/), "K1");
+    await user.type(screen.getByLabelText(/^Ad/), "Kapı");
+    await user.click(screen.getByRole("button", { name: "Kaydet" }));
+    const dialog = await screen.findByRole("dialog", { name: "Terminal API anahtarı" });
+    expect(within(dialog).getByDisplayValue(SECRET_KEY)).toBeInTheDocument();
+    expect(JSON.stringify(lastQueryClient.getMutationCache().getAll().map((m) => m.state.data ?? null))).not.toContain(
+      SECRET_KEY,
+    );
+  });
+
+  it("set_active_uses_put_active_body: deactivate sends PUT active {isActive:false} (real T1 contract)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(svc.setTerminalActive).mockResolvedValue();
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: "Pasifleştir" }));
+    await waitFor(() => expect(svc.setTerminalActive).toHaveBeenCalledWith("t1", false));
+  });
+
+  it("suspicious_badge_has_text: shows a textual warning with the date", async () => {
+    vi.mocked(svc.listTerminals).mockResolvedValue([terminal({ lastSuspiciousAtUtc: "2026-09-25T09:00:00Z" })]);
+    renderPage();
+    expect(await screen.findByText(/Şüpheli PIN denemesi:/)).toBeInTheDocument();
+  });
+
+  it("import_button_opens_dialog_with_terminal_credentials_template + sensitive_notice_shown", async () => {
+    const user = userEvent.setup();
+    setPermissions("attendance.terminal.view", "attendance.terminal.manage", "datatransfer.import.run");
+    renderPage();
+    await user.click(await screen.findByRole("tab", { name: "Çalışan kimlikleri" }));
+    await user.click(await screen.findByRole("button", { name: /Excel ile içe aktar/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/kart\/PIN içerir; yüklendikten sonra işlenir ve sunucudan silinir \(en geç 24 saat\)/)).toBeInTheDocument();
+    expect(document.querySelector("[data-template-code]")).toHaveAttribute("data-template-code", "terminal-credentials");
   });
 
   it("offline_badge_has_text: presence is conveyed by text, not colour alone", async () => {
     vi.mocked(svc.listTerminals).mockResolvedValue([
       terminal(),
-      terminal({ id: "t2", code: "KAPI-2", name: "Depo", online: false, lastSeenAtUtc: null }),
+      terminal({ id: "t2", code: "KAPI-2", name: "Depo", isOnline: false, lastSeenAtUtc: null }),
     ]);
     renderPage();
     expect(await screen.findByText("Çevrimiçi")).toBeInTheDocument();
@@ -226,13 +276,13 @@ describe("TerminalsPage", () => {
   it("credential_value_never_rendered: entered value is sent but never shown; list is masked", async () => {
     const user = userEvent.setup();
     vi.mocked(svc.listEmployeeCredentials).mockResolvedValue([
-      { id: "c1", employeeId: "e1", kind: "card", lastTwo: "42", isActive: true },
+      { id: "c1", employeeId: "e1", kind: "card", isActive: true },
     ]);
     renderPage();
     await user.click(await screen.findByRole("tab", { name: "Çalışan kimlikleri" }));
     await user.click(await screen.findByRole("button", { name: "pick-employee" }));
     expect(within(await screen.findByRole("table")).getByText("Kart")).toBeInTheDocument();
-    expect(screen.getByText(/••42/)).toBeInTheDocument();
+    expect(screen.getByText("••••")).toBeInTheDocument();
 
     const value = screen.getByLabelText(/Değer/);
     expect(value).toHaveAttribute("type", "password");
@@ -243,6 +293,5 @@ describe("TerminalsPage", () => {
     );
     await waitFor(() => expect(screen.getByLabelText(/Değer/)).toHaveValue(""));
     expect(document.body.textContent).not.toContain("1234567890");
-    expect(screen.getByRole("button", { name: /Excel ile içe aktar/ })).toBeDisabled();
   });
 });

@@ -47,10 +47,13 @@ export default function TerminalsTab({ canManage }: { canManage: boolean }) {
       }
       return createTerminal(input);
     },
+    // gcTime 0 + reset(): the raw key must not stay in the mutation cache after it is handed to the dialog.
+    gcTime: 0,
     onSuccess: async (created) => {
       toast({ variant: "success", description: t("terminals:terminal.saved") });
       setEditing(undefined);
       if (created) setRevealedKey(created.apiKey);
+      queueMicrotask(() => save.reset());
       await refresh();
     },
     onError: fail(t("terminals:terminal.saveFailed")),
@@ -58,9 +61,11 @@ export default function TerminalsTab({ canManage }: { canManage: boolean }) {
 
   const rotate = useMutation({
     mutationFn: (id: string) => rotateTerminalApiKey(id),
+    gcTime: 0,
     onSuccess: (result) => {
       setRotating(null);
       setRevealedKey(result.apiKey);
+      queueMicrotask(() => rotate.reset());
     },
     onError: fail(t("terminals:apiKey.rotateFailed")),
   });
@@ -118,9 +123,16 @@ export default function TerminalsTab({ canManage }: { canManage: boolean }) {
                   <Table.Td>{t(`terminals:directionMode.${row.directionMode}`)}</Table.Td>
                   <Table.Td>
                     <Group gap={6}>
-                      <Badge color={row.online ? "green" : "gray"} variant="light">
-                        {row.online ? t("terminals:presence.online") : t("terminals:presence.offline")}
+                      <Badge color={row.isOnline ? "green" : "gray"} variant="light">
+                        {row.isOnline ? t("terminals:presence.online") : t("terminals:presence.offline")}
                       </Badge>
+                      {row.lastSuspiciousAtUtc && (
+                        <Badge color="orange" variant="light">
+                          {t("terminals:terminal.suspicious", {
+                            date: new Date(row.lastSuspiciousAtUtc).toLocaleString(i18n.language),
+                          })}
+                        </Badge>
+                      )}
                       {!row.isActive && (
                         <Badge color="red" variant="outline">
                           {t("terminals:terminal.inactive")}

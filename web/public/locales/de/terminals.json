@@ -27,7 +27,8 @@
     "saveFailed": "Terminal konnte nicht gespeichert werden.",
     "loadFailed": "Terminals konnten nicht geladen werden.",
     "codeRequired": "Code und Name sind erforderlich.",
-    "statusFailed": "Status konnte nicht geändert werden."
+    "statusFailed": "Status konnte nicht geändert werden.",
+    "suspicious": "Verdächtige PIN-Versuche: {{date}}"
   },
   "presence": {
     "online": "Online",
@@ -73,7 +74,7 @@
     "valueHint": "Der Wert wird nach dem Speichern nie wieder angezeigt.",
     "add": "Kennung hinzufügen",
     "status": "Status",
-    "masked": "Letzte 2 Zeichen",
+    "masked": "Wert (verborgen)",
     "active": "Aktiv",
     "inactive": "Inaktiv",
     "activate": "Aktivieren",
@@ -84,8 +85,12 @@
     "statusFailed": "Status konnte nicht geändert werden.",
     "loadFailed": "Kennungen konnten nicht geladen werden.",
     "import": "Aus Excel importieren",
-    "importSoon": "Demnächst",
-    "valueRequired": "Ein Wert ist erforderlich."
+    "valueRequired": "Ein Wert ist erforderlich.",
+    "sensitiveNotice": "Diese Datei enthält Karten-/PIN-Werte; sie wird nach dem Hochladen verarbeitet und vom Server gelöscht (spätestens nach 24 Stunden).",
+    "importTitle": "Kennungen aus Excel importieren",
+    "downloadTemplate": "Vorlage herunterladen",
+    "pepperMissing": "Der Kennungsimport ist in dieser Umgebung nicht konfiguriert (Serverschlüssel fehlt). Wenden Sie sich an Ihren Administrator.",
+    "uploadFailed": "Datei konnte nicht hochgeladen werden."
   },
   "credentialKind": {
     "card": "Karte",

@@ -27,7 +27,8 @@
     "saveFailed": "Could not save the terminal.",
     "loadFailed": "Could not load terminals.",
     "codeRequired": "Code and name are required.",
-    "statusFailed": "Could not change the status."
+    "statusFailed": "Could not change the status.",
+    "suspicious": "Suspicious PIN attempts: {{date}}"
   },
   "presence": {
     "online": "Online",
@@ -73,7 +74,7 @@
     "valueHint": "The value is never shown again after it is saved.",
     "add": "Add credential",
     "status": "Status",
-    "masked": "Last 2 characters",
+    "masked": "Value (hidden)",
     "active": "Active",
     "inactive": "Inactive",
     "activate": "Activate",
@@ -84,8 +85,12 @@
     "statusFailed": "Could not change the status.",
     "loadFailed": "Could not load credentials.",
     "import": "Import from Excel",
-    "importSoon": "Coming soon",
-    "valueRequired": "A value is required."
+    "valueRequired": "A value is required.",
+    "sensitiveNotice": "This file contains card/PIN values; it is processed after upload and deleted from the server (within 24 hours at most).",
+    "importTitle": "Import credentials from Excel",
+    "downloadTemplate": "Download template",
+    "pepperMissing": "Credential import is not configured in this environment (server key missing). Contact your administrator.",
+    "uploadFailed": "Could not upload the file."
   },
   "credentialKind": {
     "card": "Card",

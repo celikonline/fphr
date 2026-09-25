@@ -13,10 +13,12 @@ import {
   Stack,
   Table,
   Text,
-  Tooltip,
 } from "@mantine/core";
 import { FileSpreadsheet, Plus } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
+import { usePermission } from "@/components/permission-guard";
+import CredentialImportDialog from "@/components/attendance/terminals/credential-import-dialog";
+import { DataTransferPermissions } from "@/services/data-transfer.service";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -37,6 +39,8 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
   const [employee, setEmployee] = useState<PickedEmployee | null>(null);
   const [kind, setKind] = useState<TerminalCredentialKind>("card");
   const [value, setValue] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const canImport = usePermission(DataTransferPermissions.Run);
   const listKey = ["attendance", "terminal-identities", employee?.id];
 
   const identities = useQuery({
@@ -74,12 +78,11 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
             placeholder={t("terminals:credential.pickEmployee")}
           />
         </div>
-        <Tooltip label={t("terminals:credential.importSoon")}>
-          {/* T2 şablon kodu: terminal-credentials. T2 yazılana kadar pasif. */}
-          <Button variant="default" leftSection={<FileSpreadsheet size={16} />} disabled data-disabled>
+        {canManage && canImport && (
+          <Button variant="default" leftSection={<FileSpreadsheet size={16} />} onClick={() => setImportOpen(true)}>
             {t("terminals:credential.import")}
           </Button>
-        </Tooltip>
+        )}
       </Group>
 
       {employee && canManage && (
@@ -133,7 +136,7 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
               {identities.data.map((c) => (
                 <Table.Tr key={c.id}>
                   <Table.Td>{t(`terminals:credentialKind.${c.kind}`)}</Table.Td>
-                  <Table.Td>{c.lastTwo ? `••${c.lastTwo}` : "••••"}</Table.Td>
+                  <Table.Td>••••</Table.Td>
                   <Table.Td>
                     <Badge color={c.isActive ? "green" : "gray"} variant="light">
                       {c.isActive ? t("terminals:credential.active") : t("terminals:credential.inactive")}
@@ -155,6 +158,7 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
             </Table.Tbody>
           </Table>
         ))}
+      <CredentialImportDialog opened={importOpen} onClose={() => setImportOpen(false)} />
     </Stack>
   );
 }

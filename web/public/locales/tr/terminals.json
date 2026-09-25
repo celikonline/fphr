@@ -27,7 +27,8 @@
     "saveFailed": "Terminal kaydedilemedi.",
     "loadFailed": "Terminaller yüklenemedi.",
     "codeRequired": "Kod ve ad zorunludur.",
-    "statusFailed": "Durum değiştirilemedi."
+    "statusFailed": "Durum değiştirilemedi.",
+    "suspicious": "Şüpheli PIN denemesi: {{date}}"
   },
   "presence": {
     "online": "Çevrimiçi",
@@ -73,7 +74,7 @@
     "valueHint": "Değer kaydedildikten sonra bir daha gösterilmez.",
     "add": "Kimlik ekle",
     "status": "Durum",
-    "masked": "Son 2 hane",
+    "masked": "Değer (gizli)",
     "active": "Aktif",
     "inactive": "Pasif",
     "activate": "Aktifleştir",
@@ -84,8 +85,12 @@
     "statusFailed": "Durum değiştirilemedi.",
     "loadFailed": "Kimlikler yüklenemedi.",
     "import": "Excel ile içe aktar",
-    "importSoon": "Yakında",
-    "valueRequired": "Değer zorunludur."
+    "valueRequired": "Değer zorunludur.",
+    "sensitiveNotice": "Bu dosya kart/PIN içerir; yüklendikten sonra işlenir ve sunucudan silinir (en geç 24 saat).",
+    "importTitle": "Kimlikleri Excel ile içe aktar",
+    "downloadTemplate": "Şablonu indir",
+    "pepperMissing": "Kimlik içe aktarma bu ortamda yapılandırılmamış (sunucu anahtarı eksik). Yöneticinize başvurun.",
+    "uploadFailed": "Dosya yüklenemedi."
   },
   "credentialKind": {
     "card": "Kart",
