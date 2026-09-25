@@ -20,15 +20,39 @@ internal static class AttendanceDayUpsert
         TimeOnly? checkIn, TimeOnly? checkOut, AttendanceDaySource source, bool overnight, CancellationToken cancellationToken,
         int actualBreakMinutes = 0, ShiftLimits? shiftLimits = null)
     {
-        var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, employeeId, date, cancellationToken).ConfigureAwait(false);
+        var plan = await PlannedDayResolver.FromScheduleAsync(schedules, employeeId, date, cancellationToken).ConfigureAwait(false);
+        return await ApplyAsync(days, plan, tenantId, employeeId, date, checkIn, checkOut, source, overnight, actualBreakMinutes, shiftLimits, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Z0.2: same upsert, planned through <see cref="IPlannedDayResolver"/> (K2: vardiya ataması/tanımı → çalışma takvimi).</summary>
+    public static async Task<Result<AttendanceDay>> UpsertAsync(
+        IAttendanceDayRepository days, IPlannedDayResolver planner, Guid tenantId, Guid employeeId, DateOnly date,
+        TimeOnly? checkIn, TimeOnly? checkOut, AttendanceDaySource source, bool overnight, CancellationToken cancellationToken,
+        int actualBreakMinutes = 0, ShiftLimits? shiftLimits = null)
+    {
+        var plan = await planner.ResolveAsync(employeeId, date, checkIn, cancellationToken).ConfigureAwait(false);
+        return await ApplyAsync(days, plan, tenantId, employeeId, date, checkIn, checkOut, source, overnight, actualBreakMinutes, shiftLimits, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static async Task<Result<AttendanceDay>> ApplyAsync(
+        IAttendanceDayRepository days, PlannedDay plan, Guid tenantId, Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut,
+        AttendanceDaySource source, bool overnight, int actualBreakMinutes, ShiftLimits? shiftLimits, CancellationToken cancellationToken)
+    {
+        // The plan's ShiftDefinition rule set rides along with the tenant limits (null rules = legacy calculation).
+        var limits = plan.Rules is null ? shiftLimits : (shiftLimits ?? ShiftLimits.None) with { Rules = plan.Rules };
         var existing = await days.FindByEmployeeAndDateAsync(employeeId, date, cancellationToken).ConfigureAwait(false);
         if (existing is not null)
         {
-            var updated = existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, source, overnight, actualBreakMinutes, shiftLimits);
+            var updated = existing.UpdateRecord(
+                checkIn, checkOut, plan.Start, plan.End, plan.PlannedMinutes, plan.BreakMinutes, source, overnight, actualBreakMinutes, limits);
             return updated.IsFailure ? updated.Error : existing;
         }
 
-        var day = AttendanceDay.Record(tenantId, employeeId, date, checkIn, checkOut, start, end, minutes, breakMinutes, source, overnight, actualBreakMinutes, shiftLimits);
+        var day = AttendanceDay.Record(
+            tenantId, employeeId, date, checkIn, checkOut, plan.Start, plan.End, plan.PlannedMinutes, plan.BreakMinutes, source, overnight,
+            actualBreakMinutes, limits);
         days.Add(day);
         return day;
     }

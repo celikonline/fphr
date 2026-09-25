@@ -334,6 +334,8 @@ public sealed class ShiftDefinitionRepository(AttendanceDbContext context) : ISh
 {
     public void Add(ShiftDefinition definition) => context.ShiftDefinitions.Add(definition);
 
+    public void Remove(ShiftDefinition definition) => context.ShiftDefinitions.Remove(definition);
+
     public async Task<Result<ShiftDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var definition = await context.ShiftDefinitions.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
@@ -366,6 +368,25 @@ public sealed class ShiftDefinitionRepository(AttendanceDbContext context) : ISh
         var normalized = code.Trim();
         return context.ShiftDefinitions.AnyAsync(d => d.Code == normalized && (excludeId == null || d.Id != excludeId), cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ShiftAssignment>> ListAssignmentsUsingAsync(
+        IReadOnlyCollection<Guid> definitionIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        if (definitionIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.ShiftAssignments
+            .Where(a => a.ShiftDefinitionId != null && definitionIds.Contains(a.ShiftDefinitionId.Value) && a.Date >= from && a.Date <= to)
+            .OrderBy(a => a.Date)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IsInUseAsync(Guid definitionId, CancellationToken cancellationToken = default) =>
+        await context.ShiftAssignments.AnyAsync(a => a.ShiftDefinitionId == definitionId, cancellationToken)
+        || await context.RotationPatterns.AnyAsync(p => p.Steps.Any(s => s.ShiftDefinitionId == definitionId), cancellationToken)
+        || await context.ShiftPlanTemplates.AnyAsync(t => t.Entries.Any(e => e.ShiftDefinitionId == definitionId), cancellationToken);
 }
 
 public sealed class PunchRequestRepository(AttendanceDbContext context) : IPunchRequestRepository

@@ -1643,4 +1643,6 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.rotation.code_duplicate" xml:space="preserve"><value>This rotation code is already in use.</value></data>
   <data name="attendance.rotation.inactive" xml:space="preserve"><value>An inactive rotation cannot be applied to employees.</value></data>
   <data name="attendance.rotation_assignment.overlap" xml:space="preserve"><value>{employee} already has a rotation assignment in this date range.</value></data>
+  <data name="attendance.shift_definition.code_duplicate" xml:space="preserve"><value>This shift code is already used by another shift definition.</value></data>
+  <data name="attendance.shift_definition.in_use" xml:space="preserve"><value>This shift definition is used by assignments, rotations or plan templates; it cannot be deleted, only deactivated.</value></data>
 </root>
