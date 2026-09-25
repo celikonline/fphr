@@ -531,7 +531,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
         string? employmentType = null,
         string? contractType = null,
         bool? missingInfo = null) =>
-        new(null, orgUnitId, includeSubUnits, status, hasUserAccount, managerId, employmentType, contractType, missingInfo);
+        new(null, orgUnitId, includeSubUnits, status, hasUserAccount, managerId, employmentType, contractType, missingInfo, IncludeTerminated: true); // mirrors the grid endpoint, which lists terminated employees by default
 
     private static CreateEmployeeCommand NewCreate(string firstName, string lastName, string? nationalId = null, Guid? orgUnitId = null, Guid? managerId = null, string? workEmail = null) =>
         new(firstName, lastName, nationalId, workEmail, null, null, null, null, orgUnitId, managerId);
