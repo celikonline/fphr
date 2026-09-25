@@ -80,6 +80,30 @@ public sealed class EmployeeSicilNumarasiTests : TestFixture
         (await lookup.FindActiveBySicilNumarasiAsync(tenantId, "SCL-NONE")).ShouldBeNull();
     }
 
+    /// <summary>Z5.4: FindBySicilNumarasiAsync finds the employee in any status and flags a terminated one (import: "not active" vs "not found").</summary>
+    [Fact]
+    public async Task FindBySicilNumarasiAsync_FindsAnyStatus_FlagsTerminated_TenantScoped()
+    {
+        var db = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var active = CreateEmployeeOrThrow(tenantId, "SCL-300");
+        var terminated = CreateEmployeeOrThrow(tenantId, "SCL-301");
+        terminated.SetStatus(EmployeeStatus.Terminated);
+        db.Employees.AddRange(active, terminated);
+        await db.SaveChangesAsync();
+
+        var lookup = new EmployeeLookup(db);
+        (await lookup.FindBySicilNumarasiAsync(tenantId, "SCL-300")).ShouldBe(new Sense.Modules.Employee.Contracts.EmployeeSicilMatch(active.Id, false));
+        (await lookup.FindBySicilNumarasiAsync(tenantId, "SCL-301")).ShouldBe(new Sense.Modules.Employee.Contracts.EmployeeSicilMatch(terminated.Id, true));
+        (await lookup.FindActiveBySicilNumarasiAsync(tenantId, "SCL-301")).ShouldBeNull();
+        (await lookup.FindBySicilNumarasiAsync(tenantId, "SCL-NONE")).ShouldBeNull();
+        (await lookup.FindBySicilNumarasiAsync(Guid.NewGuid(), "SCL-300")).ShouldBeNull();
+    }
+
     /// <summary>senseik-010/F-03: IEmployeeLookup.GetSgkOccupationCodeAsync surfaces Employee.SgkOccupationCode for Payroll's APHB/e-Bildirge preparation.</summary>
     [Fact]
     public async Task GetSgkOccupationCodeAsync_ReturnsStoredCode_NullWhenNotSetOrEmployeeMissing()

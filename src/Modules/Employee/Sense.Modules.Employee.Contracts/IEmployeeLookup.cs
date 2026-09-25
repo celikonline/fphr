@@ -57,4 +57,14 @@ public interface IEmployeeLookup
     /// not exist for the tenant, <see cref="EmployeeGender.Unspecified"/> when none is recorded.
     /// </summary>
     Task<EmployeeGender?> GetGenderAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The employee of any status whose sicil numarası matches exactly (sicil is tenant-unique across statuses), or null. Unlike
+    /// <see cref="FindActiveBySicilNumarasiAsync"/> it tells an unknown sicil apart from a terminated employee - e.g. Attendance's
+    /// terminal credential import reports "employee not active" rather than "not found" for someone who has left.
+    /// </summary>
+    Task<EmployeeSicilMatch?> FindBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Result of <see cref="IEmployeeLookup.FindBySicilNumarasiAsync"/>: the employee and whether they are terminated (işten ayrılmış).</summary>
+public sealed record EmployeeSicilMatch(Guid EmployeeId, bool IsTerminated);
