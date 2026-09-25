@@ -1601,4 +1601,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="shared_company_file.zip_too_many_files" xml:space="preserve"><value>At most {max} files can be downloaded at once.</value></data>
   <data name="payslip_import.files_required" xml:space="preserve"><value>Upload at least one PDF or zip file.</value></data>
   <data name="payslip_import.too_many_files" xml:space="preserve"><value>At most {max} files can be uploaded at once.</value></data>
+  <data name="company_event.ends_before_starts" xml:space="preserve"><value>The end cannot be before the start.</value></data>
+  <data name="company_event.online_url_required" xml:space="preserve"><value>An online event requires a valid http(s) link.</value></data>
+  <data name="company_event.location_required" xml:space="preserve"><value>An onsite event requires a location.</value></data>
+  <data name="company_event.location_too_long" xml:space="preserve"><value>Location cannot exceed 300 characters.</value></data>
+  <data name="company_event.category_not_found" xml:space="preserve"><value>The selected event category was not found.</value></data>
+  <data name="company_event.invitee_not_found" xml:space="preserve"><value>One or more invitees were not found.</value></data>
+  <data name="company_event_category.name_required" xml:space="preserve"><value>A category name is required and cannot exceed 60 characters.</value></data>
+  <data name="company_event_category.color_invalid" xml:space="preserve"><value>The colour must be in #RRGGBB format.</value></data>
+  <data name="company_event_category.in_use" xml:space="preserve"><value>This category is used by events and cannot be deleted.</value></data>
+  <data name="company_event_category.duplicate_name" xml:space="preserve"><value>A category with this name already exists.</value></data>
 </root>
