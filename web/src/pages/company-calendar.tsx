@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Button, Group, Modal, Paper, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, Button, Group, Paper, Skeleton, Text, Title, Tooltip } from "@mantine/core";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -9,7 +9,9 @@ import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import CalendarEventChip from "@/components/announcements/calendar-event-chip";
 import { EVENT_CATEGORIES_QUERY_KEY } from "@/components/announcements/event-category-manager";
+import { entryDays } from "@/components/announcements/event-form-model";
 import EventFormPanel from "@/components/announcements/event-form-panel";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, toDateOnly } from "@/lib/dates";
@@ -81,9 +83,11 @@ function CompanyCalendar() {
   const entriesByDate = useMemo(() => {
     const map = new Map<string, CompanyCalendarEntry[]>();
     for (const entry of query.data ?? []) {
-      const list = map.get(entry.date) ?? [];
-      list.push(entry);
-      map.set(entry.date, list);
+      for (const day of entryDays(entry)) {
+        const list = map.get(day) ?? [];
+        list.push(entry);
+        map.set(day, list);
+      }
     }
     return map;
   }, [query.data]);
@@ -225,38 +229,27 @@ function CompanyCalendar() {
 function DeleteEventDialog({ entry, onClose }: { entry: CompanyCalendarEntry; onClose: () => void }) {
   const { t, i18n } = useTranslation(["companyCalendar", "common"]);
   const queryClient = useQueryClient();
-  const [error, setError] = useState<string | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: () => deleteCompanyEvent(entry.id as string),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [CALENDAR_QUERY_KEY] });
-      toast({ variant: "success", title: t("common:success"), description: t("companyCalendar:deleted") });
-      onClose();
-    },
-    onError: (err) => setError(getApiErrorMessage(err, t("companyCalendar:errors.generic"))),
-  });
+  async function confirmDelete() {
+    try {
+      await deleteCompanyEvent(entry.id as string);
+    } catch (err) {
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("companyCalendar:errors.generic")) });
+      throw err;
+    }
+    void queryClient.invalidateQueries({ queryKey: [CALENDAR_QUERY_KEY] });
+    toast({ variant: "success", title: t("common:success"), description: t("companyCalendar:deleted") });
+  }
 
   return (
-    <Modal opened onClose={onClose} title={t("companyCalendar:deleteConfirmTitle")} size="28rem">
-      <Stack gap="md">
-        <Text size="sm">
-          {t("companyCalendar:deleteConfirmMessage", { title: entry.title })} ({formatDateOnly(entry.date, i18n.language)})
-        </Text>
-        {error && (
-          <Text size="sm" c="red">
-            {error}
-          </Text>
-        )}
-        <Group justify="flex-end" gap="sm">
-          <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
-            {t("common:cancel")}
-          </Button>
-          <Button type="button" color="red" loading={mutation.isPending} onClick={() => mutation.mutate()}>
-            {t("companyCalendar:delete")}
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+    <ConfirmModal
+      opened
+      onClose={onClose}
+      danger
+      title={t("companyCalendar:deleteConfirmTitle")}
+      message={`${t("companyCalendar:deleteConfirmMessage", { title: entry.title })} (${formatDateOnly(entry.date, i18n.language)})`}
+      confirmLabel={t("companyCalendar:delete")}
+      onConfirm={confirmDelete}
+    />
   );
 }

@@ -48,7 +48,9 @@
     "generic": "The event could not be saved.",
     "locationRequired": "A location is required for on-site events.",
     "onlineUrlRequired": "A valid http(s) link is required for online events.",
-    "endsBeforeStarts": "The end cannot be before the start."
+    "endsBeforeStarts": "The end cannot be before the start.",
+    "tooManyInvitees": "At most {{max}} invitees can be selected; currently {{count}}.",
+    "noInvitees": "The selection did not match any employee."
   },
   "edit": "Edit Event",
   "updated": "Event updated.",
@@ -67,5 +69,7 @@
     "edit": "Edit category {{name}}",
     "delete": "Delete category {{name}}",
     "genericError": "The category action could not be completed."
-  }
+  },
+  "editEvent": "Edit event: {{name}}",
+  "deleteEvent": "Delete event: {{name}}"
 }

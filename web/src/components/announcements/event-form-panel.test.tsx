@@ -9,7 +9,7 @@ import trCommon from "../../../public/locales/tr/common.json";
 import trEmployees from "../../../public/locales/tr/employees.json";
 import trCalendar from "../../../public/locales/tr/companyCalendar.json";
 import type { CompanyCalendarEntry } from "@/services/company-calendar.service";
-import { buildEventPayload, emptyEventForm, validateEventForm } from "./event-form-model";
+import { emptyEventForm, validateEventForm } from "./event-form-model";
 import CalendarEventChip from "./calendar-event-chip";
 import EventFormPanel from "./event-form-panel";
 
@@ -25,9 +25,19 @@ vi.mock("@/services/company-calendar.service", async () => {
 vi.mock("@/components/employees/org-unit-select", () => ({ default: () => null }));
 vi.mock("@/components/employees/employee-multi-picker", () => ({
   default: ({ onConfirm }: { onConfirm: (s: unknown) => void }) => (
-    <button type="button" onClick={() => onConfirm({ employeeIds: ["e1", "e2"], filter: null, excludedEmployeeIds: null })}>
-      picker-confirm
-    </button>
+    <div>
+      <button type="button" onClick={() => onConfirm({ employeeIds: ["e1", "e2"], filter: null, excludedEmployeeIds: null })}>
+        picker-confirm
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onConfirm({ employeeIds: Array.from({ length: 501 }, (_, i) => `x${i}`), filter: null, excludedEmployeeIds: null })
+        }
+      >
+        picker-confirm-many
+      </button>
+    </div>
   ),
 }));
 import { createCompanyEvent, updateCompanyEvent } from "@/services/company-calendar.service";
@@ -148,6 +158,16 @@ describe("EventFormPanel", () => {
     expect(vi.mocked(createCompanyEvent).mock.calls[0][0].inviteeEmployeeIds).toEqual(["e1", "e2"]);
   });
 
+  it("invitee_limit: more than 500 resolved ids show a warning, keep the picker and send nothing", async () => {
+    const user = userEvent.setup();
+    wrap(<EventFormPanel onClose={() => {}} />);
+    await user.click(await screen.findByRole("button", { name: trCalendar.form.selectInvitees }));
+    await user.click(await screen.findByText("picker-confirm-many"));
+    expect(await screen.findByTestId("invitee-warning")).toHaveTextContent("En fazla 500 davetli seçilebilir; şu an 501.");
+    expect(screen.getByTestId("invitee-count")).toHaveTextContent("0 davetli");
+    expect(screen.getByText("picker-confirm")).toBeInTheDocument();
+  });
+
   it("time_range_validation blocks an edit whose end precedes its start", async () => {
     const user = userEvent.setup();
     wrap(<EventFormPanel entry={{ ...baseEntry, startsAt: baseEntry.endsAt, endsAt: baseEntry.startsAt }} onClose={() => {}} />);
@@ -182,7 +202,13 @@ describe("EventFormPanel", () => {
       inviteeEmployeeIds: ["e9"],
       notifyInvitees: false,
     });
-    expect(Object.keys(payload).sort()).toEqual(Object.keys(buildEventPayload(emptyEventForm())).sort());
+    // B14 UpdateCompanyEventRequest body, spelled out on purpose (PUT replaces: every field must be present).
+    expect(Object.keys(payload).sort()).toEqual(
+      [
+        "title", "description", "eventDate", "type", "visibilityOrgUnitId", "startsAt", "endsAt", "isAllDay",
+        "mode", "location", "onlineUrl", "notifyInvitees", "categoryId", "inviteeEmployeeIds",
+      ].sort(),
+    );
   });
 
   it("all_day_hides_time", async () => {
@@ -197,21 +223,36 @@ describe("EventFormPanel", () => {
 });
 
 describe("CalendarEventChip", () => {
+  const category = { id: "cat1", name: "Eğitim", color: "#12b886" };
+
   it("category_color_in_calendar: colours the chip and names the category", () => {
-    wrap(
-      <CalendarEventChip
-        entry={baseEntry}
-        typeLabel="Toplantı"
-        category={{ id: "cat1", name: "Eğitim", color: "#12b886" }}
-        canManage={false}
-        onOpen={() => {}}
-        onDelete={() => {}}
-      />,
-    );
+    wrap(<CalendarEventChip entry={baseEntry} typeLabel="Toplantı" category={category} canManage={false} onOpen={() => {}} onDelete={() => {}} />);
     const chip = screen.getByTestId("calendar-event-chip");
     expect(chip).toHaveAttribute("data-category-color", "#12b886");
     expect(chip.style.borderInlineStart).toContain("3px");
     expect(chip).toHaveTextContent("Eğitim");
     expect(chip).toHaveTextContent(/\d{2}[:.]\d{2}\s?[–-]\s?\d{2}[:.]\d{2}/);
+  });
+
+  it("has no nested interactive elements and edit/delete work from the keyboard", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const onDelete = vi.fn();
+    const { container } = wrap(
+      <CalendarEventChip entry={baseEntry} typeLabel="Toplantı" category={category} canManage onOpen={onOpen} onDelete={onDelete} />,
+    );
+    expect(container.querySelectorAll("button button")).toHaveLength(0);
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Etkinliği düzenle: Kickoff" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onOpen).toHaveBeenCalledWith(baseEntry);
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Etkinliği sil: Kickoff" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onDelete).toHaveBeenCalledWith(baseEntry);
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 });

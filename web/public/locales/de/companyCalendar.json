@@ -48,7 +48,9 @@
     "generic": "Die Veranstaltung konnte nicht gespeichert werden.",
     "locationRequired": "Für Veranstaltungen vor Ort ist ein Ort erforderlich.",
     "onlineUrlRequired": "Für Online-Veranstaltungen ist ein gültiger http(s)-Link erforderlich.",
-    "endsBeforeStarts": "Das Ende darf nicht vor dem Beginn liegen."
+    "endsBeforeStarts": "Das Ende darf nicht vor dem Beginn liegen.",
+    "tooManyInvitees": "Es können höchstens {{max}} Eingeladene ausgewählt werden; aktuell {{count}}.",
+    "noInvitees": "Die Auswahl enthält keine Mitarbeitenden."
   },
   "edit": "Veranstaltung bearbeiten",
   "updated": "Veranstaltung aktualisiert.",
@@ -67,5 +69,7 @@
     "edit": "Kategorie {{name}} bearbeiten",
     "delete": "Kategorie {{name}} löschen",
     "genericError": "Die Kategorieaktion konnte nicht abgeschlossen werden."
-  }
+  },
+  "editEvent": "Veranstaltung bearbeiten: {{name}}",
+  "deleteEvent": "Veranstaltung löschen: {{name}}"
 }

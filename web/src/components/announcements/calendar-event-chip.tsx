@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Tooltip } from "@mantine/core";
+import { ActionIcon, Tooltip } from "@mantine/core";
 import { Trash2 } from "lucide-react";
 import type { CompanyCalendarEntry, CompanyEventCategory } from "@/services/company-calendar.service";
 import { eventTimeRange } from "./event-form-model";
@@ -28,43 +28,48 @@ export default function CalendarEventChip({ entry, typeLabel, category, canManag
   ].filter(Boolean);
   const tooltip = [`${typeLabel}: ${entry.title}`, time, ...details].filter(Boolean).join(" · ");
 
+  const chipStyle = category
+    ? { backgroundColor: `${category.color}26`, borderInlineStart: `3px solid ${category.color}` }
+    : undefined;
+  const content = (
+    <>
+      {category && <span className="sr-only">{category.name}: </span>}
+      {time && <span className="font-semibold">{time} </span>}
+      {entry.title}
+    </>
+  );
+  const innerClass = "min-w-0 flex-1 truncate px-1.5 py-0.5 text-left";
+
+  // Edit and delete are siblings (never nested interactive elements) inside one wrapper.
   return (
     <Tooltip label={tooltip} multiline maw={260}>
-      <Badge
-        className={classes.chip}
+      <div
+        className={`${classes.chip} flex items-center gap-0.5`}
+        data-testid="calendar-event-chip"
         data-type={entry.type}
         data-category-color={category?.color}
-        data-testid="calendar-event-chip"
-        variant="light"
-        radius="sm"
-        component={editable ? "button" : "div"}
-        type={editable ? "button" : undefined}
-        onClick={editable ? () => onOpen(entry) : undefined}
-        style={category ? { backgroundColor: `${category.color}26`, borderInlineStart: `3px solid ${category.color}` } : undefined}
-        styles={{
-          root: { display: "block", width: "100%", cursor: editable ? "pointer" : "default", ...(category ? { color: "inherit" } : {}) },
-          label: { overflow: "hidden", textOverflow: "ellipsis" },
-        }}
-        rightSection={
-          editable ? (
-            <ActionIcon
-              size="xs"
-              variant="transparent"
-              aria-label={t("delete")}
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete(entry);
-              }}
-            >
-              <Trash2 size={11} />
-            </ActionIcon>
-          ) : undefined
-        }
+        style={chipStyle}
       >
-        {category && <span className="sr-only">{category.name}: </span>}
-        {time && <span className="font-semibold">{time} </span>}
-        {entry.title}
-      </Badge>
+        {editable ? (
+          <button
+            type="button"
+            className={innerClass}
+            aria-label={t("editEvent", { name: entry.title })}
+            onClick={() => onOpen(entry)}
+          >
+            {content}
+          </button>
+        ) : (
+          <div className={innerClass}>
+            {content}
+          </div>
+        )}
+        {editable && (
+          <ActionIcon size="xs" variant="transparent" aria-label={t("deleteEvent", { name: entry.title })} onClick={() => onDelete(entry)}>
+            <Trash2 size={11} />
+          </ActionIcon>
+        )}
+      </div>
     </Tooltip>
   );
 }

@@ -18,6 +18,9 @@ import {
 import type { EmployeeSelection } from "@/types";
 import EventCategoryManager, { EVENT_CATEGORIES_QUERY_KEY } from "./event-category-manager";
 import {
+  EmptyInviteeSelectionError,
+  InviteeLimitError,
+  MAX_INVITEES,
   buildEventPayload,
   emptyEventForm,
   eventFormFromEntry,
@@ -48,6 +51,7 @@ export default function EventFormPanel({ entry, onClose }: EventFormPanelProps) 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [inviteeWarning, setInviteeWarning] = useState<string | null>(null);
 
   const categories = useQuery({ queryKey: [EVENT_CATEGORIES_QUERY_KEY], queryFn: listCompanyEventCategories });
   const categoryList = categories.data ?? [];
@@ -89,9 +93,17 @@ export default function EventFormPanel({ entry, onClose }: EventFormPanelProps) 
     try {
       const ids = await resolveSelectionToIds(selection);
       set("inviteeEmployeeIds", ids);
+      setInviteeWarning(null);
       setPickerOpen(false);
     } catch (err) {
-      setServerError(getApiErrorMessage(err, t("companyCalendar:errors.generic")));
+      // Stay on the picker so the user can narrow the selection.
+      if (err instanceof InviteeLimitError) {
+        setInviteeWarning(t("companyCalendar:errors.tooManyInvitees", { max: MAX_INVITEES, count: err.count }));
+      } else if (err instanceof EmptyInviteeSelectionError) {
+        setInviteeWarning(t("companyCalendar:errors.noInvitees"));
+      } else {
+        setServerError(getApiErrorMessage(err, t("companyCalendar:errors.generic")));
+      }
     } finally {
       setResolving(false);
     }
@@ -251,7 +263,7 @@ export default function EventFormPanel({ entry, onClose }: EventFormPanelProps) 
               <Badge variant="light" data-testid="invitee-count">
                 {t("companyCalendar:form.inviteeCount", { count: values.inviteeEmployeeIds.length })}
               </Badge>
-              <Button type="button" variant="light" size="xs" onClick={() => setPickerOpen((o) => !o)} loading={resolving}>
+              <Button type="button" variant="light" size="xs" onClick={() => { setInviteeWarning(null); setPickerOpen((o) => !o); }} loading={resolving}>
                 {t("companyCalendar:form.selectInvitees")}
               </Button>
               {values.inviteeEmployeeIds.length > 0 && (
@@ -260,7 +272,12 @@ export default function EventFormPanel({ entry, onClose }: EventFormPanelProps) 
                 </Button>
               )}
             </Group>
-            <Collapse expanded={pickerOpen}>{pickerOpen && <EmployeeMultiPicker onConfirm={(s) => void onInviteesPicked(s)} />}</Collapse>
+            <Collapse expanded={pickerOpen}>{pickerOpen && <EmployeeMultiPicker maxSelection={MAX_INVITEES} onConfirm={(s) => void onInviteesPicked(s)} />}</Collapse>
+            {inviteeWarning && (
+              <Text size="sm" c="red" role="alert" data-testid="invitee-warning">
+                {inviteeWarning}
+              </Text>
+            )}
             <Switch
               label={t("companyCalendar:form.notifyInvitees")}
               checked={values.notifyInvitees}

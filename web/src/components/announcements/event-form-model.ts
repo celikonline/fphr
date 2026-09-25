@@ -134,8 +134,33 @@ export function buildEventPayload(values: EventFormValues): CreateCompanyEventIn
 
 const RESOLVE_PAGE_SIZE = 200;
 
-/** Resolves the multi-picker result to explicit employee ids (filter selections are expanded page by page). */
+/** Backend `CompanyEventLimits.MaxInvitees`. */
+export const MAX_INVITEES = 500;
+
+export class InviteeLimitError extends Error {
+  constructor(readonly count: number) {
+    super(`invitee limit exceeded: ${count}`);
+  }
+}
+
+export class EmptyInviteeSelectionError extends Error {
+  constructor() {
+    super("selection resolved to no employees");
+  }
+}
+
+/**
+ * Resolves the multi-picker result to explicit employee ids (filter selections are expanded page by page).
+ * Throws {@link EmptyInviteeSelectionError} for an empty result and {@link InviteeLimitError} above {@link MAX_INVITEES}.
+ */
 export async function resolveSelectionToIds(selection: EmployeeSelection): Promise<string[]> {
+  const ids = await collectIds(selection);
+  if (ids.length === 0) throw new EmptyInviteeSelectionError();
+  if (ids.length > MAX_INVITEES) throw new InviteeLimitError(ids.length);
+  return ids;
+}
+
+async function collectIds(selection: EmployeeSelection): Promise<string[]> {
   if (selection.employeeIds) return [...selection.employeeIds];
   const excluded = new Set(selection.excludedEmployeeIds ?? []);
   const ids: string[] = [];
@@ -151,6 +176,23 @@ export async function resolveSelectionToIds(selection: EmployeeSelection): Promi
     if (result.items.length === 0 || page * RESOLVE_PAGE_SIZE >= result.totalCount) return ids;
   }
 }
+
+/**
+ * Local (browser) calendar days an entry occupies. Timed events follow `startsAt`..`endsAt` in local time (the
+ * backend derives `date` from the UTC day, which can be off by one); all-day and derived entries stay on `date`.
+ */
+export function entryDays(entry: CompanyCalendarEntry): string[] {
+  if (entry.isAllDay !== false || !entry.startsAt) return [entry.date];
+  const first = new Date(entry.startsAt);
+  const last = entry.endsAt ? new Date(entry.endsAt) : first;
+  const days: string[] = [];
+  const cursor = new Date(first.getFullYear(), first.getMonth(), first.getDate());
+  const end = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+  for (; cursor <= end && days.length < MAX_SPAN_DAYS; cursor.setDate(cursor.getDate() + 1)) days.push(toDateOnly(cursor));
+  return days.length > 0 ? days : [toDateOnly(first)];
+}
+
+const MAX_SPAN_DAYS = 62;
 
 /** Calendar entry time label ("09:00–10:00"); null for all-day and derived entries. */
 export function eventTimeRange(entry: CompanyCalendarEntry, locale: string): string | null {

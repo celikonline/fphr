@@ -41,14 +41,16 @@
     "inviteeCount": "{{count}} davetli",
     "selectInvitees": "Davetli seç",
     "clearInvitees": "Temizle",
-    "notifyInvitees": "Davetlilere bildirim gönderilsin"
+    "notifyInvitees": "Davetlilere bildirim gönderilir"
   },
   "errors": {
     "titleRequired": "Etkinlik başlığı gereklidir.",
     "generic": "Etkinlik kaydedilemedi.",
     "locationRequired": "Yüz yüze etkinlik için konum gereklidir.",
     "onlineUrlRequired": "Online etkinlik için geçerli bir http(s) bağlantısı gereklidir.",
-    "endsBeforeStarts": "Bitiş, başlangıçtan önce olamaz."
+    "endsBeforeStarts": "Bitiş, başlangıçtan önce olamaz.",
+    "tooManyInvitees": "En fazla {{max}} davetli seçilebilir; şu an {{count}}.",
+    "noInvitees": "Seçimden hiçbir çalışan çıkmadı."
   },
   "edit": "Etkinliği Düzenle",
   "updated": "Etkinlik güncellendi.",
@@ -67,5 +69,7 @@
     "edit": "{{name}} kategorisini düzenle",
     "delete": "{{name}} kategorisini sil",
     "genericError": "Kategori işlemi tamamlanamadı."
-  }
+  },
+  "editEvent": "Etkinliği düzenle: {{name}}",
+  "deleteEvent": "Etkinliği sil: {{name}}"
 }
