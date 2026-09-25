@@ -29,7 +29,8 @@ public sealed class ListInboxHandlerTests
     private readonly IApprovalDelegationRepository _delegations = Substitute.For<IApprovalDelegationRepository>();
 
     private ListInboxHandler HandlerWithProviders(params IApprovalRequestSummaryProvider[] providers) =>
-        new(_currentUser, _tenant, _requests, _roleAssignments, _employeeDirectory, providers, new DelegationResolver(_delegations), TimeProvider.System);
+        new(_currentUser, _tenant, _requests, _roleAssignments, _employeeDirectory, providers, new DelegationResolver(_delegations), TimeProvider.System,
+            NSubstitute.Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
 
     private ListInboxHandler Handler => HandlerWithProviders();
 

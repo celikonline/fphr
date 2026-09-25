@@ -67,7 +67,8 @@ public sealed class ListInboxHandler(
     IEmployeeDirectory employeeDirectory,
     IEnumerable<IApprovalRequestSummaryProvider> summaryProviders,
     DelegationResolver delegationResolver,
-    TimeProvider clock) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
+    TimeProvider clock,
+    ITenantTimeZoneLookup timeZones) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
 {
     /// <summary>
     /// The only fallback role queue IApproverResolver falls back to today is "HR" (TenantSettings.Workflow.FallbackApproverRoleCode
@@ -88,7 +89,7 @@ public sealed class ListInboxHandler(
             : [];
 
         // Z2.2 vekalet: also pull tasks assigned to anyone who has an active delegation to the caller; request-type scope is applied below.
-        var today = DelegationResolver.Today(clock);
+        var today = await DelegationResolver.TodayAsync(clock, timeZones, tenant.TenantId, cancellationToken);
         var delegations = await delegationResolver.ActiveDelegationsFor(employeeId, today, cancellationToken);
         var delegatorIds = delegations.Select(d => d.DelegatorEmployeeId).Distinct().ToList();
 

@@ -231,7 +231,8 @@ public sealed class DecideApprovalTaskHandler(
     IRoleAssignmentLookup roleAssignments,
     IIntegrationEventOutbox outbox,
     TimeProvider clock,
-    DelegationResolver delegationResolver) : ICommandHandler<DecideApprovalTaskCommand>
+    DelegationResolver delegationResolver,
+    ITenantTimeZoneLookup timeZones) : ICommandHandler<DecideApprovalTaskCommand>
 {
     public async Task<Result> Handle(DecideApprovalTaskCommand command, CancellationToken cancellationToken)
     {
@@ -253,7 +254,8 @@ public sealed class DecideApprovalTaskHandler(
         if (!isAssignee && !isFallbackRoleMember && task.ApproverEmployeeId is { } assigneeId)
         {
             var delegators = await delegationResolver.ActiveDelegatorsFor(
-                tenant.TenantId, command.DecidingEmployeeId, DelegationResolver.Today(clock), request.RequestType, cancellationToken);
+                tenant.TenantId, command.DecidingEmployeeId, await DelegationResolver.TodayAsync(clock, timeZones, tenant.TenantId, cancellationToken),
+                request.RequestType, cancellationToken);
             if (delegators.Contains(assigneeId))
             {
                 if (request.RequesterEmployeeId == command.DecidingEmployeeId)
