@@ -831,5 +831,21 @@
   "workCertificate": {
     "download": "Arbeitsbescheinigung (PDF)",
     "failed": "Die Arbeitsbescheinigung konnte nicht heruntergeladen werden."
+  },
+  "multiPicker": {
+    "title": "Mitarbeitende auswählen",
+    "search": "Mitarbeitende suchen",
+    "orgUnits": "Einheiten",
+    "status": "Status",
+    "allStatuses": "Alle Status",
+    "includeTerminated": "Ausgeschiedene einbeziehen",
+    "keepSelected": "Auswahl in der Liste behalten",
+    "selectAll": "Alle Treffer auswählen ({{count}})",
+    "selectedCount": "{{count}} Mitarbeitende ausgewählt",
+    "allSelectedExcluding": "Alle Treffer ausgewählt, {{count}} ausgenommen",
+    "clear": "Auswahl aufheben",
+    "empty": "Keine Mitarbeitenden entsprechen dem Filter.",
+    "loadMore": "Mehr anzeigen",
+    "confirm": "Auswahl bestätigen"
   }
 }

@@ -831,5 +831,21 @@
   "workCertificate": {
     "download": "Çalışma belgesi (PDF)",
     "failed": "Çalışma belgesi indirilemedi."
+  },
+  "multiPicker": {
+    "title": "Çalışan seç",
+    "search": "Çalışan ara",
+    "orgUnits": "Birimler",
+    "status": "Durum",
+    "allStatuses": "Tüm durumlar",
+    "includeTerminated": "İşten ayrılanları dahil et",
+    "keepSelected": "Seçilenleri listede tut",
+    "selectAll": "Filtreye uyan tümünü seç ({{count}})",
+    "selectedCount": "{{count}} çalışan seçili",
+    "allSelectedExcluding": "Filtreye uyan tümü seçili, {{count}} hariç",
+    "clear": "Seçimi temizle",
+    "empty": "Filtreye uyan çalışan bulunamadı.",
+    "loadMore": "Daha fazla göster",
+    "confirm": "Seçimi onayla"
   }
 }

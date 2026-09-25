@@ -831,5 +831,21 @@
   "workCertificate": {
     "download": "Employment certificate (PDF)",
     "failed": "Could not download the employment certificate."
+  },
+  "multiPicker": {
+    "title": "Select employees",
+    "search": "Search employees",
+    "orgUnits": "Units",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "includeTerminated": "Include terminated employees",
+    "keepSelected": "Keep selected in list",
+    "selectAll": "Select all matching ({{count}})",
+    "selectedCount": "{{count}} employees selected",
+    "allSelectedExcluding": "All matching selected, {{count}} excluded",
+    "clear": "Clear selection",
+    "empty": "No employees match the filter.",
+    "loadMore": "Show more",
+    "confirm": "Confirm selection"
   }
 }
