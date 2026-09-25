@@ -13,6 +13,7 @@ Bu liste, `.claude/takim/TAKIM.md` "riskli alan" kuralı gereği insan kararı i
 | 6 | Onboarding (B15) | `OnboardingCategoriesAndTemplateSets` | FK (RESTRICT), `importance` varsayılan Normal |
 | 7 | Notifications (B16) | `20260925115636_HrMessages` | 3 yeni tablo |
 | 8 | Employee (B17) | `AddEmployeeNotes` | PII (çalışan notları) |
+| 10 | Attendance (I0) | `20260925154835_AttendanceDayRowVersion` | xmin eşzamanlılık belirteci; şemaya DDL yok (yalnız migration geçmişi + snapshot) |
 | 9 | Attendance (B1) | Geri-doldurma: SQL migration kaldırıldı → idempotent C# `PunchBackfillJob` | Karar: yaklaşım + ne zaman/nerede çalışacağı |
 
 ## B. B1 — bordroyu etkileyen davranış kararları
