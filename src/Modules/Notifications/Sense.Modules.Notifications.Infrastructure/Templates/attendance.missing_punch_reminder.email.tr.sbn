@@ -1,0 +1,6 @@
+{{- subject = "Eksik giriş/çıkış kaydınız var" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Puantajınızda eksik veya hesaplanamayan bir gün var. Lütfen kaydı kontrol edin; gerekirse eksik kayıt talebi oluşturun.</p>
+{{~ if action_url ~}}
+{{ button "Puantajı aç" action_url }}
+{{~ end ~}}

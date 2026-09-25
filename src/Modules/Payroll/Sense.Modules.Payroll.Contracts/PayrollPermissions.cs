@@ -57,5 +57,11 @@ public static class PayrollPermissions
     public static readonly Permission UnionManage = new(
         "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
+    public static readonly Permission PayslipImport = new(
+        "payroll.payslip.import", Module, "payroll.payslip.import", Group, "Bulk-upload payslip PDF/zip files and match them to employees by registration number");
+
+    public static readonly Permission MyPayslip = new(
+        "payroll.my.payslip", Module, "payroll.my.payslip", Group, "View, acknowledge and object to one's own payslips");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, PayslipImport, MyPayslip];
 }

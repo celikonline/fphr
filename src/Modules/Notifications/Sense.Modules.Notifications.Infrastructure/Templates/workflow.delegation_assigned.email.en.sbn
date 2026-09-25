@@ -1,0 +1,6 @@
+{{- subject = "An approval delegation was assigned to you" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>{{ delegator_name | html.escape }} delegated their approval authority to you for a period. Their approval tasks will show in your inbox meanwhile.</p>
+{{~ if action_url ~}}
+{{ button "Open the inbox" action_url }}
+{{~ end ~}}

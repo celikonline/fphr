@@ -1,0 +1,6 @@
+{{- subject = "Sie haben eine fehlende Stempelung" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>An einem Ihrer Arbeitstage fehlt eine Stempelung oder er kann nicht berechnet werden. Bitte prüfen Sie ihn und stellen Sie bei Bedarf einen Antrag auf Nachtragung.</p>
+{{~ if action_url ~}}
+{{ button "Zeiterfassung öffnen" action_url }}
+{{~ end ~}}

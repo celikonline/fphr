@@ -15,7 +15,10 @@ public static class ReportCategories
     public const string Leave = "leave";
     public const string Finance = "finance";
 
-    public static readonly IReadOnlyList<string> All = [Administrative, Employee, Leave, Finance];
+    /// <summary>Zaman &amp; devam reports (daily attendance, late/early, overtime).</summary>
+    public const string Time = "time";
+
+    public static readonly IReadOnlyList<string> All = [Administrative, Employee, Leave, Finance, Time];
 
     /// <summary>Katalog sıralaması için; bilinmeyen kategori sona düşer.</summary>
     public static int SortOrder(string categoryKey)
@@ -68,6 +71,9 @@ public static class ReportParameterKeys
     public const string From = "from";
     public const string To = "to";
     public const string IncludeTerminated = "includeTerminated";
+
+    /// <summary>Single date (yyyy-MM-dd), e.g. the day of a daily attendance report.</summary>
+    public const string Date = "date";
 }
 
 /// <summary>

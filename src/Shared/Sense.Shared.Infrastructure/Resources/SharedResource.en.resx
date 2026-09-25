@@ -1528,4 +1528,27 @@ The report you requested has been generated. Click the link to view and download
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>The record has already ended.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>The replacement interval must be between 1 and 3650 days.</value></data>
+  <data name="attendance.daily.view" xml:space="preserve"><value>View daily attendance</value></data>
+  <data name="attendance.punch.manage" xml:space="preserve"><value>Manage punches</value></data>
+  <data name="attendance.shiftdefinition.view" xml:space="preserve"><value>View shift definitions</value></data>
+  <data name="attendance.shiftdefinition.manage" xml:space="preserve"><value>Manage shift definitions</value></data>
+  <data name="attendance.recalculate.run" xml:space="preserve"><value>Recalculate attendance</value></data>
+  <data name="attendance.punchrequest.manage" xml:space="preserve"><value>Manage missing-punch requests</value></data>
+  <data name="attendance.my.punchrequest" xml:space="preserve"><value>Create my missing-punch requests</value></data>
+  <data name="attendance.rotation.view" xml:space="preserve"><value>View shift rotations</value></data>
+  <data name="attendance.rotation.manage" xml:space="preserve"><value>Manage shift rotations</value></data>
+  <data name="attendance.shifttemplate.manage" xml:space="preserve"><value>Manage shift plan templates</value></data>
+  <data name="attendance.terminal.view" xml:space="preserve"><value>View terminals</value></data>
+  <data name="attendance.terminal.manage" xml:space="preserve"><value>Manage terminals</value></data>
+  <data name="attendance.dashboard.view" xml:space="preserve"><value>View the time and attendance dashboard</value></data>
+  <data name="payroll.payslip.import" xml:space="preserve"><value>Bulk-upload payslips</value></data>
+  <data name="payroll.my.payslip" xml:space="preserve"><value>View and acknowledge my payslips</value></data>
+  <data name="workflow.delegation.manage" xml:space="preserve"><value>Manage approval delegations</value></data>
+  <data name="workflow.my.delegation" xml:space="preserve"><value>Manage my approval delegation</value></data>
+  <data name="employee.notes.view" xml:space="preserve"><value>View employee notes</value></data>
+  <data name="employee.notes.manage" xml:space="preserve"><value>Manage employee notes</value></data>
+  <data name="notifications.messages.send" xml:space="preserve"><value>Send HR messages</value></data>
+  <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
+  <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
+  <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
 </root>

@@ -1537,4 +1537,27 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>Kayıt zaten sonlandırılmış.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıçtan önce olamaz.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>Yenileme aralığı 1 ile 3650 gün arasında olmalıdır.</value></data>
+  <data name="attendance.daily.view" xml:space="preserve"><value>Günlük Puantajı Görüntüleme</value></data>
+  <data name="attendance.punch.manage" xml:space="preserve"><value>Okutma Yönetimi</value></data>
+  <data name="attendance.shiftdefinition.view" xml:space="preserve"><value>Vardiya Tanımlarını Görüntüleme</value></data>
+  <data name="attendance.shiftdefinition.manage" xml:space="preserve"><value>Vardiya Tanımı Yönetimi</value></data>
+  <data name="attendance.recalculate.run" xml:space="preserve"><value>Puantaj Yeniden Hesaplama</value></data>
+  <data name="attendance.punchrequest.manage" xml:space="preserve"><value>Eksik Kayıt Taleplerini Yönetme</value></data>
+  <data name="attendance.my.punchrequest" xml:space="preserve"><value>Eksik Kayıt Talebi Oluşturma</value></data>
+  <data name="attendance.rotation.view" xml:space="preserve"><value>Vardiya Rotasyonlarını Görüntüleme</value></data>
+  <data name="attendance.rotation.manage" xml:space="preserve"><value>Vardiya Rotasyonu Yönetimi</value></data>
+  <data name="attendance.shifttemplate.manage" xml:space="preserve"><value>Vardiya Şablonu Yönetimi</value></data>
+  <data name="attendance.terminal.view" xml:space="preserve"><value>Terminalleri Görüntüleme</value></data>
+  <data name="attendance.terminal.manage" xml:space="preserve"><value>Terminal Yönetimi</value></data>
+  <data name="attendance.dashboard.view" xml:space="preserve"><value>Zaman ve Devam Panosunu Görüntüleme</value></data>
+  <data name="payroll.payslip.import" xml:space="preserve"><value>Ücret pusulalarını toplu yükleme</value></data>
+  <data name="payroll.my.payslip" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme ve onaylama</value></data>
+  <data name="workflow.delegation.manage" xml:space="preserve"><value>Onay Vekaletlerini Yönetme</value></data>
+  <data name="workflow.my.delegation" xml:space="preserve"><value>Kendi Onay Vekaletimi Yönetme</value></data>
+  <data name="employee.notes.view" xml:space="preserve"><value>Çalışan Notlarını Görüntüleme</value></data>
+  <data name="employee.notes.manage" xml:space="preserve"><value>Çalışan Notu Yönetimi</value></data>
+  <data name="notifications.messages.send" xml:space="preserve"><value>İK Mesajı Gönderme</value></data>
+  <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
+  <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
+  <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
 </root>

@@ -20,5 +20,14 @@ public static class NotificationsPermissions
     public static readonly Permission MyManage = new(
         "notifications.my.manage", Module, "Kendi Bildirimlerimi Yönetme", Group, "Kendi bildirimlerinizi okundu olarak işaretleme ve hangi bildirimleri alacağınızı değiştirme");
 
-    public static IEnumerable<Permission> All => [MyView, MyManage];
+    public static readonly Permission MessagesSend = new(
+        "notifications.messages.send", Module, "İK Mesajı Gönderme", Group, "Çalışanlara e-posta / uygulama içi İK mesajı gönderme");
+
+    public static readonly Permission MessagesView = new(
+        "notifications.messages.view", Module, "İK Mesajlarını Görüntüleme", Group, "Gönderilen ve alınan İK mesajlarını görüntüleme");
+
+    public static readonly Permission MessageGroupsManage = new(
+        "notifications.messagegroups.manage", Module, "Mesaj Gruplarını Yönetme", Group, "Kalıcı mesaj alıcı gruplarını oluşturma, düzenleme ve silme");
+
+    public static IEnumerable<Permission> All => [MyView, MyManage, MessagesSend, MessagesView, MessageGroupsManage];
 }
