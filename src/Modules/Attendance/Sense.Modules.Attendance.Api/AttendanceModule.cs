@@ -1,13 +1,14 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Attendance.Api.Terminals;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Import;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure;
-using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.Jobs;
+using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Import;
@@ -57,5 +58,7 @@ public sealed class AttendanceModule : IModule
         // Vardiya planı Excel şablonu "shift-plan" (Z3.2)
         services.AddScoped<IImportTemplate, ShiftPlanImportTemplate>();
         services.AddScoped<IImportRowHandler, ShiftPlanImportRowHandler>();
+        // Z5.1 terminal okutma ucu: X-Terminal-Key kimlik doğrulama şeması + hız sınırı politikası (yalnız API).
+        services.AddTerminalIngestEndpointSecurity(configuration);
     }
 }
