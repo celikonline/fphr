@@ -1,27 +1,28 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Badge, Button, Group, Modal, Paper, Radio, Skeleton, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ActionIcon, Button, Group, Modal, Paper, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useOrgUnits } from "@/components/employees/use-org-units";
-import { DatePicker } from "@/components/ui/date-picker";
+import CalendarEventChip from "@/components/announcements/calendar-event-chip";
+import { EVENT_CATEGORIES_QUERY_KEY } from "@/components/announcements/event-category-manager";
+import EventFormPanel from "@/components/announcements/event-form-panel";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, toDateOnly } from "@/lib/dates";
 import {
-  createCompanyEvent,
   deleteCompanyEvent,
   getCompanyCalendar,
+  listCompanyEventCategories,
   type CompanyCalendarEntry,
   type CompanyEventType,
 } from "@/services/company-calendar.service";
 import classes from "./company-calendar.module.css";
 
 const CALENDAR_QUERY_KEY = "companyCalendar";
-const MANUAL_TYPES: Extract<CompanyEventType, "companyEvent" | "meeting">[] = ["companyEvent", "meeting"];
 
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -60,7 +61,7 @@ function CompanyCalendar() {
   const { nameById } = useOrgUnits();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [panel, setPanel] = useState<{ entry: CompanyCalendarEntry | null } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CompanyCalendarEntry | null>(null);
 
   const days = useMonthGrid(month);
@@ -73,6 +74,9 @@ function CompanyCalendar() {
     queryFn: () => getCompanyCalendar({ from, to, orgUnitId }),
     retry: false,
   });
+
+  const categoriesQuery = useQuery({ queryKey: [EVENT_CATEGORIES_QUERY_KEY], queryFn: listCompanyEventCategories, retry: false });
+  const categoryById = useMemo(() => new Map((categoriesQuery.data ?? []).map((c) => [c.id, c])), [categoriesQuery.data]);
 
   const entriesByDate = useMemo(() => {
     const map = new Map<string, CompanyCalendarEntry[]>();
@@ -110,7 +114,7 @@ function CompanyCalendar() {
           <Text c="dimmed">{t("companyCalendar:subtitle")}</Text>
         </div>
         {canManage && (
-          <Button type="button" leftSection={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
+          <Button type="button" leftSection={<Plus size={16} />} onClick={() => setPanel({ entry: null })}>
             {t("companyCalendar:create")}
           </Button>
         )}
@@ -189,7 +193,15 @@ function CompanyCalendar() {
                   <span className={`${classes.dayNumber} text-xs`}>{date.getDate()}</span>
                   <div className="flex flex-col gap-1">
                     {visible.map((entry, index) => (
-                      <EventChip key={entry.id ?? `${entry.type}-${entry.employeeId}-${index}`} entry={entry} label={typeLabel(entry.type)} canManage={canManage} onDelete={setPendingDelete} />
+                      <CalendarEventChip
+                        key={entry.id ?? `${entry.type}-${entry.employeeId}-${index}`}
+                        entry={entry}
+                        typeLabel={typeLabel(entry.type)}
+                        category={entry.categoryId ? categoryById.get(entry.categoryId) : undefined}
+                        canManage={canManage}
+                        onOpen={(e) => setPanel({ entry: e })}
+                        onDelete={setPendingDelete}
+                      />
                     ))}
                     {overflow > 0 && (
                       <Text size="xs" c="dimmed">
@@ -204,168 +216,9 @@ function CompanyCalendar() {
         )}
       </Paper>
 
-      {createOpen && <CreateEventDialog onClose={() => setCreateOpen(false)} />}
+      {panel && <EventFormPanel entry={panel.entry} onClose={() => setPanel(null)} />}
       {pendingDelete && <DeleteEventDialog entry={pendingDelete} onClose={() => setPendingDelete(null)} />}
     </div>
-  );
-}
-
-function EventChip({
-  entry,
-  label,
-  canManage,
-  onDelete,
-}: {
-  entry: CompanyCalendarEntry;
-  label: string;
-  canManage: boolean;
-  onDelete: (entry: CompanyCalendarEntry) => void;
-}) {
-  const canDelete = canManage && Boolean(entry.id);
-  return (
-    <Tooltip label={`${label}: ${entry.title}`} multiline maw={240}>
-      <Badge
-        className={classes.chip}
-        data-type={entry.type}
-        variant="light"
-        radius="sm"
-        styles={{ root: { display: "block", width: "100%" }, label: { overflow: "hidden", textOverflow: "ellipsis" } }}
-        rightSection={
-          canDelete ? (
-            <ActionIcon
-              size="xs"
-              variant="transparent"
-              aria-label="delete"
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete(entry);
-              }}
-            >
-              <Trash2 size={11} />
-            </ActionIcon>
-          ) : undefined
-        }
-      >
-        {entry.title}
-      </Badge>
-    </Tooltip>
-  );
-}
-
-function eventErrorMessage(error: unknown, t: (key: string) => string): string {
-  const problem = getApiProblem(error);
-  if (problem?.code === "company_event.title_required") return t("companyCalendar:errors.titleRequired");
-  return getApiErrorMessage(error, t("companyCalendar:errors.generic"));
-}
-
-function CreateEventDialog({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation(["companyCalendar", "common", "employees"]);
-  const queryClient = useQueryClient();
-
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [eventDate, setEventDate] = useState(toDateOnly(new Date()));
-  const [type, setType] = useState<(typeof MANUAL_TYPES)[number]>("companyEvent");
-  const [visibility, setVisibility] = useState<"all" | "orgUnit">("all");
-  const [visibilityOrgUnitId, setVisibilityOrgUnitId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      createCompanyEvent({
-        title: title.trim(),
-        description: description.trim() || null,
-        eventDate,
-        type,
-        visibilityOrgUnitId: visibility === "orgUnit" ? visibilityOrgUnitId : null,
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: [CALENDAR_QUERY_KEY] });
-      toast({ variant: "success", title: t("common:success"), description: t("companyCalendar:saved") });
-      onClose();
-    },
-    onError: (err) => setError(eventErrorMessage(err, t)),
-  });
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!title.trim()) return setError(t("companyCalendar:errors.titleRequired"));
-    setError(null);
-    mutation.mutate();
-  }
-
-  return (
-    <Modal opened onClose={onClose} title={t("companyCalendar:create")} size="32rem">
-      <form onSubmit={submit}>
-        <Stack gap="md">
-          <TextInput
-            id="company-event-title"
-            label={t("companyCalendar:form.title")}
-            placeholder={t("companyCalendar:form.titlePlaceholder")}
-            withAsterisk
-            value={title}
-            maxLength={200}
-            onChange={(event) => setTitle(event.currentTarget.value)}
-            disabled={mutation.isPending}
-          />
-          <Textarea
-            id="company-event-description"
-            label={t("companyCalendar:form.description")}
-            placeholder={t("companyCalendar:form.descriptionPlaceholder")}
-            value={description}
-            maxLength={2000}
-            autosize
-            minRows={2}
-            onChange={(event) => setDescription(event.currentTarget.value)}
-            disabled={mutation.isPending}
-          />
-          <DatePicker id="company-event-date" value={eventDate} onChange={setEventDate} disabled={mutation.isPending} />
-          <Radio.Group
-            label={t("companyCalendar:form.type")}
-            value={type}
-            onChange={(value) => setType(value as (typeof MANUAL_TYPES)[number])}
-          >
-            <Group gap="md" mt={4}>
-              {MANUAL_TYPES.map((value) => (
-                <Radio key={value} value={value} label={t(`companyCalendar:type.${value}`)} disabled={mutation.isPending} />
-              ))}
-            </Group>
-          </Radio.Group>
-          <Radio.Group
-            label={t("companyCalendar:form.visibility")}
-            value={visibility}
-            onChange={(value) => setVisibility(value as "all" | "orgUnit")}
-          >
-            <Group gap="md" mt={4}>
-              <Radio value="all" label={t("companyCalendar:form.visibilityAll")} disabled={mutation.isPending} />
-              <Radio value="orgUnit" label={t("companyCalendar:form.visibilityOrgUnit")} disabled={mutation.isPending} />
-            </Group>
-          </Radio.Group>
-          {visibility === "orgUnit" && (
-            <OrgUnitSelect
-              id="company-event-org-unit"
-              value={visibilityOrgUnitId}
-              onChange={setVisibilityOrgUnitId}
-              emptyLabel={t("employees:filters.allUnits")}
-              disabled={mutation.isPending}
-            />
-          )}
-          {error && (
-            <Text size="sm" c="red">
-              {error}
-            </Text>
-          )}
-          <Group justify="flex-end" gap="sm">
-            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
-              {t("common:cancel")}
-            </Button>
-            <Button type="submit" loading={mutation.isPending}>
-              {t("common:save")}
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Modal>
   );
 }
 

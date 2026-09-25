@@ -28,10 +28,44 @@
     "type": "Type",
     "visibility": "Visibility",
     "visibilityAll": "Whole company",
-    "visibilityOrgUnit": "A specific unit"
+    "visibilityOrgUnit": "A specific unit",
+    "category": "Event category",
+    "categoryNone": "No category",
+    "allDay": "All day",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
+    "mode": "Event format",
+    "location": "Location",
+    "onlineUrl": "Online link",
+    "invitees": "Invitees",
+    "inviteeCount": "{{count}} invitees",
+    "selectInvitees": "Select invitees",
+    "clearInvitees": "Clear",
+    "notifyInvitees": "Notify invitees"
   },
   "errors": {
     "titleRequired": "An event title is required.",
-    "generic": "The event could not be saved."
+    "generic": "The event could not be saved.",
+    "locationRequired": "A location is required for on-site events.",
+    "onlineUrlRequired": "A valid http(s) link is required for online events.",
+    "endsBeforeStarts": "The end cannot be before the start."
+  },
+  "edit": "Edit Event",
+  "updated": "Event updated.",
+  "mode": {
+    "none": "Not specified",
+    "onsite": "On-site",
+    "online": "Online"
+  },
+  "categories": {
+    "manage": "Manage categories",
+    "add": "Add category",
+    "name": "Category name",
+    "color": "Color",
+    "save": "Save category",
+    "cancel": "Cancel",
+    "edit": "Edit category {{name}}",
+    "delete": "Delete category {{name}}",
+    "genericError": "The category action could not be completed."
   }
 }

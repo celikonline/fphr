@@ -28,10 +28,44 @@
     "type": "Tür",
     "visibility": "Görünürlük",
     "visibilityAll": "Tüm şirket",
-    "visibilityOrgUnit": "Belirli bir birim"
+    "visibilityOrgUnit": "Belirli bir birim",
+    "category": "Etkinlik kategorisi",
+    "categoryNone": "Kategorisiz",
+    "allDay": "Tüm gün",
+    "startsAt": "Başlangıç",
+    "endsAt": "Bitiş",
+    "mode": "Etkinlik şekli",
+    "location": "Konum",
+    "onlineUrl": "Online bağlantı",
+    "invitees": "Davetliler",
+    "inviteeCount": "{{count}} davetli",
+    "selectInvitees": "Davetli seç",
+    "clearInvitees": "Temizle",
+    "notifyInvitees": "Davetlilere bildirim gönderilsin"
   },
   "errors": {
     "titleRequired": "Etkinlik başlığı gereklidir.",
-    "generic": "Etkinlik kaydedilemedi."
+    "generic": "Etkinlik kaydedilemedi.",
+    "locationRequired": "Yüz yüze etkinlik için konum gereklidir.",
+    "onlineUrlRequired": "Online etkinlik için geçerli bir http(s) bağlantısı gereklidir.",
+    "endsBeforeStarts": "Bitiş, başlangıçtan önce olamaz."
+  },
+  "edit": "Etkinliği Düzenle",
+  "updated": "Etkinlik güncellendi.",
+  "mode": {
+    "none": "Belirtilmedi",
+    "onsite": "Yüz yüze",
+    "online": "Online"
+  },
+  "categories": {
+    "manage": "Kategorileri yönet",
+    "add": "Kategori ekle",
+    "name": "Kategori adı",
+    "color": "Renk",
+    "save": "Kategoriyi kaydet",
+    "cancel": "Vazgeç",
+    "edit": "{{name}} kategorisini düzenle",
+    "delete": "{{name}} kategorisini sil",
+    "genericError": "Kategori işlemi tamamlanamadı."
   }
 }
