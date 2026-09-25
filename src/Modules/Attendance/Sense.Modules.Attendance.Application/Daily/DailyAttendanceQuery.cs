@@ -1,3 +1,5 @@
+using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -17,7 +19,7 @@ namespace Sense.Modules.Attendance.Application.Daily;
 /// </summary>
 public sealed class DailyAttendanceQuery(
     IDataScopeService dataScope, IEmployeeDirectory employees, IOrgUnitLookup orgUnits, IAttendanceDayRepository days, IPunchRepository punches,
-    ILeaveOnDateReader leave) : IDailyAttendanceQuery
+    ILeaveOnDateReader leave, IPlannedDayResolver planner) : IDailyAttendanceQuery
 {
     private const int MaxPageSize = 200;
 
@@ -44,6 +46,7 @@ public sealed class DailyAttendanceQuery(
         var pagePunches = (await punches.ListForRangeAsync(tenantId, date, date, ordered.Select(e => e.EmployeeId).ToList(), ct))
             .ToLookup(p => p.EmployeeId);
         var rows = ordered.Select(e => ToRow(e, date, names.GetValueOrDefault(e.EmployeeId, string.Empty), pagePunches[e.EmployeeId])).ToList();
+        rows = await WithIncalculableReasonsAsync(rows, ordered, pagePunches, date, ct);
         return new PagedResult<DailyAttendanceRowDto>(rows, page, pageSize, matching.Count);
     }
 
@@ -58,6 +61,32 @@ public sealed class DailyAttendanceQuery(
         }
 
         return counts;
+    }
+
+    /// <summary>
+    /// Fills <see cref="DailyAttendanceRowDto.IncalculableReason"/> for incalculable days only. The page's punches are already loaded in
+    /// one query (no per-row punch read); the plan is resolved just for the (few) incalculable rows, never for every row.
+    /// </summary>
+    private async Task<List<DailyAttendanceRowDto>> WithIncalculableReasonsAsync(
+        List<DailyAttendanceRowDto> rows, IReadOnlyList<EmployeeDay> employeeDays, ILookup<Guid, Domain.Punches.Punch> pagePunches,
+        DateOnly date, CancellationToken ct)
+    {
+        var result = new List<DailyAttendanceRowDto>(rows.Count);
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var record = employeeDays[i].Record;
+            if (record is null || (record.Anomalies & AttendanceAnomaly.Incalculable) == 0)
+            {
+                result.Add(rows[i]);
+                continue;
+            }
+
+            var plan = await planner.ResolveAsync(record.EmployeeId, date, record.CheckIn, ct);
+            var reason = IncalculableExplainer.Explain(pagePunches[record.EmployeeId].ToList(), plan);
+            result.Add(rows[i] with { IncalculableReason = IncalculableExplainer.Code(reason) });
+        }
+
+        return result;
     }
 
     private static DailyAttendanceRowDto ToRow(EmployeeDay e, DateOnly date, string name, IEnumerable<Domain.Punches.Punch> punchesOfEmployee)

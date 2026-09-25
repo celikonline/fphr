@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Daily;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
@@ -26,6 +27,7 @@ public sealed class DailyAttendanceQueryTests
     private readonly IAttendanceDayRepository _days = Substitute.For<IAttendanceDayRepository>();
     private readonly IPunchRepository _punches = Substitute.For<IPunchRepository>();
     private readonly ILeaveOnDateReader _leave = Substitute.For<ILeaveOnDateReader>();
+    private readonly IPlannedDayResolver _planner = Substitute.For<IPlannedDayResolver>();
     private readonly Dictionary<string, Guid> _ids = [];
     private readonly List<AttendanceDay> _records = [];
     private readonly List<EmployeeLeaveOnDate> _leaves = [];
@@ -43,7 +45,7 @@ public sealed class DailyAttendanceQueryTests
             .Returns(new List<Sense.Modules.Attendance.Domain.Punches.Punch>());
     }
 
-    private DailyAttendanceQuery Create() => new(_dataScope, _employees, _orgUnits, _days, _punches, _leave);
+    private DailyAttendanceQuery Create() => new(_dataScope, _employees, _orgUnits, _days, _punches, _leave, _planner);
 
     private Guid Employee(string name) => _ids[name] = Guid.NewGuid();
 
@@ -199,5 +201,44 @@ public sealed class DailyAttendanceQueryTests
         page.Items.Select(r => r.EmployeeName).ShouldBe(["Late"]);
         await _employees.Received().ListActiveEmployeeIdsInOrgUnitsAsync(
             _tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(child)), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Daily_row_carries_incalculable_reason_without_n_plus_1()
+    {
+        // Two incalculable employees with punches but no plan at all, plus one healthy employee.
+        foreach (var name in new[] { "BadA", "BadB" })
+        {
+            var id = Employee(name);
+            var day = AttendanceDay.Record(_tenantId, id, Day, Nine, Six, Nine, Six, 540, 0, AttendanceDaySource.Device);
+            day.MarkIncalculable();
+            _records.Add(day);
+        }
+
+        Employee("Fine"); Record("Fine", Nine, Six);
+        var punchList = _ids.Where(kv => kv.Key.StartsWith("Bad", StringComparison.Ordinal)).SelectMany(kv => new[]
+        {
+            Sense.Modules.Attendance.Domain.Punches.Punch.Create(
+                _tenantId, kv.Value, new DateTime(2026, 9, 21, 6, 0, 0, DateTimeKind.Utc), Day, Sense.Modules.Attendance.Domain.SelfCheckIns.PunchDirection.In,
+                Sense.Modules.Attendance.Domain.Punches.PunchSource.Device, null, null, null, null, null, false, null, null,
+                new DateTime(2026, 9, 22, 0, 0, 0, DateTimeKind.Utc)).Value,
+            Sense.Modules.Attendance.Domain.Punches.Punch.Create(
+                _tenantId, kv.Value, new DateTime(2026, 9, 21, 15, 0, 0, DateTimeKind.Utc), Day, Sense.Modules.Attendance.Domain.SelfCheckIns.PunchDirection.Out,
+                Sense.Modules.Attendance.Domain.Punches.PunchSource.Device, null, null, null, null, null, false, null, null,
+                new DateTime(2026, 9, 22, 0, 0, 0, DateTimeKind.Utc)).Value,
+        }).ToList();
+        _punches.ListForRangeAsync(_tenantId, Day, Day, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>()).Returns(punchList);
+        _planner.ResolveAsync(Arg.Any<Guid>(), Day, Arg.Any<TimeOnly?>(), Arg.Any<CancellationToken>()).Returns((PlannedDay?)null);
+
+        var bad = await Create().ListAsync(_tenantId, Day, DailyStatus.Incalculable, null, false, 1, 100, TestContext.Current.CancellationToken);
+        // One batched punch read for the page; the plan is resolved only for the incalculable rows.
+        await _punches.Received(1).ListForRangeAsync(_tenantId, Day, Day, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>());
+        await _planner.Received(2).ResolveAsync(Arg.Any<Guid>(), Day, Arg.Any<TimeOnly?>(), Arg.Any<CancellationToken>());
+        bad.Items.Count.ShouldBe(2);
+        bad.Items.ShouldAllBe(r => r.IncalculableReason == "noPlan");
+
+        var arrived = await Create().ListAsync(_tenantId, Day, DailyStatus.Arrived, null, false, 1, 100, TestContext.Current.CancellationToken);
+        arrived.Items.Single(r => r.EmployeeName == "Fine").IncalculableReason.ShouldBeNull();
+        await _planner.Received(2).ResolveAsync(Arg.Any<Guid>(), Day, Arg.Any<TimeOnly?>(), Arg.Any<CancellationToken>());
     }
 }
