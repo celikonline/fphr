@@ -1,4 +1,4 @@
-/** E8: shared file type catalog (`api/v1/documents/shared-file-types`); write ops need `documents.sharedfiles.types.manage`. */
+/** E8: shared file type catalog (`api/v1/documents/shared-file-types`); write ops need `documents.sharedfile_types.manage`. */
 import { apiClient } from "@senseik/api-client";
 
 const SHARED_FILE_TYPES_BASE = "/v1/documents/shared-file-types";

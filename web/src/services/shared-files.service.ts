@@ -5,6 +5,7 @@
  */
 import axios from "axios";
 import { apiClient } from "@senseik/api-client";
+import { parseContentDispositionFileName } from "@/services/data-transfer.service";
 import type { PagedQueryParams, PagedResult } from "@/types";
 
 const SHARED_FILES_BASE = "/v1/documents/shared-files";
@@ -116,8 +117,9 @@ export async function classifySharedFile(id: string, input: { typeId?: string | 
   await apiClient.put(`${SHARED_FILES_BASE}/${id}/classification`, { typeId: input.typeId ?? null, visibleOnMobile: input.visibleOnMobile });
 }
 
-/** E8: downloads the selected (or filtered) visible files as one zip blob. */
-export async function downloadSharedFilesZip(request: { fileIds?: string[]; mobileOnly?: boolean; typeId?: string }): Promise<Blob> {
-  const { data } = await apiClient.post<Blob>(`${SHARED_FILES_BASE}/download-zip`, request, { responseType: "blob" });
-  return data;
+/** E8: downloads the selected (or filtered) visible files as one zip; `fileName` comes from Content-Disposition when present. */
+export async function downloadSharedFilesZip(request: { fileIds?: string[]; mobileOnly?: boolean; typeId?: string }): Promise<{ blob: Blob; fileName?: string }> {
+  const response = await apiClient.post<Blob>(`${SHARED_FILES_BASE}/download-zip`, request, { responseType: "blob" });
+  const disposition: unknown = response.headers["content-disposition"];
+  return { blob: response.data, fileName: parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) };
 }

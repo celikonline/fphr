@@ -59,7 +59,7 @@ function SharedFilesScreen() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const canManageTypes = usePermission("documents.sharedfiles.types.manage");
+  const canManageTypes = usePermission("documents.sharedfile_types.manage");
   const [deleteTarget, setDeleteTarget] = useState<SharedFile | null>(null);
   const [typeFilter, setTypeFilter] = useState("");
   const [mobileOnly, setMobileOnly] = useState(false);
@@ -97,7 +97,7 @@ function SharedFilesScreen() {
 
   const zipMutation = useMutation({
     mutationFn: () => downloadSharedFilesZip(selectedIds.length > 0 ? { fileIds: selectedIds } : { typeId, mobileOnly: mobileOnly || undefined }),
-    onSuccess: (blob) => saveDownloadedFile({ blob, fileName: t("documents:sharedFiles.zipFileName") }),
+    onSuccess: ({ blob, fileName }) => saveDownloadedFile({ blob, fileName: fileName ?? t("documents:sharedFiles.zipFileName") }),
     onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("documents:sharedFiles.zipFailed")) }),
   });
 

@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import trDocuments from "../../public/locales/tr/documents.json";
 import trCommon from "../../public/locales/tr/common.json";
+import { saveDownloadedFile } from "@/services/data-transfer.service";
 import SharedFilesPage from "./shared-files";
 import {
   classifySharedFile,
@@ -15,9 +16,10 @@ import {
   type SharedFile,
 } from "@/services/shared-files.service";
 
+const granted = vi.hoisted(() => ({ keys: null as Set<string> | null }));
 vi.mock("@/components/permission-guard", async () => {
   const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
-  return { ...actual, usePermission: () => true };
+  return { ...actual, usePermission: (key: string) => granted.keys === null || granted.keys.has(key) };
 });
 
 const TYPE_ID = "t-policy";
@@ -33,7 +35,7 @@ vi.mock("@/services/shared-files.service", async () => {
     listSharedFiles: vi.fn(async () => ({ items: FILES, page: 1, pageSize: 100, totalCount: 2 })),
     getSharedFileQuota: vi.fn(async () => ({ usedBytes: 0, quotaBytes: 1024 * 1024, usedPercent: 0, isExceeded: false })),
     classifySharedFile: vi.fn(async () => undefined),
-    downloadSharedFilesZip: vi.fn(async () => new Blob(["zip"])),
+    downloadSharedFilesZip: vi.fn(async () => ({ blob: new Blob(["zip"]), fileName: "sunucu-adi.zip" })),
   };
 });
 vi.mock("@/services/shared-file-types.service", () => ({
@@ -42,7 +44,7 @@ vi.mock("@/services/shared-file-types.service", () => ({
   updateSharedFileType: vi.fn(),
   setSharedFileTypeActive: vi.fn(),
 }));
-vi.mock("@/services/data-transfer.service", () => ({ saveDownloadedFile: vi.fn() }));
+vi.mock("@/services/data-transfer.service", () => ({ saveDownloadedFile: vi.fn(), parseContentDispositionFileName: vi.fn() }));
 vi.mock("@/services/users.service", () => ({ listRoles: vi.fn(async () => []), visibleRoles: () => [] }));
 
 beforeAll(() => {
@@ -66,7 +68,10 @@ beforeAll(() => {
   };
 });
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  granted.keys = null;
+});
 
 function renderPage() {
   const instance = i18next.createInstance();
@@ -80,7 +85,7 @@ function renderPage() {
     react: { useSuspense: false },
   });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  render(
+  return render(
     <I18nextProvider i18n={instance}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
@@ -121,5 +126,27 @@ describe("SharedFilesPage (E8)", () => {
     await user.click(screen.getByRole("button", { name: /ZIP indir \(1\)/ }));
 
     await waitFor(() => expect(downloadSharedFilesZip).toHaveBeenCalledWith({ fileIds: ["f2"] }));
+  });
+
+  it("zip_file_name_from_content_disposition", async () => {
+    renderPage();
+    const user = userEvent.setup();
+    await screen.findByText("rehber.pdf");
+
+    await user.click(screen.getByRole("button", { name: "ZIP indir" }));
+
+    await waitFor(() => expect(saveDownloadedFile).toHaveBeenCalledWith({ blob: expect.any(Blob), fileName: "sunucu-adi.zip" }));
+  });
+
+  it("manage_types_button_requires_sharedfile_types_permission", async () => {
+    granted.keys = new Set(["documents.company.view", "documents.sharedfiles.types.manage"]);
+    const { unmount } = renderPage();
+    await screen.findByText("politika.pdf");
+    expect(screen.queryByRole("button", { name: "Türleri yönet" })).toBeNull();
+    unmount();
+
+    granted.keys = new Set(["documents.company.view", "documents.sharedfile_types.manage"]);
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Türleri yönet" })).toBeTruthy();
   });
 });

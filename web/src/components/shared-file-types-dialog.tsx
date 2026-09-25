@@ -8,7 +8,7 @@ import { createSharedFileType, listSharedFileTypes, setSharedFileTypeActive } fr
 
 export const SHARED_FILE_TYPES_QUERY_KEY = ["documents", "shared-file-types"] as const;
 
-/** E8: shared file type catalog editor (`documents.sharedfiles.types.manage`): add types, toggle active. */
+/** E8: shared file type catalog editor (`documents.sharedfile_types.manage`): add types, toggle active. */
 export default function SharedFileTypesDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation(["documents", "common"]);
   const queryClient = useQueryClient();
