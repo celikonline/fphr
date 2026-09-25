@@ -35,8 +35,10 @@ internal static class ShiftAssignmentMapper
 /// </summary>
 internal static class ShiftLimitValidator
 {
-    public static Result Validate(ShiftSettings settings, IReadOnlyList<ShiftAssignment> knownAssignments, Guid excludeAssignmentId, ShiftAssignment candidate)
+    public static Result Validate(ShiftSettings settings, IReadOnlyList<ShiftAssignment> allKnownAssignments, Guid excludeAssignmentId, ShiftAssignment candidate)
     {
+        // Tek süzme noktası (Assign/Repeat/Bulk ortak): gün türü Work olmayan satırların saati yoktur, ne süre/dinlenme ne de haftalık gün sayımına girer.
+        var knownAssignments = allKnownAssignments.Where(a => a.DayType == ShiftDayType.Work).ToList();
         var dailyLimit = candidate.IsNight && settings.NightWorkEnabled && settings.NightWorkMaxMinutes is { } nightLimit ? nightLimit : settings.MaxDailyMinutes;
         if (candidate.ShiftMinutes > dailyLimit)
         {
@@ -133,7 +135,7 @@ internal static class ShiftAdjacency
 }
 
 /// <summary>m.69: night-shift status is derived server-side from the shift hours; the client's flag can only add to it, never remove it.</summary>
-internal static class ShiftNightClassifier
+public static class ShiftNightClassifier
 {
     public static bool Resolve(ShiftSettings settings, TimeOnly start, TimeOnly end, bool clientFlag) => clientFlag || settings.IsNightShift(start, end);
 }
@@ -330,6 +332,33 @@ public sealed class RepeatShiftAssignmentsHandler(
                     }
 
                     var existing = targetWeekAssignments.FirstOrDefault(a => a.Date == targetDate);
+                    if (source.DayType != ShiftDayType.Work)
+                    {
+                        // Gün türü satırı (hafta tatili/dinlenme/resmi tatil): saat yok, limit denetimi yok.
+                        if (existing is not null)
+                        {
+                            var dayOff = existing.ApplyDayOff(source.DayType);
+                            if (dayOff.IsFailure)
+                            {
+                                return dayOff;
+                            }
+                        }
+                        else
+                        {
+                            var createdDayOff = ShiftAssignment.CreateDayOff(tenant.TenantId, employeeId, targetDate, source.DayType);
+                            if (createdDayOff.IsFailure)
+                            {
+                                return createdDayOff;
+                            }
+
+                            shifts.Add(createdDayOff.Value);
+                            targetWeekAssignments = [.. targetWeekAssignments, createdDayOff.Value];
+                            pending.Add(createdDayOff.Value);
+                        }
+
+                        continue;
+                    }
+
                     var isNight = ShiftNightClassifier.Resolve(settings, source.Start, source.End, source.IsNight);
                     var candidateCheck = ShiftAssignment.Create(tenant.TenantId, employeeId, targetDate, source.Start, source.End, source.BreakMinutes, isNight, source.Note);
                     if (candidateCheck.IsFailure)
@@ -357,9 +386,16 @@ public sealed class RepeatShiftAssignmentsHandler(
                         {
                             return updated;
                         }
+
+                        var planned = existing.SetPlan(source.ShiftDefinitionId, ShiftDayType.Work);
+                        if (planned.IsFailure)
+                        {
+                            return planned;
+                        }
                     }
                     else
                     {
+                        candidateCheck.Value.SetPlan(source.ShiftDefinitionId, ShiftDayType.Work);
                         shifts.Add(candidateCheck.Value);
                         targetWeekAssignments = [.. targetWeekAssignments, candidateCheck.Value];
                         pending.Add(candidateCheck.Value);
@@ -668,9 +704,7 @@ public sealed class BulkAssignShiftsHandler(
             return candidate;
         }
 
-        // Yalnız çalışma günleri limit/dinlenme hesabına girer; gün türü olan satırların saati yoktur.
-        var workDays = employeeShifts.Where(a => a.DayType == ShiftDayType.Work).ToList();
-        var limitCheck = ShiftLimitValidator.Validate(settings, workDays, existing?.Id ?? Guid.Empty, candidate.Value);
+        var limitCheck = ShiftLimitValidator.Validate(settings, employeeShifts, existing?.Id ?? Guid.Empty, candidate.Value);
         if (limitCheck.IsFailure)
         {
             return limitCheck;
@@ -701,7 +735,7 @@ public sealed class BulkAssignShiftsHandler(
 }
 
 /// <summary>Vardiya tanımının atama satırına yansıyan saatleri: dakikalar gün başından; esnek vardiyada bitiş = başlangıç + sabit süre; mola = tanımdaki mola toplamı.</summary>
-internal static class ShiftDefinitionTimes
+public static class ShiftDefinitionTimes
 {
     public static (TimeOnly Start, TimeOnly End, int BreakMinutes) Resolve(ShiftDefinition definition)
     {
