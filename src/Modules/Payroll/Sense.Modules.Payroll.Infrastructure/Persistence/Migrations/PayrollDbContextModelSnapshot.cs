@@ -482,6 +482,20 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("acknowledged_at");
+
+                    b.Property<string>("AcknowledgedFromIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("acknowledged_from_ip");
+
+                    b.Property<string>("AcknowledgedUserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("acknowledged_user_agent");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -534,6 +548,31 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("net_amount");
 
+                    b.Property<DateTimeOffset?>("ObjectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("objected_at");
+
+                    b.Property<Guid?>("ObjectionApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("objection_approval_request_id");
+
+                    b.Property<DateTimeOffset?>("ObjectionDecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("objection_decided_at");
+
+                    b.Property<string>("ObjectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("objection_reason");
+
+                    b.Property<string>("ObjectionStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("None")
+                        .HasColumnName("objection_status");
+
                     b.Property<DateTimeOffset?>("PaymentConfirmedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("payment_confirmed_at");
@@ -541,6 +580,10 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PayrollPeriodId")
                         .HasColumnType("uuid")
                         .HasColumnName("payroll_period_id");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")

@@ -44,12 +44,14 @@ public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods
 
 /// <summary>
 /// Marks an approved period as paid (Approved → Paid) once the salaries went out, and publishes
-/// <see cref="PayrollPeriodPaid"/> so every employee gets their ücret pusulası by e-mail (4857 md.37).
+/// <see cref="PayrollPeriodPaid"/> so every employee gets their ücret pusulası by e-mail (4857 md.37). Every payslip
+/// of the period is published to its employee at the same moment (E2: visible under "Bordrolarım", acknowledgeable).
 /// </summary>
 [RequiresPermission("payroll.period.approve")]
 public sealed record MarkPayrollPeriodPaidCommand(Guid PeriodId) : ICommand;
 
-public sealed class MarkPayrollPeriodPaidHandler(IPayrollPeriodRepository periods, IPayslipRepository payslips, IIntegrationEventOutbox outbox)
+public sealed class MarkPayrollPeriodPaidHandler(
+    IPayrollPeriodRepository periods, IPayslipRepository payslips, IIntegrationEventOutbox outbox, TimeProvider? clock = null)
     : ICommandHandler<MarkPayrollPeriodPaidCommand>
 {
     public async Task<Result> Handle(MarkPayrollPeriodPaidCommand command, CancellationToken cancellationToken)
@@ -67,6 +69,12 @@ public sealed class MarkPayrollPeriodPaidHandler(IPayrollPeriodRepository period
         }
 
         var periodPayslips = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
+        var publishedAt = (clock ?? TimeProvider.System).GetUtcNow();
+        foreach (var payslip in periodPayslips)
+        {
+            payslip.Publish(publishedAt);
+        }
+
         if (periodPayslips.Count > 0)
         {
             outbox.Enqueue(new PayrollPeriodPaid(

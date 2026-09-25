@@ -71,6 +71,17 @@ public static class PayrollDomainErrors
     public const string UnionMembershipDateRangeInvalid = "payroll.errors.union_membership_date_range_invalid";
     public const string UnionMembershipDuesValueInvalid = "payroll.errors.union_membership_dues_value_invalid";
     public const string UnionMembershipAlreadyOpen = "payroll.errors.union_membership_already_open";
+
+    // Bordro onay/itiraz (E2, K4)
+    public const string PayslipNotPublished = "payroll.errors.payslip_not_published";
+    public const string PayslipAlreadyAcknowledged = "payroll.errors.payslip_already_acknowledged";
+    public const string PayslipObjectionPending = "payroll.errors.payslip_objection_pending";
+    public const string PayslipObjectionAlreadyFiled = "payroll.errors.payslip_objection_already_filed";
+    public const string PayslipObjectionReasonInvalid = "payroll.errors.payslip_objection_reason_invalid";
+    public const string PayslipObjectionNotPending = "payroll.errors.payslip_objection_not_pending";
+
+    /// <summary>The signed-in user has no linked employee record, so there are no "my" payslips to act on.</summary>
+    public const string NoEmployeeForUser = "payroll.errors.no_employee_for_user";
 }
 
 /// <summary>Domain limits.</summary>
@@ -95,4 +106,12 @@ public static class PayrollLimits
     public const int IncentiveLawCodeMaxLength = 30;
     public const int UnionNameMaxLength = 200;
     public const int UnionIndustryBranchCodeMaxLength = 30;
+
+    /// <summary>E2: an employee's payslip objection text.</summary>
+    public const int ObjectionReasonMaxLength = 1000;
+
+    /// <summary>K4 evidence: client IP (IPv6 with zone fits) and User-Agent kept with an acknowledgement.</summary>
+    public const int ClientIpMaxLength = 64;
+
+    public const int UserAgentMaxLength = 512;
 }

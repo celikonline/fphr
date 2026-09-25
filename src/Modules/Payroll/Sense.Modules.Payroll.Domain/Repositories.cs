@@ -41,6 +41,9 @@ public interface IPayslipRepository
 
     /// <summary>Every payslip of one period (ChangeDetectionRun scan, P3).</summary>
     Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default);
+
+    /// <summary>E2 reminder: published but not yet acknowledged payslips, of one period or (null) all periods.</summary>
+    Task<IReadOnlyList<Payslip>> ListPublishedUnacknowledgedAsync(Guid? payrollPeriodId, CancellationToken cancellationToken = default);
 }
 
 public interface IPayslipCalculationTraceRepository

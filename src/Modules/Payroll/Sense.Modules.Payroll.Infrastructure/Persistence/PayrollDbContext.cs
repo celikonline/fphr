@@ -105,6 +105,11 @@ public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.InputSnapshot).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.Property(x => x.InputHash).HasMaxLength(PayrollTables.HashLength).IsRequired();
+        b.Property(x => x.AcknowledgedFromIp).HasMaxLength(PayrollLimits.ClientIpMaxLength);
+        b.Property(x => x.AcknowledgedUserAgent).HasMaxLength(PayrollLimits.UserAgentMaxLength);
+        b.Property(x => x.ObjectionStatus).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength).IsRequired().HasDefaultValue(PayslipObjectionStatus.None);
+        b.Property(x => x.ObjectionReason).HasMaxLength(PayrollLimits.ObjectionReasonMaxLength);
+        b.Ignore(x => x.AwaitsAcknowledgement);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PayrollPeriodId }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
