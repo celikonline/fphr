@@ -1663,4 +1663,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.punch.reason_required" xml:space="preserve"><value>Okutma eklemek ve silmek için gerekçe zorunludur.</value></data>
   <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>Bu çalışanın ayı onaylanıp kilitlenmiş; okutma eklenemez veya silinemez.</value></data>
   <data name="attendance.punch.not_found" xml:space="preserve"><value>Okutma bulunamadı.</value></data>
+  <data name="payroll.errors.payslip_not_published" xml:space="preserve"><value>Bordro henüz yayınlanmadı; dönem ödendiğinde görüntülenebilir.</value></data>
+  <data name="payroll.errors.payslip_already_acknowledged" xml:space="preserve"><value>Bu bordro zaten onaylandı.</value></data>
+  <data name="payroll.errors.payslip_objection_pending" xml:space="preserve"><value>Bordroya yapılan itiraz sonuçlanmadan onay verilemez.</value></data>
+  <data name="payroll.errors.payslip_objection_already_filed" xml:space="preserve"><value>Bu bordro için zaten itiraz yapıldı.</value></data>
+  <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>İtiraz gerekçesi zorunludur ve en fazla 1000 karakter olabilir.</value></data>
+  <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>Bordro için bekleyen bir itiraz yok.</value></data>
+  <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınız bir çalışan kaydına bağlı değil.</value></data>
+  <data name="payroll.errors.payslip_concurrent_update" xml:space="preserve"><value>Bordro aynı anda başka bir işlemle değiştirildi; sayfayı yenileyip tekrar deneyin.</value></data>
 </root>

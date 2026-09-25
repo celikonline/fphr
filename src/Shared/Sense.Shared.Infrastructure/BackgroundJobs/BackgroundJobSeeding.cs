@@ -95,6 +95,18 @@ public static class BackgroundJobSeeding
             Description = "Send birthday greetings to employees whose birthday is today",
             Payload = "{}"
         };
+
+        // Payslip acknowledgement reminders (E2): per-tenant daily pass that publishes the published-but-unacknowledged
+        // payslips (Payroll PayslipAcknowledgementReminderJobHandler) for Notifications' reminder. 10:00
+        // Europe/Istanbul intent; same TimeZoneInfo caveat as the seeds above.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "PayslipAcknowledgementReminder",
+            JobType = JobType.PayslipAcknowledgementReminder,
+            CronExpression = "0 10 * * *", // 10:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Remind employees to acknowledge or object to their published payslips",
+            Payload = "{}"
+        };
     }
 }
 

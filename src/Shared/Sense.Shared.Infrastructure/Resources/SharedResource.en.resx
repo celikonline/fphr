@@ -1654,4 +1654,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.punch.reason_required" xml:space="preserve"><value>A reason is required to add or delete a punch.</value></data>
   <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>This employee's month is approved and locked; punches cannot be added or deleted.</value></data>
   <data name="attendance.punch.not_found" xml:space="preserve"><value>Punch not found.</value></data>
+  <data name="payroll.errors.payslip_not_published" xml:space="preserve"><value>The payslip is not published yet; it becomes available when the period is paid.</value></data>
+  <data name="payroll.errors.payslip_already_acknowledged" xml:space="preserve"><value>This payslip has already been acknowledged.</value></data>
+  <data name="payroll.errors.payslip_objection_pending" xml:space="preserve"><value>The payslip cannot be acknowledged while an objection is pending.</value></data>
+  <data name="payroll.errors.payslip_objection_already_filed" xml:space="preserve"><value>An objection has already been filed for this payslip.</value></data>
+  <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>An objection reason is required and may be at most 1000 characters.</value></data>
+  <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>There is no pending objection for this payslip.</value></data>
+  <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Your user account is not linked to an employee record.</value></data>
+  <data name="payroll.errors.payslip_concurrent_update" xml:space="preserve"><value>The payslip was changed by another request at the same time; refresh and try again.</value></data>
 </root>

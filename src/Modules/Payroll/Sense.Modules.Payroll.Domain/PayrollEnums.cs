@@ -67,3 +67,12 @@ public enum GarnishmentType
     Icra = 0,
     Nafaka = 1,
 }
+
+/// <summary>E2: the employee's objection to a published payslip, decided through the Workflow "PayslipObjection" request.</summary>
+public enum PayslipObjectionStatus
+{
+    None = 0,
+    Pending = 1,
+    Accepted = 2,
+    Rejected = 3,
+}

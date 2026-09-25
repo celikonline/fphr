@@ -7,6 +7,7 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Closing;
+using Sense.Modules.Payroll.Application.Payslips;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Severance;
 using Sense.Modules.Payroll.Application.Ports;
@@ -16,6 +17,7 @@ using Sense.Modules.Payroll.Infrastructure.Adapters;
 using Sense.Modules.Payroll.Infrastructure.Jobs;
 using Sense.Modules.Payroll.Infrastructure.Lookups;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Payroll.Infrastructure;
@@ -71,6 +73,12 @@ public static class PayrollServiceCollectionExtensions
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();
         services.AddScoped<PayslipDirtyFlagService>();
+
+        // E2 bordro onay/itiraz: reminder collection (daily job + manual trigger) and the Workflow inbox summary of a
+        // "PayslipObjection" request.
+        services.AddScoped<PayslipAcknowledgementReminderService>();
+        services.AddScoped<IPayslipChangeSaver, PayslipChangeSaver>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PayslipObjectionApprovalSummaryProvider>();
         return services;
     }
 
@@ -91,6 +99,10 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<LeaveCancelled>, LeaveCancelledDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedSettlementHandler>();
         services.AddScoped<IIntegrationEventHandler<OvertimeConvertedToPay>, OvertimeConvertedToPayDirtyFlagHandler>();
+
+        // E2: Workflow decided a "PayslipObjection" request (approve = objection accepted).
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, PayslipObjectionApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, PayslipObjectionApprovalRejectedHandler>();
         return services;
     }
 
