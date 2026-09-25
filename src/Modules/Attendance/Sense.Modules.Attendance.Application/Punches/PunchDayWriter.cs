@@ -259,7 +259,7 @@ public sealed class PunchDayWriter(
     }
 
     /// <summary>Kayıtlı gün ya da bu yazıcının az önce eklediği (henüz kaydedilmemiş) gün - aynı gün iki kez eklenmez.</summary>
-    private async Task<AttendanceDay?> FindDayAsync(Guid employeeId, DateOnly workDate, CancellationToken cancellationToken) =>
+    public async Task<AttendanceDay?> FindDayAsync(Guid employeeId, DateOnly workDate, CancellationToken cancellationToken) =>
         _createdDays.TryGetValue((employeeId, workDate), out var created)
             ? created
             : await days.FindByEmployeeAndDateAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);

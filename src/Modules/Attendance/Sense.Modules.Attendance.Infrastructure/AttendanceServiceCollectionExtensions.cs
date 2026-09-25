@@ -33,12 +33,8 @@ public static class AttendanceServiceCollectionExtensions
         // Günlük puantaj listeleri (Z1.1): IDataScopeService/IOrgUnitLookup/ILeaveOnDateReader yalnız API'de var.
         services.AddScoped<IDailyAttendanceQuery, Application.Daily.DailyAttendanceQuery>();
 
-        // Zaman-devam Z0.3: yeniden hesaplama (API-only: IEmployeeDirectory Worker'da yok). IDayRebuilder: I0 şeridi punch tabanlı gerçeğiyle değiştirir (bkz. ExistingRecordDayRebuilder).
-        services.AddScoped<IDayRebuilder, ExistingRecordDayRebuilder>();
-        services.AddScoped<RecalculationExecutor>();
-        services.AddSingleton<RecalculationJobStore>();
-        services.AddSingleton<AttendanceDayRecalculator>();
-        services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
+        // Zaman-devam Z0.3: yeniden hesaplama kuyruğunu yalnız API süreci boşaltır (iş durumu bellekte; durum ucu API'de). Servisler
+        // AddAttendanceCoreServices'te (Worker'daki onaylı okutma talebi RecalculateNowAsync çağırır).
         services.AddHostedService<RecalculationHostedService>();
         return services;
     }
@@ -88,6 +84,13 @@ public static class AttendanceServiceCollectionExtensions
         // Zaman-devam B1 (Z0.1): ham okutma deposu + tek yazma yolu. TryAdd: aynı dalgada başka şeritler de depoyu kaydedebilir.
         services.TryAddScoped<IPunchRepository, PunchRepository>();
         services.TryAddScoped<IPunchRecorder, Application.Punches.PunchRecorder>();
+        // Zaman-devam I0: okutma tabanlı yeniden hesap (B3 + B1 + B2) - API ve Worker. RecalculationExecutor'un IEmployeeDirectory'si
+        // opsiyoneldir (Worker'da yok; orada çağıranlar çalışan listesi verir).
+        services.AddScoped<IDayRebuilder, PunchDayRebuilder>();
+        services.AddScoped<RecalculationExecutor>();
+        services.AddSingleton<RecalculationJobStore>();
+        services.AddSingleton<AttendanceDayRecalculator>();
+        services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
         return services;
     }
 

@@ -42,7 +42,7 @@ public sealed class AttendanceDayRecalculationTests
             });
     }
 
-    private RecalculationExecutor Executor() => new(_days, _approvals, _rebuilder, _employees, _uow);
+    private RecalculationExecutor Executor() => new(_days, _approvals, _rebuilder, _uow, _employees);
 
     private AttendanceDay AddDay(Guid employeeId, DateOnly date)
     {

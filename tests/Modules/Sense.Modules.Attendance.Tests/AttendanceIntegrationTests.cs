@@ -2,7 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Attendance.Api;
 using Sense.Modules.Attendance.Application;
+using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.PunchRequests;
+using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -12,6 +16,7 @@ using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Tests.Shared.Fixtures;
@@ -56,9 +61,75 @@ public sealed class AttendanceIntegrationTests : TestFixture
         services.AddAttendanceCoreServices(configuration);
         services.AddAttendanceIntegrationEventHandlers();
 
-        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        // Mirrors Sense.Worker/Program.cs: the Attendance handler scan (no Application assembly), Leave's core services (the
+        // IApprovedLeaveDateLookup port) and the Identity time zone port the Worker registers for ITenantLocalClock.
+        services.AddModuleDbContext<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>(
+            configuration, Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName);
+        Sense.Modules.Leave.Infrastructure.LeaveServiceCollectionExtensions.AddLeaveCoreServices(services, configuration);
+        services.AddModuleHandlers(
+            AttendanceDbContext.SchemaName,
+            typeof(AttendancePermissions).Assembly,
+            typeof(AttendanceDbContext).Assembly,
+            typeof(IWorkScheduleRepository).Assembly);
+        services.AddScoped(_ => Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
+
+        // ValidateOnBuild = what the Development host does at startup: every registration must be constructible (I0: punch request
+        // approval -> IPunchRecorder + IAttendanceDayRecalculator, IPlannedDayResolver used by every day-building channel).
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         using var scope = provider.CreateScope();
         scope.ServiceProvider.GetServices<IIntegrationEventHandler<EmployeeHired>>().ShouldHaveSingleItem();
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalCompleted>>().ShouldContain(h => h is PunchRequestApprovalCompletedHandler);
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalRejected>>().ShouldContain(h => h is PunchRequestApprovalRejectedHandler);
+        scope.ServiceProvider.GetRequiredService<IPunchRecorder>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IAttendanceDayRecalculator>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IPlannedDayResolver>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IDayRebuilder>().ShouldBeOfType<PunchDayRebuilder>();
+    }
+
+    [Fact]
+    public void ApiRegistration_ValidatesOnBuild_AndResolvesTheTimeAttendanceServices()
+    {
+        var configuration = ServiceProvider!.GetRequiredService<IConfiguration>();
+        var services = new ServiceCollection();
+        services.AddSingleton(configuration);
+        services.AddLogging();
+        services.AddSenseCore(configuration);
+        new AttendanceModule().AddModule(services, configuration);
+        AddOtherModulePorts(services);
+
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetRequiredService<IPunchRecorder>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IAttendanceDayRecalculator>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IPlannedDayResolver>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IDailyAttendanceQuery>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IDayRebuilder>().ShouldBeOfType<PunchDayRebuilder>();
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalCompleted>>().ShouldContain(h => h is PunchRequestApprovalCompletedHandler);
+    }
+
+    /// <summary>
+    /// Ports other modules register in the API host (Employee, Organization, Leave, Workflow, Identity...): every interface an
+    /// Attendance registration's constructor needs that is neither registered nor Attendance's own gets a substitute - so a missing
+    /// Attendance registration still fails validation. Optional parameters (default value) are left alone.
+    /// </summary>
+    private static void AddOtherModulePorts(IServiceCollection services)
+    {
+        var registered = services.Select(d => d.ServiceType).ToHashSet();
+        var ports = services
+            .Select(d => d.ImplementationType)
+            .OfType<Type>()
+            .SelectMany(t => t.GetConstructors().SelectMany(c => c.GetParameters()))
+            .Where(p => !p.HasDefaultValue)
+            .Select(p => p.ParameterType)
+            .Where(t => t.IsInterface && !registered.Contains(t) && !(t.IsGenericType && registered.Contains(t.GetGenericTypeDefinition()))
+                && t.Namespace?.StartsWith("Sense.Modules.Attendance", StringComparison.Ordinal) != true
+                && !(t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+            .Distinct()
+            .ToList();
+        foreach (var port in ports)
+        {
+            services.AddScoped(port, _ => Substitute.For([port], []));
+        }
     }
 
     [Fact]
