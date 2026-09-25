@@ -14,6 +14,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { EmployeeOnboardingCard } from "@/components/employees/employee-onboarding-card";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import NoAccess from "@/components/no-access";
 import OnboardingTaskTable from "@/components/onboarding/onboarding-task-table";
@@ -191,6 +192,7 @@ function EmployeeChecklist() {
           </Stack>
         </Card>
       )}
+      {employee && <EmployeeOnboardingCard employeeId={employee.id} />}
       {employee && query.isLoading && <Skeleton height={120} />}
       {employee && query.isError && <Text c="red">{t("onboarding:loadError")}</Text>}
       {employee && query.isSuccess && items.length === 0 && (
