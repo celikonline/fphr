@@ -58,6 +58,9 @@ export interface DailyAttendanceRow {
   overtimeMinutes: number;
   anomalies: string[];
   leaveType?: string | null;
+  /** Punch ids behind checkIn/checkOut (needed for delete); optional until the backend row carries them. */
+  checkInPunchId?: string | null;
+  checkOutPunchId?: string | null;
 }
 
 /** `DailyAttendanceTotalsDto`. */
@@ -113,11 +116,11 @@ export async function getDailyCounts(date: string, orgUnitId?: string): Promise<
 
 /** Adds a manual punch (attendance.punch.manage); returns the new punch id. */
 export async function addManualPunch(input: ManualPunchInput): Promise<string> {
-  const { data } = await apiClient.post<{ id: string }>(`${ATTENDANCE_BASE}/punches`, input);
+  const { data } = await apiClient.post<{ id: string }>(`${ATTENDANCE_BASE}/daily/punches`, input);
   return data.id;
 }
 
 /** Soft-deletes a punch with a mandatory reason (attendance.punch.manage). */
 export async function deletePunch(id: string, reason: string): Promise<void> {
-  await apiClient.delete(`${ATTENDANCE_BASE}/punches/${id}`, { data: { reason } });
+  await apiClient.delete(`${ATTENDANCE_BASE}/daily/punches/${id}`, { data: { reason } });
 }
