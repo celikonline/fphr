@@ -24,7 +24,7 @@ export default function RotationPatternsPanel({ canManage }: Props) {
   const { t } = useTranslation(["rotations"]);
   const queryClient = useQueryClient();
   const patterns = useQuery({ queryKey: ROTATIONS_KEY, queryFn: listRotations });
-  const shifts = useQuery({ queryKey: ["attendance", "shift-definitions"], queryFn: listShiftDefinitions });
+  const shifts = useQuery({ queryKey: ["attendance", "shift-definitions", "active"], queryFn: () => listShiftDefinitions() });
   const [editing, setEditing] = useState(false);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");

@@ -128,7 +128,7 @@ describe("RotationsPage", () => {
   });
 
   it("save_disabled_until_every_work_step_has_a_shift", async () => {
-    vi.mocked(listShiftDefinitions).mockResolvedValue([{ id: "s-day", name: "Gündüz", startTime: "08:00:00", endTime: "20:00:00", breakMinutes: 0 }]);
+    vi.mocked(listShiftDefinitions).mockResolvedValue([{ id: "s-day", code: "D", name: "Gündüz", colorHex: "#228be6", type: "fixed", startMinute: 480, endMinute: 1200, startsPreviousDay: false, breaks: [], lateToleranceMinutes: 0, earlyLeaveToleranceMinutes: 0, bonusMinutes: 0, isActive: true }]);
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole("button", { name: "Yeni kalıp" }));

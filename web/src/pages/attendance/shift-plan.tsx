@@ -149,7 +149,7 @@ function ShiftPlan() {
 
   const definitionsQuery = useQuery({
     queryKey: [...KEY_PREFIX, "definitions"],
-    queryFn: listShiftDefinitions,
+    queryFn: () => listShiftDefinitions(),
     enabled: canPlan,
   });
   const definitionNames = useMemo(
