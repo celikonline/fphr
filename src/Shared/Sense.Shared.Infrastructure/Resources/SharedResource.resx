@@ -1559,5 +1559,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.messages.send" xml:space="preserve"><value>İK Mesajı Gönderme</value></data>
   <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
-  <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="documents.sharedfile_types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="shared_file_type.not_found" xml:space="preserve"><value>Paylaşılan dosya tipi bulunamadı.</value></data>
+  <data name="shared_file_type.name_required" xml:space="preserve"><value>Paylaşılan dosya tipi adı zorunludur.</value></data>
+  <data name="shared_file_type.name_too_long" xml:space="preserve"><value>Paylaşılan dosya tipi adı en fazla 100 karakter olabilir.</value></data>
+  <data name="shared_file_type.name_taken" xml:space="preserve"><value>Bu adla bir paylaşılan dosya tipi zaten var.</value></data>
+  <data name="shared_file_type.inactive" xml:space="preserve"><value>Pasif bir paylaşılan dosya tipi seçilemez.</value></data>
+  <data name="shared_company_file.nothing_to_download" xml:space="preserve"><value>İndirilecek, görüntüleme yetkiniz olan bir dosya bulunamadı.</value></data>
+  <data name="shared_company_file.zip_too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya indirilebilir.</value></data>
+  <data name="payslip_import.files_required" xml:space="preserve"><value>En az bir PDF veya zip dosyası yükleyin.</value></data>
+  <data name="payslip_import.too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya yüklenebilir.</value></data>
 </root>
