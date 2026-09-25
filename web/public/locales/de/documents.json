@@ -164,7 +164,32 @@
       "downloadFailed": "Download-Link konnte nicht abgerufen werden.",
       "quotaExceeded": "Beim Hochladen dieser Datei würde das Speicherkontingent überschritten.",
       "rolesRequired": "Für rollenbeschränkte Sichtbarkeit muss mindestens eine Rolle ausgewählt werden."
-    }
+    },
+    "typeColumn": "Typ",
+    "mobileColumn": "Mobil",
+    "noType": "Ohne Typ",
+    "typeFilter": "Nach Typ filtern",
+    "allTypes": "Alle Typen",
+    "mobileOnlyFilter": "Nur mobil sichtbare",
+    "mobileToggle": "{{name}} mobil sichtbar",
+    "selectRow": "{{name}} auswählen",
+    "selectAll": "Alle auswählen",
+    "zipDownload": "ZIP herunterladen",
+    "zipDownloadCount": "ZIP herunterladen ({{count}})",
+    "zipFileName": "gemeinsame-dateien.zip",
+    "classifyFailed": "Die Klassifizierung konnte nicht gespeichert werden.",
+    "zipFailed": "ZIP konnte nicht heruntergeladen werden.",
+    "manageTypes": "Typen verwalten",
+    "typesTitle": "Dateitypen",
+    "typeName": "Typname",
+    "typeMobileDefault": "Standardmäßig mobil sichtbar",
+    "typeAdd": "Typ hinzufügen",
+    "typeActivate": "Aktivieren",
+    "typeDeactivate": "Deaktivieren",
+    "typeInactive": "Inaktiv",
+    "typesFailed": "Typvorgang fehlgeschlagen.",
+    "typeField": "Typ",
+    "mobileField": "In der mobilen App sichtbar"
   },
   "visa": {
     "my": {
