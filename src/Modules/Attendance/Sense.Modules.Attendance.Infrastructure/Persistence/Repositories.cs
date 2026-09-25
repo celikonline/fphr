@@ -119,6 +119,15 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
             .OrderBy(d => d.Date)
             .ToListAsync(cancellationToken);
 
+    public void Discard(AttendanceDay day)
+    {
+        var entry = context.Entry(day);
+        if (entry.State == EntityState.Added)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
     public async Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {
@@ -334,7 +343,7 @@ public sealed class PunchRepository(AttendanceDbContext context) : IPunchReposit
 
     public bool IsDuplicateKeyViolation(Exception exception) =>
         exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres }
-        && postgres.ConstraintName == AttendanceTables.PunchUniqueIndex;
+        && postgres.ConstraintName is AttendanceTables.PunchUniqueIndex or AttendanceTables.AttendanceDayUniqueIndex;
 
     public void Discard(Punch punch)
     {

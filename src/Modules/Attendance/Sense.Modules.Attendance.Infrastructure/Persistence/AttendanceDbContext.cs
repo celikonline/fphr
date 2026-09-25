@@ -109,6 +109,9 @@ internal static class AttendanceTables
     public const string Terminals = "terminals";
     public const string EmployeeTerminalCredentials = "employee_terminal_credentials";
     public const string PunchUniqueIndex = "ux_punches_tenant_employee_occurred_direction_source";
+
+    /// <summary>attendance_days (TenantId, EmployeeId, Date) tekillik indeksinin (EF adlandırması) adı - eşzamanlı gün oluşturma yarışı.</summary>
+    public const string AttendanceDayUniqueIndex = "ix_attendance_days_tenant_id_employee_id_date";
     public const string PunchNotDeletedFilter = "deleted_at_utc IS NULL";
     public const string ShiftBreaksColumn = "breaks";
     public const string ShiftTemplateEntriesColumn = "entries";

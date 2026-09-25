@@ -70,7 +70,10 @@ public sealed class PunchDayWriter(
         return candidates;
     }
 
-    /// <summary>Bu yazıcının eklediği ama henüz kaydedilmemiş okutmaları izlemeden çıkarır (başarısız toplu alım, tekillik yarışı).</summary>
+    /// <summary>
+    /// Bu yazıcının eklediği ama henüz kaydedilmemiş okutmaları ve günleri izlemeden çıkarır (başarısız toplu alım, tekillik yarışı) - yeniden
+    /// denemede gün, yarışı kazanan işlemin kaydettiği satırdan bulunup güncellenir.
+    /// </summary>
     public void DiscardPending()
     {
         foreach (var punch in _pending)
@@ -78,7 +81,13 @@ public sealed class PunchDayWriter(
             punches.Discard(punch);
         }
 
+        foreach (var day in _createdDays.Values)
+        {
+            days.Discard(day);
+        }
+
         _pending.Clear();
+        _createdDays.Clear();
     }
 
     /// <summary>
