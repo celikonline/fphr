@@ -157,6 +157,8 @@ public sealed class ShiftAssignmentRepository(AttendanceDbContext context) : ISh
 {
     public void Add(ShiftAssignment assignment) => context.ShiftAssignments.Add(assignment);
 
+    public void Remove(ShiftAssignment assignment) => context.ShiftAssignments.Remove(assignment);
+
     public async Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var assignment = await context.ShiftAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);

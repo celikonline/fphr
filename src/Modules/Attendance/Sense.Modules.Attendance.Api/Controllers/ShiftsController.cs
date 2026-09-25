@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Attendance.Application.Shifts;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Attendance.Api.Controllers;
@@ -17,6 +18,11 @@ public sealed record RepeatShiftAssignmentsRequest(DateOnly SourceWeekStart, IRe
 public sealed record PublishShiftAssignmentsRequest(IReadOnlyList<Guid> AssignmentIds);
 
 public sealed record UnlockShiftPeriodRequest(string Reason);
+
+public sealed record BulkAssignShiftsRequest(
+    IReadOnlyList<Guid> EmployeeIds, IReadOnlyList<DateOnly> Dates, Guid? ShiftDefinitionId, ShiftDayType DayType, bool OverwritePublished = false);
+
+public sealed record BulkClearShiftsRequest(IReadOnlyList<Guid> EmployeeIds, IReadOnlyList<DateOnly> Dates, bool OverwritePublished = false);
 
 /// <summary>Vardiya yönetimi (11.3.6, package A4): ayarlar, haftalık/aylık planlama, yayınlama, plan kilidi.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -90,4 +96,27 @@ public sealed class ShiftsController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<ShiftAssignmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyShiftAssignmentsQuery(from, to), ct));
+
+    /// <summary>Toplu atama (çalışan x gün): work için shiftDefinitionId zorunlu, diğer gün türlerinde yok sayılır; kilitli/yayınlanmış hücreler skipped[] ile döner.</summary>
+    [HttpPost("bulk-assign")]
+    [ProducesResponseType<ShiftBulkResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> BulkAssign([FromBody] BulkAssignShiftsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new BulkAssignShiftsCommand(request.EmployeeIds, request.Dates, request.ShiftDefinitionId, request.DayType, request.OverwritePublished), ct));
+
+    [HttpPost("bulk-clear")]
+    [ProducesResponseType<ShiftBulkResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> BulkClear([FromBody] BulkClearShiftsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new BulkClearShiftsCommand(request.EmployeeIds, request.Dates, request.OverwritePublished), ct));
+
+    /// <summary>Aralıkta hiç ataması olmayan çalışan id'leri.</summary>
+    [HttpGet("unassigned")]
+    [ProducesResponseType<IReadOnlyList<Guid>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Unassigned([FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] IReadOnlyList<Guid>? employeeIds, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListUnassignedEmployeesQuery(from, to, employeeIds), ct));
+
+    [HttpGet("totals")]
+    [ProducesResponseType<ShiftPlanTotalsDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Totals([FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] IReadOnlyList<Guid>? employeeIds, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetShiftPlanTotalsQuery(from, to, employeeIds), ct));
 }

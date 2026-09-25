@@ -16,12 +16,12 @@ namespace Sense.Modules.Attendance.Application.Shifts;
 
 public sealed record ShiftAssignmentDto(
     Guid Id, Guid EmployeeId, DateOnly Date, TimeOnly Start, TimeOnly End, int BreakMinutes, bool IsNight, string? Note,
-    ShiftAssignmentStatus Status, DateTime? PublishedAt, int ShiftMinutes);
+    ShiftAssignmentStatus Status, DateTime? PublishedAt, int ShiftMinutes, Guid? ShiftDefinitionId = null, ShiftDayType DayType = ShiftDayType.Work);
 
 internal static class ShiftAssignmentMapper
 {
     public static ShiftAssignmentDto ToDto(ShiftAssignment a) =>
-        new(a.Id, a.EmployeeId, a.Date, a.Start, a.End, a.BreakMinutes, a.IsNight, a.Note, a.Status, a.PublishedAt, a.ShiftMinutes);
+        new(a.Id, a.EmployeeId, a.Date, a.Start, a.End, a.BreakMinutes, a.IsNight, a.Note, a.Status, a.PublishedAt, a.ShiftMinutes, a.ShiftDefinitionId, a.DayType);
 }
 
 /// <summary>
@@ -477,5 +477,373 @@ public sealed class GetMyShiftAssignmentsHandler(IShiftAssignmentRepository shif
         // Drafts are planner work-in-progress; the employee only sees a shift once it has been published (Yayınla notifies them).
         var list = await shifts.ListForRangeAsync(query.From, query.To, [employeeId], cancellationToken);
         return list.Where(a => a.Status == ShiftAssignmentStatus.Published).Select(ShiftAssignmentMapper.ToDto).ToList();
+    }
+}
+
+/// <summary>Toplu işlemde atlanan hücrenin nedeni (web: <c>locked</c> | <c>published</c>).</summary>
+public enum ShiftBulkSkipReason
+{
+    Locked = 0,
+    Published = 1,
+}
+
+public sealed record ShiftBulkSkippedDto(Guid EmployeeId, DateOnly Date, ShiftBulkSkipReason Reason);
+
+public sealed record ShiftBulkResultDto(int AffectedCount, IReadOnlyList<ShiftBulkSkippedDto> Skipped);
+
+/// <summary>Toplu atama/silme için tek kartezyen çarpım (çalışan x gün) ve hücre bazlı kilit/yayın denetimi.</summary>
+internal static class ShiftBulkCells
+{
+    public const int MaxCells = 5000;
+
+    /// <summary>Hücrenin ayı (dönem) kilitliyse true; ay başına tek sorgu (hafta iki aya yayılınca her hücre kendi ayına göre değerlendirilir).</summary>
+    public static async Task<bool> IsLockedAsync(IShiftPlanLockRepository locks, Dictionary<DateOnly, bool> cache, DateOnly date, CancellationToken cancellationToken)
+    {
+        var month = ShiftPlanLock.NormalizeToMonthStart(date);
+        if (!cache.TryGetValue(month, out var isLocked))
+        {
+            isLocked = (await ShiftPlanLockGuard.EnsureNotLockedAsync(locks, month, cancellationToken)).IsFailure;
+            cache[month] = isLocked;
+        }
+
+        return isLocked;
+    }
+
+    public static async Task<Result> EnsureInScopeAndActiveAsync(
+        IReadOnlyCollection<Guid> employeeIds, Guid tenantId, IDataScopeService dataScope, IEmployeeLookup employeeLookup, CancellationToken cancellationToken)
+    {
+        foreach (var employeeId in employeeIds)
+        {
+            if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.ShiftPlan.Key, employeeId, cancellationToken))
+            {
+                return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+            }
+
+            if (!await employeeLookup.ExistsActiveAsync(tenantId, employeeId, cancellationToken))
+            {
+                return Error.NotFound(AttendanceErrors.EmployeeNotFound);
+            }
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>Kilit/limit/yakın gün (dinlenme) kontrolleri için hafta+komşu günler; hepsi tek sorguda yüklenir.</summary>
+    public static async Task<Dictionary<Guid, List<ShiftAssignment>>> LoadAsync(
+        IShiftAssignmentRepository shifts, IReadOnlyCollection<Guid> employeeIds, IReadOnlyList<DateOnly> dates, CancellationToken cancellationToken)
+    {
+        var from = TimesheetWeekEvaluator.MondayOf(dates.Min()).AddDays(-1);
+        var to = TimesheetWeekEvaluator.MondayOf(dates.Max()).AddDays(7);
+        var loaded = await shifts.ListForRangeAsync(from, to, employeeIds, cancellationToken);
+        var byEmployee = employeeIds.ToDictionary(id => id, _ => new List<ShiftAssignment>());
+        foreach (var assignment in loaded)
+        {
+            if (byEmployee.TryGetValue(assignment.EmployeeId, out var list))
+            {
+                list.Add(assignment);
+            }
+        }
+
+        return byEmployee;
+    }
+}
+
+/// <summary>Seçilen çalışan x gün hücrelerine vardiya tanımı ya da gün türü (hafta tatili/dinlenme/resmi tatil) atar.</summary>
+[RequiresPermission("attendance.shift.plan")]
+public sealed record BulkAssignShiftsCommand(
+    IReadOnlyList<Guid> EmployeeIds, IReadOnlyList<DateOnly> Dates, Guid? ShiftDefinitionId, ShiftDayType DayType, bool OverwritePublished)
+    : ICommand<ShiftBulkResultDto>;
+
+public sealed class BulkAssignShiftsValidator : AbstractValidator<BulkAssignShiftsCommand>
+{
+    public BulkAssignShiftsValidator()
+    {
+        RuleFor(x => x.EmployeeIds).NotEmpty();
+        RuleFor(x => x.Dates).NotEmpty();
+        RuleFor(x => x.DayType).IsInEnum();
+        RuleFor(x => x).Must(x => x.EmployeeIds.Distinct().Count() * x.Dates.Distinct().Count() <= ShiftBulkCells.MaxCells)
+            .When(x => x.EmployeeIds is { Count: > 0 } && x.Dates is { Count: > 0 });
+    }
+}
+
+public sealed class BulkAssignShiftsHandler(
+    ITenantContext tenant, IShiftAssignmentRepository shifts, IShiftDefinitionRepository definitions, IShiftSettingsRepository settingsRepository,
+    IShiftPlanLockRepository locks, IEmployeeAvailabilityRepository availability, IEmployeeLookup employeeLookup, IDataScopeService dataScope,
+    IAttendanceUnitOfWork unitOfWork)
+    : ICommandHandler<BulkAssignShiftsCommand, ShiftBulkResultDto>
+{
+    public async Task<Result<ShiftBulkResultDto>> Handle(BulkAssignShiftsCommand command, CancellationToken cancellationToken)
+    {
+        var employeeIds = command.EmployeeIds.Distinct().ToList();
+        var dates = command.Dates.Distinct().Order().ToList();
+
+        var access = await ShiftBulkCells.EnsureInScopeAndActiveAsync(employeeIds, tenant.TenantId, dataScope, employeeLookup, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access.Error;
+        }
+
+        var isWork = command.DayType == ShiftDayType.Work;
+        ShiftDefinition? definition = null;
+        if (isWork)
+        {
+            if (command.ShiftDefinitionId is not { } definitionId)
+            {
+                return Error.Validation(AttendanceDomainErrors.ShiftDefinitionRequired);
+            }
+
+            definition = (await definitions.ListByIdsAsync([definitionId], cancellationToken)).FirstOrDefault(d => d.IsActive);
+            if (definition is null)
+            {
+                return Error.NotFound(AttendanceDomainErrors.ShiftDefinitionNotFound);
+            }
+        }
+
+        var settings = isWork ? await ShiftSettingsProvisioning.EnsureAsync(settingsRepository, tenant, unitOfWork, cancellationToken) : null;
+        var known = await ShiftBulkCells.LoadAsync(shifts, employeeIds, dates, cancellationToken);
+        var lockCache = new Dictionary<DateOnly, bool>();
+        var skipped = new List<ShiftBulkSkippedDto>();
+        var affected = 0;
+
+        foreach (var employeeId in employeeIds)
+        {
+            var employeeShifts = known[employeeId];
+            foreach (var date in dates)
+            {
+                if (await ShiftBulkCells.IsLockedAsync(locks, lockCache, date, cancellationToken))
+                {
+                    skipped.Add(new ShiftBulkSkippedDto(employeeId, date, ShiftBulkSkipReason.Locked));
+                    continue;
+                }
+
+                var existing = employeeShifts.FirstOrDefault(a => a.Date == date);
+                if (existing is { Status: ShiftAssignmentStatus.Published } && !command.OverwritePublished)
+                {
+                    skipped.Add(new ShiftBulkSkippedDto(employeeId, date, ShiftBulkSkipReason.Published));
+                    continue;
+                }
+
+                var applied = isWork
+                    ? await ApplyWorkAsync(employeeId, date, existing, employeeShifts, definition!, settings!, cancellationToken)
+                    : ApplyDayOff(employeeId, date, existing, employeeShifts, command.DayType);
+                if (applied.IsFailure)
+                {
+                    return applied.Error;
+                }
+
+                affected++;
+            }
+        }
+
+        return new ShiftBulkResultDto(affected, skipped);
+    }
+
+    private Result ApplyDayOff(Guid employeeId, DateOnly date, ShiftAssignment? existing, List<ShiftAssignment> employeeShifts, ShiftDayType dayType)
+    {
+        if (existing is not null)
+        {
+            return existing.ApplyDayOff(dayType);
+        }
+
+        var created = ShiftAssignment.CreateDayOff(tenant.TenantId, employeeId, date, dayType);
+        if (created.IsFailure)
+        {
+            return created;
+        }
+
+        shifts.Add(created.Value);
+        employeeShifts.Add(created.Value);
+        return Result.Success();
+    }
+
+    private async Task<Result> ApplyWorkAsync(
+        Guid employeeId, DateOnly date, ShiftAssignment? existing, List<ShiftAssignment> employeeShifts, ShiftDefinition definition, ShiftSettings settings,
+        CancellationToken cancellationToken)
+    {
+        var (start, end, breakMinutes) = ShiftDefinitionTimes.Resolve(definition);
+        var isNight = ShiftNightClassifier.Resolve(settings, start, end, false);
+        var candidate = ShiftAssignment.Create(tenant.TenantId, employeeId, date, start, end, breakMinutes, isNight, null);
+        if (candidate.IsFailure)
+        {
+            return candidate;
+        }
+
+        // Yalnız çalışma günleri limit/dinlenme hesabına girer; gün türü olan satırların saati yoktur.
+        var workDays = employeeShifts.Where(a => a.DayType == ShiftDayType.Work).ToList();
+        var limitCheck = ShiftLimitValidator.Validate(settings, workDays, existing?.Id ?? Guid.Empty, candidate.Value);
+        if (limitCheck.IsFailure)
+        {
+            return limitCheck;
+        }
+
+        var availabilityCheck = await ShiftAvailabilityGuard.EnsureNoConflictAsync(availability, employeeId, candidate.Value, cancellationToken);
+        if (availabilityCheck.IsFailure)
+        {
+            return availabilityCheck;
+        }
+
+        if (existing is not null)
+        {
+            var updated = existing.Update(start, end, breakMinutes, isNight, existing.Note);
+            return updated.IsFailure ? updated : existing.SetPlan(definition.Id, ShiftDayType.Work);
+        }
+
+        var plan = candidate.Value.SetPlan(definition.Id, ShiftDayType.Work);
+        if (plan.IsFailure)
+        {
+            return plan;
+        }
+
+        shifts.Add(candidate.Value);
+        employeeShifts.Add(candidate.Value);
+        return Result.Success();
+    }
+}
+
+/// <summary>Vardiya tanımının atama satırına yansıyan saatleri: dakikalar gün başından; esnek vardiyada bitiş = başlangıç + sabit süre; mola = tanımdaki mola toplamı.</summary>
+internal static class ShiftDefinitionTimes
+{
+    public static (TimeOnly Start, TimeOnly End, int BreakMinutes) Resolve(ShiftDefinition definition)
+    {
+        var endMinute = definition is { Type: ShiftType.Flexible, DurationMinutes: { } duration }
+            ? (definition.StartMinute + duration) % AttendanceLimits.MaxMinutesPerDay
+            : definition.EndMinute;
+        return (TimeOnly.MinValue.AddMinutes(definition.StartMinute), TimeOnly.MinValue.AddMinutes(endMinute), definition.Breaks.Sum(b => b.DurationMinutes));
+    }
+}
+
+/// <summary>Seçilen hücrelerdeki atamaları siler (kilitli dönem hücreleri ve yayınlanmışlar - bayrak yoksa - atlanıp bildirilir).</summary>
+[RequiresPermission("attendance.shift.plan")]
+public sealed record BulkClearShiftsCommand(IReadOnlyList<Guid> EmployeeIds, IReadOnlyList<DateOnly> Dates, bool OverwritePublished) : ICommand<ShiftBulkResultDto>;
+
+public sealed class BulkClearShiftsValidator : AbstractValidator<BulkClearShiftsCommand>
+{
+    public BulkClearShiftsValidator()
+    {
+        RuleFor(x => x.EmployeeIds).NotEmpty();
+        RuleFor(x => x.Dates).NotEmpty();
+        RuleFor(x => x).Must(x => x.EmployeeIds.Distinct().Count() * x.Dates.Distinct().Count() <= ShiftBulkCells.MaxCells)
+            .When(x => x.EmployeeIds is { Count: > 0 } && x.Dates is { Count: > 0 });
+    }
+}
+
+public sealed class BulkClearShiftsHandler(
+    ITenantContext tenant, IShiftAssignmentRepository shifts, IShiftPlanLockRepository locks, IEmployeeLookup employeeLookup, IDataScopeService dataScope)
+    : ICommandHandler<BulkClearShiftsCommand, ShiftBulkResultDto>
+{
+    public async Task<Result<ShiftBulkResultDto>> Handle(BulkClearShiftsCommand command, CancellationToken cancellationToken)
+    {
+        var employeeIds = command.EmployeeIds.Distinct().ToList();
+        var dates = command.Dates.Distinct().Order().ToList();
+
+        var access = await ShiftBulkCells.EnsureInScopeAndActiveAsync(employeeIds, tenant.TenantId, dataScope, employeeLookup, cancellationToken);
+        if (access.IsFailure)
+        {
+            return access.Error;
+        }
+
+        var known = await ShiftBulkCells.LoadAsync(shifts, employeeIds, dates, cancellationToken);
+        var lockCache = new Dictionary<DateOnly, bool>();
+        var skipped = new List<ShiftBulkSkippedDto>();
+        var affected = 0;
+
+        foreach (var employeeId in employeeIds)
+        {
+            foreach (var date in dates)
+            {
+                var existing = known[employeeId].FirstOrDefault(a => a.Date == date);
+                if (existing is null)
+                {
+                    continue;
+                }
+
+                if (await ShiftBulkCells.IsLockedAsync(locks, lockCache, date, cancellationToken))
+                {
+                    skipped.Add(new ShiftBulkSkippedDto(employeeId, date, ShiftBulkSkipReason.Locked));
+                    continue;
+                }
+
+                if (existing.Status == ShiftAssignmentStatus.Published && !command.OverwritePublished)
+                {
+                    skipped.Add(new ShiftBulkSkippedDto(employeeId, date, ShiftBulkSkipReason.Published));
+                    continue;
+                }
+
+                shifts.Remove(existing);
+                affected++;
+            }
+        }
+
+        return new ShiftBulkResultDto(affected, skipped);
+    }
+}
+
+/// <summary>Aralıkta HİÇ ataması (gün türü dahil) olmayan çalışanlar; employeeIds boşsa kapsamdaki görünür çalışanlar (kapsam sınırsızsa boş döner - çalışan listesi bu modülde yok).</summary>
+[RequiresPermission("attendance.shift.view")]
+public sealed record ListUnassignedEmployeesQuery(DateOnly From, DateOnly To, IReadOnlyList<Guid>? EmployeeIds) : IQuery<IReadOnlyList<Guid>>;
+
+public sealed class ListUnassignedEmployeesHandler(IShiftAssignmentRepository shifts, IDataScopeService dataScope)
+    : IQueryHandler<ListUnassignedEmployeesQuery, IReadOnlyList<Guid>>
+{
+    public async Task<Result<IReadOnlyList<Guid>>> Handle(ListUnassignedEmployeesQuery query, CancellationToken cancellationToken)
+    {
+        var candidates = await ShiftPlanScope.ResolveAsync(dataScope, query.EmployeeIds, cancellationToken);
+        if (candidates is null || candidates.Count == 0)
+        {
+            return Result.Success<IReadOnlyList<Guid>>([]);
+        }
+
+        var assigned = (await shifts.ListForRangeAsync(query.From, query.To, candidates, cancellationToken)).Select(a => a.EmployeeId).ToHashSet();
+        return candidates.Where(id => !assigned.Contains(id)).ToList();
+    }
+}
+
+internal static class ShiftPlanScope
+{
+    /// <summary>İstemci filtresi ile veri kapsamının kesişimi; ikisi de yoksa null (belirsiz küme).</summary>
+    public static async Task<IReadOnlyList<Guid>?> ResolveAsync(IDataScopeService dataScope, IReadOnlyList<Guid>? requested, CancellationToken cancellationToken)
+    {
+        var visible = await dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.ShiftView.Key, cancellationToken);
+        IReadOnlyCollection<Guid>? ids = requested is { Count: > 0 } ? requested : visible;
+        if (ids is null)
+        {
+            return null;
+        }
+
+        return (visible is null ? ids : ids.Where(visible.Contains)).Distinct().ToList();
+    }
+}
+
+public sealed record ShiftDayTotalDto(DateOnly Date, int EmployeeCount, int TotalMinutes);
+
+public sealed record ShiftEmployeeTotalDto(Guid EmployeeId, int TotalMinutes);
+
+public sealed record ShiftPlanTotalsDto(IReadOnlyList<ShiftDayTotalDto> ByDate, IReadOnlyList<ShiftEmployeeTotalDto> ByEmployee);
+
+/// <summary>Takvim dip toplamı: gün ve çalışan bazında planlanan dakika; gün türü Work olmayan günler 0 dakika sayılır ve çalışan sayısına girmez.</summary>
+[RequiresPermission("attendance.shift.view")]
+public sealed record GetShiftPlanTotalsQuery(DateOnly From, DateOnly To, IReadOnlyList<Guid>? EmployeeIds) : IQuery<ShiftPlanTotalsDto>;
+
+public sealed class GetShiftPlanTotalsHandler(IShiftAssignmentRepository shifts, IDataScopeService dataScope)
+    : IQueryHandler<GetShiftPlanTotalsQuery, ShiftPlanTotalsDto>
+{
+    public async Task<Result<ShiftPlanTotalsDto>> Handle(GetShiftPlanTotalsQuery query, CancellationToken cancellationToken)
+    {
+        var visible = await dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.ShiftView.Key, cancellationToken);
+        var scoped = query.EmployeeIds is { Count: > 0 } ? query.EmployeeIds : null;
+        if (visible is not null)
+        {
+            scoped = (scoped ?? visible.ToList()).Where(visible.Contains).Distinct().ToList();
+            if (scoped.Count == 0)
+            {
+                return new ShiftPlanTotalsDto([], []);
+            }
+        }
+
+        var work = (await shifts.ListForRangeAsync(query.From, query.To, scoped, cancellationToken)).Where(a => a.DayType == ShiftDayType.Work).ToList();
+        var byDate = work.GroupBy(a => a.Date).OrderBy(g => g.Key)
+            .Select(g => new ShiftDayTotalDto(g.Key, g.Select(a => a.EmployeeId).Distinct().Count(), g.Sum(a => a.ShiftMinutes))).ToList();
+        var byEmployee = work.GroupBy(a => a.EmployeeId).Select(g => new ShiftEmployeeTotalDto(g.Key, g.Sum(a => a.ShiftMinutes))).ToList();
+        return new ShiftPlanTotalsDto(byDate, byEmployee);
     }
 }
