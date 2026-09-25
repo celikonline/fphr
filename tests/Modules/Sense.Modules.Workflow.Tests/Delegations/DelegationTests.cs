@@ -196,6 +196,23 @@ public sealed class DelegationTests
         (await Decide(request, _delegate)).Error.Code.ShouldBe(WorkflowErrors.SelfApprovalNotAllowed);
     }
 
+    [Fact]
+    public async Task List_returns_employee_names()
+    {
+        NewDelegation();
+        var directory = Substitute.For<IEmployeeDirectory>();
+        directory.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns([new EmployeeContact(_delegator, "Ayşe", "Yılmaz", null, null, null, "Active")]);
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(_tenantId);
+
+        var result = await new ListDelegationsHandler(tenant, _store, directory).Handle(new ListDelegationsQuery(), CancellationToken.None);
+
+        var dto = result.Value.ShouldHaveSingleItem();
+        dto.DelegatorName.ShouldBe("Ayşe Yılmaz");
+        dto.DelegateName.ShouldBeNull();
+    }
+
     private sealed class MutableClock(DateTime now) : TimeProvider
     {
         public DateTime Now { get; set; } = now;

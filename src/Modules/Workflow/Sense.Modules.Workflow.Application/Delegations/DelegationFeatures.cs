@@ -15,12 +15,24 @@ namespace Sense.Modules.Workflow.Application.Delegations;
 /// <summary>Delegation as returned by the API.</summary>
 public sealed record DelegationDto(
     Guid Id, Guid DelegatorEmployeeId, Guid DelegateEmployeeId, DateOnly StartDate, DateOnly EndDate,
-    IReadOnlyList<string> RequestTypes, bool IsRevoked, DateTime? RevokedAt);
+    IReadOnlyList<string> RequestTypes, bool IsRevoked, DateTime? RevokedAt,
+    string? DelegatorName = null, string? DelegateName = null);
 
 internal static class DelegationMapping
 {
-    public static DelegationDto ToDto(ApprovalDelegation d) =>
-        new(d.Id, d.DelegatorEmployeeId, d.DelegateEmployeeId, d.StartDate, d.EndDate, d.RequestTypeList, d.IsRevoked, d.RevokedAt);
+    public static DelegationDto ToDto(ApprovalDelegation d, IReadOnlyDictionary<Guid, string> names) =>
+        new(d.Id, d.DelegatorEmployeeId, d.DelegateEmployeeId, d.StartDate, d.EndDate, d.RequestTypeList, d.IsRevoked, d.RevokedAt,
+            names.GetValueOrDefault(d.DelegatorEmployeeId), names.GetValueOrDefault(d.DelegateEmployeeId));
+
+    /// <summary>Employee display names for every delegator/delegate in the list; unresolved employees are simply absent.</summary>
+    public static async Task<IReadOnlyList<DelegationDto>> ToDtosAsync(
+        IReadOnlyList<ApprovalDelegation> list, Guid tenantId, IEmployeeDirectory directory, CancellationToken cancellationToken)
+    {
+        var ids = list.SelectMany(d => new[] { d.DelegatorEmployeeId, d.DelegateEmployeeId }).Distinct().ToList();
+        var contacts = ids.Count == 0 ? [] : await directory.GetContactsAsync(tenantId, ids, cancellationToken);
+        var names = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+        return list.Select(d => ToDto(d, names)).ToList();
+    }
 }
 
 /// <summary>Shared creation logic for the own-delegation and admin (any delegator) commands.</summary>
@@ -142,7 +154,8 @@ public sealed class RevokeDelegationHandler(IApprovalDelegationRepository delega
 [RequiresPermission("workflow.my.delegation")]
 public sealed record ListMyDelegationsQuery : IQuery<IReadOnlyList<DelegationDto>>;
 
-public sealed class ListMyDelegationsHandler(ICurrentUser currentUser, IApprovalDelegationRepository delegations)
+public sealed class ListMyDelegationsHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IApprovalDelegationRepository delegations, IEmployeeDirectory directory)
     : IQueryHandler<ListMyDelegationsQuery, IReadOnlyList<DelegationDto>>
 {
     public async Task<Result<IReadOnlyList<DelegationDto>>> Handle(ListMyDelegationsQuery query, CancellationToken cancellationToken)
@@ -153,7 +166,7 @@ public sealed class ListMyDelegationsHandler(ICurrentUser currentUser, IApproval
         }
 
         var list = await delegations.ListInvolvingAsync(me, cancellationToken);
-        return Result.Success<IReadOnlyList<DelegationDto>>(list.Select(DelegationMapping.ToDto).ToList());
+        return Result.Success(await DelegationMapping.ToDtosAsync(list, tenant.TenantId, directory, cancellationToken));
     }
 }
 
@@ -161,12 +174,12 @@ public sealed class ListMyDelegationsHandler(ICurrentUser currentUser, IApproval
 [RequiresPermission("workflow.delegation.manage")]
 public sealed record ListDelegationsQuery : IQuery<IReadOnlyList<DelegationDto>>;
 
-public sealed class ListDelegationsHandler(IApprovalDelegationRepository delegations)
+public sealed class ListDelegationsHandler(ITenantContext tenant, IApprovalDelegationRepository delegations, IEmployeeDirectory directory)
     : IQueryHandler<ListDelegationsQuery, IReadOnlyList<DelegationDto>>
 {
     public async Task<Result<IReadOnlyList<DelegationDto>>> Handle(ListDelegationsQuery query, CancellationToken cancellationToken)
     {
         var list = await delegations.ListAllAsync(cancellationToken);
-        return Result.Success<IReadOnlyList<DelegationDto>>(list.Select(DelegationMapping.ToDto).ToList());
+        return Result.Success(await DelegationMapping.ToDtosAsync(list, tenant.TenantId, directory, cancellationToken));
     }
 }
