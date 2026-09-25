@@ -155,7 +155,7 @@ src/
 
 ### Login
 
-1. Email + password → POST /api/auth/login
+1. Email + password → POST /api/v1/identity/auth/login
 2. Receive access + refresh tokens
 3. Store in SecureStore
 4. Navigate to AppStack
@@ -169,14 +169,14 @@ src/
 
 ### Logout
 
-1. POST /api/auth/logout (optional)
+1. POST /api/v1/identity/auth/logout (optional)
 2. Clear SecureStore
 3. Redirect to LoginScreen
 
 ### Token Refresh
 
 - Automatic on 401 via axios interceptor
-- Calls POST /api/auth/refresh with refresh token
+- Calls POST /api/v1/identity/auth/refresh with refresh token
 - Stores new tokens
 - Retries original request
 - Transparent to UI
@@ -221,7 +221,7 @@ eas build --platform android --auto-submit
 
 **App won't load**: Check network, verify EXPO_PUBLIC_API_BASE_URL, ensure backend running
 
-**Token refresh failing**: Verify refresh token in SecureStore, check backend /api/auth/refresh
+**Token refresh failing**: Verify refresh token in SecureStore, check backend /api/v1/identity/auth/refresh
 
 **Biometric not showing**: Verify device has biometric hardware and enrolled, test on real device
 

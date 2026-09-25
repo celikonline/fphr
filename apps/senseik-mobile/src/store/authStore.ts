@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { User, AuthTokens } from "@/types";
-import { authService } from "@/services/AuthService";
+import { User, AuthTokens, TenantChoice } from "@/types";
+import { authService, LoginOutcome } from "@/services/AuthService";
 import { SecureStorage } from "@/lib/storage";
 import { setUnauthorizedHandler } from "@/lib/apiClient";
 
@@ -12,11 +12,14 @@ export interface AuthStore {
   user: User | null;
   tenantId: string | null;
   tokens: AuthTokens | null;
+  /** Non-null while the login endpoint returned `select_tenant` and the user has not picked one yet. */
+  tenantChoices: TenantChoice[] | null;
   biometricAvailable: boolean;
   biometricEnabled: boolean;
 
   // Actions
-  login: (email: string, password: string) => Promise<void>;
+  /** `tenantSlug` re-submits a login after the caller picked one of `tenantChoices`. */
+  login: (email: string, password: string, tenantSlug?: string) => Promise<LoginOutcome>;
   loginWithBiometric: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
@@ -24,6 +27,7 @@ export interface AuthStore {
   enableBiometric: () => Promise<void>;
   disableBiometric: () => Promise<void>;
   clearError: () => void;
+  clearTenantChoices: () => void;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -34,21 +38,28 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   tenantId: null,
   tokens: null,
+  tenantChoices: null,
   biometricAvailable: false,
   biometricEnabled: false,
 
   // Actions
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, tenantSlug?: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authService.login(email, password);
+      const outcome = await authService.login(email, password, tenantSlug);
+      if (outcome.status === "select_tenant") {
+        set({ tenantChoices: outcome.tenants, isLoading: false });
+        return outcome;
+      }
       set({
         isAuthenticated: true,
-        user: response.user,
-        tenantId: response.tenantId,
-        tokens: response.tokens,
+        user: outcome.user,
+        tenantId: outcome.user.tenantId,
+        tokens: outcome.tokens,
+        tenantChoices: null,
         isLoading: false
       });
+      return outcome;
     } catch (error) {
       set({
         isAuthenticated: false,
@@ -189,7 +200,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+
+  clearTenantChoices: () => set({ tenantChoices: null })
 }));
 
 // apiClient has no direct dependency on the store (would be circular: apiClient -> authStore ->

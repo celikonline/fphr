@@ -1,36 +1,40 @@
 // User and Authentication Types
+/** Mirrors the `tenant` object on `MeDto` (Sense.Modules.Identity.Application/Dtos.cs). */
+export interface MeTenant {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/** Mapped from `GET /api/v1/identity/me` (`MeDto`). */
 export interface User {
   id: string;
   tenantId: string;
   email: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
-  profileImageUrl?: string;
-  role: UserRole;
+  employeeId?: string | null;
+  preferredLanguage: string;
+  mfaEnabled: boolean;
+  roles: string[];
   permissions: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  tenant: MeTenant;
 }
 
-export enum UserRole {
-  Admin = "Admin",
-  Manager = "Manager",
-  Employee = "Employee",
-  Approver = "Approver"
-}
-
+/** Mirrors `AuthTokensDto` (Sense.Modules.Identity.Application/Dtos.cs). */
 export interface AuthTokens {
   accessToken: string;
+  accessTokenExpiresAt: string;
   refreshToken: string;
-  expiresIn: number;
+  refreshTokenExpiresAt: string;
+  tokenType: string;
 }
 
-export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
+/** Mirrors an entry of `LoginResultDto.tenants` (`TenantChoiceDto`) when login returns `select_tenant`. */
+export interface TenantChoice {
   tenantId: string;
+  slug: string;
+  name: string;
 }
 
 export interface BiometricAvailable {

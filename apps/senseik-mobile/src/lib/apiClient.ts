@@ -146,13 +146,14 @@ class ApiClient {
               throw new Error("No refresh token available");
             }
 
-            const response = await this.refreshInstance.post("/api/auth/refresh", {
+            const response = await this.refreshInstance.post("/api/v1/identity/auth/refresh", {
               refreshToken
             });
 
             // Validate the shape before trusting it - a malformed body must not
             // overwrite good tokens with `undefined` ("Bearer undefined" retries).
-            const data = response.data?.data;
+            // AuthTokensDto is returned unwrapped (no `data` envelope).
+            const data = response.data;
             const accessToken: unknown = data?.accessToken;
             const newRefreshToken: unknown = data?.refreshToken;
             if (typeof accessToken !== "string" || !accessToken || typeof newRefreshToken !== "string" || !newRefreshToken) {
