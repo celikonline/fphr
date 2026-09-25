@@ -1551,4 +1551,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="payroll.errors.payslip_not_published" xml:space="preserve"><value>The payslip is not published yet; it becomes available when the period is paid.</value></data>
+  <data name="payroll.errors.payslip_already_acknowledged" xml:space="preserve"><value>This payslip has already been acknowledged.</value></data>
+  <data name="payroll.errors.payslip_objection_pending" xml:space="preserve"><value>The payslip cannot be acknowledged while an objection is pending.</value></data>
+  <data name="payroll.errors.payslip_objection_already_filed" xml:space="preserve"><value>An objection has already been filed for this payslip.</value></data>
+  <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>An objection reason is required and may be at most 1000 characters.</value></data>
+  <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>There is no pending objection for this payslip.</value></data>
+  <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Your user account is not linked to an employee record.</value></data>
 </root>
