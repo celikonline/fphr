@@ -1560,4 +1560,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="notifications.message.sms_unavailable" xml:space="preserve"><value>SMS kanalı şu an kullanılamıyor; SMS sağlayıcısı yapılandırılmamış.</value></data>
+  <data name="notifications.message.unknown_channel" xml:space="preserve"><value>Bilinmeyen mesaj kanalı.</value></data>
+  <data name="notifications.message.recipients_required" xml:space="preserve"><value>Mesaj için en az bir alıcı seçmelisiniz.</value></data>
+  <data name="notifications.messagegroup.not_found" xml:space="preserve"><value>Mesaj grubu bulunamadı.</value></data>
+  <data name="notifications.messagegroup.name_taken" xml:space="preserve"><value>Bu adla bir mesaj grubu zaten var.</value></data>
 </root>

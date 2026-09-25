@@ -14,4 +14,9 @@ public static class NotificationsLimits
     public const int CultureMaxLength = 10;
     public const int ErrorMaxLength = 2000;
     public const int StatusMaxLength = 20;
+
+    public const int HrMessageSubjectMaxLength = 300;
+    public const int HrMessageBodyMaxLength = 4096;
+    public const int HrMessageChannelsMaxLength = 60;
+    public const int MessageGroupNameMaxLength = 200;
 }

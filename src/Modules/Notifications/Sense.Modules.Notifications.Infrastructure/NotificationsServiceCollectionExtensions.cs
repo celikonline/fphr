@@ -46,6 +46,8 @@ public static class NotificationsServiceCollectionExtensions
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
         services.AddScoped<INotificationDeliveryRepository, NotificationDeliveryRepository>();
         services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
+        services.AddScoped<IHrMessageRepository, HrMessageRepository>();
+        services.AddScoped<IMessageGroupRepository, MessageGroupRepository>();
         services.AddScoped<INotificationsUnitOfWork>(sp => sp.GetRequiredService<NotificationsDbContext>());
 
         services.AddSingleton<INotificationTemplateRenderer, ScribanNotificationTemplateRenderer>();
@@ -71,6 +73,9 @@ public static class NotificationsServiceCollectionExtensions
         {
             services.TryAddSingleton<IEmailSender, SmtpEmailSender>();
         }
+
+        // No SMS provider yet: the null sender reports IsAvailable=false so HR messages reject the sms channel (K5).
+        services.TryAddSingleton<ISmsSender, NullSmsSender>();
 
         return services;
     }

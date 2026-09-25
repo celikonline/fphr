@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Notifications.Domain;
 using Sense.Modules.Notifications.Domain.Deliveries;
+using Sense.Modules.Notifications.Domain.HrMessages;
 using Sense.Modules.Notifications.Domain.Preferences;
 using Sense.Modules.Notifications.Domain.UserNotifications;
 using Sense.Shared.Contracts.Context;
@@ -23,6 +24,12 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
 
     public DbSet<NotificationPreference> Preferences => Set<NotificationPreference>();
 
+    public DbSet<HrMessage> HrMessages => Set<HrMessage>();
+
+    public DbSet<HrMessageRecipient> HrMessageRecipients => Set<HrMessageRecipient>();
+
+    public DbSet<MessageGroup> MessageGroups => Set<MessageGroup>();
+
     Task INotificationsUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) => SaveChangesAsync(cancellationToken);
 }
 
@@ -31,6 +38,9 @@ internal static class NotificationsTables
     public const string UserNotifications = "user_notifications";
     public const string Deliveries = "notification_deliveries";
     public const string Preferences = "notification_preferences";
+    public const string HrMessages = "hr_messages";
+    public const string HrMessageRecipients = "hr_message_recipients";
+    public const string MessageGroups = "message_groups";
 }
 
 public sealed class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotification>
@@ -93,5 +103,54 @@ public sealed class NotificationPreferenceConfiguration : IEntityTypeConfigurati
         b.Property(x => x.Channel).HasMaxLength(NotificationsLimits.ChannelMaxLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.UserId, x.TemplateKey, x.Channel }).IsUnique();
+    }
+}
+
+public sealed class HrMessageConfiguration : IEntityTypeConfiguration<HrMessage>
+{
+    public void Configure(EntityTypeBuilder<HrMessage> b)
+    {
+        b.ToTable(NotificationsTables.HrMessages);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Subject).HasMaxLength(NotificationsLimits.HrMessageSubjectMaxLength).IsRequired();
+        b.Property(x => x.Body).HasMaxLength(NotificationsLimits.HrMessageBodyMaxLength).IsRequired();
+        b.Property(x => x.Channels).HasMaxLength(NotificationsLimits.HrMessageChannelsMaxLength).IsRequired();
+        b.Property(x => x.Importance).HasConversion<string>().HasMaxLength(NotificationsLimits.StatusMaxLength);
+        b.Ignore(x => x.IsHighPriority);
+
+        b.HasMany(x => x.Recipients).WithOne().HasForeignKey(r => r.MessageId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.Recipients).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        b.HasIndex(x => new { x.TenantId, x.SenderUserId, x.CreatedAt });
+    }
+}
+
+public sealed class HrMessageRecipientConfiguration : IEntityTypeConfiguration<HrMessageRecipient>
+{
+    public void Configure(EntityTypeBuilder<HrMessageRecipient> b)
+    {
+        b.ToTable(NotificationsTables.HrMessageRecipients);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.HasIndex(x => new { x.TenantId, x.UserId });
+        b.HasIndex(x => x.MessageId);
+    }
+}
+
+public sealed class MessageGroupConfiguration : IEntityTypeConfiguration<MessageGroup>
+{
+    public void Configure(EntityTypeBuilder<MessageGroup> b)
+    {
+        b.ToTable(NotificationsTables.MessageGroups);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Name).HasMaxLength(NotificationsLimits.MessageGroupNameMaxLength).IsRequired();
+        b.Property(x => x.SelectionJson).HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
     }
 }

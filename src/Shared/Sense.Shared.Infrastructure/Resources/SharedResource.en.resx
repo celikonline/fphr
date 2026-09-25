@@ -1551,4 +1551,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
   <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
   <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="notifications.message.sms_unavailable" xml:space="preserve"><value>The SMS channel is unavailable; no SMS provider is configured.</value></data>
+  <data name="notifications.message.unknown_channel" xml:space="preserve"><value>Unknown message channel.</value></data>
+  <data name="notifications.message.recipients_required" xml:space="preserve"><value>Select at least one recipient for the message.</value></data>
+  <data name="notifications.messagegroup.not_found" xml:space="preserve"><value>Message group not found.</value></data>
+  <data name="notifications.messagegroup.name_taken" xml:space="preserve"><value>A message group with this name already exists.</value></data>
 </root>
