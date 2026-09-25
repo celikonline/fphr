@@ -27,7 +27,7 @@ public static class DayFromPunches
     /// <param name="plan">Günün K2 planı (<see cref="IPlannedDayResolver"/>); <c>null</c> = hiç plan yok (okutma varsa Incalculable).</param>
     public static DayResult Build(IReadOnlyList<Punch> punches, PlannedDay? plan, TimeZoneInfo? zone = null)
     {
-        var live = WithoutSupersededBackfillBreak(punches.Where(p => !p.IsDeleted).OrderBy(p => p.OccurredAtUtc).ToList());
+        var live = BackfillBreakFilter.WithoutSuperseded(punches.Where(p => !p.IsDeleted).OrderBy(p => p.OccurredAtUtc).ToList());
         if (live.Count == 0)
         {
             return Empty;
@@ -60,20 +60,6 @@ public static class DayFromPunches
     /// </summary>
     public static TimeOnly? FirstIn(IReadOnlyList<Punch> punches, TimeZoneInfo? zone = null) =>
         Build(punches, PlannedDay.NonWorking(), zone).CheckIn;
-
-    /// <summary>
-    /// Taşımanın temsili mola çifti (<see cref="LegacyDayPunches.BreakMarkerPrefix"/>) yalnız günde başka ara okutma yokken sayılır: gerçek
-    /// ara okutmalar (ilk giriş / son çıkış dışındaki işaretsiz okutmalar) geldiyse yok sayılır - mola ikiye katlanmaz, sıra bozulmaz.
-    /// </summary>
-    private static List<Punch> WithoutSupersededBackfillBreak(List<Punch> live)
-    {
-        var real = live.Where(p => !IsBackfillBreak(p)).ToList();
-        const int FirstInAndLastOut = 2;
-        return real.Count != live.Count && real.Count > FirstInAndLastOut ? real : live;
-    }
-
-    private static bool IsBackfillBreak(Punch punch) =>
-        punch.SourceRef?.StartsWith(LegacyDayPunches.BreakMarkerPrefix, StringComparison.Ordinal) == true;
 
     /// <summary>Bozuk sıra gün düzeyi bir kanalın (elle / Excel) okutmalarıyla başka bir kanalınkinin karışmasından geliyorsa kanal çakışması.</summary>
     private static IncalculableReason SequenceReason(List<Punch> live)

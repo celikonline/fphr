@@ -1,3 +1,4 @@
+using Sense.Modules.Attendance.Application.Punches;
 using Microsoft.Extensions.Localization;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Domain;
@@ -61,7 +62,7 @@ public sealed class IntermediatePunchesReportProvider(
         var data = new List<(string Name, DateOnly Day, int Sequence, IReadOnlyList<object?> Cells)>();
         foreach (var group in all.Where(p => !p.IsDeleted).GroupBy(p => (p.EmployeeId, p.WorkDate)))
         {
-            var ordered = group.OrderBy(p => p.OccurredAtUtc).ToList();
+            var ordered = BackfillBreakFilter.WithoutSuperseded(group.OrderBy(p => p.OccurredAtUtc).ToList());
             var name = PunchReportSupport.Name(people, group.Key.EmployeeId);
             for (var i = 1; i < ordered.Count - 1; i++)
             {
