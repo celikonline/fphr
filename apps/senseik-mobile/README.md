@@ -63,6 +63,26 @@ pnpm android     # Android emulator
 pnpm web         # Web (experimental)
 ```
 
+### Android development build
+
+Expo Go can't run this app (Android push notifications were removed from Expo Go in SDK 53),
+so `pnpm android` runs `expo run:android`: it generates `android/` with `expo prebuild` and
+installs a development build. `android/` and `ios/` are generated and gitignored; native tweaks
+live in `plugins/withAndroidBuildFixes.js`.
+
+Prerequisites (Windows): Android Studio, an AVD, and **CMake 3.31.6** in the Android SDK
+(SDK Manager → SDK Tools → Show Package Details → CMake 3.31.6). The SDK's default CMake 3.22
+ships ninja 1.10, which fails on pnpm's long `node_modules` paths.
+
+```bash
+# JAVA_HOME = Android Studio's bundled JDK, ANDROID_HOME = %LOCALAPPDATA%\Android\Sdk
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:18080 pnpm android
+```
+
+`10.0.2.2` is the host machine as seen from the emulator (`18080` is the dockerized API).
+To work in Android Studio, open `apps/senseik-mobile/android` after the first prebuild and keep
+Metro running with `pnpm start --dev-client`.
+
 ## Architecture
 
 ### Authentication
