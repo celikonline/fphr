@@ -45,6 +45,10 @@ public sealed class SharedCompanyFileConfiguration : IEntityTypeConfiguration<Sh
         b.Property(x => x.DeletedBy);
         b.Property(x => x.Visibility).HasConversion<string>().HasMaxLength(SharedCompanyFileTables.VisibilityLength).IsRequired();
 
+        b.Property(x => x.TypeId);
+        b.Property(x => x.VisibleOnMobile).HasDefaultValue(false).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.TypeId });
+
         var allowedRolesComparer = new ValueComparer<IReadOnlyList<string>>(
             (a, b2) => (a ?? Enumerable.Empty<string>()).SequenceEqual(b2 ?? Enumerable.Empty<string>()),
             v => v.Aggregate(0, (hash, role) => HashCode.Combine(hash, role.GetHashCode(StringComparison.Ordinal))),
@@ -60,6 +64,25 @@ public sealed class SharedCompanyFileConfiguration : IEntityTypeConfiguration<Sh
             .Metadata.SetValueComparer(allowedRolesComparer);
 
         // Ignore domain events (handled by outbox processor)
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+/// <summary>Shared file type catalog entity configuration (E8).</summary>
+public sealed class SharedFileTypeConfiguration : IEntityTypeConfiguration<SharedFileType>
+{
+    public void Configure(EntityTypeBuilder<SharedFileType> b)
+    {
+        b.ToTable("shared_file_types");
+        b.HasKey(x => x.Id);
+
+        b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
+
+        b.Property(x => x.Name).HasMaxLength(SharedFileType.NameMaxLength).IsRequired();
+        b.Property(x => x.VisibleOnMobile).IsRequired();
+        b.Property(x => x.IsActive).IsRequired();
+        b.Property(x => x.SortOrder).IsRequired();
+
         b.Ignore(x => x.DomainEvents);
     }
 }

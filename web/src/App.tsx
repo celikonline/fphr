@@ -103,6 +103,7 @@ const OnboardingPage = lazy(() => import("@/pages/onboarding"));
 const AnnouncementsPage = lazy(() => import("@/pages/announcements"));
 const AnnouncementEditorPage = lazy(() => import("@/pages/announcements/announcement-editor"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
+const PayslipImportPage = lazy(() => import("@/pages/payroll/payslip-import"));
 const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
 const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
 const PlatformTenantsPage = lazy(() => import("@/pages/platform/tenants"));
@@ -155,6 +156,7 @@ export default function App() {
             <Route path="requests" element={<RequestsPage />} />
             <Route path="requests/visa" element={<VisaRequestsPage />} />
             <Route path="shared-files" element={<SharedFilesPage />} />
+            <Route path="payroll/payslip-import" element={<PayslipImportPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />

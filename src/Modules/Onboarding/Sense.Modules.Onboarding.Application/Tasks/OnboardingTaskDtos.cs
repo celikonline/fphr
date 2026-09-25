@@ -9,11 +9,15 @@ public sealed record OnboardingTaskTemplateDto(
     string ResponsibleRoleCode,
     int DueDateOffsetDays,
     bool IsMandatory,
-    bool IsActive)
+    bool IsActive,
+    Guid? CategoryId = null,
+    OnboardingImportance Importance = OnboardingImportance.Normal,
+    bool RequiresEDocument = false)
 {
     public static OnboardingTaskTemplateDto From(OnboardingTaskTemplate template) => new(
         template.Id, template.Stage, template.Title, template.ResponsibleRoleCode,
-        template.DueDateOffsetDays, template.IsMandatory, template.IsActive);
+        template.DueDateOffsetDays, template.IsMandatory, template.IsActive,
+        template.CategoryId, template.Importance, template.RequiresEDocument);
 }
 
 public sealed record EmployeeOnboardingTaskDto(
@@ -27,9 +31,14 @@ public sealed record EmployeeOnboardingTaskDto(
     DateTime? CompletedAt,
     string? WaivedReason,
     Guid? WaivedBy,
-    DateTime? WaivedAt)
+    DateTime? WaivedAt,
+    Guid? CategoryId = null,
+    OnboardingImportance Importance = OnboardingImportance.Normal,
+    bool RequiresEDocument = false,
+    Guid? TemplateSetId = null)
 {
     public static EmployeeOnboardingTaskDto From(EmployeeOnboardingTask task) => new(
         task.Id, task.EmployeeId, task.TemplateId, task.Stage, task.DueDate, task.Status,
-        task.CompletedBy, task.CompletedAt, task.WaivedReason, task.WaivedBy, task.WaivedAt);
+        task.CompletedBy, task.CompletedAt, task.WaivedReason, task.WaivedBy, task.WaivedAt,
+        task.CategoryId, task.Importance, task.RequiresEDocument, task.TemplateSetId);
 }

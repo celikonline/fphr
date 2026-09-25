@@ -37,7 +37,7 @@ export interface AcceptInvitationInput {
   privacyNoticeVersion: string;
 }
 
-export type EmployeeInvitationOutcome = "Sent" | "Resent" | "AlreadyActive";
+export type EmployeeInvitationOutcome = "Sent" | "Resent" | "AlreadyActive" | "NotRequested";
 
 export type InvitationEmailSource = "Work" | "Personal" | "Account";
 
@@ -59,8 +59,15 @@ export async function acceptInvitation(input: AcceptInvitationInput): Promise<vo
   await apiClient.post(`${INVITATIONS_BASE}/accept`, input);
 }
 
-export async function inviteEmployee(employeeId: string): Promise<EmployeeInvitationResult> {
-  const { data } = await apiClient.post<EmployeeInvitationResult>(`${INVITATIONS_BASE}/employee`, { employeeId });
+/**
+ * `sendCredentials` defaults to true server-side; false validates the employee but creates no user/invitation/e-mail
+ * and returns `outcome: "NotRequested"`.
+ */
+export async function inviteEmployee(employeeId: string, options?: { sendCredentials?: boolean }): Promise<EmployeeInvitationResult> {
+  const { data } = await apiClient.post<EmployeeInvitationResult>(`${INVITATIONS_BASE}/employee`, {
+    employeeId,
+    ...(options?.sendCredentials === undefined ? {} : { sendCredentials: options.sendCredentials }),
+  });
   return data;
 }
 

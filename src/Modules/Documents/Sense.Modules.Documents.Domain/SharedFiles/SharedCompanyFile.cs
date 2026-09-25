@@ -95,6 +95,19 @@ public sealed class SharedCompanyFile : TenantAggregateRoot<Guid>, IAuditLogged
     /// empty when <see cref="SharedFileVisibility.Everyone"/>. Fixed at creation - MVP has no "edit visibility" use case.</summary>
     public IReadOnlyList<string> AllowedRoles { get; private set; } = new List<string>().AsReadOnly();
 
+    /// <summary>Optional <see cref="SharedFileType"/> (E8 catalog); null = untyped.</summary>
+    public Guid? TypeId { get; private set; }
+
+    /// <summary>Whether the mobile app lists this file (E8 "mobilde görünsün"); defaults from the type at upload.</summary>
+    public bool VisibleOnMobile { get; private set; }
+
+    /// <summary>Sets the E8 classification: type and mobile visibility.</summary>
+    public void Classify(Guid? typeId, bool visibleOnMobile)
+    {
+        TypeId = typeId;
+        VisibleOnMobile = visibleOnMobile;
+    }
+
     /// <summary>Creates a new shared file aggregate in Pending status, awaiting upload confirmation.</summary>
     public static Result<SharedCompanyFile> Create(
         Guid tenantId,

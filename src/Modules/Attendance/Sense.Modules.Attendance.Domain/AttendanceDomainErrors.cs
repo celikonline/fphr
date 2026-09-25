@@ -68,6 +68,7 @@ public static class AttendanceDomainErrors
     public const string ShiftDefinitionOvertimeRangeInvalid = "attendance.shift_definition.overtime_range_invalid";
     public const string ShiftDefinitionBreakInvalid = "attendance.shift_definition.break_invalid";
     public const string ShiftDayTypeInvalid = "attendance.shift.day_type_invalid";
+    public const string ShiftDefinitionRequired = "attendance.shift.definition_required";
     public const string PunchRequestNotFound = "attendance.punch_request.not_found";
     public const string PunchRequestReasonRequired = "attendance.punch_request.reason_required";
     public const string PunchRequestDirectionInvalid = "attendance.punch_request.direction_invalid";
