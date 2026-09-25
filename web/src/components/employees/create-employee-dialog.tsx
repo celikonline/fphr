@@ -6,6 +6,7 @@ import { Button, Group, Stack, Switch, Text } from "@mantine/core";
 import { toast } from "@/hooks/use-toast";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { usePermission } from "@/components/permission-guard";
 import { FormModal } from "@/components/ui/form-modal";
 import { createEmployee } from "@/services/employees.service";
 import { inviteEmployee } from "@/services/invitations.service";
@@ -48,6 +49,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [manager, setManager] = useState<PickedEmployee | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const canInvite = usePermission("identity.users.invite");
   const [sendCredentials, setSendCredentials] = useState(true);
   const [saveAndNew, setSaveAndNew] = useState(false);
 
@@ -74,16 +76,25 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   const mutation = useMutation({
     mutationFn: async () => {
       const employee = await createEmployee({ ...generalValuesToInput(values), orgUnitId, managerEmployeeId: manager?.id ?? null });
-      // The employee already exists at this point: an invitation failure must not fail the creation.
-      const invitation = await inviteEmployee(employee.id, { sendCredentials }).catch(() => null);
-      return { employee, invitation };
+      // The employee already exists here: an invitation failure is reported but never undoes the creation.
+      // Without the invite permission or with the switch off the invite endpoint is not called at all.
+      if (!canInvite || !sendCredentials) return { employee, invitation: null, inviteError: null, skipped: canInvite };
+      try {
+        return { employee, invitation: await inviteEmployee(employee.id, { sendCredentials: true }), inviteError: null, skipped: false };
+      } catch (error) {
+        return { employee, invitation: null, inviteError: error, skipped: false };
+      }
     },
-    onSuccess: ({ employee, invitation }) => {
+    onSuccess: ({ employee, inviteError, skipped }) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       toast({ variant: "success", title: t("common:success"), description: t("employees:create.success") });
-      if (!invitation) {
-        toast({ variant: "destructive", title: t("common:error"), description: t("employees:create.inviteFailed") });
-      } else if (invitation.outcome === "NotRequested") {
+      if (inviteError) {
+        toast({
+          variant: "destructive",
+          title: t("common:error"),
+          description: t("employees:create.inviteFailed", { message: getApiErrorMessage(inviteError, t("employees:genericError")) }),
+        });
+      } else if (skipped) {
         toast({ variant: "default", title: t("employees:invite.outcome.notrequested") });
       }
       clearDraft();
@@ -114,7 +125,6 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
         onOpenChange(false);
       }}
       title={t("employees:create.title")}
-      onSaveAndNew={() => submit(true)}
       size="42rem"
     >
       <Text size="sm" c="dimmed" mb="md">
@@ -147,12 +157,14 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             />
             <EmployeePicker id="new-emp-manager" label={t("employees:fields.manager")} value={manager} onChange={setManager} allowClear />
           </div>
+          {canInvite && (
           <Switch
             checked={sendCredentials}
             onChange={(event) => setSendCredentials(event.currentTarget.checked)}
             disabled={mutation.isPending}
             label={t("employees:create.sendCredentials")}
           />
+          )}
           <Group justify="flex-end" gap="sm">
             <Button
               type="button"
@@ -165,7 +177,16 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             >
               {t("common:cancel")}
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button
+              type="button"
+              variant="light"
+              onClick={() => submit(true)}
+              loading={mutation.isPending && saveAndNew}
+              disabled={mutation.isPending}
+            >
+              {t("common:saveAndNew")}
+            </Button>
+            <Button type="submit" loading={mutation.isPending && !saveAndNew} disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
           </Group>

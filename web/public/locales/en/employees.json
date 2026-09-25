@@ -23,7 +23,7 @@
     "description": "First and last name are enough; you can complete the rest later on the employee card.",
     "success": "Employee created.",
     "sendCredentials": "Send login details by e-mail",
-    "inviteFailed": "Employee created but login details could not be sent."
+    "inviteFailed": "Invitation could not be sent: {{message}}"
   },
   "filters": {
     "orgUnit": "Unit",

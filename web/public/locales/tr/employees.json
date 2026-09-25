@@ -23,7 +23,7 @@
     "description": "Ad ve soyad yeterlidir; diğer bilgileri daha sonra çalışan kartından tamamlayabilirsiniz.",
     "success": "Çalışan oluşturuldu.",
     "sendCredentials": "Giriş bilgileri e-posta ile gönderilsin",
-    "inviteFailed": "Çalışan oluşturuldu ancak giriş bilgisi gönderilemedi."
+    "inviteFailed": "Davet gönderilemedi: {{message}}"
   },
   "filters": {
     "orgUnit": "Birim",

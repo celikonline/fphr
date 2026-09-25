@@ -10,6 +10,7 @@ import { MantineProvider } from "@mantine/core";
 import trEmployees from "../../../public/locales/tr/employees.json";
 import trCommon from "../../../public/locales/tr/common.json";
 import CreateEmployeeDialog from "./create-employee-dialog";
+import { toast } from "@/hooks/use-toast";
 import { createEmployee } from "@/services/employees.service";
 import { inviteEmployee } from "@/services/invitations.service";
 
@@ -17,6 +18,9 @@ import { inviteEmployee } from "@/services/invitations.service";
 // field, not only in the toast that disappears after a few seconds.
 vi.mock("@/services/employees.service", () => ({ createEmployee: vi.fn() }));
 vi.mock("@/services/invitations.service", () => ({ inviteEmployee: vi.fn() }));
+const permission = vi.hoisted(() => ({ canInvite: true }));
+vi.mock("@/components/permission-guard", () => ({ usePermission: () => permission.canInvite }));
+vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
 vi.mock("./org-unit-select", () => ({ default: () => null }));
 vi.mock("./employee-picker", () => ({ default: () => null }));
 
@@ -64,8 +68,9 @@ function createTestI18n() {
   return instance;
 }
 
-function renderDialog() {
+function renderDialog(canInvite = true) {
   vi.clearAllMocks();
+  permission.canInvite = canInvite;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -109,14 +114,8 @@ describe("CreateEmployeeDialog", () => {
     await user.click(screen.getByRole("button", { name: buttonName }));
   }
 
-  it("credentials_switch_sent_in_payload: sendCredentials follows the switch", async () => {
+  it("credentials_switch_off_skips_invite_call", async () => {
     vi.mocked(createEmployee).mockResolvedValue({ id: "emp-1" } as never);
-    vi.mocked(inviteEmployee).mockResolvedValue({
-      employeeId: "emp-1",
-      outcome: "NotRequested",
-      sentToEmail: null,
-      emailSource: null,
-    });
     const user = userEvent.setup();
     renderDialog();
 
@@ -125,7 +124,11 @@ describe("CreateEmployeeDialog", () => {
     await user.click(toggle);
     await fillAndSubmit(user, trCommon.save);
 
-    await waitFor(() => expect(inviteEmployee).toHaveBeenCalledWith("emp-1", { sendCredentials: false }));
+    await waitFor(() => expect(createEmployee).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: trEmployees.invite.outcome.notrequested })),
+    );
+    expect(inviteEmployee).not.toHaveBeenCalled();
   });
 
   it("sends sendCredentials true by default", async () => {
@@ -156,5 +159,36 @@ describe("CreateEmployeeDialog", () => {
     await waitFor(() => expect(createEmployee).toHaveBeenCalledTimes(1));
     await waitFor(() => expect((document.getElementById("new-emp-firstName") as HTMLInputElement).value).toBe(""));
     expect(screen.getByRole("dialog")).not.toBeNull();
+  });
+
+  it("no_invite_permission_hides_switch_and_skips_call", async () => {
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-4" } as never);
+    renderDialog(false);
+
+    expect(screen.queryByRole("switch")).toBeNull();
+    await fillAndSubmit(userEvent.setup(), trCommon.save);
+
+    await waitFor(() => expect(createEmployee).toHaveBeenCalledTimes(1));
+    expect(inviteEmployee).not.toHaveBeenCalled();
+  });
+
+  it("invite_failure_warns_with_server_message_but_creation_succeeds", async () => {
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-5" } as never);
+    vi.mocked(inviteEmployee).mockRejectedValue(conflict("x", "SMTP kapalı"));
+    renderDialog();
+    await fillAndSubmit(userEvent.setup(), trCommon.save);
+
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: "destructive", description: expect.stringContaining("SMTP kapalı") }),
+      ),
+    );
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: "success" }));
+  });
+
+  it("save_and_new_button_sits_in_the_form_action_row", () => {
+    renderDialog();
+    const form = document.querySelector("form")!;
+    expect(form.contains(screen.getByRole("button", { name: trCommon.saveAndNew }))).toBe(true);
   });
 });
