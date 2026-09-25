@@ -1,5 +1,42 @@
 {
   "title": "Shift rotations",
   "subtitle": "Rotating shift patterns",
-  "comingSoon": "This screen is coming soon."
+  "patterns": "Patterns",
+  "assign": "Assignment",
+  "newPattern": "New pattern",
+  "code": "Code",
+  "name": "Name",
+  "preset": "Ready-made pattern",
+  "presets": {
+    "custom": "Custom",
+    "twoByTwelve": "2×12",
+    "threeByEight": "3×8",
+    "fourBySix": "4×6"
+  },
+  "cycleLength": "Cycle length (days)",
+  "steps": "Steps",
+  "stepDay": "Day {{n}}",
+  "dayType": "Day type",
+  "dayTypes": {
+    "work": "Work",
+    "off": "Off"
+  },
+  "shift": "Shift",
+  "addStep": "Add step",
+  "removeStep": "Remove step",
+  "save": "Save",
+  "saved": "Pattern saved.",
+  "pattern": "Pattern",
+  "employees": "Employees",
+  "pickEmployee": "Add employee",
+  "startDate": "Start",
+  "endDate": "End (optional)",
+  "offsetDays": "Offset (days)",
+  "apply": "Assign",
+  "noPatterns": "No patterns yet.",
+  "result": "{{count}} draft shift assignments created.",
+  "skippedTitle": "Skipped because of locked months",
+  "skippedMonth": "Period {{month}} is locked; nothing was assigned for that month.",
+  "overlapTitle": "Overlapping assignment",
+  "genericError": "The operation could not be completed."
 }
