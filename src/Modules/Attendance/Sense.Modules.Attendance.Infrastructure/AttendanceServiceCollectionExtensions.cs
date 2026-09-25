@@ -73,6 +73,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<LeaveOverlapChecker>();
         // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
         services.AddScoped<NonWorkingDayResolver>();
+        services.AddScoped<IAttendanceDailyKpiReader, AttendanceDailyKpiReader>();
         services.AddScoped<IShiftPlanTemplateRepository, ShiftPlanTemplateRepository>();
         // Eksik kayıt talebi (Z2.1, B6).
         services.AddScoped<IPunchRequestRepository, PunchRequestRepository>();
