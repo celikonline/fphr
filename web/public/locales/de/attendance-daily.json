@@ -13,7 +13,38 @@
   },
   "punchRequests": {
     "title": "Stempelanträge",
-    "subtitle": "Anträge zum Nachtragen oder Korrigieren von Stempelungen"
+    "subtitle": "Anträge zum Nachtragen oder Korrigieren von Stempelungen",
+    "tabMine": "Meine Anträge",
+    "tabAll": "Alle Anträge",
+    "new": "Neuer Antrag",
+    "formTitle": "Antrag auf fehlende Buchung",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "direction": "Richtung",
+    "in": "Kommen",
+    "out": "Gehen",
+    "reason": "Begründung",
+    "reasonPlaceholder": "Erklären Sie, warum die Buchung fehlt",
+    "submit": "Antrag senden",
+    "cancelForm": "Abbrechen",
+    "futureBlocked": "Für einen Zeitpunkt in der Zukunft kann kein Antrag gestellt werden.",
+    "reasonRequired": "Eine Begründung ist erforderlich.",
+    "required": "Datum und Uhrzeit sind erforderlich.",
+    "submitted": "Ihr Antrag wurde gesendet.",
+    "cancel": "Zurückziehen",
+    "cancelled": "Antrag zurückgezogen.",
+    "cancelConfirm": "Diesen Antrag zurückziehen?",
+    "empty": "Noch keine Anträge.",
+    "employee": "Mitarbeiter",
+    "occurredAt": "Buchungszeit",
+    "status": "Status",
+    "statuses": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "cancelled": "Storniert"
+    },
+    "loadError": "Anträge konnten nicht geladen werden."
   },
   "comingSoon": "Diese Ansicht folgt in Kürze."
 }
