@@ -21,6 +21,14 @@ export interface SharedFile {
   uploadedBy: string;
   visibility: SharedFileVisibility;
   allowedRoles: string[];
+  /** E8: catalog type (missing = untyped) and the "mobilde görünsün" flag. */
+  typeId?: string;
+  visibleOnMobile: boolean;
+}
+
+export interface SharedFileListFilters {
+  mobileOnly?: boolean;
+  typeId?: string;
 }
 
 export interface SharedFileDetail {
@@ -40,7 +48,7 @@ export interface SharedFileQuota {
   isExceeded: boolean;
 }
 
-export async function listSharedFiles(params: PagedQueryParams = {}): Promise<PagedResult<SharedFile>> {
+export async function listSharedFiles(params: PagedQueryParams & SharedFileListFilters = {}): Promise<PagedResult<SharedFile>> {
   const { data } = await apiClient.get<PagedResult<SharedFile>>(SHARED_FILES_BASE, { params });
   return data;
 }
@@ -70,6 +78,9 @@ interface InitiateSharedFileUploadResult {
 export interface UploadSharedFileOptions {
   visibility?: SharedFileVisibility;
   allowedRoles?: string[];
+  /** E8: catalog type and "mobilde görünsün" flag (omit to let the server default from the type). */
+  typeId?: string;
+  visibleOnMobile?: boolean;
 }
 
 /**
@@ -84,6 +95,8 @@ export async function uploadSharedFile(file: File, options: UploadSharedFileOpti
     fileSizeBytes: file.size,
     visibility: options.visibility ?? "everyone",
     allowedRoles: options.allowedRoles ?? null,
+    typeId: options.typeId ?? null,
+    visibleOnMobile: options.visibleOnMobile ?? null,
   });
 
   // Upload bytes directly to storage via the presigned URL (not our API - no auth header, plain axios).
@@ -96,4 +109,15 @@ export async function uploadSharedFile(file: File, options: UploadSharedFileOpti
   });
 
   return initiated.fileId;
+}
+
+/** E8: sets a file's type and "mobilde görünsün" flag (`PUT {id}/classification`, requires `documents.company.manage`). */
+export async function classifySharedFile(id: string, input: { typeId?: string | null; visibleOnMobile: boolean }): Promise<void> {
+  await apiClient.put(`${SHARED_FILES_BASE}/${id}/classification`, { typeId: input.typeId ?? null, visibleOnMobile: input.visibleOnMobile });
+}
+
+/** E8: downloads the selected (or filtered) visible files as one zip blob. */
+export async function downloadSharedFilesZip(request: { fileIds?: string[]; mobileOnly?: boolean; typeId?: string }): Promise<Blob> {
+  const { data } = await apiClient.post<Blob>(`${SHARED_FILES_BASE}/download-zip`, request, { responseType: "blob" });
+  return data;
 }
