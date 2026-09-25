@@ -16,7 +16,8 @@ public sealed record PunchInput(
     bool IsManual, Guid? CreatedByUserId, string? Reason);
 
 /// <summary>Outcome of a batch: newly stored punches vs. duplicates skipped by the idempotency rule.</summary>
-public sealed record PunchBatchResult(int Accepted, int Ignored);
+/// <see cref="Rejected"/>: kilitli aya (K6) ait okutmalar - tekrar değil, reddedildi.
+public sealed record PunchBatchResult(int Accepted, int Ignored, int Rejected = 0);
 
 /// <summary>Progress of a queued recalculation job; <see cref="State"/> is the job's lifecycle name (queued/running/completed/failed).</summary>
 public sealed record RecalculationStatusDto(Guid JobId, string State, int Total, int Done, string? Error);
