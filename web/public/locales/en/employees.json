@@ -347,7 +347,9 @@
       "leave": "Leave",
       "overtime": "Overtime",
       "other": "Other",
-      "account": "Account"
+      "account": "Account",
+      "onboarding": "Onboarding",
+      "notes": "Notes"
     },
     "tabNotes": {
       "leave": "Leave balances and requests appear here once the Leave module is available.",
@@ -831,5 +833,44 @@
   "workCertificate": {
     "download": "Employment certificate (PDF)",
     "failed": "Could not download the employment certificate."
+  },
+  "onboardingCard": {
+    "title": "Onboarding / offboarding process",
+    "progress": "Category progress",
+    "uncategorized": "Uncategorized",
+    "none": "No tasks started for this employee.",
+    "startTitle": "Start process",
+    "set": "Template set",
+    "setPlaceholder": "Select a set",
+    "referenceDate": "Reference date",
+    "start": "Start process",
+    "started": "Process started.",
+    "noSets": "No active template sets."
+  },
+  "employeeNotes": {
+    "title": "Employee notes",
+    "empty": "No notes yet.",
+    "add": "Add note",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noteTitle": "Title",
+    "content": "Content",
+    "importance": "Importance",
+    "importances": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "attachment": "Attachment",
+    "attach": "Attach file",
+    "removeAttachment": "Remove attachment",
+    "author": "Added by",
+    "saved": "Note saved.",
+    "deleted": "Note deleted.",
+    "loadError": "Notes could not be loaded.",
+    "actionFailed": "The action could not be completed.",
+    "confirmDelete": "Delete this note?"
   }
 }

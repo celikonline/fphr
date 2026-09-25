@@ -9,6 +9,8 @@ import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
 import { DOCUMENTS_CARD_TAB_PERMISSIONS, DocumentsSection } from "./documents-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
+import { EmployeeNotesCard } from "./employee-notes-card";
+import { EmployeeOnboardingCard } from "./employee-onboarding-card";
 import { OtherSection } from "./other-section";
 import { PaymentsSection } from "./payments-section";
 import { PAYROLL_CARD_TAB_PERMISSIONS, PayrollSection } from "./payroll-section";
@@ -112,6 +114,19 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   },
   { key: "other", labelKey: "employees:card.tabs.other", component: OtherSection },
   { key: "account", labelKey: "employees:card.tabs.account", component: AccountSection },
+  {
+    key: "onboarding",
+    labelKey: "employees:card.tabs.onboarding",
+    permission: "onboarding.tasks.view",
+    module: "onboarding",
+    component: ({ employee }) => <EmployeeOnboardingCard employeeId={employee.id} />,
+  },
+  {
+    key: "notes",
+    labelKey: "employees:card.tabs.notes",
+    permission: "employee.notes.view",
+    component: ({ employee }) => <EmployeeNotesCard employeeId={employee.id} />,
+  },
 ];
 
 /** Tabs the current user may see (permission / access setting filtered); never empty (Genel has no gate). */

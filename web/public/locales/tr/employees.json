@@ -347,7 +347,9 @@
       "leave": "İzinler",
       "overtime": "Fazla mesailer",
       "other": "Diğer",
-      "account": "Hesap"
+      "account": "Hesap",
+      "onboarding": "İşe alış",
+      "notes": "Notlar"
     },
     "tabNotes": {
       "leave": "İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
@@ -831,5 +833,44 @@
   "workCertificate": {
     "download": "Çalışma belgesi (PDF)",
     "failed": "Çalışma belgesi indirilemedi."
+  },
+  "onboardingCard": {
+    "title": "İşe alış / çıkış süreci",
+    "progress": "Kategori ilerlemesi",
+    "uncategorized": "Kategorisiz",
+    "none": "Bu çalışan için başlatılmış görev yok.",
+    "startTitle": "Süreç başlat",
+    "set": "Şablon seti",
+    "setPlaceholder": "Set seçin",
+    "referenceDate": "Referans tarihi",
+    "start": "Süreci başlat",
+    "started": "Süreç başlatıldı.",
+    "noSets": "Aktif şablon seti yok."
+  },
+  "employeeNotes": {
+    "title": "Çalışan notları",
+    "empty": "Henüz not yok.",
+    "add": "Not ekle",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "noteTitle": "Başlık",
+    "content": "İçerik",
+    "importance": "Önem",
+    "importances": {
+      "low": "Düşük",
+      "normal": "Normal",
+      "high": "Yüksek"
+    },
+    "attachment": "Ek dosya",
+    "attach": "Dosya ekle",
+    "removeAttachment": "Eki kaldır",
+    "author": "Ekleyen",
+    "saved": "Not kaydedildi.",
+    "deleted": "Not silindi.",
+    "loadError": "Notlar yüklenemedi.",
+    "actionFailed": "İşlem tamamlanamadı.",
+    "confirmDelete": "Bu not silinsin mi?"
   }
 }
