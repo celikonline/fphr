@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
@@ -117,6 +118,27 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
             .Where(d => d.EmployeeId == employeeId && d.Date >= from && d.Date <= to)
             .OrderBy(d => d.Date)
             .ToListAsync(cancellationToken);
+
+    public void Discard(AttendanceDay day)
+    {
+        var entry = context.Entry(day);
+        if (entry.State == EntityState.Added)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
+    public bool IsConcurrencyConflict(Exception exception) =>
+        exception is DbUpdateConcurrencyException concurrency && concurrency.Entries.Any(e => e.Entity is AttendanceDay);
+
+    public async Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default)
+    {
+        var entry = context.Entry(day);
+        if (entry.State is not (EntityState.Added or EntityState.Detached))
+        {
+            await entry.ReloadAsync(cancellationToken);
+        }
+    }
 
     public async Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
@@ -328,6 +350,21 @@ public sealed class PunchRepository(AttendanceDbContext context) : IPunchReposit
 
     public Task<Punch?> FindAsync(Guid tenantId, Guid punchId, CancellationToken cancellationToken = default) =>
         Live(tenantId).FirstOrDefaultAsync(p => p.Id == punchId, cancellationToken);
+    public Task<Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default) =>
+        context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id, cancellationToken);
+
+    public bool IsDuplicateKeyViolation(Exception exception) =>
+        exception is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres }
+        && postgres.ConstraintName is AttendanceTables.PunchUniqueIndex or AttendanceTables.AttendanceDayUniqueIndex;
+
+    public void Discard(Punch punch)
+    {
+        var entry = context.Entry(punch);
+        if (entry.State == EntityState.Added)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
 
     private IQueryable<Punch> Live(Guid tenantId) =>
         context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).Where(p => p.TenantId == tenantId && p.DeletedAtUtc == null);

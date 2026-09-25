@@ -13,6 +13,16 @@ public sealed record TenantLocalNow(DateTime Utc, DateTime Local);
 public interface ITenantLocalClock
 {
     Task<TenantLocalNow> NowAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Kiracının saat dilimi (zaman-devam Z0.1: okutma UTC saklanır, gün yerel duvar saatiyle türetilir). Varsayılan uygulama "şimdi"nin
+    /// yerel−UTC farkından sabit ofsetli bir dilim üretir (test saatleri için); <see cref="TenantLocalClock"/> gerçek dilimi döner.
+    /// </summary>
+    async Task<TimeZoneInfo> GetTimeZoneAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var now = await NowAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        return Punches.PunchTime.FixedOffset(now.Local - now.Utc);
+    }
 }
 
 public sealed class TenantLocalClock(ITenantTimeZoneLookup timeZones, TimeProvider clock) : ITenantLocalClock
@@ -20,8 +30,13 @@ public sealed class TenantLocalClock(ITenantTimeZoneLookup timeZones, TimeProvid
     public async Task<TenantLocalNow> NowAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         var utc = clock.GetUtcNow().UtcDateTime;
-        var zoneId = await timeZones.FindTimeZoneIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
-        var zone = zoneId is not null && TimeZoneInfo.TryFindSystemTimeZoneById(zoneId, out var found) ? found : TimeZoneInfo.Utc;
+        var zone = await GetTimeZoneAsync(tenantId, cancellationToken).ConfigureAwait(false);
         return new TenantLocalNow(utc, TimeZoneInfo.ConvertTimeFromUtc(utc, zone));
+    }
+
+    public async Task<TimeZoneInfo> GetTimeZoneAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var zoneId = await timeZones.FindTimeZoneIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        return zoneId is not null && TimeZoneInfo.TryFindSystemTimeZoneById(zoneId, out var found) ? found : TimeZoneInfo.Utc;
     }
 }

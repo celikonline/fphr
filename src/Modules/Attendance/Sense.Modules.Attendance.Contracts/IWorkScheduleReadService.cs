@@ -1,8 +1,12 @@
 namespace Sense.Modules.Attendance.Contracts;
 
-/// <summary>The employee's effective work schedule day on one date (11.3.6 "SenseİK tasarım kararı").</summary>
+/// <summary>
+/// The employee's effective work schedule day on one date (11.3.6 "SenseİK tasarım kararı"). <see cref="HasSchedule"/> is false when
+/// neither an assignment nor a tenant default schedule exists (zaman-devam §5.1 "plan yok" - distinct from a schedule's off day).
+/// </summary>
 public sealed record EmployeeScheduleDay(
-    bool IsWorkingDay, TimeOnly? Start, TimeOnly? End, TimeOnly? BreakStart, TimeOnly? BreakEnd, bool IncludeSaturdayWhenFullWeek);
+    bool IsWorkingDay, TimeOnly? Start, TimeOnly? End, TimeOnly? BreakStart, TimeOnly? BreakEnd, bool IncludeSaturdayWhenFullWeek,
+    bool HasSchedule = true);
 
 /// <summary>
 /// Cross-module read port other modules use instead of guessing an employee's working days (roadmap #23). Leave's

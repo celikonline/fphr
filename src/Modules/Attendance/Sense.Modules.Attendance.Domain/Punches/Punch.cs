@@ -94,7 +94,7 @@ public sealed class Punch : TenantAggregateRoot<Guid>, IAuditLogged
         string? sourceRef, Guid? terminalId, Guid? locationId, double? lat, double? lon, bool isManual, Guid? createdByUserId, string? reason,
         DateTime? nowUtc = null)
     {
-        var occurred = AsUtc(occurredAtUtc);
+        var occurred = NormalizeOccurredAt(occurredAtUtc);
         var check = Validate(employeeId, occurred, workDate, lat, lon, reason, AsUtc(nowUtc ?? DateTime.UtcNow));
         if (check.IsFailure)
         {
@@ -159,6 +159,16 @@ public sealed class Punch : TenantAggregateRoot<Guid>, IAuditLogged
         }
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Okutma anını UTC'ye çevirip mikrosaniyeye kırpar: .NET 100 ns, PostgreSQL 1 µs saklar; kırpılmazsa aynı okutmanın tekrarı
+    /// (terminal yeniden denemesi) bellekte farklı, veritabanında aynı görünür ve tekillik/idempotans kontrolü sapar.
+    /// </summary>
+    public static DateTime NormalizeOccurredAt(DateTime value)
+    {
+        var utc = AsUtc(value);
+        return new DateTime(utc.Ticks - (utc.Ticks % TimeSpan.TicksPerMicrosecond), DateTimeKind.Utc);
     }
 
     private static DateTime AsUtc(DateTime value) => value.Kind switch

@@ -10,10 +10,12 @@ namespace Sense.Modules.Attendance.Application.Recalculation;
 /// transaction). Days in a month the employee's timesheet was approved for are skipped; a human resolution
 /// (Resolved/Ignored + override) given before the run survives it; the run is idempotent (running twice yields the same
 /// rows). Tenant context must already be set by the caller (background scope).
+/// <paramref name="employees"/> is only needed for "every active employee" runs (no ids); it is optional so the recalculator also
+/// resolves in Sense.Worker (no Employee directory there) where callers always pass explicit ids (e.g. an approved punch request).
 /// </summary>
 public sealed class RecalculationExecutor(
     IAttendanceDayRepository days, IMonthlyTimesheetApprovalRepository approvals, IDayRebuilder rebuilder,
-    IEmployeeDirectory employees, IAttendanceUnitOfWork unitOfWork)
+    IAttendanceUnitOfWork unitOfWork, IEmployeeDirectory? employees = null)
 {
     public const int ChunkSize = 200;
 
@@ -24,7 +26,7 @@ public sealed class RecalculationExecutor(
     {
         var ids = employeeIds is { Count: > 0 }
             ? employeeIds.Distinct().ToList()
-            : (await employees.ListActiveEmployeeIdsAsync(tenantId, cancellationToken).ConfigureAwait(false)).ToList();
+            : (await AllActiveAsync(tenantId, cancellationToken).ConfigureAwait(false)).ToList();
         var dates = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1).Select(from.AddDays).ToList();
         var total = ids.Count * dates.Count;
         var months = dates.Select(MonthlyTimesheetApproval.NormalizeToMonthStart).Distinct().ToList();
@@ -42,6 +44,10 @@ public sealed class RecalculationExecutor(
 
         return rebuilt;
     }
+
+    private Task<IReadOnlyList<Guid>> AllActiveAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        employees?.ListActiveEmployeeIdsAsync(tenantId, cancellationToken)
+        ?? throw new InvalidOperationException("Recalculating every active employee needs IEmployeeDirectory (API host only); pass employee ids.");
 
     private async Task<int> RunChunkAsync(
         Guid tenantId, Guid[] chunk, List<DateOnly> dates, List<DateOnly> months, CancellationToken cancellationToken)

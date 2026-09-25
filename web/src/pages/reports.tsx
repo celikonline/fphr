@@ -410,6 +410,8 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
         ) : (
           <Stack gap="sm">
             {report.parameters.map((parameter) => {
+              // Çıktı biçimi tek yerde (aşağıdaki SegmentedControl) çizilir.
+              if (parameter.key === REPORT_PARAMETER_KEYS.format) return null;
               const required = parameter.isRequired ? " *" : "";
               switch (parameter.kind) {
                 case "orgUnits":
@@ -497,6 +499,20 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
                       label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key })}
                       checked={values[parameter.key] === "true"}
                       onChange={(e) => set(parameter.key, e.currentTarget.checked ? "true" : null)}
+                    />
+                  );
+                case "select":
+                  return (
+                    <Select
+                      key={parameter.key}
+                      label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key }) + required}
+                      data={(parameter.options ?? []).map((option) => ({
+                        value: option,
+                        label: t(`reports:params.${parameter.key}Options.${option}`, { defaultValue: option }),
+                      }))}
+                      value={values[parameter.key] ?? null}
+                      onChange={(v) => set(parameter.key, v)}
+                      clearable={!parameter.isRequired}
                     />
                   );
                 default:
