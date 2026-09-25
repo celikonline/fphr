@@ -28,4 +28,19 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>K6 (zaman-devam): çalışanın bu ayı için onaylı aylık puantaj var - okutma eklenemez/silinemez.</summary>
+    public const string PeriodLocked = "attendance.timesheet.period_locked";
+
+    /// <summary>Silinmek/düzeltilmek istenen okutma kiracıda yok.</summary>
+    public const string PunchNotFound = "attendance.punch.not_found";
+
+    /// <summary>IPunchRecorder girişi: okutma yönü tanımlı değerlerden biri değil.</summary>
+    public const string PunchDirectionInvalid = "attendance.punch.direction_invalid";
+
+    /// <summary>IPunchRecorder girişi: okutma kaynağı tanımlı değerlerden biri değil.</summary>
+    public const string PunchSourceInvalid = "attendance.punch.source_invalid";
+
+    /// <summary>IPunchRecorder girişi: kaynak referansı (SourceRef) izin verilen uzunluğu aşıyor - sessizce kesilmez.</summary>
+    public const string PunchSourceRefTooLong = "attendance.punch.source_ref_too_long";
 }

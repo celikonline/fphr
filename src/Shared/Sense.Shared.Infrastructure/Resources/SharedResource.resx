@@ -1600,4 +1600,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>Bu ayın puantajı onaylandı; okutma eklenemez ya da silinemez.</value></data>
+  <data name="attendance.punch.not_found" xml:space="preserve"><value>Okutma bulunamadı.</value></data>
+  <data name="attendance.punch.direction_invalid" xml:space="preserve"><value>Okutma yönü geçersiz.</value></data>
+  <data name="attendance.punch.source_invalid" xml:space="preserve"><value>Okutma kaynağı geçersiz.</value></data>
+  <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>Okutma kaynak referansı en fazla 200 karakter olabilir.</value></data>
 </root>

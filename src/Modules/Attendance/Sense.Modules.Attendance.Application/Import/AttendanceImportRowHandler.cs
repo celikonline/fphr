@@ -1,4 +1,6 @@
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -14,9 +16,13 @@ namespace Sense.Modules.Attendance.Application.Import;
 /// Source=Import, same as a manual <see cref="RecordAttendanceCommand"/>. AllOrNothing applies nothing when any row fails.
 /// </summary>
 public sealed class AttendanceImportRowHandler(
-    ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules, IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork)
+    ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules, IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork,
+    IPunchRepository punches, ITenantLocalClock clock)
     : IImportRowHandler
 {
+    /// <summary>İçe aktarılan satır günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe.</summary>
+    public const string ReplacedReason = "PDKS Excel içe aktarımıyla değiştirildi";
+
     public string TemplateCode => AttendanceImportColumns.TemplateCode;
 
     public async Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
@@ -77,13 +83,17 @@ public sealed class AttendanceImportRowHandler(
             return new ImportBatchResult(Ordered(batch, results), Applied: false);
         }
 
+        // Z0.1: her satır Source=Import okutmalara dönüşür ve günü (üzerine yazarak) yeniden türetir.
+        var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, zone, now.Utc);
         var anyChange = false;
         foreach (var plan in plans)
         {
             var wasExisting = await days.FindByEmployeeAndDateAsync(plan.EmployeeId, plan.Date, cancellationToken).ConfigureAwait(false) is not null;
-            var upserted = await AttendanceDayUpsert.UpsertAsync(
-                days, schedules, tenant.TenantId, plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut,
-                AttendanceDaySource.Import, overnight: false, cancellationToken).ConfigureAwait(false);
+            var upserted = await writer.ReplaceDayAsync(
+                plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut, AttendanceDaySource.Import, actorUserId: null, ReplacedReason, limits: null,
+                cancellationToken).ConfigureAwait(false);
             if (upserted.IsFailure)
             {
                 results[plan.RowNumber] = new ImportRowResult(

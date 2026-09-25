@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
@@ -59,6 +60,9 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<LeaveOverlapChecker>();
         // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
         services.AddScoped<NonWorkingDayResolver>();
+        // Zaman-devam B1 (Z0.1): ham okutma deposu + tek yazma yolu. TryAdd: aynı dalgada başka şeritler de depoyu kaydedebilir.
+        services.TryAddScoped<IPunchRepository, PunchRepository>();
+        services.TryAddScoped<IPunchRecorder, Application.Punches.PunchRecorder>();
         return services;
     }
 

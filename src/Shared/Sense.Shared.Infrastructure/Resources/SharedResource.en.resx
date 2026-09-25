@@ -1591,4 +1591,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
+  <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>This month's timesheet is approved; punches cannot be added or deleted.</value></data>
+  <data name="attendance.punch.not_found" xml:space="preserve"><value>Punch not found.</value></data>
+  <data name="attendance.punch.direction_invalid" xml:space="preserve"><value>The punch direction is invalid.</value></data>
+  <data name="attendance.punch.source_invalid" xml:space="preserve"><value>The punch source is invalid.</value></data>
+  <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>The punch source reference can be at most 200 characters.</value></data>
 </root>

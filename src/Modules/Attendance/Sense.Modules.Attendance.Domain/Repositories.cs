@@ -159,6 +159,9 @@ public interface IPunchRepository
     Task<bool> ExistsAsync(
         Guid tenantId, Guid employeeId, DateTime occurredAtUtc, PunchDirection direction, Punches.PunchSource source,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Kimliğe göre okutma (silinmiş olsa da döner - silme/denetim akışı kendisi karar verir); açık <paramref name="tenantId"/> ile süzülür.</summary>
+    Task<Punches.Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IShiftDefinitionRepository

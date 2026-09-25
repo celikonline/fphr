@@ -112,7 +112,9 @@ public sealed class AttendanceDataScopeTests
     [Fact]
     public async Task RecordAttendance_OutOfScope_ReturnsForbiddenWithoutWriting()
     {
-        var handler = new RecordAttendanceHandler(_days, _schedules, Substitute.For<ITenantContext>(), _dataScope, new FixedLocalClock(DateTime.UtcNow));
+        var handler = new RecordAttendanceHandler(
+            _days, _schedules, Substitute.For<ITenantContext>(), _dataScope, new FixedLocalClock(DateTime.UtcNow), new InMemoryPunchRepository(),
+            Substitute.For<ICurrentUser>());
 
         var result = await handler.Handle(
             new RecordAttendanceCommand(_outOfScope, Monday, new TimeOnly(9, 0), new TimeOnly(17, 0)), TestContext.Current.CancellationToken);

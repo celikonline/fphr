@@ -36,9 +36,9 @@ public sealed class SelfCheckInFeaturesTests
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(9, 0), new TimeOnly(18, 0), null, null, true));
     }
 
-    private QrCheckInHandler CreateQrHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock);
+    private QrCheckInHandler CreateQrHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock, new InMemoryPunchRepository());
 
-    private GpsCheckInHandler CreateGpsHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock);
+    private GpsCheckInHandler CreateGpsHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock, new InMemoryPunchRepository());
 
     [Fact]
     public async Task QrCheckIn_ValidCode_RecordsCheckInAndReturnsLocation()
@@ -159,7 +159,7 @@ public sealed class SelfCheckInFeaturesTests
         _locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34EF56", Arg.Any<CancellationToken>())
             .Returns(new LocationGeofence(_locationId, "İstanbul HQ", null, null, null));
         _days.FindByEmployeeAndDateAsync(_employeeId, Today, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
-        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock);
+        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock, new InMemoryPunchRepository());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34EF56", PunchDirection.In), TestContext.Current.CancellationToken);
 
@@ -181,7 +181,7 @@ public sealed class SelfCheckInFeaturesTests
         _days.FindByEmployeeAndDateAsync(_employeeId, yesterday, Arg.Any<CancellationToken>()).Returns(night);
         _schedules.GetForDateAsync(_employeeId, yesterday, Arg.Any<CancellationToken>())
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(22, 0), new TimeOnly(6, 0), null, null, true));
-        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock);
+        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock, new InMemoryPunchRepository());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34EF56", PunchDirection.Out), TestContext.Current.CancellationToken);
 

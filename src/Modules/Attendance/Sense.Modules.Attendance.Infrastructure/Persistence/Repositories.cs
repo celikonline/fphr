@@ -324,6 +324,9 @@ public sealed class PunchRepository(AttendanceDbContext context) : IPunchReposit
         Live(tenantId).AnyAsync(
             p => p.EmployeeId == employeeId && p.OccurredAtUtc == occurredAtUtc && p.Direction == direction && p.Source == source, cancellationToken);
 
+    public Task<Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default) =>
+        context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == id, cancellationToken);
+
     private IQueryable<Punch> Live(Guid tenantId) =>
         context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).Where(p => p.TenantId == tenantId && p.DeletedAtUtc == null);
 }

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
@@ -60,9 +61,13 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 }
 
 public sealed class RecordAttendanceHandler(
-    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock)
+    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock,
+    IPunchRepository punches, ICurrentUser currentUser)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
+    /// <summary>Elle kayıt günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe (Z0.1: elle kayıt okutmaya dönüşür).</summary>
+    public const string ReplacedReason = "Elle puantaj kaydıyla değiştirildi";
+
     public async Task<Result<Guid>> Handle(RecordAttendanceCommand command, CancellationToken cancellationToken)
     {
         if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetEdit.Key, command.EmployeeId, cancellationToken))
@@ -71,15 +76,18 @@ public sealed class RecordAttendanceHandler(
         }
 
         // A day that has not started yet (in the tenant's own time zone) cannot already have worked hours.
-        var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken)).Local);
-        if (command.Date > localToday)
+        var now = await localClock.NowAsync(tenant.TenantId, cancellationToken);
+        if (command.Date > DateOnly.FromDateTime(now.Local))
         {
             return Error.Validation(AttendanceErrors.DateInFuture);
         }
 
-        var result = await AttendanceDayUpsert.UpsertAsync(
-            days, schedules, tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut,
-            AttendanceDaySource.Manual, overnight: false, cancellationToken);
+        // Z0.1: elle kayıt Source=Manual okutmalara dönüşür; gün bu okutmalardan türetilir (ShiftSettings limitleri bugünkü gibi uygulanmaz).
+        var zone = await localClock.GetTimeZoneAsync(tenant.TenantId, cancellationToken);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, schedules, zone, now.Utc);
+        var result = await writer.ReplaceDayAsync(
+            command.EmployeeId, command.Date, command.CheckIn, command.CheckOut, AttendanceDaySource.Manual, currentUser.UserId, ReplacedReason,
+            limits: null, cancellationToken);
         return result.IsFailure ? result.Error : result.Value.Id;
     }
 }
