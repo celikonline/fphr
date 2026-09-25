@@ -1600,4 +1600,18 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="import.template.shiftplan.name" xml:space="preserve"><value>Vardiya planı</value></data>
+  <data name="import.template.shiftplan.description" xml:space="preserve"><value>Çalışanların günlük vardiya planını (vardiya kodu ya da hafta tatili/dinlenme/resmi tatil) toplu yükleyin.</value></data>
+  <data name="import.template.shiftplan.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; aynı çalışan ve gün için tekrar yüklenen satır önceki planın üzerine yazar.</value></data>
+  <data name="import.template.shiftplan.instruction.code" xml:space="preserve"><value>Vardiya kodu sütunu açılır listedir: vardiya tanımı kodlarından ya da WEEKLY_REST, REST_DAY, PUBLIC_HOLIDAY değerlerinden birini seçin.</value></data>
+  <data name="import.template.shiftplan.instruction.locked" xml:space="preserve"><value>Kilitli aydaki günler ve yayınlanmış vardiyalar değiştirilmez; bu satırlar hatalı sayılır.</value></data>
+  <data name="import.template.shiftplan.sample.valid" xml:space="preserve"><value>Doğru: tanımlı bir vardiya kodu.</value></data>
+  <data name="import.template.shiftplan.sample.rest" xml:space="preserve"><value>Doğru: hafta tatili günü.</value></data>
+  <data name="import.template.shiftplan.sample.invalid_code" xml:space="preserve"><value>Hatalı: tanımlı olmayan vardiya kodu.</value></data>
+  <data name="import.column.shiftplan.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.shiftplan.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.shiftplan.date" xml:space="preserve"><value>Tarih</value></data>
+  <data name="import.column.shiftplan.date.description" xml:space="preserve"><value>Plan günü (GG.AA.YYYY).</value></data>
+  <data name="import.column.shiftplan.shiftCode" xml:space="preserve"><value>Vardiya kodu</value></data>
+  <data name="import.column.shiftplan.shiftCode.description" xml:space="preserve"><value>Vardiya tanımı kodu ya da WEEKLY_REST / REST_DAY / PUBLIC_HOLIDAY.</value></data>
 </root>
