@@ -45,7 +45,7 @@ public sealed class CompanyEventQueriesTests
     {
         var tenantId = Guid.NewGuid();
         var s = BuildSubstitutes(tenantId);
-        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts);
+        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts, Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
 
         var result = await handler.Handle(new GetCompanyCalendarQuery(new DateOnly(2026, 9, 10), new DateOnly(2026, 9, 1), null), CancellationToken.None);
 
@@ -80,7 +80,7 @@ public sealed class CompanyEventQueriesTests
                 return ids.Select(id => new EmployeeContact(id, "Ada", "Yılmaz", null, null, null, "Active")).ToList();
             });
 
-        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts);
+        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts, Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(new GetCompanyCalendarQuery(from, to, null), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -108,7 +108,7 @@ public sealed class CompanyEventQueriesTests
         var visible = CompanyEvent.Create(tenantId, "Ekip Etkinliği", null, new DateOnly(2026, 9, 13), CompanyEventType.CompanyEvent, callerOrgUnitId, Guid.NewGuid()).Value;
         s.Events.GetInRangeAsync(tenantId, from, to, Arg.Any<CancellationToken>()).Returns(new List<CompanyEvent> { restricted, visible });
 
-        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts);
+        var handler = new GetCompanyCalendarHandler(s.Tenant, s.CurrentUser, s.Events, s.Directory, s.Contacts, s.BirthDates, s.EmployeeLookup, s.LeaveStarts, Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(new GetCompanyCalendarQuery(from, to, null), CancellationToken.None);
 
         Assert.True(result.IsSuccess);

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Sense.Modules.Announcements.Domain;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
@@ -42,7 +43,8 @@ public sealed class CreateCompanyEventValidator : AbstractValidator<CreateCompan
 
 public sealed class CreateCompanyEventHandler(
     ITenantContext tenant, ICurrentUser currentUser, ICompanyEventRepository events, IOrgUnitLookup orgUnits,
-    ICompanyEventCategoryRepository categories, IEmployeeContactLookup employeeContacts, IIntegrationEventOutbox outbox)
+    ICompanyEventCategoryRepository categories, IEmployeeContactLookup employeeContacts, IIntegrationEventOutbox outbox,
+    ITenantTimeZoneLookup timeZones)
     : ICommandHandler<CreateCompanyEventCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateCompanyEventCommand command, CancellationToken cancellationToken)
@@ -67,7 +69,8 @@ public sealed class CreateCompanyEventHandler(
 
         var plan = EventInvitationFeatures.BuildPlan(
             command.EventDate, command.StartsAt, command.EndsAt, command.IsAllDay, command.Mode, command.Location,
-            command.OnlineUrl, command.NotifyInvitees, command.CategoryId);
+            command.OnlineUrl, command.NotifyInvitees, command.CategoryId,
+            await CompanyEventLocalDay.ZoneAsync(timeZones, tenant.TenantId, cancellationToken));
         var created = CompanyEvent.Create(
             tenant.TenantId, command.Title, command.Description, command.Type,
             command.VisibilityOrgUnitId, currentUser.UserId ?? Guid.Empty, plan);
@@ -116,7 +119,8 @@ public sealed class UpdateCompanyEventValidator : AbstractValidator<UpdateCompan
 
 public sealed class UpdateCompanyEventHandler(
     ITenantContext tenant, ICompanyEventRepository events, IOrgUnitLookup orgUnits,
-    ICompanyEventCategoryRepository categories, IEmployeeContactLookup employeeContacts, IIntegrationEventOutbox outbox)
+    ICompanyEventCategoryRepository categories, IEmployeeContactLookup employeeContacts, IIntegrationEventOutbox outbox,
+    ITenantTimeZoneLookup timeZones)
     : ICommandHandler<UpdateCompanyEventCommand>
 {
     public async Task<Result> Handle(UpdateCompanyEventCommand command, CancellationToken cancellationToken)
@@ -147,7 +151,8 @@ public sealed class UpdateCompanyEventHandler(
 
         var plan = EventInvitationFeatures.BuildPlan(
             command.EventDate, command.StartsAt, command.EndsAt, command.IsAllDay, command.Mode, command.Location,
-            command.OnlineUrl, command.NotifyInvitees, command.CategoryId);
+            command.OnlineUrl, command.NotifyInvitees, command.CategoryId,
+            await CompanyEventLocalDay.ZoneAsync(timeZones, tenant.TenantId, cancellationToken));
         var updated = companyEvent.Update(command.Title, command.Description, command.Type, command.VisibilityOrgUnitId, plan);
         if (updated.IsFailure)
         {

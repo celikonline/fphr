@@ -104,7 +104,8 @@ public sealed class CompanyEventEnrichmentTests
                 .Select(id => new EmployeeContact(id, "Ad", "Soyad", null, null, null, "Active")).ToList());
         var outbox = Substitute.For<IIntegrationEventOutbox>();
         var handler = new CreateCompanyEventHandler(
-            tenant, currentUser, events, Substitute.For<IOrgUnitLookup>(), Substitute.For<ICompanyEventCategoryRepository>(), contacts, outbox);
+            tenant, currentUser, events, Substitute.For<IOrgUnitLookup>(), Substitute.For<ICompanyEventCategoryRepository>(), contacts, outbox,
+            Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         return (handler, outbox, events);
     }
 
@@ -169,7 +170,8 @@ public sealed class CompanyEventEnrichmentTests
         leaveStarts.GetApprovedLeaveStartsAsync(TenantId, from, to, Arg.Any<CancellationToken>()).Returns(new List<LeaveStartDate>());
         var handler = new GetCompanyCalendarHandler(
             tenant, Substitute.For<ICurrentUser>(), events, directory, Substitute.For<IEmployeeContactLookup>(),
-            Substitute.For<IEmployeeBirthDateLookup>(), Substitute.For<IEmployeeLookup>(), leaveStarts);
+            Substitute.For<IEmployeeBirthDateLookup>(), Substitute.For<IEmployeeLookup>(), leaveStarts,
+            Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
 
         var result = await handler.Handle(new GetCompanyCalendarQuery(from, to, null), CancellationToken.None);
 

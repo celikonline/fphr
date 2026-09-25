@@ -27,7 +27,7 @@ public sealed class CompanyEventCommandsTests
         var repository = Substitute.For<ICompanyEventRepository>();
         var orgUnits = Substitute.For<IOrgUnitLookup>();
 
-        var handler = new CreateCompanyEventHandler(tenant, currentUser, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>());
+        var handler = new CreateCompanyEventHandler(tenant, currentUser, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>(), Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -50,7 +50,7 @@ public sealed class CompanyEventCommandsTests
         var orgUnits = Substitute.For<IOrgUnitLookup>();
         orgUnits.ExistsActiveAsync(tenantId, orgUnitId, Arg.Any<CancellationToken>()).Returns(false);
 
-        var handler = new CreateCompanyEventHandler(tenant, currentUser, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>());
+        var handler = new CreateCompanyEventHandler(tenant, currentUser, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>(), Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
@@ -121,7 +121,7 @@ public sealed class CompanyEventCommandsTests
         repository.GetByIdAsync(tenantId, command.EventId, Arg.Any<CancellationToken>()).Returns((CompanyEvent?)null);
         var orgUnits = Substitute.For<IOrgUnitLookup>();
 
-        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>());
+        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>(), Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
@@ -144,7 +144,7 @@ public sealed class CompanyEventCommandsTests
         repository.GetByIdAsync(tenantId, originalId, Arg.Any<CancellationToken>()).Returns(companyEvent);
         var orgUnits = Substitute.For<IOrgUnitLookup>();
 
-        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>());
+        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>(), Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -174,7 +174,7 @@ public sealed class CompanyEventCommandsTests
         var orgUnits = Substitute.For<IOrgUnitLookup>();
         orgUnits.ExistsActiveAsync(tenantId, orgUnitId, Arg.Any<CancellationToken>()).Returns(false);
 
-        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>());
+        var handler = new UpdateCompanyEventHandler(tenant, repository, orgUnits, Substitute.For<ICompanyEventCategoryRepository>(), Substitute.For<IEmployeeContactLookup>(), Substitute.For<IIntegrationEventOutbox>(), Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.False(result.IsSuccess);

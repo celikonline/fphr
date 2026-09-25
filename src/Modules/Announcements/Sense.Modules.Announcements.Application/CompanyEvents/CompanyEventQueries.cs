@@ -1,5 +1,6 @@
 using Sense.Modules.Announcements.Domain;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -27,7 +28,8 @@ public sealed class GetCompanyCalendarHandler(
     IEmployeeContactLookup employeeContacts,
     IEmployeeBirthDateLookup birthDates,
     IEmployeeLookup employeeLookup,
-    ILeaveStartDateReader leaveStarts)
+    ILeaveStartDateReader leaveStarts,
+    ITenantTimeZoneLookup timeZones)
     : IQueryHandler<GetCompanyCalendarQuery, IReadOnlyList<CompanyCalendarEntryDto>>
 {
     public async Task<Result<IReadOnlyList<CompanyCalendarEntryDto>>> Handle(GetCompanyCalendarQuery query, CancellationToken cancellationToken)
@@ -63,13 +65,25 @@ public sealed class GetCompanyCalendarHandler(
         GetCompanyCalendarQuery query, Guid? visibilityOrgUnitId, CancellationToken cancellationToken)
     {
         var all = await events.GetInRangeAsync(tenant.TenantId, query.From, query.To, cancellationToken);
+        var zone = await CompanyEventLocalDay.ZoneAsync(timeZones, tenant.TenantId, cancellationToken);
         return all
+            .Where(e => OverlapsLocalRange(e, query.From, query.To, zone))
             .Where(e => e.VisibilityOrgUnitId is null || e.VisibilityOrgUnitId == visibilityOrgUnitId)
             .Select(e => new CompanyCalendarEntryDto(
                 e.Id, e.Title, e.Description, e.EventDate, e.Type, e.VisibilityOrgUnitId, EmployeeId: null, e.CreatedByUserId,
                 e.StartsAt, e.EndsAt, e.IsAllDay, e.Mode, e.Location, e.OnlineUrl, e.CategoryId,
                 e.Invitees.Select(i => i.EmployeeId).ToList()))
             .ToList();
+    }
+
+    /// <summary>The repository over-fetches by a day on each side; the exact overlap is decided on tenant-local days.
+    /// All-day (floating) and un-backfilled rows keep their stored dates; timed rows end on the local day of EndsAt.</summary>
+    private static bool OverlapsLocalRange(CompanyEvent e, DateOnly from, DateOnly to, TimeZoneInfo zone)
+    {
+        var lastDay = e.IsAllDay || e.StartsAt is null
+            ? e.EndDate
+            : CompanyEventLocalDay.LocalDate(e.EndsAt ?? e.StartsAt.Value, zone);
+        return e.EventDate <= to && lastDay >= from;
     }
 
     private async Task<IReadOnlyList<CompanyCalendarEntryDto>> BuildBirthdayEntriesAsync(GetCompanyCalendarQuery query, CancellationToken cancellationToken)

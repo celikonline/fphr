@@ -12,12 +12,14 @@ public static class EventInvitationFeatures
     /// <summary>Builds the schedule plan; without <paramref name="startsAt"/> the legacy <paramref name="eventDate"/> becomes an all-day event.</summary>
     public static CompanyEventPlan BuildPlan(
         DateOnly eventDate, DateTime? startsAt, DateTime? endsAt, bool? isAllDay, CompanyEventMode? mode,
-        string? location, string? onlineUrl, bool notifyInvitees, Guid? categoryId) =>
-        new(
-            startsAt ?? eventDate.ToDateTime(TimeOnly.MinValue),
-            endsAt,
-            isAllDay ?? startsAt is null,
-            mode, location, onlineUrl, notifyInvitees, categoryId);
+        string? location, string? onlineUrl, bool notifyInvitees, Guid? categoryId, TimeZoneInfo? zone = null)
+    {
+        var allDay = isAllDay ?? startsAt is null;
+        var starts = startsAt ?? eventDate.ToDateTime(TimeOnly.MinValue);
+        return new CompanyEventPlan(
+            starts, endsAt, allDay, mode, location, onlineUrl, notifyInvitees, categoryId,
+            allDay ? null : CompanyEventLocalDay.LocalDate(starts, zone));
+    }
 
     /// <summary>Every invitee must be a known employee of the tenant; returns the de-duplicated ids.</summary>
     public static async Task<Result<IReadOnlyList<Guid>>> ValidateInviteesAsync(
