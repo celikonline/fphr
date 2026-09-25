@@ -5,9 +5,14 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.PunchRequests;
+using Sense.Modules.Attendance.Domain.Punches;
+using Sense.Modules.Attendance.Domain.Rotations;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
+using Sense.Modules.Attendance.Domain.Terminals;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
+using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Infrastructure.Persistence;
@@ -152,6 +157,8 @@ public sealed class ShiftAssignmentRepository(AttendanceDbContext context) : ISh
 {
     public void Add(ShiftAssignment assignment) => context.ShiftAssignments.Add(assignment);
 
+    public void Remove(ShiftAssignment assignment) => context.ShiftAssignments.Remove(assignment);
+
     public async Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var assignment = await context.ShiftAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
@@ -281,4 +288,235 @@ public sealed class EqualizationPeriodRepository(AttendanceDbContext context) : 
             .OrderBy(p => p.EmployeeId).ThenBy(p => p.PeriodEnd)
             .ToListAsync(cancellationToken);
     }
+}
+
+/// <summary>
+/// Sorgular kiracı filtresini atlayıp açık <c>tenantId</c> ile süzer (arka plan yeniden hesaplaması kiracı bağlamı olmadan
+/// da çalışır) ve silinmiş okutmaları her zaman dışarıda bırakır.
+/// </summary>
+public sealed class PunchRepository(AttendanceDbContext context) : IPunchRepository
+{
+    public void Add(Punch punch) => context.Punches.Add(punch);
+
+    public async Task<IReadOnlyList<Punch>> ListForDayAsync(Guid tenantId, Guid employeeId, DateOnly workDate, CancellationToken cancellationToken = default) =>
+        await Live(tenantId)
+            .Where(p => p.EmployeeId == employeeId && p.WorkDate == workDate)
+            .OrderBy(p => p.OccurredAtUtc)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Punch>> ListForRangeAsync(
+        Guid tenantId, DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default)
+    {
+        var query = Live(tenantId).Where(p => p.WorkDate >= from && p.WorkDate <= to);
+        if (employeeIds is not null)
+        {
+            if (employeeIds.Count == 0)
+            {
+                return [];
+            }
+
+            query = query.Where(p => employeeIds.Contains(p.EmployeeId));
+        }
+
+        return await query.OrderBy(p => p.EmployeeId).ThenBy(p => p.OccurredAtUtc).ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> ExistsAsync(
+        Guid tenantId, Guid employeeId, DateTime occurredAtUtc, PunchDirection direction, PunchSource source, CancellationToken cancellationToken = default) =>
+        Live(tenantId).AnyAsync(
+            p => p.EmployeeId == employeeId && p.OccurredAtUtc == occurredAtUtc && p.Direction == direction && p.Source == source, cancellationToken);
+
+    private IQueryable<Punch> Live(Guid tenantId) =>
+        context.Punches.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).Where(p => p.TenantId == tenantId && p.DeletedAtUtc == null);
+}
+
+public sealed class ShiftDefinitionRepository(AttendanceDbContext context) : IShiftDefinitionRepository
+{
+    public void Add(ShiftDefinition definition) => context.ShiftDefinitions.Add(definition);
+
+    public async Task<Result<ShiftDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var definition = await context.ShiftDefinitions.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return definition is null ? Error.NotFound(AttendanceDomainErrors.ShiftDefinitionNotFound) : definition;
+    }
+
+    public async Task<IReadOnlyList<ShiftDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = context.ShiftDefinitions.AsQueryable();
+        if (!includeInactive)
+        {
+            query = query.Where(d => d.IsActive);
+        }
+
+        return await query.OrderBy(d => d.Code).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ShiftDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.ShiftDefinitions.Where(d => ids.Contains(d.Id)).ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> CodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default)
+    {
+        var normalized = code.Trim();
+        return context.ShiftDefinitions.AnyAsync(d => d.Code == normalized && (excludeId == null || d.Id != excludeId), cancellationToken);
+    }
+}
+
+public sealed class PunchRequestRepository(AttendanceDbContext context) : IPunchRequestRepository
+{
+    public void Add(PunchRequest request) => context.PunchRequests.Add(request);
+
+    public async Task<Result<PunchRequest>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var request = await context.PunchRequests.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return request is null ? Error.NotFound(AttendanceDomainErrors.PunchRequestNotFound) : request;
+    }
+
+    public Task<PunchRequest?> FindByApprovalRequestIdAsync(Guid approvalRequestId, CancellationToken cancellationToken = default) =>
+        context.PunchRequests.FirstOrDefaultAsync(r => r.ApprovalRequestId == approvalRequestId, cancellationToken);
+
+    public async Task<IReadOnlyList<PunchRequest>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.PunchRequests
+            .Where(r => r.EmployeeId == employeeId && r.WorkDate >= from && r.WorkDate <= to)
+            .OrderBy(r => r.WorkDate).ThenBy(r => r.OccurredAtUtc)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PunchRequest>> ListAsync(PunchRequestStatus? status, CancellationToken cancellationToken = default) =>
+        await context.PunchRequests
+            .Where(r => status == null || r.Status == status)
+            .OrderByDescending(r => r.OccurredAtUtc)
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class ShiftPlanTemplateRepository(AttendanceDbContext context) : IShiftPlanTemplateRepository
+{
+    public void Add(ShiftPlanTemplate template) => context.ShiftPlanTemplates.Add(template);
+
+    public void Remove(ShiftPlanTemplate template) => context.ShiftPlanTemplates.Remove(template);
+
+    public async Task<Result<ShiftPlanTemplate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var template = await context.ShiftPlanTemplates.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        return template is null ? Error.NotFound(AttendanceDomainErrors.ShiftTemplateNotFound) : template;
+    }
+
+    public async Task<IReadOnlyList<ShiftPlanTemplate>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.ShiftPlanTemplates.OrderBy(t => t.Name).ToListAsync(cancellationToken);
+}
+
+public sealed class RotationRepository(AttendanceDbContext context) : IRotationRepository
+{
+    public void AddPattern(RotationPattern pattern) => context.RotationPatterns.Add(pattern);
+
+    public async Task<Result<RotationPattern>> GetPatternByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var pattern = await context.RotationPatterns.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return pattern is null ? Error.NotFound(AttendanceDomainErrors.RotationPatternNotFound) : pattern;
+    }
+
+    public async Task<IReadOnlyList<RotationPattern>> ListPatternsAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = context.RotationPatterns.AsQueryable();
+        if (!includeInactive)
+        {
+            query = query.Where(p => p.IsActive);
+        }
+
+        return await query.OrderBy(p => p.Code).ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> PatternCodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default)
+    {
+        var normalized = code.Trim();
+        return context.RotationPatterns.AnyAsync(p => p.Code == normalized && (excludeId == null || p.Id != excludeId), cancellationToken);
+    }
+
+    public void AddAssignment(RotationAssignment assignment) => context.RotationAssignments.Add(assignment);
+
+    public async Task<Result<RotationAssignment>> GetAssignmentByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var assignment = await context.RotationAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return assignment is null ? Error.NotFound(AttendanceDomainErrors.RotationAssignmentNotFound) : assignment;
+    }
+
+    public async Task<IReadOnlyList<RotationAssignment>> ListAssignmentsOverlappingAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default)
+    {
+        var query = context.RotationAssignments.Where(a => a.StartDate <= to && (a.EndDate == null || a.EndDate >= from));
+        if (employeeIds is not null)
+        {
+            if (employeeIds.Count == 0)
+            {
+                return [];
+            }
+
+            query = query.Where(a => employeeIds.Contains(a.EmployeeId));
+        }
+
+        return await query.OrderBy(a => a.EmployeeId).ThenBy(a => a.StartDate).ToListAsync(cancellationToken);
+    }
+}
+
+public sealed class TerminalRepository(AttendanceDbContext context) : ITerminalRepository
+{
+    public void AddTerminal(Terminal terminal) => context.Terminals.Add(terminal);
+
+    public async Task<Result<Terminal>> GetTerminalByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var terminal = await context.Terminals.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        return terminal is null ? Error.NotFound(AttendanceDomainErrors.TerminalNotFound) : terminal;
+    }
+
+    public async Task<IReadOnlyList<Terminal>> ListTerminalsAsync(CancellationToken cancellationToken = default) =>
+        await context.Terminals.OrderBy(t => t.Code).ToListAsync(cancellationToken);
+
+    public Task<bool> TerminalCodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default)
+    {
+        var normalized = code.Trim();
+        return context.Terminals.AnyAsync(t => t.Code == normalized && (excludeId == null || t.Id != excludeId), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Terminal>> ListActiveByApiKeyPrefixAcrossTenantsAsync(string apiKeyPrefix, CancellationToken cancellationToken = default) =>
+        await context.Terminals.IgnoreQueryFilters([ModuleDbContext.TenantFilter])
+            .Where(t => t.ApiKeyPrefix == apiKeyPrefix && t.IsActive)
+            .ToListAsync(cancellationToken);
+
+    public void AddGroup(TerminalGroup group) => context.TerminalGroups.Add(group);
+
+    public async Task<Result<TerminalGroup>> GetGroupByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var group = await context.TerminalGroups.FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+        return group is null ? Error.NotFound(AttendanceDomainErrors.TerminalGroupNotFound) : group;
+    }
+
+    public async Task<IReadOnlyList<TerminalGroup>> ListGroupsAsync(CancellationToken cancellationToken = default) =>
+        await context.TerminalGroups.OrderBy(g => g.Name).ToListAsync(cancellationToken);
+
+    public void AddCredential(EmployeeTerminalCredential credential) => context.EmployeeTerminalCredentials.Add(credential);
+
+    public async Task<Result<EmployeeTerminalCredential>> GetCredentialByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var credential = await context.EmployeeTerminalCredentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return credential is null ? Error.NotFound(AttendanceDomainErrors.TerminalCredentialNotFound) : credential;
+    }
+
+    public Task<EmployeeTerminalCredential?> FindActiveCredentialAsync(
+        Guid tenantId, TerminalCredentialKind kind, string value, CancellationToken cancellationToken = default)
+    {
+        var normalized = value.Trim();
+        return context.EmployeeTerminalCredentials.IgnoreQueryFilters([ModuleDbContext.TenantFilter])
+            .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.Kind == kind && c.Value == normalized && c.IsActive, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<EmployeeTerminalCredential>> ListCredentialsForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.EmployeeTerminalCredentials
+            .Where(c => c.EmployeeId == employeeId)
+            .OrderBy(c => c.Kind)
+            .ToListAsync(cancellationToken);
 }

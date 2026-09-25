@@ -33,7 +33,7 @@ public sealed class QrCheckInValidator : AbstractValidator<QrCheckInCommand>
     public QrCheckInValidator()
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(64);
-        RuleFor(x => x.Direction).IsInEnum();
+        RuleFor(x => x.Direction).IsInEnum().NotEqual(PunchDirection.Unknown);
         RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude is not null);
         RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude is not null);
         RuleFor(x => x).Must(x => (x.Latitude is null) == (x.Longitude is null)).WithMessage(AttendanceErrors.SelfCheckInCoordinatesRequired);
@@ -89,7 +89,7 @@ public sealed class GpsCheckInValidator : AbstractValidator<GpsCheckInCommand>
     {
         RuleFor(x => x.Latitude).InclusiveBetween(-90, 90);
         RuleFor(x => x.Longitude).InclusiveBetween(-180, 180);
-        RuleFor(x => x.Direction).IsInEnum();
+        RuleFor(x => x.Direction).IsInEnum().NotEqual(PunchDirection.Unknown);
     }
 }
 

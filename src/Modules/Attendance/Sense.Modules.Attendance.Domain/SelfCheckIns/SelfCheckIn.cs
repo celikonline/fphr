@@ -9,6 +9,12 @@ public enum PunchDirection
 {
     In = 0,
     Out = 1,
+
+    /// <summary>
+    /// Yön bilgisi olmayan ham okutma (zaman-devam Z0.1: yönsüz terminal/cihaz kaydı) - gün hesabında sıraya göre
+    /// yorumlanır; tek sayıda yönsüz okutma günü <c>Incalculable</c> yapar. Self-servis check-in bu değeri kabul etmez.
+    /// </summary>
+    Unknown = 2,
 }
 
 /// <summary>How the self-servis check-in was verified (S-31 kabul kriteri 1/2).</summary>

@@ -17,7 +17,7 @@ namespace Sense.Modules.Documents.Application.SharedFiles;
 /// scale (a small shared-file library bounded by the tenant's storage quota, not a paginated document archive).
 /// </summary>
 [RequiresPermission("documents.company.view")]
-public sealed record ListSharedFilesQuery(PagedQuery Paging) : IQuery<PagedResult<SharedFileListItemDto>>;
+public sealed record ListSharedFilesQuery(PagedQuery Paging, bool? MobileOnly = null, Guid? TypeId = null) : IQuery<PagedResult<SharedFileListItemDto>>;
 
 public sealed class ListSharedFilesHandler(
     ISharedCompanyFileRepository files,
@@ -29,7 +29,11 @@ public sealed class ListSharedFilesHandler(
     public async Task<Result<PagedResult<SharedFileListItemDto>>> Handle(ListSharedFilesQuery query, CancellationToken cancellationToken)
     {
         var all = await files.ListByTenantAsync(0, MaxCandidateRows, cancellationToken);
-        var visible = all.Where(f => f.IsVisibleTo(currentUser.Roles)).ToList();
+        var visible = all
+            .Where(f => f.IsVisibleTo(currentUser.Roles))
+            .Where(f => query.MobileOnly != true || f.VisibleOnMobile)
+            .Where(f => query.TypeId is null || f.TypeId == query.TypeId)
+            .ToList();
 
         var skip = (query.Paging.Page - 1) * query.Paging.PageSize;
         var page = visible.Skip(skip).Take(query.Paging.PageSize)
@@ -40,7 +44,7 @@ public sealed class ListSharedFilesHandler(
     }
 
     private static SharedFileListItemDto ToListItemDto(SharedCompanyFile f) => new(
-        f.Id, f.FileName, f.ContentType, f.Size, f.UploadedAt, f.UploadedBy, f.Visibility.ToString(), f.AllowedRoles);
+        f.Id, f.FileName, f.ContentType, f.Size, f.UploadedAt, f.UploadedBy, f.Visibility.ToString(), f.AllowedRoles, f.TypeId, f.VisibleOnMobile);
 }
 
 /// <summary>Gets a single shared company file with a presigned download URL. Returns NotFound when the file is

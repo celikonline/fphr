@@ -257,6 +257,8 @@ export async function listEmployees(
   const { includeSubUnits, ...rest } = params;
   const { data } = await apiClient.get<PagedResult<EmployeeListItem>>(EMPLOYEES_BASE, {
     params: compact({ ...rest, includeSubUnits: includeSubUnits || undefined }),
+    // orgUnitIds go out as repeated keys (orgUnitIds=a&orgUnitIds=b), which is what ASP.NET binds.
+    paramsSerializer: { indexes: null },
   });
   return data;
 }

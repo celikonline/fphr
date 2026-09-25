@@ -49,5 +49,9 @@ public sealed class AttendanceModule : IModule
         // PDKS Excel import template "attendance.pdks" (collected by the DataTransfer module)
         services.AddScoped<IImportTemplate, AttendanceImportTemplate>();
         services.AddScoped<IImportRowHandler, AttendanceImportRowHandler>();
+
+        // Vardiya planı Excel şablonu "shift-plan" (Z3.2)
+        services.AddScoped<IImportTemplate, ShiftPlanImportTemplate>();
+        services.AddScoped<IImportRowHandler, ShiftPlanImportRowHandler>();
     }
 }

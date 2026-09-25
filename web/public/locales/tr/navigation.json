@@ -81,7 +81,8 @@
     "rotations": "Vardiya rotasyonları",
     "monthlyMatrix": "Aylık puantaj matrisi",
     "punchRequests": "Kayıt talepleri",
-    "terminals": "PDKS terminalleri"
+    "terminals": "PDKS terminalleri",
+    "payslipImport": "Dış bordro PDF yükleme"
   },
   "settings": {
     "company": "Şirket ve organizasyon",

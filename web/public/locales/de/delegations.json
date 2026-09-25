@@ -1,5 +1,51 @@
 {
   "title": "Genehmigungsvertretungen",
   "subtitle": "Genehmigungsbefugnis befristet delegieren",
-  "comingSoon": "Diese Ansicht folgt in Kürze."
+  "info": "Während einer aktiven Vertretung sieht die Vertretung Ihren Genehmigungseingang und kann entscheiden; die Entscheidung wird „in Ihrem Namen“ erfasst. Eine Vertretung kann widerrufen werden.",
+  "form": {
+    "title": "Neue Vertretung",
+    "delegate": "Vertretung",
+    "delegatePlaceholder": "Mitarbeitenden auswählen",
+    "from": "Beginn",
+    "to": "Ende",
+    "submit": "Vertretung festlegen",
+    "delegator": "Vertretene Person"
+  },
+  "list": {
+    "title": "Meine Vertretungen",
+    "empty": "Noch keine Vertretungen.",
+    "delegate": "Vertretung",
+    "from": "Beginn",
+    "to": "Ende",
+    "status": "Status",
+    "revoke": "Widerrufen",
+    "unknown": "Unbekannter Mitarbeitender",
+    "delegator": "Vertretene Person"
+  },
+  "status": {
+    "active": "Aktiv",
+    "scheduled": "Geplant",
+    "expired": "Abgelaufen",
+    "revoked": "Widerrufen"
+  },
+  "errors": {
+    "endBeforeStart": "Das Enddatum darf nicht vor dem Beginn liegen.",
+    "self": "Sie können sich nicht selbst vertreten lassen.",
+    "required": "Vertretung und Zeitraum sind erforderlich.",
+    "generic": "Der Vorgang konnte nicht abgeschlossen werden."
+  },
+  "toast": {
+    "created": "Vertretung angelegt.",
+    "revoked": "Vertretung widerrufen."
+  },
+  "tabs": {
+    "mine": "Meine Vertretungen",
+    "admin": "Alle Vertretungen"
+  },
+  "confirm": {
+    "title": "Vertretung widerrufen?",
+    "description": "Die Vertretung sieht und entscheidet Genehmigungen dieser Vertretung nicht mehr. Frühere Entscheidungen bleiben erhalten.",
+    "action": "Ja, widerrufen"
+  },
+  "adminInfo": "Als Administrator können Sie Vertretungen für beliebige Mitarbeitende anlegen oder widerrufen."
 }
