@@ -9,12 +9,13 @@ import trCommon from "../../../public/locales/tr/common.json";
 import DelegationsPage from "./delegations";
 import type { Delegation } from "@/services/workflow-delegations.service";
 
-vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
-  return { ...actual, usePermission: () => true, useAnyPermission: () => true };
-});
+const perms = vi.hoisted(() => ({ granted: new Set<string>() }));
+vi.mock("@/components/permission-guard", () => ({
+  usePermission: (p: string) => perms.granted.has(p),
+  useAnyPermission: (ps: string[]) => ps.some((p) => perms.granted.has(p)),
+}));
 vi.mock("@/store/auth.store", () => ({
-  useAuthStore: (selector: (s: unknown) => unknown) => selector({ user: { id: "me-user", employeeId: "me-emp" } }),
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({ user: { id: "me-user", employeeId: "me-emp", name: "Ben" } }),
 }));
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
 vi.mock("@/components/ui/date-picker", () => ({
@@ -23,15 +24,13 @@ vi.mock("@/components/ui/date-picker", () => ({
   ),
 }));
 vi.mock("@/components/employees/employee-picker", () => ({
-  default: ({ onChange }: { onChange: (v: { id: string; displayName: string } | null) => void }) => (
+  default: ({ label, onChange }: { label?: string; onChange: (v: { id: string; displayName: string } | null) => void }) => (
     <>
-      <button onClick={() => onChange({ id: "me-emp", displayName: "Ben" })}>pick-self</button>
-      <button onClick={() => onChange({ id: "e2", displayName: "Ali" })}>pick-other</button>
+      <button onClick={() => onChange({ id: "me-emp", displayName: "Ben" })}>{`pick-self-${label}`}</button>
+      <button onClick={() => onChange({ id: "e2", displayName: "Ali" })}>{`pick-other-${label}`}</button>
+      <button onClick={() => onChange({ id: "e3", displayName: "Veli" })}>{`pick-third-${label}`}</button>
     </>
   ),
-}));
-vi.mock("@/services/employees.service", () => ({
-  getEmployee: vi.fn(async (id: string) => ({ id, userId: id === "me-emp" ? "me-user" : "u2" })),
 }));
 
 const day = (offset: number) => {
@@ -39,16 +38,28 @@ const day = (offset: number) => {
   d.setDate(d.getDate() + offset);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const ITEMS: Delegation[] = [
-  { id: "d1", delegatorUserId: "me-user", delegateUserId: "u2", from: day(-1), to: day(3), isActive: true, delegateName: "Ali" },
-  { id: "d2", delegatorUserId: "me-user", delegateUserId: "u3", from: day(5), to: day(9), isActive: true, delegateName: "Veli" },
+const base = { requestTypes: [], isRevoked: false };
+const MINE: Delegation[] = [
+  { ...base, id: "d1", delegatorEmployeeId: "me-emp", delegateEmployeeId: "e2", startDate: day(-1), endDate: day(3), delegateName: "Ali", delegatorName: "Ben" },
+  { ...base, id: "d2", delegatorEmployeeId: "me-emp", delegateEmployeeId: "e3", startDate: day(5), endDate: day(9), delegateName: "Veli", delegatorName: "Ben" },
+  { ...base, id: "d3", delegatorEmployeeId: "me-emp", delegateEmployeeId: "e4", startDate: day(-9), endDate: day(-5), delegateName: "Eski", delegatorName: "Ben" },
+  { ...base, id: "d4", delegatorEmployeeId: "me-emp", delegateEmployeeId: "e5", startDate: day(-1), endDate: day(3), isRevoked: true, delegateName: "Iptal", delegatorName: "Ben" },
+  { ...base, id: "d5", delegatorEmployeeId: "boss", delegateEmployeeId: "me-emp", startDate: day(-1), endDate: day(3), delegatorName: "Patron", delegateName: "Ben" },
+];
+const ADMIN: Delegation[] = [
+  { ...base, id: "a1", delegatorEmployeeId: "x", delegateEmployeeId: "y", startDate: day(-1), endDate: day(3), delegatorName: "Asil A", delegateName: "Vekil A" },
 ];
 
-const svc = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), revoke: vi.fn() }));
+const svc = vi.hoisted(() => ({
+  listMine: vi.fn(), createMine: vi.fn(), revokeMine: vi.fn(), listAdmin: vi.fn(), createAdmin: vi.fn(), revokeAdmin: vi.fn(),
+}));
 vi.mock("@/services/workflow-delegations.service", () => ({
-  listDelegations: svc.list,
-  createDelegation: svc.create,
-  revokeDelegation: svc.revoke,
+  listMyDelegations: svc.listMine,
+  createMyDelegation: svc.createMine,
+  revokeMyDelegation: svc.revokeMine,
+  listDelegations: svc.listAdmin,
+  createDelegation: svc.createAdmin,
+  revokeDelegation: svc.revokeAdmin,
 }));
 
 beforeAll(() => {
@@ -63,9 +74,14 @@ beforeAll(() => {
   };
 });
 beforeEach(() => {
-  svc.list.mockReset().mockResolvedValue(ITEMS);
-  svc.create.mockReset().mockResolvedValue("new");
-  svc.revoke.mockReset().mockResolvedValue(undefined);
+  perms.granted = new Set(["workflow.my.delegation"]);
+  for (const m of Object.values(svc)) m.mockReset();
+  svc.listMine.mockResolvedValue(MINE);
+  svc.listAdmin.mockResolvedValue(ADMIN);
+  svc.createMine.mockResolvedValue("new");
+  svc.createAdmin.mockResolvedValue("new");
+  svc.revokeMine.mockResolvedValue(undefined);
+  svc.revokeAdmin.mockResolvedValue(undefined);
 });
 
 function renderPage() {
@@ -86,51 +102,98 @@ function renderPage() {
     </I18nextProvider>,
   );
 }
+const submitBtn = () => screen.getByRole("button", { name: trDelegations.form.submit });
+const pickOther = () => fireEvent.click(screen.getByText(`pick-other-${trDelegations.form.delegate}`));
+const setDates = (f: string, t: string) => {
+  fireEvent.change(screen.getByTestId("delegation-from"), { target: { value: f } });
+  fireEvent.change(screen.getByTestId("delegation-to"), { target: { value: t } });
+};
 
 describe("DelegationsPage", () => {
   it("end_before_start_invalid: blocks saving when the end date precedes the start", async () => {
     renderPage();
     await screen.findByText("Ali");
-    fireEvent.click(screen.getByText("pick-other"));
-    fireEvent.change(screen.getByTestId("delegation-from"), { target: { value: day(5) } });
-    fireEvent.change(screen.getByTestId("delegation-to"), { target: { value: day(2) } });
-    fireEvent.click(screen.getByRole("button", { name: trDelegations.form.submit }));
+    pickOther();
+    setDates(day(5), day(2));
+    fireEvent.click(submitBtn());
     expect(await screen.findByText(trDelegations.errors.endBeforeStart)).toBeTruthy();
-    expect(svc.create).not.toHaveBeenCalled();
+    expect(svc.createMine).not.toHaveBeenCalled();
   });
 
   it("cannot_pick_self: rejects delegating to oneself", async () => {
     renderPage();
     await screen.findByText("Ali");
-    fireEvent.click(screen.getByText("pick-self"));
-    fireEvent.change(screen.getByTestId("delegation-from"), { target: { value: day(1) } });
-    fireEvent.change(screen.getByTestId("delegation-to"), { target: { value: day(2) } });
-    fireEvent.click(screen.getByRole("button", { name: trDelegations.form.submit }));
+    fireEvent.click(screen.getByText(`pick-self-${trDelegations.form.delegate}`));
+    setDates(day(1), day(2));
+    fireEvent.click(submitBtn());
     expect(await screen.findByText(trDelegations.errors.self)).toBeTruthy();
-    expect(svc.create).not.toHaveBeenCalled();
+    expect(svc.createMine).not.toHaveBeenCalled();
   });
 
-  it("creates a delegation with the delegate's user id", async () => {
+  it("my scope creates on the /mine endpoint with the delegate's employeeId", async () => {
     renderPage();
     await screen.findByText("Ali");
-    fireEvent.click(screen.getByText("pick-other"));
-    fireEvent.change(screen.getByTestId("delegation-from"), { target: { value: day(1) } });
-    fireEvent.change(screen.getByTestId("delegation-to"), { target: { value: day(2) } });
-    fireEvent.click(screen.getByRole("button", { name: trDelegations.form.submit }));
-    await waitFor(() => expect(svc.create).toHaveBeenCalledWith({ delegateUserId: "u2", from: day(1), to: day(2) }));
+    pickOther();
+    setDates(day(1), day(2));
+    fireEvent.click(submitBtn());
+    await waitFor(() => expect(svc.createMine).toHaveBeenCalledWith({ delegateEmployeeId: "e2", startDate: day(1), endDate: day(2) }));
+    expect(svc.createAdmin).not.toHaveBeenCalled();
   });
 
-  it("revoke_calls_service: the revoke button calls revokeDelegation", async () => {
+  it("revoke_calls_service: revoking asks for confirmation, then calls the /mine service", async () => {
     renderPage();
     await screen.findByText("Ali");
     fireEvent.click(screen.getAllByRole("button", { name: trDelegations.list.revoke })[0]);
-    await waitFor(() => expect(svc.revoke).toHaveBeenCalledWith("d1"));
+    expect(svc.revokeMine).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: trDelegations.confirm.action }));
+    await waitFor(() => expect(svc.revokeMine).toHaveBeenCalledWith("d1"));
   });
 
-  it("active_badge_by_date: only a delegation covering today is badged active", async () => {
+  it("hides revoke for expired, revoked and received delegations", async () => {
     renderPage();
     await screen.findByText("Ali");
-    expect(screen.getAllByText(trDelegations.status.active)).toHaveLength(1);
+    // d1 (active) and d2 (scheduled) only.
+    expect(screen.getAllByRole("button", { name: trDelegations.list.revoke })).toHaveLength(2);
+  });
+
+  it("active_badge_by_date: status follows dates and the revoked flag", async () => {
+    renderPage();
+    await screen.findByText("Ali");
+    expect(screen.getAllByText(trDelegations.status.active)).toHaveLength(2); // d1 + received d5
     expect(screen.getAllByText(trDelegations.status.scheduled)).toHaveLength(1);
+    expect(screen.getAllByText(trDelegations.status.expired)).toHaveLength(1);
+    expect(screen.getAllByText(trDelegations.status.revoked)).toHaveLength(1);
+  });
+
+  it("shows 'unknown employee' when the API omits names", async () => {
+    svc.listMine.mockResolvedValue([{ ...MINE[0], delegateName: undefined }]);
+    renderPage();
+    expect(await screen.findByText(trDelegations.list.unknown)).toBeTruthy();
+  });
+
+  it("admin scope lists and creates on the root endpoints on behalf of another employee", async () => {
+    perms.granted = new Set(["workflow.delegation.manage"]);
+    renderPage();
+    await screen.findByText("Vekil A");
+    expect(svc.listMine).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText(`pick-third-${trDelegations.form.delegator}`));
+    pickOther();
+    setDates(day(1), day(2));
+    fireEvent.click(submitBtn());
+    await waitFor(() =>
+      expect(svc.createAdmin).toHaveBeenCalledWith({ delegatorEmployeeId: "e3", delegateEmployeeId: "e2", startDate: day(1), endDate: day(2) }),
+    );
+  });
+
+  it("admin scope rejects delegator equal to delegate", async () => {
+    perms.granted = new Set(["workflow.delegation.manage"]);
+    renderPage();
+    await screen.findByText("Vekil A");
+    fireEvent.click(screen.getByText(`pick-other-${trDelegations.form.delegator}`));
+    pickOther();
+    setDates(day(1), day(2));
+    fireEvent.click(submitBtn());
+    expect(await screen.findByText(trDelegations.errors.self)).toBeTruthy();
+    expect(svc.createAdmin).not.toHaveBeenCalled();
   });
 });

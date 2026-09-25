@@ -8,7 +8,8 @@
     "delegatePlaceholder": "Çalışan seçin",
     "from": "Başlangıç",
     "to": "Bitiş",
-    "submit": "Vekalet ver"
+    "submit": "Vekalet ver",
+    "delegator": "Asil"
   },
   "list": {
     "title": "Vekaletlerim",
@@ -18,23 +19,33 @@
     "to": "Bitiş",
     "status": "Durum",
     "revoke": "Geri al",
-    "unknown": "Bilinmeyen kullanıcı",
+    "unknown": "Bilinmeyen çalışan",
     "delegator": "Asil"
   },
   "status": {
     "active": "Aktif",
     "scheduled": "Planlandı",
-    "expired": "Süresi doldu"
+    "expired": "Süresi doldu",
+    "revoked": "Geri alındı"
   },
   "errors": {
     "endBeforeStart": "Bitiş tarihi başlangıçtan önce olamaz.",
     "self": "Kendinize vekalet veremezsiniz.",
     "required": "Vekil ve tarih aralığı zorunludur.",
-    "noAccount": "Seçilen çalışanın kullanıcı hesabı yok.",
     "generic": "İşlem tamamlanamadı."
   },
   "toast": {
     "created": "Vekalet oluşturuldu.",
     "revoked": "Vekalet geri alındı."
-  }
+  },
+  "tabs": {
+    "mine": "Vekaletlerim",
+    "admin": "Tüm vekaletler"
+  },
+  "confirm": {
+    "title": "Vekalet geri alınsın mı?",
+    "description": "Vekil, bu vekalet kapsamındaki onayları artık göremez ve karar veremez. Geçmiş kararlar korunur.",
+    "action": "Evet, geri al"
+  },
+  "adminInfo": "Yönetici olarak herhangi bir çalışan adına vekalet tanımlayabilir veya vekaleti geri alabilirsiniz."
 }

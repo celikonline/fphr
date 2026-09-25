@@ -8,7 +8,8 @@
     "delegatePlaceholder": "Select an employee",
     "from": "Start",
     "to": "End",
-    "submit": "Delegate"
+    "submit": "Delegate",
+    "delegator": "Principal"
   },
   "list": {
     "title": "My delegations",
@@ -18,23 +19,33 @@
     "to": "End",
     "status": "Status",
     "revoke": "Revoke",
-    "unknown": "Unknown user",
+    "unknown": "Unknown employee",
     "delegator": "Principal"
   },
   "status": {
     "active": "Active",
     "scheduled": "Scheduled",
-    "expired": "Expired"
+    "expired": "Expired",
+    "revoked": "Revoked"
   },
   "errors": {
     "endBeforeStart": "The end date cannot be before the start date.",
     "self": "You cannot delegate to yourself.",
     "required": "Delegate and date range are required.",
-    "noAccount": "The selected employee has no user account.",
     "generic": "The operation could not be completed."
   },
   "toast": {
     "created": "Delegation created.",
     "revoked": "Delegation revoked."
-  }
+  },
+  "tabs": {
+    "mine": "My delegations",
+    "admin": "All delegations"
+  },
+  "confirm": {
+    "title": "Revoke this delegation?",
+    "description": "The delegate will no longer see or decide approvals under this delegation. Past decisions are kept.",
+    "action": "Yes, revoke"
+  },
+  "adminInfo": "As an administrator you can create delegations on behalf of any employee or revoke them."
 }
