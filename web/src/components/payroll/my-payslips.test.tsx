@@ -94,6 +94,19 @@ describe("MyPayslips", () => {
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it("disables object after a resolved objection or an acknowledgement", async () => {
+    vi.mocked(listMyPayslips).mockResolvedValue([
+      { ...published, payslipId: "a", objectionStatus: "rejected" },
+      { ...published, payslipId: "b", objectionStatus: "accepted" },
+      done,
+      { ...published, payslipId: "c", month: 6 },
+    ]);
+    renderIt();
+    await screen.findAllByRole("button", { name: "İtiraz et" });
+    const buttons = screen.getAllByRole("button", { name: "İtiraz et" }) as HTMLButtonElement[];
+    expect(buttons.map((b) => b.disabled)).toEqual([true, true, true, false]);
+  });
+
   it("shows gross pay when present", async () => {
     renderIt();
     expect(await screen.findAllByText(/50\.000,00/)).toBeTruthy();

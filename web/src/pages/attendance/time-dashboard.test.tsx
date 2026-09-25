@@ -136,6 +136,17 @@ describe("TimeDashboardPage", () => {
     expect(within(otRows[1]).getAllByRole("cell").map((c) => c.textContent)).toEqual(["Ankara", "2"]);
   });
 
+  it("unassigned_unit_row_is_translated_client_side", async () => {
+    vi.mocked(getAttendanceSevenDay).mockResolvedValue([]);
+    vi.mocked(getLateEarlyByUnit).mockResolvedValue([
+      { orgUnitName: "Unassigned", lateCount: 2, lateMinutes: 20, earlyLeaveCount: 0, earlyLeaveMinutes: 0 },
+    ]);
+    renderPage();
+    const lateEarly = await screen.findByRole("table", { name: /geç kalma/i });
+    const cells = within(within(lateEarly).getAllByRole("row")[1]).getAllByRole("cell");
+    expect(cells[0].textContent).toBe("Atanmamış");
+  });
+
   it("group_by_switch_refetches", async () => {
     vi.mocked(getAttendanceSevenDay).mockResolvedValue([
       { date: daysAgo(0), planned: 1, arrived: 1, late: 0, earlyLeave: 0, absent: 0, onLeave: 0 },

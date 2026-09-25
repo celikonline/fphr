@@ -45,7 +45,8 @@
     "genericError": "Something went wrong.",
     "prevPage": "Previous page",
     "nextPage": "Next page",
-    "minutes": "{{count}} min"
+    "minutes": "{{count}} min",
+    "unassigned": "Unassigned"
   },
   "timeDashboard": {
     "title": "Time dashboard",
@@ -85,7 +86,8 @@
       "title": "Shift attendance rate",
       "detail": "{{worked}} / {{planned}} planned shift days"
     },
-    "unit": "Unit"
+    "unit": "Unit",
+    "unassigned": "Unassigned"
   },
   "monthlyMatrix": {
     "title": "Monthly attendance matrix",

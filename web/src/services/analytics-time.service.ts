@@ -18,7 +18,8 @@ export interface TimeKpiRangeParams {
 
 /** One row of `late-early-by-unit`. */
 export interface LateEarlyByUnitRow {
-  orgUnitId: string;
+  /** Missing on the "unassigned" bucket (its `orgUnitName` is a fixed English server text: show the i18n label instead). */
+  orgUnitId?: string;
   orgUnitName: string;
   lateCount: number;
   lateMinutes: number;

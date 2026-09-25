@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { getAttendanceErrorMessage } from "@/lib/attendance-error";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -28,7 +29,6 @@ import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useLeaveName } from "@/components/leave/leave-shared";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, toDateOnly } from "@/lib/dates";
 import { getEmployeeLeaveBalances } from "@/services/leave.service";
 import {
@@ -216,7 +216,7 @@ function TeamTimesheet() {
         </Stack>
       ) : query.isError ? (
         <Text size="sm" c="red">
-          {getApiErrorMessage(query.error, t("attendance:genericError"))}
+          {getAttendanceErrorMessage(query.error, t("attendance:genericError"), t)}
         </Text>
       ) : rows.length === 0 ? (
         <Text size="sm" c="dimmed">
@@ -445,7 +445,7 @@ function TeamDayDrawer({ selected, onClose, onResolved }: { selected: SelectedCe
       toast({ variant: "success", title: t("common:success"), description: t("attendance:teamTimesheet.resolved") });
       await invalidateAndClose();
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("attendance:genericError")) }),
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getAttendanceErrorMessage(err, t("attendance:genericError"), t) }),
   });
 
   const allowedActions = day?.allowedActions ?? [];
@@ -471,7 +471,7 @@ function TeamDayDrawer({ selected, onClose, onResolved }: { selected: SelectedCe
           <Skeleton h={160} />
         ) : detailQuery.isError || !day ? (
           <Text size="sm" c="red">
-            {getApiErrorMessage(detailQuery.error, t("attendance:genericError"))}
+            {getAttendanceErrorMessage(detailQuery.error, t("attendance:genericError"), t)}
           </Text>
         ) : (
           <>
@@ -569,7 +569,7 @@ function SetWorkedHoursForm({ attendanceDayId, onCancel, onSuccess }: { attendan
       toast({ variant: "success", title: t("common:success"), description: t("attendance:teamTimesheet.resolved") });
       await onSuccess();
     },
-    onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
+    onError: (err) => setError(getAttendanceErrorMessage(err, t("attendance:genericError"), t)),
   });
 
   function submit(event: FormEvent) {
@@ -626,7 +626,7 @@ function AddOvertimeForm({ attendanceDayId, onCancel, onSuccess }: { attendanceD
       toast({ variant: "success", title: t("common:success"), description: t("attendance:teamTimesheet.resolved") });
       await onSuccess();
     },
-    onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
+    onError: (err) => setError(getAttendanceErrorMessage(err, t("attendance:genericError"), t)),
   });
 
   function submit(event: FormEvent) {
@@ -692,7 +692,7 @@ function CreateLeaveRequestForm({ employeeId, attendanceDayId, onCancel, onSucce
       toast({ variant: "success", title: t("common:success"), description: t("attendance:teamTimesheet.resolved") });
       await onSuccess();
     },
-    onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
+    onError: (err) => setError(getAttendanceErrorMessage(err, t("attendance:genericError"), t)),
   });
 
   function submit(event: FormEvent) {

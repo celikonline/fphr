@@ -45,7 +45,8 @@
     "genericError": "Es ist ein Fehler aufgetreten.",
     "prevPage": "Vorherige Seite",
     "nextPage": "Nächste Seite",
-    "minutes": "{{count}} Min."
+    "minutes": "{{count}} Min.",
+    "unassigned": "Nicht zugewiesen"
   },
   "timeDashboard": {
     "title": "Zeit-Dashboard",
@@ -85,7 +86,8 @@
       "title": "Schichtanwesenheitsquote",
       "detail": "{{worked}} / {{planned}} geplante Schichttage"
     },
-    "unit": "Einheit"
+    "unit": "Einheit",
+    "unassigned": "Nicht zugewiesen"
   },
   "monthlyMatrix": {
     "title": "Monatliche Anwesenheitsmatrix",
