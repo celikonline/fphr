@@ -939,7 +939,9 @@ export async function getEmployeePhoto(target: EmployeePhotoTarget): Promise<Blo
 export async function uploadEmployeePhoto(target: EmployeePhotoTarget, photo: Blob): Promise<void> {
   const form = new FormData();
   form.append("file", photo, "photo");
-  await apiClient.put(photoUrl(target), form, { headers: { "Content-Type": "multipart/form-data" } });
+  await apiClient.put(photoUrl(target), form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 }
 
 export async function deleteEmployeePhoto(target: EmployeePhotoTarget): Promise<void> {

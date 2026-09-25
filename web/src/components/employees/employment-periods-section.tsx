@@ -73,16 +73,27 @@ export function EmploymentPeriodsSection({ employee }: { employee: EmployeeDetai
                   <Text size="sm" fw={500}>
                     {t("employees:career.period", {
                       from: date(period.startDate),
-                      to: period.endDate ? date(period.endDate) : t("employees:employmentPeriods.current"),
+                      to: period.endDate
+                        ? date(period.endDate)
+                        : t("employees:employmentPeriods.current"),
                     })}
                   </Text>
-                  <Badge variant="light">{t(`employees:enum.employmentPeriodSource.${period.source}`)}</Badge>
-                  {period.severancePaid && <Badge variant="outline">{t("employees:employmentPeriods.severancePaid")}</Badge>}
-                  {period.leaveSettledAtExit && <Badge variant="outline">{t("employees:employmentPeriods.leaveSettled")}</Badge>}
+                  <Badge variant="light">
+                    {t(`employees:enum.employmentPeriodSource.${period.source}`)}
+                  </Badge>
+                  {period.severancePaid && (
+                    <Badge variant="outline">
+                      {t("employees:employmentPeriods.severancePaid")}
+                    </Badge>
+                  )}
+                  {period.leaveSettledAtExit && (
+                    <Badge variant="outline">{t("employees:employmentPeriods.leaveSettled")}</Badge>
+                  )}
                 </Group>
                 {period.terminationReasonName && (
                   <Text size="xs" c="dimmed">
-                    {t("employees:employmentPeriods.columns.reason")}: {period.terminationReasonName}
+                    {t("employees:employmentPeriods.columns.reason")}:{" "}
+                    {period.terminationReasonName}
                   </Text>
                 )}
               </Stack>
@@ -98,21 +109,35 @@ export function EmploymentPeriodsSection({ employee }: { employee: EmployeeDetai
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <SeniorityField
             label={t("employees:employmentPeriods.seniority.leave")}
-            value={t("employees:employmentPeriods.seniority.days", { count: seniority.leaveSeniorityDays })}
-            hint={seniority.leaveSeniorityStartDate ? t("employees:employmentPeriods.seniority.since", { date: date(seniority.leaveSeniorityStartDate) }) : null}
+            value={t("employees:employmentPeriods.seniority.days", {
+              count: seniority.leaveSeniorityDays,
+            })}
+            hint={
+              seniority.leaveSeniorityStartDate
+                ? t("employees:employmentPeriods.seniority.since", {
+                    date: date(seniority.leaveSeniorityStartDate),
+                  })
+                : null
+            }
           />
           <SeniorityField
             label={t("employees:employmentPeriods.seniority.severance")}
-            value={t("employees:employmentPeriods.seniority.days", { count: seniority.severanceSeniorityDays })}
+            value={t("employees:employmentPeriods.seniority.days", {
+              count: seniority.severanceSeniorityDays,
+            })}
             hint={
               seniority.severanceSeniorityStartDate
-                ? t("employees:employmentPeriods.seniority.since", { date: date(seniority.severanceSeniorityStartDate) })
+                ? t("employees:employmentPeriods.seniority.since", {
+                    date: date(seniority.severanceSeniorityStartDate),
+                  })
                 : null
             }
           />
           <SeniorityField
             label={t("employees:employmentPeriods.seniority.jobSecurity")}
-            value={t("employees:employmentPeriods.seniority.months", { count: seniority.jobSecuritySeniorityMonths })}
+            value={t("employees:employmentPeriods.seniority.months", {
+              count: seniority.jobSecuritySeniorityMonths,
+            })}
             hint={null}
           />
         </div>
@@ -121,7 +146,15 @@ export function EmploymentPeriodsSection({ employee }: { employee: EmployeeDetai
   );
 }
 
-function SeniorityField({ label, value, hint }: { label: string; value: string; hint: string | null }) {
+function SeniorityField({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string | null;
+}) {
   return (
     <div>
       <Text size="xs" c="dimmed">
