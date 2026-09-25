@@ -32,7 +32,8 @@
     "prev": "Previous",
     "next": "Next",
     "detail": "Message details",
-    "close": "Close"
+    "close": "Close",
+    "open": "Open message: {{subject}}"
   },
   "compose": {
     "recipients": "Recipients",
@@ -77,6 +78,8 @@
     "deleteError": "The group could not be deleted.",
     "loadError": "Groups could not be loaded.",
     "needMembers": "Add at least one employee to the group.",
-    "needName": "Group name is required."
+    "needName": "Group name is required.",
+    "dynamic": "By filter (dynamic)",
+    "dynamicHint": "Members are determined by the filter at send time."
   }
 }

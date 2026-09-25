@@ -11,8 +11,10 @@ import {
   Table,
   Text,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
 import { Pencil, Trash2 } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import SelectionField from "@/components/messages/selection-field";
 import { isSelectionEmpty } from "@/components/messages/selection-summary";
 import { toast } from "@/hooks/use-toast";
@@ -27,15 +29,25 @@ import {
 } from "@/services/hr-messages.service";
 import type { EmployeeSelection } from "@/types";
 
-function memberCount(group: MessageGroup): string | number {
+function MemberCount({ group }: { group: MessageGroup }) {
+  const { t } = useTranslation("messages");
   const s = group.selection;
-  if (s?.filter) return "∗";
-  return s?.employeeIds?.length ?? 0;
+  if (s?.filter) {
+    return (
+      <Tooltip label={t("groups.dynamicHint")} multiline w={260}>
+        <Text span size="sm">
+          {t("groups.dynamic")}
+        </Text>
+      </Tooltip>
+    );
+  }
+  return <>{s?.employeeIds?.length ?? 0}</>;
 }
 
 export default function GroupsTab() {
   const { t } = useTranslation("messages");
   const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState<MessageGroup | null>(null);
   const [editing, setEditing] = useState<MessageGroup | "new" | null>(null);
   const groups = useQuery({ queryKey: MESSAGE_GROUPS_KEY, queryFn: listMessageGroups });
 
@@ -73,7 +85,9 @@ export default function GroupsTab() {
             {items.map((g) => (
               <Table.Tr key={g.id}>
                 <Table.Td>{g.name}</Table.Td>
-                <Table.Td>{memberCount(g)}</Table.Td>
+                <Table.Td>
+                  <MemberCount group={g} />
+                </Table.Td>
                 <Table.Td>
                   <Group gap="xs" justify="flex-end">
                     <ActionIcon
@@ -87,10 +101,7 @@ export default function GroupsTab() {
                       variant="subtle"
                       color="red"
                       aria-label={t("groups.delete")}
-                      onClick={() => {
-                        if (window.confirm(t("groups.confirmDelete", { name: g.name })))
-                          remove.mutate(g.id);
-                      }}
+                      onClick={() => setDeleting(g)}
                     >
                       <Trash2 size={16} />
                     </ActionIcon>
@@ -101,6 +112,17 @@ export default function GroupsTab() {
           </Table.Tbody>
         </Table>
       )}
+      <ConfirmModal
+        opened={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title={t("groups.delete")}
+        message={t("groups.confirmDelete", { name: deleting?.name ?? "" })}
+        confirmLabel={t("groups.delete")}
+        danger
+        onConfirm={async () => {
+          if (deleting) await remove.mutateAsync(deleting.id).catch(() => undefined);
+        }}
+      />
       {editing && (
         <GroupDialog
           key={editing === "new" ? "new" : editing.id}

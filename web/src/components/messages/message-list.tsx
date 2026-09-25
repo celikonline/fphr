@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Badge, Button, Group, Modal, Skeleton, Stack, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Group,
+  Modal,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import type { HrMessage, HrMessagesPage } from "@/services/hr-messages.service";
 import { HR_MESSAGES_KEY } from "@/services/hr-messages.service";
 
@@ -69,8 +79,16 @@ export default function MessageList({ scope, fetchPage }: MessageListProps) {
         </Table.Thead>
         <Table.Tbody>
           {items.map((m) => (
-            <Table.Tr key={m.id} style={{ cursor: "pointer" }} onClick={() => setSelected(m)}>
-              <Table.Td>{m.subject}</Table.Td>
+            <Table.Tr key={m.id}>
+              <Table.Td>
+                <UnstyledButton
+                  aria-label={t("list.open", { subject: m.subject })}
+                  onClick={() => setSelected(m)}
+                  style={{ textAlign: "left", fontWeight: 500 }}
+                >
+                  {m.subject}
+                </UnstyledButton>
+              </Table.Td>
               <Table.Td>
                 <ImportanceChip importance={m.importance} />
               </Table.Td>

@@ -43,6 +43,7 @@ vi.mock("@/services/hr-messages.service", async () => {
 });
 import {
   listInbox,
+  deleteMessageGroup,
   listMessageGroups,
   sendHrMessage,
   updateMessageGroup,
@@ -210,5 +211,54 @@ describe("messages", () => {
         { name: "Muhasebe", selection: SELECTION },
       ])
     );
+  });
+
+  it("inbox_row_opens_with_keyboard", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listInbox).mockResolvedValue({
+      items: [
+        {
+          id: "m1",
+          senderUserId: "u1",
+          subject: "Bayram tatili",
+          body: "İyi bayramlar dilerim",
+          importance: "normal",
+          channels: ["email"],
+          recipientCount: 3,
+          sentAt: "2026-09-20T08:00:00Z",
+        },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    });
+    renderUi(<InboxTab />);
+    await screen.findByText("Bayram tatili");
+    await user.tab();
+    const opener = screen.getByRole("button", { name: "Mesajı aç: Bayram tatili" });
+    expect(opener).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByText("İyi bayramlar dilerim")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByText("İyi bayramlar dilerim")).not.toBeInTheDocument()
+    );
+    await waitFor(() => expect(opener).toHaveFocus());
+  });
+
+  it("group_delete_asks_confirmation_and_filter_group_is_dynamic", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listMessageGroups).mockResolvedValue([
+      {
+        id: "g2",
+        name: "Dinamik",
+        selection: { employeeIds: null, filter: {}, excludedEmployeeIds: [] },
+      },
+    ]);
+    renderUi(<GroupsTab />);
+    expect(await screen.findByText(trMessages.groups.dynamic)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: trMessages.groups.delete }));
+    expect(await screen.findByText(/Dinamik” grubu silinsin mi\?/)).toBeInTheDocument();
+    expect(deleteMessageGroup).not.toHaveBeenCalled();
   });
 });

@@ -32,7 +32,8 @@
     "prev": "Zurück",
     "next": "Weiter",
     "detail": "Nachrichtendetails",
-    "close": "Schließen"
+    "close": "Schließen",
+    "open": "Nachricht öffnen: {{subject}}"
   },
   "compose": {
     "recipients": "Empfänger",
@@ -77,6 +78,8 @@
     "deleteError": "Die Gruppe konnte nicht gelöscht werden.",
     "loadError": "Gruppen konnten nicht geladen werden.",
     "needMembers": "Fügen Sie der Gruppe mindestens eine/n Mitarbeitende/n hinzu.",
-    "needName": "Gruppenname ist erforderlich."
+    "needName": "Gruppenname ist erforderlich.",
+    "dynamic": "Nach Filter (dynamisch)",
+    "dynamicHint": "Die Mitglieder werden beim Senden per Filter bestimmt."
   }
 }

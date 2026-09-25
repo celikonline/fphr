@@ -32,7 +32,8 @@
     "prev": "Önceki",
     "next": "Sonraki",
     "detail": "Mesaj detayı",
-    "close": "Kapat"
+    "close": "Kapat",
+    "open": "Mesajı aç: {{subject}}"
   },
   "compose": {
     "recipients": "Alıcılar",
@@ -77,6 +78,8 @@
     "deleteError": "Grup silinemedi.",
     "loadError": "Gruplar yüklenemedi.",
     "needMembers": "Gruba en az bir çalışan ekleyin.",
-    "needName": "Grup adı zorunludur."
+    "needName": "Grup adı zorunludur.",
+    "dynamic": "Filtreye göre (dinamik)",
+    "dynamicHint": "Üyeler gönderim anında filtreye göre belirlenir."
   }
 }
