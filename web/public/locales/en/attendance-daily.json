@@ -44,7 +44,10 @@
       "rejected": "Rejected",
       "cancelled": "Cancelled"
     },
-    "loadError": "Could not load requests."
+    "loadError": "Could not load requests.",
+    "allStatuses": "All",
+    "unknownEmployee": "Unknown employee",
+    "decidedAt": "Decision: {{date}}"
   },
   "comingSoon": "This screen is coming soon."
 }

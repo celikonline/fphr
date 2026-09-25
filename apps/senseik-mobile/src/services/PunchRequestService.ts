@@ -12,10 +12,14 @@ export type PunchRequestStatus = "pending" | "approved" | "rejected" | "cancelle
 export interface PunchRequest {
   id: string;
   employeeId: string;
+  employeeName?: string | null;
+  workDate: string;
   occurredAtUtc: string;
   direction: PunchRequestDirection;
   reason: string;
   status: PunchRequestStatus;
+  decidedAtUtc?: string | null;
+  approvalRequestId?: string | null;
 }
 
 export interface CreatePunchRequestInput {

@@ -24,6 +24,8 @@ function request(id: string, status: PunchRequest["status"]): PunchRequest {
   return {
     id,
     employeeId: "e1",
+    employeeName: "Ayşe Yılmaz",
+    workDate: "2026-09-20",
     occurredAtUtc: "2026-09-20T05:30:00Z",
     direction: "in",
     reason: "sebep",
@@ -131,5 +133,33 @@ describe("PunchRequestScreen", () => {
     expect(renderer.root.findAllByProps({ testID: "punch-cancel-p1" }).length).toBeGreaterThan(0);
     expect(renderer.root.findAllByProps({ testID: "punch-cancel-a1" })).toHaveLength(0);
     expect(renderer.root.findAllByProps({ testID: "punch-cancel-r1" })).toHaveLength(0);
+  });
+
+  it("decision_time_shown: approved row shows the decision timestamp", async () => {
+    service.listMine.mockResolvedValueOnce([
+      { ...request("a1", "approved"), decidedAtUtc: "2026-09-21T10:15:00Z" },
+      request("p1", "pending"),
+    ]);
+    const renderer = await renderScreen();
+    expect(flat(renderer.root.findByProps({ testID: "punch-decided-a1" }))).toContain("Karar:");
+    expect(renderer.root.findAllByProps({ testID: "punch-decided-p1" })).toHaveLength(0);
+  });
+
+  it("shows the server error detail when submit fails", async () => {
+    service.create.mockRejectedValueOnce({ response: { data: { detail: "Bu gün kilitli." } } });
+    const renderer = await renderScreen();
+    setText(renderer, "punch-date", "2026-09-20");
+    setText(renderer, "punch-time", "08:30");
+    setText(renderer, "punch-reason", "x");
+    await press(renderer, "punch-submit");
+    expect(Alert.alert).toHaveBeenCalledWith("Hata", "Bu gün kilitli.");
+  });
+
+  it("does not show the empty text alongside the load error", async () => {
+    service.listMine.mockRejectedValueOnce(new Error("x"));
+    const renderer = await renderScreen();
+    const text = flat(renderer.toJSON());
+    expect(text).toContain("Talepler yüklenemedi");
+    expect(text).not.toContain("Henüz talebiniz yok");
   });
 });

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
@@ -51,6 +51,8 @@ function row(id: string, status: PunchRequest["status"]): PunchRequest {
   return {
     id,
     employeeId: "e1",
+    employeeName: "Ayşe Yılmaz",
+    workDate: "2026-09-20",
     occurredAtUtc: "2026-09-20T05:30:00Z",
     direction: "in",
     reason: `sebep-${id}`,
@@ -156,7 +158,30 @@ describe("PunchRequestsPage", () => {
     expect(screen.getAllByRole("button", { name: "İptal et" })).toHaveLength(1);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "İptal et" }));
-    await user.click((await screen.findAllByRole("button", { name: "İptal et" })).slice(-1)[0]);
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "İptal et" }));
     await waitFor(() => expect(cancelPunchRequest).toHaveBeenCalledWith("p1"));
+  });
+
+  it("decision_time_shown: approved row shows the decision timestamp", async () => {
+    vi.mocked(listMyPunchRequests).mockResolvedValue([
+      { ...row("a1", "approved"), decidedAtUtc: "2026-09-21T10:15:00Z" },
+      row("p1", "pending"),
+    ]);
+    renderPage();
+    expect(await screen.findByText(/Karar:/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Karar:/)).toHaveLength(1);
+  });
+
+  it("status_filter_calls_service: manager filter passes status to listPunchRequests", async () => {
+    useAuthStore.setState({
+      hasPermission: (p: string) => p === "attendance.punchrequest.manage",
+      isAccessSettingEnabled: () => true,
+    });
+    vi.mocked(listPunchRequests).mockResolvedValue([{ ...row("p1", "pending"), employeeName: null }]);
+    renderPage();
+    expect(await screen.findByText("Bilinmeyen çalışan")).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Durum"), "pending");
+    await waitFor(() => expect(listPunchRequests).toHaveBeenCalledWith({ status: "pending" }));
   });
 });

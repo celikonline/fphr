@@ -36,6 +36,11 @@ function todayDateOnly(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+function errorMessage(error: unknown, fallback: string): string {
+  const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+  return detail || fallback;
+}
+
 function formatOccurred(value: string): string {
   return new Date(value).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" });
 }
@@ -89,8 +94,8 @@ export default function PunchRequestScreen() {
       setTime("");
       await load();
       Alert.alert("Gönderildi", "Talebiniz onaya gönderildi.");
-    } catch {
-      Alert.alert("Hata", "Talep gönderilemedi. Lütfen tekrar deneyin.");
+    } catch (err) {
+      Alert.alert("Hata", errorMessage(err, "Talep gönderilemedi. Lütfen tekrar deneyin."));
     } finally {
       setSubmitting(false);
     }
@@ -101,8 +106,8 @@ export default function PunchRequestScreen() {
     try {
       await punchRequestService.cancel(request.id);
       await load();
-    } catch {
-      Alert.alert("Hata", "Talep iptal edilemedi. Lütfen tekrar deneyin.");
+    } catch (err) {
+      Alert.alert("Hata", errorMessage(err, "Talep iptal edilemedi. Lütfen tekrar deneyin."));
     }
   }
 
@@ -182,7 +187,7 @@ export default function PunchRequestScreen() {
       </View>
 
       <Text style={styles.sectionTitle}>Taleplerim</Text>
-      {requests.length === 0 ? (
+      {error ? null : requests.length === 0 ? (
         <Text style={styles.emptyText}>Henüz talebiniz yok.</Text>
       ) : (
         requests.map((request) => (
@@ -198,6 +203,11 @@ export default function PunchRequestScreen() {
                 {PUNCH_STATUS_LABEL[request.status]}
               </Text>
             </View>
+            {request.decidedAtUtc ? (
+              <Text testID={`punch-decided-${request.id}`} style={styles.cardSubtext}>
+                Karar: {formatOccurred(request.decidedAtUtc)}
+              </Text>
+            ) : null}
             <Text style={styles.cardSubtext}>{request.reason}</Text>
             {canCancelPunchRequest(request.status) && (
               <TouchableOpacity

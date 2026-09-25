@@ -44,7 +44,10 @@
       "rejected": "Abgelehnt",
       "cancelled": "Storniert"
     },
-    "loadError": "Anträge konnten nicht geladen werden."
+    "loadError": "Anträge konnten nicht geladen werden.",
+    "allStatuses": "Alle",
+    "unknownEmployee": "Unbekannter Mitarbeiter",
+    "decidedAt": "Entscheidung: {{date}}"
   },
   "comingSoon": "Diese Ansicht folgt in Kürze."
 }
