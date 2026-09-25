@@ -51,6 +51,7 @@ import {
   Blocks,
   QrCode,
   MonitorCheck,
+  Mail,
   Megaphone,
   GraduationCap,
 } from "lucide-react";
@@ -540,6 +541,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["payroll.payslip.import"],
     iconColor: "navy",
   },
+  {
+    key: "messages",
+    labelKey: "apps.messages",
+    path: "/app/messages",
+    icon: Mail,
+    permissions: ["notifications.messages.view"],
+    iconColor: "cyan",
+  },
 ];
 
 export interface SettingsLink {
@@ -999,6 +1008,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
         requireAppItem("announcements"),
         requireAppItem("companyCalendar"),
         requireAppItem("training"),
+        requireAppItem("messages"),
       ],
     },
   ],

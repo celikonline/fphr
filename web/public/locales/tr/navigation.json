@@ -43,6 +43,7 @@
     "description": "Bu özellik yol haritasında Faz {{phase}} kapsamında geliyor."
   },
   "apps": {
+    "messages": "İK mesajları",
     "searchPlaceholder": "Uygulama ara…",
     "noResults": "Aramanızla eşleşen uygulama yok.",
     "viewAll": "Tüm uygulamalar",

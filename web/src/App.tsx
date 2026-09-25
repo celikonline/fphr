@@ -100,6 +100,7 @@ const AssetsPage = lazy(() => import("@/pages/assets"));
 const TrainingPage = lazy(() => import("@/pages/training"));
 const OhsPage = lazy(() => import("@/pages/ohs"));
 const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const MessagesPage = lazy(() => import("@/pages/messages"));
 const AnnouncementsPage = lazy(() => import("@/pages/announcements"));
 const AnnouncementEditorPage = lazy(() => import("@/pages/announcements/announcement-editor"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
@@ -171,6 +172,7 @@ export default function App() {
             <Route path="announcements" element={<AnnouncementsPage />} />
             <Route path="announcements/new" element={<AnnouncementEditorPage />} />
             <Route path="announcements/:id/edit" element={<AnnouncementEditorPage />} />
+            <Route path="messages" element={<MessagesPage />} />
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="ohs" element={<OhsPage />} />
             <Route path="training" element={<TrainingPage />} />

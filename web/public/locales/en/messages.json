@@ -1,5 +1,85 @@
 {
   "title": "HR messages",
   "subtitle": "Messages sent to employees and groups",
-  "comingSoon": "This screen is coming soon."
+  "tabs": {
+    "inbox": "Inbox",
+    "outbox": "Outbox",
+    "groups": "Message groups",
+    "compose": "New message"
+  },
+  "importance": {
+    "normal": "Normal",
+    "high": "High"
+  },
+  "channels": {
+    "email": "E-mail",
+    "in_app": "In-app",
+    "sms": "SMS",
+    "smsSoon": "Coming soon",
+    "smsHint": "The SMS channel will be available soon."
+  },
+  "list": {
+    "emptyInbox": "You have no incoming messages.",
+    "emptyOutbox": "You have not sent any messages.",
+    "recipients_one": "{{count}} recipient",
+    "recipients_other": "{{count}} recipients",
+    "subject": "Subject",
+    "importance": "Importance",
+    "channelsCol": "Channels",
+    "recipientsCol": "Recipients",
+    "date": "Date",
+    "loadError": "Messages could not be loaded.",
+    "prev": "Previous",
+    "next": "Next",
+    "detail": "Message details",
+    "close": "Close",
+    "open": "Open message: {{subject}}"
+  },
+  "compose": {
+    "recipients": "Recipients",
+    "pickEmployees": "Select employees",
+    "changeEmployees": "Change selection",
+    "clearEmployees": "Clear",
+    "pickerTitle": "Recipient employees",
+    "groups": "Message groups",
+    "groupsPlaceholder": "Select groups",
+    "noGroups": "No saved groups",
+    "selectionIds_one": "{{count}} employee selected",
+    "selectionIds_other": "{{count}} employees selected",
+    "selectionFilter": "Employees matching the filter selected (excluded: {{excluded}})",
+    "noRecipients": "Select at least one employee or group.",
+    "channels": "Channels",
+    "noChannel": "Select at least one channel.",
+    "subject": "Subject",
+    "body": "Content",
+    "counter": "{{count}} / {{max}}",
+    "importance": "Importance",
+    "send": "Send",
+    "sent_one": "Message sent to {{count}} recipient.",
+    "sent_other": "Message sent to {{count}} recipients.",
+    "sendError": "The message could not be sent.",
+    "noAccount": "Employees without an account only receive e-mail."
+  },
+  "groups": {
+    "name": "Name",
+    "members": "Employees",
+    "new": "New group",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": "No message groups yet.",
+    "createTitle": "New message group",
+    "editTitle": "Edit group",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirmDelete": "Delete group “{{name}}”?",
+    "saved": "Group saved.",
+    "deleted": "Group deleted.",
+    "saveError": "The group could not be saved.",
+    "deleteError": "The group could not be deleted.",
+    "loadError": "Groups could not be loaded.",
+    "needMembers": "Add at least one employee to the group.",
+    "needName": "Group name is required.",
+    "dynamic": "By filter (dynamic)",
+    "dynamicHint": "Members are determined by the filter at send time."
+  }
 }
