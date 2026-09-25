@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
@@ -260,5 +260,9 @@ describe("messages", () => {
     await user.click(screen.getByRole("button", { name: trMessages.groups.delete }));
     expect(await screen.findByText(/Dinamik” grubu silinsin mi\?/)).toBeInTheDocument();
     expect(deleteMessageGroup).not.toHaveBeenCalled();
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: trMessages.groups.delete }));
+    await waitFor(() => expect(deleteMessageGroup).toHaveBeenCalled());
+    expect(vi.mocked(deleteMessageGroup).mock.calls[0]![0]).toBe("g2");
   });
 });
