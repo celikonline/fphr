@@ -1,5 +1,100 @@
 {
   "title": "Time clock terminals",
   "subtitle": "Registered clock-in terminals",
-  "comingSoon": "This screen is coming soon."
+  "comingSoon": "This screen is coming soon.",
+  "tabs": {
+    "terminals": "Terminals",
+    "groups": "Groups",
+    "credentials": "Employee credentials"
+  },
+  "terminal": {
+    "new": "New terminal",
+    "edit": "Edit",
+    "code": "Code",
+    "name": "Name",
+    "group": "Group",
+    "noGroup": "No group",
+    "direction": "Direction mode",
+    "status": "Status",
+    "lastSeen": "Last seen",
+    "never": "Never seen",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "empty": "No terminals yet.",
+    "saved": "Terminal saved.",
+    "saveFailed": "Could not save the terminal.",
+    "loadFailed": "Could not load terminals.",
+    "codeRequired": "Code and name are required.",
+    "statusFailed": "Could not change the status.",
+    "suspicious": "Suspicious PIN attempts: {{date}}"
+  },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "directionMode": {
+    "both": "In and out",
+    "inOnly": "In only",
+    "outOnly": "Out only"
+  },
+  "apiKey": {
+    "generate": "Regenerate key",
+    "title": "Terminal API key",
+    "warning": "This key will not be shown again. Copy it now and enter it on the terminal; the old key stops working.",
+    "label": "API key",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy; select and copy the key manually.",
+    "close": "Close",
+    "rotateConfirm": "Regenerate the key? The key on the terminal will stop working.",
+    "rotateFailed": "Could not regenerate the key.",
+    "rotateAction": "Regenerate"
+  },
+  "group": {
+    "new": "New group",
+    "name": "Group name",
+    "rename": "Rename",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this group?",
+    "empty": "No groups yet.",
+    "saved": "Group saved.",
+    "saveFailed": "Could not save the group.",
+    "deleted": "Group deleted.",
+    "deleteFailed": "Could not delete the group.",
+    "loadFailed": "Could not load groups.",
+    "deleteYes": "Yes, delete"
+  },
+  "credential": {
+    "employee": "Employee",
+    "pickEmployee": "Select an employee",
+    "kind": "Type",
+    "value": "Value",
+    "valueHint": "The value is never shown again after it is saved.",
+    "add": "Add credential",
+    "status": "Status",
+    "masked": "Value (hidden)",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "empty": "This employee has no credentials.",
+    "saved": "Credential added.",
+    "saveFailed": "Could not add the credential.",
+    "statusFailed": "Could not change the status.",
+    "loadFailed": "Could not load credentials.",
+    "import": "Import from Excel",
+    "valueRequired": "A value is required.",
+    "sensitiveNotice": "This file contains card/PIN values; it is processed after upload and deleted from the server (within 24 hours at most).",
+    "importTitle": "Import credentials from Excel",
+    "downloadTemplate": "Download template",
+    "pepperMissing": "Credential import is not configured in this environment (server key missing). Contact your administrator.",
+    "uploadFailed": "Could not upload the file."
+  },
+  "credentialKind": {
+    "card": "Card",
+    "pin": "PIN",
+    "externalId": "External ID"
+  }
 }

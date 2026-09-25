@@ -1,5 +1,100 @@
 {
   "title": "PDKS terminalleri",
   "subtitle": "Kayıtlı geçiş terminalleri",
-  "comingSoon": "Bu ekran yakında kullanıma açılacak."
+  "comingSoon": "Bu ekran yakında kullanıma açılacak.",
+  "tabs": {
+    "terminals": "Terminaller",
+    "groups": "Gruplar",
+    "credentials": "Çalışan kimlikleri"
+  },
+  "terminal": {
+    "new": "Yeni terminal",
+    "edit": "Düzenle",
+    "code": "Kod",
+    "name": "Ad",
+    "group": "Grup",
+    "noGroup": "Grupsuz",
+    "direction": "Yön modu",
+    "status": "Durum",
+    "lastSeen": "Son görülme",
+    "never": "Hiç görülmedi",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "activate": "Aktifleştir",
+    "deactivate": "Pasifleştir",
+    "empty": "Henüz terminal yok.",
+    "saved": "Terminal kaydedildi.",
+    "saveFailed": "Terminal kaydedilemedi.",
+    "loadFailed": "Terminaller yüklenemedi.",
+    "codeRequired": "Kod ve ad zorunludur.",
+    "statusFailed": "Durum değiştirilemedi.",
+    "suspicious": "Şüpheli PIN denemesi: {{date}}"
+  },
+  "presence": {
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı"
+  },
+  "directionMode": {
+    "both": "Giriş ve çıkış",
+    "inOnly": "Yalnız giriş",
+    "outOnly": "Yalnız çıkış"
+  },
+  "apiKey": {
+    "generate": "Anahtarı yenile",
+    "title": "Terminal API anahtarı",
+    "warning": "Bu anahtar bir daha gösterilmeyecek. Şimdi kopyalayıp terminale girin; eski anahtar geçersiz olur.",
+    "label": "API anahtarı",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalanamadı; anahtarı elle seçip kopyalayın.",
+    "close": "Kapat",
+    "rotateConfirm": "Anahtar yenilensin mi? Terminaldeki eski anahtar çalışmayı bırakır.",
+    "rotateFailed": "Anahtar yenilenemedi.",
+    "rotateAction": "Yenile"
+  },
+  "group": {
+    "new": "Yeni grup",
+    "name": "Grup adı",
+    "rename": "Yeniden adlandır",
+    "delete": "Sil",
+    "deleteConfirm": "Bu grup silinsin mi?",
+    "empty": "Henüz grup yok.",
+    "saved": "Grup kaydedildi.",
+    "saveFailed": "Grup kaydedilemedi.",
+    "deleted": "Grup silindi.",
+    "deleteFailed": "Grup silinemedi.",
+    "loadFailed": "Gruplar yüklenemedi.",
+    "deleteYes": "Evet, sil"
+  },
+  "credential": {
+    "employee": "Çalışan",
+    "pickEmployee": "Çalışan seçin",
+    "kind": "Tür",
+    "value": "Değer",
+    "valueHint": "Değer kaydedildikten sonra bir daha gösterilmez.",
+    "add": "Kimlik ekle",
+    "status": "Durum",
+    "masked": "Değer (gizli)",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "activate": "Aktifleştir",
+    "deactivate": "Pasifleştir",
+    "empty": "Bu çalışanın kimliği yok.",
+    "saved": "Kimlik eklendi.",
+    "saveFailed": "Kimlik eklenemedi.",
+    "statusFailed": "Durum değiştirilemedi.",
+    "loadFailed": "Kimlikler yüklenemedi.",
+    "import": "Excel ile içe aktar",
+    "valueRequired": "Değer zorunludur.",
+    "sensitiveNotice": "Bu dosya kart/PIN içerir; yüklendikten sonra işlenir ve sunucudan silinir (en geç 24 saat).",
+    "importTitle": "Kimlikleri Excel ile içe aktar",
+    "downloadTemplate": "Şablonu indir",
+    "pepperMissing": "Kimlik içe aktarma bu ortamda yapılandırılmamış (sunucu anahtarı eksik). Yöneticinize başvurun.",
+    "uploadFailed": "Dosya yüklenemedi."
+  },
+  "credentialKind": {
+    "card": "Kart",
+    "pin": "PIN",
+    "externalId": "Dış kimlik"
+  }
 }
