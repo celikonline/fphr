@@ -1683,4 +1683,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.punch.source_invalid" xml:space="preserve"><value>The punch source is invalid.</value></data>
   <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>The punch source reference can be at most 200 characters.</value></data>
   <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>The punch belongs to a different tenant than the current one.</value></data>
+  <data name="attendance.day.concurrent_update" xml:space="preserve"><value>The attendance day was changed by another operation at the same time; please try again.</value></data>
 </root>

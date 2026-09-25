@@ -17,9 +17,11 @@ namespace Sense.Modules.Attendance.Application.Punches;
 /// kaydedilmemiş satırları döndürmez). K6 kilidinin tek denetim noktasıdır (<see cref="IsLockedAsync"/>): onaylı aylık puantaj ayına yazan
 /// her kanal <see cref="AttendanceErrors.PeriodLocked"/> alır. Günün planı her kanalda K2 önceliğiyle <see cref="IPlannedDayResolver"/>'dan
 /// çözülür (vardiya ataması + tanım kuralları → çalışma çizelgesi → plansız); tanımın kural seti (tolerans, FM min/maks, bonus) güne verilir.
-/// Kaydetmez - çağıran kendi unit-of-work'ünü kaydeder.
+/// Limitler günün kaynağına göre <see cref="LimitPolicy"/>'den gelir. Kaydetme <see cref="SaveAsync"/> ile yapılır: eşzamanlı yazma
+/// çakışmasında (günün xmin'i değişti / aynı gün ya da okutma başka işlemde oluştu) dokunulan günler taze veriden yeniden türetilip
+/// sınırlı sayıda yeniden denenir (bkz. PunchDayWriter.Save.cs).
 /// </summary>
-public sealed class PunchDayWriter(
+public sealed partial class PunchDayWriter(
     Guid tenantId, IAttendanceDayRepository days, IPunchRepository punches, IPlannedDayResolver planner,
     IMonthlyTimesheetApprovalRepository approvals, TimeZoneInfo zone, DateTime nowUtc)
 {
@@ -193,7 +195,8 @@ public sealed class PunchDayWriter(
 
     /// <summary>
     /// Günü okutmalardan ve K2 planından yeniden kurar ve <see cref="AttendanceDay"/>'i ekler/günceller. <paramref name="source"/> null ise en
-    /// son okutmanın kaynağı (okutma yoksa günün mevcut kaynağı) kullanılır. Okutması olan gün şu durumlarda Incalculable'dır (spec §5.1):
+    /// son okutmanın kaynağı (okutma yoksa günün mevcut kaynağı) kullanılır. <paramref name="limits"/> kiracı limitleridir; güne uygulanıp
+    /// uygulanmayacağına günün kaynağıyla <see cref="LimitPolicy"/> karar verir. Okutması olan gün şu durumlarda Incalculable'dır (spec §5.1):
     /// okutmalar tutarsız ya da plan yok (<see cref="DayFromPunches"/>), dinamik vardiya eşitliği (<see cref="PlannedDay.IsAmbiguous"/>), bir
     /// okutma iki vardiya başlangıcına eşit uzaklıkta (gece vardiyası çakışması, <see cref="WorkDateResolver"/>) ya da çağıran zorlar
     /// (<paramref name="forceIncalculable"/>).
@@ -210,13 +213,14 @@ public sealed class PunchDayWriter(
         var plan = await planner.ResolveAsync(employeeId, workDate, DayFromPunches.FirstIn(dayPunches, zone), cancellationToken).ConfigureAwait(false);
         var result = DayFromPunches.Build(dayPunches, plan, zone);
         var planned = plan ?? PlannedDay.NonWorking();
-
-        // Vardiya tanımının kural seti kiracı limitleriyle birlikte güne gider (kural yoksa eski hesap birebir).
-        var dayLimits = planned.Rules is { } rules ? (limits ?? ShiftLimits.None) with { Rules = rules } : limits;
-
         var existing = await FindDayAsync(employeeId, workDate, cancellationToken).ConfigureAwait(false);
         var daySource = source
             ?? (dayPunches.Count > 0 ? PunchTime.ToDaySource(dayPunches[^1].Source) : existing?.Source ?? AttendanceDaySource.Manual);
+        _rebuilt[(employeeId, workDate)] = new RebuildRequest(source, limits, forceIncalculable);
+
+        // Kanalın limit kuralı + vardiya tanımının kural seti (kural yoksa eski hesap birebir).
+        var channelLimits = LimitPolicy.For(daySource, limits);
+        var dayLimits = planned.Rules is { } rules ? (channelLimits ?? ShiftLimits.None) with { Rules = rules } : channelLimits;
 
         AttendanceDay day;
         if (existing is null)

@@ -12,9 +12,12 @@ namespace Sense.Modules.Attendance.Infrastructure.Jobs;
 /// <see cref="IAttendanceDayRecalculator"/> (zaman-devam Z0.3): singleton; jobs live in memory (<see cref="RecalculationJobStore"/>)
 /// and are executed one at a time by <see cref="RecalculationHostedService"/>. Every run gets its own DI scope and tenant scope.
 /// A restart loses queued/in-flight jobs - callers re-queue, the run is idempotent.
+/// The queue is drained only where <see cref="RecalculationHostedService"/> runs (API; marked by <see cref="RecalculationQueueConsumer"/>):
+/// elsewhere (Sense.Worker) <see cref="EnqueueAsync"/> refuses instead of leaving a job queued forever - use <see cref="RecalculateNowAsync"/>.
 /// </summary>
 public sealed partial class AttendanceDayRecalculator(
-    IServiceScopeFactory scopes, RecalculationJobStore store, TimeProvider clock, ILogger<AttendanceDayRecalculator> logger) : IAttendanceDayRecalculator
+    IServiceScopeFactory scopes, RecalculationJobStore store, TimeProvider clock, ILogger<AttendanceDayRecalculator> logger,
+    RecalculationQueueConsumer? consumer = null) : IAttendanceDayRecalculator
 {
     /// <summary>
     /// The enqueuing command (e.g. "Kaydet &amp; Geçmişe Uygula") may not have committed yet when it queues the job; waiting before the
@@ -28,6 +31,13 @@ public sealed partial class AttendanceDayRecalculator(
 
     public async Task<Guid> EnqueueAsync(Guid tenantId, DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken ct)
     {
+        if (consumer is null)
+        {
+            LogNoQueueConsumer(logger, tenantId);
+            throw new InvalidOperationException(
+                "Attendance recalculation queue has no consumer in this host (RecalculationHostedService runs in the API only); use RecalculateNowAsync.");
+        }
+
         var job = store.Create(tenantId, from, to, employeeIds);
         await _queue.Writer.WriteAsync(job.JobId, ct).ConfigureAwait(false);
         return job.JobId;
@@ -83,7 +93,13 @@ public sealed partial class AttendanceDayRecalculator(
 
     [LoggerMessage(EventId = 7410, Level = LogLevel.Error, Message = "Attendance recalculation job {JobId} failed")]
     private static partial void LogJobFailed(ILogger logger, Exception exception, Guid jobId);
+
+    [LoggerMessage(EventId = 7411, Level = LogLevel.Error, Message = "Attendance recalculation enqueued for tenant {TenantId} in a host without a queue consumer")]
+    private static partial void LogNoQueueConsumer(ILogger logger, Guid tenantId);
 }
+
+/// <summary>Marker: this host drains the recalculation queue (<see cref="RecalculationHostedService"/> registered alongside it).</summary>
+public sealed class RecalculationQueueConsumer;
 
 /// <summary>Drains the recalculation queue in the API process.</summary>
 public sealed class RecalculationHostedService(AttendanceDayRecalculator recalculator) : BackgroundService

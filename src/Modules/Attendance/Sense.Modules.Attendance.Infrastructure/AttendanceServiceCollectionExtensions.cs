@@ -36,6 +36,7 @@ public static class AttendanceServiceCollectionExtensions
         // Zaman-devam Z0.3: yeniden hesaplama kuyruğunu yalnız API süreci boşaltır (iş durumu bellekte; durum ucu API'de). Servisler
         // AddAttendanceCoreServices'te (Worker'daki onaylı okutma talebi RecalculateNowAsync çağırır).
         services.AddHostedService<RecalculationHostedService>();
+        services.AddSingleton<RecalculationQueueConsumer>();
         return services;
     }
 

@@ -122,7 +122,12 @@ public sealed class ImportDeviceLogsHandler(
 
         if (anyChange)
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Eşzamanlı yazma çakışması (aynı gün / aynı okutma / günün xmin'i) yazıcıda yeniden türetilip denenir.
+            var saved = await writer.SaveAsync(unitOfWork, cancellationToken).ConfigureAwait(false);
+            if (saved.IsFailure)
+            {
+                return saved.Error;
+            }
         }
 
         return new DeviceLogImportResultDto(imported, errors.Count, errors.OrderBy(e => e.Line).ToList());

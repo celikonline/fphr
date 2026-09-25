@@ -25,13 +25,13 @@ public static class ShiftRuleEvaluator
         var breakMinutes = definition.Breaks.Sum(b => b.DurationMinutes);
 
         return new PlannedDay(
-            ToTime(startMinute), ToTime(startMinute + lengthMinutes), Math.Max(lengthMinutes - breakMinutes, 0), breakMinutes,
-            definition.StartsPreviousDay, ShiftRules.From(definition), definition.Id);
+            Start: ToTime(startMinute), End: ToTime(startMinute + lengthMinutes), PlannedMinutes: Math.Max(lengthMinutes - breakMinutes, 0),
+            BreakMinutes: breakMinutes, StartsPreviousDay: definition.StartsPreviousDay, Rules: ShiftRules.From(definition), ShiftDefinitionId: definition.Id);
     }
 
     /// <summary>Tanımsız (eski) atama: yalnız satırın kendi saatleri ve molası, kural seti yok.</summary>
     public static PlannedDay FromAssignment(ShiftAssignment assignment) =>
-        new(assignment.Start, assignment.End, assignment.ShiftMinutes, assignment.BreakMinutes);
+        new(Start: assignment.Start, End: assignment.End, PlannedMinutes: assignment.ShiftMinutes, BreakMinutes: assignment.BreakMinutes);
 
     private static int FlexibleStartMinute(ShiftDefinition definition, TimeOnly? firstIn)
     {

@@ -112,9 +112,17 @@ public sealed class AttendanceImportRowHandler(
             anyChange = true;
         }
 
-        if (anyChange)
+        if (anyChange && (await writer.SaveAsync(unitOfWork, cancellationToken).ConfigureAwait(false)).IsFailure)
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Eşzamanlı yazma çakışması yeniden denemelere rağmen çözülemedi: hiçbir satır uygulanmadı.
+            foreach (var plan in plans.Where(p => results[p.RowNumber].Outcome != ImportRowOutcome.Error))
+            {
+                results[plan.RowNumber] = new ImportRowResult(
+                    plan.RowNumber, ImportRowOutcome.Error, plan.NationalId, null,
+                    [new ImportRowError(AttendanceImportColumns.Date, AttendanceErrors.DayConcurrentUpdate)]);
+            }
+
+            return new ImportBatchResult(Ordered(batch, results), Applied: false);
         }
 
         return new ImportBatchResult(Ordered(batch, results), Applied: true);

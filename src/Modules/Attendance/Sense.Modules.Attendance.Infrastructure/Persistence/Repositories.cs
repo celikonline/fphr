@@ -128,6 +128,18 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
         }
     }
 
+    public bool IsConcurrencyConflict(Exception exception) =>
+        exception is DbUpdateConcurrencyException concurrency && concurrency.Entries.Any(e => e.Entity is AttendanceDay);
+
+    public async Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default)
+    {
+        var entry = context.Entry(day);
+        if (entry.State is not (EntityState.Added or EntityState.Detached))
+        {
+            await entry.ReloadAsync(cancellationToken);
+        }
+    }
+
     public async Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {

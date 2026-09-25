@@ -57,6 +57,12 @@ public interface IAttendanceDayRepository
 
     /// <summary>Eklenmiş ama kaydedilmemiş bir günü değişiklik izlemeden çıkarır (eşzamanlı aynı gün oluşturma yarışı sonrası yeniden deneme).</summary>
     void Discard(AttendanceDay day);
+
+    /// <summary>Kaydetme hatası günün eşzamanlılık belirteci (xmin) çakışması mı - başka işlem aynı günü önce güncelledi.</summary>
+    bool IsConcurrencyConflict(Exception exception);
+
+    /// <summary>Kayıtlı günün değerlerini ve eşzamanlılık belirtecini veritabanından yeniden yükler (çakışma sonrası yeniden türetme).</summary>
+    Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default);
 }
 
 public interface IAnomalyResolutionRepository

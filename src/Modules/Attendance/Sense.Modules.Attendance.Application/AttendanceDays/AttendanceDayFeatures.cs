@@ -125,7 +125,7 @@ public sealed class PlannedDayResolver(
             ? (int)(day.BreakEnd.Value.ToTimeSpan() - day.BreakStart.Value.ToTimeSpan()).TotalMinutes
             : 0;
         var plannedMinutes = Math.Max((int)(day.End.Value.ToTimeSpan() - day.Start.Value.ToTimeSpan()).TotalMinutes - breakMinutes, 0);
-        return new PlannedDay(day.Start, day.End, plannedMinutes, breakMinutes);
+        return new PlannedDay(Start: day.Start, End: day.End, PlannedMinutes: plannedMinutes, BreakMinutes: breakMinutes);
     }
 
     /// <summary>Null when the assignment has no definition or it no longer exists (then the assignment's own hours apply).</summary>
@@ -168,7 +168,7 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 
 public sealed class RecordAttendanceHandler(
     IAttendanceDayRepository days, IPlannedDayResolver planner, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock,
-    IPunchRepository punches, ICurrentUser currentUser, IMonthlyTimesheetApprovalRepository approvals)
+    IPunchRepository punches, ICurrentUser currentUser, IMonthlyTimesheetApprovalRepository approvals, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
     /// <summary>Elle kayıt günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe (Z0.1: elle kayıt okutmaya dönüşür).</summary>
@@ -195,7 +195,20 @@ public sealed class RecordAttendanceHandler(
         var result = await writer.ReplaceDayAsync(
             command.EmployeeId, command.Date, command.CheckIn, command.CheckOut, AttendanceDaySource.Manual, currentUser.UserId, ReplacedReason,
             limits: null, cancellationToken);
-        return result.IsFailure ? result.Error : result.Value.Id;
+        if (result.IsFailure)
+        {
+            return result.Error;
+        }
+
+        // Kaydetme yazıcıda: eşzamanlı yazma çakışması (kayıp güncelleme / aynı gün) yeniden türetilip denenir.
+        var saved = await writer.SaveAsync(unitOfWork, cancellationToken);
+        if (saved.IsFailure)
+        {
+            return saved.Error;
+        }
+
+        // Yarışta gün başka işlemde oluştuysa kalıcı satırın id'si.
+        return (await writer.FindDayAsync(command.EmployeeId, command.Date, cancellationToken) ?? result.Value).Id;
     }
 }
 

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.DeviceLogs;
 using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
@@ -15,6 +16,7 @@ using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -144,6 +146,51 @@ public sealed class PunchPipelinePostgresTests : AttendancePostgresFixture
         (day.CheckIn, day.CheckOut).ShouldBe((new TimeOnly(9, 0), new TimeOnly(18, 0)), "yarışı kaybeden, kazananın gününü güncelledi");
     }
 
+    [Fact]
+    public async Task Concurrent_updates_of_an_existing_day_from_manual_and_device_keep_both_punches()
+    {
+        // Kayıp güncelleme: iki kanal aynı var olan günü aynı anda yeniden türetir; xmin olmadan son yazan kazanır, gün tek okutmayla kalır.
+        var ct = TestContext.Current.CancellationToken;
+        using var tenant = TenantContextSetter!.BeginScope(_tenantId);
+        await EnsureDefaultScheduleAsync(ct);
+        await RecordAsync(Utc(9, 0), PunchDirectionDto.In, ct);
+        await RecordAsync(Utc(18, 0), PunchDirectionDto.Out, ct);
+        var gate = new Rendezvous(parties: 2);
+        var manualBack = Input(Utc(13, 0), PunchDirectionDto.In) with { Source = PunchSourceDto.Manual, IsManual = true, Reason = "öğle dönüşü" };
+
+        var manual = Task.Run(() => RecordRacingAsync(manualBack, gate, ct), ct);
+        var device = Task.Run(() => ImportDeviceRacingAsync("2026-08-03T12:00:00;out", gate, ct), ct);
+        await Task.WhenAll(manual, device);
+
+        (await manual).IsSuccess.ShouldBeTrue();
+        var imported = await device;
+        imported.IsSuccess.ShouldBeTrue();
+        imported.Value.Errors.ShouldBeEmpty();
+        (await LoadPunchesAsync(ct)).Count.ShouldBe(4);
+        var day = await LoadDayAsync(ct);
+        day.Anomalies.HasFlag(AttendanceAnomaly.Incalculable).ShouldBeFalse("gün dört okutmanın hepsinden türetilmeli (In,Out,In,Out)");
+        (day.CheckIn, day.CheckOut, day.ActualBreakMinutes).ShouldBe((new TimeOnly(9, 0), new TimeOnly(18, 0), 60));
+    }
+
+    [Fact]
+    public async Task Concurrent_device_imports_creating_the_same_day_are_both_kept_on_one_day()
+    {
+        // Tekillik yarışı yalnız IPunchRecorder'da değil, her kanalda (cihaz aktarımı) yeniden denenir.
+        var ct = TestContext.Current.CancellationToken;
+        using var tenant = TenantContextSetter!.BeginScope(_tenantId);
+        await EnsureDefaultScheduleAsync(ct);
+        var gate = new Rendezvous(parties: 2);
+
+        var results = await Task.WhenAll(
+            Task.Run(() => ImportDeviceRacingAsync("2026-08-03T09:00:00;in", gate, ct), ct),
+            Task.Run(() => ImportDeviceRacingAsync("2026-08-03T18:00:00;out", gate, ct), ct));
+
+        results.ShouldAllBe(r => r.IsSuccess && r.Value.Imported == 1 && r.Value.Errors.Count == 0);
+        (await LoadPunchesAsync(ct)).Count.ShouldBe(2);
+        var day = await LoadDayAsync(ct);
+        (day.CheckIn, day.CheckOut).ShouldBe((new TimeOnly(9, 0), new TimeOnly(18, 0)));
+    }
+
     /// <summary>İstanbul yerel saati (UTC+3, yaz saati yok) → UTC.</summary>
     private static DateTime Utc(int localHour, int localMinute) =>
         DateTime.SpecifyKind(Date.ToDateTime(new TimeOnly(localHour, localMinute)).AddHours(-3), DateTimeKind.Utc);
@@ -191,6 +238,21 @@ public sealed class PunchPipelinePostgresTests : AttendancePostgresFixture
             sp.GetRequiredService<ITenantLocalClock>(), new RendezvousUnitOfWork(sp.GetRequiredService<IAttendanceUnitOfWork>(), gate),
             sp.GetRequiredService<ITenantContext>(), sp.GetRequiredService<ITenantContextSetter>());
         return await recorder.RecordAsync(input, ct);
+    }
+
+    /// <summary>Kendi kapsamında bir PDKS cihaz aktarımı (tek satır); ilk kaydetme diğer işlemle buluşur.</summary>
+    private async Task<Sense.Shared.Kernel.Results.Result<DeviceLogImportResultDto>> ImportDeviceRacingAsync(string row, Rendezvous gate, CancellationToken ct)
+    {
+        const string NationalId = "10000000146";
+        using var scope = ServiceProvider!.CreateScope();
+        var sp = scope.ServiceProvider;
+        var employees = Substitute.For<IEmployeeLookup>();
+        employees.FindActiveByNationalIdAsync(_tenantId, NationalId, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        var handler = new ImportDeviceLogsHandler(
+            sp.GetRequiredService<ITenantContext>(), employees, sp.GetRequiredService<IPlannedDayResolver>(), sp.GetRequiredService<IAttendanceDayRepository>(),
+            sp.GetRequiredService<IShiftSettingsRepository>(), new RendezvousUnitOfWork(sp.GetRequiredService<IAttendanceUnitOfWork>(), gate),
+            sp.GetRequiredService<IPunchRepository>(), sp.GetRequiredService<ITenantLocalClock>(), sp.GetRequiredService<IMonthlyTimesheetApprovalRepository>());
+        return await handler.Handle(new ImportDeviceLogsCommand($"employeeCode;timestamp;direction\n{NationalId};{row}\n"), ct);
     }
 
     private async Task<AttendanceDay> LoadDayAsync(CancellationToken ct)

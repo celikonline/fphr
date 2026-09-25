@@ -110,6 +110,9 @@ internal static class AttendanceTables
     public const string EmployeeTerminalCredentials = "employee_terminal_credentials";
     public const string PunchUniqueIndex = "ux_punches_tenant_employee_occurred_direction_source";
 
+    /// <summary>Gölge eşzamanlılık belirteci; PostgreSQL xmin sistem sütununa eşlenir (AttendanceDay).</summary>
+    public const string RowVersion = "RowVersion";
+
     /// <summary>attendance_days (TenantId, EmployeeId, Date) tekillik indeksinin (EF adlandırması) adı - eşzamanlı gün oluşturma yarışı.</summary>
     public const string AttendanceDayUniqueIndex = "ix_attendance_days_tenant_id_employee_id_date";
     public const string PunchNotDeletedFilter = "deleted_at_utc IS NULL";
@@ -167,6 +170,10 @@ public sealed class AttendanceDayConfiguration : IEntityTypeConfiguration<Attend
         b.Property(x => x.OverrideReason).HasMaxLength(AttendanceTables.OverrideReasonMaxLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date }).IsUnique();
         b.Ignore(x => x.DomainEvents);
+
+        // I0: iyimser eşzamanlılık PostgreSQL xmin sistem sütunuyla (şema değişikliği yok, Payroll Payslip kalıbı) - iki kanal aynı günü
+        // aynı anda yeniden türetirse geç kalan DbUpdateConcurrencyException alır, PunchDayWriter günü taze veriden yeniden türetir.
+        b.Property<uint>(AttendanceTables.RowVersion).HasColumnName("xmin").HasColumnType("xid").IsRowVersion();
     }
 }
 

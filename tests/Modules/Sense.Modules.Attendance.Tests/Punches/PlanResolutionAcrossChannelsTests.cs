@@ -182,7 +182,7 @@ public sealed class PlanResolutionAcrossChannelsTests
         switch (channel)
         {
             case "manual":
-                (await new RecordAttendanceHandler(_days, _planner, _tenant, _dataScope, _clock, _punches, _currentUser, _approvals)
+                (await new RecordAttendanceHandler(_days, _planner, _tenant, _dataScope, _clock, _punches, _currentUser, _approvals, Substitute.For<IAttendanceUnitOfWork>())
                     .Handle(new RecordAttendanceCommand(_employeeId, Date, new TimeOnly(10, 0), new TimeOnly(19, 0)), ct)).IsSuccess.ShouldBeTrue();
                 break;
             case "excel":
@@ -207,7 +207,7 @@ public sealed class PlanResolutionAcrossChannelsTests
                 var at = new DateTime(2026, 9, 16, 7, 0, 0, DateTimeKind.Utc);
                 (await new QrCheckInHandler(
                         _tenant, _currentUser, locations, _days, _planner, _shiftSettings, Substitute.For<ISelfCheckInRepository>(),
-                        new FixedLocalClock(at, at.AddHours(3)), _punches, _approvals)
+                        new FixedLocalClock(at, at.AddHours(3)), _punches, _approvals, Substitute.For<IAttendanceUnitOfWork>())
                     .Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct)).IsSuccess.ShouldBeTrue();
                 break;
             case "recorder":

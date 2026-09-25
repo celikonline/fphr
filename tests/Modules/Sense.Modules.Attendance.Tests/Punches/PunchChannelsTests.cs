@@ -66,7 +66,7 @@ public sealed class PunchChannelsTests
     private ImportDeviceLogsHandler DeviceHandler() =>
         new(_tenant, _employeeLookup, TestPlanner.From(_schedules), _days, _shiftSettings, _unitOfWork, _punches, _clock, _approvals);
 
-    private RecordAttendanceHandler ManualHandler() => new(_days, TestPlanner.From(_schedules), _tenant, _dataScope, _clock, _punches, _currentUser, _approvals);
+    private RecordAttendanceHandler ManualHandler() => new(_days, TestPlanner.From(_schedules), _tenant, _dataScope, _clock, _punches, _currentUser, _approvals, Substitute.For<IAttendanceUnitOfWork>());
 
     private AttendanceImportRowHandler ExcelHandler() => new(_tenant, _employeeLookup, TestPlanner.From(_schedules), _days, _unitOfWork, _punches, _clock, _approvals);
 
@@ -192,7 +192,7 @@ public sealed class PunchChannelsTests
         var locationId = Guid.NewGuid();
         locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>()).Returns(new LocationGeofence(locationId, "HQ", null, null, null));
         QrCheckInHandler Handler(DateTime utc) =>
-            new(_tenant, _currentUser, locations, _days, TestPlanner.From(_schedules), _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals);
+            new(_tenant, _currentUser, locations, _days, TestPlanner.From(_schedules), _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals, Substitute.For<IAttendanceUnitOfWork>());
 
         await Handler(new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
         await Handler(new DateTime(2026, 9, 16, 6, 5, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
@@ -213,7 +213,7 @@ public sealed class PunchChannelsTests
         QrCheckInHandler Handler(DateTime utc) =>
             new(
                 _tenant, _currentUser, locations, _days, TestPlanner.From(_schedules), _shiftSettings, Substitute.For<ISelfCheckInRepository>(), new FixedLocalClock(utc, utc.AddHours(3)),
-                _punches, _approvals);
+                _punches, _approvals, Substitute.For<IAttendanceUnitOfWork>());
 
         await Handler(new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
         await Handler(new DateTime(2026, 9, 16, 14, 0, 0, DateTimeKind.Utc)).Handle(new QrCheckInCommand("AB12CD34", PunchDirection.Out), ct);
@@ -301,7 +301,7 @@ public sealed class PunchChannelsTests
         locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>()).Returns(new LocationGeofence(Guid.NewGuid(), "HQ", null, null, null));
         var utc = new DateTime(2026, 9, 16, 6, 0, 0, DateTimeKind.Utc);
         var handler = new QrCheckInHandler(
-            _tenant, _currentUser, locations, _days, TestPlanner.From(_schedules), _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals);
+            _tenant, _currentUser, locations, _days, TestPlanner.From(_schedules), _shiftSettings, selfCheckIns, new FixedLocalClock(utc, utc.AddHours(3)), _punches, _approvals, Substitute.For<IAttendanceUnitOfWork>());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34", PunchDirection.In), ct);
 

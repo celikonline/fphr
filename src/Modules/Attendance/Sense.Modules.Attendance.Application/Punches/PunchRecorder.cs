@@ -14,7 +14,7 @@ namespace Sense.Modules.Attendance.Application.Punches;
 /// <see cref="IPunchRecorder"/> (Z0.1): okutmanın puantaj günü plan penceresinden çözülür (<see cref="WorkDateResolver"/>, gece vardiyası
 /// çakışması → Incalculable), K6 kilitli ay (onaylı aylık puantaj) reddedilir / toplu alımda "reddedilen" sayılır, aynı tekillik anahtarı
 /// (Tenant, Employee, OccurredAtUtc µs, Direction, Source) hata değil yoksayma sayılır - eşzamanlı aynı okutmanın kaydetme anındaki tekillik
-/// ihlali dahil (bir kez yeniden denenir); etkilenen günler okutmalardan yeniden türetilir ve kaydedilir. Başarısız işlemde eklenen okutmalar
+/// ihlali dahil (PunchDayWriter.SaveAsync yeniden dener); etkilenen günler okutmalardan yeniden türetilir ve kaydedilir. Başarısız işlemde eklenen okutmalar
 /// değişiklik izlemeden çıkarılır.
 /// Kiracı: ortam kiracısı (<see cref="ITenantContext"/>) varsa girişin kiracısıyla aynı olmalıdır (değilse <see cref="AttendanceErrors.PunchTenantMismatch"/>);
 /// yoksa (entegrasyon olayı) girişin kiracısı için kapsam açılır. Toplu alım tek kiracılıdır. Komut hattı dışından da çağrılabildiği için her
@@ -25,8 +25,6 @@ public sealed class PunchRecorder(
     IShiftSettingsRepository shiftSettings, ITenantLocalClock clock, IAttendanceUnitOfWork unitOfWork, ITenantContext tenantContext,
     ITenantContextSetter tenantSetter) : IPunchRecorder
 {
-    private const int MaxSaveAttempts = 2;
-
     private readonly IPunchRepository _punches = punches;
     private readonly IAttendanceUnitOfWork _unitOfWork = unitOfWork;
 
@@ -48,28 +46,21 @@ public sealed class PunchRecorder(
 
         using var scope = OpenTenantScope(input.TenantId);
         var session = await StartAsync(input.TenantId, ct).ConfigureAwait(false);
-        for (var attempt = 1; ; attempt++)
+        var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
+        if (staged.IsFailure || staged.Value.Kind == StageKind.Locked)
         {
-            var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
-            if (staged.IsFailure || staged.Value.Kind == StageKind.Locked)
-            {
-                session.Writer.DiscardPending();
-                return staged.IsFailure ? staged.Error : Error.Conflict(AttendanceErrors.PeriodLocked);
-            }
-
-            if (!session.HasChanges)
-            {
-                return staged.Value.PunchId;
-            }
-
-            var saved = await session.TryCommitAsync(attempt < MaxSaveAttempts, ct).ConfigureAwait(false);
-            if (saved is null)
-            {
-                continue;
-            }
-
-            return saved.IsFailure ? saved.Error : staged.Value.PunchId;
+            session.Writer.DiscardPending();
+            return staged.IsFailure ? staged.Error : Error.Conflict(AttendanceErrors.PeriodLocked);
         }
+
+        if (!session.HasChanges)
+        {
+            return staged.Value.PunchId;
+        }
+
+        // Eşzamanlı aynı okutma kaydetmede yakalanırsa yazıcı bizimkini bırakır; dönen id kalıcı olanınkidir.
+        var saved = await session.CommitAsync(ct).ConfigureAwait(false);
+        return saved.IsFailure ? saved.Error : session.Writer.SavedPunchId(staged.Value.PunchId);
     }
 
     public async Task<Result<PunchBatchResult>> RecordBatchAsync(IReadOnlyList<PunchInput> inputs, CancellationToken ct)
@@ -87,35 +78,33 @@ public sealed class PunchRecorder(
         var tenantId = inputs[0].TenantId;
         using var scope = OpenTenantScope(tenantId);
         var session = await StartAsync(tenantId, ct).ConfigureAwait(false);
-        for (var attempt = 1; ; attempt++)
+        var staged = new List<Staged>(inputs.Count);
+        foreach (var input in inputs)
         {
-            var counts = new Dictionary<StageKind, int> { [StageKind.Added] = 0, [StageKind.Duplicate] = 0, [StageKind.Locked] = 0 };
-            foreach (var input in inputs)
+            var one = await session.StageAsync(input, ct).ConfigureAwait(false);
+            if (one.IsFailure)
             {
-                var staged = await session.StageAsync(input, ct).ConfigureAwait(false);
-                if (staged.IsFailure)
-                {
-                    session.Writer.DiscardPending();
-                    return staged.Error;
-                }
-
-                counts[staged.Value.Kind]++;
+                session.Writer.DiscardPending();
+                return one.Error;
             }
 
-            var result = new PunchBatchResult(counts[StageKind.Added], counts[StageKind.Duplicate], counts[StageKind.Locked]);
-            if (!session.HasChanges)
-            {
-                return result;
-            }
-
-            var saved = await session.TryCommitAsync(attempt < MaxSaveAttempts, ct).ConfigureAwait(false);
-            if (saved is null)
-            {
-                continue;
-            }
-
-            return saved.IsFailure ? saved.Error : result;
+            staged.Add(one.Value);
         }
+
+        if (session.HasChanges)
+        {
+            var saved = await session.CommitAsync(ct).ConfigureAwait(false);
+            if (saved.IsFailure)
+            {
+                return saved.Error;
+            }
+        }
+
+        // Kaydetmede eşzamanlı aynı okutmaya düşen eklemeler yoksayılan sayılır.
+        var raced = staged.Count(s => s.Kind == StageKind.Added && session.Writer.WasDuplicate(s.PunchId));
+        return new PunchBatchResult(
+            staged.Count(s => s.Kind == StageKind.Added) - raced, staged.Count(s => s.Kind == StageKind.Duplicate) + raced,
+            staged.Count(s => s.Kind == StageKind.Locked));
     }
 
     public async Task<Result> SoftDeleteAsync(Guid tenantId, Guid punchId, Guid userId, string reason, CancellationToken ct)
@@ -145,7 +134,7 @@ public sealed class PunchRecorder(
         }
 
         session.Touch(punch.EmployeeId, punch.WorkDate, source: null, ambiguous: false);
-        return await session.TryCommitAsync(retryOnDuplicate: false, ct).ConfigureAwait(false) ?? Result.Success();
+        return await session.CommitAsync(ct).ConfigureAwait(false);
     }
 
     private Error? CheckTenant(IEnumerable<Guid> tenantIds)
@@ -243,11 +232,10 @@ public sealed class PunchRecorder(
         }
 
         /// <summary>
-        /// Dokunulan günleri yeniden kurar ve kaydeder. Kaydetme eşzamanlı aynı okutma yüzünden tekillik ihlaliyle düşerse ve
-        /// <paramref name="retryOnDuplicate"/> açıksa bu işlemin okutmaları bırakılır ve null döner - çağıran girişleri yeniden sahneler
-        /// (artık kayıtlı olan okutma yoksayılır). Dokunulan günler korunur ki yeniden kurulsunlar.
+        /// Dokunulan günleri yeniden kurar ve yazıcı üzerinden kaydeder; eşzamanlı yazma çakışmasını (aynı okutma / aynı gün / günün xmin'i)
+        /// yazıcı yeniden türeterek dener (<see cref="PunchDayWriter.SaveAsync"/>).
         /// </summary>
-        public async Task<Result?> TryCommitAsync(bool retryOnDuplicate, CancellationToken ct)
+        public async Task<Result> CommitAsync(CancellationToken ct)
         {
             var rebuilt = await RebuildAsync(ct).ConfigureAwait(false);
             if (rebuilt.IsFailure)
@@ -256,17 +244,7 @@ public sealed class PunchRecorder(
                 return rebuilt;
             }
 
-            try
-            {
-                await owner._unitOfWork.SaveChangesAsync(ct).ConfigureAwait(false);
-                return Result.Success();
-            }
-            catch (Exception ex) when (retryOnDuplicate && owner._punches.IsDuplicateKeyViolation(ex))
-            {
-                writer.DiscardPending();
-                _seen.Clear();
-                return null;
-            }
+            return await writer.SaveAsync(owner._unitOfWork, ct).ConfigureAwait(false);
         }
     }
 

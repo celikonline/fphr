@@ -52,6 +52,24 @@ public sealed class AttendanceIntegrationTests : TestFixture
     [Fact]
     public void WorkerRegistration_ResolvesEveryAttendanceIntegrationEventHandler()
     {
+        var services = WorkerServices();
+
+        // ValidateOnBuild = what the Development host does at startup: every registration must be constructible (I0: punch request
+        // approval -> IPunchRecorder + IAttendanceDayRecalculator, IPlannedDayResolver used by every day-building channel).
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<EmployeeHired>>().ShouldHaveSingleItem();
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalCompleted>>().ShouldContain(h => h is PunchRequestApprovalCompletedHandler);
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalRejected>>().ShouldContain(h => h is PunchRequestApprovalRejectedHandler);
+        scope.ServiceProvider.GetRequiredService<IPunchRecorder>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IAttendanceDayRecalculator>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IPlannedDayResolver>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IDayRebuilder>().ShouldBeOfType<PunchDayRebuilder>();
+    }
+
+    /// <summary>Sense.Worker/Program.cs'in Attendance bölümünün aynası.</summary>
+    private ServiceCollection WorkerServices()
+    {
         var configuration = ServiceProvider!.GetRequiredService<IConfiguration>();
         var services = new ServiceCollection();
         services.AddSingleton(configuration);
@@ -73,17 +91,18 @@ public sealed class AttendanceIntegrationTests : TestFixture
             typeof(IWorkScheduleRepository).Assembly);
         services.AddScoped(_ => Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
 
-        // ValidateOnBuild = what the Development host does at startup: every registration must be constructible (I0: punch request
-        // approval -> IPunchRecorder + IAttendanceDayRecalculator, IPlannedDayResolver used by every day-building channel).
-        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
-        using var scope = provider.CreateScope();
-        scope.ServiceProvider.GetServices<IIntegrationEventHandler<EmployeeHired>>().ShouldHaveSingleItem();
-        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalCompleted>>().ShouldContain(h => h is PunchRequestApprovalCompletedHandler);
-        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalRejected>>().ShouldContain(h => h is PunchRequestApprovalRejectedHandler);
-        scope.ServiceProvider.GetRequiredService<IPunchRecorder>().ShouldNotBeNull();
-        scope.ServiceProvider.GetRequiredService<IAttendanceDayRecalculator>().ShouldNotBeNull();
-        scope.ServiceProvider.GetRequiredService<IPlannedDayResolver>().ShouldNotBeNull();
-        scope.ServiceProvider.GetRequiredService<IDayRebuilder>().ShouldBeOfType<PunchDayRebuilder>();
+        return services;
+    }
+
+    [Fact]
+    public async Task WorkerRegistration_RefusesToQueueRecalculationItCannotRun()
+    {
+        // Worker'da kuyruğu boşaltan hosted service yok: EnqueueAsync sessizce bekleyen iş bırakmak yerine açıkça reddeder.
+        using var provider = WorkerServices().BuildServiceProvider();
+        var recalculator = provider.GetRequiredService<IAttendanceDayRecalculator>();
+
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            recalculator.EnqueueAsync(Guid.NewGuid(), new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 2), [Guid.NewGuid()], TestContext.Current.CancellationToken));
     }
 
     [Fact]

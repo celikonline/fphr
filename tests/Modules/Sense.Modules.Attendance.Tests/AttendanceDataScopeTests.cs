@@ -114,7 +114,7 @@ public sealed class AttendanceDataScopeTests
     {
         var handler = new RecordAttendanceHandler(
             _days, TestPlanner.From(_schedules), Substitute.For<ITenantContext>(), _dataScope, new FixedLocalClock(DateTime.UtcNow), new InMemoryPunchRepository(),
-            Substitute.For<ICurrentUser>(), Substitute.For<IMonthlyTimesheetApprovalRepository>());
+            Substitute.For<ICurrentUser>(), Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
         var result = await handler.Handle(
             new RecordAttendanceCommand(_outOfScope, Monday, new TimeOnly(9, 0), new TimeOnly(17, 0)), TestContext.Current.CancellationToken);

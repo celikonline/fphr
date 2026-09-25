@@ -1692,4 +1692,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.punch.source_invalid" xml:space="preserve"><value>Okutma kaynağı geçersiz.</value></data>
   <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>Okutma kaynak referansı en fazla 200 karakter olabilir.</value></data>
   <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>Okutmanın kiracısı işlem yapılan kiracıyla uyuşmuyor.</value></data>
+  <data name="attendance.day.concurrent_update" xml:space="preserve"><value>Puantaj günü aynı anda başka bir işlemle değiştirildi; lütfen tekrar deneyin.</value></data>
 </root>

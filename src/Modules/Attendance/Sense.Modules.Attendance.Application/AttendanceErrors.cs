@@ -69,4 +69,7 @@ public static class AttendanceErrors
 
     /// <summary>IPunchRecorder: okutmanın kiracısı ortam kiracısıyla (ITenantContext) aynı değil ya da toplu alım birden çok kiracı içeriyor.</summary>
     public const string PunchTenantMismatch = "attendance.punch.tenant_mismatch";
+
+    /// <summary>I0: aynı puantaj günü eşzamanlı yazma çakışması yeniden denemelere rağmen çözülemedi - istemci tekrar denemeli.</summary>
+    public const string DayConcurrentUpdate = "attendance.day.concurrent_update";
 }
