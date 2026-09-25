@@ -11,6 +11,8 @@ namespace Sense.Modules.Payroll.Domain.Payslips;
 /// </summary>
 public sealed class Payslip : TenantAggregateRoot<Guid>
 {
+    private readonly List<PayslipAcknowledgementRecord> _acknowledgementHistory = [];
+
     private Payslip()
     {
     }
@@ -114,6 +116,12 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
 
     public DateTimeOffset? ObjectionDecidedAt { get; private set; }
 
+    /// <summary>
+    /// Append-only K4 evidence of earlier versions: each recalculation of an acknowledged payslip (or one with a decided
+    /// objection) appends that version's acknowledgement/objection here before the live fields are reset.
+    /// </summary>
+    public IReadOnlyList<PayslipAcknowledgementRecord> AcknowledgementHistory => _acknowledgementHistory;
+
     /// <summary>Acknowledgement still expected: published, not acknowledged, no objection pending or accepted.</summary>
     public bool AwaitsAcknowledgement =>
         PublishedAt is not null && AcknowledgedAt is null
@@ -130,7 +138,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
     {
         if (PublishedAt is null)
         {
-            return Error.Validation(PayrollDomainErrors.PayslipNotPublished);
+            return Error.Rule(PayrollDomainErrors.PayslipNotPublished);
         }
 
         if (AcknowledgedAt is not null)
@@ -154,7 +162,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
     {
         if (PublishedAt is null)
         {
-            return Error.Validation(PayrollDomainErrors.PayslipNotPublished);
+            return Error.Rule(PayrollDomainErrors.PayslipNotPublished);
         }
 
         if (AcknowledgedAt is not null)
@@ -219,6 +227,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
     /// </summary>
     private void ResetPublication()
     {
+        ArchiveAcknowledgement();
         PublishedAt = null;
         AcknowledgedAt = null;
         AcknowledgedFromIp = null;
@@ -227,6 +236,27 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
         {
             ClearObjection();
         }
+    }
+
+    /// <summary>
+    /// Keeps the evidence the reset is about to clear: an acknowledgement and/or a decided objection of the current
+    /// version. A pending objection is not archived - it stays live and keeps running in Workflow.
+    /// </summary>
+    private void ArchiveAcknowledgement()
+    {
+        var decidedObjection = ObjectionStatus is PayslipObjectionStatus.Accepted or PayslipObjectionStatus.Rejected;
+        if (AcknowledgedAt is null && !decidedObjection)
+        {
+            return;
+        }
+
+        _acknowledgementHistory.Add(new PayslipAcknowledgementRecord(
+            Version, PublishedAt, AcknowledgedAt, AcknowledgedFromIp, AcknowledgedUserAgent,
+            decidedObjection ? ObjectionStatus : null,
+            decidedObjection ? ObjectionReason : null,
+            decidedObjection ? ObjectedAt : null,
+            decidedObjection ? ObjectionApprovalRequestId : null,
+            decidedObjection ? ObjectionDecidedAt : null));
     }
 
     private void ClearObjection()

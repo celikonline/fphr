@@ -12,7 +12,7 @@ using Sense.Modules.Payroll.Infrastructure.Persistence;
 namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PayrollDbContext))]
-    [Migration("20260925120658_AddPayslipAcknowledgementAndObjection")]
+    [Migration("20260925123724_AddPayslipAcknowledgementAndObjection")]
     partial class AddPayslipAcknowledgementAndObjection
     {
         /// <inheritdoc />
@@ -498,6 +498,13 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
                         .HasColumnName("acknowledged_user_agent");
+
+                    b.Property<string>("AcknowledgementHistory")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("acknowledgement_history")
+                        .HasDefaultValueSql("'[]'::jsonb");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

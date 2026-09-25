@@ -48,6 +48,7 @@ public sealed class PayslipAcknowledgementTests
         var result = await handler.Handle(new AcknowledgeMyPayslipCommand(draft.Id, null), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipNotPublished);
+        result.Error.Type.ShouldBe(Sense.Shared.Kernel.Results.ErrorType.Rule); // 422 (F11 contract)
         draft.AcknowledgedAt.ShouldBeNull();
         draft.Acknowledge(Now, "1.2.3.4", null).Error.Code.ShouldBe(PayrollDomainErrors.PayslipNotPublished);
     }
@@ -125,9 +126,11 @@ public sealed class PayslipAcknowledgementTests
 
         result.Value.Select(p => p.Month).ShouldBe([8, 7]);
         result.Value[0].AcknowledgedAt.ShouldBe(Now);
-        result.Value[0].NetAmount.ShouldBe(38_000m);
+        result.Value[0].NetPay.ShouldBe(38_000m);
+        result.Value[0].GrossPay.ShouldBe(50_000m);
+        result.Value[0].Currency.ShouldBe("TRY");
         result.Value[1].AcknowledgedAt.ShouldBeNull();
-        result.Value[1].ObjectionStatus.ShouldBe(PayslipObjectionStatus.None);
+        result.Value[1].ObjectionStatus.ShouldBeNull();
     }
 
     [Fact]

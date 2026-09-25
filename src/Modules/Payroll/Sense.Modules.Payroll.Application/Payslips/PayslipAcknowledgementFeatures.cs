@@ -13,17 +13,21 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Payroll.Application.Payslips;
 
-/// <summary>One of the caller's own published payslips with its acknowledgement/objection state (E2 "Bordrolarım").</summary>
+/// <summary>
+/// One of the caller's own published payslips with its acknowledgement/objection state (E2 "Bordrolarım"), in the F11
+/// web/mobile contract's names. <see cref="ObjectionStatus"/> is null (omitted) when no objection was filed.
+/// </summary>
 public sealed record MyPayslipDto(
     Guid PayslipId,
     Guid PeriodId,
     int Year,
     int Month,
-    decimal GrossAmount,
-    decimal NetAmount,
+    decimal GrossPay,
+    decimal NetPay,
+    string Currency,
     DateTimeOffset PublishedAt,
     DateTimeOffset? AcknowledgedAt,
-    PayslipObjectionStatus ObjectionStatus,
+    PayslipObjectionStatus? ObjectionStatus,
     string? ObjectionReason,
     DateTimeOffset? ObjectedAt,
     DateTimeOffset? ObjectionDecidedAt);
@@ -39,6 +43,9 @@ public sealed record PayslipObjectionSubmittedDto(Guid Id);
 /// </summary>
 internal static class MyPayslips
 {
+    /// <summary>Payroll runs in TRY only (see BankPaymentFileBuilder / Expense payout reader).</summary>
+    public const string PayrollCurrency = "TRY";
+
     public static bool IsPublished(Payslip payslip, PayrollPeriod period) =>
         payslip.PublishedAt is not null && period.Status is PayrollPeriodStatus.Paid or PayrollPeriodStatus.Locked;
 
@@ -62,12 +69,12 @@ internal static class MyPayslips
             return Error.NotFound(PayrollDomainErrors.PayslipNotFound);
         }
 
-        return IsPublished(payslip, period) ? (payslip, period) : Error.Validation(PayrollDomainErrors.PayslipNotPublished);
+        return IsPublished(payslip, period) ? (payslip, period) : Error.Rule(PayrollDomainErrors.PayslipNotPublished);
     }
 
     public static MyPayslipDto ToDto(Payslip p, PayrollPeriod period) =>
-        new(p.Id, period.Id, period.Year, period.Month, p.GrossAmount, p.NetAmount, p.PublishedAt!.Value, p.AcknowledgedAt,
-            p.ObjectionStatus, p.ObjectionReason, p.ObjectedAt, p.ObjectionDecidedAt);
+        new(p.Id, period.Id, period.Year, period.Month, p.GrossAmount, p.NetAmount, PayrollCurrency, p.PublishedAt!.Value, p.AcknowledgedAt,
+            p.ObjectionStatus == PayslipObjectionStatus.None ? null : p.ObjectionStatus, p.ObjectionReason, p.ObjectedAt, p.ObjectionDecidedAt);
 }
 
 /// <summary>The caller's published payslips, newest period first.</summary>

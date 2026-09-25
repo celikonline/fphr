@@ -34,6 +34,14 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                 maxLength: 512,
                 nullable: true);
 
+            migrationBuilder.AddColumn<string>(
+                name: "acknowledgement_history",
+                schema: "payroll",
+                table: "payslips",
+                type: "jsonb",
+                nullable: false,
+                defaultValueSql: "'[]'::jsonb");
+
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "objected_at",
                 schema: "payroll",
@@ -95,6 +103,11 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropColumn(
                 name: "acknowledged_user_agent",
+                schema: "payroll",
+                table: "payslips");
+
+            migrationBuilder.DropColumn(
+                name: "acknowledgement_history",
                 schema: "payroll",
                 table: "payslips");
 

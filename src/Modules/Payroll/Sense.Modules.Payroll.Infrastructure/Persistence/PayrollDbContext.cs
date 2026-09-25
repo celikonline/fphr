@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -98,6 +99,16 @@ public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payrol
 
 public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
 {
+    private static readonly JsonSerializerOptions HistoryJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    private static readonly ValueComparer<IReadOnlyList<PayslipAcknowledgementRecord>> HistoryComparer = new(
+        (a, b) => (a ?? Array.Empty<PayslipAcknowledgementRecord>()).SequenceEqual(b ?? Array.Empty<PayslipAcknowledgementRecord>()),
+        v => v.Aggregate(0, (hash, r) => HashCode.Combine(hash, r)),
+        v => v.ToList());
+
     public void Configure(EntityTypeBuilder<Payslip> b)
     {
         b.ToTable(PayrollTables.Payslips);
@@ -110,6 +121,16 @@ public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
         b.Property(x => x.ObjectionStatus).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength).IsRequired().HasDefaultValue(PayslipObjectionStatus.None);
         b.Property(x => x.ObjectionReason).HasMaxLength(PayrollLimits.ObjectionReasonMaxLength);
         b.Ignore(x => x.AwaitsAcknowledgement);
+
+        // K4: append-only evidence of earlier versions' acknowledgements/objections (Payslip.Recalculate archives them).
+        b.Property(x => x.AcknowledgementHistory)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, HistoryJsonOptions),
+                v => JsonSerializer.Deserialize<List<PayslipAcknowledgementRecord>>(v, HistoryJsonOptions) ?? new List<PayslipAcknowledgementRecord>())
+            .Metadata.SetValueComparer(HistoryComparer);
+        b.Property(x => x.AcknowledgementHistory)
+            .HasColumnName("acknowledgement_history").HasColumnType(PersistenceDefaults.JsonbColumnType)
+            .IsRequired().HasDefaultValueSql("'[]'::jsonb");
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PayrollPeriodId }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }

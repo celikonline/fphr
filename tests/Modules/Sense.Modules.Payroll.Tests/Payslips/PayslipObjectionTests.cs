@@ -101,7 +101,9 @@ public sealed class PayslipObjectionTests
         payslip.FileObjection("Hatalı", Now).IsSuccess.ShouldBeTrue();
 
         payslip.FileObjection("Tekrar", Now).Error.Code.ShouldBe(PayrollDomainErrors.PayslipObjectionAlreadyFiled);
-        payslip.Acknowledge(Now, "1.2.3.4", null).Error.Code.ShouldBe(PayrollDomainErrors.PayslipObjectionPending);
+        var pending = payslip.Acknowledge(Now, "1.2.3.4", null);
+        pending.Error.Code.ShouldBe(PayrollDomainErrors.PayslipObjectionPending);
+        pending.Error.Type.ShouldBe(ErrorType.Conflict); // 409 (F11 contract)
     }
 
     [Fact]
