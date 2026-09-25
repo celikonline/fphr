@@ -5,7 +5,41 @@
   },
   "timeDashboard": {
     "title": "Zeit-Dashboard",
-    "subtitle": "Übersicht: anwesend, verspätet, früher gegangen, abwesend"
+    "subtitle": "Übersicht: anwesend, verspätet, früher gegangen, abwesend",
+    "date": "Datum",
+    "planned": "Geplant",
+    "noData": "Keine Daten",
+    "emptyScope": "Für diesen Bereich gibt es keine Daten.",
+    "error": "Zeitkennzahlen konnten nicht geladen werden.",
+    "status": {
+      "arrived": "Anwesend",
+      "late": "Verspätet",
+      "earlyLeave": "Früher gegangen",
+      "absent": "Abwesend",
+      "onLeave": "Im Urlaub"
+    },
+    "sevenDay": {
+      "title": "Anwesenheit der letzten 7 Tage",
+      "hint": "Tage ohne Daten werden als null angezeigt."
+    },
+    "lateEarly": {
+      "title": "Verspätung / frühes Gehen nach Einheit (Personen)"
+    },
+    "overtime": {
+      "title": "Überstunden nach Gruppe",
+      "groupBy": "Gruppieren nach",
+      "hours": "Stunden"
+    },
+    "groupBy": {
+      "branch": "Filiale",
+      "unit": "Einheit",
+      "team": "Team",
+      "title": "Position"
+    },
+    "rate": {
+      "title": "Schichtanwesenheitsquote",
+      "detail": "{{worked}} / {{planned}} geplante Schichttage"
+    }
   },
   "monthlyMatrix": {
     "title": "Monatliche Anwesenheitsmatrix",

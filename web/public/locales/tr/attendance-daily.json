@@ -5,7 +5,41 @@
   },
   "timeDashboard": {
     "title": "Zaman panosu",
-    "subtitle": "Gelen, geç kalan, erken çıkan ve devamsız özeti"
+    "subtitle": "Gelen, geç kalan, erken çıkan ve devamsız özeti",
+    "date": "Tarih",
+    "planned": "Planlı",
+    "noData": "Veri yok",
+    "emptyScope": "Bu kapsamda gösterilecek veri yok.",
+    "error": "Zaman göstergeleri yüklenemedi.",
+    "status": {
+      "arrived": "Gelen",
+      "late": "Geç kalan",
+      "earlyLeave": "Erken çıkan",
+      "absent": "Devamsız",
+      "onLeave": "İzinli"
+    },
+    "sevenDay": {
+      "title": "Son 7 gün devam durumu",
+      "hint": "Veri olmayan günler sıfır olarak gösterilir."
+    },
+    "lateEarly": {
+      "title": "Birim bazında geç kalma / erken çıkma (kişi sayısı)"
+    },
+    "overtime": {
+      "title": "Gruplara göre fazla mesai",
+      "groupBy": "Gruplama",
+      "hours": "Saat"
+    },
+    "groupBy": {
+      "branch": "Şube",
+      "unit": "Birim",
+      "team": "Takım",
+      "title": "Unvan"
+    },
+    "rate": {
+      "title": "Vardiya devam oranı",
+      "detail": "{{worked}} / {{planned}} planlı vardiya günü"
+    }
   },
   "monthlyMatrix": {
     "title": "Aylık puantaj matrisi",
