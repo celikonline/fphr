@@ -33,6 +33,7 @@ public static class EmployeeNoteErrors
     public const string AttachmentInvalid = "employee.note_attachment_invalid";
     public const string AttachmentTooLarge = "employee.note_attachment_too_large";
     public const string AttachmentNotFound = "employee.note_attachment_not_found";
+    public const string AttachmentTypeNotAllowed = "employee.note_attachment_type_not_allowed";
 }
 
 /// <summary>
@@ -65,6 +66,7 @@ public sealed class EmployeeNote : TenantAggregateRoot<Guid>, IAuditLogged
 
     public string? AuthorName { get; private set; }
 
+    /// <summary>The confirmed attachment (all three are set together or all null); only this one is ever offered for download.</summary>
     public string? AttachmentFileName { get; private set; }
 
     public string? AttachmentStorageKey { get; private set; }
@@ -73,10 +75,14 @@ public sealed class EmployeeNote : TenantAggregateRoot<Guid>, IAuditLogged
 
     public long? AttachmentSizeBytes { get; private set; }
 
-    /// <summary>False between initiate and confirm; a pending attachment is never offered for download.</summary>
-    public bool AttachmentConfirmed { get; private set; }
+    /// <summary>Upload started but not confirmed yet; it replaces the confirmed attachment only on <see cref="ConfirmAttachment"/>.</summary>
+    public string? PendingAttachmentFileName { get; private set; }
 
-    public bool HasConfirmedAttachment => AttachmentConfirmed && AttachmentStorageKey is not null;
+    public string? PendingAttachmentStorageKey { get; private set; }
+
+    public string? PendingAttachmentContentType { get; private set; }
+
+    public bool HasConfirmedAttachment => AttachmentStorageKey is not null;
 
     public static Result<EmployeeNote> Create(
         Guid tenantId, Guid employeeId, string? title, string? content, EmployeeNoteImportance importance, Guid authorUserId, string? authorName)
@@ -123,8 +129,8 @@ public sealed class EmployeeNote : TenantAggregateRoot<Guid>, IAuditLogged
         return Result.Success();
     }
 
-    /// <summary>Replaces any previous attachment with a pending one (the caller deletes the old stored object).</summary>
-    public Result BeginAttachment(string fileName, string storageKey, string contentType)
+    /// <summary>Starts a new upload without touching the confirmed attachment; returns the superseded pending key (orphaned storage) or null.</summary>
+    public Result<ReplacedStorageKey> BeginAttachment(string fileName, string storageKey, string contentType)
     {
         if (string.IsNullOrWhiteSpace(fileName) || fileName.Length > EmployeeNoteLimits.FileNameMaxLength
             || string.IsNullOrWhiteSpace(contentType) || contentType.Length > EmployeeNoteLimits.ContentTypeMaxLength
@@ -133,18 +139,18 @@ public sealed class EmployeeNote : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(EmployeeNoteErrors.AttachmentInvalid);
         }
 
-        AttachmentFileName = fileName;
-        AttachmentStorageKey = storageKey;
-        AttachmentContentType = contentType;
-        AttachmentSizeBytes = null;
-        AttachmentConfirmed = false;
-        return Result.Success();
+        var superseded = PendingAttachmentStorageKey;
+        PendingAttachmentFileName = fileName;
+        PendingAttachmentStorageKey = storageKey;
+        PendingAttachmentContentType = contentType;
+        return new ReplacedStorageKey(superseded);
     }
 
     /// <param name="actualSizeBytes">Size reported by storage after the upload.</param>
-    public Result ConfirmAttachment(long actualSizeBytes)
+    /// <returns>The storage key of the previous confirmed attachment (to delete after commit), or null.</returns>
+    public Result<ReplacedStorageKey> ConfirmAttachment(long actualSizeBytes)
     {
-        if (AttachmentStorageKey is null)
+        if (PendingAttachmentStorageKey is null)
         {
             return Error.NotFound(EmployeeNoteErrors.AttachmentNotFound);
         }
@@ -154,20 +160,37 @@ public sealed class EmployeeNote : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(EmployeeNoteErrors.AttachmentTooLarge);
         }
 
+        var previous = AttachmentStorageKey;
+        AttachmentFileName = PendingAttachmentFileName;
+        AttachmentStorageKey = PendingAttachmentStorageKey;
+        AttachmentContentType = PendingAttachmentContentType;
         AttachmentSizeBytes = actualSizeBytes;
-        AttachmentConfirmed = true;
-        return Result.Success();
+        PendingAttachmentFileName = null;
+        PendingAttachmentStorageKey = null;
+        PendingAttachmentContentType = null;
+        return new ReplacedStorageKey(previous);
     }
 
-    public void ClearAttachment()
+    /// <summary>Removes the confirmed and any pending attachment; returns their storage keys (to delete after commit).</summary>
+    public IReadOnlyList<string> ClearAttachment()
     {
+        var keys = StorageKeys();
         AttachmentFileName = null;
         AttachmentStorageKey = null;
         AttachmentContentType = null;
         AttachmentSizeBytes = null;
-        AttachmentConfirmed = false;
+        PendingAttachmentFileName = null;
+        PendingAttachmentStorageKey = null;
+        PendingAttachmentContentType = null;
+        return keys;
     }
+
+    public IReadOnlyList<string> StorageKeys() =>
+        new[] { AttachmentStorageKey, PendingAttachmentStorageKey }.Where(k => k is not null).Select(k => k!).ToList();
 }
+
+/// <summary>Storage key of an object that stopped being referenced (null when nothing was replaced); a wrapper because Result&lt;T&gt; cannot carry null.</summary>
+public sealed record ReplacedStorageKey(string? Key);
 
 /// <summary>Employee note store. <see cref="ListAsync"/> filters by employee and/or importance, newest first.</summary>
 public interface IEmployeeNoteRepository

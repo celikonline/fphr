@@ -79,6 +79,25 @@ public sealed class EmployeeNoteIntegrationTests : TestFixture
         (await ExecuteQueryAsync(new ListEmployeeNotesQuery(first.Id, null))).Value.TotalCount.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task Another_tenants_notes_cannot_be_read_or_changed()
+    {
+        var tenantA = Guid.NewGuid();
+        SetUser(tenantA);
+        var employee = (await ExecuteCommandAsync(new CreateEmployeeCommand("Bir", "Çalışan", null, null, null, null, new DateOnly(2025, 3, 1), null, null, null))).Value;
+        var note = (await ExecuteCommandAsync(new CreateEmployeeNoteCommand(employee.Id, "Gizli", "x", EmployeeNoteImportance.High))).Value;
+
+        SetUser(Guid.NewGuid());
+
+        (await ExecuteQueryAsync(new ListEmployeeNotesQuery(employee.Id, null))).Value.TotalCount.ShouldBe(0);
+        (await ExecuteQueryAsync(new ListEmployeeNotesQuery(null, null))).Value.TotalCount.ShouldBe(0);
+        (await ExecuteCommandAsync(new UpdateEmployeeNoteCommand(note.Id, "Ele geçirildi", "y", EmployeeNoteImportance.Low))).Error.Code.ShouldBe(EmployeeNoteErrors.NotFound);
+        (await ExecuteCommandAsync(new DeleteEmployeeNoteCommand(note.Id))).Error.Code.ShouldBe(EmployeeNoteErrors.NotFound);
+
+        SetUser(tenantA);
+        (await ExecuteQueryAsync(new ListEmployeeNotesQuery(employee.Id, null))).Value.Items.Single().Title.ShouldBe("Gizli");
+    }
+
     private void SetUser(Guid tenantId)
     {
         ((CurrentUserAccessor)CurrentUser!).Set(new AuthenticatedUser(

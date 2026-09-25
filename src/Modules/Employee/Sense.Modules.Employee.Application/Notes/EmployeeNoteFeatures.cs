@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Logging;
+using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Paging;
@@ -30,7 +33,7 @@ public sealed record EmployeeNoteDto(
 public sealed record InitiateNoteAttachmentUploadResponse(string UploadUrl, string RequestId, DateTime ExpiresAt);
 
 /// <summary>Shared mapping and scope check for note handlers; the download URL is fresh per read, never stored.</summary>
-public sealed class EmployeeNoteAccess(ITenantContext tenant, IFileStorage fileStorage, IDataScopeService dataScope)
+public sealed class EmployeeNoteAccess(ITenantContext tenant, IFileStorage fileStorage, IDataScopeService dataScope, IIntegrationEventOutbox outbox)
 {
     private const int DownloadUrlMinutes = 15;
 
@@ -66,10 +69,31 @@ public sealed class EmployeeNoteAccess(ITenantContext tenant, IFileStorage fileS
         return note;
     }
 
-    public Task DeleteStoredAsync(EmployeeNote note, CancellationToken cancellationToken) =>
-        note.AttachmentStorageKey is null
-            ? Task.CompletedTask
-            : fileStorage.DeleteFileAsync(tenant.TenantId, EmployeeNote.BucketName, note.AttachmentStorageKey, cancellationToken);
+    /// <summary>Queues the stored object's deletion through the outbox: it runs only after the DB change committed (see <see cref="EmployeeNoteFileCleanupHandler"/>).</summary>
+    public void QueueFileDeletion(IEnumerable<string?> storageKeys)
+    {
+        foreach (var key in storageKeys.Where(k => !string.IsNullOrEmpty(k)))
+        {
+            outbox.Enqueue(new EmployeeNoteFileOrphaned(tenant.TenantId, key!));
+        }
+    }
+}
+
+/// <summary>Deletes the orphaned attachment object after commit; a storage failure is logged and never rolls anything back.</summary>
+public sealed class EmployeeNoteFileCleanupHandler(IFileStorage fileStorage, ILogger<EmployeeNoteFileCleanupHandler> logger)
+    : IIntegrationEventHandler<EmployeeNoteFileOrphaned>
+{
+    public async Task Handle(EmployeeNoteFileOrphaned integrationEvent, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await fileStorage.DeleteFileAsync(integrationEvent.TenantId, EmployeeNote.BucketName, integrationEvent.StorageKey, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Employee note attachment {StorageKey} (tenant {TenantId}) could not be deleted from storage", integrationEvent.StorageKey, integrationEvent.TenantId);
+        }
+    }
 }
 
 [RequiresPermission(EmployeeNotePermissions.ManageKey)]
@@ -90,8 +114,13 @@ public sealed class CreateEmployeeNoteHandler(
             return Error.NotFound(EmployeeErrors.EmployeeNotFound);
         }
 
+        if (user.UserId is not { } authorId)
+        {
+            return Error.Unauthorized(ErrorCodes.Unauthenticated);
+        }
+
         var created = EmployeeNote.Create(
-            access.TenantId, command.EmployeeId, command.Title, command.Content, command.Importance, user.UserId ?? Guid.Empty, user.DisplayName);
+            access.TenantId, command.EmployeeId, command.Title, command.Content, command.Importance, authorId, user.DisplayName);
         if (created.IsFailure)
         {
             return created.Error;
@@ -135,7 +164,7 @@ public sealed class DeleteEmployeeNoteHandler(IEmployeeNoteRepository notes, Emp
             return loaded.Error;
         }
 
-        await access.DeleteStoredAsync(loaded.Value, cancellationToken).ConfigureAwait(false);
+        access.QueueFileDeletion(loaded.Value.StorageKeys());
         notes.Remove(loaded.Value);
         return Result.Success();
     }
@@ -185,10 +214,15 @@ public sealed class InitiateNoteAttachmentUploadHandler(IEmployeeNoteRepository 
 {
     public async Task<Result<InitiateNoteAttachmentUploadResponse>> Handle(InitiateNoteAttachmentUploadCommand command, CancellationToken cancellationToken)
     {
-        var safeName = SanitizeFileName(command.FileName);
+        var safeName = EmployeeNoteUploadPolicy.SanitizeFileName(command.FileName);
         if (safeName.Length == 0 || string.IsNullOrWhiteSpace(command.ContentType))
         {
             return Error.Validation(EmployeeNoteErrors.AttachmentInvalid);
+        }
+
+        if (!EmployeeNoteUploadPolicy.IsAllowed(safeName, command.ContentType))
+        {
+            return Error.Validation(EmployeeNoteErrors.AttachmentTypeNotAllowed);
         }
 
         if (command.FileSizeBytes <= 0 || command.FileSizeBytes > EmployeeNoteLimits.AttachmentMaxBytes)
@@ -203,7 +237,6 @@ public sealed class InitiateNoteAttachmentUploadHandler(IEmployeeNoteRepository 
         }
 
         var note = loaded.Value;
-        var previousKey = note.AttachmentStorageKey;
         var key = $"{note.EmployeeId:N}/{note.Id:N}/{Guid.NewGuid():N}/{safeName}";
         var begun = note.BeginAttachment(safeName, key, command.ContentType);
         if (begun.IsFailure)
@@ -211,29 +244,19 @@ public sealed class InitiateNoteAttachmentUploadHandler(IEmployeeNoteRepository 
             return begun.Error;
         }
 
-        if (previousKey is not null)
-        {
-            await fileStorage.DeleteFileAsync(access.TenantId, EmployeeNote.BucketName, previousKey, cancellationToken).ConfigureAwait(false);
-        }
+        // The confirmed attachment stays untouched; only a superseded, never-confirmed upload is orphaned.
+        access.QueueFileDeletion([begun.Value.Key]);
 
         var presigned = await fileStorage.InitiateUploadAsync(access.TenantId, EmployeeNote.BucketName, key, command.ContentType, cancellationToken).ConfigureAwait(false);
         return new InitiateNoteAttachmentUploadResponse(presigned.UploadUrl, presigned.RequestId, presigned.ExpiresAt);
-    }
-
-    /// <summary>Keeps only the base name (no path parts) and drops control characters.</summary>
-    internal static string SanitizeFileName(string? name)
-    {
-        var baseName = (name ?? string.Empty).Replace('\\', '/');
-        baseName = baseName[(baseName.LastIndexOf('/') + 1)..];
-        var cleaned = new string(baseName.Where(c => !char.IsControl(c)).ToArray()).Trim();
-        return cleaned.Length > EmployeeNoteLimits.FileNameMaxLength ? cleaned[..EmployeeNoteLimits.FileNameMaxLength] : cleaned;
     }
 }
 
 [RequiresPermission(EmployeeNotePermissions.ManageKey)]
 public sealed record ConfirmNoteAttachmentUploadCommand(Guid NoteId, string ETag) : ICommand<EmployeeNoteDto>;
 
-public sealed class ConfirmNoteAttachmentUploadHandler(IEmployeeNoteRepository notes, EmployeeNoteAccess access, IFileStorage fileStorage)
+public sealed class ConfirmNoteAttachmentUploadHandler(
+    IEmployeeNoteRepository notes, EmployeeNoteAccess access, IFileStorage fileStorage, ILogger<ConfirmNoteAttachmentUploadHandler> logger)
     : ICommandHandler<ConfirmNoteAttachmentUploadCommand, EmployeeNoteDto>
 {
     public async Task<Result<EmployeeNoteDto>> Handle(ConfirmNoteAttachmentUploadCommand command, CancellationToken cancellationToken)
@@ -245,14 +268,39 @@ public sealed class ConfirmNoteAttachmentUploadHandler(IEmployeeNoteRepository n
         }
 
         var note = loaded.Value;
-        if (note.AttachmentStorageKey is null || string.IsNullOrWhiteSpace(command.ETag))
+        var pendingKey = note.PendingAttachmentStorageKey;
+        if (pendingKey is null || string.IsNullOrWhiteSpace(command.ETag))
         {
             return Error.NotFound(EmployeeNoteErrors.AttachmentNotFound);
         }
 
-        var actualSize = await fileStorage.ConfirmUploadAsync(access.TenantId, EmployeeNote.BucketName, note.AttachmentStorageKey, command.ETag, cancellationToken).ConfigureAwait(false);
+        var actualSize = await fileStorage.ConfirmUploadAsync(access.TenantId, EmployeeNote.BucketName, pendingKey, command.ETag, cancellationToken).ConfigureAwait(false);
         var confirmed = note.ConfirmAttachment(actualSize);
-        return confirmed.IsFailure ? confirmed.Error : await access.ToDtoAsync(note, cancellationToken).ConfigureAwait(false);
+        if (confirmed.IsFailure)
+        {
+            if (actualSize > EmployeeNoteLimits.AttachmentMaxBytes)
+            {
+                // The declared size was a lie: this object was never referenced by the DB, so remove it right away.
+                await DeleteOversizedAsync(access.TenantId, pendingKey, cancellationToken).ConfigureAwait(false);
+            }
+
+            return confirmed.Error;
+        }
+
+        access.QueueFileDeletion([confirmed.Value.Key]);
+        return await access.ToDtoAsync(note, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task DeleteOversizedAsync(Guid tenantId, string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await fileStorage.DeleteFileAsync(tenantId, EmployeeNote.BucketName, key, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Oversized employee note attachment {StorageKey} (tenant {TenantId}) could not be deleted from storage", key, tenantId);
+        }
     }
 }
 
@@ -269,8 +317,7 @@ public sealed class DeleteNoteAttachmentHandler(IEmployeeNoteRepository notes, E
             return loaded.Error;
         }
 
-        await access.DeleteStoredAsync(loaded.Value, cancellationToken).ConfigureAwait(false);
-        loaded.Value.ClearAttachment();
+        access.QueueFileDeletion(loaded.Value.ClearAttachment());
         return Result.Success();
     }
 }

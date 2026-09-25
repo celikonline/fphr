@@ -17,6 +17,9 @@ public sealed class EmployeeNoteConfiguration : IEntityTypeConfiguration<Employe
         b.Property(x => x.AttachmentFileName).HasMaxLength(EmployeeNoteLimits.FileNameMaxLength);
         b.Property(x => x.AttachmentStorageKey).HasMaxLength(EmployeeNoteLimits.StorageKeyMaxLength);
         b.Property(x => x.AttachmentContentType).HasMaxLength(EmployeeNoteLimits.ContentTypeMaxLength);
+        b.Property(x => x.PendingAttachmentFileName).HasMaxLength(EmployeeNoteLimits.FileNameMaxLength);
+        b.Property(x => x.PendingAttachmentStorageKey).HasMaxLength(EmployeeNoteLimits.StorageKeyMaxLength);
+        b.Property(x => x.PendingAttachmentContentType).HasMaxLength(EmployeeNoteLimits.ContentTypeMaxLength);
         b.Ignore(x => x.HasConfirmedAttachment);
         b.Ignore(x => x.DomainEvents);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.CreatedAt });

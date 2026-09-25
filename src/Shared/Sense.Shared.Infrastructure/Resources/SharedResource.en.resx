@@ -1559,4 +1559,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Invalid attachment information.</value></data>
   <data name="employee.note_attachment_too_large" xml:space="preserve"><value>The attachment can be at most 10 MB.</value></data>
   <data name="employee.note_attachment_not_found" xml:space="preserve"><value>The note has no attachment.</value></data>
+  <data name="employee.note_attachment_type_not_allowed" xml:space="preserve"><value>The attachment must be a PDF, PNG, JPEG, TXT, DOCX or XLSX file whose extension matches its content type.</value></data>
 </root>

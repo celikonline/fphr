@@ -1568,4 +1568,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Geçersiz ek dosya bilgisi.</value></data>
   <data name="employee.note_attachment_too_large" xml:space="preserve"><value>Ek dosya en fazla 10 MB olabilir.</value></data>
   <data name="employee.note_attachment_not_found" xml:space="preserve"><value>Notun ek dosyası yok.</value></data>
+  <data name="employee.note_attachment_type_not_allowed" xml:space="preserve"><value>Ek dosya PDF, PNG, JPEG, TXT, DOCX veya XLSX olmalı ve uzantısı içerik türüyle uyuşmalıdır.</value></data>
 </root>

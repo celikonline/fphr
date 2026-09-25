@@ -630,10 +630,6 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<bool>("AttachmentConfirmed")
-                        .HasColumnType("boolean")
-                        .HasColumnName("attachment_confirmed");
-
                     b.Property<string>("AttachmentContentType")
                         .HasMaxLength(127)
                         .HasColumnType("character varying(127)")
@@ -693,6 +689,21 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
+
+                    b.Property<string>("PendingAttachmentContentType")
+                        .HasMaxLength(127)
+                        .HasColumnType("character varying(127)")
+                        .HasColumnName("pending_attachment_content_type");
+
+                    b.Property<string>("PendingAttachmentFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("pending_attachment_file_name");
+
+                    b.Property<string>("PendingAttachmentStorageKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("pending_attachment_storage_key");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
