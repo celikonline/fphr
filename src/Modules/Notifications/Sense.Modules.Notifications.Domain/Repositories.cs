@@ -55,6 +55,10 @@ public interface IHrMessageRepository
     Task<(IReadOnlyList<HrMessage> Items, long TotalCount)> ListSentAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyDictionary<Guid, int>> CountRecipientsAsync(IReadOnlyCollection<Guid> messageIds, CancellationToken cancellationToken = default);
+
+    /// <summary>First <paramref name="take"/> recipient employee ids per message, one query for all messages (list previews).</summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetRecipientPreviewsAsync(
+        IReadOnlyCollection<Guid> messageIds, int take, CancellationToken cancellationToken = default);
 }
 
 /// <summary>MessageGroup repository (tenant-filtered).</summary>

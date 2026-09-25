@@ -128,6 +128,8 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
         }
     }
 
+    public void ClearTracked() => context.ChangeTracker.Clear();
+
     public bool IsConcurrencyConflict(Exception exception) =>
         exception is DbUpdateConcurrencyException concurrency && concurrency.Entries.Any(e => e.Entity is AttendanceDay);
 

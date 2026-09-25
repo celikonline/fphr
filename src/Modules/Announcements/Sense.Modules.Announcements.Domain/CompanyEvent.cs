@@ -15,7 +15,8 @@ public sealed record CompanyEventPlan(
     string? Location = null,
     string? OnlineUrl = null,
     bool NotifyInvitees = false,
-    Guid? CategoryId = null)
+    Guid? CategoryId = null,
+    DateOnly? LocalStartDate = null)
 {
     /// <summary>All-day plan for a single legacy date.</summary>
     public static CompanyEventPlan AllDay(DateOnly date) => new(date.ToDateTime(TimeOnly.MinValue), null, true);
@@ -148,7 +149,8 @@ public sealed class CompanyEvent : TenantAggregateRoot<Guid>, IAuditLogged
         StartsAt = DateTime.SpecifyKind(starts, DateTimeKind.Utc);
         EndsAt = ends is { } e ? DateTime.SpecifyKind(e, DateTimeKind.Utc) : null;
         IsAllDay = plan.IsAllDay;
-        EventDate = DateOnly.FromDateTime(starts);
+        // Timed events: the caller (who knows the tenant time zone) supplies the local calendar day; the domain stays zone-agnostic.
+        EventDate = plan.IsAllDay ? DateOnly.FromDateTime(starts) : plan.LocalStartDate ?? DateOnly.FromDateTime(starts);
         Mode = plan.Mode;
         Location = plan.Mode == CompanyEventMode.Online ? null : location;
         OnlineUrl = plan.Mode == CompanyEventMode.Onsite ? null : url;

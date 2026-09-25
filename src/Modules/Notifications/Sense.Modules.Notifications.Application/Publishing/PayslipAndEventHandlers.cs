@@ -68,7 +68,7 @@ public sealed class PayslipAcknowledgementReminderNotificationHandler(Notificati
             await publisher.PublishAsync(
                 tenantId,
                 new NotificationRequest(
-                    integrationEvent.EventId,
+                    PerPeriodSourceId(integrationEvent.EventId, payslip.PeriodId),
                     NotificationTemplateKeys.PayslipAcknowledgementReminder,
                     [recipient],
                     new Dictionary<string, string?>
@@ -79,6 +79,18 @@ public sealed class PayslipAcknowledgementReminderNotificationHandler(Notificati
                     PayslipAndEventTemplateModel.PayrollTabPath(payslip.EmployeeId)),
                 cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// The dedup key is (SourceEventId, template, user): one employee with payslips for two periods in the same event would lose the
+    /// second notice. A stable id per (event, period) keeps redelivery idempotent while separating periods (N1).
+    /// </summary>
+    internal static Guid PerPeriodSourceId(Guid eventId, Guid periodId)
+    {
+        Span<byte> bytes = stackalloc byte[32];
+        eventId.TryWriteBytes(bytes[..16]);
+        periodId.TryWriteBytes(bytes[16..]);
+        return new Guid(System.Security.Cryptography.SHA256.HashData(bytes)[..16]);
     }
 }
 

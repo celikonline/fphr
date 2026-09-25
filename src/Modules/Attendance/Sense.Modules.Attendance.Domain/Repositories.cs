@@ -63,6 +63,9 @@ public interface IAttendanceDayRepository
 
     /// <summary>Kayıtlı günün değerlerini ve eşzamanlılık belirtecini veritabanından yeniden yükler (çakışma sonrası yeniden türetme).</summary>
     Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default);
+
+    /// <summary>Drops every tracked entity so the next read is fresh (toplu yeniden hesapta çakışan parçayı baştan işlemek için).</summary>
+    void ClearTracked();
 }
 
 public interface IAnomalyResolutionRepository

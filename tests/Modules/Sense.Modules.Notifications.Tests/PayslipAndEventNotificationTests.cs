@@ -115,6 +115,33 @@ public sealed class PayslipAndEventNotificationTests
     }
 
     [Fact]
+    public async Task Two_periods_for_same_employee_produce_two_notifications()
+    {
+        var employee = Guid.NewGuid();
+        var user = Guid.NewGuid();
+        var h = new Harness(
+            id => Contact(id, "Ayse", "Yilmaz", "ayse@acme.test", user),
+            new() { [user] = new(user, employee, "a@acme.test", "Ayse", "tr", true) });
+        var integrationEvent = new PayslipAcknowledgementReminderDue(h.TenantId,
+        [
+            new UnacknowledgedPayslip(Guid.NewGuid(), employee, Guid.NewGuid(), 2026, 7),
+            new UnacknowledgedPayslip(Guid.NewGuid(), employee, Guid.NewGuid(), 2026, 8),
+        ]);
+
+        await new PayslipAcknowledgementReminderNotificationHandler(h.Resolver, h.Publisher).Handle(integrationEvent, CancellationToken.None);
+
+        h.InApp.Count.ShouldBe(2);
+        h.InApp.Select(n => n.SourceEventId).Distinct().Count().ShouldBe(2);
+        h.Emails.Select(e => e.SourceEventId).Distinct().Count().ShouldBe(2);
+
+        // Redelivery of the same event yields the same per-period keys (idempotency preserved).
+        var firstKeys = h.InApp.Select(n => n.SourceEventId).ToList();
+        h.InApp.Clear();
+        await new PayslipAcknowledgementReminderNotificationHandler(h.Resolver, h.Publisher).Handle(integrationEvent, CancellationToken.None);
+        h.InApp.Select(n => n.SourceEventId).ShouldBe(firstKeys);
+    }
+
+    [Fact]
     public async Task Objection_accepted_notifies_the_target_role_members_with_employee_and_period()
     {
         var specialist = Guid.NewGuid();

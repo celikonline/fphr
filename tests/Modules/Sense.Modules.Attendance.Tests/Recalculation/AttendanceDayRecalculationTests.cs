@@ -117,4 +117,36 @@ public sealed class AttendanceDayRecalculationTests
         await _days.Received(1).ListForEmployeesAsync(Arg.Is<IReadOnlyCollection<Guid>>(c => c.Count == 50), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
         progress.Last().ShouldBe((450 * 31, 450 * 31));
     }
+
+    [Fact]
+    public async Task Executor_retries_chunk_on_concurrency_conflict_then_succeeds()
+    {
+        var employee = Guid.NewGuid();
+        AddDay(employee, September1.AddDays(1));
+        _days.IsConcurrencyConflict(Arg.Any<Exception>()).Returns(true);
+        var saves = 0;
+        _uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(_ => ++saves == 1 ? throw new InvalidOperationException("conflict") : Task.FromResult(1));
+        var executor = new RecalculationExecutor(_days, _approvals, _rebuilder, _uow, _employees) { RetryDelay = TimeSpan.Zero };
+
+        var rebuilt = await executor.RunAsync(_tenantId, September1, September1.AddDays(5), [employee], null, TestContext.Current.CancellationToken);
+
+        rebuilt.ShouldBe(1);
+        saves.ShouldBe(2);
+        _days.Received(1).ClearTracked();
+    }
+
+    [Fact]
+    public async Task Executor_fails_after_retries_exhausted()
+    {
+        var employee = Guid.NewGuid();
+        AddDay(employee, September1.AddDays(1));
+        _days.IsConcurrencyConflict(Arg.Any<Exception>()).Returns(true);
+        _uow.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns<Task<int>>(_ => throw new InvalidOperationException("conflict"));
+        var executor = new RecalculationExecutor(_days, _approvals, _rebuilder, _uow, _employees) { RetryDelay = TimeSpan.Zero };
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => executor.RunAsync(_tenantId, September1, September1.AddDays(5), [employee], null, TestContext.Current.CancellationToken));
+
+        await _uow.Received(RecalculationExecutor.MaxChunkRetries + 1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }

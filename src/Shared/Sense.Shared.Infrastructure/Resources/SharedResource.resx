@@ -1704,6 +1704,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Hesaplanamayanlar</value></data>
   <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>Vardiya atanmayanlar</value></data>
   <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Günlük durum listesi</value></data>
+  <data name="report.note.daily_range_truncated" xml:space="preserve"><value>İlk {0} gün gösterildi</value></data>
   <data name="report.anomaly.noData" xml:space="preserve"><value>Veri yok</value></data>
   <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Giriş eksik</value></data>
   <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Çıkış eksik</value></data>

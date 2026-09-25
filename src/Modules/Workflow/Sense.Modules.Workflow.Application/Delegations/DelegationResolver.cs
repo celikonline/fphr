@@ -1,3 +1,4 @@
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.Delegations;
 
@@ -27,4 +28,14 @@ public sealed class DelegationResolver(IApprovalDelegationRepository delegations
         await delegations.ListActiveForDelegateAsync(delegateEmployeeId, today, cancellationToken);
 
     public static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
+    /// <summary>"Today" on the tenant's own calendar (B7): a delegation ending on the local day stays active until local midnight, not UTC midnight.
+    /// Unknown/unrecognized zone falls back to UTC.</summary>
+    public static async Task<DateOnly> TodayAsync(
+        TimeProvider clock, ITenantTimeZoneLookup timeZones, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        var zoneId = await timeZones.FindTimeZoneIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var zone = !string.IsNullOrEmpty(zoneId) && TimeZoneInfo.TryFindSystemTimeZoneById(zoneId, out var found) ? found : TimeZoneInfo.Utc;
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(clock.GetUtcNow().UtcDateTime, zone));
+    }
 }

@@ -81,7 +81,8 @@ public sealed class RejectionCommentRequiredTests
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(_tenantId);
         var handler = new DecideApprovalTaskHandler(tenant, repo, Substitute.For<IRoleAssignmentLookup>(), Substitute.For<IIntegrationEventOutbox>(), TimeProvider.System,
-            new Sense.Modules.Workflow.Application.Delegations.DelegationResolver(Substitute.For<Sense.Modules.Workflow.Domain.IApprovalDelegationRepository>()));
+            new Sense.Modules.Workflow.Application.Delegations.DelegationResolver(Substitute.For<Sense.Modules.Workflow.Domain.IApprovalDelegationRepository>()),
+            Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
 
         var result = await handler.Handle(
             new DecideApprovalTaskCommand(request.Tasks.Single().Id, _approver, ApprovalOutcome.Rejected, "  ", ApprovalChannel.Web, null, null), CancellationToken.None);

@@ -250,13 +250,7 @@ public sealed class ListAttendanceDaysHandler(
     {
         var dayPunches = await punches.ListForDayAsync(tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
         var plan = await planner.ResolveAsync(day.EmployeeId, day.Date, day.CheckIn, cancellationToken);
-        var reason = DayFromPunches.Build(dayPunches, plan).Reason;
-        if (reason != IncalculableReason.None)
-        {
-            return reason;
-        }
-
-        return plan?.IsAmbiguous == true ? IncalculableReason.AmbiguousShift : IncalculableReason.NightShiftOverlap;
+        return IncalculableExplainer.Explain(dayPunches, plan);
     }
 }
 

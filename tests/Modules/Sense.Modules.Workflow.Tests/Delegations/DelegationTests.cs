@@ -27,6 +27,7 @@ public sealed class DelegationTests
     private readonly Guid _delegate = Guid.NewGuid();
     private readonly Guid _requester = Guid.NewGuid();
     private readonly InMemoryDelegations _store = new();
+    private readonly ITenantTimeZoneLookup _zones = Substitute.For<ITenantTimeZoneLookup>();
     private readonly MutableClock _clock = new(new DateTime(2026, 10, 5, 9, 0, 0, DateTimeKind.Utc));
 
     private ApprovalDelegation NewDelegation(Guid? delegator = null, Guid? delegateId = null, IReadOnlyCollection<string>? types = null)
@@ -50,7 +51,7 @@ public sealed class DelegationTests
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(_tenantId);
         var outbox = Substitute.For<IIntegrationEventOutbox>();
-        return (new DecideApprovalTaskHandler(tenant, repo, Substitute.For<IRoleAssignmentLookup>(), outbox, _clock, Resolver), outbox);
+        return (new DecideApprovalTaskHandler(tenant, repo, Substitute.For<IRoleAssignmentLookup>(), outbox, _clock, Resolver, _zones), outbox);
     }
 
     private Task<Result> Decide(ApprovalRequest request, Guid decider) =>
@@ -75,7 +76,7 @@ public sealed class DelegationTests
         tenant.TenantId.Returns(_tenantId);
         var directory = Substitute.For<IEmployeeDirectory>();
         directory.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>()).Returns([]);
-        var handler = new ListInboxHandler(currentUser, tenant, requests, Substitute.For<IRoleAssignmentLookup>(), directory, [], Resolver, _clock);
+        var handler = new ListInboxHandler(currentUser, tenant, requests, Substitute.For<IRoleAssignmentLookup>(), directory, [], Resolver, _clock, _zones);
 
         var inRange = await handler.Handle(new ListInboxQuery(), CancellationToken.None);
         inRange.Value.ShouldHaveSingleItem().TaskId.ShouldBe(task.Id);
@@ -98,6 +99,23 @@ public sealed class DelegationTests
 
         _clock.Now = new DateTime(2026, 9, 30, 23, 59, 59, DateTimeKind.Utc);
         (await Resolver.ActiveDelegatorsFor(_tenantId, _delegate, DelegationResolver.Today(_clock), "Leave")).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Delegation_end_date_uses_tenant_local_day()
+    {
+        _zones.FindTimeZoneIdAsync(_tenantId, Arg.Any<CancellationToken>()).Returns("Europe/Istanbul");
+        NewDelegation();
+
+        // 2026-10-10 21:30Z is 2026-10-11 00:30 in Istanbul: the delegation (ends 10-10) is over locally although still 10-10 in UTC.
+        _clock.Now = new DateTime(2026, 10, 10, 21, 30, 0, DateTimeKind.Utc);
+        var afterLocalEnd = await Decide(NewRequest(_delegator), _delegate);
+        afterLocalEnd.IsFailure.ShouldBeTrue();
+        afterLocalEnd.Error.Code.ShouldBe(WorkflowErrors.AssigneeMismatch);
+
+        // 2026-09-30 21:30Z is already 2026-10-01 locally: the delegation has started.
+        _clock.Now = new DateTime(2026, 9, 30, 21, 30, 0, DateTimeKind.Utc);
+        (await Decide(NewRequest(_delegator), _delegate)).IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
