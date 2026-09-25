@@ -249,7 +249,32 @@
     "unlockTitle": "Periode entsperren",
     "unlockReasonLabel": "Grund",
     "unlockReasonRequired": "Zum Entsperren der Periode ist ein Grund erforderlich.",
-    "unlocked": "Periode entsperrt."
+    "unlocked": "Periode entsperrt.",
+    "paletteTitle": "Schichtpalette",
+    "paletteHint": "Ziehen Sie eine Schicht oder einen Tagestyp auf eine Zelle oder wählen Sie Zellen aus und klicken Sie.",
+    "paletteEmpty": "Keine Schichten definiert.",
+    "dayTypeTitle": "Tagestypen",
+    "dayType": {
+      "work": "Arbeit",
+      "weeklyRest": "Wöchentliche Ruhezeit",
+      "restDay": "Ruhetag",
+      "publicHoliday": "Feiertag"
+    },
+    "selectedCells": "{{count}} Zellen ausgewählt",
+    "clearSelection": "Auswahl aufheben",
+    "clearShifts": "Ausgewählte Schichten löschen",
+    "clearShiftsTitle": "Schichten löschen",
+    "clearShiftsDescription": "Die Schichten in {{count}} Zellen werden gelöscht. Bestätigen Sie?",
+    "unassignedOnly": "Mitarbeitende ohne Schicht",
+    "unassignedEmpty": "Diese Woche gibt es keine Mitarbeitenden ohne Schicht.",
+    "totalsLabel": "Summe",
+    "totalHours": "{{hours}} Std.",
+    "totalHoursMinutes": "{{hours}} Std. {{minutes}} Min.",
+    "totalMinutes": "{{minutes}} Min.",
+    "totalPeople": "{{count}} Personen",
+    "bulkDone": "{{count}} Zellen aktualisiert.",
+    "bulkSkipped": "{{count}} Zellen übersprungen (gesperrte Periode oder veröffentlichte Schicht).",
+    "lockedEditHint": "Die Periode ist gesperrt; Schichten können nicht bearbeitet werden."
   },
   "myAvailability": {
     "title": "Meine Verfügbarkeit",
