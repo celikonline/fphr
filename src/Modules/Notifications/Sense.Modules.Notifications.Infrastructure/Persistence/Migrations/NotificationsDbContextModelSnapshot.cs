@@ -142,6 +142,176 @@ namespace Sense.Modules.Notifications.Infrastructure.Persistence.Migrations
                     b.ToTable("notification_deliveries", "notifications");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.HrMessages.HrMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)")
+                        .HasColumnName("body");
+
+                    b.Property<string>("Channels")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("channels");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Importance")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("importance");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_user_id");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("subject");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_hr_messages");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_hr_messages_tenant_id");
+
+                    b.HasIndex("TenantId", "SenderUserId", "CreatedAt")
+                        .HasDatabaseName("ix_hr_messages_tenant_id_sender_user_id_created_at");
+
+                    b.ToTable("hr_messages", "notifications");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.HrMessages.HrMessageRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("message_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_hr_message_recipients");
+
+                    b.HasIndex("MessageId")
+                        .HasDatabaseName("ix_hr_message_recipients_message_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_hr_message_recipients_tenant_id");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .HasDatabaseName("ix_hr_message_recipients_tenant_id_user_id");
+
+                    b.ToTable("hr_message_recipients", "notifications");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.HrMessages.MessageGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("SelectionJson")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("jsonb")
+                        .HasColumnName("selection_json");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_message_groups");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_message_groups_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_message_groups_tenant_id_name");
+
+                    b.ToTable("message_groups", "notifications");
+                });
+
             modelBuilder.Entity("Sense.Modules.Notifications.Domain.Preferences.NotificationPreference", b =>
                 {
                     b.Property<Guid>("Id")
@@ -402,6 +572,21 @@ namespace Sense.Modules.Notifications.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "notifications");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.HrMessages.HrMessageRecipient", b =>
+                {
+                    b.HasOne("Sense.Modules.Notifications.Domain.HrMessages.HrMessage", null)
+                        .WithMany("Recipients")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_hr_message_recipients_hr_messages_message_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.HrMessages.HrMessage", b =>
+                {
+                    b.Navigation("Recipients");
                 });
 #pragma warning restore 612, 618
         }
