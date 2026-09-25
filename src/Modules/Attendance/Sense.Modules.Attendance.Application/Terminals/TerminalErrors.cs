@@ -31,6 +31,15 @@ public static class TerminalPunchRejectReasons
     /// <summary>Kimlik doğru ama çalışan aktif değil (işten ayrılmış, askıda, taslak ya da kaydı yok).</summary>
     public const string EmployeeNotActive = "employee_not_active";
 
+    /// <summary>
+    /// PIN kalemlerinde tek genel neden: bilinmeyen/pasif kimlik, aktif olmayan çalışan ya da terminalin PIN başarısızlık bütçesi dolmuş -
+    /// hangisi olduğu sızdırılmaz (kaba kuvvete karşı).
+    /// </summary>
+    public const string CredentialRejected = "credential_rejected";
+
+    /// <summary>Okutma, izin verilen en eski tarihten (MaxPunchAgeDays) daha eski.</summary>
+    public const string TooOld = "too_old";
+
     /// <summary>Kalem eksik/bozuk: kimlik türü/değeri ya da okutma anı yok.</summary>
     public const string InvalidItem = "invalid_item";
 

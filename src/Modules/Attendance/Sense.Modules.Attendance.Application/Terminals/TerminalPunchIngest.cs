@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Terminals;
@@ -26,19 +27,23 @@ public sealed record TerminalPunchItemResultDto(int Index, TerminalPunchItemStat
 
 public sealed record TerminalPunchBatchResultDto(int Accepted, int Ignored, int Rejected, IReadOnlyList<TerminalPunchItemResultDto> Items);
 
-public sealed record TerminalHeartbeatDto(DateTime ServerTimeUtc);
+/// <summary><see cref="PinEntryBlocked"/>: bu terminalde PIN girişi kaba kuvvet koruması nedeniyle geçici olarak reddediliyor.</summary>
+public sealed record TerminalHeartbeatDto(DateTime ServerTimeUtc, bool PinEntryBlocked = false);
 
 /// <summary>
 /// Terminal okutma ucu (Z5.1). Kiracı ve terminal yalnız kimliği doğrulanmış <see cref="TerminalIdentity"/>'den gelir. Her kalemin kimliği
 /// kiracı içinde HMAC özetiyle aktif bir kimliğe eşlenir; eşlenemeyen/bozuk kalem kalem bazında reddedilir, diğerleri işlenir. Kalemler
 /// <see cref="IPunchRecorder.RecordBatchAsync"/>'e TEK TEK verilir: sözleşme yalnız toplam sayıları döndürdüğünden kalem bazlı durum
 /// (kabul/yoksayıldı/reddedildi) ancak böyle kesin bilinir ve bir kalemin hatası (ör. gelecekteki okutma) diğerlerini geri almaz.
-/// Kimliği doğru olsa da çalışanı aktif olmayan (işten ayrılmış/askıda/taslak) kalem <c>employee_not_active</c> ile reddedilir.
+/// Kimliği doğru olsa da çalışanı aktif olmayan (işten ayrılmış/askıda/taslak) kalem <c>employee_not_active</c> ile reddedilir; PIN kalemlerinde
+/// tüm kimlik başarısızlıkları <c>credential_rejected</c>'tır ve terminal başına bütçeyle sınırlıdır (<see cref="TerminalCredentialFailureMonitor"/>).
+/// <see cref="TerminalIngestOptions.MaxPunchAgeDays"/>'ten eski kalem <c>too_old</c>.
 /// Recorder her çağrıda kendi değişikliklerini kaydeder; bu servis komut hattına (tek işlem) sokulmaz. Aynı okutmanın tekrar
 /// gönderilmesi hata değil "ignored" döner (idempotans recorder'dadır).
 /// </summary>
 public sealed class TerminalPunchIngest(
-    ITerminalRepository terminals, ITerminalCredentialHasher hasher, IEmployeeContactLookup employees, IPunchRecorder recorder, TimeProvider clock)
+    ITerminalRepository terminals, ITerminalCredentialHasher hasher, IEmployeeContactLookup employees, IPunchRecorder recorder,
+    TerminalCredentialFailureMonitor pinFailures, IOptions<TerminalIngestOptions> options, TimeProvider clock)
 {
     public const int MaxItemsPerRequest = 500;
 
@@ -53,7 +58,7 @@ public sealed class TerminalPunchIngest(
             return Error.Validation(TerminalErrors.BatchSizeInvalid, ("max", MaxItemsPerRequest));
         }
 
-        await MarkSeenAsync(terminal, cancellationToken).ConfigureAwait(false);
+        var now = await MarkSeenAsync(terminal, cancellationToken).ConfigureAwait(false);
 
         // Kimlik çözümü pepper ister: yoksa istek düzeyinde 503 (anahtar doğrulaması ve son görülme yine yapılmıştır).
         if (!hasher.IsAvailable)
@@ -61,20 +66,34 @@ public sealed class TerminalPunchIngest(
             return Error.ServiceUnavailable(TerminalErrors.CredentialPepperMissing);
         }
 
-        var digests = new List<string?>(items.Count);
+        var oldest = now.AddDays(-Math.Max(1, options.Value.MaxPunchAgeDays));
+        var prepared = new List<Prepared>(items.Count);
         foreach (var item in items)
         {
-            var digest = IsWellFormed(item) ? hasher.Hash(terminal.TenantId, item!.Credential!.Kind!.Value, item.Credential.Value!) : null;
-            if (digest is { IsFailure: true })
+            if (!IsWellFormed(item))
+            {
+                prepared.Add(new Prepared(null, TerminalPunchRejectReasons.InvalidItem));
+                continue;
+            }
+
+            if (NormalizeOccurredAt(item!.OccurredAtUtc) < oldest)
+            {
+                prepared.Add(new Prepared(null, TerminalPunchRejectReasons.TooOld));
+                continue;
+            }
+
+            var digest = hasher.Hash(terminal.TenantId, item.Credential!.Kind!.Value, item.Credential.Value!);
+            if (digest.IsFailure)
             {
                 return digest.Error;
             }
 
-            digests.Add(digest?.Value);
+            prepared.Add(new Prepared(digest.Value, null));
         }
 
         var credentials = await terminals.ListActiveCredentialsByValuesAsync(
-            terminal.TenantId, digests.OfType<string>().Distinct(StringComparer.Ordinal).ToList(), cancellationToken).ConfigureAwait(false);
+            terminal.TenantId, prepared.Select(p => p.Digest).OfType<string>().Distinct(StringComparer.Ordinal).ToList(), cancellationToken)
+            .ConfigureAwait(false);
         var owners = credentials
             .Where(c => c.TenantId == terminal.TenantId && c.IsActive)
             .ToDictionary(c => (c.Kind, c.Value), c => c.EmployeeId);
@@ -83,7 +102,7 @@ public sealed class TerminalPunchIngest(
         var results = new List<TerminalPunchItemResultDto>(items.Count);
         for (var index = 0; index < items.Count; index++)
         {
-            results.Add(await RecordAsync(terminal, index, items[index], digests[index], owners, activeEmployees, cancellationToken).ConfigureAwait(false));
+            results.Add(await RecordAsync(terminal, index, items[index], prepared[index], owners, activeEmployees, cancellationToken).ConfigureAwait(false));
         }
 
         return new TerminalPunchBatchResultDto(
@@ -97,7 +116,7 @@ public sealed class TerminalPunchIngest(
     public async Task<Result<TerminalHeartbeatDto>> HeartbeatAsync(TerminalIdentity terminal, CancellationToken cancellationToken)
     {
         var now = await MarkSeenAsync(terminal, cancellationToken).ConfigureAwait(false);
-        return new TerminalHeartbeatDto(now);
+        return new TerminalHeartbeatDto(now, pinFailures.IsBlocked(terminal.TerminalId));
     }
 
     /// <summary>Yön verilmemişse: yalnız giriş turnikesi → In, yalnız çıkış → Out, iki yönlü → Unknown (gün hesaplanamaz olur).</summary>
@@ -154,23 +173,30 @@ public sealed class TerminalPunchIngest(
     }
 
     private async Task<TerminalPunchItemResultDto> RecordAsync(
-        TerminalIdentity terminal, int index, TerminalPunchItem? item, string? digest,
+        TerminalIdentity terminal, int index, TerminalPunchItem? item, Prepared prepared,
         IReadOnlyDictionary<(TerminalCredentialKind Kind, string Value), Guid> owners, IReadOnlySet<Guid> activeEmployees,
         CancellationToken cancellationToken)
     {
-        if (digest is null)
+        if (prepared.Digest is not { } digest)
         {
-            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.InvalidItem);
+            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, prepared.RejectReason);
         }
 
-        if (!owners.TryGetValue((item!.Credential!.Kind!.Value, digest), out var employeeId))
+        var kind = item!.Credential!.Kind!.Value;
+        var isPin = kind == TerminalCredentialKind.Pin;
+        if (isPin && pinFailures.IsBlocked(terminal.TerminalId))
         {
-            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.UnknownCredential);
+            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.CredentialRejected);
+        }
+
+        if (!owners.TryGetValue((kind, digest), out var employeeId))
+        {
+            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.UnknownCredential);
         }
 
         if (!activeEmployees.Contains(employeeId))
         {
-            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.EmployeeNotActive);
+            return CredentialFailure(terminal, index, isPin, TerminalPunchRejectReasons.EmployeeNotActive);
         }
 
         var input = new PunchInput(
@@ -191,4 +217,22 @@ public sealed class TerminalPunchIngest(
             _ => new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.NotRecorded),
         };
     }
+
+    /// <summary>
+    /// Kimlik çözülemedi. PIN'de (düşük entropi) ayrıntı verilmez - bilinmeyen/pasif kimlik ve aktif olmayan çalışan tek <c>credential_rejected</c>
+    /// nedenine iner, böylece yanıt bir PIN'in var olup olmadığını sızdırmaz - ve başarısızlık bütçesine yazılır. Kart/dış kimlikte ayrıntılı neden kalır.
+    /// </summary>
+    private TerminalPunchItemResultDto CredentialFailure(TerminalIdentity terminal, int index, bool isPin, string reason)
+    {
+        if (!isPin)
+        {
+            return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, reason);
+        }
+
+        pinFailures.RecordFailure(terminal);
+        return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected);
+    }
+
+    /// <summary>Kalemin ön işlemesi: kimlik özeti ya da (bozuk/çok eski kalemde) red nedeni.</summary>
+    private sealed record Prepared(string? Digest, string? RejectReason);
 }

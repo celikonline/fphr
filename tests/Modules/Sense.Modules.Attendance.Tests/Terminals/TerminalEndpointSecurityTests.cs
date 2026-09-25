@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,7 +120,6 @@ public sealed class TerminalEndpointSecurityTests
         authorized.Succeeded.ShouldBeTrue();
         typeof(TerminalIngestController).GetCustomAttributes<AllowAnonymousAttribute>(true).ShouldBeEmpty();
         typeof(TerminalIngestController).GetMethods().SelectMany(m => m.GetCustomAttributes<AllowAnonymousAttribute>(true)).ShouldBeEmpty();
-        typeof(TerminalIngestController).GetCustomAttribute<EnableRateLimitingAttribute>()!.PolicyName.ShouldBe(TerminalKeyDefaults.RateLimitPolicy);
         typeof(TerminalIngestController).GetCustomAttribute<TerminalTenantScopeAttribute>().ShouldNotBeNull();
     }
 
@@ -167,50 +165,132 @@ public sealed class TerminalEndpointSecurityTests
     }
 
     [Fact]
-    public async Task Rate_limit_returns_429()
+    public void Rate_limit_returns_429()
     {
-        var perTerminal = BuildRateLimitedPipeline(permitLimit: 2, ipPermitLimit: 100);
-        var keyA = TerminalApiKey.Generate().Key;
+        using var throttle = new TerminalRequestThrottle(Options.Create(new TerminalIngestRateLimitOptions { PermitLimit = 2 }));
+        var terminalA = Guid.NewGuid();
 
-        var sameKey = new[] { await perTerminal(keyA, "10.0.0.1"), await perTerminal(keyA, "10.0.0.1"), await perTerminal(keyA, "10.0.0.1") };
-        var otherTerminalSameIp = await perTerminal(TerminalApiKey.Generate().Key, "10.0.0.1");
+        var sameTerminal = new[] { throttle.TryAcquire(terminalA, 1, out _), throttle.TryAcquire(terminalA, 1, out _), throttle.TryAcquire(terminalA, 1, out var retryAfter) };
+        var otherTerminal = throttle.TryAcquire(Guid.NewGuid(), 1, out _);
 
-        sameKey.ShouldBe([200, 200, StatusCodes.Status429TooManyRequests]);
-        otherTerminalSameIp.ShouldBe(200);
+        sameTerminal.ShouldBe([true, true, false]);
+        retryAfter.ShouldNotBeNull().ShouldBeGreaterThan(TimeSpan.Zero);
+        otherTerminal.ShouldBeTrue();
         new TerminalIngestRateLimitOptions().PermitLimit.ShouldBe(60);
     }
 
     [Fact]
-    public async Task Rate_limit_per_ip_caps_requests_with_ever_changing_keys()
+    public void Rate_cost_scales_with_item_count()
     {
-        var perIp = BuildRateLimitedPipeline(permitLimit: 100, ipPermitLimit: 3);
-        var statuses = new List<int>();
-        for (var i = 0; i < 4; i++)
-        {
-            statuses.Add(await perIp(TerminalApiKey.Generate().Key, "10.0.0.1"));
-        }
+        using var throttle = new TerminalRequestThrottle(Options.Create(new TerminalIngestRateLimitOptions { PermitLimit = 60 }));
+        var terminal = Guid.NewGuid();
 
-        var otherIp = await perIp(TerminalApiKey.Generate().Key, "10.0.0.2");
+        var costs = new[] { 0, 1, 50, 51, 500 }.Select(TerminalRequestThrottle.CostOf).ToList();
+        var fullBatches = Enumerable.Range(0, 7).Select(i => throttle.TryAcquire(terminal, TerminalRequestThrottle.CostOf(500), out _)).ToList();
 
-        statuses.ShouldBe([200, 200, 200, StatusCodes.Status429TooManyRequests]);
-        otherIp.ShouldBe(200);
+        costs.ShouldBe([1, 1, 1, 2, 10]);
+        fullBatches.ShouldBe([true, true, true, true, true, true, false]);
     }
 
-    private ServiceProvider BuildServices()
+    [Fact]
+    public async Task Valid_key_never_consumes_ip_bucket()
     {
+        var services = BuildServices(failedAuthPermitLimit: 2);
+
+        var valid = new List<bool>();
+        for (var i = 0; i < 10; i++)
+        {
+            valid.Add((await AuthenticateFromAsync(services, _validKey, "10.0.0.1")).Succeeded);
+        }
+
+        var failures = new List<int>();
+        for (var i = 0; i < 3; i++)
+        {
+            failures.Add(await ChallengeStatusAsync(services, TerminalApiKey.Generate().Key, "10.0.0.1"));
+        }
+
+        valid.ShouldAllBe(ok => ok);
+        failures.ShouldBe([401, 401, 429]);
+    }
+
+    [Fact]
+    public async Task Invalid_key_burst_gets_429_but_valid_terminal_unaffected()
+    {
+        var services = BuildServices(failedAuthPermitLimit: 3);
+        var statuses = new List<int>();
+        for (var i = 0; i < 6; i++)
+        {
+            statuses.Add(await ChallengeStatusAsync(services, TerminalApiKey.Generate().Key, "10.0.0.9"));
+        }
+
+        var blocked = NewContext(services, "10.0.0.9");
+        blocked.Request.Headers[TerminalKeyDefaults.HeaderName] = "not-even-a-key";
+        await blocked.AuthenticateAsync(TerminalKeyDefaults.AuthenticationScheme);
+        await blocked.ChallengeAsync(TerminalKeyDefaults.AuthenticationScheme);
+        var validSameIp = await AuthenticateFromAsync(services, _validKey, "10.0.0.9");
+        var otherIp = await ChallengeStatusAsync(services, TerminalApiKey.Generate().Key, "10.0.0.10");
+
+        statuses.ShouldBe([401, 401, 401, 429, 429, 429]);
+        int.Parse(blocked.Response.Headers.RetryAfter.ToString(), System.Globalization.CultureInfo.InvariantCulture).ShouldBeGreaterThan(0);
+        blocked.Response.Body.Length.ShouldBe(0);
+        validSameIp.Succeeded.ShouldBeTrue();
+        otherIp.ShouldBe(401);
+    }
+
+    [Fact]
+    public void Ip_bucket_count_is_bounded()
+    {
+        var tracker = new TerminalAuthFailureTracker(
+            Options.Create(new TerminalIngestRateLimitOptions { FailedAuthPermitLimit = 1, MaxTrackedIps = 3 }), TimeProvider.System);
+
+        for (var i = 0; i < 50; i++)
+        {
+            tracker.RegisterFailure("10.1.0." + i.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        tracker.TrackedCount.ShouldBe(3);
+        tracker.RegisterFailure("10.1.0.49").ShouldNotBeNull("the most recent IP is still tracked and over its limit");
+    }
+
+    private async Task<AuthenticateResult> AuthenticateFromAsync(ServiceProvider services, string key, string ip)
+    {
+        var context = NewContext(services, ip);
+        context.Request.Headers[TerminalKeyDefaults.HeaderName] = key;
+        return await context.AuthenticateAsync(TerminalKeyDefaults.AuthenticationScheme);
+    }
+
+    private static async Task<int> ChallengeStatusAsync(ServiceProvider services, string key, string ip)
+    {
+        var context = NewContext(services, ip);
+        context.Request.Headers[TerminalKeyDefaults.HeaderName] = key;
+        (await context.AuthenticateAsync(TerminalKeyDefaults.AuthenticationScheme)).Succeeded.ShouldBeFalse();
+        await context.ChallengeAsync(TerminalKeyDefaults.AuthenticationScheme);
+        return context.Response.StatusCode;
+    }
+
+    private ServiceProvider BuildServices(int? failedAuthPermitLimit = null)
+    {
+        var settings = new Dictionary<string, string?>();
+        if (failedAuthPermitLimit is { } limit)
+        {
+            settings[TerminalIngestRateLimitOptions.Section + ":" + nameof(TerminalIngestRateLimitOptions.FailedAuthPermitLimit)] =
+                limit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(_authenticator);
         services.AddAuthentication(FakeJwtScheme).AddScheme<AuthenticationSchemeOptions, FakeJwtHandler>(FakeJwtScheme, _ => { });
-        services.AddTerminalIngestEndpointSecurity(new ConfigurationBuilder().Build());
+        services.AddTerminalIngestEndpointSecurity(new ConfigurationBuilder().AddInMemoryCollection(settings).Build());
         services.AddAuthorization();
         return services.BuildServiceProvider();
     }
 
     /// <summary>Her istek kendi DI kapsamında (ASP.NET gibi): kimlik doğrulama işleyicileri kapsam başına önbelleğe alınır.</summary>
-    private static DefaultHttpContext NewContext(IServiceProvider services)
+    private static DefaultHttpContext NewContext(IServiceProvider services, string? ip = null)
     {
         var context = new DefaultHttpContext { RequestServices = services.CreateScope().ServiceProvider };
+        context.Connection.RemoteIpAddress = ip is null ? null : IPAddress.Parse(ip);
         context.Response.Body = new MemoryStream();
         return context;
     }
@@ -220,39 +300,6 @@ public sealed class TerminalEndpointSecurityTests
         var authorizeData = typeof(TerminalIngestController).GetCustomAttributes<AuthorizeAttribute>(true).Cast<IAuthorizeData>().ToList();
         authorizeData.ShouldNotBeEmpty();
         return (await AuthorizationPolicy.CombineAsync(services.GetRequiredService<IAuthorizationPolicyProvider>(), authorizeData))!;
-    }
-
-    private static Func<string, string, Task<int>> BuildRateLimitedPipeline(int permitLimit, int ipPermitLimit)
-    {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [TerminalIngestRateLimitOptions.Section + ":PermitLimit"] = permitLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            [TerminalIngestRateLimitOptions.Section + ":IpPermitLimit"] = ipPermitLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        }).Build();
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddRateLimiter(o => o.RejectionStatusCode = StatusCodes.Status429TooManyRequests);
-        services.AddTerminalIngestRateLimiting(configuration);
-        var provider = services.BuildServiceProvider();
-        var app = new ApplicationBuilder(provider);
-        app.UseRateLimiter();
-        app.Run(context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status200OK;
-            return Task.CompletedTask;
-        });
-        var pipeline = app.Build();
-        var endpoint = new Endpoint(null, new EndpointMetadataCollection(new EnableRateLimitingAttribute(TerminalKeyDefaults.RateLimitPolicy)), "terminal-ingest");
-
-        return async (key, ip) =>
-        {
-            var context = NewContext(provider);
-            context.Request.Headers[TerminalKeyDefaults.HeaderName] = key;
-            context.Connection.RemoteIpAddress = IPAddress.Parse(ip);
-            context.SetEndpoint(endpoint);
-            await pipeline(context);
-            return context.Response.StatusCode;
-        };
     }
 
     /// <summary>Geçerli bir kullanıcı JWT'sini temsil eder: Authorization: Bearer varsa her zaman doğrular.</summary>

@@ -8,9 +8,6 @@ public static class TerminalKeyDefaults
 
     public const string HeaderName = "X-Terminal-Key";
 
-    /// <summary>Hız sınırı politikası (bkz. <see cref="TerminalIngestRateLimiting"/>).</summary>
-    public const string RateLimitPolicy = "terminal-ingest";
-
     /// <summary>Terminal kimliğinin talepleri; kullanıcı talepleriyle (sub/tid) karışmasın diye ayrı adlar.</summary>
     public const string TerminalIdClaim = "sense:terminal_id";
 

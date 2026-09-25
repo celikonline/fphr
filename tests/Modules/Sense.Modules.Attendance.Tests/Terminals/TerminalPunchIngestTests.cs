@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Sense.Modules.Attendance.Application.Terminals;
@@ -25,11 +27,15 @@ public sealed class TerminalPunchIngestTests
     private readonly List<EmployeeTerminalCredential> _credentials = [];
     private readonly Dictionary<Guid, string> _employeeStatuses = [];
     private readonly IEmployeeContactLookup _contacts;
+    private readonly FakeTimeProvider _clock = new(Now);
+    private readonly CapturingLogger _pinLog = new();
+    private readonly TerminalCredentialFailureMonitor _monitor;
     private readonly TerminalIdentity _terminal;
 
     public TerminalPunchIngestTests()
     {
         _contacts = TerminalTestData.Contacts(_employeeStatuses);
+        _monitor = TerminalTestData.Monitor(_clock, budget: 3, _pinLog);
         _terminal = new TerminalIdentity(Guid.NewGuid(), _tenantId, TerminalDirectionMode.Both, Guid.NewGuid(), "T-01");
         AddCredential(_tenantId, _employeeA, TerminalCredentialKind.Card, "04A1B2C3");
         AddCredential(_tenantId, _employeeB, TerminalCredentialKind.Pin, "4321");
@@ -42,7 +48,7 @@ public sealed class TerminalPunchIngestTests
     }
 
     private TerminalPunchIngest Ingest(ITerminalCredentialHasher? hasher = null) =>
-        new(_terminals, hasher ?? _hasher, _contacts, _recorder, new FakeTimeProvider(Now));
+        new(_terminals, hasher ?? _hasher, _contacts, _recorder, _monitor, Options.Create(new TerminalIngestOptions()), _clock);
 
     private void AddCredential(Guid tenantId, Guid employeeId, TerminalCredentialKind kind, string raw) =>
         _credentials.Add(EmployeeTerminalCredential.Create(tenantId, employeeId, kind, _hasher.Digest(tenantId, kind, raw)).Value);
@@ -254,7 +260,7 @@ public sealed class TerminalPunchIngestTests
         var lookup = Substitute.For<IEmployeeContactLookup>();
         lookup.GetContactsAsync(default, default!, default).ReturnsForAnyArgs([]);
 
-        var result = await new TerminalPunchIngest(_terminals, _hasher, lookup, _recorder, new FakeTimeProvider(Now))
+        var result = await new TerminalPunchIngest(_terminals, _hasher, lookup, _recorder, _monitor, Options.Create(new TerminalIngestOptions()), _clock)
             .IngestAsync(_terminal, [Item(TerminalCredentialKind.Card, "04A1B2C3")], TestContext.Current.CancellationToken);
 
         result.Value.Items.Single().Reason.ShouldBe(TerminalPunchRejectReasons.EmployeeNotActive);
@@ -282,5 +288,104 @@ public sealed class TerminalPunchIngestTests
         var heartbeat = await Ingest(TerminalTestData.Hasher(pepper: null)).HeartbeatAsync(_terminal, TestContext.Current.CancellationToken);
 
         heartbeat.Value.ServerTimeUtc.ShouldBe(Now);
+    }
+
+    [Fact]
+    public async Task Pin_reasons_do_not_reveal_employee_state()
+    {
+        var terminated = Guid.NewGuid();
+        AddCredential(_tenantId, terminated, TerminalCredentialKind.Pin, "1111");
+        _employeeStatuses[terminated] = "Terminated";
+        var inactive = EmployeeTerminalCredential.Create(_tenantId, Guid.NewGuid(), TerminalCredentialKind.Pin, _hasher.Digest(_tenantId, TerminalCredentialKind.Pin, "2222")).Value;
+        inactive.Deactivate();
+        _credentials.Add(inactive);
+
+        var result = await Ingest().IngestAsync(_terminal,
+            [Item(TerminalCredentialKind.Pin, "1111"), Item(TerminalCredentialKind.Pin, "2222"), Item(TerminalCredentialKind.Pin, "9999")],
+            TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => i.Reason).ShouldBe(
+            [TerminalPunchRejectReasons.CredentialRejected, TerminalPunchRejectReasons.CredentialRejected, TerminalPunchRejectReasons.CredentialRejected]);
+        _recorder.Received.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Card_reasons_unchanged()
+    {
+        var terminated = Guid.NewGuid();
+        AddCredential(_tenantId, terminated, TerminalCredentialKind.Card, "0BAD0003");
+        _employeeStatuses[terminated] = "Terminated";
+
+        var result = await Ingest().IngestAsync(_terminal,
+            [Item(TerminalCredentialKind.Card, "0BAD0003"), Item(TerminalCredentialKind.Card, "FFFFFFFF"), Item(TerminalCredentialKind.ExternalId, "nobody")],
+            TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => i.Reason).ShouldBe(
+            [TerminalPunchRejectReasons.EmployeeNotActive, TerminalPunchRejectReasons.UnknownCredential, TerminalPunchRejectReasons.UnknownCredential]);
+        _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse("card/external failures do not spend the PIN budget");
+    }
+
+    [Fact]
+    public async Task Pin_failures_over_budget_are_rejected_and_logged()
+    {
+        var entity = TerminalTestData.NewTerminal(_tenantId, TerminalApiKey.Generate().Key);
+        var terminal = _terminal with { TerminalId = entity.Id };
+        _terminals.ListTerminalsAsync(Arg.Any<CancellationToken>()).Returns([entity]);
+
+        // Bütçe 3: üç yanlış PIN'den sonra doğru PIN bile reddedilir (tarama sırasında geçerli PIN sızmasın); kart etkilenmez.
+        var result = await Ingest().IngestAsync(terminal,
+            [
+                Item(TerminalCredentialKind.Pin, "0001"), Item(TerminalCredentialKind.Pin, "0002"), Item(TerminalCredentialKind.Pin, "0003"),
+                Item(TerminalCredentialKind.Pin, "4321"), Item(TerminalCredentialKind.Card, "04A1B2C3"),
+            ], TestContext.Current.CancellationToken);
+        var heartbeat = await Ingest().HeartbeatAsync(terminal, TestContext.Current.CancellationToken);
+        var list = (await new ListTerminalsHandler(_terminals, _monitor, _clock).Handle(new ListTerminalsQuery(), TestContext.Current.CancellationToken)).Value;
+
+        result.Value.Items.Select(i => (i.Status, i.Reason)).ShouldBe(
+            [
+                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected),
+                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected),
+                (TerminalPunchItemStatus.Accepted, (string?)null),
+            ]);
+        _recorder.Received.Select(p => p.EmployeeId).ShouldBe([_employeeA]);
+        heartbeat.Value.PinEntryBlocked.ShouldBeTrue();
+        _monitor.LastSuspiciousAtUtc(terminal.TerminalId).ShouldBe(Now);
+        var warning = _pinLog.Entries.ShouldHaveSingleItem();
+        warning.Level.ShouldBe(LogLevel.Warning);
+        warning.Message.ShouldContain("T-01");
+        warning.Message.ShouldNotContain("0001");
+        warning.Message.ShouldNotContain("4321");
+        list.Single().LastSuspiciousAtUtc.ShouldBe(Now);
+
+        // Pencere (5 dk) geçince PIN girişi yeniden açılır.
+        _clock.Advance(TimeSpan.FromMinutes(6));
+        var later = await Ingest().IngestAsync(terminal, [Item(TerminalCredentialKind.Pin, "4321", Occurred.AddMinutes(1))], TestContext.Current.CancellationToken);
+        later.Value.Accepted.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Punch_older_than_max_age_is_rejected_as_too_old()
+    {
+        var result = await Ingest().IngestAsync(_terminal,
+            [Item(TerminalCredentialKind.Card, "04A1B2C3", Now.AddDays(-46)), Item(TerminalCredentialKind.Card, "04A1B2C3", Now.AddDays(-44))],
+            TestContext.Current.CancellationToken);
+
+        result.Value.Items.Select(i => i.Reason).ShouldBe([TerminalPunchRejectReasons.TooOld, null]);
+        _recorder.Received.ShouldHaveSingleItem();
+    }
+
+    private sealed record LogEntry(LogLevel Level, string Message);
+
+    private sealed class CapturingLogger : ILogger<TerminalCredentialFailureMonitor>
+    {
+        public List<LogEntry> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Entries.Add(new LogEntry(logLevel, formatter(state, exception)));
     }
 }

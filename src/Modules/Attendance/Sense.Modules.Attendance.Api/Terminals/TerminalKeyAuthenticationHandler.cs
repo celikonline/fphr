@@ -13,12 +13,17 @@ namespace Sense.Modules.Attendance.Api.Terminals;
 /// <summary>
 /// <c>X-Terminal-Key</c> şeması (Z5.1). Başlık yoksa sonuç yok (başka şemaya karışmaz); aynı istekte <c>Authorization</c> başlığı da varsa
 /// ya da başlık birden çok değer taşıyorsa reddeder (kullanıcı ve terminal kimliği karışmasın). Doğrulama <see cref="ITerminalKeyAuthenticator"/>'da
-/// (sabit süreli karşılaştırma). Başarısızlıkta 401 yalnız şema adını döner: gövde yok, kiracı/terminal bilgisi yok.
+/// (sabit süreli karşılaştırma). Başarısızlıkta 401 yalnız şema adını döner: gövde yok, kiracı/terminal bilgisi yok. Her başarısız deneme IP
+/// kovasına yazılır (<see cref="TerminalAuthFailureTracker"/>); kova dolduysa 429 + Retry-After (gövdesiz). Başarılı doğrulama kovaya yazılmaz.
 /// </summary>
 public sealed class TerminalKeyAuthenticationHandler(
-    IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ITerminalKeyAuthenticator authenticator)
+    IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ITerminalKeyAuthenticator authenticator,
+    TerminalAuthFailureTracker failures)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
+    private const string UnknownIp = "unknown";
+    private static readonly object BlockedRetryAfterKey = new();
+
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.TryGetValue(TerminalKeyDefaults.HeaderName, out var values))
@@ -26,19 +31,31 @@ public sealed class TerminalKeyAuthenticationHandler(
             return AuthenticateResult.NoResult();
         }
 
-        if (values.Count != 1 || Request.Headers.ContainsKey(HeaderNames.Authorization))
+        var terminal = values.Count == 1 && !Request.Headers.ContainsKey(HeaderNames.Authorization)
+            ? await authenticator.AuthenticateAsync(values[0], Context.RequestAborted).ConfigureAwait(false)
+            : null;
+        if (terminal is not null)
         {
-            return AuthenticateResult.Fail(TerminalKeyDefaults.InvalidKeyMessage);
+            return AuthenticateResult.Success(new AuthenticationTicket(TerminalPrincipal.Create(terminal, Scheme.Name), Scheme.Name));
         }
 
-        var terminal = await authenticator.AuthenticateAsync(values[0], Context.RequestAborted).ConfigureAwait(false);
-        return terminal is null
-            ? AuthenticateResult.Fail(TerminalKeyDefaults.InvalidKeyMessage)
-            : AuthenticateResult.Success(new AuthenticationTicket(TerminalPrincipal.Create(terminal, Scheme.Name), Scheme.Name));
+        if (failures.RegisterFailure(Context.Connection.RemoteIpAddress?.ToString() ?? UnknownIp) is { } retryAfter)
+        {
+            Context.Items[BlockedRetryAfterKey] = retryAfter;
+        }
+
+        return AuthenticateResult.Fail(TerminalKeyDefaults.InvalidKeyMessage);
     }
 
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)
     {
+        if (Context.Items.TryGetValue(BlockedRetryAfterKey, out var value) && value is TimeSpan retryAfter)
+        {
+            Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+            return Task.CompletedTask;
+        }
+
         Response.StatusCode = StatusCodes.Status401Unauthorized;
         Response.Headers.WWWAuthenticate = TerminalKeyDefaults.AuthenticationScheme;
         return Task.CompletedTask;

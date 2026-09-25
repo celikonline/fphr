@@ -8,10 +8,13 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.Terminals;
 
-/// <summary>Terminal listesi/ayrıntısı: ham anahtar ya da özeti ASLA dönmez, yalnız tanıma amaçlı önek.</summary>
+/// <summary>
+/// Terminal listesi/ayrıntısı: ham anahtar ya da özeti ASLA dönmez, yalnız tanıma amaçlı önek. <see cref="LastSuspiciousAtUtc"/>: son "şüpheli
+/// deneme" (PIN başarısızlık bütçesi doldu) - bellek içi, süreç yeniden başlayınca sıfırlanır.
+/// </summary>
 public sealed record TerminalDto(
     Guid Id, string Code, string Name, Guid? TerminalGroupId, Guid? LocationId, TerminalDirectionMode DirectionMode, string ApiKeyPrefix,
-    DateTime? LastSeenAtUtc, bool IsOnline, bool IsActive);
+    DateTime? LastSeenAtUtc, bool IsOnline, bool IsActive, DateTime? LastSuspiciousAtUtc = null);
 
 public sealed record TerminalInput(string Code, string Name, Guid? TerminalGroupId, Guid? LocationId, TerminalDirectionMode DirectionMode);
 
@@ -26,9 +29,9 @@ internal static class TerminalMapper
     /// <summary>Son görülme bu süreden eskiyse terminal çevrimdışı sayılır (Z5.1/Z5.3).</summary>
     public static readonly TimeSpan OnlineWindow = TimeSpan.FromMinutes(5);
 
-    public static TerminalDto ToDto(Terminal t, DateTime nowUtc) =>
+    public static TerminalDto ToDto(Terminal t, DateTime nowUtc, TerminalCredentialFailureMonitor pinFailures) =>
         new(t.Id, t.Code, t.Name, t.TerminalGroupId, t.LocationId, t.DirectionMode, t.ApiKeyPrefix, t.LastSeenAtUtc,
-            IsOnline(t.LastSeenAtUtc, nowUtc), t.IsActive);
+            IsOnline(t.LastSeenAtUtc, nowUtc), t.IsActive, pinFailures.LastSuspiciousAtUtc(t.Id));
 
     public static bool IsOnline(DateTime? lastSeenAtUtc, DateTime nowUtc) => lastSeenAtUtc is { } seen && nowUtc - seen < OnlineWindow;
 
@@ -62,24 +65,26 @@ internal static class TerminalMapper
 [RequiresPermission("attendance.terminal.view")]
 public sealed record ListTerminalsQuery : IQuery<IReadOnlyList<TerminalDto>>;
 
-public sealed class ListTerminalsHandler(ITerminalRepository terminals, TimeProvider clock) : IQueryHandler<ListTerminalsQuery, IReadOnlyList<TerminalDto>>
+public sealed class ListTerminalsHandler(ITerminalRepository terminals, TerminalCredentialFailureMonitor pinFailures, TimeProvider clock)
+    : IQueryHandler<ListTerminalsQuery, IReadOnlyList<TerminalDto>>
 {
     public async Task<Result<IReadOnlyList<TerminalDto>>> Handle(ListTerminalsQuery query, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        return (await terminals.ListTerminalsAsync(cancellationToken)).Select(t => TerminalMapper.ToDto(t, now)).ToList();
+        return (await terminals.ListTerminalsAsync(cancellationToken)).Select(t => TerminalMapper.ToDto(t, now, pinFailures)).ToList();
     }
 }
 
 [RequiresPermission("attendance.terminal.view")]
 public sealed record GetTerminalQuery(Guid TerminalId) : IQuery<TerminalDto>;
 
-public sealed class GetTerminalHandler(ITerminalRepository terminals, TimeProvider clock) : IQueryHandler<GetTerminalQuery, TerminalDto>
+public sealed class GetTerminalHandler(ITerminalRepository terminals, TerminalCredentialFailureMonitor pinFailures, TimeProvider clock)
+    : IQueryHandler<GetTerminalQuery, TerminalDto>
 {
     public async Task<Result<TerminalDto>> Handle(GetTerminalQuery query, CancellationToken cancellationToken)
     {
         var terminal = await terminals.GetTerminalByIdAsync(query.TerminalId, cancellationToken);
-        return terminal.IsFailure ? terminal.Error : TerminalMapper.ToDto(terminal.Value, clock.GetUtcNow().UtcDateTime);
+        return terminal.IsFailure ? terminal.Error : TerminalMapper.ToDto(terminal.Value, clock.GetUtcNow().UtcDateTime, pinFailures);
     }
 }
 

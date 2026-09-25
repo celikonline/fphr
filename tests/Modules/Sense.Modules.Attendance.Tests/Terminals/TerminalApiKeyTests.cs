@@ -46,7 +46,7 @@ public sealed class TerminalApiKeyTests
 
         // Sonraki okumalar anahtarı ya da özetini asla döndürmez.
         _terminals.GetTerminalByIdAsync(stored.Id, Arg.Any<CancellationToken>()).Returns(stored);
-        var dto = (await new GetTerminalHandler(_terminals, TimeProvider.System).Handle(new GetTerminalQuery(stored.Id), TestContext.Current.CancellationToken)).Value;
+        var dto = (await new GetTerminalHandler(_terminals, TerminalTestData.Monitor(TimeProvider.System), TimeProvider.System).Handle(new GetTerminalQuery(stored.Id), TestContext.Current.CancellationToken)).Value;
         typeof(TerminalDto).GetProperties().Select(p => p.Name).ShouldNotContain(n => n.Contains("Hash") || n == "ApiKey");
         dto.ToString().ShouldNotContain(key);
         dto.ToString().ShouldNotContain(stored.ApiKeyHash);

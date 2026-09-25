@@ -51,6 +51,8 @@ public static class AttendanceServiceCollectionExtensions
         services.TryAddScoped<ITerminalRepository, TerminalRepository>();
         services.TryAddSingleton<ITerminalCredentialHasher, HmacTerminalCredentialHasher>();
         services.TryAddScoped<ITerminalKeyAuthenticator, TerminalKeyAuthenticator>();
+        services.AddOptions<TerminalIngestOptions>().Bind(configuration.GetSection(TerminalIngestOptions.Section));
+        services.TryAddSingleton<TerminalCredentialFailureMonitor>();
         services.TryAddScoped<TerminalPunchIngest>();
         return services;
     }

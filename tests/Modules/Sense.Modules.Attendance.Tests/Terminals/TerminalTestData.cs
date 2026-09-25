@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Sense.Modules.Attendance.Application.Terminals;
@@ -30,6 +31,10 @@ internal static class TerminalTestData
 
     public static HmacTerminalCredentialHasher Hasher(string? pepper = TestPepper) =>
         new(Options.Create(new TerminalSecurityOptions { CredentialPepper = pepper }));
+
+    public static TerminalCredentialFailureMonitor Monitor(TimeProvider clock, int budget = 20, ILogger<TerminalCredentialFailureMonitor>? logger = null) =>
+        new(Options.Create(new TerminalIngestOptions { PinFailureBudget = budget }), clock,
+            logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TerminalCredentialFailureMonitor>.Instance);
 
     /// <summary>Pepper'lı hasher için özet (başarısızsa test patlar).</summary>
     public static string Digest(this ITerminalCredentialHasher hasher, Guid tenantId, TerminalCredentialKind kind, string raw) =>

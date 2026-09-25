@@ -118,7 +118,7 @@ public sealed class TerminalManagementTests
         var never = TerminalTestData.NewTerminal(_tenantId, TerminalApiKey.Generate().Key, code: "NEW");
         _terminals.ListTerminalsAsync(Arg.Any<CancellationToken>()).Returns([online, offline, never]);
 
-        var list = (await new ListTerminalsHandler(_terminals, new FakeTimeProvider(Now)).Handle(new ListTerminalsQuery(), TestContext.Current.CancellationToken)).Value;
+        var list = (await new ListTerminalsHandler(_terminals, TerminalTestData.Monitor(new FakeTimeProvider(Now)), new FakeTimeProvider(Now)).Handle(new ListTerminalsQuery(), TestContext.Current.CancellationToken)).Value;
 
         list.Select(t => (t.Code, t.IsOnline)).ShouldBe([("ON", true), ("OFF", false), ("NEW", false)]);
         list[0].LastSeenAtUtc.ShouldBe(Now.AddMinutes(-4));
