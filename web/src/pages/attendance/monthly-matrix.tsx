@@ -25,6 +25,13 @@ import {
 } from "@/services/attendance-monthly-matrix.service";
 import { monthStartOf, shiftMonth } from "./monthly-timesheet-helpers";
 
+/** Yatay kaydırmada çalışan sütunu sabit kalır. */
+const STICKY_CELL_STYLE = {
+  position: "sticky",
+  left: 0,
+  zIndex: 1,
+  backgroundColor: "var(--mantine-color-body)",
+} as const;
 const MATRIX_KEY = ["attendance", "monthly-matrix"] as const;
 
 /** "Aylık puantaj matrisi" (Z3.4): satır = çalışan, sütun = ayın günleri; hücre = renk + kısa kod. */
@@ -42,6 +49,10 @@ function MonthlyMatrixView() {
   const monthIso = toDateOnly(monthStart);
   const monthLabel = formatDateOnly(monthIso, i18n.language, { month: "long", year: "numeric" });
   const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  const weekdayFormat = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { weekday: "short" }),
+    [i18n.language]
+  );
   const dayNumbers = useMemo(
     () => Array.from({ length: daysInMonth }, (_, i) => i + 1),
     [daysInMonth]
@@ -130,13 +141,26 @@ function MonthlyMatrixView() {
         </Text>
       ) : (
         <div className="overflow-x-auto">
-          <Table withTableBorder withColumnBorders verticalSpacing={4} horizontalSpacing={4}>
+          <Table
+            withTableBorder
+            withColumnBorders
+            verticalSpacing={4}
+            horizontalSpacing={4}
+            aria-label={`${t("attendance-daily:monthlyMatrix.title")} - ${monthLabel}`}
+          >
             <Table.Thead>
               <Table.Tr>
-                <Table.Th miw={180}>{t("attendance:teamTimesheet.employee")}</Table.Th>
+                <Table.Th scope="col" miw={180} style={STICKY_CELL_STYLE}>
+                  {t("attendance:teamTimesheet.employee")}
+                </Table.Th>
                 {dayNumbers.map((day) => (
-                  <Table.Th key={day} ta="center">
-                    {day}
+                  <Table.Th key={day} scope="col" ta="center">
+                    <div>{day}</div>
+                    <Text size="xs" c="dimmed" fw={400}>
+                      {weekdayFormat.format(
+                        new Date(monthStart.getFullYear(), monthStart.getMonth(), day)
+                      )}
+                    </Text>
                   </Table.Th>
                 ))}
               </Table.Tr>
@@ -148,7 +172,9 @@ function MonthlyMatrixView() {
                 );
                 return (
                   <Table.Tr key={row.employeeId}>
-                    <Table.Td>{row.employeeName}</Table.Td>
+                    <Table.Th scope="row" fw={500} style={STICKY_CELL_STYLE}>
+                      {row.employeeName}
+                    </Table.Th>
                     {dayNumbers.map((day) => {
                       const cell = byDay.get(day);
                       const code = cell?.code ?? "none";
@@ -160,6 +186,7 @@ function MonthlyMatrixView() {
                           <MatrixChip
                             code={code}
                             testId={`matrix-cell-${row.employeeId}-${dateIso}`}
+                            ariaLabelPrefix={`${row.employeeName}, ${formatDateOnly(dateIso, i18n.language)}`}
                           />
                         </Table.Td>
                       );

@@ -21,24 +21,38 @@ export const MATRIX_CODE_COLOR: Record<MatrixCellCode, string> = {
   none: "gray",
 };
 
+/** Sözleşme dışı (bilinmeyen) kod gelirse "none" görünümüne düşer. */
+export function normalizeMatrixCode(code: string): MatrixCellCode {
+  return code in MATRIX_CODE_COLOR ? (code as MatrixCellCode) : "none";
+}
+
 /** Hücre / lejant rozeti: renk + kısa kod metni (renk tek başına bilgi taşımaz). */
 export function MatrixChip({
-  code,
+  code: rawCode,
   testId,
   size = 26,
+  ariaLabelPrefix,
 }: {
   code: MatrixCellCode;
   testId?: string;
   size?: number;
+  /** Verilirse hücre `role="img"` olur; erişilebilir ad "{önek}: {kod adı}". Verilmezse süs (aria-hidden). */
+  ariaLabelPrefix?: string;
 }) {
   const { t } = useTranslation("attendance-daily");
+  const code = normalizeMatrixCode(rawCode);
   const color = MATRIX_CODE_COLOR[code];
+  const codeName = t(`monthlyMatrix.codes.${code}`);
+  const a11y = ariaLabelPrefix
+    ? { role: "img", "aria-label": `${ariaLabelPrefix}: ${codeName}` }
+    : { "aria-hidden": true };
   return (
     <span
       data-testid={testId}
       data-code={code}
       data-color={color}
-      title={t(`monthlyMatrix.codes.${code}`)}
+      title={codeName}
+      {...a11y}
       className="inline-flex items-center justify-center rounded-sm text-xs font-semibold"
       style={{
         minWidth: size,
