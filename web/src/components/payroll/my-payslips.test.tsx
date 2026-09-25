@@ -79,6 +79,26 @@ describe("MyPayslips", () => {
     expect((buttons[1] as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("disables acknowledge while an objection is pending and shows a hint", async () => {
+    vi.mocked(listMyPayslips).mockResolvedValue([{ ...published, objectionStatus: "pending" }]);
+    renderIt();
+    const btn = await screen.findByRole("button", { name: "Onayla" });
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getAllByText("İtirazınız inceleniyor").length).toBeGreaterThan(0);
+  });
+
+  it("re-enables acknowledge after a resolved objection", async () => {
+    vi.mocked(listMyPayslips).mockResolvedValue([{ ...published, objectionStatus: "rejected" }]);
+    renderIt();
+    const btn = await screen.findByRole("button", { name: "Onayla" });
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("shows gross pay when present", async () => {
+    renderIt();
+    expect(await screen.findAllByText(/50\.000,00/)).toBeTruthy();
+  });
+
   it("acknowledges a published payslip", async () => {
     renderIt();
     const user = userEvent.setup();

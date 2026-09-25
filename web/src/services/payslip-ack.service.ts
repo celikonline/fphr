@@ -17,6 +17,7 @@ export interface MyPayslip {
   acknowledgedAt?: string | null;
   objectionStatus?: PayslipObjectionStatus | null;
   objectionReason?: string | null;
+  objectionResolutionNote?: string | null;
 }
 
 export async function listMyPayslips(): Promise<MyPayslip[]> {
@@ -32,9 +33,11 @@ export async function objectToPayslip(payslipId: string, reason: string): Promis
   await apiClient.post(`${BASE}/${payslipId}/object`, { reason });
 }
 
-/** Onayla yalnız yayınlanmış ve daha önce onaylanmamış bordroda aktiftir. */
+/** Yalnız yayınlanmış, onaysız ve bekleyen itirazı olmayan bordroda aktif (sonuçlanan itirazdan sonra yeniden mümkün). */
 export function canAcknowledge(payslip: MyPayslip): boolean {
-  return Boolean(payslip.publishedAt) && !payslip.acknowledgedAt;
+  return (
+    Boolean(payslip.publishedAt) && !payslip.acknowledgedAt && payslip.objectionStatus !== "pending"
+  );
 }
 
 export function canObject(payslip: MyPayslip): boolean {

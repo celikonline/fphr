@@ -214,6 +214,7 @@
     "submitObjection": "Submit objection",
     "columns": {
       "period": "Period",
+      "gross": "Gross pay",
       "net": "Net pay",
       "status": "Status"
     },
@@ -223,6 +224,7 @@
       "pending": "Objection under review",
       "accepted": "Objection accepted",
       "rejected": "Objection rejected"
-    }
+    },
+    "pendingHint": "Your objection is under review"
   }
 }

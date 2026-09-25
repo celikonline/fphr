@@ -29,8 +29,19 @@ export function payslipStatusLabel(payslip: MyPayslip): string {
   return "Onay bekliyor";
 }
 
-export function formatTry(amount: number): string {
-  return `${amount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
+/** Bordro para birimiyle (yoksa TRY) cihaz locale'ine göre biçimler. */
+export function formatMoney(amount: number, currency?: string | null): string {
+  const code = currency ?? "TRY";
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${code}`;
+  }
 }
 
 export default function PayrollScreen() {
@@ -89,7 +100,7 @@ export default function PayrollScreen() {
         >
           <View style={styles.row}>
             <Text style={styles.period}>{payslipPeriodLabel(item)}</Text>
-            <Text style={styles.net}>{formatTry(item.netPay)}</Text>
+            <Text style={styles.net}>{formatMoney(item.netPay, item.currency)}</Text>
           </View>
           <Text style={styles.status}>{payslipStatusLabel(item)}</Text>
         </TouchableOpacity>

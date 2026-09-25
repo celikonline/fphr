@@ -21,11 +21,17 @@ export interface MyPayslip {
   acknowledgedAt?: string | null;
   objectionStatus?: PayslipObjectionStatus | null;
   objectionReason?: string | null;
+  objectionResolutionNote?: string | null;
 }
 
-/** Onayla yalnız yayınlanmış ve daha önce onaylanmamış bordroda aktiftir. */
+/**
+ * Onayla yalnız yayınlanmış, daha önce onaylanmamış ve bekleyen itirazı olmayan bordroda aktiftir
+ * (itiraz sonuçlanınca - accepted/rejected - yeniden mümkün).
+ */
 export function canAcknowledge(payslip: MyPayslip): boolean {
-  return Boolean(payslip.publishedAt) && !payslip.acknowledgedAt;
+  return (
+    Boolean(payslip.publishedAt) && !payslip.acknowledgedAt && payslip.objectionStatus !== "pending"
+  );
 }
 
 /** İtiraz yayınlanmış bordroda ve açık bir itiraz yokken yapılabilir. */
@@ -45,8 +51,14 @@ export const payslipService = {
     return data;
   },
 
-  async acknowledge(payslipId: string): Promise<void> {
-    await apiClient.post(`${PAYSLIP_BASE}/${payslipId}/acknowledge`);
+  /** Güncel satırı döndürür (acknowledgedAt sunucu zamanı); yanıtta satır yoksa listeyi yeniden çeker. */
+  async acknowledge(payslipId: string): Promise<MyPayslip | null> {
+    const { data } = await apiClient.post<MyPayslip | "" | null>(
+      `${PAYSLIP_BASE}/${payslipId}/acknowledge`
+    );
+    if (data && typeof data === "object" && data.acknowledgedAt) return data;
+    const list = await payslipService.getMyPayslips();
+    return list.find((item) => item.payslipId === payslipId) ?? null;
   },
 
   async object(payslipId: string, reason: string): Promise<void> {

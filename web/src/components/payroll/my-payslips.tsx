@@ -49,6 +49,7 @@ export function MyPayslips() {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t("payroll:myPayslips.columns.period")}</Table.Th>
+                <Table.Th ta="right">{t("payroll:myPayslips.columns.gross")}</Table.Th>
                 <Table.Th ta="right">{t("payroll:myPayslips.columns.net")}</Table.Th>
                 <Table.Th>{t("payroll:myPayslips.columns.status")}</Table.Th>
                 <Table.Th />
@@ -60,11 +61,17 @@ export function MyPayslips() {
                 return (
                   <Table.Tr key={p.payslipId}>
                     <Table.Td>{period(p)}</Table.Td>
+                    <Table.Td ta="right">{formatMoney(p.grossPay, p.currency ?? "TRY", i18n.language)}</Table.Td>
                     <Table.Td ta="right">{formatMoney(p.netPay, p.currency ?? "TRY", i18n.language)}</Table.Td>
                     <Table.Td>
                       <Badge color={STATE_COLOR[state]} variant="light">
                         {t(`payroll:myPayslips.state.${state}`)}
                       </Badge>
+                      {state === "pending" ? (
+                        <Text size="xs" c="dimmed">
+                          {t("payroll:myPayslips.pendingHint")}
+                        </Text>
+                      ) : null}
                     </Table.Td>
                     <Table.Td>
                       <PayslipAcknowledge payslip={p} />

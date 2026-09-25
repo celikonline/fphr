@@ -1,4 +1,4 @@
-import { payslipStatusLabel } from "@/screens/app/PayrollScreen";
+import { formatMoney, payslipStatusLabel } from "@/screens/app/PayrollScreen";
 
 const base = { payslipId: "p", year: 2026, month: 8, grossPay: 1, netPay: 1, publishedAt: "2026-09-01" };
 
@@ -8,5 +8,13 @@ describe("PayrollScreen list_shows_ack_status", () => {
     expect(payslipStatusLabel({ ...base, acknowledgedAt: "2026-09-02" })).toBe("Onaylandı");
     expect(payslipStatusLabel({ ...base, objectionStatus: "pending" })).toBe("İtiraz inceleniyor");
     expect(payslipStatusLabel({ ...base, objectionStatus: "accepted" })).toBe("İtiraz kabul edildi");
+  });
+});
+
+describe("formatMoney", () => {
+  it("uses the payslip currency, defaulting to TRY", () => {
+    expect(formatMoney(1234.5, "EUR")).toMatch(/€/);
+    expect(formatMoney(1234.5, undefined)).toMatch(/₺|TRY/);
+    expect(formatMoney(1234.5, null)).toMatch(/₺|TRY/);
   });
 });

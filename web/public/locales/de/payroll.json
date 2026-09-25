@@ -214,6 +214,7 @@
     "submitObjection": "Widerspruch senden",
     "columns": {
       "period": "Zeitraum",
+      "gross": "Bruttolohn",
       "net": "Nettolohn",
       "status": "Status"
     },
@@ -223,6 +224,7 @@
       "pending": "Widerspruch in Prüfung",
       "accepted": "Widerspruch angenommen",
       "rejected": "Widerspruch abgelehnt"
-    }
+    },
+    "pendingHint": "Ihr Widerspruch wird geprüft"
   }
 }

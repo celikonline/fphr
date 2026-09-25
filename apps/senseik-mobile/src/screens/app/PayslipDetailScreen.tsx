@@ -20,7 +20,7 @@ import {
   validateObjectionReason
 } from "@/services/PayslipService";
 import type { AppStackParamList } from "@/types/navigation";
-import { formatTry, payslipPeriodLabel, payslipStatusLabel } from "@/screens/app/PayrollScreen";
+import { formatMoney, payslipPeriodLabel, payslipStatusLabel } from "@/screens/app/PayrollScreen";
 
 export default function PayslipDetailScreen() {
   const navigation = useNavigation();
@@ -32,8 +32,8 @@ export default function PayslipDetailScreen() {
   const acknowledge = async () => {
     setBusy(true);
     try {
-      await payslipService.acknowledge(payslip.payslipId);
-      setPayslip({ ...payslip, acknowledgedAt: new Date().toISOString() });
+      const updated = await payslipService.acknowledge(payslip.payslipId);
+      if (updated) setPayslip(updated);
       Alert.alert("Onaylandı", "Bordronuzu onayladınız.");
     } catch {
       Alert.alert("Hata", "Bordro onaylanamadı. Lütfen tekrar deneyin.");
@@ -68,12 +68,19 @@ export default function PayslipDetailScreen() {
       <Text style={styles.status}>{payslipStatusLabel(payslip)}</Text>
       <View style={styles.card}>
         <Text style={styles.label}>Brüt ücret</Text>
-        <Text style={styles.value}>{formatTry(payslip.grossPay)}</Text>
+        <Text style={styles.value}>{formatMoney(payslip.grossPay, payslip.currency)}</Text>
         <Text style={styles.label}>Net ücret</Text>
-        <Text style={styles.value}>{formatTry(payslip.netPay)}</Text>
+        <Text style={styles.value}>{formatMoney(payslip.netPay, payslip.currency)}</Text>
       </View>
       {payslip.objectionReason ? (
         <Text style={styles.status}>İtiraz gerekçeniz: {payslip.objectionReason}</Text>
+      ) : null}
+
+      {payslip.objectionStatus === "pending" ? (
+        <Text style={styles.status}>İtirazınız inceleniyor; sonuçlanana kadar onaylayamazsınız.</Text>
+      ) : null}
+      {payslip.objectionResolutionNote ? (
+        <Text style={styles.status}>İtiraz sonucu: {payslip.objectionResolutionNote}</Text>
       ) : null}
 
       <TouchableOpacity

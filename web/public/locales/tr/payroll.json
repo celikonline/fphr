@@ -214,6 +214,7 @@
     "submitObjection": "İtirazı gönder",
     "columns": {
       "period": "Dönem",
+      "gross": "Brüt ücret",
       "net": "Net ücret",
       "status": "Durum"
     },
@@ -223,6 +224,7 @@
       "pending": "İtiraz inceleniyor",
       "accepted": "İtiraz kabul edildi",
       "rejected": "İtiraz reddedildi"
-    }
+    },
+    "pendingHint": "İtirazınız inceleniyor"
   }
 }
