@@ -70,6 +70,9 @@ public static class NotificationTemplateKeys
 
     /// <summary>The delegate: an approval delegation to them started (Workflow, Z2.2).</summary>
     public const string ApprovalDelegationAssigned = "workflow.delegation_assigned";
+
+    /// <summary>Members of the payroll role (Bordro Uzmanı): an employee's payslip objection was accepted and the payslip must be corrected (Payroll.PayslipObjectionAccepted).</summary>
+    public const string PayslipObjectionAccepted = "payroll.payslip_objection_accepted";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>
