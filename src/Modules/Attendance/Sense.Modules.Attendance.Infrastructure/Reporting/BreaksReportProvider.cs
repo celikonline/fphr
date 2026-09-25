@@ -73,10 +73,11 @@ public sealed class BreaksReportProvider(
             var planned = await planner.ResolveAsync(
                 group.Key.EmployeeId, group.Key.WorkDate,
                 firstIn is null ? null : TimeOnly.FromDateTime(PunchReportSupport.ToLocal(firstIn.OccurredAtUtc, zone)), cancellationToken);
+            var plannedBreak = planned?.BreakMinutes ?? 0; // plan yok (I0: PlannedDay?) → planlı mola 0
             var name = PunchReportSupport.Name(people, group.Key.EmployeeId);
             data.Add((name, group.Key.WorkDate, new List<object?>
             {
-                name, group.Key.WorkDate, gaps.Count, total, gaps.Max(), planned.BreakMinutes, total - planned.BreakMinutes,
+                name, group.Key.WorkDate, gaps.Count, total, gaps.Max(), plannedBreak, total - plannedBreak,
             }));
         }
 
