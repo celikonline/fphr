@@ -1,5 +1,40 @@
 {
   "title": "Approval delegations",
   "subtitle": "Delegate approval authority for a period",
-  "comingSoon": "This screen is coming soon."
+  "info": "While a delegation is active, the delegate sees your approval inbox and can decide; the decision is recorded \"on your behalf\". A delegation can be revoked.",
+  "form": {
+    "title": "New delegation",
+    "delegate": "Delegate",
+    "delegatePlaceholder": "Select an employee",
+    "from": "Start",
+    "to": "End",
+    "submit": "Delegate"
+  },
+  "list": {
+    "title": "My delegations",
+    "empty": "No delegations yet.",
+    "delegate": "Delegate",
+    "from": "Start",
+    "to": "End",
+    "status": "Status",
+    "revoke": "Revoke",
+    "unknown": "Unknown user",
+    "delegator": "Principal"
+  },
+  "status": {
+    "active": "Active",
+    "scheduled": "Scheduled",
+    "expired": "Expired"
+  },
+  "errors": {
+    "endBeforeStart": "The end date cannot be before the start date.",
+    "self": "You cannot delegate to yourself.",
+    "required": "Delegate and date range are required.",
+    "noAccount": "The selected employee has no user account.",
+    "generic": "The operation could not be completed."
+  },
+  "toast": {
+    "created": "Delegation created.",
+    "revoked": "Delegation revoked."
+  }
 }

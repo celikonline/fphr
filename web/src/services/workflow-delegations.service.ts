@@ -11,6 +11,9 @@ export interface Delegation {
   from: string;
   to: string;
   isActive: boolean;
+  /** Optional display names when the API resolves them. */
+  delegatorName?: string;
+  delegateName?: string;
 }
 
 export interface CreateDelegationInput {
