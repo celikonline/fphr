@@ -179,7 +179,7 @@ public sealed record UpdateTenantRequest(string Name, string? TaxNumber, string 
 
 public sealed record AcceptInvitationRequest(string Token, string Password, bool PrivacyNoticeAccepted, string? PrivacyNoticeVersion);
 
-public sealed record InviteEmployeeRequest(Guid EmployeeId);
+public sealed record InviteEmployeeRequest(Guid EmployeeId, bool SendCredentials = true);
 
 public sealed record BulkInviteEmployeesRequest(Sense.Modules.Employee.Contracts.EmployeeSelection Selection);
 
@@ -204,7 +204,7 @@ public sealed class InvitationsController : ApiControllerBase
     [Authorize]
     [ProducesResponseType<EmployeeInvitationResultDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> InviteEmployee([FromBody] InviteEmployeeRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new InviteEmployeeCommand(request.EmployeeId), ct));
+        FromResult(await Dispatcher.Send(new InviteEmployeeCommand(request.EmployeeId, request.SendCredentials), ct));
 
     /// <summary>Grid seçimindeki çalışanlara toplu davet ("Giriş bilgilerini gönder").</summary>
     [HttpPost("employees/bulk")]

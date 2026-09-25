@@ -136,4 +136,5 @@ public static class EmployeeInvitationOutcomes
     public const string Sent = "Sent";
     public const string Resent = "Resent";
     public const string AlreadyActive = "AlreadyActive";
+    public const string NotRequested = "NotRequested";
 }
