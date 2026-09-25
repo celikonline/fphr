@@ -364,6 +364,16 @@
     "errorsHint": "Erroneous rows were skipped; fix and upload again.",
     "colRow": "Row",
     "colKey": "Key",
-    "colError": "Error"
+    "colError": "Error",
+    "deleted": "Template deleted.",
+    "delete": "Delete template {{name}}",
+    "deleteConfirm": "Delete template \"{{name}}\"?",
+    "skippedHint": "{{count}} cells were skipped:",
+    "colDate": "Date",
+    "colReason": "Reason",
+    "skipReason": {
+      "locked": "Locked period",
+      "published": "Published shift"
+    }
   }
 }

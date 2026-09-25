@@ -83,6 +83,8 @@ function ShiftPlan() {
   const canLock = usePermission("attendance.shift.lock");
   const canUnlock = usePermission("attendance.shift.unlock");
   const canPlan = usePermission("attendance.shift.plan");
+  /** B10 şablon uçları `attendance.shifttemplate.manage` ister (apply için de; veri kapsamı sunucuda ShiftPlan ile denetlenir). */
+  const canManageTemplates = usePermission("attendance.shifttemplate.manage");
 
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
@@ -397,7 +399,7 @@ function ShiftPlan() {
         )}
 
         <Group gap="xs" wrap="wrap">
-          {canPlan && (
+          {canManageTemplates && (
             <Button variant="default" size="xs" leftSection={<LayoutTemplate size={14} />} onClick={() => setTemplatesOpen(true)}>
               {t("attendance:shiftTemplates.title")}
             </Button>
@@ -596,13 +598,14 @@ function ShiftPlan() {
           </Group>
         </Stack>
       </Modal>
-      {canPlan && (
+      {canManageTemplates && (
         <ShiftTemplateDialog
           opened={templatesOpen}
           onClose={() => setTemplatesOpen(false)}
           selectedKeys={selectedKeys}
           assignments={(assignmentsQuery.data ?? []) as CalendarShiftAssignment[]}
           weekStart={weekStartIso}
+          employeeNames={new Map(employees.map((e) => [e.id, e.displayName]))}
           onChanged={() => void invalidateAll()}
         />
       )}

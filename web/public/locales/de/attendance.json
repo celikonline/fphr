@@ -364,6 +364,16 @@
     "errorsHint": "Fehlerhafte Zeilen wurden übersprungen; korrigieren und erneut hochladen.",
     "colRow": "Zeile",
     "colKey": "Schlüssel",
-    "colError": "Fehler"
+    "colError": "Fehler",
+    "deleted": "Vorlage gelöscht.",
+    "delete": "Vorlage {{name}} löschen",
+    "deleteConfirm": "Vorlage \"{{name}}\" löschen?",
+    "skippedHint": "{{count}} Zellen übersprungen:",
+    "colDate": "Datum",
+    "colReason": "Grund",
+    "skipReason": {
+      "locked": "Gesperrter Zeitraum",
+      "published": "Veröffentlichte Schicht"
+    }
   }
 }

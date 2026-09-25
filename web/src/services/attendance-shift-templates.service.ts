@@ -23,7 +23,7 @@ export interface ShiftTemplate {
   name: string;
   periodLengthDays: number;
   entries: ShiftTemplateEntry[];
-  createdAt?: string;
+  createdByUserId?: string;
 }
 
 export interface CreateShiftTemplateInput {
@@ -35,14 +35,14 @@ export interface CreateShiftTemplateInput {
 export interface ApplyShiftTemplateInput {
   /** Şablonun 0. gününün düşeceği tarih. */
   startDate: string;
-  /** Uygulama tekrar sayısı (dönem uzunluğu kadar bloklar); varsayılan 1. */
-  repeatCount?: number;
   overwritePublished?: boolean;
 }
 
+export type ShiftTemplateSkipReason = "locked" | "published";
+
 export interface ApplyShiftTemplateResult {
   affectedCount: number;
-  skipped: { employeeId: string; date: string; reason: string }[];
+  skipped: { employeeId: string; date: string; reason: ShiftTemplateSkipReason }[];
 }
 
 export async function listShiftTemplates(): Promise<ShiftTemplate[]> {
@@ -50,12 +50,16 @@ export async function listShiftTemplates(): Promise<ShiftTemplate[]> {
   return data;
 }
 
-export async function createShiftTemplate(input: CreateShiftTemplateInput): Promise<ShiftTemplate> {
-  const { data } = await apiClient.post<ShiftTemplate>(BASE, input);
+export async function createShiftTemplate(input: CreateShiftTemplateInput): Promise<string> {
+  const { data } = await apiClient.post<string>(BASE, input);
   return data;
 }
 
 export async function applyShiftTemplate(id: string, input: ApplyShiftTemplateInput): Promise<ApplyShiftTemplateResult> {
   const { data } = await apiClient.post<ApplyShiftTemplateResult>(`${BASE}/${id}/apply`, input);
   return data;
+}
+
+export async function deleteShiftTemplate(id: string): Promise<void> {
+  await apiClient.delete(`${BASE}/${id}`);
 }

@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
@@ -9,13 +9,13 @@ import { MantineProvider } from "@mantine/core";
 import trAttendance from "../../../public/locales/tr/attendance.json";
 import trCommon from "../../../public/locales/tr/common.json";
 import ShiftTemplateDialog from "./shift-template-dialog";
-import { applyShiftTemplate, createShiftTemplate, listShiftTemplates } from "@/services/attendance-shift-templates.service";
+import { applyShiftTemplate, createShiftTemplate, deleteShiftTemplate, listShiftTemplates } from "@/services/attendance-shift-templates.service";
 import { getImportJob, listImportJobRows, runImportJob, saveImportJobMapping, uploadImportFile } from "@/services/data-transfer.service";
 import type { CalendarShiftAssignment } from "@/services/attendance-shift-calendar.service";
 
 vi.mock("@/services/attendance-shift-templates.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/attendance-shift-templates.service")>("@/services/attendance-shift-templates.service");
-  return { ...actual, listShiftTemplates: vi.fn(), createShiftTemplate: vi.fn(), applyShiftTemplate: vi.fn() };
+  return { ...actual, listShiftTemplates: vi.fn(), deleteShiftTemplate: vi.fn(), createShiftTemplate: vi.fn(), applyShiftTemplate: vi.fn() };
 });
 vi.mock("@/services/data-transfer.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/data-transfer.service")>("@/services/data-transfer.service");
@@ -58,7 +58,7 @@ function renderDialog(selected: string[]) {
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <MantineProvider>
-          <ShiftTemplateDialog opened onClose={onClose} selectedKeys={new Set(selected)} assignments={assignments} weekStart="2026-09-21" />
+          <ShiftTemplateDialog opened onClose={onClose} selectedKeys={new Set(selected)} assignments={assignments} weekStart="2026-09-21" employeeNames={new Map([["e1", "Ayşe Yılmaz"]])} />
         </MantineProvider>
       </QueryClientProvider>
     </I18nextProvider>,
@@ -73,7 +73,7 @@ describe("ShiftTemplateDialog", () => {
   });
 
   it("save_template_from_selection", async () => {
-    vi.mocked(createShiftTemplate).mockResolvedValue({ id: "t2", name: "X", periodLengthDays: 3, entries: [] });
+    vi.mocked(createShiftTemplate).mockResolvedValue("t2");
     const user = userEvent.setup();
     renderDialog(["e1|2026-09-21", "e1|2026-09-23", "e2|2026-09-21", "e2|2026-09-22"]);
     await user.type(await screen.findByLabelText("Şablon adı"), "Hafta A");
@@ -126,5 +126,33 @@ describe("ShiftTemplateDialog", () => {
     expect(uploadImportFile).toHaveBeenCalledWith("shift-plan", expect.any(File));
     expect(saveImportJobMapping).toHaveBeenCalledWith("j1", { mapping: [{ sourceIndex: 0, targetKey: "employeeNo" }], mode: "Upsert", failurePolicy: "SkipInvalidRows" });
     expect(listImportJobRows).toHaveBeenCalledWith("j1", { outcome: "Error", page: 1, pageSize: 50 });
+  });
+
+  it("apply_lists_skipped_cells_with_reason", async () => {
+    vi.mocked(applyShiftTemplate).mockResolvedValue({
+      affectedCount: 1,
+      skipped: [{ employeeId: "e1", date: "2026-09-22", reason: "locked" }, { employeeId: "e9", date: "2026-09-23", reason: "published" }],
+    });
+    const user = userEvent.setup();
+    renderDialog([]);
+    await user.click(screen.getByRole("tab", { name: "Şablon uygula" }));
+    await user.click(await screen.findByRole("radio", { name: /Yaz planı/ }));
+    await user.click(screen.getByRole("button", { name: "Uygula" }));
+    expect(await screen.findByText("Ayşe Yılmaz")).toBeInTheDocument();
+    expect(screen.getByText("Kilitli dönem")).toBeInTheDocument();
+    expect(screen.getByText("Yayınlanmış vardiya")).toBeInTheDocument();
+    expect(screen.getByText("e9")).toBeInTheDocument();
+  });
+
+  it("delete_template_asks_confirmation", async () => {
+    vi.mocked(deleteShiftTemplate).mockResolvedValue();
+    const user = userEvent.setup();
+    renderDialog([]);
+    await user.click(screen.getByRole("tab", { name: "Şablon uygula" }));
+    await user.click(await screen.findByRole("button", { name: "Yaz planı şablonunu sil" }));
+    expect(deleteShiftTemplate).not.toHaveBeenCalled();
+    const confirm = await screen.findByText(/şablonu silinsin mi/);
+    await user.click(within(confirm.closest("[role=dialog]") as HTMLElement).getByRole("button", { name: "Sil" }));
+    await waitFor(() => expect(deleteShiftTemplate).toHaveBeenCalledWith("t1"));
   });
 });

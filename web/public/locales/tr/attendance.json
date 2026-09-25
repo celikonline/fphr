@@ -364,6 +364,16 @@
     "errorsHint": "Hatalı satırlar atlandı; düzeltip yeniden yükleyebilirsiniz.",
     "colRow": "Satır",
     "colKey": "Anahtar",
-    "colError": "Hata"
+    "colError": "Hata",
+    "deleted": "Şablon silindi.",
+    "delete": "{{name}} şablonunu sil",
+    "deleteConfirm": "\"{{name}}\" şablonu silinsin mi?",
+    "skippedHint": "{{count}} hücre atlandı:",
+    "colDate": "Tarih",
+    "colReason": "Neden",
+    "skipReason": {
+      "locked": "Kilitli dönem",
+      "published": "Yayınlanmış vardiya"
+    }
   }
 }

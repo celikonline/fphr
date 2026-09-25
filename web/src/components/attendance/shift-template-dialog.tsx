@@ -1,18 +1,21 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Group, Modal, Radio, Stack, Table, Tabs, Text, TextInput } from "@mantine/core";
-import { Download } from "lucide-react";
+import { ActionIcon, Alert, Button, Group, Modal, Radio, Stack, Table, Tabs, Text, TextInput } from "@mantine/core";
+import { Download, Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/confirm-dialog";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { parseDateOnly } from "@/lib/dates";
+import { formatDateOnly, parseDateOnly } from "@/lib/dates";
 import type { CalendarShiftAssignment } from "@/services/attendance-shift-calendar.service";
 import {
   SHIFT_PLAN_IMPORT_TEMPLATE_CODE,
   applyShiftTemplate,
   createShiftTemplate,
+  deleteShiftTemplate,
   listShiftTemplates,
+  type ApplyShiftTemplateResult,
   type ShiftTemplateEntry,
 } from "@/services/attendance-shift-templates.service";
 import {
@@ -41,6 +44,8 @@ interface ShiftTemplateDialogProps {
   assignments: readonly CalendarShiftAssignment[];
   /** Uygulama başlangıç tarihi önerisi (yyyy-MM-dd). */
   weekStart: string;
+  /** Atlanan hücre listesinde gösterilecek çalışan adları (id -> ad). */
+  employeeNames?: ReadonlyMap<string, string>;
   /** Uygulama / içe aktarma sonrası takvimi tazelemek için. */
   onChanged?: () => void;
 }
@@ -75,7 +80,7 @@ export function buildTemplateFromSelection(selectedKeys: ReadonlySet<string>, as
   return { entries, periodLengthDays };
 }
 
-export default function ShiftTemplateDialog({ opened, onClose, selectedKeys, assignments, weekStart, onChanged }: ShiftTemplateDialogProps) {
+export default function ShiftTemplateDialog({ opened, onClose, selectedKeys, assignments, weekStart, employeeNames, onChanged }: ShiftTemplateDialogProps) {
   const { t } = useTranslation(["attendance"]);
   return (
     <Modal opened={opened} onClose={onClose} title={t("attendance:shiftTemplates.title")} size="lg">
@@ -89,7 +94,7 @@ export default function ShiftTemplateDialog({ opened, onClose, selectedKeys, ass
           <SaveTab selectedKeys={selectedKeys} assignments={assignments} />
         </Tabs.Panel>
         <Tabs.Panel value="apply" pt="md">
-          <ApplyTab weekStart={weekStart} onChanged={onChanged} />
+          <ApplyTab weekStart={weekStart} employeeNames={employeeNames} onChanged={onChanged} />
         </Tabs.Panel>
         <Tabs.Panel value="import" pt="md">
           <ImportTab onChanged={onChanged} />
@@ -139,21 +144,33 @@ function SaveTab({ selectedKeys, assignments }: Pick<ShiftTemplateDialogProps, "
   );
 }
 
-function ApplyTab({ weekStart, onChanged }: Pick<ShiftTemplateDialogProps, "weekStart" | "onChanged">) {
-  const { t } = useTranslation(["attendance", "common"]);
+function ApplyTab({ weekStart, employeeNames, onChanged }: Pick<ShiftTemplateDialogProps, "weekStart" | "employeeNames" | "onChanged">) {
+  const { t, i18n } = useTranslation(["attendance", "common"]);
   const onError = useErrorToast();
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(weekStart);
   const [overwritePublished, setOverwritePublished] = useState(false);
+  const [skipped, setSkipped] = useState<ApplyShiftTemplateResult["skipped"]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const templatesQuery = useQuery({ queryKey: TEMPLATES_KEY, queryFn: listShiftTemplates });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteShiftTemplate(id),
+    onSuccess: async (_, id) => {
+      await queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY });
+      if (templateId === id) setTemplateId(null);
+      setDeletingId(null);
+      toast({ variant: "success", title: t("common:success"), description: t("attendance:shiftTemplates.deleted") });
+    },
+    onError,
+  });
 
   const mutation = useMutation({
     mutationFn: () => applyShiftTemplate(templateId as string, { startDate, overwritePublished }),
     onSuccess: (result) => {
       toast({ variant: "success", title: t("common:success"), description: t("attendance:shiftTemplates.applied", { count: result.affectedCount }) });
-      if (result.skipped.length > 0) {
-        toast({ variant: "default", description: t("attendance:shiftPlan.bulkSkipped", { count: result.skipped.length }) });
-      }
+      setSkipped(result.skipped);
       onChanged?.();
     },
     onError,
@@ -166,7 +183,12 @@ function ApplyTab({ weekStart, onChanged }: Pick<ShiftTemplateDialogProps, "week
       <Radio.Group value={templateId} onChange={setTemplateId} label={t("attendance:shiftTemplates.pick")}>
         <Stack gap="xs" mt="xs">
           {templates.map((tpl) => (
-            <Radio key={tpl.id} value={tpl.id} label={`${tpl.name} (${t("attendance:shiftTemplates.days", { count: tpl.periodLengthDays })})`} />
+            <Group key={tpl.id} justify="space-between" wrap="nowrap">
+              <Radio value={tpl.id} label={`${tpl.name} (${t("attendance:shiftTemplates.days", { count: tpl.periodLengthDays })})`} />
+              <ActionIcon variant="subtle" color="red" aria-label={t("attendance:shiftTemplates.delete", { name: tpl.name })} onClick={() => setDeletingId(tpl.id)}>
+                <Trash2 size={14} />
+              </ActionIcon>
+            </Group>
           ))}
         </Stack>
       </Radio.Group>
@@ -182,6 +204,36 @@ function ApplyTab({ weekStart, onChanged }: Pick<ShiftTemplateDialogProps, "week
           {t("attendance:shiftTemplates.apply")}
         </Button>
       </Group>
+      {skipped.length > 0 && (
+        <Stack gap="xs">
+          <Alert color="yellow" variant="light">{t("attendance:shiftTemplates.skippedHint", { count: skipped.length })}</Alert>
+          <Table withTableBorder fz="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t("attendance:shiftPlan.employee")}</Table.Th>
+                <Table.Th>{t("attendance:shiftTemplates.colDate")}</Table.Th>
+                <Table.Th>{t("attendance:shiftTemplates.colReason")}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {skipped.map((cell) => (
+                <Table.Tr key={`${cell.employeeId}|${cell.date}`}>
+                  <Table.Td>{employeeNames?.get(cell.employeeId) ?? cell.employeeId}</Table.Td>
+                  <Table.Td>{formatDateOnly(cell.date, i18n.language, { day: "2-digit", month: "2-digit", year: "numeric" })}</Table.Td>
+                  <Table.Td>{t(`attendance:shiftTemplates.skipReason.${cell.reason}`, cell.reason)}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Stack>
+      )}
+      <ConfirmDialog
+        open={deletingId !== null}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        description={t("attendance:shiftTemplates.deleteConfirm", { name: templates.find((x) => x.id === deletingId)?.name ?? "" })}
+        onConfirm={() => deletingId && deleteMutation.mutate(deletingId)}
+        isLoading={deleteMutation.isPending}
+      />
     </Stack>
   );
 }
