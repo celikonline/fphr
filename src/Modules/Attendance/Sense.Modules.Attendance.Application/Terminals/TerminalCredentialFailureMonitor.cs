@@ -3,13 +3,26 @@ using Microsoft.Extensions.Options;
 
 namespace Sense.Modules.Attendance.Application.Terminals;
 
+/// <summary>Bir PIN kaleminin kaba kuvvet kapısından geçişi.</summary>
+public enum PinGateOutcome
+{
+    /// <summary>Engel yok, kimlik doğru: okutma işlenir.</summary>
+    Allowed,
+
+    /// <summary>Engel yok, kimlik yanlış: bütçeye yazıldı (ya da aynı özet pencerede zaten sayılmıştı).</summary>
+    Failed,
+
+    /// <summary>Engel açık: doğru/yanlış ayrımı yapılmaz, hiçbir şey yazılmaz.</summary>
+    Blocked,
+}
+
 /// <summary>
-/// PIN kaba kuvvet koruması (Z5.1): terminal başına kayan pencerede FARKLI yanlış PIN özetlerini sayar (aynı yanlış değerin tekrarı - ör. çevrimdışı
-/// toplu gönderimin yeniden denemesi - pencere içinde tek sayılır ve süresini uzatmaz). Yalnız gerçekten yanlış (eşleşmeyen) PIN'ler yazılır; doğru
-/// PIN'ler engel sırasında da bütçeye yazılmaz, böylece meşru trafik engeli kendiliğinden uzatamaz. Bütçe (<see cref="TerminalIngestOptions.PinFailureBudget"/>)
-/// dolunca o terminalin PIN kalemleri çözülmeden reddedilir; engele geçişte terminal koduyla uyarı loglanır (kimlik değeri ASLA). Bellek içidir
-/// (süreç başına; şema değişikliği yok): yalnız kimliği doğrulanmış terminaller izlendiği için kayıt sayısı terminal sayısıyla sınırlıdır ve
-/// terminal başına en çok bütçe kadar zaman damgası tutulur. <see cref="LastSuspiciousAtUtc"/> yönetim listesinde ve nabızda "şüpheli deneme" işaretidir.
+/// PIN kaba kuvvet koruması (Z5.1). Engel yokken terminal başına kayan pencerede (W) FARKLI yanlış PIN özetleri sayılır (aynı değerin tekrarı -
+/// ör. çevrimdışı toplu gönderimin yeniden denemesi - tek sayılır). Sayı bütçeye (B) ulaşınca engel açılır ve girişten TAM W sonra biter: engel
+/// süresince HİÇBİR PIN kalemi (doğru ya da yanlış) bütçeye yazılmaz, sayaç engele girişte sıfırlanır. Böylece engelin bitişi ne meşru trafikle
+/// uzar ne de adayların doğru olup olmadığını (nabızdaki <c>pinEntryBlocked</c> üzerinden) sızdırır; deneme hızı en çok B/W. "Engelli mi + kayıt"
+/// tek kilit altında atomiktir (eşzamanlı isteklerde bütçe taşmaz). Bellek içidir (süreç başına; şema değişikliği yok); kayıt sayısı terminal
+/// başına en çok B. Engele geçişte terminal koduyla uyarı loglanır (kimlik değeri ASLA). <see cref="LastSuspiciousAtUtc"/> "şüpheli deneme" işareti.
 /// </summary>
 public sealed partial class TerminalCredentialFailureMonitor(
     IOptions<TerminalIngestOptions> options, TimeProvider clock, ILogger<TerminalCredentialFailureMonitor> logger)
@@ -23,52 +36,50 @@ public sealed partial class TerminalCredentialFailureMonitor(
     {
         lock (_gate)
         {
-            return _terminals.TryGetValue(terminalId, out var state) && CountInWindow(state, Now()) >= _budget;
+            return _terminals.TryGetValue(terminalId, out var state) && state.BlockedUntilUtc > Now();
         }
     }
 
     /// <summary>
-    /// Yanlış bir PIN'i (özetiyle) kaydeder; bu özet pencerede zaten sayıldıysa hiçbir şey yapmaz. Bütçe bu kayıtla doluyorsa (engele geçiş) uyarı loglar.
+    /// Tek kilit altında: engel açıksa <see cref="PinGateOutcome.Blocked"/> (hiçbir şey yazılmaz); değilse doğru kimlik
+    /// <see cref="PinGateOutcome.Allowed"/>, yanlış kimlik bütçeye yazılır (<see cref="PinGateOutcome.Failed"/>) - bütçe bu kayıtla dolarsa engel
+    /// açılır (bu kalem yine <see cref="PinGateOutcome.Failed"/>).
     /// </summary>
-    public void RecordFailure(TerminalIdentity terminal, string credentialDigest)
+    public PinGateOutcome Evaluate(TerminalIdentity terminal, string credentialDigest, bool isFailure)
     {
         ArgumentNullException.ThrowIfNull(terminal);
         ArgumentException.ThrowIfNullOrEmpty(credentialDigest);
         var now = Now();
-        bool becameBlocked;
         lock (_gate)
         {
-            if (!_terminals.TryGetValue(terminal.TerminalId, out var state))
+            _terminals.TryGetValue(terminal.TerminalId, out var state);
+            if (state?.BlockedUntilUtc > now)
+            {
+                return PinGateOutcome.Blocked;
+            }
+
+            if (!isFailure)
+            {
+                return PinGateOutcome.Allowed;
+            }
+
+            if (state is null)
             {
                 state = new State();
                 _terminals[terminal.TerminalId] = state;
             }
 
             Prune(state, now);
-            if (state.Failures.ContainsKey(credentialDigest))
+            state.Failures.TryAdd(credentialDigest, now);
+            if (state.Failures.Count >= _budget)
             {
-                return;
-            }
-
-            var wasBlocked = state.Failures.Count >= _budget;
-            state.Failures[credentialDigest] = now;
-            while (state.Failures.Count > _budget)
-            {
-                state.Failures.Remove(state.Failures.MinBy(f => f.Value).Key);
-            }
-
-            var blocked = CountInWindow(state, now) >= _budget;
-            if (blocked)
-            {
+                state.Failures.Clear();
+                state.BlockedUntilUtc = now + _window;
                 state.LastSuspiciousAtUtc = now;
+                LogPinBudgetExceeded(logger, terminal.Code, _budget, (int)_window.TotalMinutes);
             }
 
-            becameBlocked = blocked && !wasBlocked;
-        }
-
-        if (becameBlocked)
-        {
-            LogPinBudgetExceeded(logger, terminal.Code, _budget, (int)_window.TotalMinutes);
+            return PinGateOutcome.Failed;
         }
     }
 
@@ -82,8 +93,6 @@ public sealed partial class TerminalCredentialFailureMonitor(
 
     private DateTime Now() => clock.GetUtcNow().UtcDateTime;
 
-    private int CountInWindow(State state, DateTime now) => state.Failures.Values.Count(t => now - t < _window);
-
     /// <summary>Pencereden çıkmış kayıtları atar (en çok bütçe kadar kayıt var; maliyet sabit üst sınırlı).</summary>
     private void Prune(State state, DateTime now)
     {
@@ -94,13 +103,15 @@ public sealed partial class TerminalCredentialFailureMonitor(
     }
 
     [LoggerMessage(EventId = 5102, Level = LogLevel.Warning,
-        Message = "Terminal {TerminalCode}: {Budget} failed PIN items within {WindowMinutes} min - PIN entry on this terminal is rejected until the window clears (possible brute force).")]
+        Message = "Terminal {TerminalCode}: {Budget} distinct failed PINs within {WindowMinutes} min - PIN entry on this terminal is blocked for {WindowMinutes} min (possible brute force).")]
     private static partial void LogPinBudgetExceeded(ILogger logger, string terminalCode, int budget, int windowMinutes);
 
     private sealed class State
     {
-        /// <summary>Yanlış PIN özeti → pencereye ilk girdiği an (en çok bütçe kadar kayıt).</summary>
+        /// <summary>Engel yokken: yanlış PIN özeti → pencereye ilk girdiği an (en çok bütçe kadar kayıt).</summary>
         public Dictionary<string, DateTime> Failures { get; } = new(StringComparer.Ordinal);
+
+        public DateTime? BlockedUntilUtc { get; set; }
 
         public DateTime? LastSuspiciousAtUtc { get; set; }
     }

@@ -131,6 +131,21 @@ public sealed class AttendanceIntegrationTests : TestFixture
     /// Attendance registration's constructor needs that is neither registered nor Attendance's own gets a substitute - so a missing
     /// Attendance registration still fails validation. Optional parameters (default value) are left alone.
     /// </summary>
+    /// <summary>
+    /// Framework ports whose host lifetime makes a singleton substitute safe: IHostEnvironment (host singleton), IStringLocalizer&lt;T&gt;
+    /// (host transient via AddLocalization - consumable from any lifetime), IRegistryPolicyResolver (DataProtection; not registered on
+    /// Linux, the host then uses the other KeyManagementOptionsSetup constructor).
+    /// </summary>
+    private static readonly string[] HostSingletonFrameworkPorts =
+    [
+        "Microsoft.Extensions.Hosting.IHostEnvironment",
+        "Microsoft.Extensions.Localization.IStringLocalizer`1",
+        "Microsoft.AspNetCore.DataProtection.IRegistryPolicyResolver",
+    ];
+
+    /// <summary>Resolved by the container itself - never substituted.</summary>
+    private static readonly Type[] ContainerBuiltIns = [typeof(IServiceProvider), typeof(IServiceScopeFactory)];
+
     private static void AddOtherModulePorts(IServiceCollection services)
     {
         var registered = services.Select(d => d.ServiceType).ToHashSet();
@@ -142,9 +157,16 @@ public sealed class AttendanceIntegrationTests : TestFixture
             .Select(p => p.ParameterType)
             .Where(t => t.IsInterface && !registered.Contains(t) && !(t.IsGenericType && registered.Contains(t.GetGenericTypeDefinition()))
                 && t.Namespace?.StartsWith("Sense.Modules.Attendance", StringComparison.Ordinal) != true
-                && !(t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                && !(t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                && !ContainerBuiltIns.Contains(t))
             .Distinct()
             .ToList();
+        // Framework (non-Sense) ports are substituted as SINGLETONS because the API host provides them as singletons. That would hide a
+        // singleton registration consuming a framework service that is SCOPED in the host - so the set is pinned: a new framework port
+        // fails here and needs an explicit lifetime decision (add it only after checking its lifetime in the real host).
+        var frameworkPorts = ports.Where(p => p.Namespace?.StartsWith("Sense.", StringComparison.Ordinal) != true).Select(p => p.IsGenericType ? p.GetGenericTypeDefinition().FullName : p.FullName).ToList();
+        frameworkPorts.ShouldBeSubsetOf(HostSingletonFrameworkPorts, "unexpected framework port(s); verify their lifetime in the API host: " + string.Join(", ", frameworkPorts));
+
         foreach (var port in ports)
         {
             // Sense ports are scoped in the API host; framework services the host itself provides (IHostEnvironment, DataProtection

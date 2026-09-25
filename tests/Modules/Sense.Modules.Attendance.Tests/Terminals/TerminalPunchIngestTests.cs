@@ -47,8 +47,8 @@ public sealed class TerminalPunchIngestTests
         });
     }
 
-    private TerminalPunchIngest Ingest(ITerminalCredentialHasher? hasher = null) =>
-        new(_terminals, hasher ?? _hasher, _contacts, _recorder, _monitor, Options.Create(new TerminalIngestOptions()), _clock);
+    private TerminalPunchIngest Ingest(ITerminalCredentialHasher? hasher = null, TerminalCredentialFailureMonitor? monitor = null) =>
+        new(_terminals, hasher ?? _hasher, _contacts, _recorder, monitor ?? _monitor, Options.Create(new TerminalIngestOptions()), _clock);
 
     private void AddCredential(Guid tenantId, Guid employeeId, TerminalCredentialKind kind, string raw) =>
         _credentials.Add(EmployeeTerminalCredential.Create(tenantId, employeeId, kind, _hasher.Digest(tenantId, kind, raw)).Value);
@@ -344,7 +344,7 @@ public sealed class TerminalPunchIngestTests
         result.Value.Items.Select(i => (i.Status, i.Reason)).ShouldBe(
             [
                 (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected),
-                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected),
+                (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected), (TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.PinEntryBlocked),
                 (TerminalPunchItemStatus.Accepted, (string?)null),
             ]);
         _recorder.Received.Select(p => p.EmployeeId).ShouldBe([_employeeA]);
@@ -390,7 +390,7 @@ public sealed class TerminalPunchIngestTests
         var during = await Ingest().IngestAsync(_terminal, [Pin("4321", 1), Pin("4321", 2), Pin("4321", 3)], TestContext.Current.CancellationToken);
         _clock.Advance(TimeSpan.FromMinutes(3) + TimeSpan.FromSeconds(1));
 
-        during.Value.Items.ShouldAllBe(i => i.Reason == TerminalPunchRejectReasons.CredentialRejected);
+        during.Value.Items.ShouldAllBe(i => i.Reason == TerminalPunchRejectReasons.PinEntryBlocked);
         _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse("only the three wrong PINs at t=0 were budget failures; they left the window at t=5");
     }
 
@@ -432,7 +432,7 @@ public sealed class TerminalPunchIngestTests
         var result = await Ingest().IngestAsync(_terminal, [Pin("4321", 1), Pin("9876", 1), Pin("5555", 1)], TestContext.Current.CancellationToken);
 
         result.Value.Items.Select(i => (i.Status, i.Reason)).Distinct().ShouldHaveSingleItem()
-            .ShouldBe((TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected));
+            .ShouldBe((TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.PinEntryBlocked));
         _recorder.Received.ShouldBeEmpty();
     }
 
@@ -446,6 +446,69 @@ public sealed class TerminalPunchIngestTests
 
         _monitor.IsBlocked(_terminal.TerminalId).ShouldBeFalse("two distinct wrong PINs, sent twice, are two failures (budget 3)");
         retry.Value.Items[1].Status.ShouldBe(TerminalPunchItemStatus.Ignored);
+    }
+
+    [Fact]
+    public async Task Monitor_state_identical_for_correct_and_wrong_candidates_while_blocked()
+    {
+        // Aynı başlangıç: iki terminal izleyicisi de t=0'da engele girer. Sonra biri doğru PIN içeren, diğeri hepsi yanlış aday gönderir.
+        var withCorrect = TerminalTestData.Monitor(_clock, budget: 3);
+        var allWrong = TerminalTestData.Monitor(_clock, budget: 3);
+        TerminalPunchItem[] entry = [Pin("0001", 0), Pin("0002", 0), Pin("0003", 0)];
+        await Ingest(monitor: withCorrect).IngestAsync(_terminal, entry, TestContext.Current.CancellationToken);
+        await Ingest(monitor: allWrong).IngestAsync(_terminal, entry, TestContext.Current.CancellationToken);
+
+        _clock.Advance(TimeSpan.FromMinutes(4));
+        var a = await Ingest(monitor: withCorrect).IngestAsync(_terminal, [Pin("7001", 1), Pin("4321", 2), Pin("7002", 3)], TestContext.Current.CancellationToken);
+        var b = await Ingest(monitor: allWrong).IngestAsync(_terminal, [Pin("7001", 1), Pin("7003", 2), Pin("7002", 3)], TestContext.Current.CancellationToken);
+
+        a.Value.Items.ShouldBe(b.Value.Items);
+        var ends = BlockEnds(withCorrect, allWrong);
+        ends[0].ShouldBe(ends[1]);
+        ends[0].ShouldBe(Now + TimeSpan.FromMinutes(5));
+    }
+
+    [Fact]
+    public async Task Block_ends_exactly_window_after_entry_regardless_of_traffic()
+    {
+        await Ingest().IngestAsync(_terminal, [Pin("0001", 0), Pin("0002", 0)], TestContext.Current.CancellationToken);
+        _clock.Advance(TimeSpan.FromMinutes(2));
+        await Ingest().IngestAsync(_terminal, [Pin("0003", 0)], TestContext.Current.CancellationToken);
+        var entered = _clock.GetUtcNow().UtcDateTime;
+        _monitor.IsBlocked(_terminal.TerminalId).ShouldBeTrue();
+
+        for (var minute = 1; minute <= 4; minute++)
+        {
+            _clock.Advance(TimeSpan.FromMinutes(1));
+            await Ingest().IngestAsync(_terminal,
+                [Pin("9" + minute.ToString("000", System.Globalization.CultureInfo.InvariantCulture), minute), Pin("4321", 20 + minute)],
+                TestContext.Current.CancellationToken);
+        }
+
+        BlockEnds(_monitor).Single().ShouldBe(entered + TimeSpan.FromMinutes(5));
+    }
+
+    /// <summary>
+    /// Her izleyici için engelin bittiği ilk an: saati saniye saniye (en çok 15 dk) ilerletir - testin sonunda çağrılır. Birden çok izleyici
+    /// aynı saati paylaştığından birlikte ölçülür.
+    /// </summary>
+    private DateTime[] BlockEnds(params TerminalCredentialFailureMonitor[] monitors)
+    {
+        var ends = new DateTime?[monitors.Length];
+        for (var i = 0; i <= 15 * 60 && ends.Any(e => e is null); i++)
+        {
+            for (var m = 0; m < monitors.Length; m++)
+            {
+                if (ends[m] is null && !monitors[m].IsBlocked(_terminal.TerminalId))
+                {
+                    ends[m] = _clock.GetUtcNow().UtcDateTime;
+                }
+            }
+
+            _clock.Advance(TimeSpan.FromSeconds(1));
+        }
+
+        return ends.Select(e => e ?? DateTime.MaxValue).ToArray();
     }
 
     private sealed record LogEntry(LogLevel Level, string Message);

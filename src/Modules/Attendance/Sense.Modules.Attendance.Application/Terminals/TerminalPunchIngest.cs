@@ -36,7 +36,8 @@ public sealed record TerminalHeartbeatDto(DateTime ServerTimeUtc, bool PinEntryB
 /// <see cref="IPunchRecorder.RecordBatchAsync"/>'e TEK TEK verilir: sözleşme yalnız toplam sayıları döndürdüğünden kalem bazlı durum
 /// (kabul/yoksayıldı/reddedildi) ancak böyle kesin bilinir ve bir kalemin hatası (ör. gelecekteki okutma) diğerlerini geri almaz.
 /// Kimliği doğru olsa da çalışanı aktif olmayan (işten ayrılmış/askıda/taslak) kalem <c>employee_not_active</c> ile reddedilir; PIN kalemlerinde
-/// tüm kimlik başarısızlıkları <c>credential_rejected</c>'tır ve terminal başına bütçeyle sınırlıdır (<see cref="TerminalCredentialFailureMonitor"/>).
+/// tüm kimlik başarısızlıkları <c>credential_rejected</c>'tır ve terminal başına bütçeyle sınırlıdır (<see cref="TerminalCredentialFailureMonitor"/>);
+/// engel açıkken TÜM PIN kalemleri (doğru/yanlış ayrımı olmadan) <c>pin_entry_blocked</c> alır.
 /// <see cref="TerminalIngestOptions.MaxPunchAgeDays"/>'ten eski kalem <c>too_old</c>.
 /// Recorder her çağrıda kendi değişikliklerini kaydeder; bu servis komut hattına (tek işlem) sokulmaz. Aynı okutmanın tekrar
 /// gönderilmesi hata değil "ignored" döner (idempotans recorder'dadır).
@@ -191,16 +192,13 @@ public sealed class TerminalPunchIngest(
 
         if (kind == TerminalCredentialKind.Pin)
         {
-            // Engel açıkken her PIN kalemi aynı yanıtı alır (doğru PIN sızmaz); bütçeye yalnız gerçekten yanlış olanlar yazılır.
-            var blocked = pinFailures.IsBlocked(terminal.TerminalId);
-            if (failure is not null || blocked)
+            // Engel açıkken her PIN kalemi aynı yanıtı alır ve hiçbiri bütçeye yazılmaz (doğru PIN ne yanıttan ne engel süresinden sızar).
+            switch (pinFailures.Evaluate(terminal, digest, isFailure: failure is not null))
             {
-                if (failure is not null)
-                {
-                    pinFailures.RecordFailure(terminal, digest);
-                }
-
-                return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected);
+                case PinGateOutcome.Blocked:
+                    return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.PinEntryBlocked);
+                case PinGateOutcome.Failed:
+                    return new TerminalPunchItemResultDto(index, TerminalPunchItemStatus.Rejected, TerminalPunchRejectReasons.CredentialRejected);
             }
         }
         else if (failure is not null)

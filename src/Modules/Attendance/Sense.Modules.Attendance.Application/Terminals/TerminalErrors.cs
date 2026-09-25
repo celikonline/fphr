@@ -32,10 +32,15 @@ public static class TerminalPunchRejectReasons
     public const string EmployeeNotActive = "employee_not_active";
 
     /// <summary>
-    /// PIN kalemlerinde tek genel neden: bilinmeyen/pasif kimlik, aktif olmayan çalışan ya da terminalin PIN başarısızlık bütçesi dolmuş -
-    /// hangisi olduğu sızdırılmaz (kaba kuvvete karşı).
+    /// PIN kalemlerinde tek genel neden: bilinmeyen/pasif kimlik ya da aktif olmayan çalışan - hangisi olduğu sızdırılmaz (kaba kuvvete karşı).
     /// </summary>
     public const string CredentialRejected = "credential_rejected";
+
+    /// <summary>
+    /// Terminalin PIN başarısızlık bütçesi doldu, PIN girişi geçici olarak kapalı: engel süresince TÜM PIN kalemleri (doğru ya da yanlış) bu nedeni
+    /// alır; terminal "sonra yeniden dene" olarak ele alır (çevrimdışı birikmiş kalemleri engel bitince yeniden gönderir).
+    /// </summary>
+    public const string PinEntryBlocked = "pin_entry_blocked";
 
     /// <summary>Okutma, izin verilen en eski tarihten (MaxPunchAgeDays) daha eski.</summary>
     public const string TooOld = "too_old";
