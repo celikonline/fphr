@@ -336,5 +336,44 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Plan templates",
+    "tabSave": "Save template",
+    "tabApply": "Apply template",
+    "tabImport": "Import Excel",
+    "selectionEmpty": "Select assigned cells on the calendar to save.",
+    "selectionSummary": "{{entries}} assignments over a {{days}}-day period will be saved.",
+    "name": "Template name",
+    "save": "Save template",
+    "saved": "Template saved.",
+    "noTemplates": "No saved templates.",
+    "pick": "Template",
+    "days": "{{count}} days",
+    "startDate": "Start date",
+    "keepPublished": "Keep published",
+    "overwritePublished": "Overwrite published",
+    "apply": "Apply",
+    "applied": "{{count}} cells planned.",
+    "importHint": "Download the template file, fill it in and upload; erroneous rows are listed below.",
+    "downloadTemplate": "Download Excel template",
+    "dropzoneTitle": "Drop or pick an Excel/CSV file",
+    "importing": "Importing…",
+    "invalidFile": "Invalid file (.xlsx/.csv only, max 10 MB).",
+    "importSummary": "{{inserted}} rows processed, {{errors}} rows with errors.",
+    "errorsHint": "Erroneous rows were skipped; fix and upload again.",
+    "colRow": "Row",
+    "colKey": "Key",
+    "colError": "Error",
+    "deleted": "Template deleted.",
+    "delete": "Delete template {{name}}",
+    "deleteConfirm": "Delete template \"{{name}}\"?",
+    "skippedHint": "{{count}} cells were skipped:",
+    "colDate": "Date",
+    "colReason": "Reason",
+    "skipReason": {
+      "locked": "Locked period",
+      "published": "Published shift"
+    }
   }
 }

@@ -336,5 +336,44 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Plan şablonları",
+    "tabSave": "Şablon kaydet",
+    "tabApply": "Şablon uygula",
+    "tabImport": "Excel içe aktar",
+    "selectionEmpty": "Kaydetmek için takvimde atanmış hücreleri seçin.",
+    "selectionSummary": "{{entries}} atama, {{days}} günlük dönem şablona girecek.",
+    "name": "Şablon adı",
+    "save": "Şablonu kaydet",
+    "saved": "Şablon kaydedildi.",
+    "noTemplates": "Kayıtlı şablon yok.",
+    "pick": "Şablon",
+    "days": "{{count}} gün",
+    "startDate": "Başlangıç tarihi",
+    "keepPublished": "Yayınlanmışı koru",
+    "overwritePublished": "Yayınlanmışın üzerine yaz",
+    "apply": "Uygula",
+    "applied": "{{count}} hücre planlandı.",
+    "importHint": "Şablon dosyasını indirip doldurun ve yükleyin; hatalı satırlar aşağıda listelenir.",
+    "downloadTemplate": "Excel şablonunu indir",
+    "dropzoneTitle": "Excel/CSV dosyasını sürükleyin veya seçin",
+    "importing": "İçe aktarılıyor…",
+    "invalidFile": "Geçersiz dosya (yalnız .xlsx/.csv, en çok 10 MB).",
+    "importSummary": "{{inserted}} satır işlendi, {{errors}} satır hatalı.",
+    "errorsHint": "Hatalı satırlar atlandı; düzeltip yeniden yükleyebilirsiniz.",
+    "colRow": "Satır",
+    "colKey": "Anahtar",
+    "colError": "Hata",
+    "deleted": "Şablon silindi.",
+    "delete": "{{name}} şablonunu sil",
+    "deleteConfirm": "\"{{name}}\" şablonu silinsin mi?",
+    "skippedHint": "{{count}} hücre atlandı:",
+    "colDate": "Tarih",
+    "colReason": "Neden",
+    "skipReason": {
+      "locked": "Kilitli dönem",
+      "published": "Yayınlanmış vardiya"
+    }
   }
 }

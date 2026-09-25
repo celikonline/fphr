@@ -16,12 +16,13 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { CalendarClock, ChevronLeft, ChevronRight, Lock, LockOpen, Moon, Send, Trash2, X } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, LayoutTemplate, Lock, LockOpen, Moon, Send, Trash2, X } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import ShiftCalendarGrid, { cellKey, cellRange, isNonWorkDay, type CellRef } from "@/components/attendance/shift-calendar-grid";
+import ShiftTemplateDialog from "@/components/attendance/shift-template-dialog";
 import ShiftPalette, { type PalettePayload } from "@/components/attendance/shift-palette";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -82,6 +83,8 @@ function ShiftPlan() {
   const canLock = usePermission("attendance.shift.lock");
   const canUnlock = usePermission("attendance.shift.unlock");
   const canPlan = usePermission("attendance.shift.plan");
+  /** B10 şablon uçları `attendance.shifttemplate.manage` ister (apply için de; veri kapsamı sunucuda ShiftPlan ile denetlenir). */
+  const canManageTemplates = usePermission("attendance.shifttemplate.manage");
 
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
@@ -99,6 +102,7 @@ function ShiftPlan() {
   const [armedPayload, setArmedPayload] = useState<PalettePayload | null>(null);
   const [clearing, setClearing] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const weekStartIso = toDateOnly(weekStart);
   const weekDates = useMemo(
@@ -395,6 +399,11 @@ function ShiftPlan() {
         )}
 
         <Group gap="xs" wrap="wrap">
+          {canManageTemplates && (
+            <Button variant="default" size="xs" leftSection={<LayoutTemplate size={14} />} onClick={() => setTemplatesOpen(true)}>
+              {t("attendance:shiftTemplates.title")}
+            </Button>
+          )}
           {isLocked && canUnlock && (
             <Button variant="default" size="xs" leftSection={<LockOpen size={14} />} onClick={() => setUnlocking(true)}>
               {t("attendance:shiftPlan.unlock")}
@@ -589,6 +598,17 @@ function ShiftPlan() {
           </Group>
         </Stack>
       </Modal>
+      {canManageTemplates && (
+        <ShiftTemplateDialog
+          opened={templatesOpen}
+          onClose={() => setTemplatesOpen(false)}
+          selectedKeys={selectedKeys}
+          assignments={(assignmentsQuery.data ?? []) as CalendarShiftAssignment[]}
+          weekStart={weekStartIso}
+          employeeNames={new Map(employees.map((e) => [e.id, e.displayName]))}
+          onChanged={() => void invalidateAll()}
+        />
+      )}
     </div>
   );
 }
