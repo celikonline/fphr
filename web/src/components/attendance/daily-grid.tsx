@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { ActionIcon, Alert, Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Textarea, Tooltip } from "@mantine/core";
 import { useLeaveName } from "@/components/leave/leave-shared";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { IncalculableHint } from "@/components/attendance/incalculable-hint";
+import { getAttendanceErrorMessage } from "@/lib/attendance-error";
 import type { DailyAttendanceRow, ManualPunchInput, PunchDirection } from "@/services/attendance-daily.service";
 
 interface DailyGridProps {
@@ -59,11 +60,13 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
       }
       setDialog(null);
     } catch (error) {
-      setServerError(getApiErrorMessage(error, t("attendance-daily:dailyList.genericError")));
+      setServerError(getAttendanceErrorMessage(error, t("attendance-daily:dailyList.genericError"), t));
     } finally {
       setBusy(false);
     }
   }
+
+  const showUnit = rows.some((row) => Boolean(row.orgUnitName));
 
   const deleteButton = (id: string | null | undefined, time: string, label: string) =>
     id ? (
@@ -81,7 +84,7 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
           <Table.Thead>
             <Table.Tr>
               <Table.Th>{t("attendance-daily:dailyList.employee")}</Table.Th>
-              <Table.Th>{t("attendance-daily:dailyList.unit")}</Table.Th>
+              {showUnit && <Table.Th>{t("attendance-daily:dailyList.unit")}</Table.Th>}
               <Table.Th>{t("attendance-daily:dailyList.checkIn")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.checkOut")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.worked")}</Table.Th>
@@ -94,7 +97,7 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
             {rows.map((row) => (
               <Table.Tr key={row.employeeId}>
                 <Table.Td>{row.employeeName}</Table.Td>
-                <Table.Td>{row.orgUnitName ?? "—"}</Table.Td>
+                {showUnit && <Table.Td>{row.orgUnitName || "—"}</Table.Td>}
                 <Table.Td>
                   <Group gap={4} wrap="nowrap">
                     {hhmm(row.checkIn)}
@@ -111,6 +114,7 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
                 <Table.Td>{row.overtimeMinutes > 0 ? t("attendance-daily:dailyList.minutes", { count: row.overtimeMinutes }) : "—"}</Table.Td>
                 <Table.Td>
                   <Group gap={4}>
+                    <IncalculableHint reason={row.incalculableReason} />
                     {row.leaveType && <Badge variant="light" color="blue">{leaveName(row.leaveType)}</Badge>}
                     {row.anomalies.map((a) => (
                       <Badge key={a} variant="light" color="orange">{t(`attendance:anomaly.${a}`, { defaultValue: a })}</Badge>

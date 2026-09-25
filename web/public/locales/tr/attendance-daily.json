@@ -45,7 +45,8 @@
     "genericError": "İşlem sırasında bir hata oluştu.",
     "prevPage": "Önceki sayfa",
     "nextPage": "Sonraki sayfa",
-    "minutes": "{{count}} dk"
+    "minutes": "{{count}} dk",
+    "unassigned": "Atanmamış"
   },
   "timeDashboard": {
     "title": "Zaman panosu",
@@ -85,7 +86,8 @@
       "title": "Vardiya devam oranı",
       "detail": "{{worked}} / {{planned}} planlı vardiya günü"
     },
-    "unit": "Birim"
+    "unit": "Birim",
+    "unassigned": "Atanmamış"
   },
   "monthlyMatrix": {
     "title": "Aylık puantaj matrisi",

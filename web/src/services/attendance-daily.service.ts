@@ -58,6 +58,8 @@ export interface DailyAttendanceRow {
   overtimeMinutes: number;
   anomalies: string[];
   leaveType?: string | null;
+  /** Why the day is incalculable (`channelConflict`, `noPlan`, …); unknown values are shown raw. */
+  incalculableReason?: string | null;
   /** Punch ids behind checkIn/checkOut (needed for delete); optional until the backend row carries them. */
   checkInPunchId?: string | null;
   checkOutPunchId?: string | null;

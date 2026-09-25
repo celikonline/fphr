@@ -45,6 +45,8 @@ export interface AttendanceDay {
   plannedMinutes: number;
   workedMinutes: number;
   anomalies: string;
+  /** Set when the day is incalculable: `unknownDirection|brokenSequence|channelConflict|noPlan|nightShiftOverlap` (open-ended). */
+  incalculableReason?: string | null;
   resolutionState: AttendanceResolutionState;
   source: AttendanceDaySource;
   allowedActions: AnomalyResolutionAction[];
