@@ -1,5 +1,82 @@
 {
   "title": "HR-Nachrichten",
   "subtitle": "An Mitarbeitende und Gruppen gesendete Nachrichten",
-  "comingSoon": "Diese Ansicht folgt in Kürze."
+  "tabs": {
+    "inbox": "Posteingang",
+    "outbox": "Postausgang",
+    "groups": "Nachrichtengruppen",
+    "compose": "Neue Nachricht"
+  },
+  "importance": {
+    "normal": "Normal",
+    "high": "Hoch"
+  },
+  "channels": {
+    "email": "E-Mail",
+    "in_app": "In der App",
+    "sms": "SMS",
+    "smsSoon": "Demnächst",
+    "smsHint": "Der SMS-Kanal folgt in Kürze."
+  },
+  "list": {
+    "emptyInbox": "Keine eingegangenen Nachrichten.",
+    "emptyOutbox": "Keine gesendeten Nachrichten.",
+    "recipients_one": "{{count}} Empfänger",
+    "recipients_other": "{{count}} Empfänger",
+    "subject": "Betreff",
+    "importance": "Wichtigkeit",
+    "channelsCol": "Kanäle",
+    "recipientsCol": "Empfänger",
+    "date": "Datum",
+    "loadError": "Nachrichten konnten nicht geladen werden.",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "detail": "Nachrichtendetails",
+    "close": "Schließen"
+  },
+  "compose": {
+    "recipients": "Empfänger",
+    "pickEmployees": "Mitarbeitende auswählen",
+    "changeEmployees": "Auswahl ändern",
+    "clearEmployees": "Leeren",
+    "pickerTitle": "Empfangende Mitarbeitende",
+    "groups": "Nachrichtengruppen",
+    "groupsPlaceholder": "Gruppen auswählen",
+    "noGroups": "Keine gespeicherten Gruppen",
+    "selectionIds_one": "{{count}} Mitarbeitende/r ausgewählt",
+    "selectionIds_other": "{{count}} Mitarbeitende ausgewählt",
+    "selectionFilter": "Mitarbeitende laut Filter ausgewählt (ausgenommen: {{excluded}})",
+    "noRecipients": "Wählen Sie mindestens eine/n Mitarbeitende/n oder Gruppe.",
+    "channels": "Kanäle",
+    "noChannel": "Wählen Sie mindestens einen Kanal.",
+    "subject": "Betreff",
+    "body": "Inhalt",
+    "counter": "{{count}} / {{max}}",
+    "importance": "Wichtigkeit",
+    "send": "Senden",
+    "sent_one": "Nachricht an {{count}} Empfänger gesendet.",
+    "sent_other": "Nachricht an {{count}} Empfänger gesendet.",
+    "sendError": "Die Nachricht konnte nicht gesendet werden.",
+    "noAccount": "Mitarbeitende ohne Konto erhalten nur E-Mails."
+  },
+  "groups": {
+    "name": "Name",
+    "members": "Mitarbeitende",
+    "new": "Neue Gruppe",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "empty": "Noch keine Nachrichtengruppen.",
+    "createTitle": "Neue Nachrichtengruppe",
+    "editTitle": "Gruppe bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirmDelete": "Gruppe „{{name}}“ löschen?",
+    "saved": "Gruppe gespeichert.",
+    "deleted": "Gruppe gelöscht.",
+    "saveError": "Die Gruppe konnte nicht gespeichert werden.",
+    "deleteError": "Die Gruppe konnte nicht gelöscht werden.",
+    "loadError": "Gruppen konnten nicht geladen werden.",
+    "needMembers": "Fügen Sie der Gruppe mindestens eine/n Mitarbeitende/n hinzu.",
+    "needName": "Gruppenname ist erforderlich."
+  }
 }

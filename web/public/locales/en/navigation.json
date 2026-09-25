@@ -43,6 +43,7 @@
     "description": "This feature is planned for Phase {{phase}} of the roadmap."
   },
   "apps": {
+    "messages": "HR messages",
     "searchPlaceholder": "Search apps…",
     "noResults": "No apps match your search.",
     "viewAll": "All apps",
