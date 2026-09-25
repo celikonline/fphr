@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalPolicies;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Modules.Workflow.Domain.Delegations;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Workflow.Infrastructure.Persistence;
@@ -44,15 +45,19 @@ public sealed class ApprovalRequestRepository(WorkflowDbContext context) : IAppr
     }
 
     public async Task<IReadOnlyList<ApprovalTask>> ListInboxTasksAsync(
-        Guid employeeId, IReadOnlyCollection<string> fallbackRoleCodes, CancellationToken cancellationToken = default)
+        Guid employeeId, IReadOnlyCollection<string> fallbackRoleCodes, IReadOnlyCollection<Guid> delegatorEmployeeIds,
+        CancellationToken cancellationToken = default)
     {
         var roleCodes = fallbackRoleCodes.ToList();
+        var delegatorIds = delegatorEmployeeIds.ToList();
         // A task stays Pending after its request is cancelled (withdrawn/edited) or rejected at an earlier step, so the
         // request must still be Pending - otherwise the approver sees dead items that fail with RequestNotPending.
         return await context.ApprovalTasks
             .Where(t => t.Status == ApprovalTaskStatus.Pending
                 && context.ApprovalRequests.Any(r => r.Id == t.ApprovalRequestId && r.Status == ApprovalRequestStatus.Pending)
-                && (t.ApproverEmployeeId == employeeId || (t.FallbackRoleCode != null && roleCodes.Contains(t.FallbackRoleCode))))
+                && (t.ApproverEmployeeId == employeeId
+                    || (t.ApproverEmployeeId != null && delegatorIds.Contains(t.ApproverEmployeeId.Value))
+                    || (t.FallbackRoleCode != null && roleCodes.Contains(t.FallbackRoleCode))))
             .ToListAsync(cancellationToken);
     }
 
@@ -96,4 +101,30 @@ public sealed class EmailDecisionTokenRepository(WorkflowDbContext context) : IE
         var token = await context.EmailDecisionTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
         return token is null ? Error.NotFound(WorkflowDomainErrors.TokenNotFound) : token;
     }
+}
+
+/// <summary>EF Core-backed ApprovalDelegation repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class ApprovalDelegationRepository(WorkflowDbContext context) : IApprovalDelegationRepository
+{
+    public void Add(ApprovalDelegation delegation) => context.ApprovalDelegations.Add(delegation);
+
+    public async Task<Result<ApprovalDelegation>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var found = await context.ApprovalDelegations.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return found is null ? Error.NotFound(WorkflowDomainErrors.DelegationNotFound) : found;
+    }
+
+    public async Task<IReadOnlyList<ApprovalDelegation>> ListActiveForDelegateAsync(Guid delegateEmployeeId, DateOnly today, CancellationToken cancellationToken = default) =>
+        await context.ApprovalDelegations
+            .Where(d => d.DelegateEmployeeId == delegateEmployeeId && d.RevokedAt == null && d.StartDate <= today && d.EndDate >= today)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ApprovalDelegation>> ListInvolvingAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.ApprovalDelegations
+            .Where(d => d.DelegatorEmployeeId == employeeId || d.DelegateEmployeeId == employeeId)
+            .OrderByDescending(d => d.StartDate)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ApprovalDelegation>> ListAllAsync(CancellationToken cancellationToken = default) =>
+        await context.ApprovalDelegations.OrderByDescending(d => d.StartDate).ToListAsync(cancellationToken);
 }

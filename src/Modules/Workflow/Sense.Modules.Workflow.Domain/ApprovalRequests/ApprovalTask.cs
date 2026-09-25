@@ -45,6 +45,9 @@ public sealed class ApprovalTask : TenantEntity<Guid>, IAuditLogged
 
     public ApprovalChannel? DecisionChannel { get; private set; }
 
+    /// <summary>Set when a delegate decided this task on behalf of the assignee (Z2.2 vekalet); permanent - survives later revocation.</summary>
+    public Guid? DecidedOnBehalfOfEmployeeId { get; private set; }
+
     public string? DecisionIpAddress { get; private set; }
 
     public string? DecisionUserAgent { get; private set; }
@@ -56,13 +59,14 @@ public sealed class ApprovalTask : TenantEntity<Guid>, IAuditLogged
         FallbackRoleCode = null;
     }
 
-    internal void Decide(Guid decidingEmployeeId, ApprovalOutcome outcome, string? comment, bool wasOverride, ApprovalChannel channel, string? ipAddress, string? userAgent, DateTime now)
+    internal void Decide(Guid decidingEmployeeId, ApprovalOutcome outcome, string? comment, bool wasOverride, ApprovalChannel channel, string? ipAddress, string? userAgent, DateTime now, Guid? onBehalfOfEmployeeId = null)
     {
         Status = outcome == ApprovalOutcome.Approved ? ApprovalTaskStatus.Approved : ApprovalTaskStatus.Rejected;
         DecidedByEmployeeId = decidingEmployeeId;
         DecidedAt = now;
         Comment = string.IsNullOrWhiteSpace(comment) ? null : Guard.MaxLength(comment.Trim(), WorkflowLimits.CommentMaxLength);
         WasOverride = wasOverride;
+        DecidedOnBehalfOfEmployeeId = onBehalfOfEmployeeId;
         DecisionChannel = channel;
         DecisionIpAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : Guard.MaxLength(ipAddress, WorkflowLimits.IpAddressMaxLength);
         DecisionUserAgent = string.IsNullOrWhiteSpace(userAgent) ? null : Guard.MaxLength(userAgent, WorkflowLimits.UserAgentMaxLength);
