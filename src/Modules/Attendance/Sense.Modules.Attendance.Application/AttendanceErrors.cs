@@ -42,4 +42,11 @@ public static class AttendanceErrors
 
     /// <summary>Z0.2: a definition referenced by an assignment, rotation step or plan template cannot be deleted, only deactivated.</summary>
     public const string ShiftDefinitionInUse = "attendance.shift_definition.in_use";
+    /// <summary>Manual punch add/delete needs a written reason.</summary>
+    public const string PunchReasonRequired = "attendance.punch.reason_required";
+
+    /// <summary>K6: the employee's month has an approved MonthlyTimesheetApproval; punches can no longer be added or deleted.</summary>
+    public const string PeriodLocked = "attendance.timesheet.period_locked";
+
+    public const string PunchNotFound = "attendance.punch.not_found";
 }

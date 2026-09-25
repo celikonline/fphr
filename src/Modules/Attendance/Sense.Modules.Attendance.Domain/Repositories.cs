@@ -151,6 +151,9 @@ public interface IPunchRepository
 {
     void Add(Punches.Punch punch);
 
+    /// <summary>Tek okutma (tenant içinde); silinmiş okutma dönmez.</summary>
+    Task<Punches.Punch?> FindAsync(Guid tenantId, Guid punchId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Punches.Punch>> ListForDayAsync(Guid tenantId, Guid employeeId, DateOnly workDate, CancellationToken cancellationToken = default);
 
     /// <summary>[from, to] aralığındaki WorkDate'ler; <paramref name="employeeIds"/> null ise kiracının tüm çalışanları.</summary>

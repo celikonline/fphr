@@ -21,10 +21,11 @@ public sealed record PunchBatchResult(int Accepted, int Ignored);
 /// <summary>Progress of a queued recalculation job; <see cref="State"/> is the job's lifecycle name (queued/running/completed/failed).</summary>
 public sealed record RecalculationStatusDto(Guid JobId, string State, int Total, int Done, string? Error);
 
-/// <summary>One row of a daily attendance list.</summary>
+/// <summary>One row of a daily attendance list; the punch ids (first in / last out of the day) let the UI offer "delete punch".</summary>
 public sealed record DailyAttendanceRowDto(
     Guid EmployeeId, string EmployeeName, string? OrgUnitName, DateOnly Date,
-    TimeOnly? CheckIn, TimeOnly? CheckOut, int WorkedMinutes, int OvertimeMinutes, string[] Anomalies, string? LeaveType);
+    TimeOnly? CheckIn, TimeOnly? CheckOut, int WorkedMinutes, int OvertimeMinutes, string[] Anomalies, string? LeaveType,
+    Guid? CheckInPunchId = null, Guid? CheckOutPunchId = null);
 
 /// <summary>One day's headcounts for the dashboard trend (planned employees, arrived, late, early leave, absent, on leave).</summary>
 public sealed record DailyAttendanceTotalsDto(DateOnly Date, int Planned, int Arrived, int Late, int EarlyLeave, int Absent, int OnLeave);
