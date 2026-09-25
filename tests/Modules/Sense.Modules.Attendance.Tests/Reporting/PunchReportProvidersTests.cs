@@ -84,7 +84,7 @@ public sealed class PunchReportProvidersTests
 
     private ManualEntriesReportProvider Manual() => new(_reader, _dataScope, _orgUnits, _employees, _zones, _users, _exporter, _pdf, _localizer);
 
-    private CurrentlyInsideReportProvider Inside() => new(_punches, _terminals, _clock, _zones, _dataScope, _orgUnits, _employees, _exporter, _pdf, _localizer);
+    private CurrentlyInsideReportProvider Inside(ITenantLocalClock? clock = null) => new(_punches, _terminals, _planner, clock ?? _clock, _zones, _dataScope, _orgUnits, _employees, _exporter, _pdf, _localizer);
 
     private BreaksReportProvider Breaks() => new(_punches, _planner, _clock, _zones, _dataScope, _orgUnits, _employees, _exporter, _pdf, _localizer);
 
@@ -100,6 +100,12 @@ public sealed class PunchReportProvidersTests
         Punch.Create(
             TenantId, employee, new DateTime(2026, 9, 21, localHour - 3, localMinute, 0, DateTimeKind.Utc), Day, dir, source, null, terminal, null, null, null,
             manual, by, reason, nowUtc: new DateTime(2026, 9, 22, 0, 0, 0, DateTimeKind.Utc)).Value;
+
+    /// <summary>Verilen gün ofsetinde (WorkDate = o gün) yerel saatten okutma.</summary>
+    private static Punch PD(int dayOffset, Guid employee, int localHour, int localMinute, PunchDirection dir, string? sourceRef = null, PunchSource source = PunchSource.SelfService) =>
+        Punch.Create(
+            TenantId, employee, new DateTime(2026, 9, 21 + dayOffset, localHour - 3, localMinute, 0, DateTimeKind.Utc), Day.AddDays(dayOffset), dir, source, sourceRef,
+            null, null, null, null, false, null, null, nowUtc: new DateTime(2026, 9, 22, 0, 0, 0, DateTimeKind.Utc)).Value;
 
     private void LiveReturns(params Punch[] punches) =>
         _punches.ListForRangeAsync(TenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>())
@@ -230,7 +236,7 @@ public sealed class PunchReportProvidersTests
         var file = await Inside().GenerateAsync(TenantId, Params(), TestContext.Current.CancellationToken);
 
         FirstSheet(file).Cell(2, 1).GetString().ShouldBe("Ayşe Yılmaz");
-        await _punches.Received(1).ListForRangeAsync(TenantId, Day, Day, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>());
+        await _punches.Received(1).ListForRangeAsync(TenantId, Day.AddDays(-1), Day, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -297,6 +303,79 @@ public sealed class PunchReportProvidersTests
         ShouldBePdf(pdf);
     }
 
+    [Fact]
+    public async Task Breaks_ignores_backfill_break_pair_when_real_intermediate_punches_exist()
+    {
+        LiveReturns(
+            P(Ayse, 9, 0, PunchDirection.In), PD(0, Ayse, 12, 0, PunchDirection.Out, "backfill-break:day1", PunchSource.Import),
+            PD(0, Ayse, 12, 30, PunchDirection.In, "backfill-break:day1", PunchSource.Import),
+            P(Ayse, 13, 0, PunchDirection.Out), P(Ayse, 13, 20, PunchDirection.In), P(Ayse, 18, 0, PunchDirection.Out));
+
+        var file = await Breaks().GenerateAsync(TenantId, Params(DayRange), TestContext.Current.CancellationToken);
+
+        var sheet = FirstSheet(file);
+        sheet.Cell(2, 3).GetDouble().ShouldBe(1);
+        sheet.Cell(2, 4).GetDouble().ShouldBe(20);
+    }
+
+    [Fact]
+    public async Task Breaks_counts_backfill_break_pair_when_alone()
+    {
+        LiveReturns(
+            P(Ayse, 9, 0, PunchDirection.In), PD(0, Ayse, 12, 0, PunchDirection.Out, "backfill-break:day1", PunchSource.Import),
+            PD(0, Ayse, 12, 30, PunchDirection.In, "backfill-break:day1", PunchSource.Import), P(Ayse, 18, 0, PunchDirection.Out));
+
+        var file = await Breaks().GenerateAsync(TenantId, Params(DayRange), TestContext.Current.CancellationToken);
+
+        var sheet = FirstSheet(file);
+        sheet.Cell(2, 3).GetDouble().ShouldBe(1);
+        sheet.Cell(2, 4).GetDouble().ShouldBe(30);
+    }
+
+    [Fact]
+    public async Task Night_shift_open_in_from_yesterday_is_inside()
+    {
+        var early = new FixedLocalClock(new DateTime(2026, 9, 21, 2, 0, 0, DateTimeKind.Utc), new DateTime(2026, 9, 21, 5, 0, 0));
+        LiveReturns(PD(-1, Ayse, 22, 0, PunchDirection.In));
+
+        var file = await Inside(early).GenerateAsync(TenantId, Params(), TestContext.Current.CancellationToken);
+
+        var sheet = FirstSheet(file);
+        sheet.LastRowUsed()!.RowNumber().ShouldBe(2);
+        sheet.Cell(2, 1).GetString().ShouldBe("Ayşe Yılmaz");
+        sheet.Cell(2, 3).GetString().ShouldBe("22:00");
+    }
+
+    [Fact]
+    public async Task Forgotten_checkout_older_than_window_is_not_inside()
+    {
+        LiveReturns(PD(-1, Ayse, 8, 0, PunchDirection.In)); // now 15:00 → 31 h old, plan is a day shift
+
+        var file = await Inside().GenerateAsync(TenantId, Params(), TestContext.Current.CancellationToken);
+
+        FirstSheet(file).LastRowUsed()!.RowNumber().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Today_open_in_is_inside()
+    {
+        LiveReturns(P(Ayse, 8, 0, PunchDirection.In));
+
+        var file = await Inside().GenerateAsync(TenantId, Params(), TestContext.Current.CancellationToken);
+
+        FirstSheet(file).Cell(2, 1).GetString().ShouldBe("Ayşe Yılmaz");
+    }
+
+    [Fact]
+    public async Task Last_out_today_is_not_inside()
+    {
+        LiveReturns(PD(-1, Ayse, 22, 0, PunchDirection.In), P(Ayse, 6, 0, PunchDirection.Out));
+
+        var file = await Inside().GenerateAsync(TenantId, Params(), TestContext.Current.CancellationToken);
+
+        FirstSheet(file).LastRowUsed()!.RowNumber().ShouldBe(1);
+    }
+
     // ---- Ara Kayıtlar ----
 
     [Fact]
@@ -347,5 +426,30 @@ public sealed class PunchReportProvidersTests
         providers.Select(p => p.Key).ShouldNotContain(IncalculableReportProvider.ReportKey);
         providers.Select(p => p.Key).ShouldNotContain(DailyStatusListsReportProvider.ReportKey);
         providers.Select(p => p.Key).ShouldNotContain(NoShiftAssignedReportProvider.ReportKey);
+    }
+
+    [Fact]
+    public void Every_attendance_report_provider_has_a_unique_key()
+    {
+        var providers = typeof(IncalculableReportProvider).Assembly.GetTypes()
+            .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IReportProvider).IsAssignableFrom(t))
+            .Select(Instantiate)
+            .ToList();
+
+        providers.Count.ShouldBeGreaterThanOrEqualTo(9); // aylık özet/kapanış + R1 (3) + R2 (4)
+        providers.Select(p => p.Key).ShouldBeUnique();
+        providers.Select(p => p.Key).ShouldContain(ManualEntriesReportProvider.ReportKey);
+        providers.Select(p => p.Key).ShouldContain(DailyStatusListsReportProvider.ReportKey);
+    }
+
+    private IReportProvider Instantiate(Type type)
+    {
+        var ctor = type.GetConstructors().Single();
+        var args = ctor.GetParameters().Select(p => p.ParameterType == typeof(IStringLocalizer<SharedResource>)
+            ? _localizer
+            : p.ParameterType == typeof(IReportExporter) ? _exporter
+            : p.ParameterType == typeof(ISimplePdfWriter) ? _pdf
+            : Substitute.For([p.ParameterType], [])).ToArray();
+        return (IReportProvider)ctor.Invoke(args);
     }
 }

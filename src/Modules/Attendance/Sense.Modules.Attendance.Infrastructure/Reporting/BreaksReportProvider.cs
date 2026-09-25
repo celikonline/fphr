@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Employee.Contracts;
@@ -61,7 +62,7 @@ public sealed class BreaksReportProvider(
         var data = new List<(string Name, DateOnly Day, IReadOnlyList<object?> Cells)>();
         foreach (var group in all.Where(p => !p.IsDeleted).GroupBy(p => (p.EmployeeId, p.WorkDate)))
         {
-            var ordered = group.OrderBy(p => p.OccurredAtUtc).ToList();
+            var ordered = BackfillBreakFilter.WithoutSuperseded(group.OrderBy(p => p.OccurredAtUtc).ToList());
             var gaps = Gaps(ordered);
             if (gaps.Count == 0)
             {
