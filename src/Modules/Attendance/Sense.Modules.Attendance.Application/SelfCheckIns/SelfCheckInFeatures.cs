@@ -1,8 +1,10 @@
 using FluentValidation;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Punches;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -42,7 +44,8 @@ public sealed class QrCheckInValidator : AbstractValidator<QrCheckInCommand>
 
 public sealed class QrCheckInHandler(
     ITenantContext tenant, ICurrentUser currentUser, ILocationLookup locations, IAttendanceDayRepository days,
-    IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock)
+    IPlannedDayResolver planner, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock,
+    IPunchRepository punches, IMonthlyTimesheetApprovalRepository approvals, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<QrCheckInCommand, SelfCheckInResultDto>
 {
     public async Task<Result<SelfCheckInResultDto>> Handle(QrCheckInCommand command, CancellationToken cancellationToken)
@@ -66,15 +69,15 @@ public sealed class QrCheckInHandler(
         }
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
+        var audit = SelfCheckIn.RecordQr(
+            tenant.TenantId, employeeId, now.Utc, command.Direction, location.LocationId, command.Latitude, command.Longitude, geofence.Value.Within);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, cancellationToken);
+            audit, now, new SelfCheckInPunch.Ports(days, punches, planner, shiftSettings, clock, approvals, selfCheckIns, unitOfWork), cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
         }
 
-        selfCheckIns.Add(SelfCheckIn.RecordQr(
-            tenant.TenantId, employeeId, now.Utc, command.Direction, location.LocationId, command.Latitude, command.Longitude, geofence.Value.Within));
         return new SelfCheckInResultDto(punched.Value.DayId, punched.Value.Date, command.Direction, punched.Value.Time, location.LocationId, location.Name, geofence.Value.Within);
     }
 }
@@ -95,7 +98,8 @@ public sealed class GpsCheckInValidator : AbstractValidator<GpsCheckInCommand>
 
 public sealed class GpsCheckInHandler(
     ITenantContext tenant, ICurrentUser currentUser, ILocationLookup locations, IAttendanceDayRepository days,
-    IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock)
+    IPlannedDayResolver planner, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock,
+    IPunchRepository punches, IMonthlyTimesheetApprovalRepository approvals, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<GpsCheckInCommand, SelfCheckInResultDto>
 {
     public async Task<Result<SelfCheckInResultDto>> Handle(GpsCheckInCommand command, CancellationToken cancellationToken)
@@ -125,15 +129,15 @@ public sealed class GpsCheckInHandler(
         }
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
+        var audit = SelfCheckIn.RecordGps(
+            tenant.TenantId, employeeId, now.Utc, command.Direction, command.LocationId, command.Latitude, command.Longitude, withinGeofence);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, cancellationToken);
+            audit, now, new SelfCheckInPunch.Ports(days, punches, planner, shiftSettings, clock, approvals, selfCheckIns, unitOfWork), cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
         }
 
-        selfCheckIns.Add(SelfCheckIn.RecordGps(
-            tenant.TenantId, employeeId, now.Utc, command.Direction, command.LocationId, command.Latitude, command.Longitude, withinGeofence));
         return new SelfCheckInResultDto(punched.Value.DayId, punched.Value.Date, command.Direction, punched.Value.Time, command.LocationId, location?.Name, withinGeofence);
     }
 }
@@ -200,45 +204,93 @@ internal static class SelfCheckInGeofence
 }
 
 /// <summary>
-/// Applies one real-time punch to the employee's day through the shared <see cref="AttendanceDayUpsert"/> (S-31 kabul
-/// kriteri 4). An "In" only ever sets the day's FIRST check-in (a second accidental tap that day is a no-op, same
-/// "erken giriş kazanır" idea the PDKS device-log batch import applies); an "Out" always overwrites to the latest time.
-/// Night shift (4857 md.69, same rule as the device-log import G-6-14): an "Out" with no "in" today that follows an
-/// unmatched evening "in" (12:00 or later) yesterday closes yesterday's record as overnight. Times are the tenant's
-/// local wall-clock time (the work schedule the day is compared against is local too), never UTC.
+/// Applies one real-time self-servis punch (S-31 kabul kriteri 4) as a raw <see cref="Punch"/> (Z0.1, Source=SelfService, SourceRef =
+/// the <see cref="SelfCheckIn"/> audit row id, konum/koordinat kopyalanır) and re-derives the employee's day from its punches. Kept from
+/// the pre-punch behavior: a second "In" while the day is already open (last punch is an In) is a no-op ("erken giriş kazanır"); a second
+/// self-servis "Out" supersedes the previous self-servis "Out" (soft-deleted with a reason) so the latest time wins. Night shift (4857
+/// md.69, same rule as the device-log import G-6-14): an "Out" with no "in" today that follows an unmatched evening "in" (12:00 or later)
+/// yesterday belongs to yesterday's day. Times are the tenant's local wall-clock time, never UTC.
 /// </summary>
 internal static class SelfCheckInPunch
 {
+    public const string SupersededReason = "Sonraki self-servis çıkışıyla değiştirildi";
+
     private static readonly TimeOnly Noon = new(12, 0);
 
     public sealed record Applied(Guid DayId, DateOnly Date, TimeOnly Time);
 
-    public static async Task<Result<Applied>> ApplyAsync(
-        Guid tenantId, Guid employeeId, PunchDirection direction, TenantLocalNow now, IAttendanceDayRepository days,
-        IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, CancellationToken cancellationToken)
+    public sealed record Ports(
+        IAttendanceDayRepository Days, IPunchRepository Punches, IPlannedDayResolver Planner, IShiftSettingsRepository ShiftSettings,
+        ITenantLocalClock Clock, IMonthlyTimesheetApprovalRepository Approvals, ISelfCheckInRepository SelfCheckIns,
+        IAttendanceUnitOfWork UnitOfWork);
+
+    public static async Task<Result<Applied>> ApplyAsync(SelfCheckIn audit, TenantLocalNow now, Ports ports, CancellationToken cancellationToken)
     {
         var date = DateOnly.FromDateTime(now.Local);
         var time = TimeOnly.FromDateTime(now.Local);
-        var existing = await days.FindByEmployeeAndDateAsync(employeeId, date, cancellationToken);
-        var overnight = false;
-
-        if (direction == PunchDirection.Out && existing?.CheckIn is null)
+        if (audit.Direction == PunchDirection.Out)
         {
-            var open = await FindOpenOvernightDayAsync(days, employeeId, date, cancellationToken);
-            if (open is not null)
+            var today = await ports.Days.FindByEmployeeAndDateAsync(audit.EmployeeId, date, cancellationToken);
+            if (today?.CheckIn is null && await FindOpenOvernightDayAsync(ports.Days, audit.EmployeeId, date, cancellationToken) is { } open)
             {
-                existing = open;
                 date = open.Date;
-                overnight = true;
             }
         }
 
-        var (checkIn, checkOut) = Merge(existing?.CheckIn, existing?.CheckOut, direction, time);
-        var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken));
-        var upserted = await AttendanceDayUpsert.UpsertAsync(
-            days, schedules, tenantId, employeeId, date, checkIn, checkOut, AttendanceDaySource.SelfService, overnight, cancellationToken,
-            existing?.ActualBreakMinutes ?? 0, limits);
-        return upserted.IsFailure ? upserted.Error : new Applied(upserted.Value.Id, date, time);
+        var zone = await ports.Clock.GetTimeZoneAsync(audit.TenantId, cancellationToken);
+        var writer = new PunchDayWriter(audit.TenantId, ports.Days, ports.Punches, ports.Planner, ports.Approvals, zone, now.Utc);
+        if (await writer.IsLockedAsync(audit.EmployeeId, date, cancellationToken))
+        {
+            return Error.Conflict(AttendanceErrors.PeriodLocked);
+        }
+
+        var dayPunches = await writer.LoadDayAsync(audit.EmployeeId, date, seedLegacy: true, cancellationToken);
+        var recorded = RecordPunch(writer, audit, date, dayPunches.Count > 0 ? dayPunches[^1] : null);
+        if (recorded.IsFailure)
+        {
+            return recorded.Error;
+        }
+
+        var limits = AttendanceDayUpsert.ToShiftLimits(await ports.ShiftSettings.FindAsync(cancellationToken));
+        var rebuilt = await writer.RebuildAsync(audit.EmployeeId, date, AttendanceDaySource.SelfService, limits, forceIncalculable: false, cancellationToken);
+        if (rebuilt.IsFailure)
+        {
+            return rebuilt.Error;
+        }
+
+        // Denetim satırı okutmayla aynı kaydetmede; eşzamanlı yazma çakışması yazıcıda yeniden türetilip denenir.
+        ports.SelfCheckIns.Add(audit);
+        var saved = await writer.SaveAsync(ports.UnitOfWork, cancellationToken);
+        if (saved.IsFailure)
+        {
+            return saved.Error;
+        }
+
+        // Yarışta gün başka işlemde oluştuysa kalıcı satırın id'si.
+        var day = await writer.FindDayAsync(audit.EmployeeId, date, cancellationToken) ?? rebuilt.Value;
+        return new Applied(day.Id, date, time);
+    }
+
+    private static Result RecordPunch(PunchDayWriter writer, SelfCheckIn audit, DateOnly workDate, Punch? last)
+    {
+        if (audit.Direction == PunchDirection.In && last?.Direction == PunchDirection.In)
+        {
+            return Result.Success();
+        }
+
+        if (audit.Direction == PunchDirection.Out && last is { Direction: PunchDirection.Out, Source: PunchSource.SelfService })
+        {
+            var superseded = writer.SoftDelete(last, null, SupersededReason);
+            if (superseded.IsFailure)
+            {
+                return superseded;
+            }
+        }
+
+        var added = writer.Add(
+            audit.EmployeeId, audit.TimestampUtc, workDate, audit.Direction, PunchSource.SelfService, audit.Id.ToString(), null, audit.LocationId,
+            audit.Latitude, audit.Longitude, false, null, null, audit.TimestampUtc);
+        return added.IsFailure ? added.Error : Result.Success();
     }
 
     /// <summary>Yesterday's record when it holds an evening check-in (12:00+) and no check-out yet; otherwise null.</summary>
@@ -248,9 +300,4 @@ internal static class SelfCheckInPunch
         var previous = await days.FindByEmployeeAndDateAsync(employeeId, today.AddDays(-1), cancellationToken);
         return previous is { CheckIn: { } checkIn, CheckOut: null } && checkIn >= Noon ? previous : null;
     }
-
-    internal static (TimeOnly? CheckIn, TimeOnly? CheckOut) Merge(TimeOnly? existingCheckIn, TimeOnly? existingCheckOut, PunchDirection direction, TimeOnly time) =>
-        direction == PunchDirection.In
-            ? (existingCheckIn ?? time, existingCheckOut)
-            : (existingCheckIn, time);
 }

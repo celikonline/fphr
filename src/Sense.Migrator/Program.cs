@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Sense.Migrator;
 using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Assets.Infrastructure.Persistence;
+using Sense.Modules.Attendance.Infrastructure.Backfill;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.DataTransfer.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure.Persistence;
@@ -48,6 +49,10 @@ builder.Services.AddModuleDbContext<AnnouncementsDbContext>(builder.Configuratio
 builder.Services.AddModuleDbContext<OhsDbContext>(builder.Configuration, OhsDbContext.SchemaName);
 builder.Services.AddModuleDbContext<TrainingDbContext>(builder.Configuration, TrainingDbContext.SchemaName);
 builder.Services.AddModuleDbContext<OnboardingDbContext>(builder.Configuration, OnboardingDbContext.SchemaName);
+// Zaman-devam B1: migrate sonrası tek seferlik, idempotent okutma geri doldurması; kiracı saat dilimi Identity.Contracts üzerinden.
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup, Sense.Modules.Identity.Infrastructure.Security.TenantTimeZoneLookup>();
+builder.Services.AddAttendancePunchBackfill();
 
 using var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(MigratorConstants.LoggerName);
@@ -65,6 +70,8 @@ switch (command)
             await db.Database.MigrateAsync();
         }
 
+        var backfill = await AttendanceDataBackfill.RunAsync(scope.ServiceProvider, CancellationToken.None);
+        logger.LogInformation(MigratorConstants.PunchBackfillMessage, backfill.Days, backfill.Punches);
         break;
 
     case MigratorConstants.ResetCommand:
@@ -97,5 +104,6 @@ namespace Sense.Migrator
         public const string ResettingMessage = "Resetting database (schema {Schema})";
         public const string UnknownCommandMessage = "Unknown command: {Command}";
         public const string DoneMessage = "Completed: {Command}";
+        public const string PunchBackfillMessage = "Attendance punch backfill: {Days} days, {Punches} punches";
     }
 }

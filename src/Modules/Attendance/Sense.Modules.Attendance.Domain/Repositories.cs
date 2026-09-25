@@ -54,6 +54,15 @@ public interface IAttendanceDayRepository
 
     /// <summary>Ekip haftalık ızgarası (11.3.6): every recorded day in [from, to] across a set of employees, in one query.</summary>
     Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Eklenmiş ama kaydedilmemiş bir günü değişiklik izlemeden çıkarır (eşzamanlı aynı gün oluşturma yarışı sonrası yeniden deneme).</summary>
+    void Discard(AttendanceDay day);
+
+    /// <summary>Kaydetme hatası günün eşzamanlılık belirteci (xmin) çakışması mı - başka işlem aynı günü önce güncelledi.</summary>
+    bool IsConcurrencyConflict(Exception exception);
+
+    /// <summary>Kayıtlı günün değerlerini ve eşzamanlılık belirtecini veritabanından yeniden yükler (çakışma sonrası yeniden türetme).</summary>
+    Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default);
 }
 
 public interface IAnomalyResolutionRepository
@@ -164,6 +173,18 @@ public interface IPunchRepository
     Task<bool> ExistsAsync(
         Guid tenantId, Guid employeeId, DateTime occurredAtUtc, PunchDirection direction, Punches.PunchSource source,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Kimliğe göre okutma (silinmiş olsa da döner - silme/denetim akışı kendisi karar verir); açık <paramref name="tenantId"/> ile süzülür.</summary>
+    Task<Punches.Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kaydetme hatası eşzamanlı yazma tekillik ihlali mi - okutma indeksi (aynı okutma: hata değil, yoksayma) ya da puantaj günü
+    /// (Tenant, Employee, Date) indeksi (aynı günü iki işlem birden oluşturdu: yeniden denenir, gün güncellenir).
+    /// </summary>
+    bool IsDuplicateKeyViolation(Exception exception);
+
+    /// <summary>Eklenmiş ama kaydedilmemiş bir okutmayı değişiklik izlemeden çıkarır (başarısız toplu alım / tekillik yarışı sonrası).</summary>
+    void Discard(Punches.Punch punch);
 }
 
 public interface IShiftDefinitionRepository

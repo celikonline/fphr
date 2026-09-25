@@ -193,6 +193,12 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("resolution_state");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasColumnType("text")

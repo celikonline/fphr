@@ -30,7 +30,7 @@ public sealed class RecalculationJobAndScopeTests
         var approvals = Substitute.For<IMonthlyTimesheetApprovalRepository>();
         approvals.ListForPeriodAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns([]);
         var rebuilder = Substitute.For<IDayRebuilder>();
-        var executor = new RecalculationExecutor(days, approvals, rebuilder, Substitute.For<IEmployeeDirectory>(), Substitute.For<IAttendanceUnitOfWork>());
+        var executor = new RecalculationExecutor(days, approvals, rebuilder, Substitute.For<IAttendanceUnitOfWork>(), Substitute.For<IEmployeeDirectory>());
         var services = new ServiceCollection()
             .AddSingleton(Substitute.For<ITenantContextSetter>())
             .AddSingleton(executor)
@@ -68,7 +68,9 @@ public sealed class RecalculationJobAndScopeTests
         planner.ResolveAsync(employee, date, Arg.Any<TimeOnly?>(), Arg.Any<CancellationToken>()).Returns(
             new PlannedDay(new TimeOnly(9, 0), new TimeOnly(17, 0), 480, 0, Rules: new ShiftRules(15, 0, null, null, null, null, 0), ShiftDefinitionId: Guid.NewGuid()));
         var settings = Substitute.For<IShiftSettingsRepository>();
-        var rebuilder = new ExistingRecordDayRebuilder(days, planner, settings);
+        var rebuilder = new PunchDayRebuilder(
+            days, new InMemoryPunchRepository(), planner, Substitute.For<IMonthlyTimesheetApprovalRepository>(), settings,
+            new FixedLocalClock(new DateTime(2026, 9, 30, 12, 0, 0, DateTimeKind.Utc)));
 
         var rebuilt = await rebuilder.RebuildAsync(_tenantId, employee, date, TestContext.Current.CancellationToken);
 

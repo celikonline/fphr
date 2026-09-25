@@ -1,3 +1,6 @@
+using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Shifts;
@@ -6,11 +9,9 @@ namespace Sense.Modules.Attendance.Application.Recalculation;
 
 /// <summary>
 /// Port: rebuilds ONE (employee, date) <see cref="AttendanceDay"/> from its source facts (punches + resolved plan) and
-/// returns the day, or null when there is nothing to build (no record and no punches). The recalculator owns the K6
-/// rules (approved months skipped, resolution/override preserved, chunking, idempotence); the rebuilder owns only the
+/// returns the day, or null when there is nothing to build (no record and no punches) or the month is locked. The recalculator
+/// owns the K6 rules (approved months skipped, resolution/override preserved, chunking, idempotence); the rebuilder owns only the
 /// derivation. It does not save - the recalculator commits per chunk.
-/// The default implementation (<see cref="ExistingRecordDayRebuilder"/>) re-resolves the plan for days that already have
-/// a record; the punch-based implementation (B1 DayFromPunches + B2 PlannedDayResolver) replaces it in DI once merged.
 /// </summary>
 public interface IDayRebuilder
 {
@@ -18,29 +19,51 @@ public interface IDayRebuilder
 }
 
 /// <summary>
-/// Re-derives an existing day's plan/anomalies from its stored check-in/out (no punches involved), through the same
-/// <see cref="AttendanceDays.IPlannedDayResolver"/> + <see cref="AttendanceDays.AttendanceDayUpsert"/> path check-in channels use, so
-/// the ShiftDefinition rule set (tolerances, overtime thresholds) is applied.
-/// I0 CONNECTION POINT: the punch-based rebuild (B1 DayFromPunches) replaces this class behind <see cref="IDayRebuilder"/>
-/// (DI line in AttendanceServiceCollectionExtensions.AddAttendanceServices) - derive check-in/out from
-/// IPunchRepository.ListForDayAsync, then call AttendanceDayUpsert.UpsertAsync(days, planner, ...) the same way.
+/// Punch-based rebuild (zaman-devam I0: B1 okutma hattı + B2 K2 planı + B3 yeniden hesap): the day is re-derived from its punches
+/// through the same <see cref="PunchDayWriter"/> every check-in channel uses, so the plan comes from <see cref="IPlannedDayResolver"/>
+/// (vardiya ataması + tanım kuralları → çalışma çizelgesi → plansız) and the Incalculable rules (tutarsız okutma, plansız okutma,
+/// dinamik vardiya eşitliği, gece vardiyası çakışması) are the channels' own. Rolling deploy: a day an older API wrote without punches
+/// is first converted to punches (<see cref="PunchDayWriter.LoadDayAsync"/> with <c>seedLegacy</c>), so its check-in/out survive.
+/// Tenant shift limits apply to every rebuilt day. One writer per scope (the recalculator's chunk scope), so plan windows, month locks
+/// and days created during the run are cached across calls.
 /// </summary>
-public sealed class ExistingRecordDayRebuilder(
-    IAttendanceDayRepository days, AttendanceDays.IPlannedDayResolver planner, IShiftSettingsRepository settings) : IDayRebuilder
+public sealed class PunchDayRebuilder(
+    IAttendanceDayRepository days, IPunchRepository punches, IPlannedDayResolver planner, IMonthlyTimesheetApprovalRepository approvals,
+    IShiftSettingsRepository settings, ITenantLocalClock clock) : IDayRebuilder
 {
+    private (Guid TenantId, PunchDayWriter Writer, ShiftLimits Limits)? _session;
+
     public async Task<AttendanceDay?> RebuildAsync(Guid tenantId, Guid employeeId, DateOnly date, CancellationToken cancellationToken)
     {
-        var existing = await days.FindByEmployeeAndDateAsync(employeeId, date, cancellationToken).ConfigureAwait(false);
-        if (existing is null)
+        var (writer, limits) = await SessionAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        if (await writer.IsLockedAsync(employeeId, date, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
 
-        var limits = AttendanceDays.AttendanceDayUpsert.ToShiftLimits(await settings.FindAsync(cancellationToken).ConfigureAwait(false));
-        var overnight = existing.CheckIn is { } checkIn && existing.CheckOut is { } checkOut && checkOut <= checkIn;
-        var result = await AttendanceDays.AttendanceDayUpsert.UpsertAsync(
-            days, planner, tenantId, employeeId, date, existing.CheckIn, existing.CheckOut, existing.Source, overnight, cancellationToken,
-            existing.ActualBreakMinutes, limits).ConfigureAwait(false);
-        return result.IsFailure ? null : result.Value;
+        var dayPunches = await writer.LoadDayAsync(employeeId, date, seedLegacy: true, cancellationToken).ConfigureAwait(false);
+        var existing = await writer.FindDayAsync(employeeId, date, cancellationToken).ConfigureAwait(false);
+        if (existing is null && dayPunches.Count == 0)
+        {
+            return null;
+        }
+
+        var rebuilt = await writer.RebuildAsync(employeeId, date, existing?.Source, limits, forceIncalculable: false, cancellationToken).ConfigureAwait(false);
+        return rebuilt.IsFailure ? null : rebuilt.Value;
+    }
+
+    private async Task<(PunchDayWriter Writer, ShiftLimits Limits)> SessionAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        if (_session is { } session && session.TenantId == tenantId)
+        {
+            return (session.Writer, session.Limits);
+        }
+
+        var zone = await clock.GetTimeZoneAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var now = await clock.NowAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        var limits = AttendanceDayUpsert.ToShiftLimits(await settings.FindAsync(cancellationToken).ConfigureAwait(false));
+        var writer = new PunchDayWriter(tenantId, days, punches, planner, approvals, zone, now.Utc);
+        _session = (tenantId, writer, limits);
+        return (writer, limits);
     }
 }
