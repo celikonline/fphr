@@ -28,4 +28,13 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>Zaman-devam Z0.3: recalculation range starts after it ends.</summary>
+    public const string RecalculationRangeInvalid = "attendance.recalculation.range_invalid";
+
+    /// <summary>Zaman-devam Z0.3: recalculation range longer than a year.</summary>
+    public const string RecalculationRangeTooLong = "attendance.recalculation.range_too_long";
+
+    /// <summary>Zaman-devam Z0.3: no recalculation job with this id for the tenant (or it was lost on restart).</summary>
+    public const string RecalculationJobNotFound = "attendance.recalculation.job_not_found";
 }

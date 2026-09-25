@@ -4,11 +4,13 @@ using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
+using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
@@ -26,6 +28,14 @@ public static class AttendanceServiceCollectionExtensions
         // Raporlar menüsü katkıları (senseik-029) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlySummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
+
+        // Zaman-devam Z0.3: yeniden hesaplama (API-only: IEmployeeDirectory Worker'da yok). IDayRebuilder, B1/B2 birleşince punch tabanlı gerçeğiyle değiştirilir.
+        services.AddScoped<IDayRebuilder, ExistingRecordDayRebuilder>();
+        services.AddScoped<RecalculationExecutor>();
+        services.AddSingleton<RecalculationJobStore>();
+        services.AddSingleton<AttendanceDayRecalculator>();
+        services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
+        services.AddHostedService<RecalculationHostedService>();
         return services;
     }
 

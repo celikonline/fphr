@@ -1591,4 +1591,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
   <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
   <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
+  <data name="attendance.recalculation.range_invalid" xml:space="preserve"><value>Invalid recalculation range: the start date cannot be after the end date.</value></data>
+  <data name="attendance.recalculation.range_too_long" xml:space="preserve"><value>A recalculation range can span at most 366 days.</value></data>
+  <data name="attendance.recalculation.job_not_found" xml:space="preserve"><value>Recalculation job not found.</value></data>
 </root>

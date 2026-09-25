@@ -188,6 +188,23 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         }
     }
 
+    /// <summary>
+    /// Yeniden hesaplama sonrası (zaman-devam Z0.3, K6) daha önce verilmiş çözümü geri yükler: <see cref="Recompute"/> her
+    /// hesapta override'ı siler ve durumu sıfırlar, oysa insan kararı (Resolved/Ignored + override) yeniden hesapla ezilmemeli.
+    /// Yalnız gün hâlâ anomali taşıyorsa ve önceki durum çözülmüş/yok sayılmışsa geçerlidir; anomali kalmadıysa gün zaten Resolved.
+    /// </summary>
+    public void RestoreResolution(AttendanceResolutionState state, int? overrideWorkedMinutes, string? overrideReason)
+    {
+        if (Anomalies == AttendanceAnomaly.None || state == AttendanceResolutionState.Unresolved)
+        {
+            return;
+        }
+
+        ResolutionState = state;
+        OverrideWorkedMinutes = overrideWorkedMinutes;
+        OverrideReason = overrideReason;
+    }
+
     private Result EnsureResolvable()
     {
         if (Anomalies == AttendanceAnomaly.None)
