@@ -10,6 +10,7 @@ import trAttendance from "../../../public/locales/tr/attendance.json";
 import trCommon from "../../../public/locales/tr/common.json";
 import trEmployees from "../../../public/locales/tr/employees.json";
 import ShiftPlanPage from "./shift-plan";
+import { SHIFT_PALETTE_MIME } from "@/components/attendance/shift-palette";
 import { useAuthStore } from "@/store/auth.store";
 import { toDateOnly } from "@/lib/dates";
 import { listEmployees } from "@/services/employees.service";
@@ -132,7 +133,21 @@ beforeEach(() => {
   vi.mocked(getUnpublishedShiftCount).mockResolvedValue(0);
   vi.mocked(getShiftPlanLockStatus).mockResolvedValue({ isLocked: false } as never);
   vi.mocked(listShiftDefinitions).mockResolvedValue([
-    { id: "sd1", name: "Sabah", startTime: "08:00:00", endTime: "16:00:00", breakMinutes: 30, isActive: true },
+    {
+      id: "sd1",
+      code: "S",
+      name: "Sabah",
+      colorHex: "#22aa55",
+      type: "fixed",
+      startMinute: 480,
+      endMinute: 960,
+      startsPreviousDay: false,
+      breaks: [],
+      lateToleranceMinutes: 0,
+      earlyLeaveToleranceMinutes: 0,
+      bonusMinutes: 0,
+      isActive: true,
+    },
   ]);
   vi.mocked(getShiftPlanTotals).mockResolvedValue({ byDate: [], byEmployee: [] });
   vi.mocked(bulkAssignShifts).mockResolvedValue({ affectedCount: 1, skipped: [] });
@@ -179,6 +194,7 @@ describe("ShiftPlanPage calendar (Z3.1)", () => {
   it("drag_palette_shift_to_cell_assigns", async () => {
     renderPage();
     const chip = await findPalette("shift-sd1");
+    expect(chip).toHaveTextContent("Sabah 08:00–16:00");
     const dt = dataTransfer();
     fireEvent.dragStart(chip, { dataTransfer: dt });
     const target = await screen.findByTestId(`shift-cell-e1-${weekDay(2)}`);
@@ -274,6 +290,7 @@ describe("ShiftPlanPage calendar (Z3.1)", () => {
     expect(chip).toHaveAttribute("draggable", "false");
 
     const dt = dataTransfer();
+    dt.setData(SHIFT_PALETTE_MIME, JSON.stringify({ kind: "shift", shiftDefinitionId: "sd1" }));
     fireEvent.drop(await screen.findByTestId(`shift-cell-e1-${weekDay(0)}`), { dataTransfer: dt });
     fireEvent.click(cell("e1", 0));
     expect(bulkAssignShifts).not.toHaveBeenCalled();
@@ -285,5 +302,68 @@ describe("ShiftPlanPage calendar (Z3.1)", () => {
     renderPage();
     await screen.findByTestId(`shift-cell-e1-${weekDay(0)}`);
     expect(screen.queryByTestId("palette-shift-sd1")).not.toBeInTheDocument();
+  });
+
+  it("keyboard_armed_palette_chip_then_enter_on_cell_assigns", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await findPalette("shift-sd1"));
+    expect(bulkAssignShifts).not.toHaveBeenCalled();
+    const target = await screen.findByTestId(`shift-cell-e2-${weekDay(1)}`);
+    expect(target).toHaveAttribute("role", "gridcell");
+    target.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(bulkAssignShifts).toHaveBeenCalledWith({
+        employeeIds: ["e2"],
+        dates: [weekDay(1)],
+        shiftDefinitionId: "sd1",
+        dayType: "work",
+      })
+    );
+  });
+
+  it("keyboard_arrows_move_focus_and_shift_arrows_select_range", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const start = await screen.findByTestId(`shift-cell-e1-${weekDay(0)}`);
+    start.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(cell("e1", 1)).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(cell("e2", 1)).toHaveFocus();
+    await user.keyboard("{ArrowLeft}{ArrowUp}");
+    expect(cell("e1", 0)).toHaveFocus();
+
+    await user.keyboard("{Shift>}{ArrowRight}{ArrowRight}{ArrowDown}{/Shift}");
+    expect(await screen.findByText("6 hücre seçili")).toBeInTheDocument();
+    expect(cell("e2", 2)).toHaveFocus();
+    expect(cell("e1", 0)).toHaveAttribute("aria-selected", "true");
+    expect(cell("e2", 2)).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Shift>}{ArrowLeft}{/Shift}");
+    expect(await screen.findByText("4 hücre seçili")).toBeInTheDocument();
+  });
+
+  it("locks_cells_per_month_when_week_spans_two_months", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 8, 30, 12) }); // Wed 30 Sep: week 28 Sep – 4 Oct
+    try {
+      vi.mocked(getShiftPlanLockStatus).mockImplementation(
+        async (month: string) => ({ isLocked: month.startsWith("2026-10") }) as never
+      );
+      renderPage();
+      const septCell = await screen.findByTestId("shift-cell-e1-2026-09-29");
+      const octCell = await screen.findByTestId("shift-cell-e1-2026-10-01");
+      await waitFor(() => expect(octCell).toHaveAttribute("aria-disabled", "true"));
+      expect(septCell).not.toHaveAttribute("aria-disabled", "true");
+
+      const dt = dataTransfer();
+      dt.setData(SHIFT_PALETTE_MIME, JSON.stringify({ kind: "shift", shiftDefinitionId: "sd1" }));
+      fireEvent.drop(octCell, { dataTransfer: dt });
+      expect(bulkAssignShifts).not.toHaveBeenCalled();
+      fireEvent.drop(septCell, { dataTransfer: dt });
+      await waitFor(() => expect(bulkAssignShifts).toHaveBeenCalledTimes(1));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

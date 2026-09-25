@@ -30,15 +30,17 @@ interface ShiftPaletteProps {
   definitions: ShiftDefinition[];
   /** Locked period / missing plan permission: chips are inert. */
   disabled: boolean;
+  /** Chip selected for keyboard use: the next Enter on a cell applies it. */
+  armed?: PalettePayload | null;
   onPick: (payload: PalettePayload) => void;
 }
 
-/** "HH:mm:ss" → "HH:mm". */
-const hhmm = (value: string) => value.slice(0, 5);
+/** Minutes from day start → "HH:mm" (an overnight end wraps past 24h). */
+const hhmm = (minute: number) => `${String(Math.floor(minute / 60) % 24).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
-export default function ShiftPalette({ definitions, disabled, onPick }: ShiftPaletteProps) {
+export default function ShiftPalette({ definitions, disabled, armed, onPick }: ShiftPaletteProps) {
   const { t } = useTranslation(["attendance"]);
-  const active = definitions.filter((d) => d.id && d.isActive !== false);
+  const active = definitions.filter((d) => d.id && d.isActive);
 
   return (
     <Paper withBorder p="sm" radius="md">
@@ -59,9 +61,11 @@ export default function ShiftPalette({ definitions, disabled, onPick }: ShiftPal
             <PaletteChip
               key={definition.id}
               testId={`palette-shift-${definition.id}`}
-              label={`${definition.name} ${hhmm(definition.startTime)}–${hhmm(definition.endTime)}`}
+              colorHex={definition.colorHex}
+              label={`${definition.name} ${hhmm(definition.startMinute)}–${hhmm(definition.endMinute)}`}
               payload={{ kind: "shift", shiftDefinitionId: definition.id as string }}
               disabled={disabled}
+              armed={isArmed(armed, { kind: "shift", shiftDefinitionId: definition.id as string })}
               onPick={onPick}
             />
           ))}
@@ -77,6 +81,7 @@ export default function ShiftPalette({ definitions, disabled, onPick }: ShiftPal
               label={t(`attendance:shiftPlan.dayType.${dayType}`)}
               payload={{ kind: "dayType", dayType }}
               disabled={disabled}
+              armed={isArmed(armed, { kind: "dayType", dayType })}
               onPick={onPick}
             />
           ))}
@@ -86,15 +91,21 @@ export default function ShiftPalette({ definitions, disabled, onPick }: ShiftPal
   );
 }
 
+function isArmed(armed: PalettePayload | null | undefined, payload: PalettePayload): boolean {
+  return !!armed && JSON.stringify(armed) === JSON.stringify(payload);
+}
+
 interface PaletteChipProps {
   testId: string;
   label: string;
   payload: PalettePayload;
+  colorHex?: string;
   disabled: boolean;
+  armed: boolean;
   onPick: (payload: PalettePayload) => void;
 }
 
-function PaletteChip({ testId, label, payload, disabled, onPick }: PaletteChipProps) {
+function PaletteChip({ testId, label, payload, colorHex, disabled, armed, onPick }: PaletteChipProps) {
   const handleDragStart = (event: DragEvent<HTMLDivElement>) => {
     if (disabled) return event.preventDefault();
     event.dataTransfer.setData(SHIFT_PALETTE_MIME, JSON.stringify(payload));
@@ -110,6 +121,7 @@ function PaletteChip({ testId, label, payload, disabled, onPick }: PaletteChipPr
     <Paper
       component="div"
       withBorder
+      bd={armed ? "2px solid var(--mantine-primary-color-filled)" : undefined}
       px="sm"
       py={4}
       radius="xl"
@@ -117,13 +129,17 @@ function PaletteChip({ testId, label, payload, disabled, onPick }: PaletteChipPr
       tabIndex={disabled ? -1 : 0}
       draggable={!disabled}
       aria-disabled={disabled}
+      aria-pressed={armed}
       data-testid={testId}
       onDragStart={handleDragStart}
       onClick={() => !disabled && onPick(payload)}
       onKeyDown={handleKeyDown}
       style={{ cursor: disabled ? "not-allowed" : "grab", opacity: disabled ? 0.5 : 1, userSelect: "none" }}
     >
-      <Text size="sm">{label}</Text>
+      <Group gap={6} wrap="nowrap">
+        {colorHex && <span aria-hidden style={{ width: 8, height: 8, borderRadius: 4, background: colorHex }} />}
+        <Text size="sm">{label}</Text>
+      </Group>
     </Paper>
   );
 }

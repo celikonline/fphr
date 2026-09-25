@@ -21,7 +21,7 @@ import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
-import ShiftCalendarGrid, { cellKey, cellRange, isNonWorkDay } from "@/components/attendance/shift-calendar-grid";
+import ShiftCalendarGrid, { cellKey, cellRange, isNonWorkDay, type CellRef } from "@/components/attendance/shift-calendar-grid";
 import ShiftPalette, { type PalettePayload } from "@/components/attendance/shift-palette";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -96,6 +96,7 @@ function ShiftPlan() {
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set());
   const [selectionAnchor, setSelectionAnchor] = useState<{ employeeId: string; date: string } | null>(null);
+  const [armedPayload, setArmedPayload] = useState<PalettePayload | null>(null);
   const [clearing, setClearing] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
 
@@ -130,6 +131,15 @@ function ShiftPlan() {
   const unpublishedQuery = useQuery({
     queryKey: [...KEY_PREFIX, "unpublished", weekStartIso],
     queryFn: () => getUnpublishedShiftCount({ from: weekStartIso, to: weekEnd }),
+  });
+
+  /** A week can span two months; each month has its own lock. */
+  const weekEndMonth = `${weekEnd.slice(0, 7)}-01`;
+  const endMonthDiffers = weekEndMonth !== periodMonth;
+  const endLockQuery = useQuery({
+    queryKey: [...KEY_PREFIX, "lock", weekEndMonth],
+    queryFn: () => getShiftPlanLockStatus(weekEndMonth),
+    enabled: endMonthDiffers,
   });
 
   const lockQuery = useQuery({
@@ -220,6 +230,7 @@ function ShiftPlan() {
       await invalidateAll();
       reportBulkResult(result);
       resetSelection();
+      setArmedPayload(null);
     },
     onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("attendance:genericError")) }),
   });
@@ -273,7 +284,13 @@ function ShiftPlan() {
   const isError = employeesQuery.isError || assignmentsQuery.isError;
   const isLocked = lockQuery.data?.isLocked ?? false;
   const draftCount = (assignmentsQuery.data ?? []).filter((a) => a.status === "draft").length;
-  const canEditCells = canPlan && !isLocked;
+  const isDateLocked = (date: string) => {
+    const month = `${date.slice(0, 7)}-01`;
+    if (month === periodMonth) return lockQuery.data?.isLocked ?? false;
+    return month === weekEndMonth ? (endLockQuery.data?.isLocked ?? false) : false;
+  };
+  const lockedDayCount = weekDates.filter(isDateLocked).length;
+  const canEditCells = canPlan && lockedDayCount < weekDates.length;
 
   const handleCellClick = (employeeId: string, date: string, extend: boolean) => {
     if (extend && selectionAnchor) {
@@ -299,9 +316,26 @@ function ShiftPlan() {
     });
   };
 
+  /** With a selection the chip applies at once; otherwise it is armed for a keyboard Enter on a cell. */
   const handlePaletteClick = (payload: PalettePayload) => {
-    if (selectedKeys.size === 0) return;
+    if (selectedKeys.size === 0) {
+      setArmedPayload((current) => (JSON.stringify(current) === JSON.stringify(payload) ? null : payload));
+      return;
+    }
     assignMutation.mutate({ ...selectedCells, payload });
+  };
+
+  const handleCellActivate = (employeeId: string, date: string) => {
+    if (armedPayload) return handleCellDrop(employeeId, date, armedPayload);
+    handleCellClick(employeeId, date, false);
+  };
+
+  const handleCellExtend = (from: CellRef, to: CellRef) => {
+    const anchor = selectionAnchor ?? from;
+    const range = cellRange(visibleEmployees.map((e) => e.id), weekDates, anchor, to);
+    if (!range) return;
+    setSelectionAnchor(anchor);
+    setSelectedKeys(new Set(range.employeeIds.flatMap((id) => range.dates.map((d) => cellKey(id, d)))));
   };
 
   const changeWeek = (days: number) => {
@@ -386,8 +420,8 @@ function ShiftPlan() {
 
       {canPlan && (
         <>
-          <ShiftPalette definitions={definitionsQuery.data ?? []} disabled={!canEditCells || assignMutation.isPending} onPick={handlePaletteClick} />
-          {isLocked && (
+          <ShiftPalette definitions={definitionsQuery.data ?? []} disabled={!canEditCells || assignMutation.isPending} armed={armedPayload} onPick={handlePaletteClick} />
+          {lockedDayCount > 0 && (
             <Text size="sm" c="dimmed">
               {t("attendance:shiftPlan.lockedEditHint")}
             </Text>
@@ -464,7 +498,10 @@ function ShiftPlan() {
             editable={canEditCells}
             totalsByDate={totalsByDate}
             language={i18n.language}
+            isDateLocked={isDateLocked}
             onCellClick={handleCellClick}
+            onCellExtend={handleCellExtend}
+            onCellActivate={handleCellActivate}
             onCellDrop={handleCellDrop}
           />
         </>
