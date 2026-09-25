@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal } from "@mantine/core";
+import { Button, Group, Modal } from "@mantine/core";
 
 /**
  * Left-aligned Mantine `Modal` for create/edit forms (senseik-021). Mantine's `Modal` centers
@@ -16,7 +16,27 @@ import { Modal } from "@mantine/core";
  * intentionally keep using the plain Mantine `Modal` with `centered` — this wrapper is only for
  * multi-field forms, not yes/no prompts.
  */
-export function FormModal(props: ComponentProps<typeof Modal>) {
+export type FormModalProps = ComponentProps<typeof Modal> & {
+  /**
+   * Optional "Oluştur ve Yeni" action (E9). When given, a secondary button is rendered under the
+   * content; the caller owns validation/submit and resets its own form while the modal stays open.
+   * Omitted → the modal renders exactly as before.
+   */
+  onSaveAndNew?: () => void;
+};
+
+export function FormModal({ onSaveAndNew, children, ...props }: FormModalProps) {
   const { t } = useTranslation("common");
-  return <Modal closeButtonProps={{ "aria-label": t("close") }} {...props} styles={{ inner: { justifyContent: "flex-start" } }} />;
+  return (
+    <Modal closeButtonProps={{ "aria-label": t("close") }} {...props} styles={{ inner: { justifyContent: "flex-start" } }}>
+      {children}
+      {onSaveAndNew && (
+        <Group justify="flex-end" mt="sm">
+          <Button type="button" variant="light" data-testid="form-modal-save-and-new" onClick={onSaveAndNew}>
+            {t("saveAndNew")}
+          </Button>
+        </Group>
+      )}
+    </Modal>
+  );
 }

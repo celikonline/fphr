@@ -21,7 +21,9 @@
     "button": "Yeni çalışan ekle",
     "title": "Yeni çalışan ekle",
     "description": "Ad ve soyad yeterlidir; diğer bilgileri daha sonra çalışan kartından tamamlayabilirsiniz.",
-    "success": "Çalışan oluşturuldu."
+    "success": "Çalışan oluşturuldu.",
+    "sendCredentials": "Giriş bilgileri e-posta ile gönderilsin",
+    "inviteFailed": "Davet gönderilemedi: {{message}}"
   },
   "filters": {
     "orgUnit": "Birim",
@@ -412,7 +414,8 @@
     "outcome": {
       "sent": "Davetiye gönderildi",
       "resent": "Davetiye yeniden gönderildi",
-      "alreadyactive": "Hesap zaten aktif"
+      "alreadyactive": "Hesap zaten aktif",
+      "notrequested": "Giriş bilgisi gönderilmedi."
     },
     "sentTo": "Gönderilen adres: {{email}}"
   },

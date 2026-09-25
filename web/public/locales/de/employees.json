@@ -21,7 +21,9 @@
     "button": "Neue:n Mitarbeitende:n hinzufügen",
     "title": "Neue:n Mitarbeitende:n hinzufügen",
     "description": "Vor- und Nachname genügen; die übrigen Angaben können Sie später auf der Mitarbeiterkarte ergänzen.",
-    "success": "Mitarbeitende:r angelegt."
+    "success": "Mitarbeitende:r angelegt.",
+    "sendCredentials": "Zugangsdaten per E-Mail senden",
+    "inviteFailed": "Einladung konnte nicht gesendet werden: {{message}}"
   },
   "filters": {
     "orgUnit": "Einheit",
@@ -412,7 +414,8 @@
     "outcome": {
       "sent": "Einladung gesendet",
       "resent": "Einladung erneut gesendet",
-      "alreadyactive": "Das Konto ist bereits aktiv"
+      "alreadyactive": "Das Konto ist bereits aktiv",
+      "notrequested": "Zugangsdaten wurden nicht gesendet."
     },
     "sentTo": "Gesendet an: {{email}}"
   },
