@@ -167,6 +167,36 @@ public sealed class ShiftTemplateTests
     }
 
     [Fact]
+    public async Task Apply_writes_day_off_rows_without_hours()
+    {
+        var template = await SavedTemplate();
+        var added = new List<ShiftAssignment>();
+        _shifts.When(s => s.Add(Arg.Any<ShiftAssignment>())).Do(ci => added.Add(ci.Arg<ShiftAssignment>()));
+
+        var result = await ApplyHandler().Handle(new ApplyShiftTemplateCommand(template.Id, TargetStart, false), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        var rest = added.Single(a => a.DayType == ShiftDayType.WeeklyRest);
+        rest.Start.ShouldBe(TimeOnly.MinValue);
+        rest.End.ShouldBe(TimeOnly.MinValue);
+        rest.ShiftMinutes.ShouldBe(0);
+        rest.ShiftDefinitionId.ShouldBeNull();
+        added.Where(a => a.DayType == ShiftDayType.Work).ShouldAllBe(a => a.ShiftDefinitionId != null && a.ShiftMinutes > 0);
+    }
+
+    [Fact]
+    public async Task Create_fails_when_current_user_is_unknown()
+    {
+        _currentUser.UserId.Returns((Guid?)null);
+
+        var result = await CreateHandler().Handle(
+            new CreateShiftTemplateCommand("T", 7, [new ShiftTemplateEntryDto(_employeeId, 0, _morning.Id, ShiftDayType.Work)]), TestContext.Current.CancellationToken);
+
+        result.IsFailure.ShouldBeTrue();
+        _templates.DidNotReceive().Add(Arg.Any<ShiftPlanTemplate>());
+    }
+
+    [Fact]
     public async Task Import_row_with_unknown_shift_code_fails_row_only()
     {
         var batch = Batch(

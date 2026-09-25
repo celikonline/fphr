@@ -81,6 +81,11 @@ public sealed class CreateShiftTemplateHandler(
 {
     public async Task<Result<Guid>> Handle(CreateShiftTemplateCommand command, CancellationToken cancellationToken)
     {
+        if (currentUser.UserId is not { } userId)
+        {
+            return Error.Unauthorized(ErrorCodes.Unauthenticated);
+        }
+
         var access = await ShiftTemplateEmployeeGuard.EnsureInScopeAndActiveAsync(
             command.Entries.Select(e => e.EmployeeId), tenant.TenantId, dataScope, employeeLookup, cancellationToken);
         if (access.IsFailure)
@@ -104,7 +109,7 @@ public sealed class CreateShiftTemplateHandler(
         var entries = command.Entries
             .Select(e => ShiftPlanTemplateEntry.Of(e.EmployeeId, e.DayOffset, e.DayType == ShiftDayType.Work ? e.ShiftDefinitionId : null, e.DayType))
             .ToList();
-        var created = ShiftPlanTemplate.Create(tenant.TenantId, command.Name, command.PeriodLengthDays, entries, currentUser.UserId ?? Guid.Empty);
+        var created = ShiftPlanTemplate.Create(tenant.TenantId, command.Name, command.PeriodLengthDays, entries, userId);
         if (created.IsFailure)
         {
             return created.Error;

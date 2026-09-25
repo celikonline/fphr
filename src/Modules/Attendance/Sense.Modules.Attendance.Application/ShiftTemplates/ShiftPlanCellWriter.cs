@@ -7,21 +7,6 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.ShiftTemplates;
 
-/// <summary>Bir vardiya tanımının plan satırına yazılacak saatleri (tanım tipine göre); gece vardiyasında bitiş başlangıçtan küçüktür.</summary>
-internal static class ShiftTemplateTimes
-{
-    private const int MinutesPerDay = 24 * 60;
-
-    public static (TimeOnly Start, TimeOnly End, int BreakMinutes) Resolve(ShiftDefinition definition)
-    {
-        var startMinute = definition.Type == ShiftType.Flexible ? definition.FlexStartEarliestMinute ?? definition.StartMinute : definition.StartMinute;
-        var endMinute = definition.Type == ShiftType.Flexible && definition.DurationMinutes is { } duration ? startMinute + duration : definition.EndMinute;
-        return (ToTime(startMinute), ToTime(endMinute), definition.Breaks.Sum(b => b.DurationMinutes));
-    }
-
-    private static TimeOnly ToTime(int minute) => TimeOnly.MinValue.AddMinutes(((minute % MinutesPerDay) + MinutesPerDay) % MinutesPerDay);
-}
-
 /// <summary>Ay başına tek sorgu ile plan kilidi denetimi (kilitli ay hücreleri atlanır/reddedilir).</summary>
 internal sealed class ShiftLockCache(IShiftPlanLockRepository locks)
 {
@@ -46,8 +31,6 @@ internal sealed class ShiftLockCache(IShiftPlanLockRepository locks)
 /// </summary>
 internal sealed class ShiftPlanCellWriter(ITenantContext tenant, IShiftAssignmentRepository shifts, IEmployeeAvailabilityRepository availability, ShiftSettings settings)
 {
-    private static readonly TimeOnly DayOffEnd = TimeOnly.MinValue.AddMinutes(1);
-
     private readonly Dictionary<(Guid EmployeeId, DateOnly WeekStart), List<ShiftAssignment>> _weeks = [];
     private readonly List<ShiftAssignment> _added = [];
 
@@ -63,60 +46,72 @@ internal sealed class ShiftPlanCellWriter(ITenantContext tenant, IShiftAssignmen
     {
         var week = await WeekAsync(employeeId, date, cancellationToken);
         var existing = week.FirstOrDefault(a => a.Date == date);
-        var (start, end, breakMinutes) = dayType == ShiftDayType.Work && definition is not null
-            ? ShiftTemplateTimes.Resolve(definition)
-            : (TimeOnly.MinValue, DayOffEnd, 0);
-        var isNight = dayType == ShiftDayType.Work && ShiftNightClassifier.Resolve(settings, start, end, false);
+        var written = dayType == ShiftDayType.Work && definition is not null
+            ? await WriteWorkAsync(employeeId, date, definition, week, existing, cancellationToken)
+            : WriteDayOff(employeeId, date, dayType, existing);
+        if (written.IsFailure)
+        {
+            return written.Error;
+        }
 
+        if (existing is null)
+        {
+            shifts.Add(written.Value);
+            week.Add(written.Value);
+            _added.Add(written.Value);
+        }
+
+        return (written.Value, existing is not null);
+    }
+
+    private Result<ShiftAssignment> WriteDayOff(Guid employeeId, DateOnly date, ShiftDayType dayType, ShiftAssignment? existing)
+    {
+        if (existing is null)
+        {
+            return ShiftAssignment.CreateDayOff(tenant.TenantId, employeeId, date, dayType);
+        }
+
+        var applied = existing.ApplyDayOff(dayType);
+        return applied.IsFailure ? applied.Error : existing;
+    }
+
+    private async Task<Result<ShiftAssignment>> WriteWorkAsync(
+        Guid employeeId, DateOnly date, ShiftDefinition definition, List<ShiftAssignment> week, ShiftAssignment? existing, CancellationToken cancellationToken)
+    {
+        var (start, end, breakMinutes) = ShiftDefinitionTimes.Resolve(definition);
+        var isNight = ShiftNightClassifier.Resolve(settings, start, end, false);
         var candidate = ShiftAssignment.Create(tenant.TenantId, employeeId, date, start, end, breakMinutes, isNight, null);
         if (candidate.IsFailure)
         {
             return candidate.Error;
         }
 
-        if (dayType == ShiftDayType.Work)
+        var checks = await ValidateWorkAsync(employeeId, date, week, existing, candidate.Value, cancellationToken);
+        if (checks.IsFailure)
         {
-            var checks = await ValidateWorkAsync(employeeId, date, week, existing, candidate.Value, cancellationToken);
-            if (checks.IsFailure)
-            {
-                return checks.Error;
-            }
+            return checks.Error;
         }
 
         var target = existing ?? candidate.Value;
         if (existing is not null)
         {
-            var updated = existing.Update(start, end, breakMinutes, isNight, null);
+            var updated = existing.Update(start, end, breakMinutes, isNight, existing.Note);
             if (updated.IsFailure)
             {
                 return updated.Error;
             }
         }
 
-        var planned = target.SetPlan(dayType == ShiftDayType.Work ? definition?.Id : null, dayType);
-        if (planned.IsFailure)
-        {
-            return planned.Error;
-        }
-
-        if (existing is null)
-        {
-            shifts.Add(target);
-            week.Add(target);
-            _added.Add(target);
-        }
-
-        return (target, existing is not null);
+        var planned = target.SetPlan(definition.Id, ShiftDayType.Work);
+        return planned.IsFailure ? planned.Error : target;
     }
 
     private async Task<Result> ValidateWorkAsync(
         Guid employeeId, DateOnly date, List<ShiftAssignment> week, ShiftAssignment? existing, ShiftAssignment candidate, CancellationToken cancellationToken)
     {
-        // Yalnız çalışma günleri limit/dinlenme hesabına girer; gün türü olan satırların saati yoktur.
-        var workWeek = week.Where(a => a.DayType == ShiftDayType.Work).ToList();
-        var pending = _added.Where(a => a.DayType == ShiftDayType.Work).ToList();
-        var known = await ShiftAdjacency.WithAdjacentDaysAsync(shifts, employeeId, date, workWeek, pending, cancellationToken);
-        var limits = ShiftLimitValidator.Validate(settings, known.Where(a => a.DayType == ShiftDayType.Work).ToList(), existing?.Id ?? Guid.Empty, candidate);
+        // ShiftLimitValidator gün türü Work olmayan satırları kendisi saymaz.
+        var known = await ShiftAdjacency.WithAdjacentDaysAsync(shifts, employeeId, date, week, _added, cancellationToken);
+        var limits = ShiftLimitValidator.Validate(settings, known, existing?.Id ?? Guid.Empty, candidate);
         if (limits.IsFailure)
         {
             return limits;
