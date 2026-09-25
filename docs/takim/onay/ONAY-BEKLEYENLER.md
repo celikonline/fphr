@@ -41,6 +41,7 @@ Bu liste, `.claude/takim/TAKIM.md` "riskli alan" kuralı gereği insan kararı i
 ## D. Yetki / kimlik / güvenlik
 - Manager rolüne eklenen izinler: `attendance.punch.manage`, `attendance.punchrequest.manage`, `employee.notes.manage`.
 - Identity davet akışı: `sendCredentials` bayrağı (varsayılan true). Web'de çalışan oluşturmada anahtar varsayılan AÇIK ve `identity.users.invite` iznine bağlı.
+- Altyapı: ingress-nginx arkasında `UseForwardedHeaders` + `KnownNetworks` yapılandırılmamış; terminal ucunda IP sınırı bu yüzden yalnız BAŞARISIZ kimlik denemelerini sınırlıyor (T1 tur 2). Doğru istemci IP'si için proxy yapılandırması gerekir.
 - T1 (terminal ucu, henüz yazılmadı): anahtar yalnız hash, sabit zamanlı karşılaştırma, kimlik değeri HMAC özeti, hız sınırı (bağlayıcı gereksinimler ledger'da).
 
 ## E. Bordro / ürün
