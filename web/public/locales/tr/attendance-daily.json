@@ -9,7 +9,38 @@
   },
   "monthlyMatrix": {
     "title": "Aylık puantaj matrisi",
-    "subtitle": "Çalışan x gün durum matrisi"
+    "subtitle": "Çalışan x gün durum matrisi",
+    "locked": "Kilitli dönem",
+    "empty": "Gösterilecek çalışan yok.",
+    "legend": "Durum kodları",
+    "short": {
+      "absent": "D",
+      "missing": "E",
+      "overtime": "FM",
+      "full": "T",
+      "weeklyRest": "HT",
+      "restDay": "İG",
+      "paidLeave": "Üİ",
+      "unpaidLeave": "Üzİ",
+      "otherLeave": "Dİ",
+      "publicHoliday": "RT",
+      "incalculable": "?",
+      "none": "-"
+    },
+    "codes": {
+      "absent": "Devamsız",
+      "missing": "Eksik",
+      "overtime": "Fazla mesai",
+      "full": "Tam",
+      "weeklyRest": "Hafta tatili",
+      "restDay": "İzin günü (dinlenme)",
+      "paidLeave": "Ücretli izin",
+      "unpaidLeave": "Ücretsiz izin",
+      "otherLeave": "Diğer izin",
+      "publicHoliday": "Resmi tatil",
+      "incalculable": "Hesaplanamaz",
+      "none": "Veri yok"
+    }
   },
   "punchRequests": {
     "title": "Kayıt talepleri",

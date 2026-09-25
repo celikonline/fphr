@@ -9,7 +9,38 @@
   },
   "monthlyMatrix": {
     "title": "Monatliche Anwesenheitsmatrix",
-    "subtitle": "Matrix Mitarbeitende x Tag"
+    "subtitle": "Matrix Mitarbeitende x Tag",
+    "locked": "Periode gesperrt",
+    "empty": "Keine Mitarbeitenden vorhanden.",
+    "legend": "Statuscodes",
+    "short": {
+      "absent": "F",
+      "missing": "U",
+      "overtime": "ÜS",
+      "full": "V",
+      "weeklyRest": "WR",
+      "restDay": "RT",
+      "paidLeave": "BU",
+      "unpaidLeave": "UU",
+      "otherLeave": "SU",
+      "publicHoliday": "FT",
+      "incalculable": "?",
+      "none": "-"
+    },
+    "codes": {
+      "absent": "Abwesend",
+      "missing": "Unvollständig",
+      "overtime": "Überstunden",
+      "full": "Vollständig",
+      "weeklyRest": "Wochenruhe",
+      "restDay": "Ruhetag",
+      "paidLeave": "Bezahlter Urlaub",
+      "unpaidLeave": "Unbezahlter Urlaub",
+      "otherLeave": "Sonstiger Urlaub",
+      "publicHoliday": "Feiertag",
+      "incalculable": "Nicht berechenbar",
+      "none": "Keine Daten"
+    }
   },
   "punchRequests": {
     "title": "Stempelanträge",
