@@ -14,7 +14,8 @@ namespace Sense.Modules.Identity.Tests.Roles;
 public sealed class SystemRoleDefinitionsTests
 {
     private static readonly string[] SelfServiceKeys =
-        ["employee.self.edit", "employee.my.view", "attendance.my.timesheet", "expense.my.claims", "me.profile.view"];
+        ["employee.self.edit", "employee.my.view", "attendance.my.timesheet", "expense.my.claims", "me.profile.view",
+         "attendance.shift.self", "attendance.availability.self"];
 
     private static readonly IReadOnlyList<Permission> Catalog =
     [
@@ -27,6 +28,7 @@ public sealed class SystemRoleDefinitionsTests
             "identity.users.view", "identity.users.manage", "identity.users.invite", "identity.users.suspend",
             "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view", "identity.modules.manage",
             "attendance.timesheet.view", "attendance.timesheet.resolve", "attendance.timesheet.approve",
+            "attendance.shift.view", "attendance.availability.view",
             "payroll.runs.approve", "payroll.salary.view", "expense.categories.view", "expense.categories.manage",
             "workflow.inbox.view", "workflow.inbox.decide", "workflow.request.override", "workflow.policies.create",
             PlatformPermissions.TenantsManage,
@@ -98,6 +100,31 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldNotContain("employee.sensitive.view");
         keys.ShouldNotContain("attendance.timesheet.approve");
         keys.ShouldNotContain(PlatformPermissions.TenantsManage);
+    }
+
+    /// <summary>Mobil bulgu: "*.self.*" yalnız ".self"ten sonra segment olan anahtarları eşliyordu, ".self" ile BİTEN
+    /// tek desenli anahtarları (vardiyam/müsaitliğim) hiçbir sistem rolüne vermiyordu. "*.self" deseni eklendi.</summary>
+    [Theory]
+    [InlineData(SystemRoleCodes.Employee)]
+    [InlineData(SystemRoleCodes.Manager)]
+    public void SelfServiceRoles_GetShiftAndAvailabilitySelfKeys_ButNotTheTeamWideViewKeys(string roleCode)
+    {
+        var keys = Resolve(roleCode);
+
+        keys.ShouldContain("attendance.shift.self");
+        keys.ShouldContain("attendance.availability.self");
+        keys.ShouldNotContain(PlatformPermissions.TenantsManage);
+    }
+
+    [Fact]
+    public void Employee_GetsShiftAndAvailabilitySelfKeys_ButNotTheOthersViewKeys()
+    {
+        var keys = Resolve(SystemRoleCodes.Employee);
+
+        keys.ShouldContain("attendance.shift.self");
+        keys.ShouldContain("attendance.availability.self");
+        keys.ShouldNotContain("attendance.shift.view");
+        keys.ShouldNotContain("attendance.availability.view");
     }
 
     /// <summary>Ekip yöneticileri Çalışan grubunda: kendilerine atanan onayları görüp karar verebilmeli, ama başkası adına

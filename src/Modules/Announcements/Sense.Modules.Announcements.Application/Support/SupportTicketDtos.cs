@@ -1,3 +1,5 @@
+using Sense.Modules.Announcements.Domain.Support;
+
 namespace Sense.Modules.Announcements.Application.Support;
 
 public sealed record SupportTicketDto(
@@ -5,9 +7,9 @@ public sealed record SupportTicketDto(
     Guid RequestedByUserId,
     string Subject,
     string Body,
-    string Category,
-    string Channel,
-    string Status,
+    SupportTicketCategory Category,
+    SupportTicketChannel Channel,
+    SupportTicketStatus Status,
     string? SourceRoute,
     string? Resolution,
     DateTime? AnsweredAt,
