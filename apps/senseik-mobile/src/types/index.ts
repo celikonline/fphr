@@ -46,7 +46,7 @@ export interface BiometricAvailable {
 export enum BiometricType {
   Fingerprint = "fingerprint",
   FaceRecognition = "face",
-  Iris = "iris"
+  Iris = "iris",
 }
 
 // API Error Response
@@ -71,7 +71,7 @@ export enum NetworkType {
   Wifi = "wifi",
   Bluetooth = "bluetooth",
   Ethernet = "ethernet",
-  VPN = "vpn"
+  VPN = "vpn",
 }
 
 // Push Notification Types

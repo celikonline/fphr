@@ -57,14 +57,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
         tenantId: outcome.user.tenantId,
         tokens: outcome.tokens,
         tenantChoices: null,
-        isLoading: false
+        isLoading: false,
       });
       return outcome;
     } catch (error) {
       set({
         isAuthenticated: false,
         error: error instanceof Error ? error.message : "Login failed",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -79,13 +79,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
         user: response.user,
         tenantId: response.tenantId,
         tokens: response.tokens,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       set({
         isAuthenticated: false,
         error: error instanceof Error ? error.message : "Biometric login failed",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -100,12 +100,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
         user: null,
         tenantId: null,
         tokens: null,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Logout failed",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -117,13 +117,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const tokens = await authService.refreshToken();
       set({
         tokens,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       set({
         isAuthenticated: false,
         error: error instanceof Error ? error.message : "Token refresh failed",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -149,7 +149,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
           user: user || undefined,
           tenantId: tenantId || undefined,
           biometricEnabled,
-          isLoading: false
+          isLoading: false,
         });
       } else {
         set({ isAuthenticated: false, isLoading: false });
@@ -161,7 +161,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({
         isAuthenticated: false,
         error: error instanceof Error ? error.message : "Auth check failed",
-        isLoading: false
+        isLoading: false,
       });
     }
   },
@@ -172,12 +172,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
       await authService.enableBiometricLogin();
       set({
         biometricEnabled: true,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to enable biometric",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -189,12 +189,12 @@ export const useAuthStore = create<AuthStore>((set) => ({
       await SecureStorage.setBiometricEnabled(false);
       set({
         biometricEnabled: false,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to disable biometric",
-        isLoading: false
+        isLoading: false,
       });
       throw error;
     }
@@ -202,7 +202,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   clearError: () => set({ error: null }),
 
-  clearTenantChoices: () => set({ tenantChoices: null })
+  clearTenantChoices: () => set({ tenantChoices: null }),
 }));
 
 // apiClient has no direct dependency on the store (would be circular: apiClient -> authStore ->

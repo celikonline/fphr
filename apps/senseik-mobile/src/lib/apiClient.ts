@@ -8,14 +8,14 @@ const SenseHeaders = {
   CorrelationId: "X-Correlation-Id",
   ClientApp: "X-Client-App",
   ClientVersion: "X-Client-Version",
-  ClientPlatform: "X-Client-Platform"
+  ClientPlatform: "X-Client-Platform",
 } as const;
 
 const clientVersion = Constants.expoConfig?.version ?? "dev";
 
 /** Hermes has no crypto.randomUUID; a v4-shaped random id is enough for log/trace correlation. */
 const newCorrelationId = (): string =>
-  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
@@ -40,7 +40,7 @@ export const setUnauthorizedHandler = (handler: (() => void) | null): void => {
 };
 
 const processQueue = (error: unknown, token?: string | null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -83,8 +83,8 @@ class ApiClient {
       baseURL,
       timeout: 30000,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     });
     // Bare instance for the refresh call itself: it must not carry the expired
     // Authorization header and must not re-enter the 401 queue.
@@ -92,8 +92,8 @@ class ApiClient {
       baseURL,
       timeout: 30000,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     this.setupInterceptors();
@@ -102,7 +102,7 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor
     this.instance.interceptors.request.use(
-      async config => {
+      async (config) => {
         if (!config.headers.has(SenseHeaders.CorrelationId)) {
           config.headers.set(SenseHeaders.CorrelationId, newCorrelationId());
         }
@@ -116,13 +116,13 @@ class ApiClient {
         }
         return config;
       },
-      error => Promise.reject(error)
+      (error) => Promise.reject(error)
     );
 
     // Response interceptor
     this.instance.interceptors.response.use(
-      response => response,
-      async error => {
+      (response) => response,
+      async (error) => {
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -130,11 +130,11 @@ class ApiClient {
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
             })
-              .then(token => {
+              .then((token) => {
                 originalRequest.headers.Authorization = `Bearer ${token}`;
                 return this.instance(originalRequest);
               })
-              .catch(error => Promise.reject(error));
+              .catch((error) => Promise.reject(error));
           }
 
           originalRequest._retry = true;
@@ -147,7 +147,7 @@ class ApiClient {
             }
 
             const response = await this.refreshInstance.post("/api/v1/identity/auth/refresh", {
-              refreshToken
+              refreshToken,
             });
 
             // Validate the shape before trusting it - a malformed body must not
@@ -156,7 +156,12 @@ class ApiClient {
             const data = response.data;
             const accessToken: unknown = data?.accessToken;
             const newRefreshToken: unknown = data?.refreshToken;
-            if (typeof accessToken !== "string" || !accessToken || typeof newRefreshToken !== "string" || !newRefreshToken) {
+            if (
+              typeof accessToken !== "string" ||
+              !accessToken ||
+              typeof newRefreshToken !== "string" ||
+              !newRefreshToken
+            ) {
               throw new Error("Invalid refresh response");
             }
 

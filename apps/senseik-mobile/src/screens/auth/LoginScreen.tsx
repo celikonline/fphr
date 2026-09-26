@@ -1,20 +1,93 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { biometricService } from "@/lib/biometric";
 import { TenantChoice } from "@/types";
+import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
+import { BrandMark } from "@/components/auth/BrandMark";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
+
+// Design tokens for this screen only - shared UI colors live in `styles/colors.ts`, but this
+// dark auth shell (night/navy/brand gradient) is specific to the login/tenant-select flow.
+const palette = {
+  night: "#0E0033",
+  navy: "#280087",
+  brand: "#008CF0",
+  ice: "#D3ECFD",
+  coral: "#FF8A80",
+  white: "#FFFFFF",
+  glassSurface: "rgba(255,255,255,0.07)",
+  glassBorder: "rgba(255,255,255,0.14)",
+};
+
+function Wordmark() {
+  return (
+    <Text style={styles.wordmark}>
+      Sense
+      <Text style={styles.wordmarkAccent}>İK</Text>
+    </Text>
+  );
+}
+
+/** The glass card shared by the login form and tenant-select screens, with the same entrance animation. */
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.panel}>
+      {children}
+    </Animated.View>
+  );
+}
+
+function Footer() {
+  return <Text style={styles.footer}>Algosense güvencesiyle · © {new Date().getFullYear()}</Text>;
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <View style={styles.errorBanner} accessibilityLiveRegion="polite" accessibilityRole="alert">
+      <Text style={styles.errorText}>{message}</Text>
+    </View>
+  );
+}
+
+type AuthFieldProps = { label: string; focused: boolean; children: React.ReactNode };
+
+function AuthField({ label, focused, children }: AuthFieldProps) {
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}>{children}</View>
+    </View>
+  );
+}
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
   const { login, isLoading, tenantChoices, clearTenantChoices } = useAuthStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkBiometric = async () => {
       const available = await biometricService.isBiometricAvailable();
       setBiometricAvailable(available.available);
@@ -22,9 +95,19 @@ export default function LoginScreen({ navigation }: Props) {
     checkBiometric();
   }, []);
 
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (formError) setFormError(null);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (formError) setFormError(null);
+  };
+
   const handleLogin = async (tenantSlug?: string) => {
     if (!email || !password) {
-      Alert.alert("Hata", "Lütfen e-posta ve şifrenizi girin");
+      setFormError("Lütfen e-posta ve şifrenizi girin");
       return;
     }
 
@@ -37,9 +120,10 @@ export default function LoginScreen({ navigation }: Props) {
       // endpoint details into screenshots, and precise messages enable user enumeration. The MFA-not-
       // supported message is safe to show verbatim (no account/session details).
       const message = error instanceof Error && error.message ? error.message : "";
-      Alert.alert(
-        "Giriş başarısız",
-        message.startsWith("İki adımlı doğrulama") ? message : "E-posta veya şifre hatalı. Lütfen tekrar deneyin."
+      setFormError(
+        message.startsWith("İki adımlı doğrulama")
+          ? message
+          : "E-posta veya şifre hatalı. Lütfen tekrar deneyin."
       );
     }
   };
@@ -48,122 +132,295 @@ export default function LoginScreen({ navigation }: Props) {
     void handleLogin(tenant.slug);
   };
 
-  const handleBiometricLogin = async () => {
+  const handleBiometricLogin = () => {
     if (!email) {
-      Alert.alert("Hata", "Lütfen önce e-posta adresinizi girin");
+      setFormError("Lütfen önce e-posta adresinizi girin");
       return;
     }
     navigation.navigate("BiometricPrompt", { email });
   };
 
-  if (tenantChoices) {
-    return (
-      <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
-        <Text style={{ fontSize: 28, fontWeight: "bold", marginBottom: 20 }}>SenseİK Mobile</Text>
-        <Text style={{ fontSize: 16, marginBottom: 15 }}>Devam etmek için şirket seçin</Text>
-
-        {tenantChoices.map(tenant => (
-          <TouchableOpacity
-            key={tenant.tenantId}
-            style={{
-              borderWidth: 1,
-              borderColor: "#ccc",
-              padding: 15,
-              borderRadius: 8,
-              marginBottom: 10
-            }}
-            onPress={() => handleSelectTenant(tenant)}
-            disabled={isLoading}
-          >
-            <Text style={{ fontSize: 16 }}>{tenant.name}</Text>
-          </TouchableOpacity>
-        ))}
-
-        {isLoading && <ActivityIndicator style={{ marginBottom: 10 }} />}
-
-        <TouchableOpacity onPress={clearTenantChoices} disabled={isLoading}>
-          <Text style={{ color: "#0066cc", textAlign: "center" }}>Geri</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const handleClearTenantChoices = () => {
+    setFormError(null);
+    clearTenantChoices();
+  };
 
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
-      <Text style={{ fontSize: 28, fontWeight: "bold", marginBottom: 20 }}>SenseİK Mobile</Text>
-
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          marginBottom: 15,
-          borderRadius: 8
-        }}
-        placeholder="E-posta"
-        value={email}
-        onChangeText={setEmail}
-        editable={!isLoading}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        textContentType="emailAddress"
-      />
-
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          marginBottom: 20,
-          borderRadius: 8
-        }}
-        placeholder="Şifre"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        editable={!isLoading}
-        autoCapitalize="none"
-      />
-
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#0066cc",
-          padding: 15,
-          borderRadius: 8,
-          alignItems: "center",
-          marginBottom: 10
-        }}
-        onPress={() => handleLogin()}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Giriş yap</Text>
-        )}
-      </TouchableOpacity>
-
-      {biometricAvailable && (
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#34c759",
-            padding: 15,
-            borderRadius: 8,
-            alignItems: "center",
-            marginBottom: 10
-          }}
-          onPress={handleBiometricLogin}
-          disabled={isLoading}
+    <AuthBackdrop>
+      <SafeAreaView style={styles.flexOne} edges={["top", "bottom"]}>
+        <KeyboardAvoidingView
+          style={styles.flexOne}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Parmak izi ile giriş yap</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-        <Text style={{ color: "#0066cc", textAlign: "center" }}>Şifremi unuttum</Text>
-      </TouchableOpacity>
-    </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {tenantChoices ? (
+              <>
+                <View style={styles.heroCompact}>
+                  <BrandMark size={56} />
+                  <Wordmark />
+                </View>
+                <Panel>
+                  <Text style={styles.panelTitle}>Şirket seçin</Text>
+                  <Text style={styles.panelSubtitle}>
+                    Bu e-posta adresi birden fazla şirkete kayıtlı. Devam etmek için bir şirket
+                    seçin.
+                  </Text>
+                  {tenantChoices.map((tenant) => (
+                    <TouchableOpacity
+                      key={tenant.tenantId}
+                      style={styles.tenantRow}
+                      onPress={() => handleSelectTenant(tenant)}
+                      disabled={isLoading}
+                    >
+                      <View style={styles.tenantBadge}>
+                        <Text style={styles.tenantBadgeText}>
+                          {tenant.name.charAt(0).toLocaleUpperCase("tr")}
+                        </Text>
+                      </View>
+                      <Text style={styles.tenantName}>{tenant.name}</Text>
+                      <Text style={styles.tenantChevron}>›</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {isLoading && (
+                    <ActivityIndicator color={palette.brand} style={styles.tenantLoading} />
+                  )}
+                  <TouchableOpacity
+                    onPress={handleClearTenantChoices}
+                    disabled={isLoading}
+                    style={styles.secondaryLink}
+                  >
+                    <Text style={styles.secondaryLinkText}>Farklı hesapla giriş yap</Text>
+                  </TouchableOpacity>
+                </Panel>
+                <Footer />
+              </>
+            ) : (
+              <>
+                <Animated.View entering={FadeInDown.delay(250).duration(500)} style={styles.hero}>
+                  <BrandMark size={56} />
+                  <Text style={styles.eyebrow}>İK & BORDRO · MOBİL</Text>
+                  <Wordmark />
+                  <Text style={styles.heroSubtitle}>
+                    İzin, puantaj ve bordronuz artık cebinizde.
+                  </Text>
+                </Animated.View>
+                <Panel>
+                  <Text style={styles.panelTitle}>Tekrar hoş geldiniz</Text>
+                  <Text style={styles.panelSubtitle}>Devam etmek için hesabınıza giriş yapın.</Text>
+                  {formError && <ErrorBanner message={formError} />}
+                  <AuthField label="E-POSTA" focused={focusedField === "email"}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="ad.soyad@sirket.com"
+                      placeholderTextColor="rgba(211,236,253,0.45)"
+                      selectionColor={palette.brand}
+                      value={email}
+                      onChangeText={handleEmailChange}
+                      onFocus={() => setFocusedField("email")}
+                      onBlur={() => setFocusedField(null)}
+                      editable={!isLoading}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                    />
+                  </AuthField>
+                  <AuthField label="ŞİFRE" focused={focusedField === "password"}>
+                    <View style={styles.passwordRow}>
+                      <TextInput
+                        ref={passwordRef}
+                        style={[styles.input, styles.passwordInput]}
+                        placeholder="Şifrenizi girin"
+                        placeholderTextColor="rgba(211,236,253,0.45)"
+                        selectionColor={palette.brand}
+                        value={password}
+                        onChangeText={handlePasswordChange}
+                        onFocus={() => setFocusedField("password")}
+                        onBlur={() => setFocusedField(null)}
+                        editable={!isLoading}
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        textContentType="password"
+                        autoComplete="password"
+                        returnKeyType="go"
+                        onSubmitEditing={() => handleLogin()}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword((value) => !value)}
+                        accessibilityRole="button"
+                        accessibilityLabel={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                        style={styles.showHideButton}
+                      >
+                        <Text style={styles.showHideText}>{showPassword ? "Gizle" : "Göster"}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </AuthField>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      pressed && styles.primaryButtonPressed,
+                    ]}
+                    onPress={() => handleLogin()}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color={palette.white} />
+                    ) : (
+                      <Text style={styles.primaryButtonText}>Giriş yap</Text>
+                    )}
+                  </Pressable>
+                  {biometricAvailable && (
+                    <TouchableOpacity
+                      style={styles.secondaryButton}
+                      onPress={handleBiometricLogin}
+                      disabled={isLoading}
+                    >
+                      <Text style={styles.secondaryButtonText}>Biyometrik ile giriş yap</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.secondaryLink}
+                    onPress={() => navigation.navigate("ForgotPassword")}
+                  >
+                    <Text style={styles.secondaryLinkText}>Şifremi unuttum</Text>
+                  </TouchableOpacity>
+                </Panel>
+                <Footer />
+              </>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthBackdrop>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  hero: { paddingHorizontal: 12 },
+  heroCompact: { paddingHorizontal: 12, alignItems: "flex-start", gap: 12 },
+  eyebrow: {
+    marginTop: 20,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 2.4,
+    textTransform: "uppercase",
+    color: palette.ice,
+  },
+  wordmark: {
+    marginTop: 8,
+    fontSize: 40,
+    fontWeight: "900",
+    letterSpacing: -1.5,
+    color: palette.white,
+  },
+  wordmarkAccent: { color: palette.brand },
+  heroSubtitle: { marginTop: 10, fontSize: 15, color: palette.ice },
+  panel: {
+    marginTop: 28,
+    padding: 24,
+    borderRadius: 28,
+    backgroundColor: palette.glassSurface,
+    borderWidth: 1,
+    borderColor: palette.glassBorder,
+  },
+  panelTitle: { fontSize: 22, fontWeight: "800", color: palette.white },
+  panelSubtitle: { marginTop: 4, fontSize: 15, color: palette.ice },
+  errorBanner: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,138,128,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,138,128,0.4)",
+  },
+  errorText: { fontSize: 14, color: palette.coral },
+  fieldGroup: { marginTop: 18 },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: palette.ice,
+    marginBottom: 6,
+  },
+  inputWrapper: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: palette.glassBorder,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  inputWrapperFocused: { borderColor: palette.brand, boxShadow: "0 0 0 3px rgba(0,140,240,0.25)" },
+  input: { flex: 1, height: "100%", fontSize: 15, color: palette.white },
+  passwordRow: { flex: 1, flexDirection: "row", alignItems: "center" },
+  passwordInput: { flex: 1 },
+  showHideButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  showHideText: { fontSize: 13, fontWeight: "600", color: palette.ice },
+  primaryButton: {
+    marginTop: 24,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: palette.brand,
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 10px 24px rgba(0,140,240,0.45)",
+  },
+  primaryButtonPressed: { transform: [{ scale: 0.98 }] },
+  primaryButtonText: { fontSize: 16, fontWeight: "700", color: palette.white },
+  secondaryButton: {
+    marginTop: 12,
+    height: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.glassBorder,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryButtonText: { fontSize: 15, fontWeight: "600", color: palette.white },
+  secondaryLink: {
+    marginTop: 16,
+    alignSelf: "center",
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  secondaryLinkText: { fontSize: 14, color: palette.ice },
+  tenantRow: { marginTop: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  tenantBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: palette.navy,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tenantBadgeText: { fontSize: 16, fontWeight: "700", color: palette.white },
+  tenantName: { flex: 1, fontSize: 16, fontWeight: "600", color: palette.white },
+  tenantChevron: { fontSize: 18, color: palette.ice },
+  tenantLoading: { marginTop: 16 },
+  footer: { marginTop: 16, textAlign: "center", fontSize: 12, color: "rgba(211,236,253,0.6)" },
+});

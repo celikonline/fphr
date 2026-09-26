@@ -52,7 +52,7 @@ function toAuthTokens(tokens: AuthTokensResponse): AuthTokens {
     accessTokenExpiresAt: tokens.accessTokenExpiresAt,
     refreshToken: tokens.refreshToken,
     refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
-    tokenType: tokens.tokenType
+    tokenType: tokens.tokenType,
   };
 }
 
@@ -66,9 +66,9 @@ function toUser(me: MeResponse): User {
     employeeId: me.employeeId ?? null,
     preferredLanguage: me.preferredLanguage,
     mfaEnabled: me.mfaEnabled,
-    roles: me.roles.map(role => role.code),
+    roles: me.roles.map((role) => role.code),
     permissions: me.permissions,
-    tenant: me.tenant
+    tenant: me.tenant,
   };
 }
 
@@ -82,7 +82,7 @@ export class AuthService {
       const response = await apiClient.post<LoginResultResponse>(`${AUTH_BASE}/login`, {
         email,
         password,
-        tenantSlug
+        tenantSlug,
       });
       const result = response.data;
 
@@ -125,7 +125,7 @@ export class AuthService {
       // Call logout endpoint (optional, for audit) - best effort, local logout continues regardless.
       await apiClient.post(`${AUTH_BASE}/logout`, {
         refreshToken: refreshToken ?? undefined,
-        allSessions: false
+        allSessions: false,
       });
     } catch {
       // Never log the error object: it embeds the Authorization header and refresh token.
@@ -148,11 +148,16 @@ export class AuthService {
       }
 
       const response = await apiClient.post<AuthTokensResponse>(`${AUTH_BASE}/refresh`, {
-        refreshToken
+        refreshToken,
       });
 
       const data = response.data;
-      if (typeof data?.accessToken !== "string" || !data.accessToken || typeof data?.refreshToken !== "string" || !data.refreshToken) {
+      if (
+        typeof data?.accessToken !== "string" ||
+        !data.accessToken ||
+        typeof data?.refreshToken !== "string" ||
+        !data.refreshToken
+      ) {
         throw new Error("Invalid refresh response");
       }
 
@@ -211,7 +216,9 @@ export class AuthService {
     }
   }
 
-  async loginWithBiometric(_email: string): Promise<{ user: User; tokens: AuthTokens; tenantId: string }> {
+  async loginWithBiometric(
+    _email: string
+  ): Promise<{ user: User; tokens: AuthTokens; tenantId: string }> {
     try {
       // Authenticate with biometric
       const authenticated = await biometricService.authenticate("Login with your biometric");
@@ -237,7 +244,7 @@ export class AuthService {
       return {
         user,
         tokens,
-        tenantId: user.tenantId
+        tenantId: user.tenantId,
       };
     } catch (error) {
       if (__DEV__) {

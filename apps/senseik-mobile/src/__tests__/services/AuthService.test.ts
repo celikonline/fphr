@@ -17,7 +17,7 @@ const meResponse = {
   mfaEnabled: false,
   tenant: { id: "tenant-123", name: "Demo Co", slug: "demo-hr-company" },
   roles: [{ id: "role-1", code: "employee", name: "Çalışan" }],
-  permissions: ["leave.view"]
+  permissions: ["leave.view"],
 };
 
 // Mirrors AuthTokensDto.
@@ -26,7 +26,7 @@ const tokensResponse = {
   accessTokenExpiresAt: "2026-09-25T12:00:00Z",
   refreshToken: "refresh-token",
   refreshTokenExpiresAt: "2026-10-02T12:00:00Z",
-  tokenType: "Bearer"
+  tokenType: "Bearer",
 };
 
 describe("AuthService", () => {
@@ -36,7 +36,9 @@ describe("AuthService", () => {
 
   describe("login", () => {
     it("stores tokens and maps /me on status ok", async () => {
-      (apiClient.post as jest.Mock).mockResolvedValue({ data: { status: "ok", tokens: tokensResponse } });
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "ok", tokens: tokensResponse },
+      });
       (apiClient.get as jest.Mock).mockResolvedValue({ data: meResponse });
 
       const outcome = await authService.login("test@example.com", "password123");
@@ -44,7 +46,7 @@ describe("AuthService", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/login", {
         email: "test@example.com",
         password: "password123",
-        tenantSlug: undefined
+        tenantSlug: undefined,
       });
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/identity/me");
       expect(outcome).toEqual({
@@ -60,9 +62,9 @@ describe("AuthService", () => {
           mfaEnabled: false,
           roles: ["employee"],
           permissions: ["leave.view"],
-          tenant: meResponse.tenant
+          tenant: meResponse.tenant,
         },
-        tokens: tokensResponse
+        tokens: tokensResponse,
       });
       expect(SecureStorage.setAccessToken).toHaveBeenCalledWith("access-token");
       expect(SecureStorage.setRefreshToken).toHaveBeenCalledWith("refresh-token");
@@ -74,9 +76,11 @@ describe("AuthService", () => {
     it("returns tenant choices without storing tokens on status select_tenant", async () => {
       const tenants = [
         { tenantId: "tenant-123", slug: "demo-hr-company", name: "Demo Co" },
-        { tenantId: "tenant-456", slug: "biriksin", name: "Biriksin" }
+        { tenantId: "tenant-456", slug: "biriksin", name: "Biriksin" },
       ];
-      (apiClient.post as jest.Mock).mockResolvedValue({ data: { status: "select_tenant", tenants } });
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "select_tenant", tenants },
+      });
 
       const outcome = await authService.login("owner@demo.local", "Demo123!");
 
@@ -89,7 +93,9 @@ describe("AuthService", () => {
     });
 
     it("re-submits the chosen tenantSlug and logs in", async () => {
-      (apiClient.post as jest.Mock).mockResolvedValue({ data: { status: "ok", tokens: tokensResponse } });
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "ok", tokens: tokensResponse },
+      });
       (apiClient.get as jest.Mock).mockResolvedValue({ data: meResponse });
 
       const outcome = await authService.login("owner@demo.local", "Demo123!", "biriksin");
@@ -97,14 +103,14 @@ describe("AuthService", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/login", {
         email: "owner@demo.local",
         password: "Demo123!",
-        tenantSlug: "biriksin"
+        tenantSlug: "biriksin",
       });
       expect(outcome.status).toBe("ok");
     });
 
     it("throws a Turkish, mobile-unsupported error on status mfa_required without storing tokens", async () => {
       (apiClient.post as jest.Mock).mockResolvedValue({
-        data: { status: "mfa_required", mfaToken: "mfa-token-abc" }
+        data: { status: "mfa_required", mfaToken: "mfa-token-abc" },
       });
 
       await expect(authService.login("test@example.com", "password123")).rejects.toThrow(
@@ -116,7 +122,7 @@ describe("AuthService", () => {
 
     it("throws without storing tokens on invalid credentials (401)", async () => {
       const unauthorizedError = Object.assign(new Error("Request failed with status code 401"), {
-        response: { status: 401, data: { detail: "Invalid credentials" } }
+        response: { status: 401, data: { detail: "Invalid credentials" } },
       });
       (apiClient.post as jest.Mock).mockRejectedValue(unauthorizedError);
 
@@ -136,7 +142,7 @@ describe("AuthService", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/logout", {
         refreshToken: "refresh-token",
-        allSessions: false
+        allSessions: false,
       });
       expect(SecureStorage.clearAll).toHaveBeenCalled();
     });
@@ -150,7 +156,7 @@ describe("AuthService", () => {
       const result = await authService.refreshToken();
 
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/refresh", {
-        refreshToken: "old-refresh-token"
+        refreshToken: "old-refresh-token",
       });
       expect(result).toEqual(tokensResponse);
       expect(SecureStorage.setAccessToken).toHaveBeenCalledWith("access-token");
@@ -186,7 +192,9 @@ describe("AuthService", () => {
     it("should return false when /me rejects the stored token (401)", async () => {
       (SecureStorage.getAccessToken as jest.Mock).mockResolvedValue("revoked-token");
       (apiClient.get as jest.Mock).mockRejectedValue(
-        Object.assign(new Error("Request failed with status code 401"), { response: { status: 401 } })
+        Object.assign(new Error("Request failed with status code 401"), {
+          response: { status: 401 },
+        })
       );
 
       const result = await authService.validateToken();
@@ -199,7 +207,10 @@ describe("AuthService", () => {
     it("never logs the raw error object when logout or /me fail", async () => {
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
       const leakyError = Object.assign(new Error("network"), {
-        config: { data: '{"refreshToken":"secret-refresh"}', headers: { Authorization: "Bearer secret-access" } }
+        config: {
+          data: '{"refreshToken":"secret-refresh"}',
+          headers: { Authorization: "Bearer secret-access" },
+        },
       });
       (SecureStorage.getRefreshToken as jest.Mock).mockResolvedValue("secret-refresh");
       (apiClient.post as jest.Mock).mockRejectedValue(leakyError);
