@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
@@ -19,19 +19,35 @@ import {
   supportService,
   type HelpArticleSummary,
   type SupportTicket,
-  type SupportTicketCategory
+  type SupportTicketCategory,
+  type SupportTicketStatus,
 } from "@/services/SupportService";
 
 const STATUS_COLORS: Record<SupportTicket["status"], string> = {
   open: colors.gray400,
   answered: colors.success,
-  closed: colors.gray400
+  closed: colors.gray400,
 };
 
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * D3: the backend is mid-migration from PascalCase ("Open") to camelCase ("open") enum
+ * serialization for support tickets. Normalize defensively so the badge resolves correctly either
+ * way, instead of falling through to `undefined` colors/labels.
+ */
+export function normalizeTicketStatus(status: string): SupportTicketStatus {
+  const camelCase = status.length > 0 ? status.charAt(0).toLowerCase() + status.slice(1) : status;
+  return camelCase in TICKET_STATUS_LABELS ? (camelCase as SupportTicketStatus) : "open";
 }
 
 /** "Hesabım > Destek": Yardım Merkezi araması + makale görünümü + Desteğe bağlan formu + Taleplerim (11.3.13). */
@@ -154,8 +170,12 @@ export default function SupportScreen() {
               <ActivityIndicator style={{ marginTop: spacing.md }} color={colors.primary} />
             ) : articleBody ? (
               <>
-                <Text style={[styles.cardValue, { marginTop: spacing.md }]}>{articleBody.title}</Text>
-                <Text style={[styles.cardSubtext, { marginTop: spacing.sm }]}>{articleBody.body}</Text>
+                <Text style={[styles.cardValue, { marginTop: spacing.md }]}>
+                  {articleBody.title}
+                </Text>
+                <Text style={[styles.cardSubtext, { marginTop: spacing.sm }]}>
+                  {articleBody.body}
+                </Text>
               </>
             ) : null}
           </>
@@ -171,10 +191,16 @@ export default function SupportScreen() {
             {articlesLoading ? (
               <ActivityIndicator style={{ marginTop: spacing.md }} color={colors.primary} />
             ) : articles.length === 0 ? (
-              <Text style={[styles.emptyText, { marginTop: spacing.md }]}>Bu aramayla eşleşen bir makale bulunamadı.</Text>
+              <Text style={[styles.emptyText, { marginTop: spacing.md }]}>
+                Bu aramayla eşleşen bir makale bulunamadı.
+              </Text>
             ) : (
               articles.map((article) => (
-                <TouchableOpacity key={article.slug} style={styles.articleRow} onPress={() => void openArticle(article.slug)}>
+                <TouchableOpacity
+                  key={article.slug}
+                  style={styles.articleRow}
+                  onPress={() => void openArticle(article.slug)}
+                >
                   <Text style={styles.cardLabel}>{article.title}</Text>
                 </TouchableOpacity>
               ))
@@ -185,7 +211,9 @@ export default function SupportScreen() {
 
       <Text style={styles.sectionTitle}>Desteğe bağlan</Text>
       <View style={styles.card}>
-        <Text style={styles.cardSubtext}>Aradığınızı bulamadınız mı? Kısa bir talep açın, ekibimiz size dönsün.</Text>
+        <Text style={styles.cardSubtext}>
+          Aradığınızı bulamadınız mı? Kısa bir talep açın, ekibimiz size dönsün.
+        </Text>
 
         <Text style={styles.fieldLabel}>Kategori</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
@@ -197,14 +225,21 @@ export default function SupportScreen() {
                 style={[styles.chip, selected && styles.chipSelected]}
                 onPress={() => setCategory(option.value)}
               >
-                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{option.label}</Text>
+                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                  {option.label}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
         <Text style={styles.fieldLabel}>Konu</Text>
-        <TextInput style={styles.input} value={subject} onChangeText={setSubject} placeholder="Talebinizi kısaca özetleyin" />
+        <TextInput
+          style={styles.input}
+          value={subject}
+          onChangeText={setSubject}
+          placeholder="Talebinizi kısaca özetleyin"
+        />
 
         <Text style={styles.fieldLabel}>Ayrıntı</Text>
         <TextInput
@@ -216,8 +251,16 @@ export default function SupportScreen() {
           numberOfLines={3}
         />
 
-        <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled]} onPress={() => void submitTicket()} disabled={submitting}>
-          {submitting ? <ActivityIndicator color={colors.white} /> : <Text style={styles.submitButtonText}>Talep gönder</Text>}
+        <TouchableOpacity
+          style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+          onPress={() => void submitTicket()}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.submitButtonText}>Talep gönder</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -227,18 +270,25 @@ export default function SupportScreen() {
       ) : tickets.length === 0 ? (
         <Text style={styles.emptyText}>Henüz bir destek talebiniz yok.</Text>
       ) : (
-        tickets.map((ticket) => (
-          <View key={ticket.id} style={styles.card}>
-            <View style={styles.requestHeader}>
-              <Text style={styles.cardLabel}>{ticket.subject}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[ticket.status] }]}>
-                <Text style={styles.statusBadgeText}>{TICKET_STATUS_LABELS[ticket.status]}</Text>
+        tickets.map((ticket) => {
+          const status = normalizeTicketStatus(ticket.status);
+          return (
+            <View key={ticket.id} style={styles.card}>
+              <View style={styles.requestHeader}>
+                <Text style={styles.cardLabel}>{ticket.subject}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[status] }]}>
+                  <Text style={styles.statusBadgeText}>{TICKET_STATUS_LABELS[status]}</Text>
+                </View>
               </View>
+              <Text style={styles.cardSubtext}>{formatDateTime(ticket.createdAt)}</Text>
+              {ticket.resolution ? (
+                <Text style={[styles.cardSubtext, { marginTop: spacing.xs }]}>
+                  Yanıt: {ticket.resolution}
+                </Text>
+              ) : null}
             </View>
-            <Text style={styles.cardSubtext}>{formatDateTime(ticket.createdAt)}</Text>
-            {ticket.resolution ? <Text style={[styles.cardSubtext, { marginTop: spacing.xs }]}>Yanıt: {ticket.resolution}</Text> : null}
-          </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
@@ -247,22 +297,22 @@ export default function SupportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
     ...typography.h4,
     color: colors.text,
     marginTop: spacing.xl,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   card: {
     backgroundColor: colors.white,
@@ -270,42 +320,42 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.lg,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   cardLabel: {
     ...typography.bodySm,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   cardValue: {
     ...typography.h4,
-    color: colors.text
+    color: colors.text,
   },
   cardSubtext: {
     ...typography.bodyXs,
     color: colors.textTertiary,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   emptyText: {
     ...typography.bodySm,
-    color: colors.textTertiary
+    color: colors.textTertiary,
   },
   linkText: {
     ...typography.bodySm,
-    color: colors.primary
+    color: colors.primary,
   },
   articleRow: {
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.border,
   },
   fieldLabel: {
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.md,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
   },
   chipRow: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   chip: {
     paddingVertical: spacing.sm,
@@ -314,18 +364,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginRight: spacing.sm,
-    backgroundColor: colors.gray50
+    backgroundColor: colors.gray50,
   },
   chipSelected: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary
+    borderColor: colors.primary,
   },
   chipText: {
     ...typography.bodySm,
-    color: colors.text
+    color: colors.text,
   },
   chipTextSelected: {
-    color: colors.white
+    color: colors.white,
   },
   input: {
     borderWidth: 1,
@@ -335,38 +385,38 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     ...typography.body,
     color: colors.text,
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
   },
   textArea: {
     minHeight: 72,
-    textAlignVertical: "top"
+    textAlignVertical: "top",
   },
   submitButton: {
     backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: spacing.md,
     alignItems: "center",
-    marginTop: spacing.lg
+    marginTop: spacing.lg,
   },
   submitButtonDisabled: {
-    opacity: 0.6
+    opacity: 0.6,
   },
   submitButtonText: {
     ...typography.button,
-    color: colors.white
+    color: colors.white,
   },
   requestHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   statusBadge: {
     borderRadius: 12,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2
+    paddingVertical: 2,
   },
   statusBadgeText: {
     ...typography.caption,
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });

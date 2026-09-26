@@ -19,7 +19,8 @@ export type AttendanceAnomalyFlag =
   | "lateLeave"
   | "overwork"
   | "underwork"
-  | "unplannedWork";
+  | "unplannedWork"
+  | "workedWhileOnLeave";
 
 /** Splits a possibly-combined `AttendanceAnomaly` string into its individual flags ("none"/empty → []). */
 export function parseAnomalyFlags(value: string): AttendanceAnomalyFlag[] {
@@ -30,7 +31,7 @@ export function parseAnomalyFlags(value: string): AttendanceAnomalyFlag[] {
 }
 
 export type AttendanceResolutionState = "unresolved" | "resolved" | "ignored";
-export type AttendanceDaySource = "manual" | "import" | "device";
+export type AttendanceDaySource = "manual" | "import" | "device" | "selfService";
 export type AnomalyResolutionAction =
   "addOvertime" | "setWorkedHours" | "createLeaveRequest" | "ignore";
 

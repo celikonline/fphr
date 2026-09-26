@@ -1,13 +1,26 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useAuthStore } from "@/store/authStore";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
-import { leaveService, type EmployeeLeaveBalances, type LeaveBalanceItem } from "@/services/LeaveService";
+import {
+  leaveService,
+  type EmployeeLeaveBalances,
+  type LeaveBalanceItem,
+} from "@/services/LeaveService";
 import { attendanceService, type MyTimesheetSummary } from "@/services/AttendanceService";
+import { formatDays, toLocalDateOnly } from "@/lib/formatters";
 import type { MainTabsParamList } from "@/types/navigation";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference` (Puantajım kalıbıyla aynı). */
@@ -15,7 +28,7 @@ function currentMonthRange(): { from: string; to: string } {
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), 1);
   const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  return { from: toLocalDateOnly(from), to: toLocalDateOnly(to) };
 }
 
 function formatWorkedMinutes(minutes: number): string {
@@ -35,7 +48,10 @@ function annualLeaveBalance(balances: EmployeeLeaveBalances | null): LeaveBalanc
   return balances.balances.find((item) => item.leaveTypeCode === "annual") ?? null;
 }
 
-function firstLeaveBalances(balances: EmployeeLeaveBalances | null, count: number): LeaveBalanceItem[] {
+function firstLeaveBalances(
+  balances: EmployeeLeaveBalances | null,
+  count: number
+): LeaveBalanceItem[] {
   if (!balances) return [];
   return balances.balances.slice(0, count);
 }
@@ -55,7 +71,7 @@ export default function DashboardScreen() {
     try {
       const [balancesResult, summaryResult] = await Promise.all([
         leaveService.getMyBalances(),
-        attendanceService.getMyTimesheetSummary(currentMonthRange())
+        attendanceService.getMyTimesheetSummary(currentMonthRange()),
       ]);
       setBalances(balancesResult);
       setSummary(summaryResult);
@@ -109,7 +125,9 @@ export default function DashboardScreen() {
             {annualBalance ? (
               <>
                 <Text style={styles.cardLabel}>Yıllık izin bakiyem</Text>
-                <Text style={styles.cardValue}>{annualBalance.balance.availableBalance} gün</Text>
+                <Text style={styles.cardValue}>
+                  {formatDays(annualBalance.balance.availableBalance)} gün
+                </Text>
                 <Text style={styles.cardSubtext}>kullanılabilir</Text>
               </>
             ) : (
@@ -120,7 +138,7 @@ export default function DashboardScreen() {
                 ) : (
                   firstLeaveBalances(balances, 3).map((item) => (
                     <Text key={item.leaveTypeCode + item.leaveTypeName} style={styles.cardSubtext}>
-                      {item.leaveTypeName}: {item.balance.availableBalance} gün
+                      {item.leaveTypeName}: {formatDays(item.balance.availableBalance)} gün
                     </Text>
                   ))
                 )}
@@ -133,8 +151,10 @@ export default function DashboardScreen() {
             onPress={() => navigation.navigate("Attendance")}
           >
             <Text style={styles.cardLabel}>Bu ay puantaj</Text>
-            <Text style={styles.cardValue}>{summary?.workedDays ?? 0} gün</Text>
-            <Text style={styles.cardSubtext}>{formatWorkedMinutes(summary?.workedMinutes ?? 0)} çalışıldı</Text>
+            <Text style={styles.cardValue}>{formatDays(summary?.workedDays ?? 0)} gün</Text>
+            <Text style={styles.cardSubtext}>
+              {formatWorkedMinutes(summary?.workedMinutes ?? 0)} çalışıldı
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -149,74 +169,74 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   centered: {
     paddingVertical: spacing.xxxl,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   welcome: {
     ...typography.bodySm,
     color: colors.textSecondary,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   errorBanner: {
     backgroundColor: "#fdecea",
     borderRadius: 8,
     padding: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   errorText: {
     ...typography.bodySm,
-    color: colors.error
+    color: colors.error,
   },
   cardRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    marginBottom: spacing.xl
+    marginBottom: spacing.xl,
   },
   card: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    padding: spacing.lg
+    padding: spacing.lg,
   },
   summaryCard: {
-    flex: 1
+    flex: 1,
   },
   cardLabel: {
     ...typography.bodySm,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   cardValue: {
     ...typography.h4,
     color: colors.text,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   cardSubtext: {
     ...typography.bodyXs,
     color: colors.textTertiary,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   logoutButton: {
     backgroundColor: colors.error,
     padding: spacing.md,
     borderRadius: 8,
-    alignItems: "center"
+    alignItems: "center",
   },
   logoutButtonText: {
     ...typography.button,
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });

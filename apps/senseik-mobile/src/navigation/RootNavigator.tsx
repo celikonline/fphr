@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import {
   RootStackParamList,
@@ -52,7 +53,9 @@ function MainTabsNavigator() {
       screenOptions={{
         tabBarActiveTintColor: "#0066cc",
         tabBarInactiveTintColor: "#999999",
-        headerShown: true,
+        // B3: each tab screen already renders its own in-page title (e.g. "Ana Sayfa") - a
+        // navigator header on top of that showed the title twice ("Anasayfa" + "Ana Sayfa").
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -61,6 +64,9 @@ function MainTabsNavigator() {
         options={{
           title: "Anasayfa",
           tabBarLabel: "Anasayfa",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -69,6 +75,9 @@ function MainTabsNavigator() {
         options={{
           title: "Puantaj",
           tabBarLabel: "Puantaj",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -77,6 +86,9 @@ function MainTabsNavigator() {
         options={{
           title: "İzin",
           tabBarLabel: "İzin",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -85,6 +97,9 @@ function MainTabsNavigator() {
         options={{
           title: "Bordro",
           tabBarLabel: "Bordro",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cash-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -93,6 +108,9 @@ function MainTabsNavigator() {
         options={{
           title: "Onaylarım",
           tabBarLabel: "Onaylarım",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkmark-done-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -101,6 +119,9 @@ function MainTabsNavigator() {
         options={{
           title: "Profil",
           tabBarLabel: "Profil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>

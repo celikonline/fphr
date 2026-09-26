@@ -19,6 +19,7 @@ import {
   type EmployeeAvailability,
   type ShiftAssignment,
 } from "@/services/ShiftService";
+import { toLocalDateOnly } from "@/lib/formatters";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the week containing `reference` (Monday start). */
 function weekRange(reference: Date): { from: string; to: string } {
@@ -28,15 +29,11 @@ function weekRange(reference: Date): { from: string; to: string } {
   monday.setDate(reference.getDate() + mondayOffset);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
-  return { from: toDateOnly(monday), to: toDateOnly(sunday) };
-}
-
-function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return { from: toLocalDateOnly(monday), to: toLocalDateOnly(sunday) };
 }
 
 function todayDateOnly(): string {
-  return toDateOnly(new Date());
+  return toLocalDateOnly(new Date());
 }
 
 function formatDayLabel(value: string): string {

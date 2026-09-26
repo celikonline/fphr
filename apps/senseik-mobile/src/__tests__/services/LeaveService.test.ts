@@ -28,11 +28,11 @@ describe("LeaveService", () => {
                 totalAccrued: 14,
                 totalUsed: 2,
                 currentBalance: 12,
-                availableBalance: 12
-              }
-            }
-          ]
-        }
+                availableBalance: 12,
+              },
+            },
+          ],
+        },
       };
       (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
 
@@ -49,7 +49,13 @@ describe("LeaveService", () => {
           ruleSetId: "rule-set-1",
           hireDate: "2020-01-01",
           leaveAccrualStartDate: "2020-01-01",
-          balances: [{ leaveTypeName: "leave.type.sick", leaveTypeCode: "sick", balance: { availableBalance: 5 } }],
+          balances: [
+            {
+              leaveTypeName: "leave.type.sick",
+              leaveTypeCode: "sick",
+              balance: { availableBalance: 5 },
+            },
+          ],
         },
       };
       (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
@@ -96,17 +102,57 @@ describe("LeaveService", () => {
 
       expect(result.map((type) => type.name)).toEqual(["Yıllık izin", "Özel izin"]);
     });
+
+    it("passes requiresSubstitute through unchanged (D2: mobile blocks submission for these types)", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "type-1",
+            code: "annual",
+            name: "Yıllık İzin",
+            unit: "fullDay",
+            requiresSubstitute: true,
+          },
+        ],
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyRequestableLeaveTypes();
+
+      expect(result[0].requiresSubstitute).toBe(true);
+    });
   });
 
   describe("submitLeaveRequest", () => {
     it("posts a new self-service leave request", async () => {
-      const input = { leaveTypeId: "type-1", startDate: "2026-10-01", endDate: "2026-10-03", description: null };
+      const input = {
+        leaveTypeId: "type-1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-03",
+        description: null,
+      };
       const mockResponse = { data: { id: "request-2", status: "pending" } };
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await leaveService.submitLeaveRequest(input);
 
       expect(result).toEqual(mockResponse.data);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/requests", input);
+    });
+
+    it("forwards halfDayPeriod for a half-day request (D2, same start/end date)", async () => {
+      const input = {
+        leaveTypeId: "type-1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        description: null,
+        halfDayPeriod: "morning" as const,
+      };
+      const mockResponse = { data: { id: "request-3", status: "pending" } };
+      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+
+      await leaveService.submitLeaveRequest(input);
+
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/requests", input);
     });
   });
@@ -123,7 +169,9 @@ describe("LeaveService", () => {
 
   describe("error mapping", () => {
     it("propagates the API error when a leave request submission fails (e.g. balance/validation rejection)", async () => {
-      const apiError = { response: { status: 400, data: { error: { message: "Yetersiz bakiye" } } } };
+      const apiError = {
+        response: { status: 400, data: { error: { message: "Yetersiz bakiye" } } },
+      };
       (apiClient.post as jest.Mock).mockRejectedValue(apiError);
 
       await expect(
@@ -131,13 +179,15 @@ describe("LeaveService", () => {
           leaveTypeId: "type-1",
           startDate: "2026-10-01",
           endDate: "2026-10-03",
-          description: null
+          description: null,
         })
       ).rejects.toEqual(apiError);
     });
 
     it("propagates the API error when fetching balances fails (e.g. no employee record)", async () => {
-      const apiError = { response: { status: 404, data: { error: { message: "Çalışan bulunamadı" } } } };
+      const apiError = {
+        response: { status: 404, data: { error: { message: "Çalışan bulunamadı" } } },
+      };
       (apiClient.get as jest.Mock).mockRejectedValue(apiError);
 
       await expect(leaveService.getMyBalances()).rejects.toEqual(apiError);

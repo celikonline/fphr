@@ -84,6 +84,10 @@ class ApiClient {
       timeout: 30000,
       headers: {
         "Content-Type": "application/json",
+        // The app has no i18n and is Turkish-only (see `LeaveService.ts`); endpoints that localize
+        // server-side (e.g. `/leave/me/requests`'s `leaveTypeName`, ProblemDetails error `detail`)
+        // need this to return Turkish instead of falling back to the server's default culture.
+        "Accept-Language": "tr",
       },
     });
     // Bare instance for the refresh call itself: it must not carry the expired

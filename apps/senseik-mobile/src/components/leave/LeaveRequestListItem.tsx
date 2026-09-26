@@ -4,6 +4,7 @@ import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import type { LeaveRequest, LeaveRequestStatus } from "@/services/LeaveService";
+import { formatDays } from "@/lib/formatters";
 
 /** Shared with `LeaveScreen`'s own request list so both screens render identical status badges. */
 export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
@@ -46,7 +47,7 @@ export function LeaveRequestListItem({ request, onPress }: Props) {
       </View>
       <Text style={styles.subtext}>
         {formatLeaveDateOnly(request.startDate)} – {formatLeaveDateOnly(request.endDate)} ·{" "}
-        {request.calculatedDays} gün
+        {formatDays(request.calculatedDays)} gün
       </Text>
     </>
   );

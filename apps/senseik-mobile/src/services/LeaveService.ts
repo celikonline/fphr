@@ -31,6 +31,8 @@ export type LeaveTypeCode =
 
 export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
 export type LeaveRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
+/** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
+export type LeaveHalfDayPeriod = "morning" | "afternoon";
 
 /** `LeaveBalance` projection of one PerYear type (days). */
 export interface LeaveBalance {
@@ -94,14 +96,27 @@ export interface RequestableLeaveType {
   requiresDescription: boolean;
   requiresDocument: boolean;
   countsNonWorkingDays: boolean;
+  /**
+   * "Vekil" gerektiren türler (`requiresSubstitute`): self-service akış bir `substituteEmployeeId`
+   * seçici içermediği için bu mobilde şimdilik engellenir (bkz. `isRequestableOnMobile`). Absent on
+   * older API builds (treated as `false`, mirrors `web/src/services/leave.service.ts`).
+   */
+  requiresSubstitute?: boolean;
 }
 
-/** Self-service submit body (`LeaveRequestBody`); `previousRequestId` resubmits a rejected own request. */
+/**
+ * Self-service submit body (`LeaveRequestBody`); `previousRequestId` resubmits a rejected own
+ * request. `halfDayPeriod` is required by the API when the selected type's `unit` is `"halfDay"`
+ * (start/end date are the same single day in that case); `hourly`/`requiresSubstitute`/
+ * `requiresDocument` types are not submittable from mobile yet (see `isRequestableOnMobile`), so
+ * their fields (`startTime`/`endTime`, `substituteEmployeeId`, `documentIds`) are not modeled here.
+ */
 export interface MyLeaveRequestInput {
   leaveTypeId: string;
   startDate: string;
   endDate: string;
   description: string | null;
+  halfDayPeriod?: LeaveHalfDayPeriod;
   previousRequestId?: string | null;
 }
 
@@ -139,7 +154,10 @@ export class LeaveService {
     const response = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/me/balances`);
     return {
       ...response.data,
-      balances: response.data.balances.map((item) => ({ ...item, leaveTypeName: leaveTypeDisplayName(item.leaveTypeName) })),
+      balances: response.data.balances.map((item) => ({
+        ...item,
+        leaveTypeName: leaveTypeDisplayName(item.leaveTypeName),
+      })),
     };
   }
 

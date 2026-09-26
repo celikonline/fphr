@@ -8,30 +8,43 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import { approvalsService, type InboxTask } from "@/services/ApprovalsService";
+import { formatDays } from "@/lib/formatters";
+import { formatLeaveDateOnly } from "@/components/leave/LeaveRequestListItem";
 
 /** `RequestType` (Workflow.Domain) server value - same mapping as web `workflow.json`'daki `requestType.*`. */
 const REQUEST_TYPE_LABELS: Record<string, string> = {
   Leave: "İzin",
   Advance: "Avans",
   Expense: "Harcama",
-  Overtime: "Fazla mesai"
+  Overtime: "Fazla mesai",
+  Requisition: "Kadro talebi",
+  AssetAssignment: "Zimmet",
 };
 
-function requestTypeLabel(requestType: string): string {
+export function requestTypeLabel(requestType: string): string {
   return REQUEST_TYPE_LABELS[requestType] ?? requestType;
 }
 
 /** Web `home.tsx`'teki `SUBMITTED_DATE` biçimiyle aynı: `gg.aa.yyyy`. */
-const SUBMITTED_DATE_FORMAT: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
+const SUBMITTED_DATE_FORMAT: Intl.DateTimeFormatOptions = {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+};
 
 function formatSubmittedAt(submittedAt: string): string {
   return new Intl.DateTimeFormat("tr-TR", SUBMITTED_DATE_FORMAT).format(new Date(submittedAt));
+}
+
+/** `TimeOnly` ("HH:mm:ss") → "HH:mm" for display. */
+export function formatTime(value: string): string {
+  return value.slice(0, 5);
 }
 
 export default function ApprovalsScreen() {
@@ -93,7 +106,10 @@ export default function ApprovalsScreen() {
     }
     setDecidingTaskId(taskId);
     try {
-      await approvalsService.decideTask(taskId, { outcome: "rejected", comment: rejectReason.trim() });
+      await approvalsService.decideTask(taskId, {
+        outcome: "rejected",
+        comment: rejectReason.trim(),
+      });
       setRejectingTaskId(null);
       setRejectReason("");
       await loadAll();
@@ -149,6 +165,33 @@ export default function ApprovalsScreen() {
                 <Text style={styles.cardSubtext}>{formatSubmittedAt(task.submittedAt)}</Text>
               )}
 
+              {task.summary?.leave && (
+                <View style={styles.summaryBox}>
+                  <Text style={styles.summaryText}>
+                    {task.summary.leave.leaveTypeName ?? task.summary.leave.leaveTypeCode} ·{" "}
+                    {formatLeaveDateOnly(task.summary.leave.startDate)} –{" "}
+                    {formatLeaveDateOnly(task.summary.leave.endDate)} ·{" "}
+                    {formatDays(task.summary.leave.days)} gün
+                  </Text>
+                  {task.summary.leave.description && (
+                    <Text style={styles.summaryText}>{task.summary.leave.description}</Text>
+                  )}
+                </View>
+              )}
+
+              {task.summary?.overtime && (
+                <View style={styles.summaryBox}>
+                  <Text style={styles.summaryText}>
+                    {formatLeaveDateOnly(task.summary.overtime.workDate)} ·{" "}
+                    {formatTime(task.summary.overtime.startTime)} ·{" "}
+                    {task.summary.overtime.durationMinutes} dk
+                  </Text>
+                  {task.summary.overtime.reason && (
+                    <Text style={styles.summaryText}>{task.summary.overtime.reason}</Text>
+                  )}
+                </View>
+              )}
+
               {isRejecting ? (
                 <>
                   <Text style={styles.fieldLabel}>Reddetme gerekçesi (zorunlu)</Text>
@@ -161,7 +204,11 @@ export default function ApprovalsScreen() {
                     numberOfLines={3}
                   />
                   <View style={styles.actionRow}>
-                    <TouchableOpacity style={styles.secondaryButton} onPress={cancelReject} disabled={isDeciding}>
+                    <TouchableOpacity
+                      style={styles.secondaryButton}
+                      onPress={cancelReject}
+                      disabled={isDeciding}
+                    >
                       <Text style={styles.secondaryButtonText}>Vazgeç</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -210,22 +257,22 @@ export default function ApprovalsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   card: {
     backgroundColor: colors.white,
@@ -233,51 +280,61 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.lg,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   cardLabel: {
     ...typography.bodySm,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   cardSubtext: {
     ...typography.bodyXs,
     color: colors.textTertiary,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   emptyText: {
     ...typography.bodySm,
-    color: colors.textTertiary
+    color: colors.textTertiary,
   },
   errorBanner: {
     backgroundColor: "#fdecea",
     borderRadius: 8,
     padding: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   errorText: {
     ...typography.bodySm,
-    color: colors.error
+    color: colors.error,
   },
   requestHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   fallbackBadge: {
     borderRadius: 12,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    backgroundColor: colors.gray100
+    backgroundColor: colors.gray100,
   },
   fallbackBadgeText: {
     ...typography.caption,
-    color: colors.textSecondary
+    color: colors.textSecondary,
+  },
+  summaryBox: {
+    backgroundColor: colors.gray50,
+    borderRadius: 8,
+    padding: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  summaryText: {
+    ...typography.bodyXs,
+    color: colors.textSecondary,
   },
   fieldLabel: {
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.md,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
   },
   input: {
     borderWidth: 1,
@@ -287,30 +344,30 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     ...typography.body,
     color: colors.text,
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
   },
   textArea: {
     minHeight: 72,
-    textAlignVertical: "top"
+    textAlignVertical: "top",
   },
   actionRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    marginTop: spacing.md
+    marginTop: spacing.md,
   },
   approveButton: {
     flex: 1,
     backgroundColor: colors.success,
     borderRadius: 8,
     paddingVertical: spacing.sm,
-    alignItems: "center"
+    alignItems: "center",
   },
   rejectButton: {
     flex: 1,
     backgroundColor: colors.error,
     borderRadius: 8,
     paddingVertical: spacing.sm,
-    alignItems: "center"
+    alignItems: "center",
   },
   secondaryButton: {
     flex: 1,
@@ -319,17 +376,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 8,
     paddingVertical: spacing.sm,
-    alignItems: "center"
+    alignItems: "center",
   },
   secondaryButtonText: {
     ...typography.button,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   buttonDisabled: {
-    opacity: 0.6
+    opacity: 0.6,
   },
   actionButtonText: {
     ...typography.button,
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });

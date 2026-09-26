@@ -20,6 +20,7 @@ import {
   type AttendanceDay,
   type MyTimesheetSummary,
 } from "@/services/AttendanceService";
+import { formatDays, toLocalDateOnly } from "@/lib/formatters";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference`. */
 function monthRange(reference: Date): { from: string; to: string } {
@@ -27,11 +28,7 @@ function monthRange(reference: Date): { from: string; to: string } {
   const month = reference.getMonth();
   const from = new Date(year, month, 1);
   const to = new Date(year, month + 1, 0);
-  return { from: toDateOnly(from), to: toDateOnly(to) };
-}
-
-function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return { from: toLocalDateOnly(from), to: toLocalDateOnly(to) };
 }
 
 function formatMonthLabel(reference: Date): string {
@@ -163,7 +160,7 @@ export default function AttendanceScreen() {
       <View style={styles.summaryRow}>
         <View style={[styles.card, styles.summaryCard]}>
           <Text style={styles.cardLabel}>Çalışılan gün</Text>
-          <Text style={styles.cardValue}>{summary?.workedDays ?? 0}</Text>
+          <Text style={styles.cardValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
         </View>
         <View style={[styles.card, styles.summaryCard]}>
           <Text style={styles.cardLabel}>Çalışılan süre</Text>

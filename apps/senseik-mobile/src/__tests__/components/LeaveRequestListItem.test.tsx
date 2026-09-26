@@ -54,6 +54,16 @@ describe("LeaveRequestListItem", () => {
     expect(texts.some((text) => text.includes("3 gün"))).toBe(true);
   });
 
+  it("formats a decimal day count with the Turkish decimal comma (B2)", () => {
+    const renderer = renderComponent(
+      <LeaveRequestListItem request={buildRequest({ calculatedDays: 2.5 })} />
+    );
+
+    const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+
+    expect(texts.some((text) => text.includes("2,5 gün"))).toBe(true);
+  });
+
   it("falls back to the leave type code when no display name is present", () => {
     const renderer = renderComponent(
       <LeaveRequestListItem request={buildRequest({ leaveTypeName: null })} />

@@ -16,14 +16,35 @@ import { typography } from "@/styles/typography";
 import {
   leaveService,
   type EmployeeLeaveBalances,
+  type LeaveHalfDayPeriod,
   type LeaveRequest,
   type RequestableLeaveType,
 } from "@/services/LeaveService";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
+import { formatDays, toLocalDateOnly } from "@/lib/formatters";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 /** `DateOnly` string the API expects ("yyyy-MM-dd"); today, as a sane default for the form. */
 function todayDateOnly(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalDateOnly(new Date());
+}
+
+const HALF_DAY_PERIOD_LABELS: Record<LeaveHalfDayPeriod, string> = {
+  morning: "Sabah",
+  afternoon: "Öğleden sonra",
+};
+
+/**
+ * D2: the self-service submit body only models `fullDay`/`halfDay` (no `startTime`/`endTime`,
+ * `substituteEmployeeId`, or `documentIds` fields) - `hourly` types and types that require a
+ * substitute or a document are rejected by the server (`LeaveRequestRules.cs`) if submitted from
+ * here. They still show up in the type list (so the balance/limits are visible), but selecting one
+ * shows an info message instead of a submittable form.
+ */
+export function isRequestableOnMobile(
+  type: Pick<RequestableLeaveType, "unit" | "requiresSubstitute" | "requiresDocument">
+): boolean {
+  return type.unit !== "hourly" && !type.requiresSubstitute && !type.requiresDocument;
 }
 
 export default function LeaveScreen() {
@@ -37,6 +58,7 @@ export default function LeaveScreen() {
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(todayDateOnly());
   const [endDate, setEndDate] = useState(todayDateOnly());
+  const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod>("morning");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -69,21 +91,26 @@ export default function LeaveScreen() {
   }
 
   const selectedType = requestableTypes.find((t) => t.id === selectedTypeId) ?? null;
+  const isHalfDay = selectedType?.unit === "halfDay";
+  const blockedOnMobile = selectedType !== null && !isRequestableOnMobile(selectedType);
 
   async function submitRequest() {
-    if (!selectedTypeId) {
+    if (!selectedTypeId || !selectedType) {
       Alert.alert("Eksik bilgi", "Lütfen bir izin türü seçin.");
       return;
     }
-    if (!startDate || !endDate) {
+    if (!isRequestableOnMobile(selectedType)) {
+      return;
+    }
+    if (!startDate || (!isHalfDay && !endDate)) {
       Alert.alert("Eksik bilgi", "Lütfen başlangıç ve bitiş tarihini girin.");
       return;
     }
-    if (endDate < startDate) {
+    if (!isHalfDay && endDate < startDate) {
       Alert.alert("Geçersiz tarih", "Bitiş tarihi başlangıç tarihinden önce olamaz.");
       return;
     }
-    if (selectedType?.requiresDescription && description.trim().length === 0) {
+    if (selectedType.requiresDescription && description.trim().length === 0) {
       Alert.alert("Eksik bilgi", "Bu izin türü için açıklama zorunludur.");
       return;
     }
@@ -93,14 +120,18 @@ export default function LeaveScreen() {
       await leaveService.submitLeaveRequest({
         leaveTypeId: selectedTypeId,
         startDate,
-        endDate,
+        endDate: isHalfDay ? startDate : endDate,
         description: description.trim().length > 0 ? description.trim() : null,
+        ...(isHalfDay ? { halfDayPeriod } : {}),
       });
       setDescription("");
       await loadAll();
       Alert.alert("Gönderildi", "İzin talebiniz onaya gönderildi.");
-    } catch {
-      Alert.alert("Hata", "İzin talebi gönderilemedi. Lütfen tekrar deneyin.");
+    } catch (submitError) {
+      Alert.alert(
+        "Hata",
+        getApiErrorMessage(submitError, "İzin talebi gönderilemedi. Lütfen tekrar deneyin.")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -133,9 +164,12 @@ export default function LeaveScreen() {
         balances.balances.map((item) => (
           <View key={item.leaveTypeCode + item.leaveTypeName} style={styles.card}>
             <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
-            <Text style={styles.cardValue}>{item.balance.availableBalance} gün kullanılabilir</Text>
+            <Text style={styles.cardValue}>
+              {formatDays(item.balance.availableBalance)} gün kullanılabilir
+            </Text>
             <Text style={styles.cardSubtext}>
-              {item.balance.totalAccrued} tahakkuk · {item.balance.totalUsed} kullanılan
+              {formatDays(item.balance.totalAccrued)} tahakkuk ·{" "}
+              {formatDays(item.balance.totalUsed)} kullanılan
             </Text>
           </View>
         ))
@@ -167,47 +201,85 @@ export default function LeaveScreen() {
               })}
             </ScrollView>
 
-            <Text style={styles.fieldLabel}>Başlangıç tarihi (yyyy-aa-gg)</Text>
-            <TextInput
-              style={styles.input}
-              value={startDate}
-              onChangeText={setStartDate}
-              placeholder="2026-09-16"
-              autoCapitalize="none"
-            />
+            {blockedOnMobile ? (
+              <View style={styles.infoBanner}>
+                <Text style={styles.infoBannerText}>
+                  Bu izin türü şimdilik web uygulamasından talep edilebilir.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.fieldLabel}>
+                  {isHalfDay ? "Tarih (yyyy-aa-gg)" : "Başlangıç tarihi (yyyy-aa-gg)"}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={startDate}
+                  onChangeText={setStartDate}
+                  placeholder="2026-09-16"
+                  autoCapitalize="none"
+                />
 
-            <Text style={styles.fieldLabel}>Bitiş tarihi (yyyy-aa-gg)</Text>
-            <TextInput
-              style={styles.input}
-              value={endDate}
-              onChangeText={setEndDate}
-              placeholder="2026-09-18"
-              autoCapitalize="none"
-            />
+                {isHalfDay ? (
+                  <>
+                    <Text style={styles.fieldLabel}>Gün yarısı</Text>
+                    <View style={styles.chipRowWrap}>
+                      {(Object.keys(HALF_DAY_PERIOD_LABELS) as LeaveHalfDayPeriod[]).map(
+                        (period) => {
+                          const selected = period === halfDayPeriod;
+                          return (
+                            <TouchableOpacity
+                              key={period}
+                              style={[styles.chip, selected && styles.chipSelected]}
+                              onPress={() => setHalfDayPeriod(period)}
+                            >
+                              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                                {HALF_DAY_PERIOD_LABELS[period]}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        }
+                      )}
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.fieldLabel}>Bitiş tarihi (yyyy-aa-gg)</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={endDate}
+                      onChangeText={setEndDate}
+                      placeholder="2026-09-18"
+                      autoCapitalize="none"
+                    />
+                  </>
+                )}
 
-            <Text style={styles.fieldLabel}>
-              Açıklama {selectedType?.requiresDescription ? "(zorunlu)" : "(opsiyonel)"}
-            </Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Talebinizle ilgili not ekleyin"
-              multiline
-              numberOfLines={3}
-            />
+                <Text style={styles.fieldLabel}>
+                  Açıklama {selectedType?.requiresDescription ? "(zorunlu)" : "(opsiyonel)"}
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Talebinizle ilgili not ekleyin"
+                  multiline
+                  numberOfLines={3}
+                />
 
-            <TouchableOpacity
-              style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-              onPress={() => void submitRequest()}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <Text style={styles.submitButtonText}>Talebi gönder</Text>
-              )}
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+                  onPress={() => void submitRequest()}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Talebi gönder</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
           </>
         )}
       </View>
@@ -284,6 +356,16 @@ const styles = StyleSheet.create({
     ...typography.bodySm,
     color: colors.error,
   },
+  infoBanner: {
+    backgroundColor: colors.gray50,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  infoBannerText: {
+    ...typography.bodySm,
+    color: colors.textSecondary,
+  },
   fieldLabel: {
     ...typography.caption,
     color: colors.textSecondary,
@@ -293,6 +375,10 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: "row",
   },
+  chipRowWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   chip: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
@@ -300,6 +386,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginRight: spacing.sm,
+    marginBottom: spacing.sm,
     backgroundColor: colors.gray50,
   },
   chipSelected: {
