@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import { leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 
 /**
  * Leave module (self-service): mirrors `LeaveControllers.cs`'s `/leave/me` group
@@ -34,7 +35,14 @@ export type LeaveRequestStatus = "pending" | "approved" | "rejected" | "withdraw
 /** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
 export type LeaveHalfDayPeriod = "morning" | "afternoon";
 
-/** `LeaveBalance` projection of one PerYear type (days). */
+/**
+ * `LeaveBalance` projection of one PerYear type (days). `totalAccrued`/`totalUsed` are LIFETIME
+ * sums (or period sums for "resets each period" types - see `LeaveBalanceEngine.Project`), so they
+ * generally do NOT add up to `availableBalance`; the fields that do are the period-scoped ones:
+ * `availableBalance = carriedOverIntoPeriod + lastPeriodAccrued + extraGrants + adjustments -
+ * currentPeriodUsed - futureApprovedInPeriod` (`LeaveBalanceEngine.cs:239-256`, server-computed -
+ * the mobile app never recomputes it, only breaks it down for display, B8).
+ */
 export interface LeaveBalance {
   leaveTypeId: string;
   currentPeriodFrom: string;
@@ -42,16 +50,34 @@ export interface LeaveBalance {
   nextAccrualDate: string;
   totalAccrued: number;
   totalUsed: number;
+  /** Carried over from the previous period into this one. */
+  carriedOverIntoPeriod: number;
+  /** This period's accrual (may differ from lifetime `totalAccrued`). */
+  lastPeriodAccrued: number;
+  /** Manually granted extra days in this period. */
+  extraGrants: number;
+  /** Manual balance corrections in this period (opening balance included); signed - can be negative. */
+  adjustments: number;
+  /** Days used so far in this period (may differ from lifetime `totalUsed`). */
+  currentPeriodUsed: number;
+  /** Approved leave with a future start date in this period - already subtracted from `availableBalance`. */
+  futureApprovedInPeriod: number;
   currentBalance: number;
   availableBalance: number;
   negativeBalanceLimit?: number | null;
 }
 
-/** `LeaveBalanceDto`: `leaveTypeName` may be a raw resource key for seeded types; `getMyBalances` resolves it (`leaveTypeDisplayName`). */
+/**
+ * `LeaveBalanceDto`: `leaveTypeName` may be a raw resource key for seeded types; `getMyBalances`
+ * resolves it (`leaveTypeDisplayName`). `pendingDays`: days of the employee's still-pending (not
+ * yet decided) requests of this type - not yet deducted from `balance.availableBalance` by this
+ * DTO itself, but `LeaveRequestRules` deducts it when validating a new request. Absent on older API builds.
+ */
 export interface LeaveBalanceItem {
   leaveTypeName: string;
   leaveTypeCode: LeaveTypeCode;
   balance: LeaveBalance;
+  pendingDays?: number;
 }
 
 export interface EmployeeLeaveBalances {
@@ -118,35 +144,6 @@ export interface MyLeaveRequestInput {
   description: string | null;
   halfDayPeriod?: LeaveHalfDayPeriod;
   previousRequestId?: string | null;
-}
-
-/**
- * Turkish names of the seeded leave-type resource keys (mirror of `leave.type.*` in SharedResource.resx; the mobile
- * app has no i18n and is Turkish-only). The leave API returns these keys raw on `/me/balances` and `/me/leave-types`
- * (the web resolves them with its own i18n), so the service resolves them before the screens render them.
- */
-const LEAVE_TYPE_NAMES: Readonly<Record<string, string>> = {
-  "leave.type.annual": "Yıllık izin",
-  "leave.type.excuse": "Mazeret izni",
-  "leave.type.sick": "Hastalık izni",
-  "leave.type.job_search": "Yeni iş arama izni",
-  "leave.type.marriage": "Evlilik izni",
-  "leave.type.bereavement": "Ölüm izni",
-  "leave.type.paternity": "Babalık izni",
-  "leave.type.maternity": "Doğum izni",
-  "leave.type.postnatal_unpaid": "Doğum sonrası ücretsiz izin",
-  "leave.type.paid_military_service": "Bedelli askerlik izni",
-  "leave.type.unpaid": "Ücretsiz izin",
-  "leave.type.foster_care": "Koruyucu aile izni",
-  "leave.type.breastfeeding": "Süt izni",
-  "leave.type.disabled_child": "Engelli/süreğen hastalıklı çocuk izni",
-  "leave.type.template.remote_work": "Uzaktan Çalışma",
-  "leave.type.template.birthday": "Doğum günü izni",
-};
-
-/** Resolves a seeded leave-type resource key to its Turkish name; free-form (user-entered) names pass through. */
-export function leaveTypeDisplayName(name: string): string {
-  return LEAVE_TYPE_NAMES[name] ?? name;
 }
 
 export class LeaveService {

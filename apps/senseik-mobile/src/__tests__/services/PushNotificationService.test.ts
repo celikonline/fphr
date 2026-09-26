@@ -15,6 +15,7 @@ describe("PushNotificationService.registerPushToken", () => {
 
   afterEach(() => {
     process.env.EXPO_PUBLIC_PROJECT_ID = originalProjectId;
+    jest.restoreAllMocks();
   });
 
   it("skips registration and resolves to null when EXPO_PUBLIC_PROJECT_ID is not configured (B1: no red LogBox toast)", async () => {
@@ -25,6 +26,33 @@ describe("PushNotificationService.registerPushToken", () => {
     expect(result).toBeNull();
     expect(Notifications.getExpoPushTokenAsync).not.toHaveBeenCalled();
     expect(apiClient.post).not.toHaveBeenCalled();
+  });
+
+  it("logs nothing when EXPO_PUBLIC_PROJECT_ID is not configured (B7: console.warn also renders an on-screen LogBox banner)", async () => {
+    delete process.env.EXPO_PUBLIC_PROJECT_ID;
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await pushNotificationService.registerPushToken();
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("logs nothing when the backend push-token endpoint fails (B7)", async () => {
+    process.env.EXPO_PUBLIC_PROJECT_ID = "test-project-id";
+    (SecureStorage.getUserId as jest.Mock).mockResolvedValue("user-1");
+    (apiClient.post as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 404 },
+    });
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await pushNotificationService.registerPushToken();
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it("fetches and uploads the push token when a project id is configured", async () => {

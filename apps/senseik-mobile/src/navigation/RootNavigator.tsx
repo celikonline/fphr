@@ -3,6 +3,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -33,6 +35,32 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
+/**
+ * B9: with `headerShown:false` on the tab navigator (B3), a tab screen's own top-level
+ * ScrollView/View has nothing pushing it below the Android status bar - it used to get the
+ * navigator header's height for free. Wrap each tab screen once here (instead of editing all six
+ * screens' containers) with a top-edge-only SafeAreaView so scrolled content never renders under
+ * the status bar. Defined at module scope (not inside `MainTabsNavigator`) so the wrapped
+ * component keeps a stable identity across renders - react-navigation would otherwise remount the
+ * screen every time.
+ */
+function withTopSafeArea<P extends object>(ScreenComponent: React.ComponentType<P>) {
+  return function TopSafeAreaScreen(props: P) {
+    return (
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <ScreenComponent {...props} />
+      </SafeAreaView>
+    );
+  };
+}
+
+const DashboardScreenWithTopSafeArea = withTopSafeArea(DashboardScreen);
+const AttendanceScreenWithTopSafeArea = withTopSafeArea(AttendanceScreen);
+const LeaveScreenWithTopSafeArea = withTopSafeArea(LeaveScreen);
+const PayrollScreenWithTopSafeArea = withTopSafeArea(PayrollScreen);
+const ApprovalsScreenWithTopSafeArea = withTopSafeArea(ApprovalsScreen);
+const ProfileScreenWithTopSafeArea = withTopSafeArea(ProfileScreen);
+
 function AuthNavigator() {
   return (
     <AuthStack.Navigator
@@ -60,7 +88,7 @@ function MainTabsNavigator() {
     >
       <Tab.Screen
         name="Dashboard"
-        component={DashboardScreen}
+        component={DashboardScreenWithTopSafeArea}
         options={{
           title: "Anasayfa",
           tabBarLabel: "Anasayfa",
@@ -71,7 +99,7 @@ function MainTabsNavigator() {
       />
       <Tab.Screen
         name="Attendance"
-        component={AttendanceScreen}
+        component={AttendanceScreenWithTopSafeArea}
         options={{
           title: "Puantaj",
           tabBarLabel: "Puantaj",
@@ -82,7 +110,7 @@ function MainTabsNavigator() {
       />
       <Tab.Screen
         name="Leave"
-        component={LeaveScreen}
+        component={LeaveScreenWithTopSafeArea}
         options={{
           title: "İzin",
           tabBarLabel: "İzin",
@@ -93,7 +121,7 @@ function MainTabsNavigator() {
       />
       <Tab.Screen
         name="Payroll"
-        component={PayrollScreen}
+        component={PayrollScreenWithTopSafeArea}
         options={{
           title: "Bordro",
           tabBarLabel: "Bordro",
@@ -104,7 +132,7 @@ function MainTabsNavigator() {
       />
       <Tab.Screen
         name="Approvals"
-        component={ApprovalsScreen}
+        component={ApprovalsScreenWithTopSafeArea}
         options={{
           title: "Onaylarım",
           tabBarLabel: "Onaylarım",
@@ -115,7 +143,7 @@ function MainTabsNavigator() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileScreenWithTopSafeArea}
         options={{
           title: "Profil",
           tabBarLabel: "Profil",
@@ -175,39 +203,49 @@ export function RootNavigator() {
     initializeApp();
   }, [checkAuth]);
 
+  // B9: the auth stack has a dark backdrop (needs light/white status bar content); the app's tab
+  // screens are white-background, so the same light content would be invisible on them.
+  const statusBarStyle = isAuthenticated ? "dark" : "light";
+
   if (!appReady || isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0066cc" />
-      </View>
+      <>
+        <StatusBar style={statusBarStyle} />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#0066cc" />
+        </View>
+      </>
     );
   }
 
   return (
-    <NavigationContainer>
-      <RootStack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        {!isAuthenticated ? (
-          <RootStack.Screen
-            name="Auth"
-            component={AuthNavigator}
-            options={{
-              animation: "none",
-            }}
-          />
-        ) : (
-          <RootStack.Screen
-            name="App"
-            component={AppNavigator}
-            options={{
-              animation: "none",
-            }}
-          />
-        )}
-      </RootStack.Navigator>
-    </NavigationContainer>
+    <>
+      <StatusBar style={statusBarStyle} />
+      <NavigationContainer>
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          {!isAuthenticated ? (
+            <RootStack.Screen
+              name="Auth"
+              component={AuthNavigator}
+              options={{
+                animation: "none",
+              }}
+            />
+          ) : (
+            <RootStack.Screen
+              name="App"
+              component={AppNavigator}
+              options={{
+                animation: "none",
+              }}
+            />
+          )}
+        </RootStack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }

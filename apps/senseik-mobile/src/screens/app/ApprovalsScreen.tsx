@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -13,9 +14,15 @@ import {
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
-import { approvalsService, type InboxTask } from "@/services/ApprovalsService";
+import {
+  approvalsService,
+  type DecideTaskInput,
+  type InboxTask,
+  type InboxTaskLeaveSummary,
+} from "@/services/ApprovalsService";
 import { formatDays } from "@/lib/formatters";
 import { formatLeaveDateOnly } from "@/components/leave/LeaveRequestListItem";
+import { humanizeLeaveTypeCode, leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 
 /** `RequestType` (Workflow.Domain) server value - same mapping as web `workflow.json`'daki `requestType.*`. */
 const REQUEST_TYPE_LABELS: Record<string, string> = {
@@ -45,6 +52,26 @@ function formatSubmittedAt(submittedAt: string): string {
 /** `TimeOnly` ("HH:mm:ss") → "HH:mm" for display. */
 export function formatTime(value: string): string {
   return value.slice(0, 5);
+}
+
+/**
+ * B5: the inbox summary's `leaveTypeName` can be a raw seeded resource key (e.g. "leave.type.annual")
+ * just like `LeaveService`'s balances/requestable-types responses - translate it the same way. When
+ * it's missing entirely, fall back to a humanized `leaveTypeCode` instead of a bare/raw string.
+ */
+export function leaveSummaryTypeLabel(
+  leave: Pick<InboxTaskLeaveSummary, "leaveTypeName" | "leaveTypeCode">
+): string {
+  if (leave.leaveTypeName && leave.leaveTypeName.trim().length > 0) {
+    return leaveTypeDisplayName(leave.leaveTypeName);
+  }
+  return humanizeLeaveTypeCode(leave.leaveTypeCode);
+}
+
+/** B6: the reject comment is optional now (a small confirmation Modal, not a mandatory reason field). */
+export function buildRejectDecision(reason: string): DecideTaskInput {
+  const comment = reason.trim();
+  return comment.length > 0 ? { outcome: "rejected", comment } : { outcome: "rejected" };
 }
 
 export default function ApprovalsScreen() {
@@ -99,17 +126,22 @@ export default function ApprovalsScreen() {
     }
   }
 
+  // B6: irreversible decision - confirm before deciding instead of acting on the first tap.
+  function confirmApprove(taskId: string) {
+    Alert.alert(
+      "Talebi onayla",
+      "Bu talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { text: "Onayla", onPress: () => void approve(taskId) },
+      ]
+    );
+  }
+
   async function confirmReject(taskId: string) {
-    if (rejectReason.trim().length === 0) {
-      Alert.alert("Eksik bilgi", "Reddetme gerekçesi zorunludur.");
-      return;
-    }
     setDecidingTaskId(taskId);
     try {
-      await approvalsService.decideTask(taskId, {
-        outcome: "rejected",
-        comment: rejectReason.trim(),
-      });
+      await approvalsService.decideTask(taskId, buildRejectDecision(rejectReason));
       setRejectingTaskId(null);
       setRejectReason("");
       await loadAll();
@@ -168,7 +200,7 @@ export default function ApprovalsScreen() {
               {task.summary?.leave && (
                 <View style={styles.summaryBox}>
                   <Text style={styles.summaryText}>
-                    {task.summary.leave.leaveTypeName ?? task.summary.leave.leaveTypeCode} ·{" "}
+                    {leaveSummaryTypeLabel(task.summary.leave)} ·{" "}
                     {formatLeaveDateOnly(task.summary.leave.startDate)} –{" "}
                     {formatLeaveDateOnly(task.summary.leave.endDate)} ·{" "}
                     {formatDays(task.summary.leave.days)} gün
@@ -192,59 +224,70 @@ export default function ApprovalsScreen() {
                 </View>
               )}
 
-              {isRejecting ? (
-                <>
-                  <Text style={styles.fieldLabel}>Reddetme gerekçesi (zorunlu)</Text>
-                  <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={rejectReason}
-                    onChangeText={setRejectReason}
-                    placeholder="Gerekçenizi yazın"
-                    multiline
-                    numberOfLines={3}
-                  />
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={styles.secondaryButton}
-                      onPress={cancelReject}
-                      disabled={isDeciding}
-                    >
-                      <Text style={styles.secondaryButtonText}>Vazgeç</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
-                      onPress={() => void confirmReject(task.taskId)}
-                      disabled={isDeciding}
-                    >
-                      {isDeciding ? (
-                        <ActivityIndicator color={colors.white} />
-                      ) : (
-                        <Text style={styles.actionButtonText}>Reddi onayla</Text>
-                      )}
-                    </TouchableOpacity>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
+                  onPress={() => startReject(task.taskId)}
+                  disabled={isDeciding}
+                >
+                  <Text style={styles.actionButtonText}>Reddet</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.approveButton, isDeciding && styles.buttonDisabled]}
+                  onPress={() => confirmApprove(task.taskId)}
+                  disabled={isDeciding}
+                >
+                  {isDeciding ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.actionButtonText}>Onayla</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* B6: Android has no Alert.prompt, so a free-text (optional) reject reason needs its
+                  own small modal - this doubles as the "are you sure" confirmation for this
+                  irreversible decision. */}
+              {isRejecting && (
+                <Modal transparent animationType="fade" visible onRequestClose={cancelReject}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                      <Text style={styles.modalTitle}>Talebi reddet</Text>
+                      <Text style={styles.modalMessage}>
+                        Bu talebi reddetmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                      </Text>
+                      <Text style={styles.fieldLabel}>Gerekçe (opsiyonel)</Text>
+                      <TextInput
+                        style={[styles.input, styles.textArea]}
+                        value={rejectReason}
+                        onChangeText={setRejectReason}
+                        placeholder="Gerekçenizi yazın"
+                        multiline
+                        numberOfLines={3}
+                      />
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={styles.secondaryButton}
+                          onPress={cancelReject}
+                          disabled={isDeciding}
+                        >
+                          <Text style={styles.secondaryButtonText}>Vazgeç</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
+                          onPress={() => void confirmReject(task.taskId)}
+                          disabled={isDeciding}
+                        >
+                          {isDeciding ? (
+                            <ActivityIndicator color={colors.white} />
+                          ) : (
+                            <Text style={styles.actionButtonText}>Reddet</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
-                </>
-              ) : (
-                <View style={styles.actionRow}>
-                  <TouchableOpacity
-                    style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
-                    onPress={() => startReject(task.taskId)}
-                    disabled={isDeciding}
-                  >
-                    <Text style={styles.actionButtonText}>Reddet</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.approveButton, isDeciding && styles.buttonDisabled]}
-                    onPress={() => void approve(task.taskId)}
-                    disabled={isDeciding}
-                  >
-                    {isDeciding ? (
-                      <ActivityIndicator color={colors.white} />
-                    ) : (
-                      <Text style={styles.actionButtonText}>Onayla</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
+                </Modal>
               )}
             </View>
           );
@@ -319,6 +362,28 @@ const styles = StyleSheet.create({
   fallbackBadgeText: {
     ...typography.caption,
     color: colors.textSecondary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(17, 24, 39, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.xl,
+  },
+  modalCard: {
+    width: "100%",
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.lg,
+  },
+  modalTitle: {
+    ...typography.h4,
+    color: colors.text,
+  },
+  modalMessage: {
+    ...typography.bodySm,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   summaryBox: {
     backgroundColor: colors.gray50,

@@ -167,6 +167,18 @@ export default function ShiftScreen() {
     }
   }
 
+  // B6: irreversible action - confirm before cancelling instead of acting on the first tap.
+  function confirmCancelAvailability(id: string) {
+    Alert.alert(
+      "Kaydı iptal et",
+      "Bu müsaitlik kaydını iptal etmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { text: "İptal et", style: "destructive", onPress: () => void cancelAvailability(id) },
+      ]
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -314,7 +326,7 @@ export default function ShiftScreen() {
             <View key={entry.id} style={styles.card}>
               <View style={styles.rowHeader}>
                 <Text style={styles.cardLabel}>{formatDayLabel(entry.date)}</Text>
-                <TouchableOpacity onPress={() => void cancelAvailability(entry.id)}>
+                <TouchableOpacity onPress={() => confirmCancelAvailability(entry.id)}>
                   <Text style={styles.cancelLink}>İptal et</Text>
                 </TouchableOpacity>
               </View>

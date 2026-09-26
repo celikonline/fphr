@@ -21,14 +21,14 @@ export class PushNotificationService {
    * `EXPO_PUBLIC_PROJECT_ID` is unset in dev builds (no EAS project configured yet) - this is
    * expected, not an error: permission requests and notification listeners must keep working
    * without a push token, so this resolves to `null` instead of throwing (a thrown error here
-   * used to surface as a red LogBox toast on every app start).
+   * used to surface as a red LogBox toast on every app start). B7: this used to log via
+   * `console.warn`, which RN/Expo also renders as an on-screen LogBox banner covering the tab bar
+   * on every launch - skip silently instead (Metro's terminal isn't the right place for an
+   * expected, permanent dev-environment condition either).
    */
   async registerPushToken(): Promise<string | null> {
     const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
     if (!projectId) {
-      if (__DEV__) {
-        console.warn("Push token registration skipped: EXPO_PUBLIC_PROJECT_ID is not configured.");
-      }
       return null;
     }
 
@@ -62,11 +62,9 @@ export class PushNotificationService {
         type: "expo",
       });
     } catch {
-      // Don't throw - continue even if backend upload fails. The axios error object is never
-      // logged (it can carry auth headers); a single dev-only note is enough to explain the 404.
-      if (__DEV__) {
-        console.warn("Push token upload skipped (backend endpoint not implemented yet).");
-      }
+      // Don't throw - continue even if backend upload fails. Never logged (B7: console.warn
+      // renders as an on-screen LogBox banner in dev, not just a terminal line; the axios error
+      // object must never be logged either way, since it can carry auth headers).
     }
   }
 

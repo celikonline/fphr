@@ -1,6 +1,6 @@
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 import type { LeaveRequest } from "@/services/LeaveService";
 
@@ -91,5 +91,61 @@ describe("LeaveRequestListItem", () => {
     });
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Geri çek (H1: withdraw a pending request)", () => {
+    it("shows a Geri çek button for a pending request when onWithdraw is given", () => {
+      const onWithdraw = jest.fn();
+      const renderer = renderComponent(
+        <LeaveRequestListItem
+          request={buildRequest({ status: "pending" })}
+          onWithdraw={onWithdraw}
+        />
+      );
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).toContain("Geri çek");
+
+      act(() => {
+        renderer.root.findByType(TouchableOpacity).props.onPress();
+      });
+      expect(onWithdraw).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not show a Geri çek button when onWithdraw is not given (e.g. ProfileScreen's summary usage)", () => {
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest({ status: "pending" })} />
+      );
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).not.toContain("Geri çek");
+    });
+
+    it("does not show a Geri çek button for a non-pending request even when onWithdraw is given", () => {
+      const renderer = renderComponent(
+        <LeaveRequestListItem
+          request={buildRequest({ status: "approved" })}
+          onWithdraw={jest.fn()}
+        />
+      );
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).not.toContain("Geri çek");
+    });
+
+    it("shows a loading indicator instead of the label while withdrawing, and disables the button", () => {
+      const renderer = renderComponent(
+        <LeaveRequestListItem
+          request={buildRequest({ status: "pending" })}
+          onWithdraw={jest.fn()}
+          isWithdrawing
+        />
+      );
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).not.toContain("Geri çek");
+      expect(renderer.root.findAllByType(ActivityIndicator)).toHaveLength(1);
+      expect(renderer.root.findByType(TouchableOpacity).props.disabled).toBe(true);
+    });
   });
 });

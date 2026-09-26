@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
@@ -32,9 +32,19 @@ export function formatLeaveDateOnly(value: string): string {
 type Props = {
   request: LeaveRequest;
   onPress?: () => void;
+  /** H1: renders a "Geri çek" action, shown only when the request is still `pending`. */
+  onWithdraw?: () => void;
+  isWithdrawing?: boolean;
 };
 
-export function LeaveRequestListItem({ request, onPress }: Props) {
+export function LeaveRequestListItem({
+  request,
+  onPress,
+  onWithdraw,
+  isWithdrawing = false,
+}: Props) {
+  const canWithdraw = Boolean(onWithdraw) && request.status === "pending";
+
   const content = (
     <>
       <View style={styles.header}>
@@ -49,6 +59,19 @@ export function LeaveRequestListItem({ request, onPress }: Props) {
         {formatLeaveDateOnly(request.startDate)} – {formatLeaveDateOnly(request.endDate)} ·{" "}
         {formatDays(request.calculatedDays)} gün
       </Text>
+      {canWithdraw && (
+        <TouchableOpacity
+          style={styles.withdrawButton}
+          onPress={onWithdraw}
+          disabled={isWithdrawing}
+        >
+          {isWithdrawing ? (
+            <ActivityIndicator size="small" color={colors.error} />
+          ) : (
+            <Text style={styles.withdrawButtonText}>Geri çek</Text>
+          )}
+        </TouchableOpacity>
+      )}
     </>
   );
 
@@ -94,5 +117,15 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     ...typography.caption,
     color: colors.white,
+  },
+  withdrawButton: {
+    alignSelf: "flex-start",
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  withdrawButtonText: {
+    ...typography.bodyXs,
+    color: colors.error,
+    fontWeight: "600",
   },
 });

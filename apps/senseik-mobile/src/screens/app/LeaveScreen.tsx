@@ -16,6 +16,7 @@ import { typography } from "@/styles/typography";
 import {
   leaveService,
   type EmployeeLeaveBalances,
+  type LeaveBalanceItem,
   type LeaveHalfDayPeriod,
   type LeaveRequest,
   type RequestableLeaveType,
@@ -27,6 +28,46 @@ import { getApiErrorMessage } from "@/lib/apiError";
 /** `DateOnly` string the API expects ("yyyy-MM-dd"); today, as a sane default for the form. */
 function todayDateOnly(): string {
   return toLocalDateOnly(new Date());
+}
+
+/**
+ * B8 (2. bulgu): the first breakdown used `totalAccrued`/`totalUsed`, which are LIFETIME sums - they
+ * don't add up to `availableBalance`, which is period-scoped. The fields that do sum to it
+ * (`LeaveBalanceEngine.cs:239-256`):
+ *   availableBalance = carriedOverIntoPeriod + lastPeriodAccrued + extraGrants + adjustments
+ *                       - currentPeriodUsed - futureApprovedInPeriod
+ * Zero-valued items are omitted; `adjustments` keeps its sign (a negative correction shows "-").
+ * `pendingDays` is NOT part of that sum (the server doesn't subtract it from `availableBalance`,
+ * only validates new requests against it) - shown separately in parentheses so it reads as
+ * informational, not as a term of the equation above.
+ */
+export function balanceBreakdown(item: Pick<LeaveBalanceItem, "balance" | "pendingDays">): string {
+  const {
+    carriedOverIntoPeriod,
+    lastPeriodAccrued,
+    extraGrants,
+    adjustments,
+    currentPeriodUsed,
+    futureApprovedInPeriod,
+  } = item.balance;
+  const parts: string[] = [];
+  if (carriedOverIntoPeriod !== 0) parts.push(`${formatDays(carriedOverIntoPeriod)} devreden`);
+  if (lastPeriodAccrued !== 0) parts.push(`${formatDays(lastPeriodAccrued)} hak ediş`);
+  if (extraGrants !== 0) parts.push(`${formatDays(extraGrants)} ek hak`);
+  if (adjustments !== 0) {
+    const sign = adjustments > 0 ? "+" : "-";
+    parts.push(`${sign}${formatDays(Math.abs(adjustments))} düzeltme`);
+  }
+  if (currentPeriodUsed !== 0) parts.push(`${formatDays(currentPeriodUsed)} kullanılan`);
+  if (futureApprovedInPeriod !== 0) parts.push(`${formatDays(futureApprovedInPeriod)} planlanan`);
+
+  const summary = parts.join(" · ");
+  const pendingDays = item.pendingDays ?? 0;
+  if (pendingDays <= 0) {
+    return summary;
+  }
+  const pendingSuffix = `(${formatDays(pendingDays)} onay bekliyor)`;
+  return summary.length > 0 ? `${summary} ${pendingSuffix}` : pendingSuffix;
 }
 
 const HALF_DAY_PERIOD_LABELS: Record<LeaveHalfDayPeriod, string> = {
@@ -47,6 +88,11 @@ export function isRequestableOnMobile(
   return type.unit !== "hourly" && !type.requiresSubstitute && !type.requiresDocument;
 }
 
+/** H1: only a request still awaiting a decision can be withdrawn (`POST .../requests/{id}/withdraw`). */
+export function canWithdrawLeaveRequest(request: Pick<LeaveRequest, "status">): boolean {
+  return request.status === "pending";
+}
+
 export default function LeaveScreen() {
   const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -61,6 +107,7 @@ export default function LeaveScreen() {
   const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod>("morning");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawingRequestId, setWithdrawingRequestId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -88,6 +135,33 @@ export default function LeaveScreen() {
     setRefreshing(true);
     await loadAll();
     setRefreshing(false);
+  }
+
+  async function withdrawRequest(requestId: string) {
+    setWithdrawingRequestId(requestId);
+    try {
+      await leaveService.withdrawLeaveRequest(requestId);
+      await loadAll();
+    } catch (withdrawError) {
+      Alert.alert(
+        "Hata",
+        getApiErrorMessage(withdrawError, "İzin talebi geri çekilemedi. Lütfen tekrar deneyin.")
+      );
+    } finally {
+      setWithdrawingRequestId(null);
+    }
+  }
+
+  // H1: irreversible action - confirm before withdrawing instead of acting on the first tap.
+  function confirmWithdraw(requestId: string) {
+    Alert.alert(
+      "İzin talebini geri çek",
+      "Bu izin talebini geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { text: "Geri çek", style: "destructive", onPress: () => void withdrawRequest(requestId) },
+      ]
+    );
   }
 
   const selectedType = requestableTypes.find((t) => t.id === selectedTypeId) ?? null;
@@ -167,10 +241,7 @@ export default function LeaveScreen() {
             <Text style={styles.cardValue}>
               {formatDays(item.balance.availableBalance)} gün kullanılabilir
             </Text>
-            <Text style={styles.cardSubtext}>
-              {formatDays(item.balance.totalAccrued)} tahakkuk ·{" "}
-              {formatDays(item.balance.totalUsed)} kullanılan
-            </Text>
+            <Text style={styles.cardSubtext}>{balanceBreakdown(item)}</Text>
           </View>
         ))
       ) : (
@@ -288,7 +359,16 @@ export default function LeaveScreen() {
       {requests.length === 0 ? (
         <Text style={styles.emptyText}>Henüz izin talebiniz yok.</Text>
       ) : (
-        requests.map((request) => <LeaveRequestListItem key={request.id} request={request} />)
+        requests.map((request) => (
+          <LeaveRequestListItem
+            key={request.id}
+            request={request}
+            onWithdraw={
+              canWithdrawLeaveRequest(request) ? () => confirmWithdraw(request.id) : undefined
+            }
+            isWithdrawing={withdrawingRequestId === request.id}
+          />
+        ))
       )}
     </ScrollView>
   );
