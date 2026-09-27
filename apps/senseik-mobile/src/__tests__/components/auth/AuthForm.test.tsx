@@ -20,9 +20,7 @@ describe("AuthFormError", () => {
       create(<AuthFormError message="E-posta veya şifre hatalı. Lütfen tekrar deneyin." />);
     });
 
-    expect(announceSpy).toHaveBeenCalledWith(
-      "E-posta veya şifre hatalı. Lütfen tekrar deneyin."
-    );
+    expect(announceSpy).toHaveBeenCalledWith("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
   });
 
   it("re-announces when the message text changes", () => {
