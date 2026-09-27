@@ -15,7 +15,7 @@ import { AvailabilityEntryCard } from "./shift/AvailabilityEntryCard";
 import { AvailabilityForm } from "./shift/AvailabilityForm";
 import { ShiftCard } from "./shift/ShiftCard";
 import { WeekStrip } from "./shift/WeekStrip";
-import { formatDayLabel, formatWeekLabel, weekDays } from "./shift/shiftWeek";
+import { emptyShiftTexts, formatDayLabel, formatWeekLabel, weekDays } from "./shift/shiftWeek";
 
 function todayDateOnly(): string {
   return toLocalDateOnly(new Date());
@@ -170,6 +170,7 @@ export default function ShiftScreen() {
   const onSelectedDay = (shift: ShiftAssignment) => !selectedDay || shift.date === selectedDay;
   const visibleMine = myShifts.filter(onSelectedDay);
   const visibleTeam = teamShifts.filter(onSelectedDay);
+  const emptyTexts = emptyShiftTexts(selectedDay);
 
   return (
     <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
@@ -196,11 +197,7 @@ export default function ShiftScreen() {
         title={selectedDay ? formatDayLabel(selectedDay) : "Bu haftaki vardiyalarım"}
       />
       {visibleMine.length === 0 ? (
-        <Text style={styles.emptyText}>
-          {selectedDay
-            ? "Bu gün için vardiyanız yok."
-            : "Bu hafta için yayınlanmış vardiyanız yok."}
-        </Text>
+        <Text style={styles.emptyText}>{emptyTexts.mine}</Text>
       ) : (
         visibleMine.map((shift) => (
           <ShiftCard
@@ -217,9 +214,7 @@ export default function ShiftScreen() {
         <>
           <SectionHeader title="Ekip vardiyaları" />
           {visibleTeam.length === 0 ? (
-            <Text style={styles.emptyText}>
-              Bu hafta için görüntüleyebileceğiniz ekip vardiyası yok.
-            </Text>
+            <Text style={styles.emptyText}>{emptyTexts.team}</Text>
           ) : (
             visibleTeam.map((shift) => (
               <ShiftCard

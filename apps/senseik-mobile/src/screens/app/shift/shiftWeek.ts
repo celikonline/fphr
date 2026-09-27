@@ -31,3 +31,15 @@ export function weekdayShort(value: string): string {
 export function formatDayLabel(value: string): string {
   return `${weekdayShort(value)}, ${formatDayMonth(value)}`;
 }
+
+/** Empty-list texts for Vardiyam's own/team sections: they speak of the day when one is picked in
+ * the week strip, otherwise of the whole week. */
+export function emptyShiftTexts(selectedDay: string | null): { mine: string; team: string } {
+  const period = selectedDay ? "Bu gün" : "Bu hafta";
+  return {
+    mine: selectedDay
+      ? `${period} için vardiyanız yok.`
+      : `${period} için yayınlanmış vardiyanız yok.`,
+    team: `${period} için görüntüleyebileceğiniz ekip vardiyası yok.`,
+  };
+}

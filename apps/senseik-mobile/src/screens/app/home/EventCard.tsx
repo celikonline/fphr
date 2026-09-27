@@ -1,8 +1,9 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { GlassCard } from "@/components/ui";
 import type { CompanyCalendarEntry } from "@/services/HomeFeedService";
-import { fontFor, palette, text } from "@/theme/theme";
+import { accents, fontFor, palette, text } from "@/theme/theme";
 import { formatShortDate } from "./homeSections";
 
 type Props = {
@@ -14,6 +15,8 @@ type Props = {
  * Not pressable - the mobile app has no event detail screen, so the mockup's chevron is omitted.
  */
 export function EventCard({ event }: Props) {
+  const isMeeting = event.type === "meeting";
+  const accent = accents[isMeeting ? "purple" : "blue"];
   const meta = event.description
     ? `${formatShortDate(event.date)} · ${event.description}`
     : formatShortDate(event.date);
@@ -22,11 +25,15 @@ export function EventCard({ event }: Props) {
     <GlassCard style={styles.card}>
       <View style={styles.row}>
         <View
-          style={styles.icon}
+          style={[styles.icon, { backgroundColor: accent.bg }]}
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >
-          <Text style={styles.iconText}>{event.type === "meeting" ? "👥" : "📋"}</Text>
+          <Ionicons
+            name={isMeeting ? "people-outline" : "calendar-outline"}
+            size={22}
+            color={accent.fg}
+          />
         </View>
         <Text style={styles.title} numberOfLines={2}>
           {event.title}
@@ -53,14 +60,8 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    borderWidth: 1,
-    borderColor: palette.glassBorder,
-    backgroundColor: palette.glassInner,
     alignItems: "center",
     justifyContent: "center",
-  },
-  iconText: {
-    fontSize: 18,
   },
   title: {
     flex: 1,

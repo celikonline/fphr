@@ -1,4 +1,9 @@
-import { formatDayLabel, formatWeekLabel, weekDays } from "@/screens/app/shift/shiftWeek";
+import {
+  emptyShiftTexts,
+  formatDayLabel,
+  formatWeekLabel,
+  weekDays,
+} from "@/screens/app/shift/shiftWeek";
 
 describe("weekDays", () => {
   it("lists Monday..Sunday of the week containing a midweek day", () => {
@@ -32,5 +37,21 @@ describe("week labels", () => {
 
   it("formats a day with its Turkish weekday", () => {
     expect(formatDayLabel("2026-09-30")).toBe("Çar, 30 Eyl");
+  });
+});
+
+describe("emptyShiftTexts", () => {
+  it("speaks of the week when no day is selected", () => {
+    expect(emptyShiftTexts(null)).toEqual({
+      mine: "Bu hafta için yayınlanmış vardiyanız yok.",
+      team: "Bu hafta için görüntüleyebileceğiniz ekip vardiyası yok.",
+    });
+  });
+
+  it("speaks of the day for both lists once a day is selected", () => {
+    expect(emptyShiftTexts("2026-09-30")).toEqual({
+      mine: "Bu gün için vardiyanız yok.",
+      team: "Bu gün için görüntüleyebileceğiniz ekip vardiyası yok.",
+    });
   });
 });

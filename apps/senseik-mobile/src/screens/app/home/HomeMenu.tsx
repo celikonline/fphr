@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fontFor, palette } from "@/theme/theme";
 
@@ -27,12 +28,13 @@ const MENU_OFFSET_FROM_SAFE_TOP = 52;
  */
 export function HomeMenu({ visible, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType={reduceMotion ? "none" : "fade"}
       statusBarTranslucent
       onRequestClose={onClose}
     >
