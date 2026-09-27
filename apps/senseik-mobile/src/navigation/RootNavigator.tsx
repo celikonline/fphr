@@ -78,11 +78,11 @@ export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): bo
 }
 
 /**
- * TEMPORARY (removed by Task 4 / Task 9, when Home and CheckIn move onto the shared `Screen` shell):
- * the two tab screens still use their pre-redesign containers, which know nothing about the status
- * bar or the custom tab bar that now overlays the scene. Pad them below the status bar and above the
- * tab bar so nothing (e.g. Home's "Çıkış yap" button) ends up hidden under either. Module-scope
- * components so react-navigation sees a stable identity and never remounts the screen.
+ * TEMPORARY (removed by Task 9, when CheckIn moves onto the shared `Screen` shell): the CheckIn tab
+ * still uses its pre-redesign container, which knows nothing about the status bar or the custom tab
+ * bar that now overlays the scene. Pad it below the status bar and above the tab bar so nothing ends
+ * up hidden under either. Module-scope components so react-navigation sees a stable identity and
+ * never remounts the screen. (Home renders `Screen withTabBar` itself.)
  */
 function TemporaryTabScreenFrame({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
@@ -95,14 +95,6 @@ function TemporaryTabScreenFrame({ children }: { children: ReactNode }) {
     >
       {children}
     </View>
-  );
-}
-
-function HomeTabScreen() {
-  return (
-    <TemporaryTabScreenFrame>
-      <DashboardScreen />
-    </TemporaryTabScreenFrame>
   );
 }
 
@@ -139,7 +131,7 @@ function MainTabsNavigator() {
         sceneStyle: { backgroundColor: palette.night },
       }}
     >
-      <Tab.Screen name="Home" component={HomeTabScreen} options={{ title: "Ana sayfa" }} />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{ title: "Ana sayfa" }} />
       <Tab.Screen
         name="CheckIn"
         component={CheckInTabScreen}
