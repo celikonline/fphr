@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -15,6 +14,7 @@ import { pushNotificationService } from "@/services/PushNotificationService";
 import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
 import type { NavigationTarget } from "@/lib/notificationNavigation";
 import { useAuthStore } from "@/store/authStore";
+import { PushBanner } from "@/components/ui/PushBanner";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
 const FOREGROUND_BANNER_DURATION_MS = 4000;
@@ -130,37 +130,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {foregroundBanner && (
-        <View style={styles.banner} pointerEvents="none">
-          {foregroundBanner.title.length > 0 && (
-            <Text style={styles.bannerTitle}>{foregroundBanner.title}</Text>
-          )}
-          {foregroundBanner.body.length > 0 && (
-            <Text style={styles.bannerBody}>{foregroundBanner.body}</Text>
-          )}
-        </View>
+        <PushBanner title={foregroundBanner.title} body={foregroundBanner.body} />
       )}
       <RootNavigator />
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    position: "absolute",
-    top: 48,
-    left: 16,
-    right: 16,
-    zIndex: 100,
-    backgroundColor: "#1f2937",
-    borderRadius: 12,
-    padding: 12,
-  },
-  bannerTitle: {
-    color: "#ffffff",
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  bannerBody: {
-    color: "#e5e7eb",
-  },
-});
