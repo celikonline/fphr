@@ -7,6 +7,8 @@ import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
 import { palette } from "@/theme/theme";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
+import { navigationRef } from "@/navigation/navigationRef";
+import { usePushTapNavigation } from "@/navigation/usePushTapNavigation";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -131,6 +133,7 @@ function AppNavigator() {
 export function RootNavigator() {
   const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -163,6 +166,8 @@ export function RootNavigator() {
     return () => subscription.remove();
   }, [statusBarStyle]);
 
+  usePushTapNavigation(navigationRef, isAuthenticated && navigationReady);
+
   if (shouldShowRootSplash(appReady)) {
     return (
       <>
@@ -177,7 +182,7 @@ export function RootNavigator() {
   return (
     <>
       <StatusBar style={statusBarStyle} />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
         <RootStack.Navigator
           screenOptions={{
             headerShown: false,

@@ -1,13 +1,21 @@
-import type { NavigationProp } from "@react-navigation/native";
 import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
 
 /**
  * Where a notification tap may land: a stack screen by name, or one of the two bottom tabs.
  * `MainTabs` (the tab container itself) and `NewRequest` (needs a `kind` param) are never targets.
  */
-export type NavigationTarget =
-  | { stack: Exclude<keyof AppStackParamList, "MainTabs" | "NewRequest"> }
-  | { tab: keyof MainTabsParamList };
+export type StackTargetScreen = Exclude<keyof AppStackParamList, "MainTabs" | "NewRequest">;
+export type NavigationTarget = { stack: StackTargetScreen } | { tab: keyof MainTabsParamList };
+
+/**
+ * The slice of an AppStack `navigation` that `navigateToTarget` needs - a screen's own
+ * `navigation` satisfies it, and so does `appStackNavigation` (`pushTapNavigation.ts`), which
+ * forwards through the root container ref for push taps.
+ */
+export interface TargetNavigator {
+  navigate(screen: StackTargetScreen): void;
+  navigate(screen: "MainTabs", params: { screen: keyof MainTabsParamList }): void;
+}
 
 /**
  * N1: maps an in-app notification's `templateKey` (never its `actionUrl`) to a mobile screen.
@@ -41,10 +49,7 @@ export function resolveNotificationNavigationTarget(templateKey: string): Naviga
 }
 
 /** Opens a resolved target: stack screens directly, tabs through the `MainTabs` container. */
-export function navigateToTarget(
-  navigation: NavigationProp<AppStackParamList>,
-  target: NavigationTarget
-): void {
+export function navigateToTarget(navigation: TargetNavigator, target: NavigationTarget): void {
   if ("tab" in target) {
     navigation.navigate("MainTabs", { screen: target.tab });
     return;

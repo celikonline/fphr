@@ -20,7 +20,6 @@ Notifications.setNotificationHandler({
 
 export class PushNotificationService {
   private listenerRef: Notifications.Subscription | null = null;
-  private responseListenerRef: Notifications.Subscription | null = null;
   /**
    * Token most recently confirmed as registered with the backend, kept in memory only. Used by
    * `unregisterPushToken` (logout, best-effort revoke). Not persisted: a fresh app launch always
@@ -97,25 +96,19 @@ export class PushNotificationService {
     }
   }
 
+  /** Taps on a notification are handled by `usePushTapNavigation`, not here. */
   setupNotificationListeners(
-    onNotificationReceived?: (notification: Notifications.Notification) => void,
-    onNotificationResponse?: (response: Notifications.NotificationResponse) => void
+    onNotificationReceived?: (notification: Notifications.Notification) => void
   ): void {
     // Listener for notifications received while app is in foreground
     this.listenerRef = Notifications.addNotificationReceivedListener((notification) => {
       // Never log the notification body: it can contain payroll/leave PII.
       onNotificationReceived?.(notification);
     });
-
-    // Listener for user interactions with notifications
-    this.responseListenerRef = Notifications.addNotificationResponseReceivedListener((response) => {
-      onNotificationResponse?.(response);
-    });
   }
 
   removeNotificationListeners(): void {
     this.listenerRef?.remove();
-    this.responseListenerRef?.remove();
   }
 
   async requestNotificationPermissions(): Promise<boolean> {
