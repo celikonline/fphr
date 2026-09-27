@@ -18,10 +18,15 @@ public sealed record SelfCheckInResultDto(
 
 /// <summary>
 /// "Şu an içeride miyim" (S-31): drives which button (Giriş/Çıkış/Mola başı/Mola sonu) the self check-in page shows.
-/// <c>BreakStartedAt</c> is the open break's tenant-local start; <c>BreakMinutesToday</c> is the day's closed break minutes.
+/// <c>BreakStartedAt</c> is the open break's tenant-local start; <c>BreakMinutesToday</c> is the day's closed break minutes;
+/// <c>Breaks</c> lists the day's breaks oldest first (empty when not checked in or no break yet).
 /// </summary>
 public sealed record MyCheckInStatusDto(
-    bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, bool OnBreak = false, TimeOnly? BreakStartedAt = null, int BreakMinutesToday = 0);
+    bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, bool OnBreak = false, TimeOnly? BreakStartedAt = null, int BreakMinutesToday = 0,
+    IReadOnlyList<MyBreakDto>? Breaks = null);
+
+/// <summary>One break of the day in tenant-local wall-clock time (same "HH:mm:ss" convention as check-in/out); <c>End</c> is null while the break is open.</summary>
+public sealed record MyBreakDto(TimeOnly Start, TimeOnly? End);
 
 /// <summary>
 /// QR self-servis check-in (S-31 kabul kriteri 1): <paramref name="Code"/> is the Location.SelfCheckInCode scanned from its
@@ -168,7 +173,8 @@ public sealed class GetMyCheckInStatusHandler(
             isCheckedIn, record?.Date ?? today, record?.CheckIn, record?.CheckOut,
             OnBreak: openBreakUtc is not null,
             BreakStartedAt: openBreakUtc is { } startedUtc ? SelfCheckInBreaks.ToLocalTime(startedUtc, now) : null,
-            BreakMinutesToday: record?.ActualBreakMinutes ?? 0);
+            BreakMinutesToday: record?.ActualBreakMinutes ?? 0,
+            Breaks: record is null ? [] : await SelfCheckInBreaks.ListDayBreaksAsync(selfCheckIns, employeeId, record, now, cancellationToken));
     }
 }
 

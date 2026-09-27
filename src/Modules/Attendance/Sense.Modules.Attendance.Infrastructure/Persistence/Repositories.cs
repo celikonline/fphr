@@ -216,6 +216,13 @@ public sealed class SelfCheckInRepository(AttendanceDbContext context) : ISelfCh
                 && (c.Direction == PunchDirection.BreakStart || c.Direction == PunchDirection.BreakEnd))
             .OrderByDescending(c => c.TimestampUtc)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<SelfCheckIn>> ListBreakAndOutPunchesAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
+        await context.SelfCheckIns
+            .Where(c => c.EmployeeId == employeeId && c.TimestampUtc >= sinceUtc
+                && (c.Direction == PunchDirection.BreakStart || c.Direction == PunchDirection.BreakEnd || c.Direction == PunchDirection.Out))
+            .OrderBy(c => c.TimestampUtc)
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository

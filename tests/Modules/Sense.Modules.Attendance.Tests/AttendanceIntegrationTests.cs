@@ -239,6 +239,36 @@ public sealed class AttendanceIntegrationTests : TestFixture
         (await selfCheckIns.FindLatestBreakPunchAsync(employeeId, at(12, 41), TestContext.Current.CancellationToken)).ShouldBeNull();
     }
 
+    /// <summary>Günün molaları (durum uç noktası): break and out rows since a moment, oldest first; "in" rows and other employees excluded.</summary>
+    [Fact]
+    public async Task SelfCheckInRepository_ListBreakAndOutPunches_ReturnsBreakAndOutRowsInOrder()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var at = (int hour, int minute) => new DateTime(2026, 9, 21, hour, minute, 0, DateTimeKind.Utc);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var repository = write.ServiceProvider.GetRequiredService<ISelfCheckInRepository>();
+            repository.Add(SelfCheckIn.RecordGps(tenantId, employeeId, at(17, 0), PunchDirection.Out, null, 39.9, 32.8, null));
+            repository.Add(SelfCheckIn.RecordGps(tenantId, employeeId, at(12, 40), PunchDirection.BreakEnd, null, 39.9, 32.8, null));
+            repository.Add(SelfCheckIn.RecordGps(tenantId, employeeId, at(12, 0), PunchDirection.BreakStart, null, 39.9, 32.8, null));
+            repository.Add(SelfCheckIn.RecordGps(tenantId, employeeId, at(10, 0), PunchDirection.In, null, 39.9, 32.8, null));
+            repository.Add(SelfCheckIn.RecordGps(tenantId, employeeId, at(8, 0), PunchDirection.BreakStart, null, 39.9, 32.8, null));
+            repository.Add(SelfCheckIn.RecordGps(tenantId, Guid.NewGuid(), at(13, 0), PunchDirection.BreakStart, null, 39.9, 32.8, null));
+            await write.ServiceProvider.GetRequiredService<AttendanceDbContext>().SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider!.CreateScope();
+        var selfCheckIns = read.ServiceProvider.GetRequiredService<ISelfCheckInRepository>();
+
+        var rows = await selfCheckIns.ListBreakAndOutPunchesAsync(employeeId, at(10, 0), TestContext.Current.CancellationToken);
+
+        rows.Select(r => r.Direction).ShouldBe([PunchDirection.BreakStart, PunchDirection.BreakEnd, PunchDirection.Out]);
+        rows.Select(r => r.TimestampUtc).ShouldBe([at(12, 0), at(12, 40), at(17, 0)]);
+    }
+
     /// <summary>Attendance.Contracts port Faz 7 (Payroll) consumes (S-8): worked/missing days and hours aggregated over a calendar month.</summary>
     [Fact]
     public async Task MonthlySummaryReader_AggregatesWorkedAndMissingDays_AndSkipsEmployeesWithNoRecords()

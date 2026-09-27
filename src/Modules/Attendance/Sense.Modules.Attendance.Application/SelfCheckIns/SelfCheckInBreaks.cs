@@ -71,9 +71,46 @@ internal static class SelfCheckInBreaks
             return null;
         }
 
-        var checkedInUtc = DateTime.SpecifyKind(day.Date.ToDateTime(checkIn) - UtcOffset(now), DateTimeKind.Utc);
-        var latest = await selfCheckIns.FindLatestBreakPunchAsync(employeeId, checkedInUtc, cancellationToken);
+        var latest = await selfCheckIns.FindLatestBreakPunchAsync(employeeId, CheckedInUtc(day.Date, checkIn, now), cancellationToken);
         return latest is { Direction: PunchDirection.BreakStart } ? latest.TimestampUtc : null;
+    }
+
+    /// <summary>
+    /// The day's breaks, oldest first (status tiles survive an app restart): a break start opens a break, the next break
+    /// end or check-out closes it. A break still open on a day that was checked out through another channel ends at the
+    /// day's check-out; one still open on an open day has no end. Empty when the day has no check-in.
+    /// </summary>
+    public static async Task<IReadOnlyList<MyBreakDto>> ListDayBreaksAsync(
+        ISelfCheckInRepository selfCheckIns, Guid employeeId, AttendanceDay day, TenantLocalNow now, CancellationToken cancellationToken)
+    {
+        if (day.CheckIn is not { } checkIn)
+        {
+            return [];
+        }
+
+        var punches = await selfCheckIns.ListBreakAndOutPunchesAsync(employeeId, CheckedInUtc(day.Date, checkIn, now), cancellationToken);
+        var breaks = new List<MyBreakDto>();
+        TimeOnly? openStart = null;
+        foreach (var punch in punches)
+        {
+            var time = ToLocalTime(punch.TimestampUtc, now);
+            if (punch.Direction == PunchDirection.BreakStart)
+            {
+                openStart ??= time;
+            }
+            else if (openStart is { } start)
+            {
+                breaks.Add(new MyBreakDto(start, time));
+                openStart = null;
+            }
+        }
+
+        if (openStart is { } stillOpen)
+        {
+            breaks.Add(new MyBreakDto(stillOpen, day.CheckOut));
+        }
+
+        return breaks;
     }
 
     /// <summary>Whole minutes between two instants (partial minute dropped, never negative).</summary>
@@ -92,6 +129,9 @@ internal static class SelfCheckInBreaks
         var day = await FindCurrentDayAsync(days, employeeId, today, cancellationToken);
         return day is { CheckIn: not null, CheckOut: null } ? day : null;
     }
+
+    private static DateTime CheckedInUtc(DateOnly date, TimeOnly checkIn, TenantLocalNow now) =>
+        DateTime.SpecifyKind(date.ToDateTime(checkIn) - UtcOffset(now), DateTimeKind.Utc);
 
     private static TimeSpan UtcOffset(TenantLocalNow now) => now.Local - now.Utc;
 }

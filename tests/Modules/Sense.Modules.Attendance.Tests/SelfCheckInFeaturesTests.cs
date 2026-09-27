@@ -296,6 +296,8 @@ public sealed class SelfCheckInFeaturesTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.IsCheckedIn.ShouldBeFalse();
+        result.Value.Breaks.ShouldNotBeNull();
+        result.Value.Breaks.ShouldBeEmpty();
     }
 
     // --- Mola başı/sonu (mobil yeniden tasarım §6): stateful fakes so a whole day's punch sequence can be replayed. ---
@@ -310,6 +312,11 @@ public sealed class SelfCheckInFeaturesTests
                 .Where(p => p.TimestampUtc >= c.ArgAt<DateTime>(1) && p.Direction is PunchDirection.BreakStart or PunchDirection.BreakEnd)
                 .OrderByDescending(p => p.TimestampUtc)
                 .FirstOrDefault());
+        _selfCheckIns.ListBreakAndOutPunchesAsync(_employeeId, Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(c => (IReadOnlyList<SelfCheckIn>)_punches
+                .Where(p => p.TimestampUtc >= c.ArgAt<DateTime>(1) && p.Direction is PunchDirection.BreakStart or PunchDirection.BreakEnd or PunchDirection.Out)
+                .OrderBy(p => p.TimestampUtc)
+                .ToList());
     }
 
     private static FixedLocalClock At(int hour, int minute) => new(new DateTime(2026, 9, 21, hour, minute, 0, DateTimeKind.Utc));
@@ -450,5 +457,76 @@ public sealed class SelfCheckInFeaturesTests
         _punches.ShouldContain(p => p.Direction == PunchDirection.BreakStart && p.Method == SelfCheckInMethod.Qr);
         _todayRecord.CheckIn.ShouldBe(new TimeOnly(10, 0));
         _todayRecord.ActualBreakMinutes.ShouldBe(0);
+    }
+
+    // --- Günün molaları (status "breaks"): tiles rebuilt after an app restart from the day's break/out rows. ---
+
+    [Fact]
+    public async Task GetMyCheckInStatus_TwoClosedBreaks_ListsBothInOrder()
+    {
+        UseStatefulStores();
+        (await GpsAt(PunchDirection.In, 9, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakStart, 10, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakEnd, 10, 15)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakStart, 12, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakEnd, 12, 45)).IsSuccess.ShouldBeTrue();
+
+        var status = await StatusAt(13, 0);
+
+        status.IsSuccess.ShouldBeTrue();
+        status.Value.OnBreak.ShouldBeFalse();
+        status.Value.BreakMinutesToday.ShouldBe(60);
+        status.Value.Breaks.ShouldBe(
+        [
+            new MyBreakDto(new TimeOnly(10, 0), new TimeOnly(10, 15)),
+            new MyBreakDto(new TimeOnly(12, 0), new TimeOnly(12, 45)),
+        ]);
+    }
+
+    [Fact]
+    public async Task GetMyCheckInStatus_OpenBreak_IsListedLastWithoutEnd()
+    {
+        UseStatefulStores();
+        (await GpsAt(PunchDirection.In, 10, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakStart, 12, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakEnd, 12, 40)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakStart, 15, 0)).IsSuccess.ShouldBeTrue();
+
+        var status = await StatusAt(15, 10);
+
+        status.Value.OnBreak.ShouldBeTrue();
+        status.Value.BreakStartedAt.ShouldBe(new TimeOnly(15, 0));
+        status.Value.Breaks.ShouldBe(
+        [
+            new MyBreakDto(new TimeOnly(12, 0), new TimeOnly(12, 40)),
+            new MyBreakDto(new TimeOnly(15, 0), null),
+        ]);
+    }
+
+    [Fact]
+    public async Task GetMyCheckInStatus_BreakClosedByCheckOut_EndsAtCheckOut()
+    {
+        UseStatefulStores();
+        (await GpsAt(PunchDirection.In, 10, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.BreakStart, 12, 0)).IsSuccess.ShouldBeTrue();
+        (await GpsAt(PunchDirection.Out, 12, 30)).IsSuccess.ShouldBeTrue();
+
+        var status = await StatusAt(12, 35);
+
+        status.Value.IsCheckedIn.ShouldBeFalse();
+        status.Value.Breaks.ShouldBe([new MyBreakDto(new TimeOnly(12, 0), new TimeOnly(12, 30))]);
+    }
+
+    [Fact]
+    public async Task GetMyCheckInStatus_CheckedInWithoutBreaks_ReturnsEmptyBreaks()
+    {
+        UseStatefulStores();
+        (await GpsAt(PunchDirection.In, 10, 0)).IsSuccess.ShouldBeTrue();
+
+        var status = await StatusAt(11, 0);
+
+        status.Value.IsCheckedIn.ShouldBeTrue();
+        status.Value.Breaks.ShouldNotBeNull();
+        status.Value.Breaks.ShouldBeEmpty();
     }
 }
