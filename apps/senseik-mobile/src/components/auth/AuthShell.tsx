@@ -5,6 +5,16 @@ import { AuthBackdrop } from "./AuthBackdrop";
 import { BrandMark } from "./BrandMark";
 import { Wordmark } from "./Wordmark";
 
+/** Compact brand hero (mark + wordmark) above the auth panels other than the login form. */
+export function AuthHero() {
+  return (
+    <View style={styles.hero}>
+      <BrandMark size={56} />
+      <Wordmark />
+    </View>
+  );
+}
+
 /**
  * Layout of the secondary auth screens (forgot password, biometric prompt): the login screen's
  * backdrop and compact brand hero, with the screen's glass `AuthPanel` rendered below it.
@@ -21,10 +31,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.hero}>
-              <BrandMark size={56} />
-              <Wordmark />
-            </View>
+            <AuthHero />
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

@@ -28,6 +28,12 @@ export const palette = {
   grabber: "rgba(255,255,255,0.25)",
   // ErrorBanner's border - pairs with `tones.danger.bg` (same hue) at a higher alpha for definition.
   dangerBorder: "rgba(255,138,128,0.3)",
+  // AuthBackdrop's outlined ghost square fill - a faint white wash inside the `ghostBorder` outline.
+  ghostOutlineFill: "rgba(255,255,255,0.10)",
+  // Focus ring around the auth screens' focused input (brand blue, soft).
+  focusRing: "rgba(0,140,240,0.25)",
+  // Glow under the auth screens' primary submit button (brand blue).
+  brandGlow: "rgba(0,140,240,0.45)",
 } as const;
 
 // AuthBackdrop.tsx'teki `experimental_backgroundImage` sabitiyle birebir aynı - orası bu sabiti

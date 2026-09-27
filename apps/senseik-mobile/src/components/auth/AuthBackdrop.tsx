@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "14deg" }],
     borderWidth: 1,
     borderColor: palette.ghostBorder,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: palette.ghostOutlineFill,
   },
   ghostFilled: {
     width: "100%",

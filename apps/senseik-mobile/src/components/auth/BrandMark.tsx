@@ -8,11 +8,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-
-// Mirrors the web signature mark's two colors (LoginScreen's `palette.brand` / white) — kept local
-// so this decorative mark has no dependency on the screen that renders it.
-const BRAND_COLOR = "#008CF0";
-const WHITE = "#FFFFFF";
+import { palette } from "@/theme/theme";
 
 const BASE_SIZE = 40;
 const SPRING_DAMPING = 14;
@@ -77,7 +73,7 @@ export function BrandMark({ size = 56, animated = true }: Props) {
             width: 24 * unit,
             height: 24 * unit,
             borderRadius: 6 * unit,
-            backgroundColor: WHITE,
+            backgroundColor: palette.white,
           },
         ]}
       />
@@ -92,7 +88,7 @@ export function BrandMark({ size = 56, animated = true }: Props) {
             width: 24 * unit,
             height: 24 * unit,
             borderRadius: 6 * unit,
-            backgroundColor: BRAND_COLOR,
+            backgroundColor: palette.brand,
           },
         ]}
       >
@@ -115,7 +111,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   arrow: {
-    color: WHITE,
+    color: palette.white,
+    // Deliberately `fontWeight`, not `fontFor`: Manrope has no "↗" (U+2197) glyph, so the arrow
+    // always renders in the system fallback font, where only a numeric weight makes it heavy.
     fontWeight: "900",
     textAlign: "center",
     includeFontPadding: false,
