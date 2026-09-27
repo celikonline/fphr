@@ -2,6 +2,7 @@ import axios from "axios";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
+import { pushNotificationService } from "@/services/PushNotificationService";
 import { User, AuthTokens, TenantChoice } from "@/types";
 
 // Paths mirror IdentityRoutes / AuthController.cs and MeController.cs (Sense.Modules.Identity.Api).
@@ -201,6 +202,16 @@ export class AuthService {
         console.error("Logout API call failed.");
       }
       // Continue with local logout even if API fails
+    }
+
+    // Best-effort: revoke this device's push token while the Bearer token is still valid (the
+    // revoke endpoint requires auth) - must happen before SecureStorage.clearAll() below.
+    // PushNotificationService.unregisterPushToken already swallows its own errors, but logout must
+    // never fail here either way.
+    try {
+      await pushNotificationService.unregisterPushToken();
+    } catch {
+      // Never log the raw error object (app-wide rule - see comment above).
     }
 
     // Clear local storage

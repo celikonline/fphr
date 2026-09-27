@@ -21,6 +21,18 @@ describe("resolvePushNavigationScreen", () => {
     expect(resolvePushNavigationScreen({ type: "announcement.published" })).toBe("Dashboard");
   });
 
+  it("maps approval.task_assigned to Approvals (aligned with notificationNavigation.ts)", () => {
+    expect(resolvePushNavigationScreen({ type: "approval.task_assigned" })).toBe("Approvals");
+  });
+
+  it("maps payroll.payslip_ready to Payroll (aligned with notificationNavigation.ts)", () => {
+    expect(resolvePushNavigationScreen({ type: "payroll.payslip_ready" })).toBe("Payroll");
+  });
+
+  it("maps leave.added_on_behalf to Leave (aligned with notificationNavigation.ts)", () => {
+    expect(resolvePushNavigationScreen({ type: "leave.added_on_behalf" })).toBe("Leave");
+  });
+
   it("prefers an explicit data.screen over data.type when both are present", () => {
     expect(resolvePushNavigationScreen({ screen: "Payroll", type: "employee.birthday" })).toBe(
       "Payroll"

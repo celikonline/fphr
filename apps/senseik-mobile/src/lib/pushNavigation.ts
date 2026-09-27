@@ -23,13 +23,20 @@ export const ALLOWED_PUSH_SCREENS = new Set([
 ]);
 
 /**
- * `data.type` -> tab screen, for template keys that don't carry an explicit `data.screen`.
- * Keys mirror `NotificationTemplateKeys` (Notifications.Contracts). The mobile app has no
- * dedicated announcement screen yet, so `announcement.published` lands on Dashboard, the closest
- * general landing screen; `employee.anniversary` is included for forward-compatibility even
- * though the backend catalog does not define it yet (only `employee.birthday` exists today).
+ * `data.type` -> tab screen, for template keys that don't carry an explicit `data.screen`. This is
+ * the push-delivery counterpart of `NOTIFICATION_TEMPLATE_SCREENS` in `notificationNavigation.ts`
+ * (in-app list) - kept aligned with it so a template that navigates from the in-app notification
+ * center navigates the same way from a push tap (see push-bildirimleri-tasarim.md §3.5: the backend
+ * sends push `data` as `{ type: <templateKey>, id }`). `employee.anniversary` is included for
+ * forward-compatibility even though the backend catalog does not define it yet (only
+ * `employee.birthday` exists today); `request.*` keys are intentionally not mapped here either,
+ * mirroring `notificationNavigation.ts` (a "request" can be Leave, Advance, Expense, Overtime,
+ * Requisition or AssetAssignment - types mobile has no single screen for).
  */
 const NOTIFICATION_TYPE_SCREENS: Record<string, string> = {
+  "approval.task_assigned": "Approvals",
+  "payroll.payslip_ready": "Payroll",
+  "leave.added_on_behalf": "Leave",
   "employee.birthday": "Dashboard",
   "employee.anniversary": "Dashboard",
   "announcement.published": "Dashboard",
