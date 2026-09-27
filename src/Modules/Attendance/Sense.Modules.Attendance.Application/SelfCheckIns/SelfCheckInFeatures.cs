@@ -16,8 +16,12 @@ namespace Sense.Modules.Attendance.Application.SelfCheckIns;
 public sealed record SelfCheckInResultDto(
     Guid AttendanceDayId, DateOnly Date, PunchDirection Direction, TimeOnly Time, Guid? LocationId, string? LocationName, bool? WithinGeofence);
 
-/// <summary>"Şu an içeride miyim" (S-31): drives which button (Giriş/Çıkış) the self check-in page shows.</summary>
-public sealed record MyCheckInStatusDto(bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut);
+/// <summary>
+/// "Şu an içeride miyim" (S-31): drives which button (Giriş/Çıkış/Mola başı/Mola sonu) the self check-in page shows.
+/// <c>BreakStartedAt</c> is the open break's tenant-local start; <c>BreakMinutesToday</c> is the day's closed break minutes.
+/// </summary>
+public sealed record MyCheckInStatusDto(
+    bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, bool OnBreak = false, TimeOnly? BreakStartedAt = null, int BreakMinutesToday = 0);
 
 /// <summary>
 /// QR self-servis check-in (S-31 kabul kriteri 1): <paramref name="Code"/> is the Location.SelfCheckInCode scanned from its
@@ -67,7 +71,7 @@ public sealed class QrCheckInHandler(
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, cancellationToken);
+            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, selfCheckIns, cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
@@ -126,7 +130,7 @@ public sealed class GpsCheckInHandler(
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
         var punched = await SelfCheckInPunch.ApplyAsync(
-            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, cancellationToken);
+            tenant.TenantId, employeeId, command.Direction, now, days, schedules, shiftSettings, selfCheckIns, cancellationToken);
         if (punched.IsFailure)
         {
             return punched.Error;
@@ -143,7 +147,7 @@ public sealed class GpsCheckInHandler(
 public sealed record GetMyCheckInStatusQuery : IQuery<MyCheckInStatusDto>;
 
 public sealed class GetMyCheckInStatusHandler(
-    ITenantContext tenant, ICurrentUser currentUser, IAttendanceDayRepository days, ITenantLocalClock clock)
+    ITenantContext tenant, ICurrentUser currentUser, IAttendanceDayRepository days, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock)
     : IQueryHandler<GetMyCheckInStatusQuery, MyCheckInStatusDto>
 {
     public async Task<Result<MyCheckInStatusDto>> Handle(GetMyCheckInStatusQuery query, CancellationToken cancellationToken)
@@ -155,19 +159,16 @@ public sealed class GetMyCheckInStatusHandler(
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
         var today = DateOnly.FromDateTime(now.Local);
-        var record = await days.FindByEmployeeAndDateAsync(employeeId, today, cancellationToken);
-        if (record?.CheckIn is null)
-        {
-            // Night shift: an evening "in" yesterday with no "out" yet is still open this morning.
-            var open = await SelfCheckInPunch.FindOpenOvernightDayAsync(days, employeeId, today, cancellationToken);
-            if (open is not null)
-            {
-                return new MyCheckInStatusDto(IsCheckedIn: true, open.Date, open.CheckIn, open.CheckOut);
-            }
-        }
 
+        // Night shift: with no "in" today, an evening "in" yesterday with no "out" yet is still open this morning.
+        var record = await SelfCheckInBreaks.FindCurrentDayAsync(days, employeeId, today, cancellationToken);
         var isCheckedIn = record is { CheckIn: not null, CheckOut: null };
-        return new MyCheckInStatusDto(isCheckedIn, today, record?.CheckIn, record?.CheckOut);
+        var openBreakUtc = record is null ? null : await SelfCheckInBreaks.FindOpenBreakStartUtcAsync(selfCheckIns, employeeId, record, now, cancellationToken);
+        return new MyCheckInStatusDto(
+            isCheckedIn, record?.Date ?? today, record?.CheckIn, record?.CheckOut,
+            OnBreak: openBreakUtc is not null,
+            BreakStartedAt: openBreakUtc is { } startedUtc ? SelfCheckInBreaks.ToLocalTime(startedUtc, now) : null,
+            BreakMinutesToday: record?.ActualBreakMinutes ?? 0);
     }
 }
 
@@ -215,8 +216,13 @@ internal static class SelfCheckInPunch
 
     public static async Task<Result<Applied>> ApplyAsync(
         Guid tenantId, Guid employeeId, PunchDirection direction, TenantLocalNow now, IAttendanceDayRepository days,
-        IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, CancellationToken cancellationToken)
+        IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, CancellationToken cancellationToken)
     {
+        if (direction is PunchDirection.BreakStart or PunchDirection.BreakEnd)
+        {
+            return await SelfCheckInBreaks.ApplyAsync(tenantId, employeeId, direction, now, days, schedules, shiftSettings, selfCheckIns, cancellationToken);
+        }
+
         var date = DateOnly.FromDateTime(now.Local);
         var time = TimeOnly.FromDateTime(now.Local);
         var existing = await days.FindByEmployeeAndDateAsync(employeeId, date, cancellationToken);
@@ -233,11 +239,19 @@ internal static class SelfCheckInPunch
             }
         }
 
+        // A check-out during an open break closes it at the check-out moment (mola süresi günün molasına eklenir).
+        var actualBreakMinutes = existing?.ActualBreakMinutes ?? 0;
+        if (direction == PunchDirection.Out && existing is not null
+            && await SelfCheckInBreaks.FindOpenBreakStartUtcAsync(selfCheckIns, employeeId, existing, now, cancellationToken) is { } breakStartedUtc)
+        {
+            actualBreakMinutes += SelfCheckInBreaks.ElapsedMinutes(breakStartedUtc, now.Utc);
+        }
+
         var (checkIn, checkOut) = Merge(existing?.CheckIn, existing?.CheckOut, direction, time);
         var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken));
         var upserted = await AttendanceDayUpsert.UpsertAsync(
             days, schedules, tenantId, employeeId, date, checkIn, checkOut, AttendanceDaySource.SelfService, overnight, cancellationToken,
-            existing?.ActualBreakMinutes ?? 0, limits);
+            actualBreakMinutes, limits);
         return upserted.IsFailure ? upserted.Error : new Applied(upserted.Value.Id, date, time);
     }
 

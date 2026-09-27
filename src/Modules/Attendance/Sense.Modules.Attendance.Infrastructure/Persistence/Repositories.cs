@@ -209,6 +209,13 @@ public sealed class EmployeeAvailabilityRepository(AttendanceDbContext context) 
 public sealed class SelfCheckInRepository(AttendanceDbContext context) : ISelfCheckInRepository
 {
     public void Add(SelfCheckIn checkIn) => context.SelfCheckIns.Add(checkIn);
+
+    public async Task<SelfCheckIn?> FindLatestBreakPunchAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
+        await context.SelfCheckIns
+            .Where(c => c.EmployeeId == employeeId && c.TimestampUtc >= sinceUtc
+                && (c.Direction == PunchDirection.BreakStart || c.Direction == PunchDirection.BreakEnd))
+            .OrderByDescending(c => c.TimestampUtc)
+            .FirstOrDefaultAsync(cancellationToken);
 }
 
 public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository
