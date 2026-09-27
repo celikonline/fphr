@@ -15,6 +15,7 @@ import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
 import type { NavigationTarget } from "@/lib/notificationNavigation";
 import { useAuthStore } from "@/store/authStore";
 import { PushBanner } from "@/components/ui/PushBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
 const FOREGROUND_BANNER_DURATION_MS = 4000;
@@ -132,7 +133,9 @@ export default function App() {
       {foregroundBanner && (
         <PushBanner title={foregroundBanner.title} body={foregroundBanner.body} />
       )}
-      <RootNavigator />
+      <ErrorBoundary>
+        <RootNavigator />
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }
