@@ -21,6 +21,7 @@ import { getApiProblem } from "@/lib/apiError";
 import { TenantChoice } from "@/types";
 import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
 import { BrandMark } from "@/components/auth/BrandMark";
+import { fontFor } from "@/theme/theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
@@ -41,7 +42,7 @@ function Wordmark() {
   return (
     <Text style={styles.wordmark}>
       Sense
-      <Text style={styles.wordmarkAccent}>İK</Text>
+      <Text style={styles.wordmarkAccent}>HR</Text>
     </Text>
   );
 }
@@ -414,9 +415,9 @@ const styles = StyleSheet.create({
   wordmark: {
     marginTop: 8,
     fontSize: 40,
-    fontWeight: "900",
     letterSpacing: -1.5,
     color: palette.white,
+    ...fontFor(800),
   },
   wordmarkAccent: { color: palette.brand },
   heroSubtitle: { marginTop: 10, fontSize: 15, color: palette.ice },
