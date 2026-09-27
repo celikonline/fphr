@@ -52,6 +52,9 @@ export function PayslipRow({
               disabled={disabled}
               accessibilityRole="button"
               accessibilityLabel="Okudum, onaylıyorum"
+              // `StatusPill`'in görsel yüksekliği ~24px (paddingVertical 4 + caption lineHeight 16) -
+              // hitSlop dokunma alanını >=44'e çıkarır.
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <StatusPill
                 label={isAcknowledging ? "Kaydediliyor…" : statusLabel}

@@ -5,110 +5,28 @@ import {
   FlatList,
   RefreshControl,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
+import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { notificationsService, type UserNotification } from "@/services/NotificationsService";
-import { formatRelativeTime } from "@/lib/formatters";
 import {
   navigateToTarget,
   resolveNotificationNavigationTarget,
 } from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
-import { accents, fontFor, palette, radius, text, type AccentKey } from "@/theme/theme";
+import { palette } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
+import { MarkAllReadPill } from "./notifications/MarkAllReadPill";
+import { NotificationRow } from "./notifications/NotificationRow";
+
+/** Re-exported so existing tests/imports keep working from this screen's path. */
+export { notificationCategoryIcon } from "./notifications/notificationCategoryIcon";
 
 const PAGE_SIZE = 20;
 
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList, "Notifications">;
-
-/** N1: each `templateKey`'s dot-separated first segment ("payroll.payslip_ready" -> "payroll")
- * picks the category icon/accent - `UserNotification` carries no explicit `category` field. */
-const CATEGORY_ICONS: Record<string, { icon: IoniconName; accent: AccentKey }> = {
-  request: { icon: "document-text-outline", accent: "amber" },
-  approval: { icon: "checkmark-done-outline", accent: "purple" },
-  documents: { icon: "document-attach-outline", accent: "teal" },
-  ohs: { icon: "alert-circle-outline", accent: "coral" },
-  employee: { icon: "people-outline", accent: "blue" },
-  announcement: { icon: "megaphone-outline", accent: "indigo" },
-  payroll: { icon: "wallet-outline", accent: "coral" },
-  leave: { icon: "sunny-outline", accent: "green" },
-  onboarding: { icon: "flag-outline", accent: "pink" },
-  account: { icon: "person-circle-outline", accent: "gray" },
-};
-
-const DEFAULT_CATEGORY_ICON: { icon: IoniconName; accent: AccentKey } = {
-  icon: "notifications-outline",
-  accent: "gray",
-};
-
-/** Maps a notification's `templateKey` to the category icon/accent shown on its row. */
-export function notificationCategoryIcon(templateKey: string): {
-  icon: IoniconName;
-  accent: AccentKey;
-} {
-  const prefix = templateKey.split(".")[0];
-  return CATEGORY_ICONS[prefix] ?? DEFAULT_CATEGORY_ICON;
-}
-
-function NotificationRow({
-  notification,
-  onPress,
-}: {
-  notification: UserNotification;
-  onPress: () => void;
-}) {
-  const isUnread = !notification.readAt;
-  const { icon, accent } = notificationCategoryIcon(notification.templateKey);
-  const accentStyle = accents[accent];
-
-  return (
-    <GlassCard style={styles.card} onPress={onPress} accessibilityLabel={notification.title}>
-      <View style={styles.row}>
-        <View style={[styles.iconWrap, { backgroundColor: accentStyle.bg }]}>
-          <Ionicons name={icon} size={20} color={accentStyle.fg} />
-        </View>
-        <View style={styles.content}>
-          <View style={styles.titleRow}>
-            {isUnread ? <View style={styles.dot} /> : null}
-            <Text
-              style={[styles.title, isUnread && styles.titleUnread]}
-              numberOfLines={1}
-            >
-              {notification.title}
-            </Text>
-          </View>
-          <Text style={styles.body} numberOfLines={2}>
-            {notification.body}
-          </Text>
-          <Text style={styles.time}>{formatRelativeTime(notification.createdAt)}</Text>
-        </View>
-      </View>
-    </GlassCard>
-  );
-}
-
-function MarkAllReadPill({ disabled, onPress }: { disabled: boolean; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      style={[styles.markAllPill, disabled && styles.markAllPillDisabled]}
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel="Tümünü okundu yap"
-    >
-      <Text style={[styles.markAllText, disabled && styles.markAllTextDisabled]}>
-        Tümünü okundu yap
-      </Text>
-    </TouchableOpacity>
-  );
-}
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<NotificationsNavigationProp>();
@@ -266,72 +184,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  markAllPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    backgroundColor: palette.glass,
-    borderWidth: 1,
-    borderColor: palette.glassBorder,
-  },
-  markAllPillDisabled: {
-    opacity: 0.5,
-  },
-  markAllText: {
-    fontSize: 12,
-    color: palette.brandText,
-    ...fontFor(700),
-  },
-  markAllTextDisabled: {
-    color: palette.textFaint,
-  },
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 12,
-  },
-  card: {
-    marginBottom: 10,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  content: {
-    flex: 1,
-    minWidth: 0,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.brand,
-  },
-  title: {
-    ...text.body,
-    flexShrink: 1,
-  },
-  titleUnread: {
-    ...fontFor(800),
-  },
-  body: {
-    ...text.bodyMuted,
-    marginTop: 2,
-  },
-  time: {
-    ...text.caption,
-    marginTop: 4,
   },
   footer: {
     marginVertical: 12,
