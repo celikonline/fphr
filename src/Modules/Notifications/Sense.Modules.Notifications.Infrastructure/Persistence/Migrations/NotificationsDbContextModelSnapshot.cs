@@ -201,6 +201,79 @@ namespace Sense.Modules.Notifications.Infrastructure.Persistence.Migrations
                     b.ToTable("notification_preferences", "notifications");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Notifications.Domain.PushDevices.PushDeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DeviceName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("device_name");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("platform");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("token");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_push_device_tokens");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_push_device_tokens_tenant_id");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("ix_push_device_tokens_token")
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .HasDatabaseName("ix_push_device_tokens_tenant_id_user_id")
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.ToTable("push_device_tokens", "notifications");
+                });
+
             modelBuilder.Entity("Sense.Modules.Notifications.Domain.UserNotifications.UserNotification", b =>
                 {
                     b.Property<Guid>("Id")

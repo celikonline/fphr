@@ -671,6 +671,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.preference.unknown_template" xml:space="preserve"><value>Unknown notification type: {TemplateKey}.</value></data>
   <data name="notifications.preference.unknown_channel" xml:space="preserve"><value>This notification type is not delivered over the "{Channel}" channel.</value></data>
   <data name="notifications.preference.not_configurable" xml:space="preserve"><value>This notification is mandatory and cannot be turned off.</value></data>
+  <data name="notifications.device.invalid_token" xml:space="preserve"><value>Invalid push notification token.</value></data>
+  <data name="notifications.device.invalid_platform" xml:space="preserve"><value>Invalid platform; must be "ios" or "android".</value></data>
   <data name="leave.rule_sets.read" xml:space="preserve"><value>View leave rule sets</value></data>
   <data name="leave.rule_sets.manage" xml:space="preserve"><value>Manage leave rule sets</value></data>
   <data name="leave.rule_sets.assign" xml:space="preserve"><value>Assign leave rule sets</value></data>

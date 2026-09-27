@@ -23,7 +23,9 @@ public sealed class TemplateRendererTests
         var data = new TheoryData<string, string, string>();
         foreach (var definition in NotificationCatalog.All)
         {
-            foreach (var channel in definition.DefaultChannels)
+            // Push has no "{key}.push.{lang}.sbn" of its own: PushDeliverySender re-renders with the in_app
+            // channel and reuses that text (push-bildirimleri-tasarim.md §3.4) - nothing to assert here per-key.
+            foreach (var channel in definition.DefaultChannels.Where(c => c != NotificationChannels.Push))
             {
                 foreach (var language in ScribanNotificationTemplateRenderer.SupportedLanguages)
                 {

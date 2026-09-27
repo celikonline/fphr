@@ -55,13 +55,14 @@ public static class NotificationTemplateKeys
     public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
 }
 
-/// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>
+/// <summary>Delivery channels. Web Push (browser) is not covered yet - only Expo (mobile) push.</summary>
 public static class NotificationChannels
 {
     public const string Email = "email";
     public const string InApp = "in_app";
+    public const string Push = "push";
 
-    public static IReadOnlyList<string> All { get; } = [Email, InApp];
+    public static IReadOnlyList<string> All { get; } = [Email, InApp, Push];
 }
 
 /// <summary>SignalR client method names on /hubs/notifications for this module.</summary>

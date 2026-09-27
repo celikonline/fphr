@@ -14,4 +14,7 @@ public static class NotificationsLimits
     public const int CultureMaxLength = 10;
     public const int ErrorMaxLength = 2000;
     public const int StatusMaxLength = 20;
+    public const int PushTokenMaxLength = 255;
+    public const int PushPlatformMaxLength = 20;
+    public const int DeviceNameMaxLength = 100;
 }

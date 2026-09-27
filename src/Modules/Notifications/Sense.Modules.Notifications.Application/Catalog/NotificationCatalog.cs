@@ -47,12 +47,16 @@ public static class NotificationCatalog
     private static readonly string[] InAppOnly = [NotificationChannels.InApp];
     private static readonly string[] EmailOnly = [NotificationChannels.Email];
 
+    // Engagement/time-sensitive templates that also fan out over Expo push (push-bildirimleri-tasarim.md §3.1).
+    // Mandatory/statutory reminders (OhsSgkNotificationDue, EmployeeWorkCertificate) are deliberately excluded.
+    private static readonly string[] EmailInAppAndPush = [NotificationChannels.Email, NotificationChannels.InApp, NotificationChannels.Push];
+
     public static IReadOnlyList<NotificationTemplateDefinition> All { get; } =
     [
         new(NotificationTemplateKeys.RequestCreated, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
-        new(NotificationTemplateKeys.RequestApproved, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
-        new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
-        new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.RequestApproved, NotificationCategory.Request, EmailInAppAndPush, IsMandatory: false),
+        new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailInAppAndPush, IsMandatory: false),
+        new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailInAppAndPush, IsMandatory: false),
         new(NotificationTemplateKeys.LeaveAddedOnBehalf, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.DocumentExpiryReminder, NotificationCategory.Reminder, InAppOnly, IsMandatory: false),
         // Missing the statutory SGK deadline is a legal breach, so this reminder cannot be switched off.
@@ -62,9 +66,9 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.EmployeeTerminated, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
         // 4857 md.28: the employer must hand out the çalışma belgesi, and the leaver has no account left to opt out with.
         new(NotificationTemplateKeys.EmployeeWorkCertificate, NotificationCategory.Employee, EmailOnly, IsMandatory: true),
-        new(NotificationTemplateKeys.EmployeeBirthday, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
-        new(NotificationTemplateKeys.AnnouncementPublished, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
-        new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.EmployeeBirthday, NotificationCategory.Employee, EmailInAppAndPush, IsMandatory: false),
+        new(NotificationTemplateKeys.AnnouncementPublished, NotificationCategory.Announcement, EmailInAppAndPush, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailInAppAndPush, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskAssigned, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskCompleted, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
     ];

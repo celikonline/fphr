@@ -48,6 +48,8 @@ public sealed class NotificationsOptions
 
     public DeliveryOptions Delivery { get; set; } = new();
 
+    public PushOptions Push { get; set; } = new();
+
     public sealed class DeliveryOptions
     {
         public int BatchSize { get; set; } = 20;
@@ -60,4 +62,40 @@ public sealed class NotificationsOptions
 
         public int PollingIntervalSeconds { get; set; } = 5;
     }
+
+    /// <summary>Same shape as <see cref="DeliveryOptions"/>; push is scanned more often (shorter default interval).</summary>
+    public sealed class PushOptions
+    {
+        public int BatchSize { get; set; } = 20;
+
+        public int MaxAttempts { get; set; } = 8;
+
+        public int BaseBackoffSeconds { get; set; } = 30;
+
+        public int MaxBackoffSeconds { get; set; } = 3600;
+
+        public int PollingIntervalSeconds { get; set; } = 2;
+    }
+}
+
+/// <summary>One Expo push message to send. <see cref="Data"/> is the payload the mobile app's push handler reads
+/// (see apps/senseik-mobile/src/lib/pushNavigation.ts) - only the template key and a safe id, never PII.</summary>
+public sealed record ExpoPushMessage(string Token, string Title, string Body, IReadOnlyDictionary<string, string?> Data);
+
+/// <summary>
+/// Expo's per-message send result ("ticket"; not the later delivery "receipt", which is out of scope for this
+/// phase). <see cref="Token"/> lets the caller map the ticket back to the device it was sent to.
+/// </summary>
+public sealed record ExpoPushTicket(string Token, bool IsError, string? ErrorCode);
+
+public static class ExpoPushErrorCodes
+{
+    /// <summary>The token is no longer valid (app uninstalled, token rotated) - the device row must be revoked.</summary>
+    public const string DeviceNotRegistered = "DeviceNotRegistered";
+}
+
+/// <summary>Sends Expo push messages. See ExpoPushSender (Infrastructure) for the HTTP client.</summary>
+public interface IExpoPushSender
+{
+    Task<IReadOnlyList<ExpoPushTicket>> SendAsync(IReadOnlyList<ExpoPushMessage> messages, CancellationToken cancellationToken = default);
 }

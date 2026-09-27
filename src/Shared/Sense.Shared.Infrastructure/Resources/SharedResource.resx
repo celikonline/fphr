@@ -680,6 +680,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.preference.unknown_template" xml:space="preserve"><value>Bilinmeyen bildirim türü: {TemplateKey}.</value></data>
   <data name="notifications.preference.unknown_channel" xml:space="preserve"><value>Bu bildirim türü "{Channel}" kanalından gönderilmiyor.</value></data>
   <data name="notifications.preference.not_configurable" xml:space="preserve"><value>Bu bildirim zorunludur, kapatılamaz.</value></data>
+  <data name="notifications.device.invalid_token" xml:space="preserve"><value>Geçersiz push bildirim token'ı.</value></data>
+  <data name="notifications.device.invalid_platform" xml:space="preserve"><value>Geçersiz platform; "ios" veya "android" olmalı.</value></data>
   <data name="leave.rule_sets.read" xml:space="preserve"><value>İzin kurallarını görüntüleme</value></data>
   <data name="leave.rule_sets.manage" xml:space="preserve"><value>İzin kurallarını yönetme</value></data>
   <data name="leave.rule_sets.assign" xml:space="preserve"><value>İzin kuralı atama</value></data>

@@ -134,6 +134,7 @@ builder.Services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
+builder.Services.AddHostedService<PushDeliveryPollingService>();
 // Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
 // (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
 // Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
