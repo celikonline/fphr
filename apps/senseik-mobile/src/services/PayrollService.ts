@@ -3,13 +3,16 @@ import { apiClient } from "@/lib/apiClient";
 
 /**
  * TK-030: "Bordro Pusulam" - mirrors `PayslipsController.cs`'s `payroll/payslips/my` group
- * (`GET my`, `GET my/{id}/document`). Only the caller's own payslips, and only for periods already
- * Paid/Locked (server-enforced - `PayslipVisibility.IsVisibleToEmployee`); the HR-facing
- * employee/{id}/payslips and the "okundu/onaylandı" flow are out of scope (not built server-side yet).
+ * (`GET my`, `GET my/{id}/document`, `POST my/{id}/acknowledge`). Only the caller's own payslips, and
+ * only for periods already Paid/Locked (server-enforced - `PayslipVisibility.IsVisibleToEmployee`);
+ * the HR-facing employee/{id}/payslips flow is out of scope.
  */
 const PAYROLL_BASE = "/api/v1/payroll/payslips";
 
-/** `MyPayslipDto`. */
+/**
+ * `MyPayslipDto`. `viewedAt`/`acknowledgedAt` are omitted by the API (`WhenWritingNull`) until the
+ * employee has downloaded / acknowledged this payslip - missing means null, never "unknown".
+ */
 export interface MyPayslip {
   payslipId: string;
   year: number;
@@ -18,12 +21,33 @@ export interface MyPayslip {
   netAmount: number;
   hasDocument: boolean;
   createdAt: string;
+  viewedAt: string | null;
+  acknowledgedAt: string | null;
 }
+
+/** Raw API shape: `viewedAt`/`acknowledgedAt` are absent from the JSON entirely when null (`WhenWritingNull`). */
+type MyPayslipResponse = Omit<MyPayslip, "viewedAt" | "acknowledgedAt"> & {
+  viewedAt?: string;
+  acknowledgedAt?: string;
+};
 
 export class PayrollService {
   async getMyPayslips(): Promise<MyPayslip[]> {
-    const response = await apiClient.get<MyPayslip[]>(`${PAYROLL_BASE}/my`);
-    return response.data;
+    const response = await apiClient.get<MyPayslipResponse[]>(`${PAYROLL_BASE}/my`);
+    return response.data.map((payslip) => ({
+      ...payslip,
+      viewedAt: payslip.viewedAt ?? null,
+      acknowledgedAt: payslip.acknowledgedAt ?? null,
+    }));
+  }
+
+  /**
+   * "Okudum, onaylıyorum" (TK-030 kabul kriteri 2). Idempotent - a second call for an already
+   * acknowledged payslip still returns 204 and does not change the original `acknowledgedAt`.
+   * Always sent as the "mobile" channel, matching `PayslipDeliveryChannel`.
+   */
+  async acknowledgePayslip(payslipId: string): Promise<void> {
+    await apiClient.post(`${PAYROLL_BASE}/my/${payslipId}/acknowledge`, { channel: "mobile" });
   }
 
   /**

@@ -40,7 +40,7 @@ describe("PayrollService", () => {
   });
 
   describe("getMyPayslips", () => {
-    it("fetches the caller's own payslips", async () => {
+    it("fetches the caller's own payslips and defaults a missing viewedAt/acknowledgedAt to null", async () => {
       const mockResponse = {
         data: [
           {
@@ -51,6 +51,7 @@ describe("PayrollService", () => {
             netAmount: 45000,
             hasDocument: true,
             createdAt: "2026-09-27T08:00:00Z",
+            // viewedAt/acknowledgedAt intentionally absent - the API omits them (WhenWritingNull) when null.
           },
         ],
       };
@@ -58,8 +59,34 @@ describe("PayrollService", () => {
 
       const result = await payrollService.getMyPayslips();
 
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual([
+        { ...mockResponse.data[0], viewedAt: null, acknowledgedAt: null },
+      ]);
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/payroll/payslips/my");
+    });
+
+    it("passes through a present viewedAt/acknowledgedAt instead of overwriting it with null", async () => {
+      const mockResponse = {
+        data: [
+          {
+            payslipId: "payslip-1",
+            year: 2026,
+            month: 9,
+            grossAmount: 60000,
+            netAmount: 45000,
+            hasDocument: true,
+            createdAt: "2026-09-27T08:00:00Z",
+            viewedAt: "2026-09-27T09:00:00Z",
+            acknowledgedAt: "2026-09-27T09:05:00Z",
+          },
+        ],
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await payrollService.getMyPayslips();
+
+      expect(result[0].viewedAt).toBe("2026-09-27T09:00:00Z");
+      expect(result[0].acknowledgedAt).toBe("2026-09-27T09:05:00Z");
     });
 
     it("propagates a 403/404 instead of returning fabricated data - the screen must show no payslips on failure", async () => {
@@ -67,6 +94,26 @@ describe("PayrollService", () => {
       (apiClient.get as jest.Mock).mockRejectedValue(apiError);
 
       await expect(payrollService.getMyPayslips()).rejects.toEqual(apiError);
+    });
+  });
+
+  describe("acknowledgePayslip", () => {
+    it("posts the mobile channel to the acknowledge endpoint for exactly the given payslipId", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({ status: 204 });
+
+      await payrollService.acknowledgePayslip("payslip-1");
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/payroll/payslips/my/payslip-1/acknowledge",
+        { channel: "mobile" }
+      );
+    });
+
+    it("propagates a 404 (another employee's payslip or a not-yet-visible period)", async () => {
+      const apiError = { response: { status: 404, data: { code: "payroll.payslip.not_found" } } };
+      (apiClient.post as jest.Mock).mockRejectedValue(apiError);
+
+      await expect(payrollService.acknowledgePayslip("someone-elses-id")).rejects.toEqual(apiError);
     });
   });
 

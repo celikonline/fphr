@@ -12,18 +12,30 @@ namespace Sense.Modules.Payroll.Tests;
 /// <summary>
 /// TK-030 "Bordro Pusulam": <see cref="GetMyPayslipsHandler"/> only ever lists the CALLER's own payslips, and only
 /// for periods already Paid or Locked - never another employee's payslips, never an Open/Approved (still-changeable)
-/// period's payslip.
+/// period's payslip. Also carries each payslip's <see cref="PayslipDelivery"/> Viewed/Acknowledged state (kabul
+/// kriteri 2/3) in the SAME query - no per-row lookup (N+1).
 /// </summary>
 public sealed class MyPayslipFeaturesTests
 {
     private static readonly Guid TenantId = Guid.NewGuid();
+
+    private static GetMyPayslipsHandler Handler(
+        IPayslipRepository payslips, IPayrollPeriodRepository periods, ICurrentUser currentUser, IPayslipDeliveryRepository? deliveries = null) =>
+        new(payslips, periods, deliveries ?? EmptyDeliveries(), currentUser);
+
+    private static IPayslipDeliveryRepository EmptyDeliveries()
+    {
+        var deliveries = Substitute.For<IPayslipDeliveryRepository>();
+        deliveries.ListByEmployeeAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayslipDelivery>>([]));
+        return deliveries;
+    }
 
     [Fact]
     public async Task Handle_NoEmployeeRecord_ReturnsEmptyList()
     {
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.EmployeeId.Returns((Guid?)null);
-        var handler = new GetMyPayslipsHandler(Substitute.For<IPayslipRepository>(), Substitute.For<IPayrollPeriodRepository>(), currentUser);
+        var handler = Handler(Substitute.For<IPayslipRepository>(), Substitute.For<IPayrollPeriodRepository>(), currentUser);
 
         var result = await handler.Handle(new GetMyPayslipsQuery(), CancellationToken.None);
 
@@ -58,7 +70,7 @@ public sealed class MyPayslipFeaturesTests
         periods.ListAllAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<PayrollPeriod>>([openPeriod, paidPeriod, lockedPeriod]));
 
-        var handler = new GetMyPayslipsHandler(payslips, periods, currentUser);
+        var handler = Handler(payslips, periods, currentUser);
 
         var result = await handler.Handle(new GetMyPayslipsQuery(), CancellationToken.None);
 
@@ -86,12 +98,47 @@ public sealed class MyPayslipFeaturesTests
         var periods = Substitute.For<IPayrollPeriodRepository>();
         periods.ListAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayrollPeriod>>([period]));
 
-        var handler = new GetMyPayslipsHandler(payslips, periods, currentUser);
+        var handler = Handler(payslips, periods, currentUser);
 
         var result = await handler.Handle(new GetMyPayslipsQuery(), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldBeEmpty();
         await payslips.DidNotReceive().ListByEmployeeAsync(otherEmployeeId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_IncludesViewedAndAcknowledgedAt_FromOneBatchedDeliveryQuery()
+    {
+        var employeeId = Guid.NewGuid();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(employeeId);
+
+        var period = PayrollPeriod.Create(TenantId, 2026, 1).Value;
+        period.Approve(null);
+        period.MarkPaid();
+        var payslip = Payslip.CreateFirstVersion(TenantId, employeeId, period.Id, "{}", "hash", 100_000m, 84_000m, 130_000m);
+
+        var delivery = PayslipDelivery.Create(TenantId, payslip.Id, employeeId, PayslipDeliveryChannel.Mobile);
+        var viewedAt = DateTimeOffset.UtcNow.AddHours(-2);
+        var acknowledgedAt = DateTimeOffset.UtcNow.AddHours(-1);
+        delivery.MarkViewed(viewedAt);
+        delivery.Acknowledge(acknowledgedAt, PayslipDeliveryChannel.Mobile, payslip.Version, "evidence-hash");
+
+        var payslips = Substitute.For<IPayslipRepository>();
+        payslips.ListByEmployeeAsync(employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<Payslip>>([payslip]));
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        periods.ListAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayrollPeriod>>([period]));
+        var deliveries = Substitute.For<IPayslipDeliveryRepository>();
+        deliveries.ListByEmployeeAsync(employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayslipDelivery>>([delivery]));
+
+        var handler = Handler(payslips, periods, currentUser, deliveries);
+
+        var result = await handler.Handle(new GetMyPayslipsQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Single().ViewedAt.ShouldBe(viewedAt);
+        result.Value.Single().AcknowledgedAt.ShouldBe(acknowledgedAt);
+        await deliveries.Received(1).ListByEmployeeAsync(employeeId, Arg.Any<CancellationToken>());
     }
 }
