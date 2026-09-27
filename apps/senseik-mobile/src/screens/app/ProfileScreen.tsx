@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAuthStore } from "@/store/authStore";
+import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
 import {
   Avatar,
   EmptyState,
@@ -23,7 +23,6 @@ type ProfileNavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigationProp>();
-  const { logout } = useAuthStore();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,6 +30,7 @@ export default function ProfileScreen() {
   const [notFound, setNotFound] = useState(false);
   const [groups, setGroups] = useState<ProfileGroup[]>([]);
   const [activeGroupKey, setActiveGroupKey] = useState<ProfileGroup["key"] | null>(null);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -119,8 +119,16 @@ export default function ProfileScreen() {
       <ProfileMenuCard onNavigate={onMenuNavigate} />
 
       <View style={styles.logout}>
-        <PrimaryButton label="Çıkış yap" variant="danger" onPress={() => void logout()} />
+        <PrimaryButton
+          label="Çıkış yap"
+          variant="danger"
+          onPress={() => setLogoutConfirmVisible(true)}
+        />
       </View>
+      <LogoutConfirmSheet
+        visible={logoutConfirmVisible}
+        onClose={() => setLogoutConfirmVisible(false)}
+      />
     </Screen>
   );
 }

@@ -11,6 +11,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/auth/BrandMark";
+import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
 import { Avatar, ErrorBanner, IconCircleButton, Screen, SectionHeader } from "@/components/ui";
 import { leaveService, type LeaveBalanceItem } from "@/services/LeaveService";
 import { approvalsService } from "@/services/ApprovalsService";
@@ -70,7 +71,7 @@ function daysFromToday(days: number): Date {
 }
 
 export default function DashboardScreen() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigation = useNavigation<DashboardNavigationProp>();
   const selfEmployeeId = user?.employeeId ?? undefined;
 
@@ -81,6 +82,7 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
   const loadUnreadCount = useCallback(async () => {
     try {
@@ -161,7 +163,7 @@ export default function DashboardScreen() {
         navigation.navigate("Support");
         break;
       case "logout":
-        void logout();
+        setLogoutConfirmVisible(true);
         break;
     }
   }
@@ -269,6 +271,10 @@ export default function DashboardScreen() {
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
         onSelect={onMenuSelect}
+      />
+      <LogoutConfirmSheet
+        visible={logoutConfirmVisible}
+        onClose={() => setLogoutConfirmVisible(false)}
       />
     </Screen>
   );
