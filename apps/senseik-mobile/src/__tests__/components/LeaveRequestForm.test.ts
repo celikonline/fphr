@@ -2,6 +2,7 @@ import {
   buildCapturedPhotoFileName,
   buildPreviewInput,
   clampEndDate,
+  filterRedundantWarnings,
   formatHourlyDuration,
   hasRequiredDocument,
   leaveUnitFlags,
@@ -254,5 +255,79 @@ describe("previewSummaryText (B-mobil-006)", () => {
 
   it("shows the B12 message when the preview resolves to zero days (e.g. a Sunday-only request)", () => {
     expect(previewSummaryText(buildPreview({ days: 0 }))).toBe("Bu tarihlerde düşülecek gün yok");
+  });
+});
+
+describe("filterRedundantWarnings (B17)", () => {
+  const zeroDaysWarning = {
+    code: "leave.errors.zero_days",
+    message: "Seçilen tarihlerde izinden düşülecek gün yok.",
+  };
+  const documentRequiredWarning = {
+    code: "leave.errors.document_required",
+    message: "Bu izin türü için belge eklemelisiniz.",
+  };
+  const balanceWarning = {
+    code: "leave.warnings.balance_low",
+    message: "Bakiyeniz yetersiz olabilir.",
+  };
+
+  it("drops the zero-days warning when the client's own 0-day summary is already shown", () => {
+    expect(
+      filterRedundantWarnings([zeroDaysWarning], { previewDaysZero: true, requiresDocument: false })
+    ).toEqual([]);
+  });
+
+  it("keeps the zero-days warning when the preview actually has days > 0 (matched by code, not just presence)", () => {
+    expect(
+      filterRedundantWarnings([zeroDaysWarning], {
+        previewDaysZero: false,
+        requiresDocument: false,
+      })
+    ).toEqual([zeroDaysWarning]);
+  });
+
+  it("drops the document-required warning when the client's own document hint is already shown", () => {
+    expect(
+      filterRedundantWarnings([documentRequiredWarning], {
+        previewDaysZero: false,
+        requiresDocument: true,
+      })
+    ).toEqual([]);
+  });
+
+  it("keeps the document-required warning when the type doesn't require a document (would be an unmatched code)", () => {
+    expect(
+      filterRedundantWarnings([documentRequiredWarning], {
+        previewDaysZero: false,
+        requiresDocument: false,
+      })
+    ).toEqual([documentRequiredWarning]);
+  });
+
+  it("keeps unrelated warnings (balance, team overlap, ...) untouched regardless of context", () => {
+    expect(
+      filterRedundantWarnings([balanceWarning], { previewDaysZero: true, requiresDocument: true })
+    ).toEqual([balanceWarning]);
+  });
+
+  it("filters both redundant warnings at once while keeping an unrelated one, matched by code not text", () => {
+    const result = filterRedundantWarnings(
+      [zeroDaysWarning, documentRequiredWarning, balanceWarning],
+      {
+        previewDaysZero: true,
+        requiresDocument: true,
+      }
+    );
+
+    expect(result).toEqual([balanceWarning]);
+  });
+
+  it("does not match on message text alone - a differently-worded message with a redundant code is still dropped", () => {
+    const reworded = { code: "leave.errors.zero_days", message: "Different wording, same fact." };
+
+    expect(
+      filterRedundantWarnings([reworded], { previewDaysZero: true, requiresDocument: false })
+    ).toEqual([]);
   });
 });

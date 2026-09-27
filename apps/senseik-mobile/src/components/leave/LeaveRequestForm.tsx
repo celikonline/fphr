@@ -113,6 +113,31 @@ export function previewSummaryText(preview: LeaveRequestPreview | null): string 
     : "Bu tarihlerde düşülecek gün yok";
 }
 
+/** `LeaveDomainErrors.RequestZeroDays` (`LeaveDomainErrors.cs:25`) - same fact as `previewSummaryText`'s 0-day message. */
+const ZERO_DAYS_WARNING_CODE = "leave.errors.zero_days";
+/** `LeaveRequestCore.DocumentRequired` (`LeaveRequestCore.cs:42`) - same fact as `LeaveDocumentsSection`'s hint. */
+const DOCUMENT_REQUIRED_WARNING_CODE = "leave.errors.document_required";
+
+/**
+ * B17: the preview always adds a `document_required` warning for a `requiresDocument` type (it has
+ * no idea what's staged in this unsaved draft) and, once nothing would be deducted, a
+ * `zero_days` warning duplicating `previewSummaryText`'s own message - both already have a client
+ * counterpart on screen (the "Belge ekle" hint, the red 0-day summary), so showing the server's copy
+ * too is pure repetition. Matched by **code**, never by message text - a translated/reworded message
+ * must not silently stop being recognized as the same fact. Every other warning (balance/team
+ * overlap/anything else) still gets through unchanged.
+ */
+export function filterRedundantWarnings(
+  warnings: LeaveRequestPreview["warnings"],
+  context: { previewDaysZero: boolean; requiresDocument: boolean }
+): LeaveRequestPreview["warnings"] {
+  return warnings.filter((warning) => {
+    if (warning.code === ZERO_DAYS_WARNING_CODE && context.previewDaysZero) return false;
+    if (warning.code === DOCUMENT_REQUIRED_WARNING_CODE && context.requiresDocument) return false;
+    return true;
+  });
+}
+
 /** B-mobil-004: a `requiresDocument` type needs at least one uploaded document before it can be submitted. */
 export function hasRequiredDocument(
   type: Pick<RequestableLeaveType, "requiresDocument"> | null,
@@ -489,7 +514,10 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
             <Text style={preview.days > 0 ? styles.previewText : styles.previewTextInvalid}>
               {previewSummaryText(preview)}
             </Text>
-            {preview.warnings.map((warning) => (
+            {filterRedundantWarnings(preview.warnings, {
+              previewDaysZero: preview.days <= 0,
+              requiresDocument: showDocuments,
+            }).map((warning) => (
               <Text key={warning.code} style={styles.previewWarning}>
                 {warning.message}
               </Text>

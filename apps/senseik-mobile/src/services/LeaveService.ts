@@ -171,6 +171,22 @@ export interface LeaveRequestPreviewInput {
   halfDayPeriod?: LeaveHalfDayPeriod;
 }
 
+/** `LeaveRequestAttachmentDto` (`LeaveRequestAttachments.cs:12`): one file linked to a request. */
+export interface LeaveRequestAttachment {
+  documentId: string;
+  fileName: string;
+  attachedAt: string;
+}
+
+/**
+ * `LeaveRequestDetailDto` (`GET /leave/employees/{employeeId}/requests/{id}`) - A1: only the field
+ * the approver's inbox card needs (`attachments`); the mobile app has no other use for this
+ * manager-scoped detail endpoint yet, so the rest of the (much larger) DTO isn't modeled here.
+ */
+export interface LeaveRequestDetail {
+  attachments?: LeaveRequestAttachment[] | null;
+}
+
 export class LeaveService {
   async getMyBalances(): Promise<EmployeeLeaveBalances> {
     const response = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/me/balances`);
@@ -207,6 +223,17 @@ export class LeaveService {
 
   async withdrawLeaveRequest(id: string): Promise<void> {
     await apiClient.post(`${LEAVE_BASE}/me/requests/${id}/withdraw`);
+  }
+
+  /** A1 (onaycı): Manager-scoped detail read, used only to surface a leave task's `attachments`. */
+  async getEmployeeLeaveRequest(
+    employeeId: string,
+    requestId: string
+  ): Promise<LeaveRequestDetail> {
+    const response = await apiClient.get<LeaveRequestDetail>(
+      `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}`
+    );
+    return response.data;
   }
 }
 

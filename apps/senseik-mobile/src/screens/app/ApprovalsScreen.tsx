@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
@@ -20,9 +24,11 @@ import {
   type InboxTask,
   type InboxTaskLeaveSummary,
 } from "@/services/ApprovalsService";
+import { leaveService, type LeaveRequestAttachment } from "@/services/LeaveService";
 import { formatDays } from "@/lib/formatters";
 import { formatLeaveDateOnly } from "@/components/leave/LeaveRequestListItem";
 import { humanizeLeaveTypeCode, leaveTypeDisplayName } from "@/lib/leaveTypeNames";
+import { initialRejectFlowState, rejectFlowReducer } from "@/screens/app/approvalsRejectFlow";
 
 /** `RequestType` (Workflow.Domain) server value - same mapping as web `workflow.json`'daki `requestType.*`. */
 const REQUEST_TYPE_LABELS: Record<string, string> = {
@@ -74,14 +80,78 @@ export function buildRejectDecision(reason: string): DecideTaskInput {
   return comment.length > 0 ? { outcome: "rejected", comment } : { outcome: "rejected" };
 }
 
+/**
+ * A1: fetches a Leave task's attachments so the approver knows a document was attached before
+ * deciding. Never throws - missing `requesterEmployeeId` (older API build), 403 (no Manager scope
+ * over this employee), 404 (request no longer exists) and any network error all just hide the row
+ * instead of showing an error; the axios error object is never logged. Non-Leave tasks (Overtime,
+ * Advance, ...) skip the request entirely - this is the only inbox detail endpoint mobile calls,
+ * and only for the request type that actually has attachments.
+ */
+export async function loadLeaveTaskAttachments(
+  task: Pick<InboxTask, "requestType" | "requesterEmployeeId" | "subjectId">
+): Promise<LeaveRequestAttachment[]> {
+  if (task.requestType !== "Leave" || !task.requesterEmployeeId) {
+    return [];
+  }
+  try {
+    const detail = await leaveService.getEmployeeLeaveRequest(
+      task.requesterEmployeeId,
+      task.subjectId
+    );
+    return detail.attachments ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** A1: "📎 N belge: ad, ad" - `null` when there is nothing to show (no row rendered). */
+export function formatAttachmentsSummary(
+  attachments: Pick<LeaveRequestAttachment, "fileName">[]
+): string | null {
+  if (attachments.length === 0) {
+    return null;
+  }
+  return `📎 ${attachments.length} belge: ${attachments.map((a) => a.fileName).join(", ")}`;
+}
+
+/**
+ * A1: one card's attachment line - a dedicated component (not inline state in `ApprovalsScreen`) so
+ * React's list reconciliation (`key={task.taskId}` on the card) gives "fetch once per card, cached"
+ * for free: this only remounts (and re-fetches) when the task itself is a different task, not on
+ * every inbox refresh of the same still-pending list.
+ */
+function LeaveTaskAttachmentsLine({ task }: { task: InboxTask }) {
+  const [attachments, setAttachments] = useState<LeaveRequestAttachment[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadLeaveTaskAttachments(task).then((result) => {
+      if (!cancelled) {
+        setAttachments(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // `task.taskId` identifies the card; the other fields it reads (requestType/requesterEmployeeId/
+    // subjectId) never change for the same task, so re-running only when the id changes is correct.
+  }, [task.taskId]);
+
+  const summary = formatAttachmentsSummary(attachments);
+  if (!summary) {
+    return null;
+  }
+  return <Text style={styles.summaryText}>{summary}</Text>;
+}
+
 export default function ApprovalsScreen() {
   const [tasks, setTasks] = useState<InboxTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [decidingTaskId, setDecidingTaskId] = useState<string | null>(null);
-  const [rejectingTaskId, setRejectingTaskId] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
+  const [rejectFlow, dispatchRejectFlow] = useReducer(rejectFlowReducer, initialRejectFlowState);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -98,20 +168,43 @@ export default function ApprovalsScreen() {
     void loadAll().finally(() => setLoading(false));
   }, [loadAll]);
 
+  // B19: the Android hardware back button, while the reject Modal's TextInput has focus, closes the
+  // keyboard AND fires the Modal's `onRequestClose` in the same press (RN's Modal wires the native
+  // Dialog's back handling straight to `onRequestClose`, with no keyboard-awareness - see
+  // `react-native/Libraries/Modal/Modal.js`). Tracking keyboard visibility ourselves lets the reducer
+  // treat that first back press as "close the keyboard only" and require a second, separate press to
+  // actually close the modal.
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () =>
+      dispatchRejectFlow({ type: "KEYBOARD_SHOWN" })
+    );
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () =>
+      dispatchRejectFlow({ type: "KEYBOARD_HIDDEN" })
+    );
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  // B18: after the reject Modal's native Android Dialog window closes, the tab screens' status bar
+  // icons have been observed reverting to the light/unreadable style - the Dialog window can affect
+  // the Activity's system-bar appearance flags directly at the native level, outside of the
+  // `expo-status-bar` JS module's own merge-stack, so nothing re-triggers our declarative
+  // `<StatusBar style="dark">` in `RootNavigator` (its prop never actually changes). Re-assert the
+  // dark style imperatively the moment the reject flow returns to idle (the modal has fully closed).
+  const previousRejectFlowTypeRef = useRef(rejectFlow.type);
+  useEffect(() => {
+    if (previousRejectFlowTypeRef.current !== "idle" && rejectFlow.type === "idle") {
+      StatusBar.setStyle("dark");
+    }
+    previousRejectFlowTypeRef.current = rejectFlow.type;
+  }, [rejectFlow.type]);
+
   async function onRefresh() {
     setRefreshing(true);
     await loadAll();
     setRefreshing(false);
-  }
-
-  function startReject(taskId: string) {
-    setRejectingTaskId(taskId);
-    setRejectReason("");
-  }
-
-  function cancelReject() {
-    setRejectingTaskId(null);
-    setRejectReason("");
   }
 
   async function approve(taskId: string) {
@@ -138,17 +231,28 @@ export default function ApprovalsScreen() {
     );
   }
 
-  async function confirmReject(taskId: string) {
-    setDecidingTaskId(taskId);
+  // B19: closing via the hardware back button and closing via "Vazgeç" both go through the reducer,
+  // so both fully reset the reject state the same way - there is no separate ad-hoc reset path left.
+  function handleRequestClose() {
+    if (rejectFlow.type === "rejecting" && rejectFlow.keyboardVisible) {
+      Keyboard.dismiss();
+    }
+    dispatchRejectFlow({ type: "REQUEST_CLOSE" });
+  }
+
+  async function submitReject() {
+    if (rejectFlow.type !== "rejecting") {
+      return;
+    }
+    const { taskId, reason } = rejectFlow;
+    dispatchRejectFlow({ type: "SUBMIT_START" });
     try {
-      await approvalsService.decideTask(taskId, buildRejectDecision(rejectReason));
-      setRejectingTaskId(null);
-      setRejectReason("");
+      await approvalsService.decideTask(taskId, buildRejectDecision(reason));
+      dispatchRejectFlow({ type: "SUBMIT_SUCCESS" });
       await loadAll();
     } catch {
+      dispatchRejectFlow({ type: "SUBMIT_ERROR" });
       Alert.alert("Hata", "Talep reddedilemedi. Lütfen tekrar deneyin.");
-    } finally {
-      setDecidingTaskId(null);
     }
   }
 
@@ -160,140 +264,159 @@ export default function ApprovalsScreen() {
     );
   }
 
+  const isRejectModalOpen = rejectFlow.type !== "idle";
+  const isRejectDeciding = rejectFlow.type === "deciding";
+  const rejectReasonValue = rejectFlow.type === "idle" ? "" : rejectFlow.reason;
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-    >
-      <Text style={styles.title}>Onaylarım</Text>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+      >
+        <Text style={styles.title}>Onaylarım</Text>
 
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
 
-      {tasks.length === 0 ? (
-        <Text style={styles.emptyText}>Onayınızı bekleyen talep yok.</Text>
-      ) : (
-        tasks.map((task) => {
-          const isDeciding = decidingTaskId === task.taskId;
-          const isRejecting = rejectingTaskId === task.taskId;
-          return (
-            <View key={task.taskId} style={styles.card}>
-              <View style={styles.requestHeader}>
-                <Text style={styles.cardLabel}>{requestTypeLabel(task.requestType)}</Text>
-                {task.isFallbackRoleTask && (
-                  <View style={styles.fallbackBadge}>
-                    <Text style={styles.fallbackBadgeText}>Yedek onaylayan</Text>
+        {tasks.length === 0 ? (
+          <Text style={styles.emptyText}>Onayınızı bekleyen talep yok.</Text>
+        ) : (
+          tasks.map((task) => {
+            const isDeciding =
+              decidingTaskId === task.taskId ||
+              (isRejectDeciding && rejectFlow.taskId === task.taskId);
+            return (
+              <View key={task.taskId} style={styles.card}>
+                <View style={styles.requestHeader}>
+                  <Text style={styles.cardLabel}>{requestTypeLabel(task.requestType)}</Text>
+                  {task.isFallbackRoleTask && (
+                    <View style={styles.fallbackBadge}>
+                      <Text style={styles.fallbackBadgeText}>Yedek onaylayan</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.cardSubtext}>
+                  {task.requesterName ?? "Bilinmiyor"} · Adım {task.stepNumber}
+                </Text>
+                {task.submittedAt && (
+                  <Text style={styles.cardSubtext}>{formatSubmittedAt(task.submittedAt)}</Text>
+                )}
+
+                {task.summary?.leave && (
+                  <View style={styles.summaryBox}>
+                    <Text style={styles.summaryText}>
+                      {leaveSummaryTypeLabel(task.summary.leave)} ·{" "}
+                      {formatLeaveDateOnly(task.summary.leave.startDate)} –{" "}
+                      {formatLeaveDateOnly(task.summary.leave.endDate)} ·{" "}
+                      {formatDays(task.summary.leave.days)} gün
+                    </Text>
+                    {task.summary.leave.description && (
+                      <Text style={styles.summaryText}>{task.summary.leave.description}</Text>
+                    )}
+                    <LeaveTaskAttachmentsLine task={task} />
                   </View>
                 )}
-              </View>
-              <Text style={styles.cardSubtext}>
-                {task.requesterName ?? "Bilinmiyor"} · Adım {task.stepNumber}
-              </Text>
-              {task.submittedAt && (
-                <Text style={styles.cardSubtext}>{formatSubmittedAt(task.submittedAt)}</Text>
-              )}
 
-              {task.summary?.leave && (
-                <View style={styles.summaryBox}>
-                  <Text style={styles.summaryText}>
-                    {leaveSummaryTypeLabel(task.summary.leave)} ·{" "}
-                    {formatLeaveDateOnly(task.summary.leave.startDate)} –{" "}
-                    {formatLeaveDateOnly(task.summary.leave.endDate)} ·{" "}
-                    {formatDays(task.summary.leave.days)} gün
-                  </Text>
-                  {task.summary.leave.description && (
-                    <Text style={styles.summaryText}>{task.summary.leave.description}</Text>
-                  )}
-                </View>
-              )}
-
-              {task.summary?.overtime && (
-                <View style={styles.summaryBox}>
-                  <Text style={styles.summaryText}>
-                    {formatLeaveDateOnly(task.summary.overtime.workDate)} ·{" "}
-                    {formatTime(task.summary.overtime.startTime)} ·{" "}
-                    {task.summary.overtime.durationMinutes} dk
-                  </Text>
-                  {task.summary.overtime.reason && (
-                    <Text style={styles.summaryText}>{task.summary.overtime.reason}</Text>
-                  )}
-                </View>
-              )}
-
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
-                  onPress={() => startReject(task.taskId)}
-                  disabled={isDeciding}
-                >
-                  <Text style={styles.actionButtonText}>Reddet</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.approveButton, isDeciding && styles.buttonDisabled]}
-                  onPress={() => confirmApprove(task.taskId)}
-                  disabled={isDeciding}
-                >
-                  {isDeciding ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <Text style={styles.actionButtonText}>Onayla</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* B6: Android has no Alert.prompt, so a free-text (optional) reject reason needs its
-                  own small modal - this doubles as the "are you sure" confirmation for this
-                  irreversible decision. */}
-              {isRejecting && (
-                <Modal transparent animationType="fade" visible onRequestClose={cancelReject}>
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                      <Text style={styles.modalTitle}>Talebi reddet</Text>
-                      <Text style={styles.modalMessage}>
-                        Bu talebi reddetmek istediğinize emin misiniz? Bu işlem geri alınamaz.
-                      </Text>
-                      <Text style={styles.fieldLabel}>Gerekçe (opsiyonel)</Text>
-                      <TextInput
-                        style={[styles.input, styles.textArea]}
-                        value={rejectReason}
-                        onChangeText={setRejectReason}
-                        placeholder="Gerekçenizi yazın"
-                        multiline
-                        numberOfLines={3}
-                      />
-                      <View style={styles.actionRow}>
-                        <TouchableOpacity
-                          style={styles.secondaryButton}
-                          onPress={cancelReject}
-                          disabled={isDeciding}
-                        >
-                          <Text style={styles.secondaryButtonText}>Vazgeç</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
-                          onPress={() => void confirmReject(task.taskId)}
-                          disabled={isDeciding}
-                        >
-                          {isDeciding ? (
-                            <ActivityIndicator color={colors.white} />
-                          ) : (
-                            <Text style={styles.actionButtonText}>Reddet</Text>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </View>
+                {task.summary?.overtime && (
+                  <View style={styles.summaryBox}>
+                    <Text style={styles.summaryText}>
+                      {formatLeaveDateOnly(task.summary.overtime.workDate)} ·{" "}
+                      {formatTime(task.summary.overtime.startTime)} ·{" "}
+                      {task.summary.overtime.durationMinutes} dk
+                    </Text>
+                    {task.summary.overtime.reason && (
+                      <Text style={styles.summaryText}>{task.summary.overtime.reason}</Text>
+                    )}
                   </View>
-                </Modal>
-              )}
+                )}
+
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
+                    onPress={() => dispatchRejectFlow({ type: "START_REJECT", taskId: task.taskId })}
+                    disabled={isDeciding}
+                  >
+                    <Text style={styles.actionButtonText}>Reddet</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.approveButton, isDeciding && styles.buttonDisabled]}
+                    onPress={() => confirmApprove(task.taskId)}
+                    disabled={isDeciding}
+                  >
+                    {isDeciding ? (
+                      <ActivityIndicator color={colors.white} />
+                    ) : (
+                      <Text style={styles.actionButtonText}>Onayla</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
+
+      {/* B6: Android has no Alert.prompt, so a free-text (optional) reject reason needs its own
+          small modal - this doubles as the "are you sure" confirmation for this irreversible
+          decision. B19: a single Modal instance kept mounted for the whole screen (toggled via
+          `visible`, not mounted/unmounted per task row) instead of one-per-task-row - this avoids
+          repeatedly constructing/tearing down the underlying native Android Dialog, which is a
+          plausible source of the leftover-touch-blocking-overlay symptom reported after the
+          back-button interaction. */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isRejectModalOpen}
+        onRequestClose={handleRequestClose}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Talebi reddet</Text>
+            <Text style={styles.modalMessage}>
+              Bu talebi reddetmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </Text>
+            <Text style={styles.fieldLabel}>Gerekçe (opsiyonel)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={rejectReasonValue}
+              onChangeText={(reason) => dispatchRejectFlow({ type: "SET_REASON", reason })}
+              placeholder="Gerekçenizi yazın"
+              multiline
+              numberOfLines={3}
+              editable={!isRejectDeciding}
+            />
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => dispatchRejectFlow({ type: "CANCEL" })}
+                disabled={isRejectDeciding}
+              >
+                <Text style={styles.secondaryButtonText}>Vazgeç</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.rejectButton, isRejectDeciding && styles.buttonDisabled]}
+                onPress={() => void submitReject()}
+                disabled={isRejectDeciding}
+              >
+                {isRejectDeciding ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={styles.actionButtonText}>Reddet</Text>
+                )}
+              </TouchableOpacity>
             </View>
-          );
-        })
-      )}
-    </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </>
   );
 }
 

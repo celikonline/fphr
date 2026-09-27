@@ -48,6 +48,13 @@ export interface InboxTask {
   submittedAt?: string | null;
   /** Absent on older API builds (falls back to the request type + requester name only). */
   summary?: InboxTaskSummary | null;
+  /**
+   * A1: the request's owner, populated for every task (including fallback-role ones) -
+   * `ApprovalRequestDtos.cs:24-33`. Used only to fetch a Leave task's attachments
+   * (`GET /leave/employees/{requesterEmployeeId}/requests/{subjectId}`); optional here too in case
+   * an older API build hasn't rolled out yet - absence just skips the attachment lookup.
+   */
+  requesterEmployeeId?: string | null;
 }
 
 export type DecisionOutcome = "approved" | "rejected";

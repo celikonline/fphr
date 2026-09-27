@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -67,6 +67,28 @@ function withTopSafeArea<P extends object>(ScreenComponent: React.ComponentType<
  */
 export function shouldShowRootSplash(appReady: boolean): boolean {
   return !appReady;
+}
+
+/**
+ * B9: the auth stack has a dark backdrop (needs light/white status bar content); the app's tab
+ * screens are white-background, so the same light content would be invisible on them. Exported as a
+ * pure function (B18) so `RootNavigator`'s own effects and tests can compute it without duplicating
+ * the ternary.
+ */
+export function resolveStatusBarStyle(isAuthenticated: boolean): "light" | "dark" {
+  return isAuthenticated ? "dark" : "light";
+}
+
+/**
+ * B18: the app was observed reverting to an unreadable light/white status bar on the (white
+ * background) tab screens after returning from the background. `expo-status-bar`'s declarative
+ * `<StatusBar style={...}>` only re-applies the native style when its own prop changes - it never
+ * changes here across a background/foreground cycle, so nothing re-asserts it if anything else
+ * (the OS, or a native dialog window opened earlier) altered the status bar appearance while
+ * backgrounded. Re-apply it imperatively whenever the app becomes active again.
+ */
+export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): boolean {
+  return nextAppState === "active";
 }
 
 const DashboardScreenWithTopSafeArea = withTopSafeArea(DashboardScreen);
@@ -219,9 +241,19 @@ export function RootNavigator() {
     initializeApp();
   }, [checkAuth]);
 
-  // B9: the auth stack has a dark backdrop (needs light/white status bar content); the app's tab
-  // screens are white-background, so the same light content would be invisible on them.
-  const statusBarStyle = isAuthenticated ? "dark" : "light";
+  const statusBarStyle = resolveStatusBarStyle(isAuthenticated);
+
+  // B18: see `shouldReapplyStatusBarOnAppStateChange` - re-assert the current style whenever the app
+  // returns to the foreground, since nothing else in this component's own props changes across a
+  // background/foreground cycle to trigger `<StatusBar>` to re-apply it natively.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (shouldReapplyStatusBarOnAppStateChange(nextAppState)) {
+        StatusBar.setStyle(statusBarStyle);
+      }
+    });
+    return () => subscription.remove();
+  }, [statusBarStyle]);
 
   if (shouldShowRootSplash(appReady)) {
     return (

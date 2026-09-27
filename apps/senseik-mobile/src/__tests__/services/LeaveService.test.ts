@@ -200,6 +200,26 @@ describe("LeaveService", () => {
     });
   });
 
+  describe("getEmployeeLeaveRequest (A1: onaycı - attachments)", () => {
+    it("fetches the manager-scoped request detail by employeeId and requestId", async () => {
+      const mockResponse = {
+        data: {
+          attachments: [
+            { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+          ],
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getEmployeeLeaveRequest("employee-1", "request-1");
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        "/api/v1/leave/employees/employee-1/requests/request-1"
+      );
+    });
+  });
+
   describe("error mapping", () => {
     it("propagates the API error when a leave request submission fails (e.g. balance/validation rejection)", async () => {
       const apiError = {
