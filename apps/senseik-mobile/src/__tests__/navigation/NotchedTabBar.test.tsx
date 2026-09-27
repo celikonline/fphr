@@ -1,8 +1,9 @@
 import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
-import { Modal } from "react-native";
+import { Modal, Text } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
+import { palette } from "@/theme/theme";
 
 // react-native-reanimated v4's real module throws outside a native runtime (see RootNavigator.test).
 jest.mock("react-native-reanimated", () => {
@@ -100,5 +101,14 @@ describe("NotchedTabBar", () => {
 
     expect(navigate).toHaveBeenCalledWith("NewRequest", { kind: "overtime" });
     expect(sheetVisible(renderer)).toBe(false);
+  });
+
+  it("renders the unfocused tab label in textMuted for WCAG AA contrast", () => {
+    const { renderer } = renderBar(0);
+
+    const label = findButton(renderer, "Giriş / Çıkış").findByType(Text);
+    const style = [label.props.style].flat();
+
+    expect(style).toContainEqual(expect.objectContaining({ color: palette.textMuted }));
   });
 });

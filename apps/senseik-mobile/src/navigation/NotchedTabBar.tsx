@@ -105,7 +105,7 @@ export function NotchedTabBar({ state, navigation }: BottomTabBarProps) {
               color={isFocused ? palette.brand : palette.textFaint}
             />
             <Text
-              style={[styles.tabLabel, { color: isFocused ? palette.white : palette.textFaint }]}
+              style={[styles.tabLabel, { color: isFocused ? palette.white : palette.textMuted }]}
               numberOfLines={1}
             >
               {tab.label}
