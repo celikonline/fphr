@@ -1,4 +1,5 @@
 import {
+  attachmentsCountLabel,
   buildRejectDecision,
   formatAttachmentsSummary,
   formatTime,
@@ -92,6 +93,13 @@ describe("formatAttachmentsSummary (A1)", () => {
         { fileName: "Hastalık izni 2026-09-27 01.55.jpg" },
       ])
     ).toBe("📎 2 belge: rapor.pdf, Hastalık izni 2026-09-27 01.55.jpg");
+  });
+});
+
+describe("attachmentsCountLabel (senseik-mobile-011)", () => {
+  it("formats the header above the tappable attachment rows", () => {
+    expect(attachmentsCountLabel(1)).toBe("📎 1 belge:");
+    expect(attachmentsCountLabel(3)).toBe("📎 3 belge:");
   });
 });
 

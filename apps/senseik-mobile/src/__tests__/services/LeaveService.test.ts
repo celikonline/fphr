@@ -220,6 +220,81 @@ describe("LeaveService", () => {
     });
   });
 
+  describe("getMyLeaveRequest (senseik-mobile-011: self-service - lazy attachments)", () => {
+    it("fetches the caller's own request detail by requestId", async () => {
+      const mockResponse = {
+        data: {
+          attachments: [
+            { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+          ],
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyLeaveRequest("request-1");
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/leave/me/requests/request-1");
+    });
+  });
+
+  describe("getEmployeeAttachmentDownloadUrl (senseik-mobile-011: onaycı/İK)", () => {
+    it("fetches the manager-scoped presigned download URL", async () => {
+      const mockResponse = {
+        data: {
+          url: "https://storage.example/documents/doc-1?sig=abc",
+          expiresAt: "2026-09-27T09:15:00Z",
+          fileName: "rapor.pdf",
+          contentType: "application/pdf",
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getEmployeeAttachmentDownloadUrl(
+        "employee-1",
+        "request-1",
+        "doc-1"
+      );
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        "/api/v1/leave/employees/employee-1/requests/request-1/attachments/doc-1/download-url"
+      );
+    });
+  });
+
+  describe("getMyAttachmentDownloadUrl (senseik-mobile-011: talep sahibi)", () => {
+    it("fetches the self-service presigned download URL", async () => {
+      const mockResponse = {
+        data: {
+          url: "https://storage.example/documents/doc-1?sig=xyz",
+          expiresAt: "2026-09-27T09:15:00Z",
+          fileName: "rapor.pdf",
+          contentType: "application/pdf",
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyAttachmentDownloadUrl("request-1", "doc-1");
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        "/api/v1/leave/me/requests/request-1/attachments/doc-1/download-url"
+      );
+    });
+
+    it("propagates a 403/404 (out of scope, request/attachment/document not found) instead of swallowing it", async () => {
+      const apiError = {
+        response: { status: 404, data: { error: { code: "leave.errors.attachment_not_found" } } },
+      };
+      (apiClient.get as jest.Mock).mockRejectedValue(apiError);
+
+      await expect(leaveService.getMyAttachmentDownloadUrl("request-1", "doc-1")).rejects.toEqual(
+        apiError
+      );
+    });
+  });
+
   describe("error mapping", () => {
     it("propagates the API error when a leave request submission fails (e.g. balance/validation rejection)", async () => {
       const apiError = {

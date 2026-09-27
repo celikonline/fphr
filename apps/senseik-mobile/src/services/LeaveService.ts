@@ -179,12 +179,24 @@ export interface LeaveRequestAttachment {
 }
 
 /**
- * `LeaveRequestDetailDto` (`GET /leave/employees/{employeeId}/requests/{id}`) - A1: only the field
- * the approver's inbox card needs (`attachments`); the mobile app has no other use for this
- * manager-scoped detail endpoint yet, so the rest of the (much larger) DTO isn't modeled here.
+ * `LeaveRequestDetailDto` (`GET /leave/employees/{employeeId}/requests/{id}` and
+ * `GET /leave/me/requests/{id}`) - A1/senseik-mobile-011: only the field mobile needs
+ * (`attachments`); the rest of the (much larger) DTO isn't modeled here.
  */
 export interface LeaveRequestDetail {
   attachments?: LeaveRequestAttachment[] | null;
+}
+
+/**
+ * `download-url` response (senseik-mobile-011): a 15-minute presigned link to the attachment's
+ * bytes. Never cache this - fetch it fresh on every "open" tap and never log/persist `url` (it
+ * carries a signature), same rule as `DocumentService.ts`'s upload presigned URL.
+ */
+export interface LeaveAttachmentDownloadUrl {
+  url: string;
+  expiresAt: string;
+  fileName: string;
+  contentType: string;
 }
 
 export class LeaveService {
@@ -232,6 +244,37 @@ export class LeaveService {
   ): Promise<LeaveRequestDetail> {
     const response = await apiClient.get<LeaveRequestDetail>(
       `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: self-service detail read, used only to lazily surface a request's `attachments`. */
+  async getMyLeaveRequest(requestId: string): Promise<LeaveRequestDetail> {
+    const response = await apiClient.get<LeaveRequestDetail>(
+      `${LEAVE_BASE}/me/requests/${requestId}`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: onaycı/İK - manager-scoped presigned download URL for one attachment. */
+  async getEmployeeAttachmentDownloadUrl(
+    employeeId: string,
+    requestId: string,
+    documentId: string
+  ): Promise<LeaveAttachmentDownloadUrl> {
+    const response = await apiClient.get<LeaveAttachmentDownloadUrl>(
+      `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}/attachments/${documentId}/download-url`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: talep sahibi - self-service presigned download URL for one attachment. */
+  async getMyAttachmentDownloadUrl(
+    requestId: string,
+    documentId: string
+  ): Promise<LeaveAttachmentDownloadUrl> {
+    const response = await apiClient.get<LeaveAttachmentDownloadUrl>(
+      `${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}/download-url`
     );
     return response.data;
   }

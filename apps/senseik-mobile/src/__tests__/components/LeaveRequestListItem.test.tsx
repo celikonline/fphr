@@ -1,8 +1,12 @@
 import React from "react";
-import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
+import { ActivityIndicator, Alert, Text, TouchableOpacity } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
-import type { LeaveRequest } from "@/services/LeaveService";
+import { leaveService, type LeaveRequest } from "@/services/LeaveService";
+
+jest.mock("@/services/LeaveService");
+jest.mock("expo-web-browser", () => ({ openBrowserAsync: jest.fn() }));
 
 function buildRequest(overrides: Partial<LeaveRequest> = {}): LeaveRequest {
   return {
@@ -146,6 +150,209 @@ describe("LeaveRequestListItem", () => {
       expect(texts).not.toContain("Geri çek");
       expect(renderer.root.findAllByType(ActivityIndicator)).toHaveLength(1);
       expect(renderer.root.findByType(TouchableOpacity).props.disabled).toBe(true);
+    });
+  });
+
+  describe("Ekler (senseik-mobile-011: lazy-loaded attachments)", () => {
+    /** A `TouchableOpacity` test instance's own text is whatever its nested `Text` node(s) render -
+     * not `.props.children` (a React element, not a string) and not `.children` (the rendered host
+     * tree, which for a composite component like `TouchableOpacity` isn't just its JSX prop). */
+    function touchableText(node: ReactTestInstance) {
+      return node
+        .findAllByType(Text)
+        .map((textNode) => extractText(textNode.children))
+        .join("");
+    }
+
+    function findByText(renderer: ReactTestRenderer, ...labels: string[]) {
+      return renderer.root
+        .findAllByType(TouchableOpacity)
+        .find((node) => labels.includes(touchableText(node)));
+    }
+
+    function findToggle(renderer: ReactTestRenderer) {
+      return findByText(renderer, "Ekler", "Ekleri gizle");
+    }
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      (WebBrowser.openBrowserAsync as jest.Mock).mockResolvedValue({ type: "opened" });
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("does not show the Ekler toggle when showAttachments is not given (e.g. ProfileScreen's summary usage)", () => {
+      const renderer = renderComponent(<LeaveRequestListItem request={buildRequest()} />);
+      expect(findToggle(renderer)).toBeUndefined();
+    });
+
+    it("does not fetch the request detail until the card is expanded - no N-requests-per-list", () => {
+      renderComponent(<LeaveRequestListItem request={buildRequest()} showAttachments />);
+      expect(leaveService.getMyLeaveRequest).not.toHaveBeenCalled();
+    });
+
+    it("fetches attachments on first expand and renders each name as its own tappable row", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({
+        attachments: [
+          { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+        ],
+      });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+
+      expect(leaveService.getMyLeaveRequest).toHaveBeenCalledWith("request-1");
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).toContain("rapor.pdf");
+    });
+
+    it("shows 'Ek yok.' when the request has no attachments", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({ attachments: [] });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).toContain("Ek yok.");
+    });
+
+    it("shows an error message when loading attachments fails, without throwing", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockRejectedValue({
+        response: { status: 404 },
+      });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+
+      const texts = renderer.root.findAllByType(Text).map((node) => extractText(node.children));
+      expect(texts).toContain("Ekler yüklenemedi.");
+    });
+
+    it("does not refetch on a second expand (collapse/re-expand) once already loaded", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({
+        attachments: [
+          { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+        ],
+      });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress(); // expand -> fetches
+      });
+      await act(async () => {
+        findToggle(renderer)?.props.onPress(); // collapse
+      });
+      await act(async () => {
+        findToggle(renderer)?.props.onPress(); // re-expand -> cached, no refetch
+      });
+
+      expect(leaveService.getMyLeaveRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it("tapping an attachment name fetches a fresh download URL and opens it", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({
+        attachments: [
+          { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+        ],
+      });
+      (leaveService.getMyAttachmentDownloadUrl as jest.Mock).mockResolvedValue({
+        url: "https://storage.example/rapor.pdf?sig=1",
+      });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+      const attachmentRow = findByText(renderer, "rapor.pdf");
+      await act(async () => {
+        await attachmentRow?.props.onPress();
+      });
+
+      expect(leaveService.getMyAttachmentDownloadUrl).toHaveBeenCalledWith("request-1", "doc-1");
+      expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(
+        "https://storage.example/rapor.pdf?sig=1"
+      );
+    });
+
+    it("shows the generic error alert when opening an attachment fails (403/404/network)", async () => {
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({
+        attachments: [
+          { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+        ],
+      });
+      (leaveService.getMyAttachmentDownloadUrl as jest.Mock).mockRejectedValue({
+        response: { status: 403 },
+      });
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+      const attachmentRow = findByText(renderer, "rapor.pdf");
+      await act(async () => {
+        await attachmentRow?.props.onPress();
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith("Hata", "Belge açılamadı. Lütfen tekrar deneyin.");
+    });
+
+    it("double-tap guard: a second tap while the first download is in flight does not fetch again", async () => {
+      let resolveDownloadUrl: (value: { url: string }) => void = () => {};
+      (leaveService.getMyLeaveRequest as jest.Mock).mockResolvedValue({
+        attachments: [
+          { documentId: "doc-1", fileName: "rapor.pdf", attachedAt: "2026-09-27T01:55:00Z" },
+        ],
+      });
+      (leaveService.getMyAttachmentDownloadUrl as jest.Mock).mockReturnValue(
+        new Promise((resolve) => (resolveDownloadUrl = resolve))
+      );
+      const renderer = renderComponent(
+        <LeaveRequestListItem request={buildRequest()} showAttachments />
+      );
+
+      await act(async () => {
+        findToggle(renderer)?.props.onPress();
+      });
+      // Captured once - the same TouchableOpacity's `.props` reflect its latest render even after
+      // its child switches from the filename `Text` to a loading `ActivityIndicator`, so re-querying
+      // by visible text (which disappears once mid-flight) would wrongly find nothing.
+      const attachmentRow = findByText(renderer, "rapor.pdf");
+
+      act(() => {
+        void attachmentRow?.props.onPress();
+      });
+      // The row is now disabled (mid-flight) - a second tap must not fire another request.
+      expect(attachmentRow?.props.disabled).toBe(true);
+      act(() => {
+        void attachmentRow?.props.onPress();
+      });
+
+      await act(async () => {
+        resolveDownloadUrl({ url: "https://storage.example/rapor.pdf?sig=1" });
+      });
+
+      expect(leaveService.getMyAttachmentDownloadUrl).toHaveBeenCalledTimes(1);
     });
   });
 });

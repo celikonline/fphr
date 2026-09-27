@@ -29,6 +29,11 @@ import { formatDays } from "@/lib/formatters";
 import { formatLeaveDateOnly } from "@/components/leave/LeaveRequestListItem";
 import { humanizeLeaveTypeCode, leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 import { initialRejectFlowState, rejectFlowReducer } from "@/screens/app/approvalsRejectFlow";
+import {
+  ATTACHMENT_OPEN_ERROR_MESSAGE,
+  openLeaveAttachment,
+  shouldIgnoreAttachmentTap,
+} from "@/lib/attachmentDownload";
 
 /** `RequestType` (Workflow.Domain) server value - same mapping as web `workflow.json`'daki `requestType.*`. */
 const REQUEST_TYPE_LABELS: Record<string, string> = {
@@ -105,7 +110,7 @@ export async function loadLeaveTaskAttachments(
   }
 }
 
-/** A1: "📎 N belge: ad, ad" - `null` when there is nothing to show (no row rendered). */
+/** A1: "📎 N belge: ad, ad" - `null` when there is nothing to show (no row rendered). Kept for callers that just need a plain summary string; the card itself now renders each name as its own tappable row (senseik-mobile-011) instead of this joined form. */
 export function formatAttachmentsSummary(
   attachments: Pick<LeaveRequestAttachment, "fileName">[]
 ): string | null {
@@ -115,14 +120,24 @@ export function formatAttachmentsSummary(
   return `📎 ${attachments.length} belge: ${attachments.map((a) => a.fileName).join(", ")}`;
 }
 
+/** senseik-mobile-011: "📎 N belge:" header shown above the tappable attachment rows. */
+export function attachmentsCountLabel(count: number): string {
+  return `📎 ${count} belge:`;
+}
+
 /**
  * A1: one card's attachment line - a dedicated component (not inline state in `ApprovalsScreen`) so
  * React's list reconciliation (`key={task.taskId}` on the card) gives "fetch once per card, cached"
  * for free: this only remounts (and re-fetches) when the task itself is a different task, not on
  * every inbox refresh of the same still-pending list.
+ *
+ * senseik-mobile-011: each attachment name is now its own tappable row - tapping fetches a fresh
+ * 15-minute presigned download URL (manager-scoped, since this is the approver's inbox) and opens
+ * it; `openingDocumentId` blocks a second tap while one download-url request/open is in flight.
  */
 function LeaveTaskAttachmentsLine({ task }: { task: InboxTask }) {
   const [attachments, setAttachments] = useState<LeaveRequestAttachment[]>([]);
+  const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,11 +153,53 @@ function LeaveTaskAttachmentsLine({ task }: { task: InboxTask }) {
     // subjectId) never change for the same task, so re-running only when the id changes is correct.
   }, [task.taskId]);
 
-  const summary = formatAttachmentsSummary(attachments);
-  if (!summary) {
+  async function openAttachment(documentId: string) {
+    const requesterEmployeeId = task.requesterEmployeeId;
+    if (shouldIgnoreAttachmentTap(openingDocumentId) || !requesterEmployeeId) {
+      return;
+    }
+    setOpeningDocumentId(documentId);
+    try {
+      await openLeaveAttachment(() =>
+        leaveService.getEmployeeAttachmentDownloadUrl(
+          requesterEmployeeId,
+          task.subjectId,
+          documentId
+        )
+      );
+    } catch {
+      Alert.alert("Hata", ATTACHMENT_OPEN_ERROR_MESSAGE);
+    } finally {
+      setOpeningDocumentId(null);
+    }
+  }
+
+  if (attachments.length === 0) {
     return null;
   }
-  return <Text style={styles.summaryText}>{summary}</Text>;
+
+  return (
+    <View>
+      <Text style={styles.summaryText}>{attachmentsCountLabel(attachments.length)}</Text>
+      {attachments.map((attachment) => {
+        const isOpening = openingDocumentId === attachment.documentId;
+        return (
+          <TouchableOpacity
+            key={attachment.documentId}
+            onPress={() => void openAttachment(attachment.documentId)}
+            disabled={openingDocumentId !== null}
+            style={styles.attachmentRow}
+          >
+            {isOpening ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={styles.attachmentText}>{attachment.fileName}</Text>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 }
 
 export default function ApprovalsScreen() {
@@ -273,7 +330,9 @@ export default function ApprovalsScreen() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+        }
       >
         <Text style={styles.title}>Onaylarım</Text>
 
@@ -338,7 +397,9 @@ export default function ApprovalsScreen() {
                 <View style={styles.actionRow}>
                   <TouchableOpacity
                     style={[styles.rejectButton, isDeciding && styles.buttonDisabled]}
-                    onPress={() => dispatchRejectFlow({ type: "START_REJECT", taskId: task.taskId })}
+                    onPress={() =>
+                      dispatchRejectFlow({ type: "START_REJECT", taskId: task.taskId })
+                    }
                     disabled={isDeciding}
                   >
                     <Text style={styles.actionButtonText}>Reddet</Text>
@@ -517,6 +578,14 @@ const styles = StyleSheet.create({
   summaryText: {
     ...typography.bodyXs,
     color: colors.textSecondary,
+  },
+  attachmentRow: {
+    paddingVertical: spacing.xs,
+  },
+  attachmentText: {
+    ...typography.bodyXs,
+    color: colors.primary,
+    textDecorationLine: "underline",
   },
   fieldLabel: {
     ...typography.caption,

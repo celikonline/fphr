@@ -27,6 +27,31 @@ export function canWithdrawLeaveRequest(request: Pick<LeaveRequest, "status">): 
   return request.status === "pending";
 }
 
+/**
+ * B21: the "Ekler" (attachments) link used to show on every card, including hourly/annual/etc.
+ * requests that can never have a document - misleading, since most turned out empty on tap. The
+ * `/leave/me/requests` list DTO has no `attachmentCount`/`hasAttachments` field to check directly
+ * (confirmed against `LeaveRequestDto`, `LeaveRequestCore.cs:74-78`), so this matches the request's
+ * `leaveTypeId` against the requestable-types catalog's `requiresDocument` instead.
+ *
+ * This is not a heuristic - it's exact for how attachments can exist today: `LeaveRequestForm.tsx`
+ * only ever sends `documentIds` when `selectedType.requiresDocument` is true (`showDocuments =
+ * !!selectedType?.requiresDocument`), and the same is true on web (`leave-request-dialog.tsx`'s
+ * `showDocuments`/`documentIds` are both gated on `selected?.requiresDocument`). The one other way
+ * to attach a file - `POST requests/{id}/attachments` (`attachMyLeaveDocument`, used by web's edit
+ * dialog) - is itself only reachable when that same `showDocuments` gate is open, so a
+ * non-`requiresDocument` request can never end up with an attachment from either client. A type no
+ * longer in the (active-only) requestable-types list - e.g. deactivated since the request was made -
+ * defaults to `false` (hide), consistent with "don't show a link that's overwhelmingly likely to be
+ * empty".
+ */
+export function canLeaveRequestHaveAttachments(
+  leaveTypeId: string,
+  requestableTypes: Pick<RequestableLeaveType, "id" | "requiresDocument">[]
+): boolean {
+  return requestableTypes.some((type) => type.id === leaveTypeId && type.requiresDocument);
+}
+
 export default function LeaveScreen() {
   const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -138,6 +163,7 @@ export default function LeaveScreen() {
               canWithdrawLeaveRequest(request) ? () => confirmWithdraw(request.id) : undefined
             }
             isWithdrawing={withdrawingRequestId === request.id}
+            showAttachments={canLeaveRequestHaveAttachments(request.leaveTypeId, requestableTypes)}
           />
         ))
       )}
