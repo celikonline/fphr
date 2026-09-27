@@ -85,6 +85,16 @@ describe("AttendanceService", () => {
         params: { from: "2026-09-01", to: "2026-09-30" },
       });
     });
+
+    it("opts into leave-only rows via includeLeaveDays, unlike the default call", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+
+      await attendanceService.getMyAttendanceDays({ from: "2026-09-01", to: "2026-09-30" }, true);
+
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/timesheet/me", {
+        params: { from: "2026-09-01", to: "2026-09-30", includeLeaveDays: true },
+      });
+    });
   });
 
   describe("getMyTimesheetSummary", () => {

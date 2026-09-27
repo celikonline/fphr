@@ -6,7 +6,7 @@ import {
 import type { Tone } from "@/theme/theme";
 
 /** A Puantaj day card's status pill (spec §5). */
-export type AttendanceDayStatus = "completed" | "missing" | "anomaly" | "onLeave";
+export type AttendanceDayStatus = "completed" | "missing" | "anomaly" | "onLeave" | "leave";
 
 export type AttendanceFilter = "all" | "missing" | "anomaly";
 
@@ -16,6 +16,8 @@ export const ATTENDANCE_STATUS_PILLS: Record<AttendanceDayStatus, { label: strin
   anomaly: { label: "Anomali", tone: "warning" },
   // `workedWhileOnLeave`: the person worked on an approved-leave day, which needs a look.
   onLeave: { label: "İzinli günde çalışma", tone: "warning" },
+  // `day.onLeave` with nothing worked: an ordinary leave day, not an anomaly.
+  leave: { label: "İzinli", tone: "info" },
 };
 
 export const ATTENDANCE_FILTERS: { value: AttendanceFilter; label: string }[] = [
@@ -45,14 +47,19 @@ const MISSING_FLAGS = new Set<AttendanceAnomalyFlag>([
 ]);
 
 /**
- * Status from the day's anomaly flags (the DTO has no other leave/status field): a missing punch
- * wins, then a day covered by an approved leave (`workedWhileOnLeave`), then any other flag.
+ * Status: work on a day covered by an approved leave (`workedWhileOnLeave`) wins first - it needs a
+ * look even though the day is also `onLeave`. Then a plain leave day (`onLeave`, nothing worked) reads
+ * as "İzinli" instead of "Eksik", even if the day also has no punches. Then a missing punch, then any
+ * other anomaly flag.
  */
-export function attendanceDayStatus(day: Pick<AttendanceDay, "anomalies">): AttendanceDayStatus {
+export function attendanceDayStatus(
+  day: Pick<AttendanceDay, "anomalies"> & Partial<Pick<AttendanceDay, "onLeave" | "workedMinutes">>
+): AttendanceDayStatus {
   const flags = parseAnomalyFlags(day.anomalies);
+  if (flags.includes("workedWhileOnLeave")) return "onLeave";
+  if (day.onLeave && (day.workedMinutes ?? 0) === 0) return "leave";
   if (flags.length === 0) return "completed";
   if (flags.some((flag) => MISSING_FLAGS.has(flag))) return "missing";
-  if (flags.includes("workedWhileOnLeave")) return "onLeave";
   return "anomaly";
 }
 

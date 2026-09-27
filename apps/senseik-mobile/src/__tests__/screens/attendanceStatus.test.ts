@@ -34,6 +34,27 @@ describe("attendanceDayStatus", () => {
       expect(attendanceDayStatus({ anomalies })).toBe("anomaly");
     }
   );
+
+  it("is a plain leave day (not 'Eksik') when onLeave and nothing was worked", () => {
+    expect(attendanceDayStatus({ anomalies: "none", onLeave: true, workedMinutes: 0 })).toBe(
+      "leave"
+    );
+    // A leave-only synthetic row has no punches, which would otherwise read as missing/no data.
+    expect(attendanceDayStatus({ anomalies: "noData", onLeave: true, workedMinutes: 0 })).toBe(
+      "leave"
+    );
+    expect(ATTENDANCE_STATUS_PILLS.leave).toEqual({ label: "İzinli", tone: "info" });
+  });
+
+  it("does not treat a leave day as plain leave once minutes were worked without the anomaly flag", () => {
+    expect(attendanceDayStatus({ anomalies: "none", onLeave: true, workedMinutes: 60 })).toBe(
+      "completed"
+    );
+  });
+
+  it("ignores onLeave for a regular day (not on leave)", () => {
+    expect(attendanceDayStatus({ anomalies: "missingCheckIn", onLeave: false })).toBe("missing");
+  });
 });
 
 describe("matchesAttendanceFilter", () => {

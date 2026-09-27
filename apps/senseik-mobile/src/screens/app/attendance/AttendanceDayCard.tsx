@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { TR_MONTHS_SHORT, parseDateOnly } from "@/components/form/dateRange";
 import { formatDurationMinutes } from "@/lib/formatters";
+import { leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 import type { AttendanceDay } from "@/services/AttendanceService";
 import { fontFor, palette, text } from "@/theme/theme";
 import {
@@ -24,7 +25,10 @@ type Props = {
 export function AttendanceDayCard({ day, overtimeText }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { year, month0, day: dayOfMonth } = parseDateOnly(day.date);
-  const status = ATTENDANCE_STATUS_PILLS[attendanceDayStatus(day)];
+  const dayStatus = attendanceDayStatus(day);
+  const status = ATTENDANCE_STATUS_PILLS[dayStatus];
+  const leaveTypeText =
+    dayStatus === "leave" && day.leaveTypeName ? leaveTypeDisplayName(day.leaveTypeName) : null;
   const worked = formatDurationMinutes(day.workedMinutes);
   const flags = anomalyLabels(day.anomalies);
   const hasPlan = Boolean(day.plannedStart && day.plannedEnd);
@@ -58,6 +62,7 @@ export function AttendanceDayCard({ day, overtimeText }: Props) {
         <StatusPill label={status.label} tone={status.tone} />
         <Text style={styles.caption}>{formatPunchLine(day)}</Text>
       </View>
+      {leaveTypeText ? <Text style={styles.caption}>{leaveTypeText}</Text> : null}
       {overtimeText ? <Text style={styles.caption}>{overtimeText}</Text> : null}
 
       {expanded ? (

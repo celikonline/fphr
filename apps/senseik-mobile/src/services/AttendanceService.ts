@@ -35,7 +35,13 @@ export type AttendanceDaySource = "manual" | "import" | "device" | "selfService"
 export type AnomalyResolutionAction =
   "addOvertime" | "setWorkedHours" | "createLeaveRequest" | "ignore";
 
-/** `AttendanceDayDto`; `checkIn`/`checkOut`/`plannedStart`/`plannedEnd` are `TimeOnly` ("HH:mm:ss"), omitted when unset. */
+/**
+ * `AttendanceDayDto`; `checkIn`/`checkOut`/`plannedStart`/`plannedEnd` are `TimeOnly` ("HH:mm:ss"), omitted when unset.
+ * `onLeave` is always present; `leaveTypeName` is omitted when not on leave or the leave type is masked
+ * (seeded types carry a `leave.type.*` resource key - resolve with `@/lib/leaveTypeNames`).
+ * With `includeLeaveDays: true` the list also contains leave-only rows (id `"00000000-0000-0000-0000-000000000000"`,
+ * `workedMinutes: 0`, `onLeave: true`) for approved-leave dates with no recorded day - key list items by `date`, not `id`.
+ */
 export interface AttendanceDay {
   id: string;
   employeeId: string;
@@ -50,6 +56,8 @@ export interface AttendanceDay {
   resolutionState: AttendanceResolutionState;
   source: AttendanceDaySource;
   allowedActions: AnomalyResolutionAction[];
+  onLeave?: boolean;
+  leaveTypeName?: string | null;
 }
 
 /** `MyTimesheetSummaryDto` (package A5 "Puantajım" özet kartları). */
@@ -77,9 +85,17 @@ export interface SelfCheckInResult {
   withinGeofence?: boolean | null;
 }
 
+/** One break of the day ("HH:mm:ss", tenant-local, oldest first); `end` is omitted while still open. */
+export interface CheckInBreak {
+  start: string;
+  end?: string | null;
+}
+
 /**
  * `MyCheckInStatusDto`: "şu an içeride miyim" - which punch (Giriş/Çıkış/Mola başı/Mola sonu) comes next.
  * `breakStartedAt` is the open break's start ("HH:mm:ss"); `breakMinutesToday` counts closed breaks only.
+ * `breaks` is always present (`[]` when not checked in) - the day's breaks oldest first, so it survives
+ * an app restart unlike the in-session punch times.
  */
 export interface MyCheckInStatus {
   isCheckedIn: boolean;
@@ -89,6 +105,7 @@ export interface MyCheckInStatus {
   onBreak?: boolean;
   breakStartedAt?: string | null;
   breakMinutesToday?: number;
+  breaks?: CheckInBreak[];
 }
 
 export interface QrCheckInInput {
@@ -130,9 +147,16 @@ export class AttendanceService {
     return response.data;
   }
 
-  async getMyAttendanceDays(query: DateRangeQuery): Promise<AttendanceDay[]> {
+  /**
+   * `includeLeaveDays` opts into synthetic leave-only rows (mobile Puantaj); omitted it matches every
+   * other caller (web) byte-for-byte, only enriched with the additive `onLeave`/`leaveTypeName` fields.
+   */
+  async getMyAttendanceDays(
+    query: DateRangeQuery,
+    includeLeaveDays?: boolean
+  ): Promise<AttendanceDay[]> {
     const response = await apiClient.get<AttendanceDay[]>(`${ATTENDANCE_BASE}/timesheet/me`, {
-      params: query,
+      params: includeLeaveDays ? { ...query, includeLeaveDays } : query,
     });
     return response.data;
   }

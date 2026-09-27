@@ -4,6 +4,7 @@ import {
   elapsedSinceCheckIn,
   formatClockDate,
   formatGmtOffset,
+  latestBreak,
   nextPunchAction,
   punchTimes,
   qrButtonLabel,
@@ -112,8 +113,26 @@ describe("shouldRenderMap", () => {
     expect(shouldRenderMap({ hasMapsKey: true }, "web")).toBe(false));
 });
 
+describe("latestBreak", () => {
+  it("returns null when there are no breaks yet", () => {
+    expect(latestBreak(undefined)).toBeNull();
+    expect(latestBreak(null)).toBeNull();
+    expect(latestBreak([])).toBeNull();
+  });
+
+  it("returns the most recent (last) break, oldest-first input", () => {
+    expect(latestBreak([{ start: "12:00:00", end: "12:40:00" }, { start: "15:00:00" }])).toEqual({
+      start: "15:00:00",
+    });
+  });
+
+  it("reports a still-open break without an end", () => {
+    expect(latestBreak([{ start: "15:00:00" }])?.end).toBeUndefined();
+  });
+});
+
 describe("punchTimes", () => {
-  it("reads Giriş/Çıkış and the open break start from the status as HH:mm", () => {
+  it("reads Giriş/Çıkış and the open break start from status.breaks as HH:mm", () => {
     expect(
       punchTimes(
         {
@@ -122,13 +141,44 @@ describe("punchTimes", () => {
           checkIn: "09:05:12",
           onBreak: true,
           breakStartedAt: "12:30:00",
+          breaks: [{ start: "12:30:00" }],
         },
         {}
       )
     ).toEqual({ in: "09:05", out: null, breakStart: "12:30", breakEnd: null });
   });
 
-  it("falls back to this session's punches for a closed break", () => {
+  it("reads a closed break's start/end from status.breaks, surviving an app restart", () => {
+    expect(
+      punchTimes(
+        {
+          isCheckedIn: true,
+          date: d,
+          checkIn: "09:00:00",
+          breakMinutesToday: 40,
+          breaks: [{ start: "12:00:00", end: "12:40:00" }],
+        },
+        {}
+      )
+    ).toEqual({ in: "09:00", out: null, breakStart: "12:00", breakEnd: "12:40" });
+  });
+
+  it("shows the latest of several breaks, not the first", () => {
+    expect(
+      punchTimes(
+        {
+          isCheckedIn: true,
+          date: d,
+          checkIn: "09:00:00",
+          onBreak: true,
+          breaks: [{ start: "12:00:00", end: "12:40:00" }, { start: "15:00:00" }],
+        },
+        {}
+      )
+    ).toEqual({ in: "09:00", out: null, breakStart: "15:00", breakEnd: null });
+  });
+
+  it("falls back to this session's punches when the status has no breaks field", () => {
     expect(
       punchTimes(
         { isCheckedIn: true, date: d, checkIn: "09:00:00", breakMinutesToday: 15 },

@@ -1,4 +1,4 @@
-import type { MyCheckInStatus } from "@/services/AttendanceService";
+import type { CheckInBreak, MyCheckInStatus } from "@/services/AttendanceService";
 import { formatDurationMinutes } from "@/lib/formatters";
 
 /** Giriş / Çıkış / Mola başı / Mola sonu - same set as the API's `PunchDirection`. */
@@ -83,19 +83,27 @@ function hhmm(value: string | null | undefined): string | null {
   return value ? value.slice(0, 5) : null;
 }
 
+/** The most recent break (`status.breaks` is oldest-first) - `null` when the day has none yet. */
+export function latestBreak(breaks: CheckInBreak[] | null | undefined): CheckInBreak | null {
+  if (!breaks || breaks.length === 0) return null;
+  return breaks[breaks.length - 1];
+}
+
 /**
- * Tile times ("HH:mm" or null). Giriş/Çıkış and an open break's start come from the status; a closed
- * break's start/end are not in the status, so they fall back to this session's punch results.
+ * Tile times ("HH:mm" or null). Giriş/Çıkış always come from the status; Mola başı/sonu prefer the
+ * latest entry of `status.breaks` (survives an app restart), falling back to this session's punch
+ * results only when the status has no `breaks` at all.
  */
 export function punchTimes(
   s: MyCheckInStatus | null,
   session: Partial<Record<PunchAction, string>>
 ): Record<PunchAction, string | null> {
+  const latest = latestBreak(s?.breaks);
   return {
     in: hhmm(s?.checkIn),
     out: hhmm(s?.checkOut),
-    breakStart: hhmm(s?.onBreak ? s.breakStartedAt : session.breakStart),
-    breakEnd: s?.onBreak ? null : hhmm(session.breakEnd),
+    breakStart: latest ? hhmm(latest.start) : hhmm(session.breakStart),
+    breakEnd: latest ? hhmm(latest.end) : hhmm(session.breakEnd),
   };
 }
 

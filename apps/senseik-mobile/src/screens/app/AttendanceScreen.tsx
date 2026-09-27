@@ -74,7 +74,7 @@ export default function AttendanceScreen() {
       const range = monthRange(monthDate);
       const [summaryResult, daysResult] = await Promise.all([
         attendanceService.getMyTimesheetSummary(range),
-        attendanceService.getMyAttendanceDays(range),
+        attendanceService.getMyAttendanceDays(range, true),
       ]);
       setSummary(summaryResult);
       setDays([...daysResult].sort((a, b) => a.date.localeCompare(b.date)));
@@ -175,7 +175,8 @@ export default function AttendanceScreen() {
         />
       ) : (
         visibleDays.map((day) => (
-          <AttendanceDayCard key={day.id} day={day} overtimeText={formatOvertimeUndertime(day)} />
+          // `key`d by `date`, not `id`: leave-only rows all share the empty-guid `id`.
+          <AttendanceDayCard key={day.date} day={day} overtimeText={formatOvertimeUndertime(day)} />
         ))
       )}
 
