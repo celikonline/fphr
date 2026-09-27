@@ -57,5 +57,13 @@ public static class PayrollPermissions
     public static readonly Permission UnionManage = new(
         "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
+    /// <summary>TK-030: kendi ücret pusulalarını görüntüleme/indirme (yalnız ödenmiş/kilitli dönemler). "*.my.*"
+    /// deseniyle Çalışan (ve diğer self-servis sistem rolleri) otomatik alır - eşdeğer joker desen
+    /// Identity.Application.Roles.SystemRoleDefinitions (PermissionPatterns.SelfService) içindedir, burada tekrarlanmıyor.</summary>
+    public const string MyPayslipsKey = "payroll.my.payslips";
+
+    public static readonly Permission MyPayslips = new(
+        MyPayslipsKey, Module, "Kendi Ücret Pusulalarımı Görüntüleme", Group, "Kendi ücret pusulalarını görüntüleme ve indirme (yalnız ödenmiş/kilitli dönemler)");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, MyPayslips];
 }

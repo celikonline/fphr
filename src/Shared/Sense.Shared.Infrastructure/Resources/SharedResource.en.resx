@@ -900,6 +900,7 @@ The report you requested has been generated. Click the link to view and download
 
   <!-- Payroll (Faz 3 P5): union / solidarity dues (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Manage unions and memberships</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>View my own payslips</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Union not found.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>The union name is too long.</value></data>

@@ -909,6 +909,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (Faz 3 P5): sendika / dayanışma aidatı (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Sendikaları ve üyelikleri yönetme</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Sendika bulunamadı.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>Sendika adı zorunludur.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>Sendika adı çok uzun.</value></data>
