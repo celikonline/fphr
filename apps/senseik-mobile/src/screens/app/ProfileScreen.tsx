@@ -167,6 +167,14 @@ export default function ProfileScreen() {
         ))
       )}
 
+      <TouchableOpacity
+        style={styles.supportRow}
+        onPress={() => navigation.navigate("NotificationPreferences")}
+      >
+        <Text style={styles.supportRowText}>Bildirim tercihleri</Text>
+        <Text style={styles.supportRowChevron}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Support")}>
         <Text style={styles.supportRowText}>Destek</Text>
         <Text style={styles.supportRowChevron}>›</Text>

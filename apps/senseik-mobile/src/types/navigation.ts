@@ -20,6 +20,8 @@ export type AppStackParamList = {
   People: undefined;
   Shift: undefined;
   Goals: undefined;
+  Notifications: undefined;
+  NotificationPreferences: undefined;
 };
 
 export type MainTabsParamList = {

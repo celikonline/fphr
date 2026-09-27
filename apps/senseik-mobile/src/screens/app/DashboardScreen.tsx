@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -8,8 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  type CompositeNavigationProp,
+} from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
@@ -20,8 +27,19 @@ import {
   type LeaveBalanceItem,
 } from "@/services/LeaveService";
 import { attendanceService, type MyTimesheetSummary } from "@/services/AttendanceService";
+import { notificationsService } from "@/services/NotificationsService";
 import { formatDays, toLocalDateOnly } from "@/lib/formatters";
-import type { MainTabsParamList } from "@/types/navigation";
+import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
+
+type DashboardNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabsParamList, "Dashboard">,
+  NativeStackNavigationProp<AppStackParamList>
+>;
+
+/** N1: badge caps at "9+" instead of growing the pill indefinitely. */
+export function formatUnreadBadge(count: number): string {
+  return count > 9 ? "9+" : String(count);
+}
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference` (Puantajım kalıbıyla aynı). */
 function currentMonthRange(): { from: string; to: string } {
@@ -58,13 +76,39 @@ function firstLeaveBalances(
 
 export default function DashboardScreen() {
   const { user, logout } = useAuthStore();
-  const navigation = useNavigation<BottomTabNavigationProp<MainTabsParamList>>();
+  const navigation = useNavigation<DashboardNavigationProp>();
 
   const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
   const [summary, setSummary] = useState<MyTimesheetSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      setUnreadCount(await notificationsService.getUnreadCount());
+    } catch {
+      // Bell badge just stays at its last known value - not worth an error banner over.
+    }
+  }, []);
+
+  // N1: refresh the bell badge whenever this screen regains focus, and whenever the app comes back
+  // to the foreground while already on it - no polling interval (coordinator's explicit ask).
+  useFocusEffect(
+    useCallback(() => {
+      void loadUnreadCount();
+    }, [loadUnreadCount])
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        void loadUnreadCount();
+      }
+    });
+    return () => subscription.remove();
+  }, [loadUnreadCount]);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -99,7 +143,22 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
     >
-      <Text style={styles.title}>Ana Sayfa</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Ana Sayfa</Text>
+        <TouchableOpacity
+          style={styles.bellButton}
+          onPress={() => navigation.navigate("Notifications")}
+          accessibilityRole="button"
+          accessibilityLabel="Bildirimler"
+        >
+          <Ionicons name="notifications-outline" size={24} color={colors.text} />
+          {unreadCount > 0 && (
+            <View style={styles.bellBadge}>
+              <Text style={styles.bellBadgeText}>{formatUnreadBadge(unreadCount)}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
       {user && (
         <Text style={styles.welcome}>
           Merhaba, {user.firstName} {user.lastName}
@@ -180,10 +239,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.sm,
+  },
+  bellButton: {
+    padding: spacing.xs,
+  },
+  bellBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
+    backgroundColor: colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellBadgeText: {
+    ...typography.caption,
+    color: colors.white,
+    fontSize: 10,
+    lineHeight: 12,
   },
   welcome: {
     ...typography.bodySm,

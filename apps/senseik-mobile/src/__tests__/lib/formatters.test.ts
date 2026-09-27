@@ -4,6 +4,7 @@ import {
   formatDateWithWeekday,
   formatDays,
   formatDurationMinutes,
+  formatRelativeTime,
   parseTimeOnly,
   timeOnlyToDate,
   toLocalDateOnly,
@@ -123,5 +124,44 @@ describe("timeOnlyToDate / dateToTimeOnly", () => {
 
   it("falls back to 09:00 for a malformed value", () => {
     expect(dateToTimeOnly(timeOnlyToDate("garbage"))).toBe("09:00");
+  });
+});
+
+describe("formatRelativeTime (N1)", () => {
+  const now = new Date("2026-09-27T12:00:00Z");
+
+  it("shows 'az önce' for anything under a minute old", () => {
+    expect(formatRelativeTime("2026-09-27T11:59:30Z", now)).toBe("az önce");
+  });
+
+  it("shows minutes for under an hour", () => {
+    expect(formatRelativeTime("2026-09-27T11:55:00Z", now)).toBe("5 dk önce");
+  });
+
+  it("shows hours for under a day", () => {
+    expect(formatRelativeTime("2026-09-27T10:00:00Z", now)).toBe("2 sa önce");
+  });
+
+  it("shows days for under a week", () => {
+    expect(formatRelativeTime("2026-09-25T12:00:00Z", now)).toBe("2 gün önce");
+  });
+
+  it("falls back to an absolute date beyond a week", () => {
+    expect(formatRelativeTime("2026-09-01T12:00:00Z", now)).toBe(
+      new Date("2026-09-01T12:00:00Z").toLocaleDateString("tr-TR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    );
+  });
+
+  it("returns the raw string for an unparseable value instead of throwing", () => {
+    expect(formatRelativeTime("not-a-date", now)).toBe("not-a-date");
+  });
+
+  it("defaults `now` to the current time when omitted", () => {
+    const justNow = new Date().toISOString();
+    expect(formatRelativeTime(justNow)).toBe("az önce");
   });
 });

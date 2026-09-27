@@ -4,22 +4,20 @@ import {
   type RejectFlowState,
 } from "@/screens/app/approvalsRejectFlow";
 
-const rejecting = (overrides: Partial<Extract<RejectFlowState, { type: "rejecting" }>> = {}) =>
-  ({
-    type: "rejecting" as const,
-    taskId: "task-1",
-    reason: "",
-    keyboardVisible: false,
-    ...overrides,
-  });
+const rejecting = (overrides: Partial<Extract<RejectFlowState, { type: "rejecting" }>> = {}) => ({
+  type: "rejecting" as const,
+  taskId: "task-1",
+  reason: "",
+  keyboardVisible: false,
+  ...overrides,
+});
 
-const deciding = (overrides: Partial<Extract<RejectFlowState, { type: "deciding" }>> = {}) =>
-  ({
-    type: "deciding" as const,
-    taskId: "task-1",
-    reason: "",
-    ...overrides,
-  });
+const deciding = (overrides: Partial<Extract<RejectFlowState, { type: "deciding" }>> = {}) => ({
+  type: "deciding" as const,
+  taskId: "task-1",
+  reason: "",
+  ...overrides,
+});
 
 describe("rejectFlowReducer (B19)", () => {
   it("starts idle", () => {
@@ -43,7 +41,10 @@ describe("rejectFlowReducer (B19)", () => {
   });
 
   it("SET_REASON updates the reason while rejecting", () => {
-    const result = rejectFlowReducer(rejecting(), { type: "SET_REASON", reason: "Bütçe uygun değil" });
+    const result = rejectFlowReducer(rejecting(), {
+      type: "SET_REASON",
+      reason: "Bütçe uygun değil",
+    });
     expect(result).toEqual(rejecting({ reason: "Bütçe uygun değil" }));
   });
 

@@ -72,3 +72,36 @@ export function timeOnlyToDate(value: string): Date {
 export function dateToTimeOnly(date: Date): string {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
+
+const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+/** Beyond a week, a relative count stops being useful - show the actual date instead (N1). */
+const RELATIVE_TIME_MAX_DAYS = 7;
+
+/**
+ * N1: "5 dk önce" / "2 sa önce" / "3 gün önce" style relative time for the notifications list.
+ * Falls back to an absolute date once the gap exceeds a week. `now` is a parameter (not `new
+ * Date()` internally) so this stays pure and testable without mocking the clock.
+ */
+export function formatRelativeTime(iso: string, now: Date = new Date()): string {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) {
+    return iso;
+  }
+
+  const diffMs = now.getTime() - then.getTime();
+  if (diffMs < MINUTE_MS) {
+    return "az önce";
+  }
+  if (diffMs < HOUR_MS) {
+    return `${Math.floor(diffMs / MINUTE_MS)} dk önce`;
+  }
+  if (diffMs < DAY_MS) {
+    return `${Math.floor(diffMs / HOUR_MS)} sa önce`;
+  }
+  if (diffMs < RELATIVE_TIME_MAX_DAYS * DAY_MS) {
+    return `${Math.floor(diffMs / DAY_MS)} gün önce`;
+  }
+  return then.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+}
