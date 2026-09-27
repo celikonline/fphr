@@ -2,13 +2,19 @@ import React, { type ReactNode } from "react";
 import { StyleSheet, TouchableOpacity, View, type StyleProp, type ViewStyle } from "react-native";
 import { palette, radius } from "@/theme/theme";
 
-type Props = {
+type BaseProps = {
   children: ReactNode;
-  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
-  accessibilityLabel?: string;
   padding?: number;
 };
+
+/** `accessibilityLabel` is required at the type level once `onPress` is given, so a pressable
+ * card can never ship unlabeled - a plain (non-pressable) card has no accessible-name need. */
+type Props = BaseProps &
+  (
+    | { onPress?: undefined; accessibilityLabel?: string }
+    | { onPress: () => void; accessibilityLabel: string }
+  );
 
 /** The frosted-glass card surface used across the redesign (balances, action tiles, list rows). */
 export function GlassCard({ children, onPress, style, accessibilityLabel, padding = 16 }: Props) {

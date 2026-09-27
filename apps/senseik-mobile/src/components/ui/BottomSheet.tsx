@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: palette.grabber,
     alignSelf: "center",
     marginBottom: 14,
   },

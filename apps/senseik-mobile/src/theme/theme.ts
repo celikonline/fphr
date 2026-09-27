@@ -19,6 +19,15 @@ export const palette = {
   sheetBottom: "#170553",
   tabBar: "#1A0766",
   scrim: "rgba(5,0,20,0.55)",
+  // ScreenBackground's decorative brand-mark ghost squares (border/fill) - distinct alphas from
+  // `glass`/`glassBorder` so they read as a subtler background trace, not a foreground surface.
+  ghostBorder: "rgba(255,255,255,0.18)",
+  ghostFill: "rgba(0,140,240,0.10)",
+  // BottomSheet's grab handle - brighter than `glassBorder` so it stays visible against the sheet
+  // gradient.
+  grabber: "rgba(255,255,255,0.25)",
+  // ErrorBanner's border - pairs with `tones.danger.bg` (same hue) at a higher alpha for definition.
+  dangerBorder: "rgba(255,138,128,0.3)",
 } as const;
 
 // AuthBackdrop.tsx'teki `experimental_backgroundImage` sabitiyle birebir aynı - orası bu sabiti
@@ -37,15 +46,7 @@ export const tones: Record<Tone, { fg: string; bg: string }> = {
 };
 
 export type AccentKey =
-  | "blue"
-  | "green"
-  | "coral"
-  | "purple"
-  | "amber"
-  | "teal"
-  | "indigo"
-  | "pink"
-  | "gray";
+  "blue" | "green" | "coral" | "purple" | "amber" | "teal" | "indigo" | "pink" | "gray";
 
 export const accents: Record<AccentKey, { fg: string; bg: string }> = {
   blue: { fg: "#5CBBFF", bg: "rgba(0,140,240,0.22)" },
@@ -92,8 +93,20 @@ export const text: {
   number: TextStyle;
   button: TextStyle;
 } = {
-  display: { fontSize: 28, lineHeight: 34, letterSpacing: -0.5, color: palette.white, ...fontFor(800) },
-  title: { fontSize: 22, lineHeight: 28, letterSpacing: -0.4, color: palette.white, ...fontFor(800) },
+  display: {
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+    color: palette.white,
+    ...fontFor(800),
+  },
+  title: {
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+    color: palette.white,
+    ...fontFor(800),
+  },
   heading: { fontSize: 16, lineHeight: 22, color: palette.white, ...fontFor(800) },
   section: {
     fontSize: 12,

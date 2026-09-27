@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { accents, palette, radius, text, type AccentKey } from "@/theme/theme";
+import { accents, fontFor, palette, radius, text, type AccentKey } from "@/theme/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -76,11 +76,11 @@ const styles = StyleSheet.create({
   badgeText: {
     color: palette.white,
     fontSize: 10,
-    fontWeight: "800",
+    ...fontFor(800),
   },
   label: {
     ...text.caption,
     color: palette.white,
-    fontWeight: "700",
+    ...fontFor(700),
   },
 });

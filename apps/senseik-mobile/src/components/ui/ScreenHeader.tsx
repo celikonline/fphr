@@ -23,6 +23,9 @@ export function ScreenHeader({ title, onBack, right, subtitle }: Props) {
         onPress={onBack ?? (() => navigation.goBack())}
         accessibilityRole="button"
         accessibilityLabel="Geri"
+        // Visual size stays 40x40 (matches the top bar's glass icon buttons); hitSlop brings the
+        // tappable area to >=44.
+        hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
       >
         <Ionicons name="chevron-back" size={22} color={palette.white} />
       </TouchableOpacity>

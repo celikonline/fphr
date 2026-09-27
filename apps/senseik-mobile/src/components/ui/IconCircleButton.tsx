@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { palette, radius } from "@/theme/theme";
+import { fontFor, palette, radius } from "@/theme/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -20,6 +20,8 @@ export function IconCircleButton({ icon, onPress, accessibilityLabel, badge }: P
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      // Visual size stays 40x40 (mockup's `.icon-btn`); hitSlop brings the tappable area to >=44.
+      hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
     >
       <Ionicons name={icon} size={22} color={palette.ice} />
       {badge ? (
@@ -56,6 +58,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: palette.white,
     fontSize: 10,
-    fontWeight: "800",
+    ...fontFor(800),
   },
 });

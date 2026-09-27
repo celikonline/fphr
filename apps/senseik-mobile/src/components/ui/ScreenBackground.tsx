@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     borderRadius: GHOST_RADIUS,
     transform: [{ rotate: "-14deg" }],
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    backgroundColor: "rgba(255,255,255,0.07)",
+    borderColor: palette.ghostBorder,
+    backgroundColor: palette.glass,
   },
   ghostFilled: {
     position: "absolute",
@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
     left: -120,
     borderRadius: 44,
     transform: [{ rotate: "18deg" }],
-    backgroundColor: "rgba(0,140,240,0.10)",
+    backgroundColor: palette.ghostFill,
   },
 });

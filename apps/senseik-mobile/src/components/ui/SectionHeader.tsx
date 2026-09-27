@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { palette, text } from "@/theme/theme";
+import { fontFor, palette, text } from "@/theme/theme";
 
 type Props = {
   title: string;
@@ -14,7 +14,11 @@ export function SectionHeader({ title, actionLabel, onAction }: Props) {
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       {actionLabel && onAction ? (
-        <TouchableOpacity onPress={onAction} accessibilityRole="button" accessibilityLabel={actionLabel}>
+        <TouchableOpacity
+          onPress={onAction}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+        >
           <Text style={styles.action}>{actionLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -36,7 +40,7 @@ const styles = StyleSheet.create({
   },
   action: {
     fontSize: 13,
-    fontWeight: "700",
     color: palette.brandText,
+    ...fontFor(700),
   },
 });

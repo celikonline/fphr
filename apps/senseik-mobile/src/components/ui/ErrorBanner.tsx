@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { palette, radius, text } from "@/theme/theme";
+import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 
 type Props = {
   message: string;
@@ -12,7 +12,7 @@ type Props = {
 export function ErrorBanner({ message, onRetry }: Props) {
   return (
     <View style={styles.container} accessibilityRole="alert">
-      <Ionicons name="alert-circle-outline" size={18} color={palette.coral} />
+      <Ionicons name="alert-circle-outline" size={18} color={tones.danger.fg} />
       <Text style={styles.message}>{message}</Text>
       {onRetry ? (
         <TouchableOpacity
@@ -35,18 +35,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 14,
     borderRadius: radius.card,
-    backgroundColor: "rgba(255,138,128,0.12)",
+    backgroundColor: tones.danger.bg,
     borderWidth: 1,
-    borderColor: "rgba(255,138,128,0.3)",
+    borderColor: palette.dangerBorder,
   },
   message: {
     ...text.bodyMuted,
     flex: 1,
-    color: palette.coral,
+    color: tones.danger.fg,
   },
   retry: {
     fontSize: 13,
-    fontWeight: "700",
     color: palette.brandText,
+    ...fontFor(700),
   },
 });

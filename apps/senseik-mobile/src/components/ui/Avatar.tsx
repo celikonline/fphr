@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage } from "@/lib/storage";
-import { accents, fontFor } from "@/theme/theme";
+import { accents, fontFor, palette } from "@/theme/theme";
 import { accentForName, initialsOf } from "./avatarUtils";
 
 type Props = {
@@ -71,7 +71,8 @@ export function Avatar({ name, employeeId, self = false, size = 58, radius = 16 
 
 const styles = StyleSheet.create({
   image: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    // Equivalent to the `glass` surface used everywhere else while the photo loads.
+    backgroundColor: palette.glass,
   },
   initials: {
     alignItems: "center",
