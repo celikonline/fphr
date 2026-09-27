@@ -36,11 +36,11 @@ export const colors = {
   background: palette.night,
   text: "#FFFFFF",
   textSecondary: palette.textMuted,
-  textTertiary: palette.textFaint
+  textTertiary: palette.textFaint,
 };
 
 export const lightColors = {
-  ...colors
+  ...colors,
 };
 
 export const darkColors = {
@@ -48,5 +48,5 @@ export const darkColors = {
   background: "#1f2937",
   text: "#ffffff",
   textSecondary: "#d1d5db",
-  textTertiary: "#9ca3af"
+  textTertiary: "#9ca3af",
 };

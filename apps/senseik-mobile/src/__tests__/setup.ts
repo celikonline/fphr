@@ -6,7 +6,7 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 jest.mock("expo-secure-store", () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   getItemAsync: jest.fn(() => Promise.resolve(null)),
-  deleteItemAsync: jest.fn(() => Promise.resolve())
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock("expo-local-authentication", () => ({
@@ -16,9 +16,9 @@ jest.mock("expo-local-authentication", () => ({
   AuthenticationType: {
     FINGERPRINT: 1,
     FACIAL_RECOGNITION: 2,
-    IRIS: 3
+    IRIS: 3,
   },
-  authenticateAsync: jest.fn(() => Promise.resolve({ success: true }))
+  authenticateAsync: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
 jest.mock("expo-notifications", () => ({
@@ -28,12 +28,12 @@ jest.mock("expo-notifications", () => ({
   addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   removeNotificationSubscription: jest.fn(),
-  scheduleNotificationAsync: jest.fn()
+  scheduleNotificationAsync: jest.fn(),
 }));
 
 jest.mock("expo-font", () => ({
   useFonts: jest.fn(() => [true, null]),
-  loadAsync: jest.fn(() => Promise.resolve())
+  loadAsync: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock("@expo-google-fonts/manrope", () => ({
@@ -41,7 +41,7 @@ jest.mock("@expo-google-fonts/manrope", () => ({
   Manrope_500Medium: "Manrope_500Medium",
   Manrope_600SemiBold: "Manrope_600SemiBold",
   Manrope_700Bold: "Manrope_700Bold",
-  Manrope_800ExtraBold: "Manrope_800ExtraBold"
+  Manrope_800ExtraBold: "Manrope_800ExtraBold",
 }));
 
 jest.mock("react-native-svg", () => {
@@ -50,7 +50,7 @@ jest.mock("react-native-svg", () => {
     __esModule: true,
     default: View,
     Svg: View,
-    Path: View
+    Path: View,
   };
 });
 
@@ -60,6 +60,6 @@ jest.mock("react-native-maps", () => {
     __esModule: true,
     default: View,
     Marker: View,
-    Circle: View
+    Circle: View,
   };
 });
