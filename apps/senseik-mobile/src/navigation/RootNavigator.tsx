@@ -1,13 +1,11 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
 import { palette } from "@/theme/theme";
-import { TAB_BAR_HEIGHT } from "@/navigation/layout";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
 import {
   RootStackParamList,
@@ -77,35 +75,6 @@ export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): bo
   return nextAppState === "active";
 }
 
-/**
- * TEMPORARY (removed by Task 9, when CheckIn moves onto the shared `Screen` shell): the CheckIn tab
- * still uses its pre-redesign container, which knows nothing about the status bar or the custom tab
- * bar that now overlays the scene. Pad it below the status bar and above the tab bar so nothing ends
- * up hidden under either. Module-scope components so react-navigation sees a stable identity and
- * never remounts the screen. (Home renders `Screen withTabBar` itself.)
- */
-function TemporaryTabScreenFrame({ children }: { children: ReactNode }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View
-      style={[
-        styles.tabScreenFrame,
-        { paddingTop: insets.top, paddingBottom: TAB_BAR_HEIGHT + insets.bottom },
-      ]}
-    >
-      {children}
-    </View>
-  );
-}
-
-function CheckInTabScreen() {
-  return (
-    <TemporaryTabScreenFrame>
-      <CheckInScreen />
-    </TemporaryTabScreenFrame>
-  );
-}
-
 function AuthNavigator() {
   return (
     <AuthStack.Navigator
@@ -132,11 +101,7 @@ function MainTabsNavigator() {
       }}
     >
       <Tab.Screen name="Home" component={DashboardScreen} options={{ title: "Ana sayfa" }} />
-      <Tab.Screen
-        name="CheckIn"
-        component={CheckInTabScreen}
-        options={{ title: "Giriş / Çıkış" }}
-      />
+      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: "Giriş / Çıkış" }} />
     </Tab.Navigator>
   );
 }
@@ -246,10 +211,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: palette.night,
-  },
-  tabScreenFrame: {
-    flex: 1,
     backgroundColor: palette.night,
   },
 });

@@ -6,10 +6,12 @@ import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 type Props = {
   message: string;
   onRetry?: () => void;
+  /** Label of the `onRetry` action; defaults to "Tekrar dene" (e.g. "Ayarları aç" for a denied permission). */
+  actionLabel?: string;
 };
 
 /** Inline error state for a failed section load, with an optional "Tekrar dene" retry action. */
-export function ErrorBanner({ message, onRetry }: Props) {
+export function ErrorBanner({ message, onRetry, actionLabel = "Tekrar dene" }: Props) {
   return (
     <View style={styles.container} accessibilityRole="alert">
       <Ionicons name="alert-circle-outline" size={18} color={tones.danger.fg} />
@@ -18,9 +20,10 @@ export function ErrorBanner({ message, onRetry }: Props) {
         <TouchableOpacity
           onPress={onRetry}
           accessibilityRole="button"
-          accessibilityLabel="Tekrar dene"
+          accessibilityLabel={actionLabel}
+          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
         >
-          <Text style={styles.retry}>Tekrar dene</Text>
+          <Text style={styles.retry}>{actionLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
