@@ -14,7 +14,7 @@ import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import { payrollService, type MyPayslip } from "@/services/PayrollService";
-import { formatCurrencyTRY } from "@/lib/formatters";
+import { formatCurrencyTRY, formatRelativeTime } from "@/lib/formatters";
 
 /**
  * TK-030 riskli alan: always the same generic Turkish message, regardless of the underlying failure
@@ -29,6 +29,16 @@ export function payslipsLoadErrorMessage(_error: unknown): string {
 /** Same guarantee as `payslipsLoadErrorMessage`, for the "open one payslip's PDF" action. */
 export function payslipOpenErrorMessage(_error: unknown): string {
   return "Bordro pusulası açılamadı. Lütfen tekrar deneyin.";
+}
+
+/** Same guarantee as `payslipsLoadErrorMessage`, for the "okudum, onaylıyorum" action (TK-030 kabul kriteri 2). */
+export function payslipAcknowledgeErrorMessage(_error: unknown): string {
+  return "Onay gönderilemedi. Lütfen tekrar deneyin.";
+}
+
+/** "Onaylandı · 2 gün önce" once a payslip has an `acknowledgedAt` - reuses the notifications list's relative-time formatter. */
+export function formatAcknowledgedLabel(acknowledgedAt: string): string {
+  return `Onaylandı · ${formatRelativeTime(acknowledgedAt)}`;
 }
 
 const TURKISH_MONTHS = [
@@ -68,6 +78,7 @@ export default function PayrollScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openingPayslipId, setOpeningPayslipId] = useState<string | null>(null);
+  const [acknowledgingPayslipId, setAcknowledgingPayslipId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -123,6 +134,32 @@ export default function PayrollScreen() {
     }
   }
 
+  async function acknowledgePayslip(payslipId: string) {
+    setAcknowledgingPayslipId(payslipId);
+    try {
+      await payrollService.acknowledgePayslip(payslipId);
+      // Re-fetch instead of patching local state in place - the server is the source of truth for
+      // `acknowledgedAt` (and picks up any other change since the last load).
+      await loadAll();
+    } catch (acknowledgeError) {
+      Alert.alert("Hata", payslipAcknowledgeErrorMessage(acknowledgeError));
+    } finally {
+      setAcknowledgingPayslipId(null);
+    }
+  }
+
+  // B6-style irreversible action: confirm before acknowledging instead of acting on the first tap.
+  function confirmAcknowledge(payslipId: string) {
+    Alert.alert(
+      "Okudum, onaylıyorum",
+      "Bu bordro pusulasını okuduğunuzu onaylıyor musunuz?",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { text: "Onaylıyorum", onPress: () => void acknowledgePayslip(payslipId) },
+      ]
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -150,22 +187,38 @@ export default function PayrollScreen() {
       ) : (
         payslips.map((payslip) => {
           const isOpening = openingPayslipId === payslip.payslipId;
+          const isAcknowledging = acknowledgingPayslipId === payslip.payslipId;
           return (
-            <TouchableOpacity
-              key={payslip.payslipId}
-              style={styles.card}
-              onPress={() => void openPayslip(payslip)}
-              disabled={openingPayslipId !== null}
-            >
-              <Text style={styles.cardPeriod}>{formatPayslipPeriod(payslip.year, payslip.month)}</Text>
-              <Text style={styles.cardNet}>{formatCurrencyTRY(payslip.netAmount)}</Text>
-              <Text style={styles.cardGross}>Brüt {formatCurrencyTRY(payslip.grossAmount)}</Text>
-              {isOpening && (
-                <View style={styles.cardLoading}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                </View>
+            <View key={payslip.payslipId} style={styles.card}>
+              <TouchableOpacity
+                onPress={() => void openPayslip(payslip)}
+                disabled={openingPayslipId !== null}
+              >
+                <Text style={styles.cardPeriod}>{formatPayslipPeriod(payslip.year, payslip.month)}</Text>
+                <Text style={styles.cardNet}>{formatCurrencyTRY(payslip.netAmount)}</Text>
+                <Text style={styles.cardGross}>Brüt {formatCurrencyTRY(payslip.grossAmount)}</Text>
+                {isOpening && (
+                  <View style={styles.cardLoading}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+              {payslip.acknowledgedAt ? (
+                <Text style={styles.acknowledgedLabel}>{formatAcknowledgedLabel(payslip.acknowledgedAt)}</Text>
+              ) : (
+                <TouchableOpacity
+                  style={styles.acknowledgeButton}
+                  onPress={() => confirmAcknowledge(payslip.payslipId)}
+                  disabled={openingPayslipId !== null || acknowledgingPayslipId !== null}
+                >
+                  {isAcknowledging ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={styles.acknowledgeButtonText}>Okudum, onaylıyorum</Text>
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
           );
         })
       )}
@@ -232,5 +285,23 @@ const styles = StyleSheet.create({
   cardLoading: {
     marginTop: spacing.sm,
     alignItems: "flex-start",
+  },
+  acknowledgedLabel: {
+    ...typography.bodyXs,
+    color: colors.success,
+    marginTop: spacing.md,
+  },
+  acknowledgeButton: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
+  },
+  acknowledgeButtonText: {
+    ...typography.bodyXs,
+    color: colors.primary,
   },
 });

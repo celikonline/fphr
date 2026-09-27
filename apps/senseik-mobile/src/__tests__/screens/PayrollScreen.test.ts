@@ -1,6 +1,8 @@
 import {
   buildPayslipFileName,
+  formatAcknowledgedLabel,
   formatPayslipPeriod,
+  payslipAcknowledgeErrorMessage,
   payslipOpenErrorMessage,
   payslipsLoadErrorMessage,
   shouldIgnorePayslipTap,
@@ -66,5 +68,34 @@ describe("payslipOpenErrorMessage (TK-030 riskli alan)", () => {
     expect(payslipOpenErrorMessage({ response: { status: 403 } })).toBe(message);
     expect(payslipOpenErrorMessage({ response: { status: 404 } })).toBe(message);
     expect(payslipOpenErrorMessage(new Error("boom"))).toBe(message);
+  });
+});
+
+describe("payslipAcknowledgeErrorMessage (TK-030 kabul kriteri 2, riskli alan)", () => {
+  it("returns the same generic Turkish message regardless of the underlying error", () => {
+    const message = "Onay gönderilemedi. Lütfen tekrar deneyin.";
+    expect(payslipAcknowledgeErrorMessage({ response: { status: 403 } })).toBe(message);
+    expect(payslipAcknowledgeErrorMessage({ response: { status: 404 } })).toBe(message);
+    expect(payslipAcknowledgeErrorMessage(new Error("boom"))).toBe(message);
+  });
+
+  it("never echoes back any text from the error object", () => {
+    const sensitiveError = { response: { status: 404, data: { detail: "Bu talebe ait maaş bilgisi: 45000 TRY" } } };
+    expect(payslipAcknowledgeErrorMessage(sensitiveError)).not.toContain("45000");
+  });
+});
+
+describe("formatAcknowledgedLabel (TK-030 kabul kriteri 2)", () => {
+  it("prefixes the formatted date with 'Onaylandı ·'", () => {
+    // Far enough in the past that `formatRelativeTime` always falls back to an absolute date,
+    // regardless of when this test runs - keeps the assertion deterministic without mocking the clock.
+    const acknowledgedAt = "2020-01-15T10:00:00Z";
+    const expectedDate = new Date(acknowledgedAt).toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    expect(formatAcknowledgedLabel(acknowledgedAt)).toBe(`Onaylandı · ${expectedDate}`);
   });
 });
