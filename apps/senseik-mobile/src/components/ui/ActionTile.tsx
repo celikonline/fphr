@@ -17,13 +17,14 @@ type Props = {
 export function ActionTile({ label, icon, accent, badge, onPress }: Props) {
   const accentStyle = accents[accent];
   const showBadge = typeof badge === "number" && badge > 0;
+  const accessibilityLabel = showBadge ? `${label}, ${badge} bekliyor` : label;
 
   return (
     <TouchableOpacity
       style={styles.tile}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel}
     >
       <View style={[styles.iconWrap, { backgroundColor: accentStyle.bg }]}>
         <Ionicons name={icon} size={24} color={accentStyle.fg} />
