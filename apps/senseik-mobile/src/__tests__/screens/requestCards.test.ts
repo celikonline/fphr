@@ -152,6 +152,15 @@ describe("request cards (Taleplerim)", () => {
       expect(card.dateLabel).toBe("27 Eyl 2026");
       expect(card.sortDate).toBe("2026-09-27");
     });
+
+    it("sorts leave and overtime by the local day they were submitted", () => {
+      expect(leaveRequestCard(leave({ submittedAt: "2026-09-26T22:30:00Z" })).sortDate).toBe(
+        "2026-09-27"
+      );
+      expect(overtimeRequestCard(overtime({ submittedAt: "2026-09-26T21:05:00Z" })).sortDate).toBe(
+        "2026-09-27"
+      );
+    });
   });
 
   it("lists every item of a multi-item expense claim as an extra line", () => {
@@ -229,6 +238,42 @@ describe("request cards (Taleplerim)", () => {
       categories: [],
     });
     expect(cards.map((card) => card.kind)).toEqual(["leave", "expense", "overtime", "advance"]);
+  });
+
+  it("orders by submission, not by the leave's start or the overtime's work date", () => {
+    const cards = buildRequestCards({
+      // Starts far in the future but was submitted first.
+      leave: [
+        leave({
+          startDate: "2026-12-01",
+          endDate: "2026-12-05",
+          submittedAt: "2026-09-02T09:00:00Z",
+        }),
+      ],
+      // Worked long ago, submitted last.
+      overtime: [overtime({ workDate: "2026-08-01", submittedAt: "2026-09-18T09:00:00Z" })],
+      expense: [expense({ submittedAt: "2026-09-10T09:00:00Z" })],
+      advance: [advance({ requestedDate: "2026-09-05" })],
+      categories: [],
+    });
+    expect(cards.map((card) => card.kind)).toEqual(["overtime", "expense", "advance", "leave"]);
+  });
+
+  it("orders same-day submissions by submission time", () => {
+    const cards = buildRequestCards({
+      leave: [leave({ submittedAt: "2026-09-20T08:00:00Z" })],
+      overtime: [overtime({ submittedAt: "2026-09-20T11:00:00Z" })],
+      expense: [],
+      advance: [],
+      categories: [],
+    });
+    expect(cards.map((card) => card.kind)).toEqual(["overtime", "leave"]);
+  });
+
+  it("falls back to the type's own date when there is no submission timestamp", () => {
+    expect(leaveRequestCard(leave({ submittedAt: "" })).sortDate).toBe("2026-09-29");
+    expect(expenseClaimCard(expense({ submittedAt: null }), []).sortDate).toBe("2026-09-14");
+    expect(advanceRequestCard(advance()).sortDate).toBe("2026-09-01");
   });
 
   it("filters by kind, 'all' keeping everything", () => {

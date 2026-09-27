@@ -32,7 +32,9 @@ export const REQUEST_FILTERS: { value: RequestFilter; label: string }[] = [
   { value: "advance", label: "Avans" },
 ];
 
-/** One Taleplerim card, whatever the request type. `sortDate` is a `DateOnly` for ordering. */
+/** One Taleplerim card, whatever the request type. `sortDate` is the local `DateOnly` the request
+ * was submitted on (see `submittedDay`), falling back to the type's own date when the DTO has no
+ * submission timestamp - so every kind is ordered by the same thing. */
 export type RequestCard = {
   key: string;
   id: string;
@@ -48,7 +50,22 @@ export type RequestCard = {
   /** Only pending leave/overtime requests have a withdraw endpoint. */
   canWithdraw: boolean;
   sortDate: string;
+  /** Submission instant in epoch ms - orders same-day cards; 0 when the DTO has no timestamp. */
+  sortInstant: number;
 };
+
+/** Local calendar day of a UTC submission instant (never the UTC day - "2026-09-26T22:30:00Z" is
+ * the 27th in Istanbul); undefined when the DTO carries no (valid) timestamp. */
+function submittedDay(submittedAt: string | null | undefined): string | undefined {
+  const instant = submittedInstant(submittedAt);
+  return instant ? toLocalDateOnly(new Date(instant)) : undefined;
+}
+
+function submittedInstant(submittedAt: string | null | undefined): number {
+  if (!submittedAt) return 0;
+  const ms = new Date(submittedAt).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
 
 const EXPENSE_CLAIM_STATUS_TONES: Record<ExpenseClaimStatus, Tone> = {
   draft: "neutral",
@@ -78,7 +95,8 @@ export function leaveRequestCard(request: LeaveRequest): RequestCard {
     description: request.description ?? null,
     lines: [],
     canWithdraw: request.status === "pending",
-    sortDate: request.startDate,
+    sortDate: submittedDay(request.submittedAt) ?? request.startDate,
+    sortInstant: submittedInstant(request.submittedAt),
   };
 }
 
@@ -95,7 +113,8 @@ export function overtimeRequestCard(request: OvertimeRequest): RequestCard {
     description: request.description ?? null,
     lines: [],
     canWithdraw: request.status === "pending",
-    sortDate: request.workDate,
+    sortDate: submittedDay(request.submittedAt) ?? request.workDate,
+    sortInstant: submittedInstant(request.submittedAt),
   };
 }
 
@@ -108,9 +127,8 @@ function categoryName(categoryId: string, categories: CategoryRef[]): string {
 export function expenseClaimCard(claim: ExpenseClaim, categories: CategoryRef[]): RequestCard {
   const first = claim.items[0];
   const knownCategory = first && categories.some((c) => c.id === first.categoryId);
-  // `submittedAt` is a UTC instant: its calendar day is the local one, not the UTC one.
-  const submittedDay = claim.submittedAt ? toLocalDateOnly(new Date(claim.submittedAt)) : undefined;
-  const receiptDate = first?.receiptDate ?? submittedDay;
+  const submissionDay = submittedDay(claim.submittedAt);
+  const receiptDate = first?.receiptDate ?? submissionDay;
   return {
     key: `expense-${claim.id}`,
     id: claim.id,
@@ -137,7 +155,8 @@ export function expenseClaimCard(claim: ExpenseClaim, categories: CategoryRef[])
           )
         : [],
     canWithdraw: false,
-    sortDate: submittedDay ?? receiptDate ?? "",
+    sortDate: submissionDay ?? receiptDate ?? "",
+    sortInstant: submittedInstant(claim.submittedAt),
   };
 }
 
@@ -154,11 +173,14 @@ export function advanceRequestCard(request: AdvanceRequest): RequestCard {
     description: request.description ?? null,
     lines: [],
     canWithdraw: false,
+    // `AdvanceRequestDto` has no submission timestamp; `requestedDate` is the day it was requested.
     sortDate: request.requestedDate,
+    sortInstant: 0,
   };
 }
 
-/** Every loaded request as one list, newest first (a source that failed to load is just `[]`). */
+/** Every loaded request as one list, most recently submitted first (a source that failed to load
+ * is just `[]`). Same-day cards go by submission time; those without one keep list order. */
 export function buildRequestCards(sources: {
   leave: LeaveRequest[];
   overtime: OvertimeRequest[];
@@ -171,7 +193,7 @@ export function buildRequestCards(sources: {
     ...sources.overtime.map(overtimeRequestCard),
     ...sources.expense.map((claim) => expenseClaimCard(claim, sources.categories)),
     ...sources.advance.map(advanceRequestCard),
-  ].sort((a, b) => b.sortDate.localeCompare(a.sortDate));
+  ].sort((a, b) => b.sortDate.localeCompare(a.sortDate) || b.sortInstant - a.sortInstant);
 }
 
 export function filterRequestCards(cards: RequestCard[], filter: RequestFilter): RequestCard[] {
