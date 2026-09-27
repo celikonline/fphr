@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import { palette, radius, text } from "@/theme/theme";
 
 type Props = {
@@ -21,8 +22,15 @@ type Props = {
  * scrim closes on tap; the Android hardware back button closes it via `onRequestClose`. On iOS the
  * sheet is padded up by the keyboard's height so a focused input and its buttons stay visible. */
 export function BottomSheet({ visible, onClose, title, children }: Props) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduceMotion ? "none" : "slide"}
+      onRequestClose={onClose}
+    >
       <KeyboardAvoidingView
         style={styles.scrim}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

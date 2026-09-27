@@ -1,7 +1,13 @@
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { KeyboardAvoidingView, Modal, Platform, Text } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+
+jest.mock("react-native-reanimated", () => ({
+  __esModule: true,
+  useReducedMotion: jest.fn(() => false),
+}));
 
 function renderSheet(onClose = jest.fn()): ReactTestRenderer {
   let renderer!: ReactTestRenderer;
@@ -40,5 +46,15 @@ describe("BottomSheet", () => {
     act(() => root.findByType(Modal).props.onRequestClose());
     act(() => root.findByProps({ accessibilityLabel: "Kapat" }).props.onPress());
     expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("slides in by default (motion not reduced)", () => {
+    (useReducedMotion as jest.Mock).mockReturnValue(false);
+    expect(renderSheet().root.findByType(Modal).props.animationType).toBe("slide");
+  });
+
+  it("skips the slide animation when the OS reduce-motion setting is on", () => {
+    (useReducedMotion as jest.Mock).mockReturnValue(true);
+    expect(renderSheet().root.findByType(Modal).props.animationType).toBe("none");
   });
 });
