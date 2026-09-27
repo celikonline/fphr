@@ -3,6 +3,7 @@ import {
   formatAcknowledgedLabel,
   formatPayslipPeriod,
   payslipAcknowledgeErrorMessage,
+  payslipAcknowledgementStatus,
   payslipOpenErrorMessage,
   payslipsLoadErrorMessage,
   shouldIgnorePayslipTap,
@@ -97,5 +98,21 @@ describe("formatAcknowledgedLabel (TK-030 kabul kriteri 2)", () => {
     });
 
     expect(formatAcknowledgedLabel(acknowledgedAt)).toBe(`Onaylandı · ${expectedDate}`);
+  });
+});
+
+describe("payslipAcknowledgementStatus (TK-030, mobil yeniden tasarım)", () => {
+  it("returns the acknowledged pill when the payslip has an acknowledgedAt", () => {
+    expect(payslipAcknowledgementStatus("2026-09-01T10:00:00Z")).toEqual({
+      label: "Onaylandı",
+      tone: "success",
+    });
+  });
+
+  it("returns the pending pill when the payslip has not been acknowledged", () => {
+    expect(payslipAcknowledgementStatus(null)).toEqual({
+      label: "Onay bekliyor",
+      tone: "warning",
+    });
   });
 });

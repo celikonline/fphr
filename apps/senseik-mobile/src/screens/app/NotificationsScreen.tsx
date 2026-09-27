@@ -9,11 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
 import { notificationsService, type UserNotification } from "@/services/NotificationsService";
 import { formatRelativeTime } from "@/lib/formatters";
 import {
@@ -21,11 +20,42 @@ import {
   resolveNotificationNavigationTarget,
 } from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
+import { accents, fontFor, palette, radius, text, type AccentKey } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
 
 const PAGE_SIZE = 20;
 
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList, "Notifications">;
+
+/** N1: each `templateKey`'s dot-separated first segment ("payroll.payslip_ready" -> "payroll")
+ * picks the category icon/accent - `UserNotification` carries no explicit `category` field. */
+const CATEGORY_ICONS: Record<string, { icon: IoniconName; accent: AccentKey }> = {
+  request: { icon: "document-text-outline", accent: "amber" },
+  approval: { icon: "checkmark-done-outline", accent: "purple" },
+  documents: { icon: "document-attach-outline", accent: "teal" },
+  ohs: { icon: "alert-circle-outline", accent: "coral" },
+  employee: { icon: "people-outline", accent: "blue" },
+  announcement: { icon: "megaphone-outline", accent: "indigo" },
+  payroll: { icon: "wallet-outline", accent: "coral" },
+  leave: { icon: "sunny-outline", accent: "green" },
+  onboarding: { icon: "flag-outline", accent: "pink" },
+  account: { icon: "person-circle-outline", accent: "gray" },
+};
+
+const DEFAULT_CATEGORY_ICON: { icon: IoniconName; accent: AccentKey } = {
+  icon: "notifications-outline",
+  accent: "gray",
+};
+
+/** Maps a notification's `templateKey` to the category icon/accent shown on its row. */
+export function notificationCategoryIcon(templateKey: string): {
+  icon: IoniconName;
+  accent: AccentKey;
+} {
+  const prefix = templateKey.split(".")[0];
+  return CATEGORY_ICONS[prefix] ?? DEFAULT_CATEGORY_ICON;
+}
 
 function NotificationRow({
   notification,
@@ -35,17 +65,47 @@ function NotificationRow({
   onPress: () => void;
 }) {
   const isUnread = !notification.readAt;
+  const { icon, accent } = notificationCategoryIcon(notification.templateKey);
+  const accentStyle = accents[accent];
+
+  return (
+    <GlassCard style={styles.card} onPress={onPress} accessibilityLabel={notification.title}>
+      <View style={styles.row}>
+        <View style={[styles.iconWrap, { backgroundColor: accentStyle.bg }]}>
+          <Ionicons name={icon} size={20} color={accentStyle.fg} />
+        </View>
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            {isUnread ? <View style={styles.dot} /> : null}
+            <Text
+              style={[styles.title, isUnread && styles.titleUnread]}
+              numberOfLines={1}
+            >
+              {notification.title}
+            </Text>
+          </View>
+          <Text style={styles.body} numberOfLines={2}>
+            {notification.body}
+          </Text>
+          <Text style={styles.time}>{formatRelativeTime(notification.createdAt)}</Text>
+        </View>
+      </View>
+    </GlassCard>
+  );
+}
+
+function MarkAllReadPill({ disabled, onPress }: { disabled: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
-      style={[styles.card, isUnread && styles.cardUnread]}
+      style={[styles.markAllPill, disabled && styles.markAllPillDisabled]}
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
+      accessibilityLabel="Tümünü okundu yap"
     >
-      <Text style={[styles.cardTitle, isUnread && styles.cardTitleUnread]}>
-        {notification.title}
+      <Text style={[styles.markAllText, disabled && styles.markAllTextDisabled]}>
+        Tümünü okundu yap
       </Text>
-      <Text style={styles.body}>{notification.body}</Text>
-      <Text style={styles.time}>{formatRelativeTime(notification.createdAt)}</Text>
     </TouchableOpacity>
   );
 }
@@ -149,128 +209,131 @@ export default function NotificationsScreen() {
     }
   }
 
+  const header = (
+    <ScreenHeader
+      title="Bildirimler"
+      right={<MarkAllReadPill disabled={unreadCount === 0} onPress={() => void markAllRead()} />}
+    />
+  );
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Screen scroll={false} header={header}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={palette.white} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bildirimler</Text>
-        <TouchableOpacity onPress={() => void markAllRead()} disabled={unreadCount === 0}>
-          <Text style={[styles.markAllText, unreadCount === 0 && styles.markAllTextDisabled]}>
-            Tümünü okundu işaretle
-          </Text>
-        </TouchableOpacity>
+    <Screen scroll={false} header={header}>
+      <View style={styles.flex}>
+        {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
+
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <NotificationRow notification={item} onPress={() => void openNotification(item)} />
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void onRefresh()}
+              tintColor={palette.white}
+            />
+          }
+          onEndReachedThreshold={0.4}
+          onEndReached={() => void loadMore()}
+          ListEmptyComponent={<EmptyState icon="notifications-outline" title="Bildiriminiz yok." />}
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator style={styles.footer} color={palette.white} />
+            ) : null
+          }
+        />
       </View>
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <NotificationRow notification={item} onPress={() => void openNotification(item)} />
-        )}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
-        }
-        onEndReachedThreshold={0.4}
-        onEndReached={() => void loadMore()}
-        ListEmptyComponent={<Text style={styles.emptyText}>Bildiriminiz yok.</Text>}
-        ListFooterComponent={
-          loadingMore ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null
-        }
-      />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.xl,
-  },
+  flex: { flex: 1 },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.lg,
+  markAllPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: palette.glass,
+    borderWidth: 1,
+    borderColor: palette.glassBorder,
   },
-  title: {
-    ...typography.h3,
-    color: colors.text,
+  markAllPillDisabled: {
+    opacity: 0.5,
   },
   markAllText: {
-    ...typography.bodySm,
-    color: colors.primary,
+    fontSize: 12,
+    color: palette.brandText,
+    ...fontFor(700),
   },
   markAllTextDisabled: {
-    color: colors.textTertiary,
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error,
+    color: palette.textFaint,
   },
   listContent: {
-    paddingBottom: spacing.xxxl,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
   card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+    marginBottom: 10,
   },
-  cardUnread: {
-    backgroundColor: "#eaf2ff",
-    borderColor: colors.primaryLight,
+  row: {
+    flexDirection: "row",
+    gap: 12,
   },
-  cardTitle: {
-    ...typography.body,
-    color: colors.text,
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  cardTitleUnread: {
-    fontWeight: "700",
+  content: {
+    flex: 1,
+    minWidth: 0,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: palette.brand,
+  },
+  title: {
+    ...text.body,
+    flexShrink: 1,
+  },
+  titleUnread: {
+    ...fontFor(800),
   },
   body: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
+    ...text.bodyMuted,
+    marginTop: 2,
   },
   time: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary,
+    ...text.caption,
+    marginTop: 4,
   },
   footer: {
-    marginVertical: spacing.md,
+    marginVertical: 12,
   },
 });
