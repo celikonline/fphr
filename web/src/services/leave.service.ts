@@ -434,6 +434,8 @@ export async function getMyLeaveLedger(leaveTypeId?: string): Promise<LeaveLedge
 /** `LeaveRequestOnBehalfBody` (İşlemler → İzin Ekle); `bypassApproval` needs leave.requests.bypass_approval. */
 export interface LeaveRequestOnBehalfInput extends LeaveRequestInput {
   bypassApproval: boolean;
+  /** Overrides the system-calculated day count (TK-014); omit to keep the calculated value. */
+  manualDays?: number;
 }
 
 export async function createLeaveRequestOnBehalf(
