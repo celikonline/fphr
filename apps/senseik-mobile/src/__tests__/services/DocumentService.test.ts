@@ -1,3 +1,4 @@
+import { File, UploadType } from "expo-file-system";
 import { apiClient } from "@/lib/apiClient";
 import {
   isDocumentFileSizeAllowed,
@@ -6,6 +7,15 @@ import {
 } from "@/services/DocumentService";
 
 jest.mock("@/lib/apiClient");
+
+const mockUpload = jest.fn();
+jest.mock("expo-file-system", () => ({
+  // B11: `uploadMyDocument` now uploads via `new File(uri).upload(...)` instead of
+  // `fetch(uri).blob()` - mock the `File` constructor to return a fixed `upload` spy so each test
+  // can control/assert the upload call without touching the real filesystem.
+  File: jest.fn().mockImplementation((uri: string) => ({ uri, upload: mockUpload })),
+  UploadType: { BINARY_CONTENT: 0, MULTIPART: 1 },
+}));
 
 function buildPickedFile(overrides: Partial<Parameters<typeof uploadMyDocument>[0]> = {}) {
   return {
@@ -18,17 +28,11 @@ function buildPickedFile(overrides: Partial<Parameters<typeof uploadMyDocument>[
 }
 
 describe("uploadMyDocument", () => {
-  const originalFetch = global.fetch;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    global.fetch = originalFetch;
-  });
-
-  it("runs initiate -> read local file -> PUT to storage -> confirm, in that order", async () => {
+  it("runs initiate -> upload the local file -> confirm, in that order, without ever reading it into a JS Blob", async () => {
     (apiClient.post as jest.Mock)
       .mockResolvedValueOnce({
         data: {
@@ -41,30 +45,20 @@ describe("uploadMyDocument", () => {
       .mockResolvedValueOnce({
         data: { documentId: "doc-1", title: "rapor.pdf", uploadedAt: "2026-09-27T12:00:00Z" },
       });
-
-    const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
-    const readLocalFile = jest.fn().mockResolvedValue({ blob: () => Promise.resolve(blob) });
-    const putToStorage = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: { get: (name: string) => (name.toLowerCase() === "etag" ? '"server-etag"' : null) },
-    });
-    const calls: string[] = [];
-    global.fetch = jest.fn(
-      (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-        if (!init) {
-          calls.push("read-local-file");
-          return readLocalFile(input);
-        }
-        calls.push("put-to-storage");
-        return putToStorage(input, init);
-      }
-    ) as unknown as typeof fetch;
+    mockUpload.mockResolvedValue({ status: 200, body: "", headers: { ETag: '"server-etag"' } });
 
     const documentId = await uploadMyDocument(buildPickedFile());
 
     expect(documentId).toBe("doc-1");
-    expect(calls).toEqual(["read-local-file", "put-to-storage"]);
+    expect(File).toHaveBeenCalledWith("file:///tmp/rapor.pdf");
+    expect(mockUpload).toHaveBeenCalledWith(
+      "http://localhost:19000/documents/doc-1?signature=abc",
+      {
+        httpMethod: "PUT",
+        uploadType: UploadType.BINARY_CONTENT,
+        headers: { "Content-Type": "application/pdf" },
+      }
+    );
     expect(apiClient.post).toHaveBeenNthCalledWith(1, "/api/v1/documents/me/initiate-upload", {
       fileName: "rapor.pdf",
       contentType: "application/pdf",
@@ -78,7 +72,7 @@ describe("uploadMyDocument", () => {
     });
   });
 
-  it("PUTs to the presigned URL with no Authorization header (it is not our API)", async () => {
+  it("uploads with no Authorization header (it is not our API) - only the explicit Content-Type", async () => {
     (apiClient.post as jest.Mock)
       .mockResolvedValueOnce({
         data: {
@@ -89,24 +83,34 @@ describe("uploadMyDocument", () => {
         },
       })
       .mockResolvedValueOnce({ data: {} });
-
-    const blob = new Blob(["x"]);
-    let putHeaders: NonNullable<Parameters<typeof fetch>[1]>["headers"];
-    global.fetch = jest.fn(
-      (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-        if (!init) return Promise.resolve({ blob: () => Promise.resolve(blob) } as Response);
-        putHeaders = init.headers;
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          headers: { get: () => null },
-        } as unknown as Response);
-      }
-    ) as unknown as typeof fetch;
+    mockUpload.mockResolvedValue({ status: 200, body: "", headers: {} });
 
     await uploadMyDocument(buildPickedFile());
 
-    expect(putHeaders).toEqual({ "Content-Type": "application/pdf" });
+    const uploadOptions = mockUpload.mock.calls[0][1];
+    expect(uploadOptions.headers).toEqual({ "Content-Type": "application/pdf" });
+  });
+
+  it("reads the ETag header case-insensitively", async () => {
+    (apiClient.post as jest.Mock)
+      .mockResolvedValueOnce({
+        data: {
+          documentId: "doc-1",
+          presignedUrl: "http://localhost:19000/x",
+          requestId: "request-1",
+          expiresAt: "x",
+        },
+      })
+      .mockResolvedValueOnce({ data: {} });
+    mockUpload.mockResolvedValue({ status: 200, body: "", headers: { etag: '"lowercase-etag"' } });
+
+    await uploadMyDocument(buildPickedFile());
+
+    expect(apiClient.post).toHaveBeenNthCalledWith(2, "/api/v1/documents/me/doc-1/confirm-upload", {
+      eTag: '"lowercase-etag"',
+      actualFileSizeBytes: 1024,
+      expiryDate: null,
+    });
   });
 
   it("falls back to the initiate response's requestId when the storage response has no ETag header", async () => {
@@ -120,18 +124,7 @@ describe("uploadMyDocument", () => {
         },
       })
       .mockResolvedValueOnce({ data: {} });
-
-    global.fetch = jest.fn(
-      (_input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-        if (!init)
-          return Promise.resolve({ blob: () => Promise.resolve(new Blob(["x"])) } as Response);
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          headers: { get: () => null },
-        } as unknown as Response);
-      }
-    ) as unknown as typeof fetch;
+    mockUpload.mockResolvedValue({ status: 200, body: "", headers: {} });
 
     await uploadMyDocument(buildPickedFile());
 
@@ -142,7 +135,7 @@ describe("uploadMyDocument", () => {
     });
   });
 
-  it("throws and never calls confirm-upload when the storage PUT fails", async () => {
+  it("throws and never calls confirm-upload when the storage upload returns a non-2xx status", async () => {
     (apiClient.post as jest.Mock).mockResolvedValueOnce({
       data: {
         documentId: "doc-1",
@@ -151,20 +144,24 @@ describe("uploadMyDocument", () => {
         expiresAt: "x",
       },
     });
-
-    global.fetch = jest.fn(
-      (_input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-        if (!init)
-          return Promise.resolve({ blob: () => Promise.resolve(new Blob(["x"])) } as Response);
-        return Promise.resolve({
-          ok: false,
-          status: 500,
-          headers: { get: () => null },
-        } as unknown as Response);
-      }
-    ) as unknown as typeof fetch;
+    mockUpload.mockResolvedValue({ status: 500, body: "", headers: {} });
 
     await expect(uploadMyDocument(buildPickedFile())).rejects.toThrow("500");
+    expect(apiClient.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("propagates a rejection from the upload itself (e.g. the file could not be read)", async () => {
+    (apiClient.post as jest.Mock).mockResolvedValueOnce({
+      data: {
+        documentId: "doc-1",
+        presignedUrl: "http://localhost:19000/x",
+        requestId: "request-1",
+        expiresAt: "x",
+      },
+    });
+    mockUpload.mockRejectedValue(new Error("Unable to read file"));
+
+    await expect(uploadMyDocument(buildPickedFile())).rejects.toThrow("Unable to read file");
     expect(apiClient.post).toHaveBeenCalledTimes(1);
   });
 });
