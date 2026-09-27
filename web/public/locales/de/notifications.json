@@ -35,6 +35,13 @@
     },
     "payroll": {
       "payslip_ready": "Wenn meine Gehaltsabrechnung bereit ist"
+    },
+    "leave": {
+      "added_on_behalf": "Wenn in meinem Namen ein Urlaubsantrag hinzugefügt wird"
+    },
+    "onboarding": {
+      "task_assigned": "Wenn mir eine Onboarding-Aufgabe zugewiesen wird",
+      "task_completed": "Wenn eine Onboarding-Aufgabe abgeschlossen wird"
     }
   },
   "preferences": {
@@ -56,7 +63,8 @@
     "reminder": "Erinnerungen",
     "employee": "Mitarbeitende",
     "announcement": "Ankündigungen",
-    "payroll": "Lohnabrechnung"
+    "payroll": "Lohnabrechnung",
+    "onboarding": "Onboarding"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"
