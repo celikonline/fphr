@@ -1,6 +1,6 @@
 import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
-import { Alert, TextInput } from "react-native";
+import { Alert, Text, TextInput } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import ForgotPasswordScreen from "@/screens/auth/ForgotPasswordScreen";
 import BiometricPromptScreen from "@/screens/auth/BiometricPromptScreen";
@@ -50,6 +50,13 @@ function findButton(renderer: ReactTestRenderer, label: string): ReactTestInstan
   )[0];
 }
 
+function allTexts(renderer: ReactTestRenderer): string[] {
+  return renderer.root
+    .findAllByType(Text)
+    .map((node) => node.props.children)
+    .filter((child): child is string => typeof child === "string");
+}
+
 describe("ForgotPasswordScreen", () => {
   type Props = NativeStackScreenProps<AuthStackParamList, "ForgotPassword">;
   const goBack = jest.fn();
@@ -62,25 +69,42 @@ describe("ForgotPasswordScreen", () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it("asks for the e-mail and stays on the screen when it is empty", () => {
+  it("shows an inline error (no native alert) and stays on the screen when it is empty", () => {
     const renderer = render(<ForgotPasswordScreen {...props} />);
 
     act(() => findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress());
 
-    expect(Alert.alert).toHaveBeenCalledWith("Hata", "Lütfen e-posta adresinizi girin");
+    expect(allTexts(renderer)).toContain("Lütfen e-posta adresinizi girin");
+    expect(Alert.alert).not.toHaveBeenCalled();
     expect(goBack).not.toHaveBeenCalled();
   });
 
-  it("confirms generically and returns to login once an e-mail is entered", () => {
+  it("clears the inline error once the user types", () => {
+    const renderer = render(<ForgotPasswordScreen {...props} />);
+
+    act(() => findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress());
+    act(() => renderer.root.findByType(TextInput).props.onChangeText("a"));
+
+    expect(allTexts(renderer)).not.toContain("Lütfen e-posta adresinizi girin");
+  });
+
+  it("shows the generic success panel in-screen, then returns to login from its button", () => {
     const renderer = render(<ForgotPasswordScreen {...props} />);
 
     act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
     act(() => findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress());
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Başarılı",
-      "E-posta kayıtlıysa sıfırlama bağlantısı gönderildi."
-    );
+    const texts = allTexts(renderer);
+    expect(texts).toContain("Talebiniz alındı");
+    expect(texts).toContain("E-posta kayıtlıysa sıfırlama bağlantısı gönderildi.");
+    // Never echoes the address (account enumeration).
+    expect(texts.some((line) => line.includes("ad@sirket.com"))).toBe(false);
+    expect(renderer.root.findAllByType(TextInput)).toHaveLength(0);
+    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(goBack).not.toHaveBeenCalled();
+
+    act(() => findButton(renderer, "Girişe dön").props.onPress());
+
     expect(goBack).toHaveBeenCalledTimes(1);
   });
 
@@ -121,16 +145,41 @@ describe("BiometricPromptScreen", () => {
     expect(goBack).not.toHaveBeenCalled();
   });
 
-  it("alerts and returns to login when the biometric login fails", async () => {
+  it("shows an inline failure (no native alert) and stays on the screen when it fails", async () => {
     loginWithBiometric.mockRejectedValue(new Error("cancelled"));
 
-    render(<BiometricPromptScreen {...props} />);
+    const renderer = render(<BiometricPromptScreen {...props} />);
     await act(async () => {});
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Biyometrik giriş başarısız",
-      "Lütfen tekrar deneyin veya şifrenizle giriş yapın."
+    expect(allTexts(renderer)).toContain(
+      "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın."
     );
+    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(goBack).not.toHaveBeenCalled();
+  });
+
+  it("retries the biometric login from the failure message", async () => {
+    loginWithBiometric.mockRejectedValueOnce(new Error("cancelled"));
+    loginWithBiometric.mockReturnValueOnce(new Promise(() => undefined));
+    const renderer = render(<BiometricPromptScreen {...props} />);
+    await act(async () => {});
+
+    await act(async () => findButton(renderer, "Tekrar dene").props.onPress());
+
+    expect(loginWithBiometric).toHaveBeenCalledTimes(2);
+    expect(allTexts(renderer)).toContain("Kimlik doğrulanıyor...");
+    expect(allTexts(renderer)).not.toContain(
+      "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın."
+    );
+  });
+
+  it("returns to the password login from the failure message", async () => {
+    loginWithBiometric.mockRejectedValue(new Error("cancelled"));
+    const renderer = render(<BiometricPromptScreen {...props} />);
+    await act(async () => {});
+
+    act(() => findButton(renderer, "Şifreyle giriş yap").props.onPress());
+
     expect(goBack).toHaveBeenCalledTimes(1);
   });
 
