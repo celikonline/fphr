@@ -25,7 +25,7 @@ import { fontFor } from "@/theme/theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
-// Design tokens for this screen only - shared UI colors live in `styles/colors.ts`, but this
+// Design tokens for this screen only - shared UI colors live in `theme/theme.ts`, but this
 // dark auth shell (night/navy/brand gradient) is specific to the login/tenant-select flow.
 const palette = {
   night: "#0E0033",

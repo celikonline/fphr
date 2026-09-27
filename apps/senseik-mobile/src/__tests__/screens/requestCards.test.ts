@@ -131,6 +131,29 @@ describe("request cards (Taleplerim)", () => {
     expect(expenseClaimCard(expense(), []).title).toBe("Masraf");
   });
 
+  describe("submittedAt day in a positive UTC offset", () => {
+    const originalTZ = process.env.TZ;
+
+    beforeAll(() => {
+      // Deterministic regardless of the host: the UTC-day bug only shows east of UTC (Turkey, UTC+3).
+      process.env.TZ = "Europe/Istanbul";
+    });
+
+    afterAll(() => {
+      process.env.TZ = originalTZ;
+    });
+
+    it("dates and sorts an itemless claim by the local day it was submitted, not the UTC day", () => {
+      // 22:30 UTC on the 26th is 01:30 on the 27th in Istanbul.
+      const card = expenseClaimCard(
+        expense({ items: [], submittedAt: "2026-09-26T22:30:00Z" }),
+        []
+      );
+      expect(card.dateLabel).toBe("27 Eyl 2026");
+      expect(card.sortDate).toBe("2026-09-27");
+    });
+  });
+
   it("lists every item of a multi-item expense claim as an extra line", () => {
     const claim = expense({
       items: [

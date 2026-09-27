@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
 import { palette } from "@/theme/theme";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
+import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -54,14 +55,7 @@ export function shouldShowRootSplash(appReady: boolean): boolean {
   return !appReady;
 }
 
-/**
- * B9/redesign: both the auth stack and (since the 2026-09 redesign) every app screen sit on the dark
- * brand backdrop, so the status bar content is always light. Kept as an exported pure function
- * (B18) so `RootNavigator`'s own effects and tests share one source.
- */
-export function resolveStatusBarStyle(): "light" {
-  return "light";
-}
+export { resolveStatusBarStyle };
 
 /**
  * B18: the app was observed reverting to the wrong status bar style after returning from the

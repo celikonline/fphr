@@ -239,6 +239,24 @@ eas build --platform android --auto-submit
 
 Variables starting with EXPO_PUBLIC_ are embedded in build.
 
+### Google Maps key (Android)
+
+`GOOGLE_MAPS_ANDROID_API_KEY` is read by `app.config.js` at prebuild/build time and written into the
+Android manifest (`android.config.googleMaps.apiKey`). It is not an `EXPO_PUBLIC_` variable and is
+never read by JS; JS only sees `extra.hasMapsKey`.
+
+- **Without the key** the Android Giriş/Çıkış tab shows the location card (address/coordinates)
+  instead of the map, because the Google Maps SDK crashes without a key. iOS uses Apple Maps and
+  needs no key.
+- **Local builds**: put `GOOGLE_MAPS_ANDROID_API_KEY=...` in `.env.local` (gitignored) or export it
+  in the shell, then rebuild the native app (`pnpm exec expo run:android`). A Metro reload is not
+  enough; the key lives in the native manifest.
+- **EAS builds**: store it as a secret EAS environment variable, e.g.
+  `eas env:create --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> --visibility secret --environment production`
+  (repeat for `preview`/`development` as needed).
+- **Never commit the key** (not in `app.json`, `eas.json`, `.env.example` or docs). Restrict it in
+  Google Cloud to "Maps SDK for Android" and the app's package name + signing SHA-1.
+
 ## Best Practices
 
 1. Never store tokens in AsyncStorage - use SecureStore

@@ -1,4 +1,5 @@
 import {
+  ATTENDANCE_STATUS_PILLS,
   anomalyLabels,
   attendanceDayStatus,
   formatPunchLine,
@@ -18,8 +19,13 @@ describe("attendanceDayStatus", () => {
     }
   );
 
-  it("is on leave when the day is covered by an approved leave", () => {
+  it("flags work on a day covered by an approved leave as a warning, not as a plain leave day", () => {
     expect(attendanceDayStatus({ anomalies: "workedWhileOnLeave" })).toBe("onLeave");
+    // The person worked that day, so the pill must not read as a plain "İzinli".
+    expect(ATTENDANCE_STATUS_PILLS.onLeave).toEqual({
+      label: "İzinli günde çalışma",
+      tone: "warning",
+    });
   });
 
   it.each(["lateArrival", "overwork", "earlyLeave, underwork", "unplannedWork"])(

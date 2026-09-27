@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Keyboard, StyleSheet, View } from "react-nati
 import { StatusBar } from "expo-status-bar";
 import { OptionSheet } from "@/components/form/OptionSheet";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
+import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
 import {
   approvalsService,
   type DecideTaskInput,
@@ -81,16 +82,16 @@ export default function ApprovalsScreen() {
     };
   }, []);
 
-  // B18: after the reject sheet's native Android Dialog window closes, the tab screens' status bar
-  // icons have been observed reverting to the light/unreadable style - the Dialog window can affect
-  // the Activity's system-bar appearance flags directly at the native level, outside of the
-  // `expo-status-bar` JS module's own merge-stack, so nothing re-triggers our declarative
-  // `<StatusBar style="dark">` in `RootNavigator` (its prop never actually changes). Re-assert the
-  // dark style imperatively the moment the reject flow returns to idle (the sheet has fully closed).
+  // B18: after the reject sheet's native Android Dialog window closes, the status bar icons have
+  // been observed reverting to the wrong style - the Dialog window can affect the Activity's
+  // system-bar appearance flags directly at the native level, outside of the `expo-status-bar` JS
+  // module's own merge-stack, so nothing re-triggers the declarative `<StatusBar>` in
+  // `RootNavigator` (its prop never actually changes). Re-assert the app's style (always light on
+  // the dark backdrop) imperatively the moment the reject flow returns to idle (sheet fully closed).
   const previousRejectFlowTypeRef = useRef(rejectFlow.type);
   useEffect(() => {
     if (previousRejectFlowTypeRef.current !== "idle" && rejectFlow.type === "idle") {
-      StatusBar.setStyle("dark");
+      StatusBar.setStyle(resolveStatusBarStyle());
     }
     previousRejectFlowTypeRef.current = rejectFlow.type;
   }, [rejectFlow.type]);

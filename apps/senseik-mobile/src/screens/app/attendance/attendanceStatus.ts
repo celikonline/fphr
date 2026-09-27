@@ -14,7 +14,8 @@ export const ATTENDANCE_STATUS_PILLS: Record<AttendanceDayStatus, { label: strin
   completed: { label: "Tamamlandı", tone: "success" },
   missing: { label: "Eksik", tone: "danger" },
   anomaly: { label: "Anomali", tone: "warning" },
-  onLeave: { label: "İzinli", tone: "info" },
+  // `workedWhileOnLeave`: the person worked on an approved-leave day, which needs a look.
+  onLeave: { label: "İzinli günde çalışma", tone: "warning" },
 };
 
 export const ATTENDANCE_FILTERS: { value: AttendanceFilter; label: string }[] = [

@@ -1,6 +1,11 @@
 import { LEAVE_STATUS_LABELS, LEAVE_STATUS_TONES } from "@/components/leave/LeaveRequestListItem";
 import { formatDayMonthYear, formatShortRange } from "@/components/form/dateRange";
-import { formatCurrencyTRY, formatDays, formatDurationMinutes } from "@/lib/formatters";
+import {
+  formatCurrencyTRY,
+  formatDays,
+  formatDurationMinutes,
+  toLocalDateOnly,
+} from "@/lib/formatters";
 import {
   ADVANCE_STATUS_LABELS,
   EXPENSE_CLAIM_STATUS_LABELS,
@@ -103,7 +108,9 @@ function categoryName(categoryId: string, categories: CategoryRef[]): string {
 export function expenseClaimCard(claim: ExpenseClaim, categories: CategoryRef[]): RequestCard {
   const first = claim.items[0];
   const knownCategory = first && categories.some((c) => c.id === first.categoryId);
-  const receiptDate = first?.receiptDate ?? claim.submittedAt?.slice(0, 10);
+  // `submittedAt` is a UTC instant: its calendar day is the local one, not the UTC one.
+  const submittedDay = claim.submittedAt ? toLocalDateOnly(new Date(claim.submittedAt)) : undefined;
+  const receiptDate = first?.receiptDate ?? submittedDay;
   return {
     key: `expense-${claim.id}`,
     id: claim.id,
@@ -122,7 +129,7 @@ export function expenseClaimCard(claim: ExpenseClaim, categories: CategoryRef[])
           )
         : [],
     canWithdraw: false,
-    sortDate: claim.submittedAt?.slice(0, 10) ?? receiptDate ?? "",
+    sortDate: submittedDay ?? receiptDate ?? "",
   };
 }
 

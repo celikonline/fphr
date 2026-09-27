@@ -1,5 +1,13 @@
 import React, { type ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { palette, radius, text } from "@/theme/theme";
 
 type Props = {
@@ -10,11 +18,15 @@ type Props = {
 };
 
 /** Modal-based bottom sheet (new request picker, date picker, reject-reason forms, ...). The
- * scrim closes on tap; the Android hardware back button closes it via `onRequestClose`. */
+ * scrim closes on tap; the Android hardware back button closes it via `onRequestClose`. On iOS the
+ * sheet is padded up by the keyboard's height so a focused input and its buttons stay visible. */
 export function BottomSheet({ visible, onClose, title, children }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.scrim}>
+      <KeyboardAvoidingView
+        style={styles.scrim}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -26,7 +38,7 @@ export function BottomSheet({ visible, onClose, title, children }: Props) {
           {title ? <Text style={styles.title}>{title}</Text> : null}
           {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
