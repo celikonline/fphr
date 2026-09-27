@@ -30,3 +30,36 @@ jest.mock("expo-notifications", () => ({
   removeNotificationSubscription: jest.fn(),
   scheduleNotificationAsync: jest.fn()
 }));
+
+jest.mock("expo-font", () => ({
+  useFonts: jest.fn(() => [true, null]),
+  loadAsync: jest.fn(() => Promise.resolve())
+}));
+
+jest.mock("@expo-google-fonts/manrope", () => ({
+  Manrope_400Regular: "Manrope_400Regular",
+  Manrope_500Medium: "Manrope_500Medium",
+  Manrope_600SemiBold: "Manrope_600SemiBold",
+  Manrope_700Bold: "Manrope_700Bold",
+  Manrope_800ExtraBold: "Manrope_800ExtraBold"
+}));
+
+jest.mock("react-native-svg", () => {
+  const { View } = jest.requireActual("react-native");
+  return {
+    __esModule: true,
+    default: View,
+    Svg: View,
+    Path: View
+  };
+});
+
+jest.mock("react-native-maps", () => {
+  const { View } = jest.requireActual("react-native");
+  return {
+    __esModule: true,
+    default: View,
+    Marker: View,
+    Circle: View
+  };
+});

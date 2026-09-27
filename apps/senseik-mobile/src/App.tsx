@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from "@expo-google-fonts/manrope";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { pushNotificationService } from "@/services/PushNotificationService";
 import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
@@ -8,6 +17,10 @@ import { useAuthStore } from "@/store/authStore";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
 const FOREGROUND_BANNER_DURATION_MS = 4000;
+
+// Keeps the native splash screen up while Manrope loads instead of flashing the system font -
+// swallow a repeat call (e.g. Fast Refresh) rather than let it reject and go unhandled.
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /**
  * Last validated push-navigation request. RootNavigator consumes and clears it after
@@ -28,6 +41,22 @@ interface ForegroundBanner {
 export default function App() {
   const [foregroundBanner, setForegroundBanner] = useState<ForegroundBanner | null>(null);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+  // A font load failure falls back to the system font rather than blocking the app - only the
+  // still-pending (neither loaded nor errored) case keeps the splash screen up.
+  const fontsReady = fontsLoaded || Boolean(fontError);
+
+  useEffect(() => {
+    if (fontsReady) {
+      SplashScreen.hideAsync().catch(() => undefined);
+    }
+  }, [fontsReady]);
 
   useEffect(() => {
     if (!foregroundBanner) {
@@ -91,6 +120,11 @@ export default function App() {
       pushNotificationService.removeNotificationListeners();
     };
   }, []);
+
+  if (!fontsReady) {
+    // Native splash screen (kept up by preventAutoHideAsync above) is still covering the screen.
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "SenseİK Mobile",
+    "name": "Sense HR",
     "slug": "senseik-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTabletMode": true,
       "bundleIdentifier": "com.algosense.senseik",
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0E0033"
       },
       "package": "com.algosense.senseik",
       "versionCode": 1,
@@ -56,13 +56,14 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0E0033"
         }
       ],
       "./plugins/withAndroidBuildFixes.js",
       "@react-native-community/datetimepicker",
       "expo-web-browser",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-font"
     ],
     "extra": {
       "eas": {

@@ -8,11 +8,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import { backdropImage, palette } from "@/theme/theme";
 
-// Kept local (not imported from LoginScreen's `palette`) so this decorative layer has no
-// dependency on the screens that render on top of it.
-const NIGHT = "#0E0033";
-const BRAND = "#008CF0";
+const NIGHT = palette.night;
+const BRAND = palette.brand;
 
 const FLOAT_HALF_DURATION_MS = 3500;
 const FLOAT_DISTANCE = 12;
@@ -74,8 +73,7 @@ const styles = StyleSheet.create({
     backgroundColor: NIGHT,
     // New-Architecture-only style prop (RN 0.86); falls back to the solid `backgroundColor` above
     // on runtimes that don't understand it.
-    experimental_backgroundImage:
-      "radial-gradient(circle at 90% 5%, rgba(0,140,240,0.55), transparent 45%), radial-gradient(circle at 0% 100%, rgba(0,65,210,0.75), transparent 55%), linear-gradient(160deg, #280087, #0E0033)",
+    experimental_backgroundImage: backdropImage,
   },
   ghostOutlineWrapper: {
     position: "absolute",

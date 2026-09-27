@@ -1,6 +1,8 @@
+import { palette } from "@/theme/theme";
+
 export const colors = {
   // Primary
-  primary: "#0066cc",
+  primary: palette.brand,
   primaryLight: "#4d94ff",
   primaryDark: "#0052a3",
 
@@ -26,15 +28,15 @@ export const colors = {
   // Status
   success: "#34c759",
   warning: "#ff9500",
-  error: "#ff3b30",
+  error: palette.coral,
   info: "#0066cc",
 
   // Semantic
-  border: "#e5e7eb",
-  background: "#ffffff",
-  text: "#1f2937",
-  textSecondary: "#6b7280",
-  textTertiary: "#9ca3af"
+  border: palette.glassBorder,
+  background: palette.night,
+  text: "#FFFFFF",
+  textSecondary: palette.textMuted,
+  textTertiary: palette.textFaint
 };
 
 export const lightColors = {
