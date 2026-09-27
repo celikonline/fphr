@@ -12,16 +12,17 @@ export class BiometricService {
       return {
         available: compatible && enrolled,
         enrolled,
-        supportedTypes
+        supportedTypes,
       };
-    } catch (error) {
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Error checking biometric availability:", error);
+        console.error("Error checking biometric availability.");
       }
       return {
         available: false,
         enrolled: false,
-        supportedTypes: []
+        supportedTypes: [],
       };
     }
   }
@@ -42,9 +43,10 @@ export class BiometricService {
       }
 
       return supported;
-    } catch (error) {
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Error getting supported biometric types:", error);
+        console.error("Error getting supported biometric types.");
       }
       return [];
     }
@@ -56,13 +58,14 @@ export class BiometricService {
       // biometrics for payroll/HR data. Users without biometrics log in with password.
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
-        disableDeviceFallback: true
+        disableDeviceFallback: true,
       });
 
       return result.success;
-    } catch (error) {
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Biometric authentication failed:", error);
+        console.error("Biometric authentication failed.");
       }
       return false;
     }

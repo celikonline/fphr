@@ -20,6 +20,36 @@ const newCorrelationId = (): string =>
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
 
+// Paths mirror IdentityRoutes/AuthController.cs (Sense.Modules.Identity.Api): every anonymous
+// endpoint under AUTH_BASE except `logout` (Bearer-authenticated, so a 401 there IS a real expired
+// session and should still go through the refresh flow below).
+const AUTH_BASE = "/api/v1/identity/auth";
+const ANONYMOUS_AUTH_PATHS = [
+  `${AUTH_BASE}/login`,
+  `${AUTH_BASE}/mfa/complete`,
+  `${AUTH_BASE}/refresh`,
+  `${AUTH_BASE}/forgot-password`,
+  `${AUTH_BASE}/reset-password`,
+];
+
+/**
+ * B16: a 401 from an anonymous auth endpoint (wrong password, wrong TOTP code, ...) is NOT an
+ * expired access token - the request never carried one. Treating it as one used to (a) try a token
+ * refresh with whatever refresh token happened to be stored from a previous session, (b) silently
+ * retry the SAME login/MFA request with a newly "refreshed" Authorization header if that succeeded,
+ * and (c) log a scary "Login failed." / trigger `onUnauthorized` (session-expired logout) if it
+ * didn't - none of which have anything to do with the user's actual wrong password. The same applies
+ * to any request that never had an Authorization header in the first place (belt-and-suspenders for
+ * other anonymous endpoints).
+ */
+function isAnonymousAuthRequest(config: { url?: string; headers?: unknown } | undefined): boolean {
+  if (!config) return false;
+  const url = config.url ?? "";
+  if (ANONYMOUS_AUTH_PATHS.some((path) => url.includes(path))) return true;
+  const headers = config.headers as Record<string, unknown> | undefined;
+  return !headers?.Authorization;
+}
+
 interface QueuedRequest {
   resolve: (token?: string | null) => void;
   reject: (error: unknown) => void;
@@ -129,7 +159,11 @@ class ApiClient {
       async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAnonymousAuthRequest(originalRequest)
+        ) {
           if (isRefreshing) {
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
@@ -150,7 +184,7 @@ class ApiClient {
               throw new Error("No refresh token available");
             }
 
-            const response = await this.refreshInstance.post("/api/v1/identity/auth/refresh", {
+            const response = await this.refreshInstance.post(`${AUTH_BASE}/refresh`, {
               refreshToken,
             });
 

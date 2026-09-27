@@ -1,6 +1,7 @@
 import { authService } from "@/services/AuthService";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
+import { biometricService } from "@/lib/biometric";
 
 jest.mock("@/lib/apiClient");
 jest.mock("@/lib/storage");
@@ -108,16 +109,28 @@ describe("AuthService", () => {
       expect(outcome.status).toBe("ok");
     });
 
-    it("throws a Turkish, mobile-unsupported error on status mfa_required without storing tokens", async () => {
+    it("returns the mfaRequired outcome with the challenge token, without storing tokens", async () => {
       (apiClient.post as jest.Mock).mockResolvedValue({
         data: { status: "mfa_required", mfaToken: "mfa-token-abc" },
       });
 
-      await expect(authService.login("test@example.com", "password123")).rejects.toThrow(
-        "İki adımlı doğrulama mobil uygulamada henüz desteklenmiyor. Lütfen web tarayıcısından giriş yapın."
-      );
+      const outcome = await authService.login("test@example.com", "password123");
+
+      expect(outcome).toEqual({ status: "mfaRequired", mfaToken: "mfa-token-abc" });
+      expect(apiClient.get).not.toHaveBeenCalled();
       expect(SecureStorage.setAccessToken).not.toHaveBeenCalled();
       expect(SecureStorage.setRefreshToken).not.toHaveBeenCalled();
+    });
+
+    it("throws on status mfa_required without a mfaToken", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "mfa_required" },
+      });
+
+      await expect(authService.login("test@example.com", "password123")).rejects.toThrow(
+        "Beklenmeyen giriş yanıtı."
+      );
+      expect(SecureStorage.setAccessToken).not.toHaveBeenCalled();
     });
 
     it("throws without storing tokens on invalid credentials (401)", async () => {
@@ -130,6 +143,76 @@ describe("AuthService", () => {
       expect(SecureStorage.setAccessToken).not.toHaveBeenCalled();
       expect(SecureStorage.setRefreshToken).not.toHaveBeenCalled();
       expect(SecureStorage.setUserId).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("completeMfa", () => {
+    it("stores tokens and maps /me on status ok", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "ok", tokens: tokensResponse },
+      });
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: meResponse });
+
+      const outcome = await authService.completeMfa("mfa-token-abc", "123456", "test@example.com");
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/mfa/complete", {
+        mfaToken: "mfa-token-abc",
+        code: "123456",
+      });
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/identity/me");
+      expect(outcome.status).toBe("ok");
+      expect(outcome.tokens).toEqual(tokensResponse);
+      expect(SecureStorage.setAccessToken).toHaveBeenCalledWith("access-token");
+      expect(SecureStorage.setRefreshToken).toHaveBeenCalledWith("refresh-token");
+      expect(SecureStorage.setUserId).toHaveBeenCalledWith("user-123");
+      expect(SecureStorage.setTenantId).toHaveBeenCalledWith("tenant-123");
+      expect(PreferenceStorage.setLastLoginEmail).toHaveBeenCalledWith("test@example.com");
+    });
+
+    it("does not record a last-login email when none is given", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { status: "ok", tokens: tokensResponse },
+      });
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: meResponse });
+
+      await authService.completeMfa("mfa-token-abc", "123456", null);
+
+      expect(PreferenceStorage.setLastLoginEmail).not.toHaveBeenCalled();
+    });
+
+    it("throws identity.mfa.invalid_code without storing tokens or recording the email", async () => {
+      const invalidCodeError = Object.assign(new Error("Request failed with status code 401"), {
+        response: {
+          status: 401,
+          data: { code: "identity.mfa.invalid_code", detail: "Kod geçersiz." },
+        },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(invalidCodeError);
+
+      await expect(
+        authService.completeMfa("mfa-token-abc", "000000", "test@example.com")
+      ).rejects.toThrow();
+      expect(SecureStorage.setAccessToken).not.toHaveBeenCalled();
+      expect(SecureStorage.setRefreshToken).not.toHaveBeenCalled();
+      expect(PreferenceStorage.setLastLoginEmail).not.toHaveBeenCalled();
+    });
+
+    it("throws identity.mfa.token_expired without storing tokens or establishing a session", async () => {
+      const expiredError = Object.assign(new Error("Request failed with status code 401"), {
+        response: {
+          status: 401,
+          data: { code: "identity.mfa.token_expired", detail: "Süre doldu." },
+        },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(expiredError);
+
+      await expect(
+        authService.completeMfa("mfa-token-abc", "123456", "test@example.com")
+      ).rejects.toThrow();
+      expect(SecureStorage.setAccessToken).not.toHaveBeenCalled();
+      expect(SecureStorage.setRefreshToken).not.toHaveBeenCalled();
+      expect(apiClient.get).not.toHaveBeenCalled();
+      expect(PreferenceStorage.setLastLoginEmail).not.toHaveBeenCalled();
     });
   });
 
@@ -203,6 +286,27 @@ describe("AuthService", () => {
     });
   });
 
+  describe("enableBiometricLogin", () => {
+    it("never logs the raw error object - only a fixed-text dev log - when it fails", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      (PreferenceStorage.getLastLoginEmail as jest.Mock).mockResolvedValue("test@example.com");
+      (SecureStorage.getRefreshToken as jest.Mock).mockResolvedValue("secret-refresh-token");
+      const leakyError = Object.assign(new Error("Biometric authentication failed"), {
+        config: { headers: { Authorization: "Bearer secret-access-token" } },
+      });
+      (biometricService.enableBiometric as jest.Mock).mockRejectedValue(leakyError);
+
+      await expect(authService.enableBiometricLogin()).rejects.toThrow();
+
+      expect(consoleError).toHaveBeenCalledWith("Failed to enable biometric login.");
+      for (const call of consoleError.mock.calls) {
+        expect(call).not.toContain(leakyError);
+        expect(JSON.stringify(call)).not.toMatch(/secret-/);
+      }
+      consoleError.mockRestore();
+    });
+  });
+
   describe("error logging", () => {
     it("never logs the raw error object when logout or /me fail", async () => {
       const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
@@ -223,6 +327,105 @@ describe("AuthService", () => {
         expect(call).not.toContain(leakyError);
         expect(JSON.stringify(call)).not.toMatch(/secret-/);
       }
+      consoleError.mockRestore();
+    });
+
+    it("never logs the raw error object when completeMfa fails (TOTP code, mfaToken)", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const leakyError = Object.assign(new Error("Request failed with status code 401"), {
+        config: { data: '{"mfaToken":"secret-mfa-token","code":"999999"}' },
+        response: { status: 401, data: { code: "identity.mfa.invalid_code" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(leakyError);
+
+      await expect(
+        authService.completeMfa("secret-mfa-token", "999999", "test@example.com")
+      ).rejects.toThrow();
+
+      for (const call of consoleError.mock.calls) {
+        expect(call).not.toContain(leakyError);
+        expect(JSON.stringify(call)).not.toMatch(/secret-mfa-token|999999/);
+      }
+      consoleError.mockRestore();
+    });
+  });
+
+  describe("console.error suppression for expected user errors (B14/B15)", () => {
+    it("does not log to console.error on a 401 invalid-credentials login failure", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const unauthorizedError = Object.assign(new Error("Request failed with status code 401"), {
+        isAxiosError: true,
+        response: { status: 401, data: { code: "auth.invalid_credentials" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(unauthorizedError);
+
+      await expect(authService.login("test@example.com", "wrong")).rejects.toThrow();
+
+      expect(consoleError).not.toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("logs a fixed-text message (never the error object) when login fails unexpectedly (network/5xx)", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const serverError = Object.assign(new Error("Request failed with status code 500"), {
+        isAxiosError: true,
+        response: { status: 500, data: { detail: "Internal error" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(serverError);
+
+      await expect(authService.login("test@example.com", "password123")).rejects.toThrow();
+
+      expect(consoleError).toHaveBeenCalledWith("Login failed.");
+      expect(consoleError).not.toHaveBeenCalledWith(serverError);
+      consoleError.mockRestore();
+    });
+
+    it("does not log to console.error on a 401 invalid_code MFA failure", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const invalidCodeError = Object.assign(new Error("Request failed with status code 401"), {
+        isAxiosError: true,
+        response: { status: 401, data: { code: "identity.mfa.invalid_code" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(invalidCodeError);
+
+      await expect(
+        authService.completeMfa("mfa-token-abc", "000000", "test@example.com")
+      ).rejects.toThrow();
+
+      expect(consoleError).not.toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("does not log to console.error on a 401 token_expired MFA failure", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const expiredError = Object.assign(new Error("Request failed with status code 401"), {
+        isAxiosError: true,
+        response: { status: 401, data: { code: "identity.mfa.token_expired" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(expiredError);
+
+      await expect(
+        authService.completeMfa("mfa-token-abc", "123456", "test@example.com")
+      ).rejects.toThrow();
+
+      expect(consoleError).not.toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it("logs a fixed-text message (never the error object) when completeMfa fails unexpectedly (network/5xx)", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const serverError = Object.assign(new Error("Request failed with status code 503"), {
+        isAxiosError: true,
+        response: { status: 503, data: { detail: "Service unavailable" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(serverError);
+
+      await expect(
+        authService.completeMfa("mfa-token-abc", "123456", "test@example.com")
+      ).rejects.toThrow();
+
+      expect(consoleError).toHaveBeenCalledWith("MFA completion failed.");
+      expect(consoleError).not.toHaveBeenCalledWith(serverError);
       consoleError.mockRestore();
     });
   });

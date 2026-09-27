@@ -43,13 +43,18 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 const login = jest.fn();
 const clearTenantChoices = jest.fn();
+const completeMfa = jest.fn();
+const clearMfaChallenge = jest.fn();
 
 function mockStore(overrides: Partial<ReturnType<typeof useAuthStore>> = {}) {
   (useAuthStore as unknown as jest.Mock).mockReturnValue({
     login,
+    completeMfa,
+    clearMfaChallenge,
     isLoading: false,
     tenantChoices: null,
     clearTenantChoices,
+    mfaToken: null,
     ...overrides,
   });
 }
@@ -166,11 +171,10 @@ describe("LoginScreen", () => {
     expect(allTexts(renderer)).toContain("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
   });
 
-  it("shows the MFA message verbatim when login rejects with it", async () => {
-    const mfaMessage =
-      "İki adımlı doğrulama mobil uygulamada henüz desteklenmiyor. Lütfen web tarayıcısından giriş yapın.";
-    login.mockRejectedValue(new Error(mfaMessage));
-    const renderer = await renderScreen();
+  it("switches to the code-entry step when login resolves mfaRequired, without an error banner", async () => {
+    login.mockResolvedValue({ status: "mfaRequired", mfaToken: "mfa-token-abc" });
+    const props = buildProps();
+    const renderer = await renderScreen(props);
 
     const emailInput = renderer.root.findAll(
       (node) => node.props.placeholder === "ad.soyad@sirket.com"
@@ -188,7 +192,117 @@ describe("LoginScreen", () => {
       findSubmitButton(renderer).props.onPress();
     });
 
-    expect(allTexts(renderer)).toContain(mfaMessage);
+    // The real store would have set `mfaToken` by now - the mock re-renders the screen with it.
+    mockStore({ mfaToken: "mfa-token-abc" });
+    await act(async () => {
+      renderer.update(<LoginScreen {...props} />);
+    });
+
+    expect(allTexts(renderer)).toContain("İki adımlı doğrulama");
+    expect(allTexts(renderer)).not.toContain("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
+  });
+
+  describe("MFA code step", () => {
+    function findCodeInput(renderer: ReactTestRenderer): ReactTestInstance {
+      return renderer.root.findAll((node) => node.props.placeholder === "000000")[0];
+    }
+
+    it("calls completeMfa with the entered 6-digit code", async () => {
+      completeMfa.mockResolvedValue(undefined);
+      mockStore({ mfaToken: "mfa-token-abc" });
+      const renderer = await renderScreen();
+
+      await act(async () => {
+        findCodeInput(renderer).props.onChangeText("123456");
+      });
+      await act(async () => {
+        findSubmitButton(renderer).props.onPress();
+      });
+
+      expect(completeMfa).toHaveBeenCalledWith("123456");
+    });
+
+    it("strips non-digit characters and caps the code at 6 digits", async () => {
+      mockStore({ mfaToken: "mfa-token-abc" });
+      const renderer = await renderScreen();
+
+      await act(async () => {
+        findCodeInput(renderer).props.onChangeText("12-34ab56789");
+      });
+
+      expect(findCodeInput(renderer).props.value).toBe("123456");
+    });
+
+    it("shows a generic message and does not clear the challenge on an invalid code", async () => {
+      completeMfa.mockRejectedValue(
+        Object.assign(new Error("invalid"), {
+          isAxiosError: true,
+          response: { data: { code: "identity.mfa.invalid_code" } },
+        })
+      );
+      mockStore({ mfaToken: "mfa-token-abc" });
+      const renderer = await renderScreen();
+
+      await act(async () => {
+        findCodeInput(renderer).props.onChangeText("000000");
+      });
+      await act(async () => {
+        findSubmitButton(renderer).props.onPress();
+      });
+
+      expect(allTexts(renderer)).toContain("Doğrulama kodu hatalı. Lütfen tekrar deneyin.");
+      expect(clearMfaChallenge).not.toHaveBeenCalled();
+      expect(findCodeInput(renderer).props.value).toBe("");
+    });
+
+    it("clears the challenge and returns to the login form on an expired token", async () => {
+      completeMfa.mockRejectedValue(
+        Object.assign(new Error("expired"), {
+          isAxiosError: true,
+          response: { data: { code: "identity.mfa.token_expired" } },
+        })
+      );
+      const props = buildProps();
+      mockStore({ mfaToken: "mfa-token-abc" });
+      const renderer = await renderScreen(props);
+
+      await act(async () => {
+        findCodeInput(renderer).props.onChangeText("123456");
+      });
+      await act(async () => {
+        findSubmitButton(renderer).props.onPress();
+      });
+
+      expect(clearMfaChallenge).toHaveBeenCalled();
+
+      // The real store would have cleared `mfaToken` by now.
+      mockStore({ mfaToken: null });
+      await act(async () => {
+        renderer.update(<LoginScreen {...props} />);
+      });
+
+      expect(allTexts(renderer)).toContain("Doğrulama süresi doldu. Lütfen tekrar giriş yapın.");
+      expect(allTexts(renderer)).toContain("Tekrar hoş geldiniz");
+    });
+
+    it("cancels the challenge when 'Farklı hesapla giriş yap' is tapped", async () => {
+      mockStore({ mfaToken: "mfa-token-abc" });
+      const renderer = await renderScreen();
+
+      const cancelLink = renderer.root
+        .findAllByType(TouchableOpacity)
+        .find((instance) =>
+          instance
+            .findAllByType(Text)
+            .some((node) => extractText(node.children) === "Farklı hesapla giriş yap")
+        );
+
+      await act(async () => {
+        cancelLink?.props.onPress();
+      });
+
+      expect(clearMfaChallenge).toHaveBeenCalled();
+    });
   });
 
   it("lists tenant choices and logs in with the selected slug when tapped", async () => {

@@ -45,8 +45,9 @@ export class PushNotificationService {
 
       return token.data;
     } catch (error) {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Failed to register push token:", error);
+        console.error("Failed to register push token.");
       }
       throw error;
     }
@@ -93,9 +94,10 @@ export class PushNotificationService {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       return status === "granted";
-    } catch (error) {
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Failed to request notification permissions:", error);
+        console.error("Failed to request notification permissions.");
       }
       return false;
     }
@@ -111,9 +113,10 @@ export class PushNotificationService {
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1 },
       });
-    } catch (error) {
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
       if (__DEV__) {
-        console.error("Failed to send local notification:", error);
+        console.error("Failed to send local notification.");
       }
     }
   }

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
@@ -6,6 +7,18 @@ import { User, AuthTokens, TenantChoice } from "@/types";
 // Paths mirror IdentityRoutes / AuthController.cs and MeController.cs (Sense.Modules.Identity.Api).
 const AUTH_BASE = "/api/v1/identity/auth";
 const ME_PATH = "/api/v1/identity/me";
+
+/**
+ * 401s from an auth call (wrong password, wrong TOTP code, expired MFA challenge, an expired/invalid
+ * access token on `/identity/me` during `checkAuth`) are expected user/session states, not app bugs -
+ * logging them via `console.error` paints a red LogBox screen in dev that looks like a crash
+ * (B14/B15). Genuinely unexpected failures (network, 5xx) still get a fixed-text dev log; the error
+ * object itself is never logged either way (it can carry the `Authorization` header or credentials).
+ * Exported so every auth call site (this service, `authStore`) applies the exact same rule.
+ */
+export function isExpectedAuthFailure(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 401;
+}
 
 /** Wire shape of `AuthTokensDto`. */
 interface AuthTokensResponse {
@@ -38,13 +51,16 @@ interface MeResponse {
   permissions: string[];
 }
 
-/** Outcome of `login()`: session established, or the caller must pick a tenant and call `login` again with `tenantSlug`. */
+/**
+ * Outcome of `login()`: session established, the caller must pick a tenant and call `login` again
+ * with `tenantSlug`, or the account has MFA enabled and `completeMfa(mfaToken, code)` must be
+ * called next (S-5). `completeMfa` itself only ever resolves the "ok" branch - the tenant is
+ * already fixed by the time `LoginHandler` issues an `mfaToken` (see `CompleteMfaLoginHandler`).
+ */
 export type LoginOutcome =
   | { status: "ok"; user: User; tokens: AuthTokens }
-  | { status: "select_tenant"; tenants: TenantChoice[] };
-
-const MFA_NOT_SUPPORTED_MESSAGE =
-  "İki adımlı doğrulama mobil uygulamada henüz desteklenmiyor. Lütfen web tarayıcısından giriş yapın.";
+  | { status: "select_tenant"; tenants: TenantChoice[] }
+  | { status: "mfaRequired"; mfaToken: string };
 
 function toAuthTokens(tokens: AuthTokensResponse): AuthTokens {
   return {
@@ -91,7 +107,10 @@ export class AuthService {
       }
 
       if (result.status === "mfa_required") {
-        throw new Error(MFA_NOT_SUPPORTED_MESSAGE);
+        if (!result.mfaToken) {
+          throw new Error("Beklenmeyen giriş yanıtı.");
+        }
+        return { status: "mfaRequired", mfaToken: result.mfaToken };
       }
 
       if (result.status !== "ok" || !result.tokens) {
@@ -111,9 +130,58 @@ export class AuthService {
 
       return { status: "ok", user, tokens };
     } catch (error) {
-      // Never log the error object: axios errors embed the request password and tokens.
-      if (__DEV__) {
+      // Never log the error object: axios errors embed the request password and tokens. A 401 (wrong
+      // credentials) is expected - see `isExpectedAuthFailure`.
+      if (__DEV__ && !isExpectedAuthFailure(error)) {
         console.error("Login failed.");
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Second step after `login()` resolves `mfaRequired`: exchanges the `mfaToken` + TOTP code for a
+   * session. Mirrors `login()`'s "ok" branch (store tokens, fetch `/me`, remember `email` for
+   * biometric enrollment) - `mfa/complete` never returns `select_tenant`/`mfa_required` again, so an
+   * unexpected status is treated as a contract violation rather than surfaced as a new outcome.
+   * `email` is the address from the original `login()` call (the caller carries it alongside the
+   * `mfaToken`) - passed through only to record it, never logged.
+   */
+  async completeMfa(
+    mfaToken: string,
+    code: string,
+    email: string | null
+  ): Promise<Extract<LoginOutcome, { status: "ok" }>> {
+    try {
+      const response = await apiClient.post<LoginResultResponse>(`${AUTH_BASE}/mfa/complete`, {
+        mfaToken,
+        code,
+      });
+      const result = response.data;
+
+      if (result.status !== "ok" || !result.tokens) {
+        throw new Error("Beklenmeyen giriş yanıtı.");
+      }
+
+      const tokens = toAuthTokens(result.tokens);
+      await SecureStorage.setAccessToken(tokens.accessToken);
+      await SecureStorage.setRefreshToken(tokens.refreshToken);
+
+      const user = await this.fetchAndStoreCurrentUser();
+      if (!user) {
+        throw new Error("Kullanıcı bilgileri alınamadı.");
+      }
+
+      if (email) {
+        await PreferenceStorage.setLastLoginEmail(email);
+      }
+
+      return { status: "ok", user, tokens };
+    } catch (error) {
+      // Never log the error object: axios errors embed the TOTP code and the mfaToken. A 401 (wrong
+      // code, expired challenge) is expected - see `isExpectedAuthFailure`.
+      if (__DEV__ && !isExpectedAuthFailure(error)) {
+        console.error("MFA completion failed.");
       }
       throw error;
     }
@@ -270,8 +338,10 @@ export class AuthService {
       // Enable biometric (will prompt user)
       await biometricService.enableBiometric();
     } catch (error) {
+      // Never log the error object: it can carry a stored refresh token or the biometric prompt's
+      // native error payload.
       if (__DEV__) {
-        console.error("Failed to enable biometric login:", error);
+        console.error("Failed to enable biometric login.");
       }
       throw error;
     }

@@ -54,6 +54,21 @@ function withTopSafeArea<P extends object>(ScreenComponent: React.ComponentType<
   };
 }
 
+/**
+ * Whether the root spinner (full-screen, replaces the whole navigator) should render instead of the
+ * Auth/App navigator stack. Gated ONLY on the initial `checkAuth()` finishing (`appReady`) - never on
+ * `isLoading` from later store actions (`login`, `completeMfa`, `logout`, `refreshToken`,
+ * `loginWithBiometric`). Those set `isLoading` on the SAME screen the user is already looking at;
+ * gating this splash on `isLoading` used to swap the whole navigator out for the spinner the instant
+ * `login`/`completeMfa` started, unmounting `LoginScreen` and wiping its local state (typed
+ * email/password/MFA code, the inline error banner) before the request even resolved - B14/B15.
+ * Those actions show their own inline spinner instead (`LoginScreen`'s submit button).
+ * Exported as a pure function so the fix is unit-testable without mounting the full navigator.
+ */
+export function shouldShowRootSplash(appReady: boolean): boolean {
+  return !appReady;
+}
+
 const DashboardScreenWithTopSafeArea = withTopSafeArea(DashboardScreen);
 const AttendanceScreenWithTopSafeArea = withTopSafeArea(AttendanceScreen);
 const LeaveScreenWithTopSafeArea = withTopSafeArea(LeaveScreen);
@@ -184,16 +199,17 @@ function AppNavigator() {
 }
 
 export function RootNavigator() {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
         await checkAuth();
-      } catch (error) {
+      } catch {
+        // Never log the error object here either - `checkAuth` already stores it in `error` state.
         if (__DEV__) {
-          console.error("Failed to check authentication:", error);
+          console.error("Failed to check authentication.");
         }
       } finally {
         setAppReady(true);
@@ -207,7 +223,7 @@ export function RootNavigator() {
   // screens are white-background, so the same light content would be invisible on them.
   const statusBarStyle = isAuthenticated ? "dark" : "light";
 
-  if (!appReady || isLoading) {
+  if (shouldShowRootSplash(appReady)) {
     return (
       <>
         <StatusBar style={statusBarStyle} />

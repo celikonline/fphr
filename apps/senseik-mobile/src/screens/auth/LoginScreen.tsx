@@ -17,6 +17,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { biometricService } from "@/lib/biometric";
+import { getApiProblem } from "@/lib/apiError";
 import { TenantChoice } from "@/types";
 import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
 import { BrandMark } from "@/components/auth/BrandMark";
@@ -81,11 +82,21 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
+  const [focusedField, setFocusedField] = useState<"email" | "password" | "mfaCode" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState<string | null>(null);
   const passwordRef = useRef<TextInput>(null);
-  const { login, isLoading, tenantChoices, clearTenantChoices } = useAuthStore();
+  const {
+    login,
+    completeMfa,
+    clearMfaChallenge,
+    isLoading,
+    tenantChoices,
+    clearTenantChoices,
+    mfaToken,
+  } = useAuthStore();
 
   useEffect(() => {
     const checkBiometric = async () => {
@@ -112,24 +123,50 @@ export default function LoginScreen({ navigation }: Props) {
     }
 
     try {
-      // Resolves to "ok" (store marks the session authenticated - navigation reacts to that) or
-      // "select_tenant" (store fills `tenantChoices`, rendered below instead of the form).
+      // Resolves to "ok" (store marks the session authenticated - navigation reacts to that),
+      // "select_tenant" (store fills `tenantChoices`, rendered below instead of the form), or
+      // "mfaRequired" (store fills `mfaToken`, the code-entry step below replaces the form).
       await login(email, password, tenantSlug);
-    } catch (error) {
-      // Generic message for credential failures: backend/axios errors can leak status codes, hosts or
-      // endpoint details into screenshots, and precise messages enable user enumeration. The MFA-not-
-      // supported message is safe to show verbatim (no account/session details).
-      const message = error instanceof Error && error.message ? error.message : "";
-      setFormError(
-        message.startsWith("İki adımlı doğrulama")
-          ? message
-          : "E-posta veya şifre hatalı. Lütfen tekrar deneyin."
-      );
+    } catch {
+      // Generic message: backend/axios errors can leak status codes, hosts or endpoint details into
+      // screenshots, and precise messages enable user enumeration.
+      setFormError("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
     }
   };
 
   const handleSelectTenant = (tenant: TenantChoice) => {
     void handleLogin(tenant.slug);
+  };
+
+  const handleMfaCodeChange = (value: string) => {
+    setMfaCode(value.replace(/[^0-9]/g, "").slice(0, 6));
+    if (mfaError) setMfaError(null);
+  };
+
+  const handleMfaSubmit = async () => {
+    if (mfaCode.length !== 6) return;
+
+    try {
+      await completeMfa(mfaCode);
+    } catch (error) {
+      const problem = getApiProblem(error);
+      if (problem?.code === "identity.mfa.token_expired") {
+        // The challenge itself expired (not the code): only a fresh login can issue a new one.
+        clearMfaChallenge();
+        setMfaCode("");
+        setFormError("Doğrulama süresi doldu. Lütfen tekrar giriş yapın.");
+      } else {
+        setMfaCode("");
+        setMfaError("Doğrulama kodu hatalı. Lütfen tekrar deneyin.");
+      }
+    }
+  };
+
+  const handleCancelMfa = () => {
+    setFormError(null);
+    setMfaError(null);
+    setMfaCode("");
+    clearMfaChallenge();
   };
 
   const handleBiometricLogin = () => {
@@ -156,7 +193,62 @@ export default function LoginScreen({ navigation }: Props) {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            {tenantChoices ? (
+            {mfaToken ? (
+              <>
+                <View style={styles.heroCompact}>
+                  <BrandMark size={56} />
+                  <Wordmark />
+                </View>
+                <Panel>
+                  <Text style={styles.panelTitle}>İki adımlı doğrulama</Text>
+                  <Text style={styles.panelSubtitle}>
+                    Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.
+                  </Text>
+                  {mfaError && <ErrorBanner message={mfaError} />}
+                  <AuthField label="DOĞRULAMA KODU" focused={focusedField === "mfaCode"}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="000000"
+                      placeholderTextColor="rgba(211,236,253,0.45)"
+                      selectionColor={palette.brand}
+                      value={mfaCode}
+                      onChangeText={handleMfaCodeChange}
+                      onFocus={() => setFocusedField("mfaCode")}
+                      onBlur={() => setFocusedField(null)}
+                      editable={!isLoading}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      textContentType="oneTimeCode"
+                      returnKeyType="done"
+                      onSubmitEditing={() => handleMfaSubmit()}
+                    />
+                  </AuthField>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      pressed && styles.primaryButtonPressed,
+                    ]}
+                    onPress={() => handleMfaSubmit()}
+                    disabled={isLoading || mfaCode.length !== 6}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color={palette.white} />
+                    ) : (
+                      <Text style={styles.primaryButtonText}>Doğrula</Text>
+                    )}
+                  </Pressable>
+                  <TouchableOpacity
+                    onPress={handleCancelMfa}
+                    disabled={isLoading}
+                    style={styles.secondaryLink}
+                  >
+                    <Text style={styles.secondaryLinkText}>Farklı hesapla giriş yap</Text>
+                  </TouchableOpacity>
+                </Panel>
+                <Footer />
+              </>
+            ) : tenantChoices ? (
               <>
                 <View style={styles.heroCompact}>
                   <BrandMark size={56} />

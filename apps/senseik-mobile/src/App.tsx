@@ -64,9 +64,10 @@ export default function App() {
             }
           }
         );
-      } catch (error) {
+      } catch {
+        // Never log the raw error object (app-wide rule - see AuthService.ts).
         if (__DEV__) {
-          console.error("Failed to initialize app:", error);
+          console.error("Failed to initialize app.");
         }
       }
     };
