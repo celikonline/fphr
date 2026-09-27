@@ -11,7 +11,12 @@ import {
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
-import { leaveService, type OvertimeRequest } from "@/services/LeaveService";
+import {
+  leaveService,
+  OVERTIME_DEFAULT_PAY_RATE_KIND,
+  type OvertimePayRateKind,
+  type OvertimeRequest,
+} from "@/services/LeaveService";
 import { DateField } from "@/components/form/DateField";
 import { TimeField } from "@/components/form/TimeField";
 import { formatDurationMinutes, toLocalDateOnly } from "@/lib/formatters";
@@ -27,6 +32,15 @@ import { getApiErrorMessage } from "@/lib/apiError";
 function todayDateOnly(): string {
   return toLocalDateOnly(new Date());
 }
+
+/**
+ * TK-031 (web parity): labels mirror `web/public/locales/tr/leave.json`'s `overtime.payRate.*`
+ * (4857 md.41 - `OvertimePayRateKind` doc comment in `LeaveService.ts` has the legal detail).
+ */
+export const OVERTIME_PAY_RATE_LABELS: Record<OvertimePayRateKind, string> = {
+  rate50: "%50 fazlası (fazla mesai)",
+  rate25: "%25 fazlası (fazla sürelerle çalışma)",
+};
 
 /** `SubmitMyOvertimeRequestValidator`: duration must be `1..OvertimeLimits.MaxDurationMinutes`. */
 export function canSubmitOvertimeRequest(params: { durationText: string }): boolean {
@@ -45,6 +59,9 @@ export default function OvertimeRequestSection() {
   const [startTime, setStartTime] = useState("18:00");
   const [durationText, setDurationText] = useState("");
   const [description, setDescription] = useState("");
+  const [payRateKind, setPayRateKind] = useState<OvertimePayRateKind>(
+    OVERTIME_DEFAULT_PAY_RATE_KIND
+  );
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -74,9 +91,11 @@ export default function OvertimeRequestSection() {
         startTime,
         durationMinutes,
         description: description.trim().length > 0 ? description.trim() : null,
+        payRateKind,
       });
       setDurationText("");
       setDescription("");
+      setPayRateKind(OVERTIME_DEFAULT_PAY_RATE_KIND);
       if (result.warnings.length > 0) {
         Alert.alert("Talep gönderildi", result.warnings.map(overtimeWarningLabel).join("\n\n"));
       }
@@ -156,6 +175,24 @@ export default function OvertimeRequestSection() {
       {durationPreview !== null && isOvertimeDurationValid(durationPreview) && (
         <Text style={styles.previewText}>{formatDurationMinutes(durationPreview)}</Text>
       )}
+
+      <Text style={styles.fieldLabel}>Ücret oranı</Text>
+      <View style={styles.payRateRow}>
+        {(Object.keys(OVERTIME_PAY_RATE_LABELS) as OvertimePayRateKind[]).map((kind) => {
+          const selected = kind === payRateKind;
+          return (
+            <TouchableOpacity
+              key={kind}
+              style={[styles.payRateChip, selected && styles.payRateChipSelected]}
+              onPress={() => setPayRateKind(kind)}
+            >
+              <Text style={[styles.payRateChipText, selected && styles.payRateChipTextSelected]}>
+                {OVERTIME_PAY_RATE_LABELS[kind]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       <Text style={styles.fieldLabel}>Açıklama (opsiyonel)</Text>
       <TextInput
@@ -240,6 +277,31 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
+  },
+  payRateRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  payRateChip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.gray50,
+  },
+  payRateChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  payRateChipText: {
+    ...typography.bodySm,
+    color: colors.text,
+  },
+  payRateChipTextSelected: {
+    color: colors.white,
   },
   input: {
     borderWidth: 1,

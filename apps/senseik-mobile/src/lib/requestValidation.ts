@@ -20,6 +20,12 @@ export function isPositiveAmount(amount: number): boolean {
 /** `ExpenseLimits.MaxReceiptDateDaysAhead` (`ExpenseDomainErrors.cs:53`) - a receipt may be dated at most 1 day ahead of today. */
 const MAX_RECEIPT_DATE_DAYS_AHEAD = 1;
 
+/**
+ * Client-side sanity ceiling for the number of items in one expense claim - `ExpenseLimits`
+ * (`ExpenseDomainErrors.cs`) has no server-side cap on item count, only per-item amount/date rules.
+ */
+export const EXPENSE_CLAIM_MAX_ITEMS = 20;
+
 export function isReceiptDateAllowed(receiptDate: string, today: Date = new Date()): boolean {
   const max = atMidnight(today);
   max.setDate(max.getDate() + MAX_RECEIPT_DATE_DAYS_AHEAD);

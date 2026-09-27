@@ -205,7 +205,11 @@ const OVERTIME_BASE = `${LEAVE_BASE}/me/overtimes`;
 /** Mirrors `OvertimeRequestStatus` (Sense.Modules.Leave.Domain.Overtime), camelCase JsonStringEnumConverter. */
 export type OvertimeRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
 
-/** 4857 md.41 ücret oranı (%25/%50) - TK-031 decision #4: never shown to the employee to pick, always `rate50` (the company default, matching web's `OvertimeRequestBody.PayRateKind = Rate50` default). */
+/**
+ * 4857 md.41 ücret oranı: Rate50 = %50 fazlası (asıl m.41 fazla çalışma, haftalık 45 saati aşan
+ * kısım - varsayılan), Rate25 = %25 fazlası (fazla sürelerle çalışma, sözleşmeyle kısaltılmış
+ * haftalık süre üstü). Mirrors web's `OvertimePayRateKind` (`web/src/services/leave.service.ts`).
+ */
 export type OvertimePayRateKind = "rate25" | "rate50";
 
 export const OVERTIME_DEFAULT_PAY_RATE_KIND: OvertimePayRateKind = "rate50";
@@ -338,10 +342,10 @@ export class LeaveService {
   }
 
   /**
-   * TK-031: submits an overtime request. `payRateKind` defaults to `rate50` (decision #4 - never
-   * offered as a choice in the mobile form) - sent explicitly rather than relying on the backend's
-   * own C# default parameter, since that default only applies when System.Text.Json can resolve it
-   * from the record's constructor, which is more fragile to depend on across API versions.
+   * TK-031 (web parity): submits an overtime request. The form lets the employee pick `payRateKind`
+   * (defaulting to `rate50`); it's sent explicitly here rather than relying on the backend's own C#
+   * default parameter, since that default only applies when System.Text.Json can resolve it from
+   * the record's constructor, which is more fragile to depend on across API versions.
    */
   async submitOvertimeRequest(input: OvertimeRequestInput): Promise<OvertimeSubmissionResult> {
     const response = await apiClient.post<OvertimeSubmissionResult>(OVERTIME_BASE, {

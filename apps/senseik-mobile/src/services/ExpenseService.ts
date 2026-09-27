@@ -57,7 +57,7 @@ export interface ExpenseClaim {
   items: ExpenseItem[];
 }
 
-/** `AddExpenseItemRequest` body - v1 is single-item, so `receiptFileId` is never sent (no photo upload yet). */
+/** `AddExpenseItemRequest` body - `receiptFileId` is never sent from mobile (no photo upload yet - web doesn't upload one either, see `ExpenseClaimSection.tsx`'s doc comment). */
 export interface AddExpenseItemInput {
   categoryId: string;
   amount: number;
@@ -96,7 +96,7 @@ export interface CreateAdvanceRequestInput {
 }
 
 /**
- * Thrown by `submitSingleItemExpenseClaim` when the draft claim was created but a later step (add
+ * Thrown by `submitExpenseClaim` when the draft claim was created but a later step (adding an
  * item / submit) failed. `ExpenseClaimsController.cs` has no claim-level `DELETE` (only a
  * per-item one), so a half-finished draft can't be cleaned up from mobile - the caller must tell
  * the user the draft exists and point them at the web app to finish or discard it, never fail
@@ -133,23 +133,29 @@ export class ExpenseService {
     return response.data;
   }
 
-  private async submitExpenseClaim(claimId: string): Promise<void> {
+  private async finalizeExpenseClaim(claimId: string): Promise<void> {
     await apiClient.post(`${EXPENSE_BASE}/claims/${claimId}/submit`);
   }
 
   /**
-   * v1 single-item flow (senseik-mobile TK-031 decision #2): draft -> add the one item -> submit.
-   * If adding the item or submitting fails, throws `ExpenseClaimDraftIncompleteError` carrying the
-   * already-created `claimId` instead of swallowing the error - see that class's doc comment for why
-   * mobile can't just delete the draft itself.
+   * Web-parity multi-item flow (TK-031 follow-up): draft -> add each item in order -> submit. Items
+   * are added sequentially (not `Promise.all`) so the request order is deterministic and a failure
+   * partway through leaves a predictable, testable set of already-added items. If adding an item or
+   * the final submit fails, throws `ExpenseClaimDraftIncompleteError` carrying the already-created
+   * `claimId` instead of swallowing the error - see that class's doc comment for why mobile can't
+   * just delete the draft itself.
    */
-  async submitSingleItemExpenseClaim(
-    input: AddExpenseItemInput & { description?: string | null }
-  ): Promise<string> {
-    const claimId = await this.createExpenseClaimDraft(input.description ?? null);
+  async submitExpenseClaim(items: AddExpenseItemInput[]): Promise<string> {
+    if (items.length === 0) {
+      throw new Error("submitExpenseClaim requires at least one item.");
+    }
+
+    const claimId = await this.createExpenseClaimDraft(null);
     try {
-      await this.addExpenseItem(claimId, input);
-      await this.submitExpenseClaim(claimId);
+      for (const item of items) {
+        await this.addExpenseItem(claimId, item);
+      }
+      await this.finalizeExpenseClaim(claimId);
       return claimId;
     } catch (error) {
       throw new ExpenseClaimDraftIncompleteError(claimId, error);
