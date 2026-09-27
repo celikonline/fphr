@@ -14,6 +14,12 @@ export const PUNCH_LABELS: Record<PunchAction, { tile: string; action: string }>
   breakEnd: { tile: "Mola sonu", action: "Molayı bitir" },
 };
 
+/** QR button label: the scan records `next`, so it names that punch ("QR ile çıkış yap"). */
+export function qrButtonLabel(next: PunchAction | "done"): string {
+  if (next === "done") return "QR kodu okut";
+  return `QR ile ${PUNCH_LABELS[next].action.toLocaleLowerCase("tr-TR")}`;
+}
+
 /** Spec §6: location accuracy at or below this many meters reads as "Doğru". */
 const ACCURATE_METERS = 50;
 

@@ -6,6 +6,7 @@ import {
   formatGmtOffset,
   nextPunchAction,
   punchTimes,
+  qrButtonLabel,
   shouldRenderMap,
 } from "@/lib/punch";
 
@@ -85,6 +86,18 @@ describe("accuracyLabel", () => {
     expect(accuracyLabel(null)).toBeNull();
     expect(accuracyLabel(undefined)).toBeNull();
   });
+});
+
+describe("qrButtonLabel", () => {
+  it("names the punch the scan will record", () => {
+    expect(qrButtonLabel("in")).toBe("QR ile giriş yap");
+    expect(qrButtonLabel("out")).toBe("QR ile çıkış yap");
+    expect(qrButtonLabel("breakStart")).toBe("QR ile molaya başla");
+    expect(qrButtonLabel("breakEnd")).toBe("QR ile molayı bitir");
+  });
+
+  it("falls back to a neutral label once the day is done", () =>
+    expect(qrButtonLabel("done")).toBe("QR kodu okut"));
 });
 
 describe("shouldRenderMap", () => {

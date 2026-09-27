@@ -10,6 +10,7 @@ import {
   availableActions,
   nextPunchAction,
   punchTimes,
+  qrButtonLabel,
   shouldRenderMap,
   type PunchAction,
 } from "@/lib/punch";
@@ -141,7 +142,8 @@ export default function CheckInScreen() {
 
   async function onRefresh() {
     setRefreshing(true);
-    location.retry();
+    // Never `retry` here: after "unavailable" that would reopen the declined accuracy dialog.
+    location.recheck();
     await loadStatus();
     setRefreshing(false);
   }
@@ -245,7 +247,7 @@ export default function CheckInScreen() {
               />
             ) : null}
             <PrimaryButton
-              label="QR ile giriş yap"
+              label={qrButtonLabel(next)}
               variant="secondary"
               icon="qr-code-outline"
               onPress={() => void startScan()}
