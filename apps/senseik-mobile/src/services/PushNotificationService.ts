@@ -1,7 +1,12 @@
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 import { apiClient } from "@/lib/apiClient";
-import { SecureStorage } from "@/lib/storage";
 import { NotificationPayload } from "@/types";
+
+// Paths mirror MyNotificationsController (Sense.Modules.Notifications.Api) - see
+// docs/implementation/push-bildirimleri-tasarim.md §2.
+const DEVICES_PATH = "/api/v1/notifications/my/devices";
+const DEVICES_REVOKE_PATH = "/api/v1/notifications/my/devices/revoke";
 
 // Set notification handler
 Notifications.setNotificationHandler({
@@ -16,6 +21,12 @@ Notifications.setNotificationHandler({
 export class PushNotificationService {
   private listenerRef: Notifications.Subscription | null = null;
   private responseListenerRef: Notifications.Subscription | null = null;
+  /**
+   * Token most recently confirmed as registered with the backend, kept in memory only. Used by
+   * `unregisterPushToken` (logout, best-effort revoke). Not persisted: a fresh app launch always
+   * re-registers via `registerPushToken` before a revoke could ever be needed.
+   */
+  private registeredToken: string | null = null;
 
   /**
    * `EXPO_PUBLIC_PROJECT_ID` is unset in dev builds (no EAS project configured yet) - this is
@@ -37,11 +48,7 @@ export class PushNotificationService {
 
       // Never log the push token: it addresses this device and is readable via logcat.
 
-      // Send to backend
-      const userId = await SecureStorage.getUserId();
-      if (userId) {
-        await this.uploadPushToken(userId, token.data);
-      }
+      await this.uploadPushToken(token.data);
 
       return token.data;
     } catch (error) {
@@ -53,19 +60,40 @@ export class PushNotificationService {
     }
   }
 
-  // BACKEND UCU YOK: `/api/users/{id}/push-tokens` henüz Identity/Employee API'sinde tanımlı değil
-  // (ayrı bir iş - bkz. B1). Uç eklenene kadar bu istek her zaman 404 dönecek; sessizce yutulur ki
-  // giriş/izin akışı bundan etkilenmesin.
-  private async uploadPushToken(userId: string, token: string): Promise<void> {
+  /**
+   * Upserts this device's token (`POST /devices`, Bearer-authenticated, idempotent - see
+   * push-bildirimleri-tasarim.md §2.1). `deviceName` is intentionally omitted: it would require the
+   * `expo-device` native module, which isn't a dependency of this app.
+   */
+  private async uploadPushToken(token: string): Promise<void> {
     try {
-      await apiClient.post(`/api/users/${encodeURIComponent(userId)}/push-tokens`, {
+      await apiClient.post(DEVICES_PATH, {
         token,
-        type: "expo",
+        platform: Platform.OS,
       });
+      this.registeredToken = token;
     } catch {
       // Don't throw - continue even if backend upload fails. Never logged (B7: console.warn
       // renders as an on-screen LogBox banner in dev, not just a terminal line; the axios error
       // object must never be logged either way, since it can carry auth headers).
+    }
+  }
+
+  /**
+   * Best-effort revoke of this device's token (`POST /devices/revoke`), called from
+   * `AuthService.logout()` while the Bearer token is still valid. No-op if this device never
+   * successfully registered a token. Never throws - logout must complete regardless.
+   */
+  async unregisterPushToken(): Promise<void> {
+    const token = this.registeredToken;
+    if (!token) {
+      return;
+    }
+
+    try {
+      await apiClient.post(DEVICES_REVOKE_PATH, { token });
+    } catch {
+      // Never log the raw error object (app-wide rule - see AuthService.ts).
     }
   }
 

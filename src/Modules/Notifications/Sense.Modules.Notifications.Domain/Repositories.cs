@@ -1,5 +1,6 @@
 using Sense.Modules.Notifications.Domain.Deliveries;
 using Sense.Modules.Notifications.Domain.Preferences;
+using Sense.Modules.Notifications.Domain.PushDevices;
 using Sense.Modules.Notifications.Domain.UserNotifications;
 
 namespace Sense.Modules.Notifications.Domain;
@@ -40,6 +41,22 @@ public interface INotificationPreferenceRepository
     Task<IReadOnlyList<NotificationPreference>> ListForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<NotificationPreference>> ListForUsersAsync(IReadOnlyCollection<Guid> userIds, string templateKey, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// PushDeviceToken repository. <see cref="FindActiveByTokenAsync"/> deliberately ignores tenant filtering: a token
+/// belongs to one physical device across tenants (see <see cref="PushDeviceToken"/> remarks), not to a single
+/// tenant, so a device handed to an employee in a different tenant must still be found and revoked.
+/// </summary>
+public interface IPushDeviceTokenRepository
+{
+    void Add(PushDeviceToken token);
+
+    /// <summary>Tracked; the single active (RevokedAt == null) row for this token, across tenants, or null.</summary>
+    Task<PushDeviceToken?> FindActiveByTokenAsync(string token, CancellationToken cancellationToken = default);
+
+    /// <summary>This user's active devices in the current tenant (Worker fan-out at send time).</summary>
+    Task<IReadOnlyList<PushDeviceToken>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

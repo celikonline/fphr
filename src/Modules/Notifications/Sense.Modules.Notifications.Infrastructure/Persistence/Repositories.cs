@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Notifications.Domain;
 using Sense.Modules.Notifications.Domain.Deliveries;
 using Sense.Modules.Notifications.Domain.Preferences;
+using Sense.Modules.Notifications.Domain.PushDevices;
 using Sense.Modules.Notifications.Domain.UserNotifications;
 
 namespace Sense.Modules.Notifications.Infrastructure.Persistence;
@@ -71,4 +72,22 @@ public sealed class NotificationPreferenceRepository(NotificationsDbContext cont
             .Where(p => ids.Contains(p.UserId) && p.TemplateKey == templateKey)
             .ToListAsync(cancellationToken);
     }
+}
+
+/// <summary>
+/// EF Core-backed PushDeviceToken repository. <see cref="FindActiveByTokenAsync"/> ignores the tenant query filter
+/// on purpose (see the interface's remarks); everything else stays tenant-scoped.
+/// </summary>
+public sealed class PushDeviceTokenRepository(NotificationsDbContext context) : IPushDeviceTokenRepository
+{
+    public void Add(PushDeviceToken token) => context.PushDeviceTokens.Add(token);
+
+    public Task<PushDeviceToken?> FindActiveByTokenAsync(string token, CancellationToken cancellationToken = default) =>
+        context.PushDeviceTokens.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Token == token && t.RevokedAt == null, cancellationToken);
+
+    public async Task<IReadOnlyList<PushDeviceToken>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        await context.PushDeviceTokens.AsNoTracking()
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ToListAsync(cancellationToken);
 }

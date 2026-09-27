@@ -2,10 +2,12 @@ import { authService } from "@/services/AuthService";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
+import { pushNotificationService } from "@/services/PushNotificationService";
 
 jest.mock("@/lib/apiClient");
 jest.mock("@/lib/storage");
 jest.mock("@/lib/biometric");
+jest.mock("@/services/PushNotificationService");
 
 // Mirrors MeDto (Sense.Modules.Identity.Application/Dtos.cs).
 const meResponse = {
@@ -228,6 +230,36 @@ describe("AuthService", () => {
         allSessions: false,
       });
       expect(SecureStorage.clearAll).toHaveBeenCalled();
+    });
+
+    it("revokes this device's push token before clearing local storage (Bearer still valid)", async () => {
+      (SecureStorage.getRefreshToken as jest.Mock).mockResolvedValue("refresh-token");
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: {} });
+      const callOrder: string[] = [];
+      (pushNotificationService.unregisterPushToken as jest.Mock).mockImplementation(async () => {
+        callOrder.push("unregisterPushToken");
+      });
+      (SecureStorage.clearAll as jest.Mock).mockImplementation(async () => {
+        callOrder.push("clearAll");
+      });
+
+      await authService.logout();
+
+      expect(pushNotificationService.unregisterPushToken).toHaveBeenCalled();
+      expect(callOrder).toEqual(["unregisterPushToken", "clearAll"]);
+    });
+
+    it("completes local logout even when unregisterPushToken rejects", async () => {
+      (SecureStorage.getRefreshToken as jest.Mock).mockResolvedValue("refresh-token");
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: {} });
+      (pushNotificationService.unregisterPushToken as jest.Mock).mockRejectedValue(
+        new Error("network")
+      );
+
+      await expect(authService.logout()).resolves.toBeUndefined();
+
+      expect(SecureStorage.clearAll).toHaveBeenCalled();
+      expect(biometricService.disableBiometric).toHaveBeenCalled();
     });
   });
 

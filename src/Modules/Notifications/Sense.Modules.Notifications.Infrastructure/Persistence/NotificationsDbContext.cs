@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Notifications.Domain;
 using Sense.Modules.Notifications.Domain.Deliveries;
 using Sense.Modules.Notifications.Domain.Preferences;
+using Sense.Modules.Notifications.Domain.PushDevices;
 using Sense.Modules.Notifications.Domain.UserNotifications;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -23,6 +24,8 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
 
     public DbSet<NotificationPreference> Preferences => Set<NotificationPreference>();
 
+    public DbSet<PushDeviceToken> PushDeviceTokens => Set<PushDeviceToken>();
+
     Task INotificationsUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) => SaveChangesAsync(cancellationToken);
 }
 
@@ -31,6 +34,7 @@ internal static class NotificationsTables
     public const string UserNotifications = "user_notifications";
     public const string Deliveries = "notification_deliveries";
     public const string Preferences = "notification_preferences";
+    public const string PushDeviceTokens = "push_device_tokens";
 }
 
 public sealed class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotification>
@@ -93,5 +97,25 @@ public sealed class NotificationPreferenceConfiguration : IEntityTypeConfigurati
         b.Property(x => x.Channel).HasMaxLength(NotificationsLimits.ChannelMaxLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.UserId, x.TemplateKey, x.Channel }).IsUnique();
+    }
+}
+
+public sealed class PushDeviceTokenConfiguration : IEntityTypeConfiguration<PushDeviceToken>
+{
+    public void Configure(EntityTypeBuilder<PushDeviceToken> b)
+    {
+        b.ToTable(NotificationsTables.PushDeviceTokens);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Token).HasMaxLength(NotificationsLimits.PushTokenMaxLength).IsRequired();
+        b.Property(x => x.Platform).HasMaxLength(NotificationsLimits.PushPlatformMaxLength).IsRequired();
+        b.Property(x => x.DeviceName).HasMaxLength(NotificationsLimits.DeviceNameMaxLength);
+
+        // A token belongs to one device; only one active (non-revoked) owner at a time.
+        b.HasIndex(x => x.Token).IsUnique().HasFilter("revoked_at IS NULL");
+
+        // Worker fan-out: this user's active devices.
+        b.HasIndex(x => new { x.TenantId, x.UserId }).HasFilter("revoked_at IS NULL");
     }
 }

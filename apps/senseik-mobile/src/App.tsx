@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { pushNotificationService } from "@/services/PushNotificationService";
 import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
+import { useAuthStore } from "@/store/authStore";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
 const FOREGROUND_BANNER_DURATION_MS = 4000;
@@ -26,6 +27,7 @@ interface ForegroundBanner {
 
 export default function App() {
   const [foregroundBanner, setForegroundBanner] = useState<ForegroundBanner | null>(null);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
     if (!foregroundBanner) {
@@ -34,6 +36,17 @@ export default function App() {
     const timeoutId = setTimeout(() => setForegroundBanner(null), FOREGROUND_BANNER_DURATION_MS);
     return () => clearTimeout(timeoutId);
   }, [foregroundBanner]);
+
+  // Registers this device's push token right after a successful login/MFA completion/biometric
+  // login (isAuthenticated flips to true) - the app-start effect below only covers a cold start
+  // where a session already existed. Fire-and-forget: registerPushToken already handles/logs its
+  // own failures (see PushNotificationService.ts) and must never block the auth flow.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    pushNotificationService.registerPushToken().catch(() => undefined);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const initializeApp = async () => {

@@ -59,6 +59,7 @@ public sealed partial class NotificationPublisher(
         var now = clock.GetUtcNow().UtcDateTime;
         var created = new List<UserNotification>();
         var queuedAddresses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var queuedPushUserIds = new HashSet<Guid>();
 
         foreach (var recipient in request.Recipients)
         {
@@ -82,6 +83,15 @@ public sealed partial class NotificationPublisher(
                     tenantId, request.SourceEventId, request.TemplateKey, NotificationChannels.Email, recipient.EmployeeId, recipient.UserId,
                     email, recipient.DisplayName, source, recipient.Language, JsonSerializer.Serialize(model, JsonOptions), now));
             }
+
+            if (recipient.UserId is { } pushUserId && Enabled(pushUserId, NotificationChannels.Push)
+                && queuedPushUserIds.Add(pushUserId)
+                && !await deliveries.ExistsAsync(request.SourceEventId, request.TemplateKey, NotificationChannels.Push, pushUserId.ToString(), ct))
+            {
+                deliveries.Add(new NotificationDelivery(
+                    tenantId, request.SourceEventId, request.TemplateKey, NotificationChannels.Push, recipient.EmployeeId, pushUserId,
+                    pushUserId.ToString(), recipient.DisplayName, AddressSources.UserId, recipient.Language, JsonSerializer.Serialize(model, JsonOptions), now));
+            }
         }
 
         await unitOfWork.SaveChangesAsync(ct);
@@ -91,7 +101,7 @@ public sealed partial class NotificationPublisher(
             await realtime.NotifyUserAsync(notification.UserId, UserNotificationDto.From(notification), ct);
         }
 
-        Log.Published(logger, request.TemplateKey, request.SourceEventId, created.Count, queuedAddresses.Count);
+        Log.Published(logger, request.TemplateKey, request.SourceEventId, created.Count, queuedAddresses.Count, queuedPushUserIds.Count);
     }
 
     /// <summary>JSON-stored string model → template model (plain object values).</summary>
@@ -114,7 +124,7 @@ public sealed partial class NotificationPublisher(
 
     private static partial class Log
     {
-        [LoggerMessage(EventId = 4100, Level = LogLevel.Debug, Message = "Notification {TemplateKey} for event {SourceEventId}: {InAppCount} in-app created, {EmailCount} e-mail recipients")]
-        public static partial void Published(ILogger logger, string templateKey, Guid sourceEventId, int inAppCount, int emailCount);
+        [LoggerMessage(EventId = 4100, Level = LogLevel.Debug, Message = "Notification {TemplateKey} for event {SourceEventId}: {InAppCount} in-app created, {EmailCount} e-mail recipients, {PushCount} push recipients")]
+        public static partial void Published(ILogger logger, string templateKey, Guid sourceEventId, int inAppCount, int emailCount, int pushCount);
     }
 }

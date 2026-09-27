@@ -16,6 +16,9 @@ public static class AddressSources
     public const string WorkEmail = "work_email";
     public const string PersonalEmail = "personal_email";
     public const string UserEmail = "user_email";
+
+    /// <summary>Push deliveries: RecipientAddress is the user id, not an e-mail address (see NotificationPublisher).</summary>
+    public const string UserId = "user_id";
 }
 
 /// <summary>Employee ids → recipients (contact data from Employee, account/language from Identity). Terminated employees are dropped.</summary>
