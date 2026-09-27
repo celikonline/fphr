@@ -21,6 +21,10 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
   const [failed, setFailed] = useState(false);
   // A successful login swaps the whole navigator (this screen unmounts) - never set state after it.
   const mountedRef = useRef(true);
+  // Ref guard (not state): the mount effect and "Tekrar dene" can both call `attemptBiometric`, and
+  // a rapid double tap must be rejected synchronously - a state flag would still read stale on the
+  // second call within the same event loop tick.
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -30,10 +34,14 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
   }, []);
 
   const attemptBiometric = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     try {
       await loginWithBiometric(email);
     } catch {
       if (mountedRef.current) setFailed(true);
+    } finally {
+      inFlightRef.current = false;
     }
   }, [email, loginWithBiometric]);
 

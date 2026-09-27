@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
+import { authService } from "@/services/AuthService";
 import { AuthFormError } from "@/components/auth/AuthForm";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -13,26 +14,43 @@ import { palette, tones } from "@/theme/theme";
 type Props = NativeStackScreenProps<AuthStackParamList, "ForgotPassword">;
 
 const EMPTY_EMAIL_ERROR = "Lütfen e-posta adresinizi girin";
-// Generic message without echoing the address: the screen performs no request yet, and
-// confirming a specific address enables account enumeration.
+// Generic message without echoing the address, and shown regardless of whether the request
+// succeeds for a registered or unregistered e-mail: the backend always answers 204 either way, so
+// confirming a specific address here would enable account enumeration.
 const SENT_MESSAGE = "E-posta kayıtlıysa sıfırlama bağlantısı gönderildi.";
+const NETWORK_ERROR = "İstek gönderilemedi. Lütfen tekrar deneyin.";
 
 export default function ForgotPasswordScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Ref guard (not state): a second rapid tap must be rejected synchronously, before React has a
+  // chance to re-render with the disabled button - see BiometricPromptScreen's `inFlightRef`.
+  const submittingRef = useRef(false);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (error) setError(null);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    if (submittingRef.current) return;
     if (!email) {
       setError(EMPTY_EMAIL_ERROR);
       return;
     }
-    setSent(true);
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      await authService.forgotPassword(email);
+      setSent(true);
+    } catch {
+      setError(NETWORK_ERROR);
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   if (sent) {
@@ -77,7 +95,12 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           />
         </View>
         <View style={styles.submit}>
-          <PrimaryButton label="Sıfırlama bağlantısı gönder" onPress={handleReset} />
+          <PrimaryButton
+            label="Sıfırlama bağlantısı gönder"
+            onPress={() => void handleReset()}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          />
         </View>
         <TouchableOpacity
           style={authStyles.secondaryLink}

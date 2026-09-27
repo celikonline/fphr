@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import ForgotPasswordScreen from "@/screens/auth/ForgotPasswordScreen";
 import BiometricPromptScreen from "@/screens/auth/BiometricPromptScreen";
 import { useAuthStore } from "@/store/authStore";
+import { authService } from "@/services/AuthService";
 import type { AuthStackParamList } from "@/types/navigation";
 
 // Same stub as LoginScreen.test: reanimated v4's real module throws outside a native runtime.
@@ -35,6 +36,7 @@ jest.mock("react-native-reanimated", () => {
 // Ionicons checks expo-font's isLoaded, which the shared expo-font mock (setup.ts) lacks.
 jest.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
 jest.mock("@/store/authStore");
+jest.mock("@/services/AuthService", () => ({ authService: { forgotPassword: jest.fn() } }));
 
 function render(element: React.ReactElement): ReactTestRenderer {
   let renderer!: ReactTestRenderer;
@@ -64,17 +66,19 @@ describe("ForgotPasswordScreen", () => {
 
   beforeEach(() => {
     goBack.mockClear();
+    (authService.forgotPassword as jest.Mock).mockReset();
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
   });
 
   afterEach(() => jest.restoreAllMocks());
 
-  it("shows an inline error (no native alert) and stays on the screen when it is empty", () => {
+  it("shows an inline error (no native alert), stays on the screen and makes no request when it is empty", () => {
     const renderer = render(<ForgotPasswordScreen {...props} />);
 
     act(() => findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress());
 
     expect(allTexts(renderer)).toContain("Lütfen e-posta adresinizi girin");
+    expect(authService.forgotPassword).not.toHaveBeenCalled();
     expect(Alert.alert).not.toHaveBeenCalled();
     expect(goBack).not.toHaveBeenCalled();
   });
@@ -88,11 +92,26 @@ describe("ForgotPasswordScreen", () => {
     expect(allTexts(renderer)).not.toContain("Lütfen e-posta adresinizi girin");
   });
 
-  it("shows the generic success panel in-screen, then returns to login from its button", () => {
+  it("calls the forgot-password request and shows the generic success panel only after it resolves, then returns to login from its button", async () => {
+    let resolveRequest!: () => void;
+    (authService.forgotPassword as jest.Mock).mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveRequest = resolve;
+      })
+    );
     const renderer = render(<ForgotPasswordScreen {...props} />);
 
     act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
     act(() => findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress());
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith("ad@sirket.com");
+    // Still in-flight: the success panel must not appear before the request resolves.
+    expect(allTexts(renderer)).not.toContain("Talebiniz alındı");
+
+    await act(async () => {
+      resolveRequest();
+      await Promise.resolve();
+    });
 
     const texts = allTexts(renderer);
     expect(texts).toContain("Talebiniz alındı");
@@ -106,6 +125,54 @@ describe("ForgotPasswordScreen", () => {
     act(() => findButton(renderer, "Girişe dön").props.onPress());
 
     expect(goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a themed inline error and retries (no success panel) when the request fails", async () => {
+    (authService.forgotPassword as jest.Mock).mockRejectedValue(new Error("network"));
+    const renderer = render(<ForgotPasswordScreen {...props} />);
+
+    act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
+    await act(async () => {
+      findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress();
+    });
+
+    expect(allTexts(renderer)).toContain("İstek gönderilemedi. Lütfen tekrar deneyin.");
+    expect(allTexts(renderer)).not.toContain("Talebiniz alındı");
+    expect(renderer.root.findAllByType(TextInput)).toHaveLength(1);
+    expect(Alert.alert).not.toHaveBeenCalled();
+
+    // Retry: tapping the same button again re-sends the request.
+    (authService.forgotPassword as jest.Mock).mockResolvedValue(undefined);
+    await act(async () => {
+      findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress();
+    });
+
+    expect(authService.forgotPassword).toHaveBeenCalledTimes(2);
+    expect(allTexts(renderer)).toContain("Talebiniz alındı");
+  });
+
+  it("guards against a double tap starting two requests", async () => {
+    let resolveRequest!: () => void;
+    (authService.forgotPassword as jest.Mock).mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveRequest = resolve;
+      })
+    );
+    const renderer = render(<ForgotPasswordScreen {...props} />);
+
+    act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
+    const submitButton = findButton(renderer, "Sıfırlama bağlantısı gönder");
+    act(() => {
+      submitButton.props.onPress();
+      submitButton.props.onPress();
+    });
+
+    expect(authService.forgotPassword).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveRequest();
+      await Promise.resolve();
+    });
   });
 
   it("goes back to login from the link", () => {
@@ -171,6 +238,23 @@ describe("BiometricPromptScreen", () => {
     expect(allTexts(renderer)).not.toContain(
       "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın."
     );
+  });
+
+  it("guards against 'Tekrar dene' starting two biometric prompts on a rapid double tap", async () => {
+    loginWithBiometric.mockRejectedValueOnce(new Error("cancelled"));
+    loginWithBiometric.mockReturnValue(new Promise(() => undefined));
+    const renderer = render(<BiometricPromptScreen {...props} />);
+    await act(async () => {});
+
+    const retryButton = findButton(renderer, "Tekrar dene");
+    await act(async () => {
+      retryButton.props.onPress();
+      retryButton.props.onPress();
+    });
+
+    // One call from the initial mount attempt (rejected) + one from the retry tap - the second,
+    // overlapping retry tap must be dropped by the in-flight guard.
+    expect(loginWithBiometric).toHaveBeenCalledTimes(2);
   });
 
   it("returns to the password login from the failure message", async () => {

@@ -188,6 +188,23 @@ export class AuthService {
     }
   }
 
+  /**
+   * Mirrors `web/src/services/password-reset.service.ts`: the backend's `POST forgot-password` is
+   * `[AllowAnonymous]` and always answers 204, whether or not the address is registered - so a
+   * caught error here is a genuine network/server failure, never "email not found".
+   */
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await apiClient.post(`${AUTH_BASE}/forgot-password`, { email });
+    } catch (error) {
+      // Never log the error object: axios errors embed the request body/headers.
+      if (__DEV__) {
+        console.error("Forgot password request failed.");
+      }
+      throw error;
+    }
+  }
+
   async logout(): Promise<void> {
     try {
       const refreshToken = await SecureStorage.getRefreshToken();
