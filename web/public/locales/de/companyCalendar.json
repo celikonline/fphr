@@ -8,11 +8,13 @@
   "genericError": "Der Kalender konnte nicht geladen werden.",
   "moreCount": "+{{count}} weitere",
   "create": "Veranstaltung erstellen",
+  "edit": "Veranstaltung bearbeiten",
   "delete": "Löschen",
   "deleteConfirmTitle": "Veranstaltung löschen",
   "deleteConfirmMessage": "Möchten Sie \"{{title}}\" wirklich löschen?",
   "deleted": "Veranstaltung gelöscht.",
   "saved": "Veranstaltung erstellt.",
+  "updated": "Veranstaltung aktualisiert.",
   "type": {
     "companyEvent": "Firmenveranstaltung",
     "meeting": "Meeting",

@@ -8,11 +8,13 @@
   "genericError": "The calendar could not be loaded.",
   "moreCount": "+{{count}} more",
   "create": "Create Event",
+  "edit": "Edit Event",
   "delete": "Delete",
   "deleteConfirmTitle": "Delete event",
   "deleteConfirmMessage": "Are you sure you want to delete \"{{title}}\"?",
   "deleted": "Event deleted.",
   "saved": "Event created.",
+  "updated": "Event updated.",
   "type": {
     "companyEvent": "Company Event",
     "meeting": "Meeting",

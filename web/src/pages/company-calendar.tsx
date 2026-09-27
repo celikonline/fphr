@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Badge, Button, Group, Modal, Paper, Radio, Skeleton, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
@@ -15,6 +15,7 @@ import {
   createCompanyEvent,
   deleteCompanyEvent,
   getCompanyCalendar,
+  updateCompanyEvent,
   type CompanyCalendarEntry,
   type CompanyEventType,
 } from "@/services/company-calendar.service";
@@ -61,6 +62,7 @@ function CompanyCalendar() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CompanyCalendarEntry | null>(null);
   const [pendingDelete, setPendingDelete] = useState<CompanyCalendarEntry | null>(null);
 
   const days = useMonthGrid(month);
@@ -189,7 +191,14 @@ function CompanyCalendar() {
                   <span className={`${classes.dayNumber} text-xs`}>{date.getDate()}</span>
                   <div className="flex flex-col gap-1">
                     {visible.map((entry, index) => (
-                      <EventChip key={entry.id ?? `${entry.type}-${entry.employeeId}-${index}`} entry={entry} label={typeLabel(entry.type)} canManage={canManage} onDelete={setPendingDelete} />
+                      <EventChip
+                        key={entry.id ?? `${entry.type}-${entry.employeeId}-${index}`}
+                        entry={entry}
+                        label={typeLabel(entry.type)}
+                        canManage={canManage}
+                        onEdit={setEditingEvent}
+                        onDelete={setPendingDelete}
+                      />
                     ))}
                     {overflow > 0 && (
                       <Text size="xs" c="dimmed">
@@ -204,7 +213,8 @@ function CompanyCalendar() {
         )}
       </Paper>
 
-      {createOpen && <CreateEventDialog onClose={() => setCreateOpen(false)} />}
+      {createOpen && <EventFormDialog onClose={() => setCreateOpen(false)} />}
+      {editingEvent && <EventFormDialog editing={editingEvent} onClose={() => setEditingEvent(null)} />}
       {pendingDelete && <DeleteEventDialog entry={pendingDelete} onClose={() => setPendingDelete(null)} />}
     </div>
   );
@@ -214,14 +224,17 @@ function EventChip({
   entry,
   label,
   canManage,
+  onEdit,
   onDelete,
 }: {
   entry: CompanyCalendarEntry;
   label: string;
   canManage: boolean;
+  onEdit: (entry: CompanyCalendarEntry) => void;
   onDelete: (entry: CompanyCalendarEntry) => void;
 }) {
-  const canDelete = canManage && Boolean(entry.id);
+  // Only manual (companyEvent/meeting) entries carry an id — derived birthday/leave-start entries have none.
+  const canModify = canManage && Boolean(entry.id);
   return (
     <Tooltip label={`${label}: ${entry.title}`} multiline maw={240}>
       <Badge
@@ -231,18 +244,31 @@ function EventChip({
         radius="sm"
         styles={{ root: { display: "block", width: "100%" }, label: { overflow: "hidden", textOverflow: "ellipsis" } }}
         rightSection={
-          canDelete ? (
-            <ActionIcon
-              size="xs"
-              variant="transparent"
-              aria-label="delete"
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete(entry);
-              }}
-            >
-              <Trash2 size={11} />
-            </ActionIcon>
+          canModify ? (
+            <Group gap={2} wrap="nowrap">
+              <ActionIcon
+                size="xs"
+                variant="transparent"
+                aria-label="edit"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit(entry);
+                }}
+              >
+                <Pencil size={11} />
+              </ActionIcon>
+              <ActionIcon
+                size="xs"
+                variant="transparent"
+                aria-label="delete"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete(entry);
+                }}
+              >
+                <Trash2 size={11} />
+              </ActionIcon>
+            </Group>
           ) : undefined
         }
       >
@@ -258,30 +284,43 @@ function eventErrorMessage(error: unknown, t: (key: string) => string): string {
   return getApiErrorMessage(error, t("companyCalendar:errors.generic"));
 }
 
-function CreateEventDialog({ onClose }: { onClose: () => void }) {
+function EventFormDialog({ editing, onClose }: { editing?: CompanyCalendarEntry; onClose: () => void }) {
   const { t } = useTranslation(["companyCalendar", "common", "employees"]);
   const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [eventDate, setEventDate] = useState(toDateOnly(new Date()));
-  const [type, setType] = useState<(typeof MANUAL_TYPES)[number]>("companyEvent");
-  const [visibility, setVisibility] = useState<"all" | "orgUnit">("all");
-  const [visibilityOrgUnitId, setVisibilityOrgUnitId] = useState<string | null>(null);
+  const initialType: (typeof MANUAL_TYPES)[number] =
+    editing && (MANUAL_TYPES as CompanyEventType[]).includes(editing.type) ? (editing.type as (typeof MANUAL_TYPES)[number]) : "companyEvent";
+
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [eventDate, setEventDate] = useState(editing?.date ?? toDateOnly(new Date()));
+  const [type, setType] = useState<(typeof MANUAL_TYPES)[number]>(initialType);
+  const [visibility, setVisibility] = useState<"all" | "orgUnit">(editing?.visibilityOrgUnitId ? "orgUnit" : "all");
+  const [visibilityOrgUnitId, setVisibilityOrgUnitId] = useState<string | null>(editing?.visibilityOrgUnitId ?? null);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      createCompanyEvent({
+    mutationFn: async () => {
+      const payload = {
         title: title.trim(),
         description: description.trim() || null,
         eventDate,
         type,
         visibilityOrgUnitId: visibility === "orgUnit" ? visibilityOrgUnitId : null,
-      }),
+      };
+      if (editing) {
+        await updateCompanyEvent(editing.id as string, payload);
+      } else {
+        await createCompanyEvent(payload);
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [CALENDAR_QUERY_KEY] });
-      toast({ variant: "success", title: t("common:success"), description: t("companyCalendar:saved") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t(editing ? "companyCalendar:updated" : "companyCalendar:saved"),
+      });
       onClose();
     },
     onError: (err) => setError(eventErrorMessage(err, t)),
@@ -295,7 +334,7 @@ function CreateEventDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal opened onClose={onClose} title={t("companyCalendar:create")} size="32rem">
+    <Modal opened onClose={onClose} title={t(editing ? "companyCalendar:edit" : "companyCalendar:create")} size="32rem">
       <form onSubmit={submit}>
         <Stack gap="md">
           <TextInput
