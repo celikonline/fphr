@@ -120,12 +120,20 @@ export function expenseClaimCard(claim: ExpenseClaim, categories: CategoryRef[])
     detail: formatCurrencyTRY(claim.totalAmount),
     statusLabel: EXPENSE_CLAIM_STATUS_LABELS[claim.status],
     tone: EXPENSE_CLAIM_STATUS_TONES[claim.status],
-    description: claim.description ?? null,
+    // TK-031: mobile now creates the draft without a claim-level description and puts the text on
+    // each item, so a single-item claim shows its item's description instead.
+    description: claim.description ?? (claim.items.length === 1 ? first.description : null) ?? null,
     lines:
       claim.items.length > 1
-        ? claim.items.map(
-            (item) =>
-              `${categoryName(item.categoryId, categories)} · ${formatDayMonthYear(item.receiptDate)} · ${formatCurrencyTRY(item.amount)}`
+        ? claim.items.map((item) =>
+            [
+              categoryName(item.categoryId, categories),
+              formatDayMonthYear(item.receiptDate),
+              formatCurrencyTRY(item.amount),
+              item.description,
+            ]
+              .filter(Boolean)
+              .join(" · ")
           )
         : [],
     canWithdraw: false,

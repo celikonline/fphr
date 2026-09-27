@@ -36,24 +36,34 @@ describe("ExpenseService", () => {
     });
   });
 
-  describe("submitSingleItemExpenseClaim (TK-031 decision #2: draft -> item -> submit)", () => {
-    it("runs create -> addItem -> submit in that order and returns the claim id", async () => {
+  describe("submitExpenseClaim (TK-031 web parity: draft -> add each item in order -> submit)", () => {
+    it("runs create -> addItem (per item, in order) -> submit and returns the claim id", async () => {
       (apiClient.post as jest.Mock)
         .mockResolvedValueOnce({ data: "claim-1" }) // create
-        .mockResolvedValueOnce({ data: "item-1" }) // addItem
+        .mockResolvedValueOnce({ data: "item-1" }) // addItem #1
+        .mockResolvedValueOnce({ data: "item-2" }) // addItem #2
         .mockResolvedValueOnce({ data: undefined }); // submit
 
-      const claimId = await expenseService.submitSingleItemExpenseClaim({
-        categoryId: "cat-1",
-        amount: 250.5,
-        receiptDate: "2026-09-27",
-        currency: "TRY",
-        description: "Taksi",
-      });
+      const claimId = await expenseService.submitExpenseClaim([
+        {
+          categoryId: "cat-1",
+          amount: 250.5,
+          receiptDate: "2026-09-27",
+          currency: "TRY",
+          description: "Taksi",
+        },
+        {
+          categoryId: "cat-2",
+          amount: 80,
+          receiptDate: "2026-09-26",
+          currency: "TRY",
+          description: null,
+        },
+      ]);
 
       expect(claimId).toBe("claim-1");
       expect(apiClient.post).toHaveBeenNthCalledWith(1, "/api/v1/expense/claims", {
-        description: "Taksi",
+        description: null,
       });
       expect(apiClient.post).toHaveBeenNthCalledWith(2, "/api/v1/expense/claims/claim-1/items", {
         categoryId: "cat-1",
@@ -62,28 +72,24 @@ describe("ExpenseService", () => {
         currency: "TRY",
         description: "Taksi",
       });
-      expect(apiClient.post).toHaveBeenNthCalledWith(3, "/api/v1/expense/claims/claim-1/submit");
-    });
-
-    it("defaults the draft description to null when none is given", async () => {
-      (apiClient.post as jest.Mock)
-        .mockResolvedValueOnce({ data: "claim-1" })
-        .mockResolvedValueOnce({ data: "item-1" })
-        .mockResolvedValueOnce({ data: undefined });
-
-      await expenseService.submitSingleItemExpenseClaim({
-        categoryId: "cat-1",
-        amount: 50,
-        receiptDate: "2026-09-27",
+      expect(apiClient.post).toHaveBeenNthCalledWith(3, "/api/v1/expense/claims/claim-1/items", {
+        categoryId: "cat-2",
+        amount: 80,
+        receiptDate: "2026-09-26",
         currency: "TRY",
-      });
-
-      expect(apiClient.post).toHaveBeenNthCalledWith(1, "/api/v1/expense/claims", {
         description: null,
       });
+      expect(apiClient.post).toHaveBeenNthCalledWith(4, "/api/v1/expense/claims/claim-1/submit");
     });
 
-    it("throws ExpenseClaimDraftIncompleteError carrying the claimId when adding the item fails - never leaves the caller unaware of the half-created draft", async () => {
+    it("throws without calling the API when given no items", async () => {
+      await expect(expenseService.submitExpenseClaim([])).rejects.toThrow(
+        "submitExpenseClaim requires at least one item."
+      );
+      expect(apiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("throws ExpenseClaimDraftIncompleteError carrying the claimId when adding an item fails - never leaves the caller unaware of the half-created draft", async () => {
       const addItemError = { response: { status: 400 } };
       (apiClient.post as jest.Mock)
         .mockResolvedValueOnce({ data: "claim-1" })
@@ -91,12 +97,9 @@ describe("ExpenseService", () => {
 
       let caughtError: unknown;
       try {
-        await expenseService.submitSingleItemExpenseClaim({
-          categoryId: "cat-1",
-          amount: 50,
-          receiptDate: "2026-09-27",
-          currency: "TRY",
-        });
+        await expenseService.submitExpenseClaim([
+          { categoryId: "cat-1", amount: 50, receiptDate: "2026-09-27", currency: "TRY" },
+        ]);
       } catch (error) {
         caughtError = error;
       }
@@ -105,7 +108,23 @@ describe("ExpenseService", () => {
       expect(caughtError).toMatchObject({ claimId: "claim-1", cause: addItemError });
     });
 
-    it("throws ExpenseClaimDraftIncompleteError when submit fails after the item was added", async () => {
+    it("throws ExpenseClaimDraftIncompleteError when the second item fails to add - only the first item made it in", async () => {
+      const addItemError = { response: { status: 400 } };
+      (apiClient.post as jest.Mock)
+        .mockResolvedValueOnce({ data: "claim-1" })
+        .mockResolvedValueOnce({ data: "item-1" })
+        .mockRejectedValueOnce(addItemError);
+
+      await expect(
+        expenseService.submitExpenseClaim([
+          { categoryId: "cat-1", amount: 50, receiptDate: "2026-09-27", currency: "TRY" },
+          { categoryId: "cat-2", amount: 30, receiptDate: "2026-09-27", currency: "TRY" },
+        ])
+      ).rejects.toMatchObject({ claimId: "claim-1", cause: addItemError });
+      expect(apiClient.post).toHaveBeenCalledTimes(3);
+    });
+
+    it("throws ExpenseClaimDraftIncompleteError when submit fails after all items were added", async () => {
       const submitError = { response: { status: 409 } };
       (apiClient.post as jest.Mock)
         .mockResolvedValueOnce({ data: "claim-1" })
@@ -113,12 +132,9 @@ describe("ExpenseService", () => {
         .mockRejectedValueOnce(submitError);
 
       await expect(
-        expenseService.submitSingleItemExpenseClaim({
-          categoryId: "cat-1",
-          amount: 50,
-          receiptDate: "2026-09-27",
-          currency: "TRY",
-        })
+        expenseService.submitExpenseClaim([
+          { categoryId: "cat-1", amount: 50, receiptDate: "2026-09-27", currency: "TRY" },
+        ])
       ).rejects.toMatchObject({ claimId: "claim-1", cause: submitError });
     });
   });

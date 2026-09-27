@@ -181,6 +181,33 @@ describe("request cards (Taleplerim)", () => {
     expect(card.lines[1]).toContain("cat-x · 13 Eyl 2026");
   });
 
+  it("shows a single-item claim's item description when the claim itself has none (TK-031)", () => {
+    const [item] = expense().items;
+    const card = expenseClaimCard(expense({ items: [{ ...item, description: "Taksi" }] }), []);
+    expect(card.description).toBe("Taksi");
+    expect(expenseClaimCard(expense(), []).description).toBeNull();
+  });
+
+  it("prefers the claim-level description over the item's", () => {
+    const [item] = expense().items;
+    const claim = expense({ description: "Ziyaret", items: [{ ...item, description: "Taksi" }] });
+    expect(expenseClaimCard(claim, []).description).toBe("Ziyaret");
+  });
+
+  it("appends each item's description to its line on a multi-item claim (TK-031)", () => {
+    const [item] = expense().items;
+    const claim = expense({
+      items: [
+        { ...item, id: "a", description: "Taksi" },
+        { ...item, id: "b", description: null },
+      ],
+    });
+    const card = expenseClaimCard(claim, []);
+    expect(card.description).toBeNull();
+    expect(card.lines[0]).toMatch(/ · Taksi$/);
+    expect(card.lines[1]).not.toContain("Taksi");
+  });
+
   it("maps an advance request to its requested date, amount and danger tone when rejected", () => {
     const card = advanceRequestCard(advance());
     expect(card).toMatchObject({
