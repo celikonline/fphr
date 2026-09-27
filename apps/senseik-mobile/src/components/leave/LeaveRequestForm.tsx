@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import {
   leaveService,
   type LeaveHalfDayPeriod,
@@ -9,16 +9,15 @@ import { LeaveDocumentsSection } from "@/components/leave/LeaveDocumentsSection"
 import { SubstitutePicker, type SubstituteCandidate } from "@/components/leave/SubstitutePicker";
 import { DateRangeSheet } from "@/components/form/DateRangeSheet";
 import { OptionSheet } from "@/components/form/OptionSheet";
-import { SummaryRow } from "@/components/form/SummaryRow";
-import { TimeField } from "@/components/form/TimeField";
 import { formatDayMonthYear } from "@/components/form/dateRange";
-import { PrimaryButton, SegmentedControl, SelectField, TextField } from "@/components/ui";
+import { PrimaryButton, SelectField, TextField } from "@/components/ui";
 import { requestFormStyles as formStyles } from "@/components/requests/requestFormStyles";
 import { formatDateWithWeekday, toLocalDateOnly } from "@/lib/formatters";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { useAuthStore } from "@/store/authStore";
-import { text } from "@/theme/theme";
 import { LeavePreviewSummary } from "./LeavePreviewSummary";
+import { HalfDayPicker } from "./form/HalfDayPicker";
+import { HourlyTimeFields } from "./form/HourlyTimeFields";
 import {
   clampEndDate,
   formatHourlyDuration,
@@ -45,11 +44,6 @@ export {
 function todayDateOnly(): string {
   return toLocalDateOnly(new Date());
 }
-
-const HALF_DAY_PERIOD_LABELS: Record<LeaveHalfDayPeriod, string> = {
-  morning: "Sabah",
-  afternoon: "Öğleden sonra",
-};
 
 type Props = {
   requestableTypes: RequestableLeaveType[];
@@ -178,9 +172,6 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
   const dateLabel = isMultiDay
     ? `${formatDayMonthYear(startDate)} → ${formatDayMonthYear(endDate)}`
     : formatDateWithWeekday(startDate);
-  const halfDayOptions = (Object.keys(HALF_DAY_PERIOD_LABELS) as LeaveHalfDayPeriod[]).map(
-    (period) => ({ value: period, label: HALF_DAY_PERIOD_LABELS[period] })
-  );
   const typeOptions = requestableTypes.map((type) => ({
     value: type.id,
     label: type.name,
@@ -204,38 +195,16 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
         onPress={() => setDateSheetVisible(true)}
       />
 
-      {isHalfDay ? (
-        <View style={styles.group}>
-          <Text style={styles.groupLabel}>Gün yarısı</Text>
-          <SegmentedControl
-            options={halfDayOptions}
-            value={halfDayPeriod}
-            onChange={setHalfDayPeriod}
-          />
-        </View>
-      ) : null}
+      {isHalfDay ? <HalfDayPicker value={halfDayPeriod} onChange={setHalfDayPeriod} /> : null}
 
       {isHourly ? (
-        <>
-          <View style={styles.timeRow}>
-            <View style={styles.timeField}>
-              <TimeField
-                label="Başlangıç saati"
-                required
-                value={startTime}
-                onChange={setStartTime}
-              />
-            </View>
-            <View style={styles.timeField}>
-              <TimeField label="Bitiş saati" required value={endTime} onChange={setEndTime} />
-            </View>
-          </View>
-          {hourlyDuration ? (
-            <SummaryRow label="Saat" value={hourlyDuration} />
-          ) : (
-            <Text style={formStyles.warning}>Bitiş saati başlangıçtan sonra olmalı</Text>
-          )}
-        </>
+        <HourlyTimeFields
+          startTime={startTime}
+          endTime={endTime}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          duration={hourlyDuration}
+        />
       ) : null}
 
       {/* B-mobil-006: live day-count preview - the whole reason B12 exists (a Sunday-only request
@@ -317,19 +286,3 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  group: {
-    gap: 6,
-  },
-  groupLabel: {
-    ...text.caption,
-  },
-  timeRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  timeField: {
-    flex: 1,
-  },
-});
