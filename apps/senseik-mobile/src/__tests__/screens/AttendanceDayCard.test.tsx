@@ -1,6 +1,7 @@
 import React from "react";
 import { Text } from "react-native";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
+import { GlassCard } from "@/components/ui";
 import { AttendanceDayCard } from "@/screens/app/attendance/AttendanceDayCard";
 import type { AttendanceDay } from "@/services/AttendanceService";
 
@@ -67,5 +68,17 @@ describe("AttendanceDayCard", () => {
 
     expect(texts(renderer)).toContain("İzinli günde çalışma");
     expect(texts(renderer)).not.toContain("İzinli");
+  });
+
+  it("includes the leave type name and overtime text in the card's accessibilityLabel", () => {
+    const day: AttendanceDay = { ...baseDay, onLeave: true, leaveTypeName: "leave.type.annual" };
+
+    const renderer = renderComponent(
+      <AttendanceDayCard day={day} overtimeText="Fazla mesai: 1 sa 0 dk" />
+    );
+
+    const label = renderer.root.findByType(GlassCard).props.accessibilityLabel as string;
+    expect(label).toContain("Yıllık izin");
+    expect(label).toContain("Fazla mesai: 1 sa 0 dk");
   });
 });

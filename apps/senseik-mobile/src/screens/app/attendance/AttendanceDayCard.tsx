@@ -32,12 +32,21 @@ export function AttendanceDayCard({ day, overtimeText }: Props) {
   const worked = formatDurationMinutes(day.workedMinutes);
   const flags = anomalyLabels(day.anomalies);
   const hasPlan = Boolean(day.plannedStart && day.plannedEnd);
+  const accessibilityLabel = [
+    `${dayOfMonth} ${TR_MONTHS_SHORT[month0]} ${year}`,
+    status.label,
+    `çalışma süresi ${worked}`,
+    leaveTypeText,
+    overtimeText,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(", ");
 
   return (
     <GlassCard
       style={styles.card}
       onPress={() => setExpanded((current) => !current)}
-      accessibilityLabel={`${dayOfMonth} ${TR_MONTHS_SHORT[month0]} ${year}, ${status.label}, çalışma süresi ${worked}`}
+      accessibilityLabel={accessibilityLabel}
     >
       <View style={styles.top}>
         <View style={styles.dateBlock}>
