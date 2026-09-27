@@ -10,9 +10,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { backdropImage, palette } from "@/theme/theme";
 
-const NIGHT = palette.night;
-const BRAND = palette.brand;
-
 const FLOAT_HALF_DURATION_MS = 3500;
 const FLOAT_DISTANCE = 12;
 const GHOST_SIZE = 320;
@@ -66,11 +63,11 @@ export function AuthBackdrop({ children }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: NIGHT,
+    backgroundColor: palette.night,
   },
   gradient: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: NIGHT,
+    backgroundColor: palette.night,
     // New-Architecture-only style prop (RN 0.86); falls back to the solid `backgroundColor` above
     // on runtimes that don't understand it.
     experimental_backgroundImage: backdropImage,
@@ -95,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: GHOST_RADIUS,
     transform: [{ rotate: "14deg" }],
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
+    borderColor: palette.ghostBorder,
     backgroundColor: "rgba(255,255,255,0.1)",
   },
   ghostFilled: {
@@ -103,7 +100,7 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: GHOST_RADIUS,
     transform: [{ rotate: "14deg" }],
-    backgroundColor: BRAND,
+    backgroundColor: palette.brand,
     opacity: 0.3,
   },
 });

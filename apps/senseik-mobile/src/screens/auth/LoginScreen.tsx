@@ -20,8 +20,9 @@ import { biometricService } from "@/lib/biometric";
 import { getApiProblem } from "@/lib/apiError";
 import { TenantChoice } from "@/types";
 import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
+import { AuthPanel as Panel } from "@/components/auth/AuthPanel";
 import { BrandMark } from "@/components/auth/BrandMark";
-import { fontFor } from "@/theme/theme";
+import { Wordmark } from "@/components/auth/Wordmark";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
@@ -34,27 +35,8 @@ const palette = {
   ice: "#D3ECFD",
   coral: "#FF8A80",
   white: "#FFFFFF",
-  glassSurface: "rgba(255,255,255,0.07)",
   glassBorder: "rgba(255,255,255,0.14)",
 };
-
-function Wordmark() {
-  return (
-    <Text style={styles.wordmark}>
-      Sense
-      <Text style={styles.wordmarkAccent}>HR</Text>
-    </Text>
-  );
-}
-
-/** The glass card shared by the login form and tenant-select screens, with the same entrance animation. */
-function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.panel}>
-      {children}
-    </Animated.View>
-  );
-}
 
 function Footer() {
   return <Text style={styles.footer}>Algosense güvencesiyle · © {new Date().getFullYear()}</Text>;
@@ -412,23 +394,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: palette.ice,
   },
-  wordmark: {
-    marginTop: 8,
-    fontSize: 40,
-    letterSpacing: -1.5,
-    color: palette.white,
-    ...fontFor(800),
-  },
-  wordmarkAccent: { color: palette.brand },
   heroSubtitle: { marginTop: 10, fontSize: 15, color: palette.ice },
-  panel: {
-    marginTop: 28,
-    padding: 24,
-    borderRadius: 28,
-    backgroundColor: palette.glassSurface,
-    borderWidth: 1,
-    borderColor: palette.glassBorder,
-  },
   panelTitle: { fontSize: 22, fontWeight: "800", color: palette.white },
   panelSubtitle: { marginTop: 4, fontSize: 15, color: palette.ice },
   errorBanner: {
