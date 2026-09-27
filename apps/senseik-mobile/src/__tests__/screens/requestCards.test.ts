@@ -134,8 +134,22 @@ describe("request cards (Taleplerim)", () => {
   it("lists every item of a multi-item expense claim as an extra line", () => {
     const claim = expense({
       items: [
-        { id: "a", categoryId: "cat-food", amount: 10, receiptDate: "2026-09-14", taxAmount: 0, currency: "TRY" },
-        { id: "b", categoryId: "cat-x", amount: 20, receiptDate: "2026-09-13", taxAmount: 0, currency: "TRY" },
+        {
+          id: "a",
+          categoryId: "cat-food",
+          amount: 10,
+          receiptDate: "2026-09-14",
+          taxAmount: 0,
+          currency: "TRY",
+        },
+        {
+          id: "b",
+          categoryId: "cat-x",
+          amount: 20,
+          receiptDate: "2026-09-13",
+          taxAmount: 0,
+          currency: "TRY",
+        },
       ],
     });
     const card = expenseClaimCard(claim, [{ id: "cat-food", code: "food" }]);
