@@ -4,12 +4,7 @@ import { Avatar, GlassCard, PrimaryButton, StatusPill } from "@/components/ui";
 import type { InboxTask } from "@/services/ApprovalsService";
 import { fontFor, palette, text } from "@/theme/theme";
 import { ApprovalAttachmentsLine } from "./ApprovalAttachmentsLine";
-import { requestTypeLabel } from "./approvalLabels";
-import {
-  approvalAmountText,
-  approvalDetailRows,
-  approvalTypeCaption,
-} from "./approvalPresentation";
+import { approvalCardHeading, approvalDetailRows } from "./approvalPresentation";
 
 /** Web `home.tsx`'teki `SUBMITTED_DATE` biçimiyle aynı: `gg.aa.yyyy`. */
 const SUBMITTED_DATE_FORMAT: Intl.DateTimeFormatOptions = {
@@ -45,7 +40,7 @@ type Props = {
 
 /** Görev 8: "Onaylarım" kart görünümü (spec §5 / ZenHR "My Approvals" referansı). */
 export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onReject }: Props) {
-  const amountText = approvalAmountText(task);
+  const { heading, subtitle } = approvalCardHeading(task);
   const detailRows = approvalDetailRows(task);
   const requesterName = task.requesterName ?? "Bilinmiyor";
 
@@ -68,8 +63,8 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
 
       <View style={styles.amountRow}>
         <View style={styles.amountTexts}>
-          <Text style={styles.amount}>{amountText ?? requestTypeLabel(task.requestType)}</Text>
-          <Text style={styles.typeCaption}>{approvalTypeCaption(task)}</Text>
+          <Text style={styles.amount}>{heading}</Text>
+          {subtitle ? <Text style={styles.typeCaption}>{subtitle}</Text> : null}
         </View>
         <StatusPill label="Bekliyor" tone="warning" />
       </View>

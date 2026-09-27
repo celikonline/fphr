@@ -1,4 +1,5 @@
 import type { InboxTask } from "@/services/ApprovalsService";
+import { approvalTypeKey } from "./approvalLabels";
 
 /** Görev 8: "Onaylarım"'ın "Tür" seçimi - `InboxTask.requestType` sunucu değerlerinden türetilir. */
 export type ApprovalFilter = "all" | "leave" | "overtime" | "expense" | "advance";
@@ -6,7 +7,7 @@ export type ApprovalFilter = "all" | "leave" | "overtime" | "expense" | "advance
 export const FILTER_ORDER: ApprovalFilter[] = ["all", "leave", "overtime", "expense", "advance"];
 
 /** Spec §5 dropdown metinleri (Tümü / İzin / Fazla mesai / Masraf / Avans) - kart gövdesindeki
- * `requestTypeLabel`'dan bağımsız (orada "Expense" için "Harcama" kullanılıyor). */
+ * `requestTypeLabel` ile aynı etiketler (QA-103: ikisi de tek `approvalTypeKey` eşlemesinden gelir). */
 export const FILTER_LABELS: Record<ApprovalFilter, string> = {
   all: "Tümü",
   leave: "İzin",
@@ -15,17 +16,12 @@ export const FILTER_LABELS: Record<ApprovalFilter, string> = {
   advance: "Avans",
 };
 
-const REQUEST_TYPE_TO_FILTER: Record<string, ApprovalFilter | undefined> = {
-  Leave: "leave",
-  Overtime: "overtime",
-  Expense: "expense",
-  Advance: "advance",
-};
-
 /** `null` for a request type with no filter mapping yet (Requisition, AssetAssignment, ...) - such
- * a task is only ever counted/shown under "all" (brief: "bilinmeyen tür yalnız 'Tümü'de sayılır"). */
+ * a task is only ever counted/shown under "all" (brief: "bilinmeyen tür yalnız 'Tümü'de sayılır").
+ * Uses the same `approvalTypeKey` normalizer as the card's type label (QA-103: "ExpenseClaim" must
+ * count as "expense" here too, not just in the label). */
 function filterOf(task: Pick<InboxTask, "requestType">): ApprovalFilter | null {
-  return REQUEST_TYPE_TO_FILTER[task.requestType] ?? null;
+  return approvalTypeKey(task.requestType);
 }
 
 export function countByFilter(tasks: InboxTask[]): Record<ApprovalFilter, number> {

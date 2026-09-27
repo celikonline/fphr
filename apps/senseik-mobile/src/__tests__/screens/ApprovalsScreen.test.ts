@@ -43,8 +43,12 @@ describe("requestTypeLabel", () => {
     expect(requestTypeLabel("AssetAssignment")).toBe("Zimmet");
   });
 
-  it("falls back to the raw request type when unknown", () => {
-    expect(requestTypeLabel("SomethingNew")).toBe("SomethingNew");
+  it("falls back to 'Talep' for an unknown request type, never the raw server key (QA-103)", () => {
+    expect(requestTypeLabel("SomethingNew")).toBe("Talep");
+  });
+
+  it("maps 'ExpenseClaim' (Expense's own Workflow request type) to 'Masraf' (QA-103)", () => {
+    expect(requestTypeLabel("ExpenseClaim")).toBe("Masraf");
   });
 });
 

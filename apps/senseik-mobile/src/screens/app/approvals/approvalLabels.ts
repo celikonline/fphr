@@ -1,18 +1,53 @@
 import { humanizeLeaveTypeCode, leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 import type { InboxTaskLeaveSummary } from "@/services/ApprovalsService";
 
-/** `RequestType` (Workflow.Domain) server value - same mapping as web `workflow.json`'daki `requestType.*`. */
-const REQUEST_TYPE_LABELS: Record<string, string> = {
-  Leave: "İzin",
-  Advance: "Avans",
-  Expense: "Harcama",
-  Overtime: "Fazla mesai",
+/** The four request types the "Tür" filter (spec §5) offers - also the ones the card's amount/
+ *  duration heading knows how to compute (see `approvalPresentation.ts`). */
+export type ApprovalTypeKey = "leave" | "overtime" | "expense" | "advance";
+
+/**
+ * `InboxTask.requestType` server values aren't consistent across modules: the org-policy key is
+ * "Expense" (`Sense.Modules.Organization.Contracts.ApprovalRequestTypes`), but the Workflow request
+ * Expense actually submits under is "ExpenseClaim" (`ExpenseClaimCommands.Claim`) - QA-103. Compared
+ * case-insensitively so either spelling (and a same-shaped "…Request" suffix some modules use, e.g.
+ * Attendance's `AnomalyResolutionFeatures`) resolves to the same key.
+ */
+const TYPE_KEY_ALIASES: Record<string, ApprovalTypeKey> = {
+  leave: "leave",
+  leaverequest: "leave",
+  overtime: "overtime",
+  overtimerequest: "overtime",
+  expense: "expense",
+  expenseclaim: "expense",
+  advance: "advance",
+  advancerequest: "advance",
+};
+
+/** `null` for a request type with no filter/summary mapping (Requisition, AssetAssignment, ...) -
+ *  such a task only ever counts/shows under "Tümü" (see `approvalFilters.ts`). */
+export function approvalTypeKey(requestType: string): ApprovalTypeKey | null {
+  return TYPE_KEY_ALIASES[requestType.toLowerCase()] ?? null;
+}
+
+const TYPE_KEY_LABELS: Record<ApprovalTypeKey, string> = {
+  leave: "İzin",
+  overtime: "Fazla mesai",
+  expense: "Masraf",
+  advance: "Avans",
+};
+
+/** `RequestType` values with a filter/summary key above use the same label there (spec §5's "Masraf"/
+ *  "Avans"/...); a couple of other known types (unit-assignable but not filterable yet) keep their own
+ *  label; anything else falls back to "Talep" - never the raw server key (QA-103). */
+const OTHER_REQUEST_TYPE_LABELS: Record<string, string> = {
   Requisition: "Kadro talebi",
   AssetAssignment: "Zimmet",
 };
 
 export function requestTypeLabel(requestType: string): string {
-  return REQUEST_TYPE_LABELS[requestType] ?? requestType;
+  const key = approvalTypeKey(requestType);
+  if (key) return TYPE_KEY_LABELS[key];
+  return OTHER_REQUEST_TYPE_LABELS[requestType] ?? "Talep";
 }
 
 /** `TimeOnly` ("HH:mm:ss") → "HH:mm" for display. */
