@@ -63,7 +63,8 @@ export interface DateRangeQuery {
   to: string;
 }
 
-export type PunchDirection = "in" | "out";
+/** `PunchDirection`: the break directions (Mola başı / Mola sonu) are only valid while checked in. */
+export type PunchDirection = "in" | "out" | "breakStart" | "breakEnd";
 
 /** `SelfCheckInResultDto`. */
 export interface SelfCheckInResult {
@@ -76,12 +77,18 @@ export interface SelfCheckInResult {
   withinGeofence?: boolean | null;
 }
 
-/** `MyCheckInStatusDto`: "şu an içeride miyim" - Giriş mi Çıkış mı yapılacağını belirler. */
+/**
+ * `MyCheckInStatusDto`: "şu an içeride miyim" - which punch (Giriş/Çıkış/Mola başı/Mola sonu) comes next.
+ * `breakStartedAt` is the open break's start ("HH:mm:ss"); `breakMinutesToday` counts closed breaks only.
+ */
 export interface MyCheckInStatus {
   isCheckedIn: boolean;
   date: string;
   checkIn?: string | null;
   checkOut?: string | null;
+  onBreak?: boolean;
+  breakStartedAt?: string | null;
+  breakMinutesToday?: number;
 }
 
 export interface QrCheckInInput {
@@ -89,6 +96,14 @@ export interface QrCheckInInput {
   direction: PunchDirection;
   latitude?: number;
   longitude?: number;
+}
+
+/** GPS punch: without `locationId` no geofence is checked (roaming/remote employee), the position is only recorded. */
+export interface GpsCheckInInput {
+  latitude: number;
+  longitude: number;
+  locationId?: string;
+  direction: PunchDirection;
 }
 
 export class AttendanceService {
@@ -101,6 +116,15 @@ export class AttendanceService {
   async qrCheckIn(input: QrCheckInInput): Promise<SelfCheckInResult> {
     const response = await apiClient.post<SelfCheckInResult>(
       `${ATTENDANCE_BASE}/self-checkin/qr`,
+      input
+    );
+    return response.data;
+  }
+
+  /** Konumla giriş/çıkış/mola (attendance.my.checkin). */
+  async gpsCheckIn(input: GpsCheckInInput): Promise<SelfCheckInResult> {
+    const response = await apiClient.post<SelfCheckInResult>(
+      `${ATTENDANCE_BASE}/self-checkin/gps`,
       input
     );
     return response.data;

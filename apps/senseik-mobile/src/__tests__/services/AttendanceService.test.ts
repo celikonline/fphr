@@ -34,6 +34,22 @@ describe("AttendanceService", () => {
       expect(result).toEqual(data);
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/qr", input);
     });
+
+    it("posts a GPS punch, including the break directions", async () => {
+      const data = {
+        attendanceDayId: "day-1",
+        date: "2026-09-27",
+        direction: "breakStart",
+        time: "12:00:00",
+      };
+      (apiClient.post as jest.Mock).mockResolvedValue({ data });
+      const input = { latitude: 41.01, longitude: 28.97, direction: "breakStart" as const };
+
+      const result = await attendanceService.gpsCheckIn(input);
+
+      expect(result).toEqual(data);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/gps", input);
+    });
   });
 
   describe("getMyAttendanceDays", () => {
