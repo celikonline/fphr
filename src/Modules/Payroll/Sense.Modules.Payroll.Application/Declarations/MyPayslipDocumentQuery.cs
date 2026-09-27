@@ -16,7 +16,8 @@ public sealed record GetMyPayslipDocumentQuery(Guid PayslipId) : IQuery<ExportFi
 
 public sealed class GetMyPayslipDocumentHandler(
     IPayslipRepository payslips, IPayrollPeriodRepository periods, IPayslipDocumentProvider documents,
-    ITenantContext tenant, ICurrentUser currentUser)
+    IPayslipDeliveryRepository deliveries, IPayrollUnitOfWork unitOfWork,
+    ITenantContext tenant, ICurrentUser currentUser, TimeProvider clock)
     : IQueryHandler<GetMyPayslipDocumentQuery, ExportFileResult>
 {
     public async Task<Result<ExportFileResult>> Handle(GetMyPayslipDocumentQuery query, CancellationToken cancellationToken)
@@ -34,6 +35,23 @@ public sealed class GetMyPayslipDocumentHandler(
         }
 
         var file = await documents.RenderPdfAsync(tenant.TenantId, query.PayslipId, cancellationToken);
-        return file is null ? Error.NotFound(PayrollDomainErrors.PayslipNotFound) : file;
+        if (file is null)
+        {
+            return Error.NotFound(PayrollDomainErrors.PayslipNotFound);
+        }
+
+        // Kabul kriteri 3: ilk indirmede PayslipDelivery.ViewedAt set edilir (yoksa kayıt açılır) - sorgu bu yan
+        // etki için UnitOfWork'ü kendisi kaydeder (UnitOfWorkBehaviour yalnız komutlarda SaveChanges çağırır).
+        var delivery = await deliveries.FindByPayslipIdAsync(payslip.Id, cancellationToken);
+        if (delivery is null)
+        {
+            delivery = PayslipDelivery.Create(payslip.TenantId, payslip.Id, employeeId, PayslipDeliveryChannel.Web);
+            deliveries.Add(delivery);
+        }
+
+        delivery.MarkViewed(clock.GetUtcNow());
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return file;
     }
 }
