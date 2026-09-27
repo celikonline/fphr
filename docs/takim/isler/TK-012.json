@@ -1,7 +1,7 @@
 {
   "id": "TK-012",
   "baslik": "Leave - izin turu sihirbazinda sunucu dogrulama hatalari alan bazli",
-  "durum": "incelemede",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/leave-alan-bazli-hata",
   "kaynak": "docs/analysis/kolayik-video/faz1b-durum-takibi.md:20 (#14 - sunucu tarafi dogrulama hatalari alan bazli gosterilmiyor)",

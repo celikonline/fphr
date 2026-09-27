@@ -1,7 +1,7 @@
 {
   "id": "TK-023",
   "baslik": "Recruitment - Admin-teklif sablonu rolu + ilan bazli erisim UI",
-  "durum": "incelemede",
+  "durum": "birlesti",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "takim/recruitment-teklif-sablonu-rolu",
   "kaynak": "docs/analysis/kolayik-video/faz6-durum-takibi.md:29 (#83 - Admin-teklif sablonu ayri rolu ve ilan bazli erisim UI yok)",
