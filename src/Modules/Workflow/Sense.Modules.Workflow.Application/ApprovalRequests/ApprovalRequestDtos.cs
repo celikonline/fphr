@@ -26,6 +26,7 @@ public sealed record InboxTaskDto(
     Guid ApprovalRequestId,
     string RequestType,
     Guid SubjectId,
+    Guid RequesterEmployeeId,
     string? RequesterName,
     int StepNumber,
     bool IsFallbackRoleTask,

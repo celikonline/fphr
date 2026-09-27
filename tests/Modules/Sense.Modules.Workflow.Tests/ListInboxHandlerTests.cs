@@ -15,8 +15,10 @@ namespace Sense.Modules.Workflow.Tests;
 /// <summary>
 /// Unit tests for ListInboxHandler with every port faked - no DB needed since the repository abstraction already
 /// returns domain aggregates. Covers the InboxTaskDto.SubmittedAt contract added for the FE inbox date display
-/// (see docs/implementation, faz-01 tur 2) and the InboxTaskDto.Summary projection added for senseik-047 (D-01: the
-/// decide screen must show request-type-specific detail, not a raw SubjectId).
+/// (see docs/implementation, faz-01 tur 2), the InboxTaskDto.Summary projection added for senseik-047 (D-01: the
+/// decide screen must show request-type-specific detail, not a raw SubjectId), and the InboxTaskDto.RequesterEmployeeId
+/// projection so the mobile approval screen can fetch the requester's own leave request detail (attachments) without
+/// a second lookup.
 /// </summary>
 public sealed class ListInboxHandlerTests
 {
@@ -60,6 +62,39 @@ public sealed class ListInboxHandlerTests
         result.IsSuccess.ShouldBeTrue();
         var dto = result.Value.ShouldHaveSingleItem();
         dto.SubmittedAt.ShouldBe(submittedAt);
+        dto.RequesterEmployeeId.ShouldBe(requesterId);
+    }
+
+    [Fact]
+    public async Task Handle_FallbackRoleTask_DtoRequesterEmployeeIdMatchesRequestRequester()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var requesterId = Guid.NewGuid();
+        var submittedAt = new DateTime(2026, 9, 10, 8, 30, 0, DateTimeKind.Utc);
+
+        _currentUser.EmployeeId.Returns(employeeId);
+        _tenant.TenantId.Returns(tenantId);
+        _roleAssignments.EmployeeHasRoleAsync(tenantId, employeeId, "HR", Arg.Any<CancellationToken>()).Returns(true);
+
+        IReadOnlyList<ApprovalTaskSeed> steps = [new ApprovalTaskSeed(1, null, "HR", true)];
+        var request = ApprovalRequest.Submit(
+            tenantId, "Leave", Guid.NewGuid(), requesterId, steps,
+            null, null, null, false, true, submittedAt, null, null).Value;
+        var task = request.Tasks.Single();
+
+        _requests.ListInboxTasksAsync(employeeId, Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+            .Returns([task]);
+        _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(request)));
+        _employeeDirectory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var result = await Handler.Handle(new ListInboxQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        var dto = result.Value.ShouldHaveSingleItem();
+        dto.IsFallbackRoleTask.ShouldBeTrue();
+        dto.RequesterEmployeeId.ShouldBe(requesterId);
     }
 
     [Fact]
