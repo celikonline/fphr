@@ -6,8 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { colors } from "@/styles/colors";
@@ -16,77 +14,13 @@ import { typography } from "@/styles/typography";
 import {
   leaveService,
   type EmployeeLeaveBalances,
-  type LeaveBalanceItem,
-  type LeaveHalfDayPeriod,
   type LeaveRequest,
   type RequestableLeaveType,
 } from "@/services/LeaveService";
+import { LeaveBalanceCard } from "@/components/leave/LeaveBalanceCard";
+import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
-import { formatDays, toLocalDateOnly } from "@/lib/formatters";
 import { getApiErrorMessage } from "@/lib/apiError";
-
-/** `DateOnly` string the API expects ("yyyy-MM-dd"); today, as a sane default for the form. */
-function todayDateOnly(): string {
-  return toLocalDateOnly(new Date());
-}
-
-/**
- * B8 (2. bulgu): the first breakdown used `totalAccrued`/`totalUsed`, which are LIFETIME sums - they
- * don't add up to `availableBalance`, which is period-scoped. The fields that do sum to it
- * (`LeaveBalanceEngine.cs:239-256`):
- *   availableBalance = carriedOverIntoPeriod + lastPeriodAccrued + extraGrants + adjustments
- *                       - currentPeriodUsed - futureApprovedInPeriod
- * Zero-valued items are omitted; `adjustments` keeps its sign (a negative correction shows "-").
- * `pendingDays` is NOT part of that sum (the server doesn't subtract it from `availableBalance`,
- * only validates new requests against it) - shown separately in parentheses so it reads as
- * informational, not as a term of the equation above.
- */
-export function balanceBreakdown(item: Pick<LeaveBalanceItem, "balance" | "pendingDays">): string {
-  const {
-    carriedOverIntoPeriod,
-    lastPeriodAccrued,
-    extraGrants,
-    adjustments,
-    currentPeriodUsed,
-    futureApprovedInPeriod,
-  } = item.balance;
-  const parts: string[] = [];
-  if (carriedOverIntoPeriod !== 0) parts.push(`${formatDays(carriedOverIntoPeriod)} devreden`);
-  if (lastPeriodAccrued !== 0) parts.push(`${formatDays(lastPeriodAccrued)} hak ediş`);
-  if (extraGrants !== 0) parts.push(`${formatDays(extraGrants)} ek hak`);
-  if (adjustments !== 0) {
-    const sign = adjustments > 0 ? "+" : "-";
-    parts.push(`${sign}${formatDays(Math.abs(adjustments))} düzeltme`);
-  }
-  if (currentPeriodUsed !== 0) parts.push(`${formatDays(currentPeriodUsed)} kullanılan`);
-  if (futureApprovedInPeriod !== 0) parts.push(`${formatDays(futureApprovedInPeriod)} planlanan`);
-
-  const summary = parts.join(" · ");
-  const pendingDays = item.pendingDays ?? 0;
-  if (pendingDays <= 0) {
-    return summary;
-  }
-  const pendingSuffix = `(${formatDays(pendingDays)} onay bekliyor)`;
-  return summary.length > 0 ? `${summary} ${pendingSuffix}` : pendingSuffix;
-}
-
-const HALF_DAY_PERIOD_LABELS: Record<LeaveHalfDayPeriod, string> = {
-  morning: "Sabah",
-  afternoon: "Öğleden sonra",
-};
-
-/**
- * D2: the self-service submit body only models `fullDay`/`halfDay` (no `startTime`/`endTime`,
- * `substituteEmployeeId`, or `documentIds` fields) - `hourly` types and types that require a
- * substitute or a document are rejected by the server (`LeaveRequestRules.cs`) if submitted from
- * here. They still show up in the type list (so the balance/limits are visible), but selecting one
- * shows an info message instead of a submittable form.
- */
-export function isRequestableOnMobile(
-  type: Pick<RequestableLeaveType, "unit" | "requiresSubstitute" | "requiresDocument">
-): boolean {
-  return type.unit !== "hourly" && !type.requiresSubstitute && !type.requiresDocument;
-}
 
 /** H1: only a request still awaiting a decision can be withdrawn (`POST .../requests/{id}/withdraw`). */
 export function canWithdrawLeaveRequest(request: Pick<LeaveRequest, "status">): boolean {
@@ -100,13 +34,6 @@ export default function LeaveScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState(todayDateOnly());
-  const [endDate, setEndDate] = useState(todayDateOnly());
-  const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod>("morning");
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [withdrawingRequestId, setWithdrawingRequestId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
@@ -120,7 +47,6 @@ export default function LeaveScreen() {
       setBalances(balancesResult);
       setRequests(requestsResult);
       setRequestableTypes(typesResult);
-      setSelectedTypeId((current) => current ?? typesResult[0]?.id ?? null);
     } catch {
       setError("İzin bilgileri yüklenemedi. Lütfen tekrar deneyin.");
     }
@@ -164,53 +90,6 @@ export default function LeaveScreen() {
     );
   }
 
-  const selectedType = requestableTypes.find((t) => t.id === selectedTypeId) ?? null;
-  const isHalfDay = selectedType?.unit === "halfDay";
-  const blockedOnMobile = selectedType !== null && !isRequestableOnMobile(selectedType);
-
-  async function submitRequest() {
-    if (!selectedTypeId || !selectedType) {
-      Alert.alert("Eksik bilgi", "Lütfen bir izin türü seçin.");
-      return;
-    }
-    if (!isRequestableOnMobile(selectedType)) {
-      return;
-    }
-    if (!startDate || (!isHalfDay && !endDate)) {
-      Alert.alert("Eksik bilgi", "Lütfen başlangıç ve bitiş tarihini girin.");
-      return;
-    }
-    if (!isHalfDay && endDate < startDate) {
-      Alert.alert("Geçersiz tarih", "Bitiş tarihi başlangıç tarihinden önce olamaz.");
-      return;
-    }
-    if (selectedType.requiresDescription && description.trim().length === 0) {
-      Alert.alert("Eksik bilgi", "Bu izin türü için açıklama zorunludur.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await leaveService.submitLeaveRequest({
-        leaveTypeId: selectedTypeId,
-        startDate,
-        endDate: isHalfDay ? startDate : endDate,
-        description: description.trim().length > 0 ? description.trim() : null,
-        ...(isHalfDay ? { halfDayPeriod } : {}),
-      });
-      setDescription("");
-      await loadAll();
-      Alert.alert("Gönderildi", "İzin talebiniz onaya gönderildi.");
-    } catch (submitError) {
-      Alert.alert(
-        "Hata",
-        getApiErrorMessage(submitError, "İzin talebi gönderilemedi. Lütfen tekrar deneyin.")
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -236,13 +115,7 @@ export default function LeaveScreen() {
       <Text style={styles.sectionTitle}>Bakiyelerim</Text>
       {balances && balances.balances.length > 0 ? (
         balances.balances.map((item) => (
-          <View key={item.leaveTypeCode + item.leaveTypeName} style={styles.card}>
-            <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
-            <Text style={styles.cardValue}>
-              {formatDays(item.balance.availableBalance)} gün kullanılabilir
-            </Text>
-            <Text style={styles.cardSubtext}>{balanceBreakdown(item)}</Text>
-          </View>
+          <LeaveBalanceCard key={item.leaveTypeCode + item.leaveTypeName} item={item} />
         ))
       ) : (
         <Text style={styles.emptyText}>Bakiye kaydı bulunamadı.</Text>
@@ -250,109 +123,7 @@ export default function LeaveScreen() {
 
       <Text style={styles.sectionTitle}>Yeni izin talebi</Text>
       <View style={styles.card}>
-        {requestableTypes.length === 0 ? (
-          <Text style={styles.emptyText}>Talep edebileceğiniz bir izin türü yok.</Text>
-        ) : (
-          <>
-            <Text style={styles.fieldLabel}>İzin türü</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {requestableTypes.map((type) => {
-                const selected = type.id === selectedTypeId;
-                return (
-                  <TouchableOpacity
-                    key={type.id}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => setSelectedTypeId(type.id)}
-                  >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                      {type.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {blockedOnMobile ? (
-              <View style={styles.infoBanner}>
-                <Text style={styles.infoBannerText}>
-                  Bu izin türü şimdilik web uygulamasından talep edilebilir.
-                </Text>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.fieldLabel}>
-                  {isHalfDay ? "Tarih (yyyy-aa-gg)" : "Başlangıç tarihi (yyyy-aa-gg)"}
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  value={startDate}
-                  onChangeText={setStartDate}
-                  placeholder="2026-09-16"
-                  autoCapitalize="none"
-                />
-
-                {isHalfDay ? (
-                  <>
-                    <Text style={styles.fieldLabel}>Gün yarısı</Text>
-                    <View style={styles.chipRowWrap}>
-                      {(Object.keys(HALF_DAY_PERIOD_LABELS) as LeaveHalfDayPeriod[]).map(
-                        (period) => {
-                          const selected = period === halfDayPeriod;
-                          return (
-                            <TouchableOpacity
-                              key={period}
-                              style={[styles.chip, selected && styles.chipSelected]}
-                              onPress={() => setHalfDayPeriod(period)}
-                            >
-                              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                                {HALF_DAY_PERIOD_LABELS[period]}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        }
-                      )}
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.fieldLabel}>Bitiş tarihi (yyyy-aa-gg)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={endDate}
-                      onChangeText={setEndDate}
-                      placeholder="2026-09-18"
-                      autoCapitalize="none"
-                    />
-                  </>
-                )}
-
-                <Text style={styles.fieldLabel}>
-                  Açıklama {selectedType?.requiresDescription ? "(zorunlu)" : "(opsiyonel)"}
-                </Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Talebinizle ilgili not ekleyin"
-                  multiline
-                  numberOfLines={3}
-                />
-
-                <TouchableOpacity
-                  style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-                  onPress={() => void submitRequest()}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <Text style={styles.submitButtonText}>Talebi gönder</Text>
-                  )}
-                </TouchableOpacity>
-              </>
-            )}
-          </>
-        )}
+        <LeaveRequestForm requestableTypes={requestableTypes} onSubmitted={loadAll} />
       </View>
 
       <Text style={styles.sectionTitle}>Taleplerim</Text>
@@ -408,20 +179,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.sm,
   },
-  cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
-  },
-  cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs,
-  },
-  cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-  },
   emptyText: {
     ...typography.bodySm,
     color: colors.textTertiary,
@@ -435,77 +192,5 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.bodySm,
     color: colors.error,
-  },
-  infoBanner: {
-    backgroundColor: colors.gray50,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginTop: spacing.md,
-  },
-  infoBannerText: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
-  },
-  fieldLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  chipRow: {
-    flexDirection: "row",
-  },
-  chipRowWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.gray50,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    ...typography.bodySm,
-    color: colors.text,
-  },
-  chipTextSelected: {
-    color: colors.white,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.white,
-  },
-  textArea: {
-    minHeight: 72,
-    textAlignVertical: "top",
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    ...typography.button,
-    color: colors.white,
   },
 });

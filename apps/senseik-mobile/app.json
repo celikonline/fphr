@@ -32,11 +32,22 @@
       "expo-local-authentication",
       [
         "expo-camera",
-        { "cameraPermission": "Lokasyon girişindeki QR kodu okutmak için kamera erişimi gerekir." }
+        {
+          "cameraPermission": "Lokasyon girişindeki QR kodu okutmak için kamera erişimi gerekir."
+        }
       ],
       [
         "expo-location",
-        { "locationWhenInUsePermission": "Lokasyon geofence doğrulaması için konumunuz kullanılır." }
+        {
+          "locationWhenInUsePermission": "Lokasyon geofence doğrulaması için konumunuz kullanılır."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Belge eklemek için fotoğraf galerinize erişim gerekir.",
+          "cameraPermission": "Belge fotoğrafı çekmek için kamera erişimi gerekir."
+        }
       ],
       "expo-notifications",
       "expo-secure-store",
@@ -48,7 +59,8 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "./plugins/withAndroidBuildFixes.js"
+      "./plugins/withAndroidBuildFixes.js",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "eas": {

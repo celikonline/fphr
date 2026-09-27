@@ -122,20 +122,18 @@ export interface RequestableLeaveType {
   requiresDescription: boolean;
   requiresDocument: boolean;
   countsNonWorkingDays: boolean;
-  /**
-   * "Vekil" gerektiren türler (`requiresSubstitute`): self-service akış bir `substituteEmployeeId`
-   * seçici içermediği için bu mobilde şimdilik engellenir (bkz. `isRequestableOnMobile`). Absent on
-   * older API builds (treated as `false`, mirrors `web/src/services/leave.service.ts`).
-   */
+  /** "Vekil" gerektiren türler; absent on older API builds (treated as `false`, mirrors `web/src/services/leave.service.ts`). */
   requiresSubstitute?: boolean;
 }
 
 /**
  * Self-service submit body (`LeaveRequestBody`); `previousRequestId` resubmits a rejected own
- * request. `halfDayPeriod` is required by the API when the selected type's `unit` is `"halfDay"`
- * (start/end date are the same single day in that case); `hourly`/`requiresSubstitute`/
- * `requiresDocument` types are not submittable from mobile yet (see `isRequestableOnMobile`), so
- * their fields (`startTime`/`endTime`, `substituteEmployeeId`, `documentIds`) are not modeled here.
+ * request. `halfDayPeriod` is required when the selected type's `unit` is `"halfDay"`; `startTime`/
+ * `endTime` ("HH:mm:ss") when it's `"hourly"` (start/end date are the same single day in both
+ * cases). `substituteEmployeeId` is required when the type's `requiresSubstitute` is set
+ * (`LeaveRequestRules.ValidateSubstituteAsync` - server rejects a missing substitute, the requester
+ * themself, an inactive employee, or one already on leave over the same dates). `documentIds`
+ * (uploaded via `DocumentService.uploadMyDocument`) is required when `requiresDocument` is set.
  */
 export interface MyLeaveRequestInput {
   leaveTypeId: string;
@@ -143,7 +141,34 @@ export interface MyLeaveRequestInput {
   endDate: string;
   description: string | null;
   halfDayPeriod?: LeaveHalfDayPeriod;
+  startTime?: string;
+  endTime?: string;
+  substituteEmployeeId?: string;
+  documentIds?: string[];
   previousRequestId?: string | null;
+}
+
+/**
+ * `LeaveRequestPreviewResponse` (`GET /leave/me/requests/preview`): live day-count preview shown
+ * while filling the form (B-mobil-006) - `days` is what will actually be deducted (e.g. Sunday-only
+ * "full day" requests can preview `0` when the day isn't a working day); `warnings[].message` is
+ * already localized server-side. Mirrors `web/src/services/leave.service.ts`'s `LeaveRequestPreview`
+ * (mobile only reads `days`/`warnings`, not `weeklyRestDays`/`publicHolidayDays`/`teamOverlap`).
+ */
+export interface LeaveRequestPreview {
+  days: number;
+  weeklyRestDays: number;
+  publicHolidayDays: number;
+  warnings: { code: string; message: string }[];
+}
+
+export interface LeaveRequestPreviewInput {
+  leaveTypeId: string;
+  start: string;
+  end: string;
+  startTime?: string;
+  endTime?: string;
+  halfDayPeriod?: LeaveHalfDayPeriod;
 }
 
 export class LeaveService {
@@ -166,6 +191,13 @@ export class LeaveService {
   async getMyRequestableLeaveTypes(): Promise<RequestableLeaveType[]> {
     const response = await apiClient.get<RequestableLeaveType[]>(`${LEAVE_BASE}/me/leave-types`);
     return response.data.map((type) => ({ ...type, name: leaveTypeDisplayName(type.name) }));
+  }
+
+  async previewMyLeaveRequest(input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
+    const response = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/me/requests/preview`, {
+      params: input,
+    });
+    return response.data;
   }
 
   async submitLeaveRequest(input: MyLeaveRequestInput): Promise<LeaveRequest> {

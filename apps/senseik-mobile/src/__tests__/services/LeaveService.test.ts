@@ -103,7 +103,7 @@ describe("LeaveService", () => {
       expect(result.map((type) => type.name)).toEqual(["Yıllık izin", "Özel izin"]);
     });
 
-    it("passes requiresSubstitute through unchanged (D2: mobile blocks submission for these types)", async () => {
+    it("passes requiresSubstitute through unchanged (B-mobil-005: drives the vekil picker)", async () => {
       const mockResponse = {
         data: [
           {
@@ -149,6 +149,39 @@ describe("LeaveService", () => {
         halfDayPeriod: "morning" as const,
       };
       const mockResponse = { data: { id: "request-3", status: "pending" } };
+      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+
+      await leaveService.submitLeaveRequest(input);
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/requests", input);
+    });
+
+    it("forwards startTime/endTime with the same start/end date for an hourly request (A: saatlik izin)", async () => {
+      const input = {
+        leaveTypeId: "type-1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        description: null,
+        startTime: "09:00:00",
+        endTime: "11:30:00",
+      };
+      const mockResponse = { data: { id: "request-4", status: "pending" } };
+      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+
+      await leaveService.submitLeaveRequest(input);
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/requests", input);
+    });
+
+    it("forwards substituteEmployeeId for a requiresSubstitute request (B-mobil-005)", async () => {
+      const input = {
+        leaveTypeId: "type-1",
+        startDate: "2026-10-01",
+        endDate: "2026-10-03",
+        description: null,
+        substituteEmployeeId: "employee-2",
+      };
+      const mockResponse = { data: { id: "request-5", status: "pending" } };
       (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
 
       await leaveService.submitLeaveRequest(input);

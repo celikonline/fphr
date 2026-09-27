@@ -21,3 +21,54 @@ export function toLocalDateOnly(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+/** Parses a `DateOnly` ("yyyy-MM-dd") string into a local `Date` at midnight - the inverse of `toLocalDateOnly`. */
+export function dateOnlyToDate(value: string): Date {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+/**
+ * "16 Kas 2026 Pzt": day, short month, year, short weekday - the format the date picker fields
+ * (`DateField`) show once a date is picked, instead of a raw "yyyy-aa-gg" text box.
+ */
+export function formatDateWithWeekday(value: string): string {
+  const date = dateOnlyToDate(value);
+  const datePart = date.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const weekdayPart = date.toLocaleDateString("tr-TR", { weekday: "short" });
+  return `${datePart} ${weekdayPart}`;
+}
+
+/** "2 sa 30 dk" - shared by the timesheet screens and the hourly-leave duration preview. */
+export function formatDurationMinutes(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours} sa ${minutes} dk`;
+}
+
+/** Parses a `TimeOnly`-shaped "HH:mm" string; `null` when malformed (never throws on user-typed input). */
+export function parseTimeOnly(value: string): { hours: number; minutes: number } | null {
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return { hours, minutes };
+}
+
+/** Builds a `Date` carrying `value` ("HH:mm") as its wall-clock time (today's date, ignored by callers) - what the native time picker's `value` prop expects. Falls back to 09:00 when malformed. */
+export function timeOnlyToDate(value: string): Date {
+  const parsed = parseTimeOnly(value);
+  const date = new Date();
+  date.setHours(parsed?.hours ?? 9, parsed?.minutes ?? 0, 0, 0);
+  return date;
+}
+
+/** Inverse of `timeOnlyToDate`: reads a `Date`'s wall-clock time as "HH:mm". */
+export function dateToTimeOnly(date: Date): string {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}

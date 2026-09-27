@@ -83,6 +83,11 @@ EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:18080 pnpm android
 To work in Android Studio, open `apps/senseik-mobile/android` after the first prebuild and keep
 Metro running with `pnpm start --dev-client`.
 
+Document upload (leave requests that `requiresDocument`) PUTs straight to MinIO's presigned URL, which
+in dev points at `localhost:19000` (not `10.0.2.2`, since the API - not the app - generates that URL);
+run `adb reverse tcp:19000 tcp:19000` once per emulator session so the emulator's `localhost:19000`
+reaches the host's MinIO. Do not rewrite the presigned URL in code to work around this.
+
 ## Architecture
 
 ### Authentication

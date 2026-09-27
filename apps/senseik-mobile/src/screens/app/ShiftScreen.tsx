@@ -19,6 +19,7 @@ import {
   type EmployeeAvailability,
   type ShiftAssignment,
 } from "@/services/ShiftService";
+import { DateField } from "@/components/form/DateField";
 import { toLocalDateOnly } from "@/lib/formatters";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the week containing `reference` (Monday start). */
@@ -269,14 +270,8 @@ export default function ShiftScreen() {
 
       <Text style={styles.sectionTitle}>Müsait değilim</Text>
       <View style={styles.card}>
-        <Text style={styles.fieldLabel}>Tarih (yyyy-aa-gg)</Text>
-        <TextInput
-          style={styles.input}
-          value={availabilityDate}
-          onChangeText={setAvailabilityDate}
-          placeholder="2026-09-25"
-          autoCapitalize="none"
-        />
+        <Text style={styles.fieldLabel}>Tarih</Text>
+        <DateField value={availabilityDate} onChange={setAvailabilityDate} />
 
         <Text style={styles.fieldLabel}>Tür</Text>
         <View style={styles.chipRow}>

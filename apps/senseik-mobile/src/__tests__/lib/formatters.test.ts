@@ -1,4 +1,13 @@
-import { formatDays, toLocalDateOnly } from "@/lib/formatters";
+import {
+  dateOnlyToDate,
+  dateToTimeOnly,
+  formatDateWithWeekday,
+  formatDays,
+  formatDurationMinutes,
+  parseTimeOnly,
+  timeOnlyToDate,
+  toLocalDateOnly,
+} from "@/lib/formatters";
 
 describe("formatDays", () => {
   it("rounds to at most one decimal using the Turkish decimal comma", () => {
@@ -55,5 +64,64 @@ describe("toLocalDateOnly", () => {
     const noon = new Date(2026, 5, 10, 12, 0, 0);
 
     expect(toLocalDateOnly(noon)).toBe("2026-06-10");
+  });
+});
+
+describe("dateOnlyToDate", () => {
+  it("is the inverse of toLocalDateOnly", () => {
+    expect(toLocalDateOnly(dateOnlyToDate("2026-11-16"))).toBe("2026-11-16");
+  });
+
+  it("falls back to the current date for a malformed value instead of throwing", () => {
+    expect(() => dateOnlyToDate("not-a-date")).not.toThrow();
+  });
+});
+
+describe("formatDateWithWeekday (D-mobil-005: DateField display)", () => {
+  it("formats as 'gg Ay yyyy Hft' (day, short month, year, short weekday)", () => {
+    // 2026-11-16 is a Monday ("Pzt" in Turkish).
+    expect(formatDateWithWeekday("2026-11-16")).toBe("16 Kas 2026 Pzt");
+  });
+});
+
+describe("formatDurationMinutes", () => {
+  it("formats hours and leftover minutes", () => {
+    expect(formatDurationMinutes(150)).toBe("2 sa 30 dk");
+  });
+
+  it("formats an exact number of hours with 0 dk", () => {
+    expect(formatDurationMinutes(180)).toBe("3 sa 0 dk");
+  });
+
+  it("formats less than an hour as 0 sa", () => {
+    expect(formatDurationMinutes(45)).toBe("0 sa 45 dk");
+  });
+});
+
+describe("parseTimeOnly", () => {
+  it("parses a valid HH:mm string", () => {
+    expect(parseTimeOnly("09:30")).toEqual({ hours: 9, minutes: 30 });
+  });
+
+  it("returns null for an out-of-range hour", () => {
+    expect(parseTimeOnly("24:00")).toBeNull();
+  });
+
+  it("returns null for an out-of-range minute", () => {
+    expect(parseTimeOnly("09:60")).toBeNull();
+  });
+
+  it("returns null for a malformed string", () => {
+    expect(parseTimeOnly("9:30")).toBeNull();
+  });
+});
+
+describe("timeOnlyToDate / dateToTimeOnly", () => {
+  it("round-trips a valid HH:mm string", () => {
+    expect(dateToTimeOnly(timeOnlyToDate("14:05"))).toBe("14:05");
+  });
+
+  it("falls back to 09:00 for a malformed value", () => {
+    expect(dateToTimeOnly(timeOnlyToDate("garbage"))).toBe("09:00");
   });
 });
