@@ -9,12 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  useFocusEffect,
-  useNavigation,
-  type CompositeNavigationProp,
-} from "@react-navigation/native";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
@@ -29,12 +24,9 @@ import {
 import { attendanceService, type MyTimesheetSummary } from "@/services/AttendanceService";
 import { notificationsService } from "@/services/NotificationsService";
 import { formatDays, toLocalDateOnly } from "@/lib/formatters";
-import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
+import type { AppStackParamList } from "@/types/navigation";
 
-type DashboardNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabsParamList, "Dashboard">,
-  NativeStackNavigationProp<AppStackParamList>
->;
+type DashboardNavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 /** N1: badge caps at "9+" instead of growing the pill indefinitely. */
 export function formatUnreadBadge(count: number): string {

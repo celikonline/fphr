@@ -13,6 +13,7 @@ import {
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { pushNotificationService } from "@/services/PushNotificationService";
 import { resolvePushNavigationScreen } from "@/lib/pushNavigation";
+import type { NavigationTarget } from "@/lib/notificationNavigation";
 import { useAuthStore } from "@/store/authStore";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
@@ -26,8 +27,8 @@ SplashScreen.preventAutoHideAsync().catch(() => undefined);
  * Last validated push-navigation request. RootNavigator consumes and clears it after
  * authentication is confirmed, so an unauthenticated cold start can't land inside the app.
  */
-export let pushNavigationTarget: string | null = null;
-export function consumePushNavigationTarget(): string | null {
+export let pushNavigationTarget: NavigationTarget | null = null;
+export function consumePushNavigationTarget(): NavigationTarget | null {
   const target = pushNavigationTarget;
   pushNavigationTarget = null;
   return target;
@@ -97,9 +98,9 @@ export default function App() {
             }
           },
           (response) => {
-            // `data.screen`/`data.type` originate from the push sender: only known tab
-            // screens are ever returned, so a compromised sender can't deep-link into
-            // arbitrary routes.
+            // `data.screen`/`data.type` originate from the push sender: only known
+            // navigation targets are ever returned, so a compromised sender can't deep-link
+            // into arbitrary routes.
             const screen = resolvePushNavigationScreen(response.notification.request.content.data);
             if (screen) {
               pushNavigationTarget = screen;

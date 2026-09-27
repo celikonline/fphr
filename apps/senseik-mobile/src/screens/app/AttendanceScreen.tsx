@@ -133,7 +133,10 @@ export default function AttendanceScreen() {
     >
       <Text style={styles.title}>Puantajım</Text>
 
-      <TouchableOpacity style={styles.checkInButton} onPress={() => navigation.navigate("CheckIn")}>
+      <TouchableOpacity
+        style={styles.checkInButton}
+        onPress={() => navigation.navigate("MainTabs", { screen: "CheckIn" })}
+      >
         <Text style={styles.checkInButtonText}>QR ile giriş / çıkış yap</Text>
       </TouchableOpacity>
 

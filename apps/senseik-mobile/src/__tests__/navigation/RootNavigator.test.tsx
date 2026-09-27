@@ -1,7 +1,11 @@
 import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
 import { ActivityIndicator, Text } from "react-native";
-import { RootNavigator, shouldShowRootSplash } from "@/navigation/RootNavigator";
+import {
+  RootNavigator,
+  resolveStatusBarStyle,
+  shouldShowRootSplash,
+} from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/store/authStore";
 import { biometricService } from "@/lib/biometric";
 
@@ -99,6 +103,12 @@ describe("shouldShowRootSplash", () => {
     // longer feed into this decision - that was the B14/B15 root cause (RootNavigator unmounting
     // LoginScreen mid-submit and wiping its local state).
     expect(shouldShowRootSplash(true)).toBe(false);
+  });
+});
+
+describe("resolveStatusBarStyle", () => {
+  it("is always light - every screen (auth and app) now sits on the dark brand backdrop", () => {
+    expect(resolveStatusBarStyle()).toBe("light");
   });
 });
 

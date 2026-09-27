@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, AppState, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
+import { palette } from "@/theme/theme";
+import { TAB_BAR_HEIGHT } from "@/navigation/layout";
+import { NotchedTabBar } from "@/navigation/NotchedTabBar";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -32,30 +34,12 @@ import GoalsScreen from "@/screens/app/GoalsScreen";
 import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
 import RequestsScreen from "@/screens/app/RequestsScreen";
+import NewRequestScreen from "@/screens/app/NewRequestScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
-
-/**
- * B9: with `headerShown:false` on the tab navigator (B3), a tab screen's own top-level
- * ScrollView/View has nothing pushing it below the Android status bar - it used to get the
- * navigator header's height for free. Wrap each tab screen once here (instead of editing all six
- * screens' containers) with a top-edge-only SafeAreaView so scrolled content never renders under
- * the status bar. Defined at module scope (not inside `MainTabsNavigator`) so the wrapped
- * component keeps a stable identity across renders - react-navigation would otherwise remount the
- * screen every time.
- */
-function withTopSafeArea<P extends object>(ScreenComponent: React.ComponentType<P>) {
-  return function TopSafeAreaScreen(props: P) {
-    return (
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-        <ScreenComponent {...props} />
-      </SafeAreaView>
-    );
-  };
-}
 
 /**
  * Whether the root spinner (full-screen, replaces the whole navigator) should render instead of the
@@ -73,18 +57,17 @@ export function shouldShowRootSplash(appReady: boolean): boolean {
 }
 
 /**
- * B9: the auth stack has a dark backdrop (needs light/white status bar content); the app's tab
- * screens are white-background, so the same light content would be invisible on them. Exported as a
- * pure function (B18) so `RootNavigator`'s own effects and tests can compute it without duplicating
- * the ternary.
+ * B9/redesign: both the auth stack and (since the 2026-09 redesign) every app screen sit on the dark
+ * brand backdrop, so the status bar content is always light. Kept as an exported pure function
+ * (B18) so `RootNavigator`'s own effects and tests share one source.
  */
-export function resolveStatusBarStyle(isAuthenticated: boolean): "light" | "dark" {
-  return isAuthenticated ? "dark" : "light";
+export function resolveStatusBarStyle(): "light" {
+  return "light";
 }
 
 /**
- * B18: the app was observed reverting to an unreadable light/white status bar on the (white
- * background) tab screens after returning from the background. `expo-status-bar`'s declarative
+ * B18: the app was observed reverting to the wrong status bar style after returning from the
+ * background. `expo-status-bar`'s declarative
  * `<StatusBar style={...}>` only re-applies the native style when its own prop changes - it never
  * changes here across a background/foreground cycle, so nothing re-asserts it if anything else
  * (the OS, or a native dialog window opened earlier) altered the status bar appearance while
@@ -94,12 +77,42 @@ export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): bo
   return nextAppState === "active";
 }
 
-const DashboardScreenWithTopSafeArea = withTopSafeArea(DashboardScreen);
-const AttendanceScreenWithTopSafeArea = withTopSafeArea(AttendanceScreen);
-const LeaveScreenWithTopSafeArea = withTopSafeArea(LeaveScreen);
-const PayrollScreenWithTopSafeArea = withTopSafeArea(PayrollScreen);
-const ApprovalsScreenWithTopSafeArea = withTopSafeArea(ApprovalsScreen);
-const ProfileScreenWithTopSafeArea = withTopSafeArea(ProfileScreen);
+/**
+ * TEMPORARY (removed by Task 4 / Task 9, when Home and CheckIn move onto the shared `Screen` shell):
+ * the two tab screens still use their pre-redesign containers, which know nothing about the status
+ * bar or the custom tab bar that now overlays the scene. Pad them below the status bar and above the
+ * tab bar so nothing (e.g. Home's "Çıkış yap" button) ends up hidden under either. Module-scope
+ * components so react-navigation sees a stable identity and never remounts the screen.
+ */
+function TemporaryTabScreenFrame({ children }: { children: ReactNode }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={[
+        styles.tabScreenFrame,
+        { paddingTop: insets.top, paddingBottom: TAB_BAR_HEIGHT + insets.bottom },
+      ]}
+    >
+      {children}
+    </View>
+  );
+}
+
+function HomeTabScreen() {
+  return (
+    <TemporaryTabScreenFrame>
+      <DashboardScreen />
+    </TemporaryTabScreenFrame>
+  );
+}
+
+function CheckInTabScreen() {
+  return (
+    <TemporaryTabScreenFrame>
+      <CheckInScreen />
+    </TemporaryTabScreenFrame>
+  );
+}
 
 function AuthNavigator() {
   return (
@@ -118,79 +131,19 @@ function AuthNavigator() {
 function MainTabsNavigator() {
   return (
     <Tab.Navigator
+      tabBar={(props) => <NotchedTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: "#0066cc",
-        tabBarInactiveTintColor: "#999999",
-        // B3: each tab screen already renders its own in-page title (e.g. "Ana Sayfa") - a
-        // navigator header on top of that showed the title twice ("Anasayfa" + "Ana Sayfa").
         headerShown: false,
+        // The custom tab bar overlays the scene (its notch corners are transparent), so the scene
+        // behind it must be the dark backdrop, not the default light theme background.
+        sceneStyle: { backgroundColor: palette.night },
       }}
     >
+      <Tab.Screen name="Home" component={HomeTabScreen} options={{ title: "Ana sayfa" }} />
       <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreenWithTopSafeArea}
-        options={{
-          title: "Anasayfa",
-          tabBarLabel: "Anasayfa",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Attendance"
-        component={AttendanceScreenWithTopSafeArea}
-        options={{
-          title: "Puantaj",
-          tabBarLabel: "Puantaj",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Leave"
-        component={LeaveScreenWithTopSafeArea}
-        options={{
-          title: "İzin",
-          tabBarLabel: "İzin",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Payroll"
-        component={PayrollScreenWithTopSafeArea}
-        options={{
-          title: "Bordro",
-          tabBarLabel: "Bordro",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cash-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Approvals"
-        component={ApprovalsScreenWithTopSafeArea}
-        options={{
-          title: "Onaylarım",
-          tabBarLabel: "Onaylarım",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-done-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreenWithTopSafeArea}
-        options={{
-          title: "Profil",
-          tabBarLabel: "Profil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
+        name="CheckIn"
+        component={CheckInTabScreen}
+        options={{ title: "Giriş / Çıkış" }}
       />
     </Tab.Navigator>
   );
@@ -198,42 +151,22 @@ function MainTabsNavigator() {
 
 function AppNavigator() {
   return (
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: true,
-      }}
-    >
-      <AppStack.Screen
-        name="MainTabs"
-        component={MainTabsNavigator}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
-      <AppStack.Screen
-        name="CheckIn"
-        component={CheckInScreen}
-        options={{ title: "Giriş / Çıkış" }}
-      />
-      <AppStack.Screen name="People" component={PeopleScreen} options={{ title: "Kişiler" }} />
-      <AppStack.Screen name="Shift" component={ShiftScreen} options={{ title: "Vardiyalarım" }} />
-      <AppStack.Screen name="Goals" component={GoalsScreen} options={{ title: "Hedeflerim" }} />
-      <AppStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ title: "Bildirimler" }}
-      />
-      <AppStack.Screen
-        name="NotificationPreferences"
-        component={NotificationPreferencesScreen}
-        options={{ title: "Bildirim tercihleri" }}
-      />
-      <AppStack.Screen
-        name="Requests"
-        component={RequestsScreen}
-        options={{ title: "Taleplerim" }}
-      />
+    // Every stack screen draws its own header (`ScreenHeader`) - see spec §3.
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      <AppStack.Screen name="MainTabs" component={MainTabsNavigator} />
+      <AppStack.Screen name="Attendance" component={AttendanceScreen} />
+      <AppStack.Screen name="Leave" component={LeaveScreen} />
+      <AppStack.Screen name="Payroll" component={PayrollScreen} />
+      <AppStack.Screen name="Approvals" component={ApprovalsScreen} />
+      <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="Requests" component={RequestsScreen} />
+      <AppStack.Screen name="People" component={PeopleScreen} />
+      <AppStack.Screen name="Shift" component={ShiftScreen} />
+      <AppStack.Screen name="Goals" component={GoalsScreen} />
+      <AppStack.Screen name="Support" component={SupportScreen} />
+      <AppStack.Screen name="Notifications" component={NotificationsScreen} />
+      <AppStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+      <AppStack.Screen name="NewRequest" component={NewRequestScreen} />
     </AppStack.Navigator>
   );
 }
@@ -259,7 +192,7 @@ export function RootNavigator() {
     initializeApp();
   }, [checkAuth]);
 
-  const statusBarStyle = resolveStatusBarStyle(isAuthenticated);
+  const statusBarStyle = resolveStatusBarStyle();
 
   // B18: see `shouldReapplyStatusBarOnAppStateChange` - re-assert the current style whenever the app
   // returns to the foreground, since nothing else in this component's own props changes across a
@@ -277,8 +210,8 @@ export function RootNavigator() {
     return (
       <>
         <StatusBar style={statusBarStyle} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#0066cc" />
+        <View style={styles.splash}>
+          <ActivityIndicator size="large" color={palette.brand} />
         </View>
       </>
     );
@@ -315,3 +248,16 @@ export function RootNavigator() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: palette.night,
+  },
+  tabScreenFrame: {
+    flex: 1,
+    backgroundColor: palette.night,
+  },
+});

@@ -16,13 +16,16 @@ import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import { notificationsService, type UserNotification } from "@/services/NotificationsService";
 import { formatRelativeTime } from "@/lib/formatters";
-import { resolveNotificationNavigationTarget } from "@/lib/notificationNavigation";
+import {
+  navigateToTarget,
+  resolveNotificationNavigationTarget,
+} from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
 import type { AppStackParamList } from "@/types/navigation";
 
 const PAGE_SIZE = 20;
 
-type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList>;
+type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList, "Notifications">;
 
 function NotificationRow({
   notification,
@@ -126,7 +129,7 @@ export default function NotificationsScreen() {
 
     const target = resolveNotificationNavigationTarget(notification.templateKey);
     if (target) {
-      navigation.navigate("MainTabs", { screen: target });
+      navigateToTarget(navigation, target);
     }
   }
 

@@ -8,9 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { CompositeNavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
@@ -18,15 +16,12 @@ import { typography } from "@/styles/typography";
 import { profileService, type MyProfile } from "@/services/ProfileService";
 import { leaveService, type LeaveRequest } from "@/services/LeaveService";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
-import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
+import type { AppStackParamList } from "@/types/navigation";
 
 /** Number of recent leave requests shown in the "Taleplerim" summary on the profile screen. */
 const RECENT_LEAVE_REQUEST_COUNT = 5;
 
-type ProfileNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabsParamList, "Profile">,
-  NativeStackNavigationProp<AppStackParamList>
->;
+type ProfileNavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 function formatDateOnly(value: string): string {
   const date = new Date(`${value}T00:00:00`);
