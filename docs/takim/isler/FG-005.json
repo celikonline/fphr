@@ -1,0 +1,51 @@
+{
+  "id": "FG-005",
+  "baslik": "Akıllı giriş: konum (geofence) doğrulama + biyometrik teyit",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'Smart Clocking: biometric verification, geo-fencing controls, working-hours tracking' - resmi kaynak: zenhr.com/en/mobile; 'Location-based restrictions, GPS verification display' - ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "mobilde kısmi: harita + konum doğruluğu rozeti + GPS ile giriş/çıkış/mola var (CheckInScreen), ama POST self-checkin/gps'e locationId GÖNDERİLMİYOR → sunucu geofence kontrolü hiç devreye girmiyor; biyometrik teyit yok.",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/attendance/self-checkin/gps { latitude, longitude, locationId?, direction } - locationId verilirse SelfCheckInGeofence.Evaluate yarıçap dışını SelfCheckInOutsideGeofence ile reddediyor",
+      "GET /api/v1/attendance/self-checkin/status",
+      "Organization lokasyonları enlem/boylam/RadiusMeters taşıyor (LocationsController - organization.locations.read, Employee rolünde YOK)"
+    ],
+    "gereken_yeni": [
+      "GET /api/v1/attendance/self-checkin/locations (çalışanın giriş yapabileceği lokasyonlar: ad, enlem, boylam, yarıçap) - Employee rolünün organization.locations.read'i olmadığından self uç gerekli",
+      "Çalışan↔lokasyon ataması yok (Employee DTO'da LocationId yok): ya kiracının tüm aktif lokasyonları döner ya da atama modeli eklenir - karar sözleşmede yazılmalı",
+      "İsteğe bağlı kiracı ayarı: 'mobil girişte konum zorunlu' (roaming çalışanlar için kapatılabilir)"
+    ],
+    "izin": "Yeni uç 'attendance.my.checkin' (mevcut, Employee rolünde) ile korunur; yeni izin gerekmez."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/CheckInScreen.tsx (en yakın lokasyonu seçip locationId gönder; dışarıdaysa uyarı)",
+      "apps/senseik-mobile/src/screens/app/checkin/MapHeader.tsx (ofis geofence dairesini haritada göster)",
+      "apps/senseik-mobile/src/screens/app/checkin/ClockCard.tsx ('Ofis alanında / Alan dışında' rozeti)",
+      "apps/senseik-mobile/src/lib/biometric.ts (işlem öncesi LocalAuthentication teyidi)",
+      "apps/senseik-mobile/src/services/AttendanceService.ts (getCheckInLocations)"
+    ],
+    "navigasyon": "Alt bar 'Giriş / Çıkış' sekmesi (mevcut ekran)"
+  },
+  "kabul": [
+    "Giriş ekranı açıldığında çalışanın lokasyonları yüklenir; en yakın lokasyon adı ve mesafesi saat kartında görünür",
+    "Harita anahtarı varsa ofis geofence dairesi haritada çizilir; yoksa konum kartında 'Ofis alanında/Alan dışında' metni görünür",
+    "Giriş/çıkış/mola isteği en yakın lokasyonun locationId'si ile gider; yarıçap dışındaysa sunucunun yerelleştirilmiş hatası gösterilir ve punch oluşmaz",
+    "Lokasyonu olmayan (roaming) kiracı/çalışanda davranış değişmez (locationId gönderilmez)",
+    "Biyometri kayıtlı cihazda punch öncesi Face ID/parmak izi istenir; iptal edilirse punch gönderilmez; biyometri yoksa cihaz PIN'ine düşer",
+    "Birim testleri: en yakın lokasyon seçimi, mesafe hesabı, biyometri iptali; backend uç için handler + entegrasyon testi"
+  ],
+  "tasarim_notu": "Saat kartındaki doğruluk rozeti yanına ikinci StatusPill: 'Ofis alanında' (yeşil) / 'Alan dışında' (mercan). Haritada geofence dairesi brand %20 dolgu + brand kenarlık; kullanıcı dairesi ice.",
+  "buyukluk": "M - bir self uç + mobil seçim/teyit mantığı",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "mola başı/sonu işi (spec §6) birleşmiş olmalı"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": "KARAR GEREKLİ (insan): çalışan↔lokasyon ataması yok; tüm aktif lokasyonlardan en yakınını seçmek uzaktan/roaming çalışanların GPS girişini reddetmeye başlar. Önce kiracı ayarı (mobilde konum zorunlu mu) ve atama modeli kararı; sonra uygulanır. (2026-09-27, mobil yeniden tasarım oturumu)"
+}

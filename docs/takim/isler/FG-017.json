@@ -1,0 +1,43 @@
+{
+  "id": "FG-017",
+  "baslik": "Görevlerim (atanan görevler / işe alışım görevleri)",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "My Actions 'Tasks: pending and completed assigned tasks' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); 'Task Management: create, receive, and manage tasks' (MSS) - zenhr.com/en/mobile; tanıtım videosu + mağaza ekran görüntüleri (spec 2026-09-27 referansı) ızgarada 'Tasks'.",
+  "senseik_durumu": "mobilde yok; web'de İK tarafı var (onboarding.tsx) ama çalışanın kendi görev listesi web'de de yok. Backend self uçları hazır.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/onboarding/me/tasks (onboarding.my.tasks)",
+      "POST /api/v1/onboarding/me/tasks/{id}/complete (onboarding.my.tasks)"
+    ],
+    "gereken_yeni": [
+      "(faz 2) Genel görev (işe alışım dışı, yöneticinin atadığı) modeli backend'de yok - ZenHR MSS görev oluşturma için ayrı kart gerekir"
+    ],
+    "izin": "onboarding.my.tasks *.my.* kalıbıyla Employee rolünde; faz 1 mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/TasksService.ts (yeni)",
+      "apps/senseik-mobile/src/screens/app/tasks/TasksScreen.tsx (yeni: Bekleyen / Tamamlanan)",
+      "apps/senseik-mobile/src/screens/app/home/ActionGrid.tsx ('Görevlerim' kutucuğu + bekleyen rozeti)"
+    ],
+    "navigasyon": "İşlemlerim ızgarası 'Görevlerim' (bekleyen sayısı rozeti)"
+  },
+  "kabul": [
+    "Görevlerim ekranı bekleyen ve tamamlanan görevleri segmentle ayırır; son tarih yaklaşanlar üstte",
+    "Çalışan görevi 'Tamamlandı' olarak işaretleyebilir; liste ve rozet güncellenir",
+    "Başkasının görevi tamamlanamaz (backend 404/403)",
+    "Görev yoksa kutucuk rozetsiz, ekran EmptyState",
+    "Saf fonksiyon testleri (sıralama, rozet sayısı)"
+  ],
+  "tasarim_notu": "Görev kartı: onay dairesi (dokununca brand dolgu + onay işareti animasyonu, useReducedMotion'da animasyonsuz) + başlık + son tarih StatusPill.",
+  "buyukluk": "S - iki mevcut uç + bir ekran",
+  "riskli_alan": false,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

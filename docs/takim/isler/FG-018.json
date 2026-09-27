@@ -1,0 +1,48 @@
+{
+  "id": "FG-018",
+  "baslik": "Performans: değerlendirmelerim, hedef oluşturma, ekip hedefleri",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "My Actions 'Evaluation: performance reviews, OKRs, progress tracking' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); 'Performance Tracking: view OKRs and performance evaluation progress' - zenhr.com/en/mobile; blog.zenhr.com mobil uygulama yazısı 'check performance evaluations'.",
+  "senseik_durumu": "mobilde kısmi: Hedeflerim hedef listesi + ilerleme güncelleme var; değerlendirme dönemleri, hedef oluşturma ve ekip hedefleri yok (web'de my-goals, team-goals, review-cycles var).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/performance/goals/me, POST /api/v1/performance/goals/{id}/progress/me (mevcut mobil)",
+      "POST /api/v1/performance/goals/me (CreateMyGoalCommand; performance.my.goals)",
+      "GET /api/v1/performance/review-cycles/me (performance.my.reviews)",
+      "GET /api/v1/performance/goals/team (performance.team.goals - Manager rolünde, Employee'de YOK)"
+    ],
+    "gereken_yeni": [
+      "Öz değerlendirme formu doldurma/gönderme ucu yok (review-forms yalnız İK tanımı) - ZenHR değerlendirme doldurma için ayrı backend kartı gerekir",
+      "Ekip hedefleri Employee grubundaki yöneticilere açılacaksa ekip kapsamlı yetki (FG-007 kararı)"
+    ],
+    "izin": "performance.my.goals / performance.my.reviews Employee rolünde; faz 1 (değerlendirme listesi + hedef oluşturma) mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/GoalsService.ts (createMyGoal, getMyReviewCycles)",
+      "apps/senseik-mobile/src/screens/app/GoalsScreen.tsx (SegmentedControl 'Hedeflerim' / 'Değerlendirmelerim' / 'Ekibim')",
+      "apps/senseik-mobile/src/screens/app/goals/NewGoalSheet.tsx (yeni)"
+    ],
+    "navigasyon": "İşlemlerim ızgarası 'Hedeflerim' (mevcut) içinde segmentler"
+  },
+  "kabul": [
+    "Çalışan başlık, açıklama, hedef tarihi (ve varsa değerlendirme dönemi) ile yeni hedef oluşturur; liste güncellenir",
+    "Değerlendirmelerim segmenti çalışanın dahil olduğu değerlendirme dönemlerini durum ve tarihleriyle listeler",
+    "Ekip hedefleri segmenti yalnız yetkisi olana görünür (403'te gizli)",
+    "Doğrulama hataları (geçmiş hedef tarihi vb.) yerelleştirilmiş gösterilir",
+    "Saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "Hedef oluşturma BottomSheet + cam TextField; dönem kartı GlassCard + tarih aralığı + StatusPill (aktif/kapalı).",
+  "buyukluk": "M - mevcut uçlarla iki yeni görünüm + form",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-007 (ekip yetkisi)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

@@ -1,0 +1,48 @@
+{
+  "id": "FG-008",
+  "baslik": "Onay geçmişi ve toplu onay",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'My Approvals' tür filtresi, toplu seçim onay kutuları ve geçmiş sekmesi (tanıtım videosu + mağaza ekran görüntüleri (spec 2026-09-27 referansı)); 'Approvals dashboard with quick actions' - resmi kaynak: zenhr.com/en/mobile.",
+  "senseik_durumu": "mobilde kısmi: Onaylarım tür filtresi + tekil onay/red + red gerekçesi var; 'Geçmiş' ve toplu seçim yok. Backend'de karar verilmiş görevleri listeleyen uç yok.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/workflow/inbox (yalnız bekleyen görevler, workflow.inbox.view)",
+      "POST /api/v1/workflow/inbox/{taskId}/decide (workflow.inbox.decide)",
+      "ApprovalHistoryEntry domain'de kayıtlı (Workflow.Domain/ApprovalRequests)"
+    ],
+    "gereken_yeni": [
+      "GET /api/v1/workflow/inbox/history?from=&to=&type= (çağıranın verdiği kararlar: tür, talep eden, karar, tarih, yorum) - sayfalı",
+      "POST /api/v1/workflow/inbox/decide-bulk { taskIds[], outcome, comment? } - her görev için ayrı sonuç (kısmi başarı) döner; red için gerekçe zorunluluğu korunur",
+      "Karar kanalı: mobil çağrılarda ApprovalChannel.Mobile (bugün Web sabit)"
+    ],
+    "izin": "workflow.inbox.view / workflow.inbox.decide - ikisi de Employee rolünde; yeni izin gerekmez."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/ApprovalsScreen.tsx (ScreenHeader sağ eylem 'Geçmiş', seçim modu)",
+      "apps/senseik-mobile/src/screens/app/approvals/ApprovalHistoryScreen.tsx (yeni)",
+      "apps/senseik-mobile/src/screens/app/approvals/ApprovalTaskCard.tsx (seçim onay kutusu)",
+      "apps/senseik-mobile/src/services/ApprovalsService.ts (getHistory, decideBulk)"
+    ],
+    "navigasyon": "Onaylarım ekranı başlığında 'Geçmiş' hapı; uzun basınca / 'Seç' ile toplu seçim modu"
+  },
+  "kabul": [
+    "Onaylarım'da 'Geçmiş' hapı, kullanıcının onayladığı/reddettiği talepleri tarih sırasıyla ve tür filtresiyle listeler",
+    "'Seç' moduna geçince kartlarda onay kutusu çıkar; 'Tümünü seç' filtrelenmiş listeyi seçer",
+    "Seçili N talep 'Onayla (N)' ile tek seferde onaylanır; 'Reddet (N)' ortak gerekçe ister",
+    "Kısmi başarısızlıkta başarılılar listeden düşer, başarısızlar hata nedeniyle işaretli kalır",
+    "Onay rozet sayısı (ana sayfa) işlem sonrası güncellenir",
+    "Backend: bulk uçta yetki (başkasının görevi AssigneeMismatch) ve kısmi sonuç testleri; mobil seçim durumu saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "Seçim modunda alt kenarda sabit cam eylem çubuğu: 'Reddet (N)' mercan PrimaryButton danger + 'Onayla (N)' brand. Geçmiş kartında karar StatusPill (onaylandı yeşil / reddedildi mercan) ve karar tarihi.",
+  "buyukluk": "M - iki uç + ekran durumları",
+  "riskli_alan": false,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

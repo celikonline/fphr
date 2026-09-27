@@ -1,0 +1,44 @@
+{
+  "id": "FG-015",
+  "baslik": "Banka hesaplarım ve maaş geçmişim",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Bank Account' sekmesi ve 'Profile tab: salary details'; Payroll 'salary history and pay slips' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "web'de var mobilde yok (mobil Bordro yalnız bordro PDF'leri).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/employees/me/bank-accounts (IBAN maskesiz - kendi verisi; employee.my.view)",
+      "GET /api/v1/employees/me/salaries (employee.my.view)"
+    ],
+    "gereken_yeni": [],
+    "izin": "employee.my.view - Employee rolünde; mobil-only. Çalışan tarafından banka hesabı düzenleme ucu yok (yalnız İK: employee.bank_accounts.edit) - salt okuma."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/ProfileService.ts (getMyBankAccounts, getMySalaries)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Banka' sekmesi)",
+      "apps/senseik-mobile/src/screens/app/PayrollScreen.tsx ('Maaş geçmişi' segmenti)"
+    ],
+    "navigasyon": "Profil 'Banka' sekmesi + Bordro ekranında 'Bordrolar / Maaş geçmişi' segmenti"
+  },
+  "kabul": [
+    "Banka sekmesi hesapları (banka adı, IBAN, birincil etiketi) listeler; IBAN varsayılan maskeli, göz ikonuyla açılır ve biyometri ister",
+    "IBAN kopyalanabilir; IBAN ve tutarlar hiçbir log/analitik olayına yazılmaz",
+    "Maaş geçmişi yürürlük tarihi, brüt/net tutar ve para birimiyle yeni→eski listelenir; geçerli kayıt 'Güncel' etiketi taşır",
+    "Tutarlar ekran görüntüsü önizlemesinde (uygulama değiştirici) gizlenir (Android FLAG_SECURE / iOS blur)",
+    "Veri yoksa EmptyState; 404 (çalışan kaydı yok) hata bandı değil boş durum",
+    "Saf fonksiyon testleri (maskeleme, sıralama)"
+  ],
+  "tasarim_notu": "Tutarlar tabular-nums; IBAN satırı GlassCard + göz IconCircleButton. Maaş kartı PayslipHeroCard dilini kullanır (brand zemin, beyaz metin) yalnız güncel kayıt için.",
+  "buyukluk": "S - iki GET ucu, salt okuma ekranı (PII/para nedeniyle dikkat)",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "FG-014 (profil sekme yapısı)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

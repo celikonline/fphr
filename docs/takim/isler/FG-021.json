@@ -1,0 +1,44 @@
+{
+  "id": "FG-021",
+  "baslik": "Kişi detayı ve organizasyon şeması",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "'Employee Directory: find employees, roles, and contacts'; 'Colleague Contacts: view full employee profiles' - resmi kaynak: zenhr.com/en/mobile; App Store 'find colleagues' numbers, emails, titles' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "mobilde kısmi: Kişiler listesi + arama + ara/e-posta düğmeleri var; kişi detay sayfası, fotoğraf ve organizasyon şeması yok (web'de org-chart.tsx var).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/employees/directory (employee.directory.view)",
+      "GET /api/v1/employees/org-chart (employee.orgchart.view - Employee'de var)",
+      "GET /api/v1/employees/{id}/photo"
+    ],
+    "gereken_yeni": [],
+    "izin": "employee.directory.view ve employee.orgchart.view Employee rolünde açıkça listelenmiş; fotoğraf ucu da employee.directory.view ile korunuyor; mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/people/PersonDetailScreen.tsx (yeni)",
+      "apps/senseik-mobile/src/screens/app/people/OrgChartScreen.tsx (yeni)",
+      "apps/senseik-mobile/src/screens/app/PeopleScreen.tsx (satıra dokununca detay)",
+      "apps/senseik-mobile/src/services/PeopleService.ts (getOrgChart)"
+    ],
+    "navigasyon": "İşlemlerim 'Kişiler' → detay; Kişiler ekranı başlığında 'Şema' eylemi"
+  },
+  "kabul": [
+    "Kişiler listesinde satıra dokununca kişi detayı açılır: fotoğraf/baş harfler, ad, unvan, birim, yönetici, iş e-postası, (ayar açıksa) iş telefonu",
+    "Detaydan arama/e-posta/WhatsApp değil yalnız tel:/mailto: eylemleri (mevcut kural) çalışır",
+    "Yöneticisine ve bağlılarına dokunarak gezinilebilir",
+    "Organizasyon şeması ekranı kendi konumundan başlar, üst/alt düzeylere genişletilebilir",
+    "Telefon gizleme ayarı kapalıysa telefon hiç görünmez",
+    "Saf ağaç dönüştürme fonksiyonu birim testli"
+  ],
+  "tasarim_notu": "Detay başlığı: büyük Avatar + ad (heading 800) + unvan; altında iki IconCircleButton (ara, e-posta). Şema: dikey girintili cam kartlar, bağlantı çizgileri ice %20.",
+  "buyukluk": "M - iki yeni ekran, mevcut uçlar",
+  "riskli_alan": false,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

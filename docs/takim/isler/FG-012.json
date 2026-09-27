@@ -1,0 +1,44 @@
+{
+  "id": "FG-012",
+  "baslik": "Çalışan adına talep (yönetici/İK on-behalf)",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "'Time Off: individual or on-behalf-of-employee requests' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "web'de var mobilde yok (İK web'den çalışan adına izin/fazla mesai girebiliyor).",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/leave/employees/{employeeId}/requests + GET .../requests/preview + GET .../balances (leave.requests.create_on_behalf; dataScope kontrolü)",
+      "POST /api/v1/leave/employees/{employeeId}/overtimes (leave.overtimes.create_on_behalf)",
+      "GET /api/v1/employees (seçim listesi, employee.employees.read)"
+    ],
+    "gereken_yeni": [
+      "Yok (yetkili kullanıcı için); Employee grubundaki yöneticilere açılacaksa ekip kapsamlı yetki gerekir (FG-007 kararıyla birlikte)"
+    ],
+    "izin": "leave.requests.create_on_behalf / leave.overtimes.create_on_behalf: HR/Owner'da var, Employee ve Manager'da YOK. Mobil yalnız izni olana gösterir."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/NewRequestScreen.tsx ('Kimin için' çalışan seçici - yalnız izinliyse)",
+      "apps/senseik-mobile/src/services/LeaveService.ts"
+    ],
+    "navigasyon": "FAB > İzin / Fazla mesai formunda üstte 'Kimin için' alanı"
+  },
+  "kabul": [
+    "İzni olmayan kullanıcı formda değişiklik görmez",
+    "İzinli kullanıcı çalışan arayıp seçer; bakiye ve önizleme seçilen çalışana göre gelir",
+    "Talep seçilen çalışan adına oluşur ve onay akışına girer; çalışana bildirim gider",
+    "Kapsam dışı çalışan seçilemez (backend 404)"
+  ],
+  "tasarim_notu": "Formun en üstünde cam SelectField 'Kimin için' (Avatar + ad); varsayılan 'Kendim'.",
+  "buyukluk": "M - mevcut uçlar, form genişletmesi",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-007 (yetki kararı)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

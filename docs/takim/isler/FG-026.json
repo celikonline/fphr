@@ -1,0 +1,44 @@
+{
+  "id": "FG-026",
+  "baslik": "Sigorta bilgilerim (özel sağlık/hayat sigortası)",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Insurance Tab: insurance details' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "backend'de yok (yalnız SGK bildirge/prim hesapları var - Payroll; çalışanın yan hak sigorta poliçesi modeli yok).",
+  "backend": {
+    "mevcut_uclar": [
+      "Payroll SGK hesapları (APHB) - çalışana gösterilecek sigorta bilgisi değil"
+    ],
+    "gereken_yeni": [
+      "Yan hak sigorta poliçesi varlığı (sigorta şirketi, poliçe no, kapsam, başlangıç/bitiş, kapsanan aile üyeleri) + migration",
+      "GET /api/v1/employees/me/insurances + İK CRUD; poliçe belgesi Documents ile"
+    ],
+    "izin": "Yeni 'employee.my.insurance' (*.my.*) + İK 'employee.insurance.manage'."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Sigorta' sekmesi)",
+      "apps/senseik-mobile/src/services/ProfileService.ts"
+    ],
+    "navigasyon": "Profil 'Sigorta' sekmesi (kayıt yoksa gizli)"
+  },
+  "kabul": [
+    "Sigorta sekmesi poliçeleri şirket, kapsam ve geçerlilik tarihleriyle listeler",
+    "Poliçe belgesi varsa indirilebilir",
+    "SGK işe giriş tarihi/sicil gibi yasal bilgiler ayrı satırda salt okuma gösterilebilir (karar: gösterilecek mi)",
+    "Kayıt yoksa sekme gizli; backend yetki testleri"
+  ],
+  "tasarim_notu": "ProfileInfoCard; kalkan ikonu accent turkuaz.",
+  "buyukluk": "M - yeni varlık + migration",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-014",
+    "FG-024 (kapsanan aile üyeleri)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

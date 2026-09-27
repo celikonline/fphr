@@ -1,0 +1,46 @@
+{
+  "id": "FG-025",
+  "baslik": "Disiplin kayıtlarım",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Disciplinary Action Tab' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); 'view records of disciplinary actions' (zenhr.com/en/mobile arama özeti).",
+  "senseik_durumu": "backend'de yok (yalnız belge türü tohumunda disiplinle ilgili belge türü var; disiplin kaydı modeli yok).",
+  "backend": {
+    "mevcut_uclar": [
+      "Documents belge türleri (DocumentTypeSeed) - tutanak/savunma belgeleri yüklenebilir"
+    ],
+    "gereken_yeni": [
+      "Employee modülünde DisciplinaryAction varlığı (tarih, tür: uyarı/kınama/ihtar, gerekçe, savunma istendi mi/savunma belgesi, İK notu) + migration",
+      "GET /api/v1/employees/me/disciplinary-actions (salt okuma, çalışana gösterilecek alanlar filtreli) + İK CRUD",
+      "(isteğe bağlı) çalışan savunma metni/belgesi yükleme ucu"
+    ],
+    "izin": "Yeni 'employee.my.disciplinary' (*.my.*) + İK 'employee.disciplinary.manage'; hassas → Manager rolünde exclude (Sensitive kalıbı) değerlendirilmeli; insan onayı."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Disiplin' sekmesi)",
+      "apps/senseik-mobile/src/services/ProfileService.ts"
+    ],
+    "navigasyon": "Profil 'Disiplin' sekmesi (kayıt yoksa gizli)"
+  },
+  "kabul": [
+    "Çalışan kendisi hakkındaki disiplin kayıtlarını tarih, tür ve gerekçeyle görür; İK iç notları görünmez",
+    "Savunma istenen kayıtta savunma belgesi yüklenebilir (Documents altyapısı)",
+    "Kayıt yoksa sekme hiç görünmez",
+    "Yetki testleri: başkasının kaydı 404; yönetici yalnız yetkisi varsa görür",
+    "Migration testi"
+  ],
+  "tasarim_notu": "Sade liste; tür StatusPill (uyarı amber, ihtar mercan). Vurgu rengi minimum - hassas içerik.",
+  "buyukluk": "M - yeni varlık + migration + ekran",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "FG-014",
+    "FG-013"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}
