@@ -16,6 +16,7 @@ import {
   Divider,
   Group,
   Modal,
+  MultiSelect,
   NumberInput,
   Select,
   Stack,
@@ -32,16 +33,19 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { enumLabel } from "@/lib/i18n-enum";
 import { formatDateTime } from "@/lib/dates";
 import { useOrgUnits } from "@/components/employees/use-org-units";
+import { listUsers } from "@/services/users.service";
 import {
   createCandidate,
   createJobApplication,
   getJobPosting,
+  getJobPostingAccess,
   getJobRequisition,
   listApplicationsByPosting,
   listCandidates,
   listFormResponsesByApplication,
   listFormTemplates,
   moveJobApplicationStage,
+  setJobPostingAccess,
   submitFormResponse,
   APPLICATION_STAGES,
   type ApplicationStage,
@@ -78,6 +82,7 @@ function JobPostingDetail() {
   const queryClient = useQueryClient();
   const canManageApplications = usePermission("recruitment.applications.manage");
   const canSubmitForms = usePermission("recruitment.form_responses.submit");
+  const canManageAccess = usePermission("recruitment.postings.update");
   const { nameById: orgUnitNameById } = useOrgUnits();
 
   const postingQuery = useQuery({
@@ -260,6 +265,8 @@ function JobPostingDetail() {
           <Text size="sm">{posting.description}</Text>
         </Card>
       )}
+
+      <JobPostingAccessSection postingId={posting.id} canManageAccess={canManageAccess} />
 
       <Divider label={t("recruitment:applications.title")} labelPosition="left" />
 
@@ -566,5 +573,96 @@ function JobPostingDetail() {
         </Stack>
       </Modal>
     </div>
+  );
+}
+
+/** Kimlerin bu ilana erişebileceğini gösterir (TK-023); `canManageAccess` yoksa salt okunur liste. */
+function JobPostingAccessSection({ postingId, canManageAccess }: { postingId: string; canManageAccess: boolean }) {
+  const { t } = useTranslation(["recruitment", "common"]);
+
+  const accessQuery = useQuery({
+    queryKey: ["recruitment", "postings", postingId, "access"],
+    queryFn: () => getJobPostingAccess(postingId),
+  });
+  const usersQuery = useQuery({ queryKey: ["users", "options"], queryFn: () => listUsers({ pageSize: 200 }) });
+
+  const userOptions = useMemo(
+    () => (usersQuery.data?.items ?? []).map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` })),
+    [usersQuery.data],
+  );
+  const userNameById = useMemo(() => new Map(userOptions.map((o) => [o.value, o.label])), [userOptions]);
+
+  return (
+    <Card withBorder>
+      <Text fw={600} mb={4}>
+        {t("recruitment:postings.access")}
+      </Text>
+      <Text size="sm" c="dimmed" mb="sm">
+        {t("recruitment:postings.accessHint")}
+      </Text>
+
+      {accessQuery.isLoading ? (
+        <Text size="sm" c="dimmed">
+          {t("common:loading")}
+        </Text>
+      ) : canManageAccess ? (
+        <JobPostingAccessEditor postingId={postingId} initialUserIds={accessQuery.data ?? []} userOptions={userOptions} />
+      ) : (accessQuery.data ?? []).length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("recruitment:postings.accessEmpty")}
+        </Text>
+      ) : (
+        <Group gap="xs">
+          {(accessQuery.data ?? []).map((userId) => (
+            <Badge key={userId} variant="light">
+              {userNameById.get(userId) ?? userId}
+            </Badge>
+          ))}
+        </Group>
+      )}
+    </Card>
+  );
+}
+
+/** `canManageAccess` altında düzenlenebilir liste; kaydet `SetJobPostingAccessCommand`'a giden PUT'u tetikler. */
+function JobPostingAccessEditor({
+  postingId,
+  initialUserIds,
+  userOptions,
+}: {
+  postingId: string;
+  initialUserIds: string[];
+  userOptions: { value: string; label: string }[];
+}) {
+  const { t } = useTranslation(["recruitment", "common"]);
+  const queryClient = useQueryClient();
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(initialUserIds);
+
+  const saveMutation = useMutation({
+    mutationFn: () => setJobPostingAccess(postingId, selectedUserIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recruitment", "postings", postingId, "access"] });
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:postings.accessSaved") });
+    },
+    onError: (err) =>
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  return (
+    <Stack gap="sm">
+      <MultiSelect
+        aria-label={t("recruitment:postings.access")}
+        data={userOptions}
+        value={selectedUserIds}
+        onChange={setSelectedUserIds}
+        searchable
+        clearable
+      />
+      <Group justify="flex-end">
+        <Button type="button" size="sm" disabled={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+          {saveMutation.isPending ? t("common:saving") : t("common:save")}
+        </Button>
+      </Group>
+    </Stack>
   );
 }

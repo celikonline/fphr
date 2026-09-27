@@ -44,7 +44,11 @@
     "closeSuccess": "Ausschreibung geschlossen.",
     "archiveSuccess": "Ausschreibung archiviert.",
     "empty": "Noch keine Ausschreibungen vorhanden.",
-    "viewDetail": "Ausschreibung ansehen"
+    "viewDetail": "Ausschreibung ansehen",
+    "access": "Zugriff",
+    "accessHint": "Verwalten Sie, welche Benutzer über den Eigentümer und die einstellende Führungskraft hinaus auf diese Ausschreibung zugreifen können.",
+    "accessEmpty": "Kein zusätzlicher Zugriff über den Eigentümer und die einstellende Führungskraft hinaus gewährt.",
+    "accessSaved": "Zugriffsliste aktualisiert."
   },
   "postingDetail": {
     "careerLink": {

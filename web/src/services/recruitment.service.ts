@@ -112,6 +112,11 @@ export async function archiveJobPosting(id: string, reason: JobPostingArchiveRea
   await apiClient.post(`${RECRUITMENT_BASE}/postings/${id}/archive`, { reason });
 }
 
+export async function getJobPostingAccess(id: string): Promise<string[]> {
+  const { data } = await apiClient.get<string[]>(`${RECRUITMENT_BASE}/postings/${id}/access`);
+  return data;
+}
+
 export async function setJobPostingAccess(id: string, userIds: string[]): Promise<void> {
   await apiClient.put(`${RECRUITMENT_BASE}/postings/${id}/access`, { userIds });
 }
