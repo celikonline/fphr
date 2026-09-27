@@ -123,7 +123,7 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         if (documentIds.Count > 0)
         {
             var attached = await LeaveRequestAttachmentLinker.LinkAsync(
-                documents, attachments, tenant.TenantId, request.Id, documentIds, currentUser.UserId, now, cancellationToken);
+                documents, attachments, tenant.TenantId, request.Id, command.EmployeeId, documentIds, currentUser.UserId, now, cancellationToken);
             if (attached.IsFailure)
             {
                 return attached.Error;

@@ -103,7 +103,7 @@ public sealed class SubmitLeaveRequestHandler(
         if (documentIds.Count > 0)
         {
             var attached = await LeaveRequestAttachmentLinker.LinkAsync(
-                documents, attachments, tenant.TenantId, submitted.Value.Id, documentIds, currentUser.UserId, clock.GetUtcNow().UtcDateTime, cancellationToken);
+                documents, attachments, tenant.TenantId, submitted.Value.Id, employeeId, documentIds, currentUser.UserId, clock.GetUtcNow().UtcDateTime, cancellationToken);
             if (attached.IsFailure)
             {
                 return attached.Error;
