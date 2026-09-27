@@ -1,10 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
 import type { LeaveBalanceItem } from "@/services/LeaveService";
 import { formatDays } from "@/lib/formatters";
+import { palette, radius, text } from "@/theme/theme";
 
 /**
  * B8 (2. bulgu): the first breakdown used `totalAccrued`/`totalUsed`, which are LIFETIME sums - they
@@ -50,40 +48,36 @@ type Props = {
   item: LeaveBalanceItem;
 };
 
-/** One "Bakiyelerim" card: kullanılabilir gün + dönem bazlı döküm (B8). */
+/** One balance's detail (İzinlerim's balance sheet): kullanılabilir gün + dönem bazlı döküm (B8). */
 export function LeaveBalanceCard({ item }: Props) {
+  const breakdown = balanceBreakdown(item);
   return (
     <View style={styles.card}>
       <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
       <Text style={styles.cardValue}>
         {formatDays(item.balance.availableBalance)} gün kullanılabilir
       </Text>
-      <Text style={styles.cardSubtext}>{balanceBreakdown(item)}</Text>
+      {breakdown ? <Text style={styles.cardSubtext}>{breakdown}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    gap: 6,
+    padding: 16,
+    borderRadius: radius.card,
+    backgroundColor: palette.glass,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+    borderColor: palette.glassBorder,
   },
   cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    ...text.bodyMuted,
   },
   cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs,
+    ...text.number,
   },
   cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
+    ...text.caption,
   },
 });

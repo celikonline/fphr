@@ -4,6 +4,9 @@ import { Text } from "react-native";
 import NewRequestScreen from "@/screens/app/NewRequestScreen";
 import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import { leaveService } from "@/services/LeaveService";
+import OvertimeRequestSection from "@/components/requests/OvertimeRequestSection";
+import ExpenseClaimSection from "@/components/requests/ExpenseClaimSection";
+import AdvanceRequestSection from "@/components/requests/AdvanceRequestSection";
 import type { RequestKind } from "@/types/navigation";
 
 // Ionicons checks expo-font's isLoaded, which the shared expo-font mock (setup.ts) lacks.
@@ -19,7 +22,10 @@ jest.mock("@/components/leave/LeaveRequestForm", () => ({ LeaveRequestForm: jest
 function mockFormStub(label: string) {
   const { Text: RNText } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
-  return { __esModule: true, default: () => ReactActual.createElement(RNText, null, label) };
+  return {
+    __esModule: true,
+    default: jest.fn(() => ReactActual.createElement(RNText, null, label)),
+  };
 }
 jest.mock("@/components/requests/OvertimeRequestSection", () => mockFormStub("overtime-form"));
 jest.mock("@/components/requests/ExpenseClaimSection", () => mockFormStub("expense-form"));
@@ -73,6 +79,19 @@ describe("NewRequestScreen", () => {
     const { renderer } = await renderScreen(kind);
 
     expect(texts(renderer)).toEqual(expect.arrayContaining([title, form]));
+  });
+
+  it.each([
+    ["overtime", OvertimeRequestSection],
+    ["expense", ExpenseClaimSection],
+    ["advance", AdvanceRequestSection],
+  ] as const)("closes after a successful %s submit", async (kind, section) => {
+    const { goBack } = await renderScreen(kind);
+
+    const sectionProps = (section as unknown as jest.Mock).mock.lastCall[0];
+    act(() => sectionProps.onSubmitted());
+
+    expect(goBack).toHaveBeenCalledTimes(1);
   });
 
   it("loads the requestable leave types, hands them to LeaveRequestForm and closes on success", async () => {

@@ -15,6 +15,7 @@ type Props = {
   disabled?: boolean;
   /** Caption shown above the glass box (and used as its accessible name). */
   label?: string;
+  required?: boolean;
 };
 
 /**
@@ -25,7 +26,7 @@ type Props = {
  * imperative API on Android"). On any other platform the field shows the value but tapping is a
  * no-op until an iOS picker is designed. Request forms use the JS `SheetDateField` instead.
  */
-export function DateField({ value, onChange, minimumDateValue, disabled, label }: Props) {
+export function DateField({ value, onChange, minimumDateValue, disabled, label, required }: Props) {
   function open() {
     if (Platform.OS !== "android" || disabled) {
       return;
@@ -44,7 +45,12 @@ export function DateField({ value, onChange, minimumDateValue, disabled, label }
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <Text style={styles.label}>
+          {label}
+          {required ? " *" : ""}
+        </Text>
+      ) : null}
       <TouchableOpacity
         style={[styles.field, disabled && styles.fieldDisabled]}
         onPress={open}

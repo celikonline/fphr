@@ -23,7 +23,7 @@ export const NEW_REQUEST_TITLES: Record<RequestKind, string> = {
 /**
  * Full-screen request form opened from the tab bar's "Yeni talep" sheet: a brand-blue title band
  * (with a close button) over a dark rounded body that hosts the existing form for `kind`. The forms
- * themselves are restyled in Task 7; here they are only placed into the new shell.
+ * themselves use the glass fields, the JS "Tarih seç" sheet and a full-width "Talebi gönder" button.
  */
 export default function NewRequestScreen({ navigation, route }: Props) {
   const { kind } = route.params;
@@ -50,21 +50,18 @@ export default function NewRequestScreen({ navigation, route }: Props) {
   );
 }
 
-/**
- * Mounts the existing form for `kind` with the same props its current host passes (`LeaveScreen`
- * for leave; `RequestsScreen` renders the other three prop-less). Only `LeaveRequestForm` exposes a
- * success callback today, so only a leave submit closes the screen automatically.
- */
+/** Mounts the form for `kind`; every form calls `onSubmitted` after a successful submit, which
+ * closes the screen (Taleplerim/İzinlerim reload on focus). */
 function RequestForm({ kind, onSubmitted }: { kind: RequestKind; onSubmitted: () => void }) {
   switch (kind) {
     case "leave":
       return <LeaveRequestBody onSubmitted={onSubmitted} />;
     case "overtime":
-      return <OvertimeRequestSection />;
+      return <OvertimeRequestSection onSubmitted={onSubmitted} />;
     case "expense":
-      return <ExpenseClaimSection />;
+      return <ExpenseClaimSection onSubmitted={onSubmitted} />;
     case "advance":
-      return <AdvanceRequestSection />;
+      return <AdvanceRequestSection onSubmitted={onSubmitted} />;
   }
 }
 

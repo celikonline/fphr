@@ -1,8 +1,9 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { Ionicons } from "@expo/vector-icons";
+import { accents, fontFor, palette, radius, text, tones, type AccentKey } from "@/theme/theme";
+
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export interface StagedDocument {
   id: string;
@@ -28,101 +29,147 @@ export function LeaveDocumentsSection({
   onRemove,
 }: Props) {
   return (
-    <>
-      <Text style={styles.fieldLabel}>Belge ekle (zorunlu)</Text>
+    <View style={styles.container}>
+      <Text style={styles.label}>Belge ekle *</Text>
       <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={styles.secondaryButton}
+        <PickerTile
+          icon="camera-outline"
+          accent="blue"
+          label="Fotoğraf çek"
           onPress={onCapturePhoto}
           disabled={uploading}
-        >
-          <Text style={styles.secondaryButtonText}>Fotoğraf çek</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={onPickFile} disabled={uploading}>
-          <Text style={styles.secondaryButtonText}>Dosya seç</Text>
-        </TouchableOpacity>
+        />
+        <PickerTile
+          icon="document-attach-outline"
+          accent="purple"
+          label="Dosya seç"
+          onPress={onPickFile}
+          disabled={uploading}
+        />
       </View>
-      {uploading && (
+      {uploading ? (
         <View style={styles.uploadingRow}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.uploadingText}>Belge yükleniyor…</Text>
+          <ActivityIndicator size="small" color={palette.white} />
+          <Text style={styles.caption}>Belge yükleniyor…</Text>
         </View>
-      )}
+      ) : null}
       {documents.map((doc) => (
         <View key={doc.id} style={styles.documentRow}>
+          <Ionicons name="document-outline" size={18} color={palette.ice} />
           <Text style={styles.documentName} numberOfLines={1}>
             {doc.name}
           </Text>
-          <TouchableOpacity onPress={() => onRemove(doc.id)}>
-            <Text style={styles.documentRemove}>Kaldır</Text>
+          <TouchableOpacity
+            onPress={() => onRemove(doc.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`${doc.name} kaldır`}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.remove}>Kaldır</Text>
           </TouchableOpacity>
         </View>
       ))}
-      {missingRequired && (
-        <Text style={styles.documentHint}>
-          Bu izin türü için en az bir belge eklemeniz gerekir.
-        </Text>
-      )}
-    </>
+      {missingRequired ? (
+        <Text style={styles.hint}>Bu izin türü için en az bir belge eklemeniz gerekir.</Text>
+      ) : null}
+    </View>
+  );
+}
+
+function PickerTile({
+  icon,
+  accent,
+  label,
+  onPress,
+  disabled,
+}: {
+  icon: IoniconName;
+  accent: AccentKey;
+  label: string;
+  onPress: () => void;
+  disabled: boolean;
+}) {
+  const accentStyle = accents[accent];
+  return (
+    <TouchableOpacity
+      style={[styles.tile, disabled && styles.tileDisabled]}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+    >
+      <View style={[styles.tileIcon, { backgroundColor: accentStyle.bg }]}>
+        <Ionicons name={icon} size={24} color={accentStyle.fg} />
+      </View>
+      <Text style={styles.tileLabel}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  fieldLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+  container: {
+    gap: 8,
+  },
+  label: {
+    ...text.caption,
   },
   actionRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: 12,
   },
-  secondaryButton: {
+  tile: {
     flex: 1,
-    backgroundColor: colors.gray50,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: spacing.sm,
     alignItems: "center",
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: radius.tile,
+    backgroundColor: palette.glass,
+    borderWidth: 1,
+    borderColor: palette.glassBorder,
   },
-  secondaryButtonText: {
-    ...typography.button,
-    color: colors.text,
+  tileDisabled: {
+    opacity: 0.5,
+  },
+  tileIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tileLabel: {
+    ...text.caption,
+    color: palette.white,
+    ...fontFor(700),
   },
   uploadingRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    gap: 8,
   },
-  uploadingText: {
-    ...typography.bodyXs,
-    color: colors.textSecondary,
+  caption: {
+    ...text.caption,
   },
   documentRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
+    gap: 10,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: palette.line,
   },
   documentName: {
-    ...typography.bodySm,
-    color: colors.text,
+    ...text.body,
     flex: 1,
-    marginRight: spacing.sm,
   },
-  documentRemove: {
-    ...typography.bodyXs,
-    color: colors.error,
+  remove: {
+    ...text.caption,
+    color: palette.coral,
+    ...fontFor(700),
   },
-  documentHint: {
-    ...typography.bodyXs,
-    color: colors.error,
-    marginTop: spacing.xs,
+  hint: {
+    ...text.caption,
+    color: tones.danger.fg,
   },
 });

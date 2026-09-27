@@ -13,10 +13,11 @@ type Props = {
   disabled?: boolean;
   /** Caption shown above the glass box (and used as its accessible name). */
   label?: string;
+  required?: boolean;
 };
 
 /** Tap-to-open native time picker for hourly leave start/end times; see `DateField` for the Android-only rationale. */
-export function TimeField({ value, onChange, disabled, label }: Props) {
+export function TimeField({ value, onChange, disabled, label, required }: Props) {
   function open() {
     if (Platform.OS !== "android" || disabled) {
       return;
@@ -35,7 +36,12 @@ export function TimeField({ value, onChange, disabled, label }: Props) {
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <Text style={styles.label}>
+          {label}
+          {required ? " *" : ""}
+        </Text>
+      ) : null}
       <TouchableOpacity
         style={[styles.field, disabled && styles.fieldDisabled]}
         onPress={open}
