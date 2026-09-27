@@ -7,6 +7,7 @@ export interface ApiProblem {
   status?: number;
   code?: string;
   errors?: Record<string, string[]>;
+  args?: Record<string, unknown>;
 }
 
 export function getApiErrorStatus(error: unknown): number | undefined {

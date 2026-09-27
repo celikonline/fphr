@@ -223,3 +223,79 @@ describe("LeaveTypeDialog (denetim A6 eligible gender)", () => {
     expect((screen.getByRole("combobox", { name: /Uygun cinsiyet/ }) as HTMLInputElement).value).toBe("Herkes");
   });
 });
+
+describe("LeaveTypeDialog (TK-012 field-scoped server errors)", () => {
+  function axiosError(data: unknown) {
+    return { isAxiosError: true, response: { status: 400, data } };
+  }
+
+  it("binds a server field error to its input, focuses it, and skips the generic banner", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateLeaveType).mockRejectedValueOnce(
+      axiosError({ detail: "Yıllık gün 0.5 ile 365 arasında olmalıdır.", code: "leave.type.invalid", args: { field: "annualDays" } }),
+    );
+    renderDialog(seededAnnualType());
+
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    const annualDaysInput = await screen.findByLabelText(/Yıllık gün/);
+    expect(annualDaysInput).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Yıllık gün 0.5 ile 365 arasında olmalıdır.")).toBeInTheDocument();
+    expect(annualDaysInput).toHaveFocus();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("falls back to the generic banner when the field is not rendered (e.g. seniorityTiers)", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateLeaveType).mockRejectedValueOnce(
+      axiosError({ detail: "Kıdem kademeleri geçersiz.", code: "leave.type.invalid", args: { field: "seniorityTiers" } }),
+    );
+    renderDialog(seededAnnualType());
+
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Kıdem kademeleri geçersiz.");
+  });
+
+  it("falls back to the generic banner when the server sends no field", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateLeaveType).mockRejectedValueOnce(axiosError({ detail: "Sunucu hatası." }));
+    renderDialog(seededAnnualType());
+
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Sunucu hatası.");
+  });
+
+  it("clears the field error once the user edits the field", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateLeaveType).mockRejectedValueOnce(
+      axiosError({ detail: "Yıllık gün geçersiz.", code: "leave.type.invalid", args: { field: "annualDays" } }),
+    );
+    renderDialog(seededAnnualType());
+
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+    const annualDaysInput = await screen.findByLabelText(/Yıllık gün/);
+    expect(annualDaysInput).toHaveAttribute("aria-invalid", "true");
+
+    await user.clear(annualDaysInput);
+    await user.type(annualDaysInput, "10");
+
+    expect(annualDaysInput).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByText("Yıllık gün geçersiz.")).toBeNull();
+  });
+
+  it("shows the client-side name-required error under the name field, not the generic banner", async () => {
+    const user = userEvent.setup();
+    renderDialog(seededAnnualType());
+
+    const nameInput = screen.getByRole("textbox", { name: /Tür adı/ });
+    await user.clear(nameInput);
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    expect(nameInput).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Ad zorunludur.")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(updateLeaveType).not.toHaveBeenCalled();
+  });
+});

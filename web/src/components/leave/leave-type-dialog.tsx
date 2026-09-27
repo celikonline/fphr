@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,7 +20,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useLeaveName } from "@/components/leave/leave-shared";
 import { FormModal } from "@/components/ui/form-modal";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import {
   addLeaveType,
   updateLeaveType,
@@ -119,9 +119,22 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
   const isMobile = useMediaQuery("(max-width: 390px)");
   const [settings, setSettings] = useState<LeaveTypeSettings>(editing?.settings ?? defaultSettings());
   const [error, setError] = useState<string | null>(null);
+  // Server-side validation errors (Error.Args["field"], see LeaveTypeSettings.Validate) that name one of the
+  // inputs below are shown under that input instead of the generic banner (`error` above); a field the server
+  // names but this form does not render (e.g. seniorityTiers) still falls back to the generic banner.
+  const [fieldError, setFieldError] = useState<{ field: string; message: string } | null>(null);
 
-  const set = <K extends keyof LeaveTypeSettings>(key: K, value: LeaveTypeSettings[K]) =>
+  const set = <K extends keyof LeaveTypeSettings>(key: K, value: LeaveTypeSettings[K]) => {
     setSettings((current) => ({ ...current, [key]: value }));
+    if (fieldError?.field === key) setFieldError(null);
+  };
+
+  const fieldErrorMessage = (field: string) => (fieldError?.field === field ? fieldError.message : undefined);
+
+  // Focuses the field the server flagged once it is rendered with its error, after the DOM reflects `fieldError`.
+  useEffect(() => {
+    if (fieldError) document.getElementById(`leave-type-${fieldError.field}`)?.focus();
+  }, [fieldError]);
 
   // `settings.name` may still be a seed resource key (e.g. "leave.type.annual") until the user edits the field;
   // the input always shows the resolved display value, and saving sends that resolved value (never the raw key) —
@@ -139,13 +152,19 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
       toast({ variant: "success", title: t("common:success"), description: t(editing ? "leave:types.saved" : "leave:types.added") });
       onClose();
     },
-    onError: (err) => setError(getApiErrorMessage(err, t("leave:genericError"))),
+    onError: (err) => {
+      const field = getApiProblem(err)?.args?.field;
+      const message = getApiErrorMessage(err, t("leave:genericError"));
+      if (typeof field === "string" && document.getElementById(`leave-type-${field}`)) setFieldError({ field, message });
+      else setError(message);
+    },
   });
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!displayName.trim()) return setError(t("leave:ruleSets.nameRequired"));
     setError(null);
+    setFieldError(null);
+    if (!displayName.trim()) return setFieldError({ field: "name", message: t("leave:ruleSets.nameRequired") });
     mutation.mutate();
   }
 
@@ -181,6 +200,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 value={displayName}
                 maxLength={NAME_MAX_LENGTH}
                 disabled={busy}
+                error={fieldErrorMessage("name")}
                 onChange={(event) => set("name", event.currentTarget.value)}
               />
             </div>
@@ -224,6 +244,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 step={0.5}
                 value={settings.perRequestMaxDays ?? undefined}
                 disabled={busy}
+                error={fieldErrorMessage("perRequestMaxDays")}
                 onChange={(value) => set("perRequestMaxDays", typeof value === "number" ? value : null)}
               />
             )}
@@ -239,6 +260,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                   withAsterisk
                   value={settings.annualDays ?? undefined}
                   disabled={busy}
+                  error={fieldErrorMessage("annualDays")}
                   onChange={(value) => set("annualDays", typeof value === "number" ? value : null)}
                 />
 
@@ -282,6 +304,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                       step={0.5}
                       value={settings.negativeBalanceLimitDays ?? undefined}
                       disabled={busy}
+                      error={fieldErrorMessage("negativeBalanceLimitDays")}
                       onChange={(value) => set("negativeBalanceLimitDays", typeof value === "number" ? value : null)}
                     />
                   )}
@@ -336,6 +359,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                       step={0.5}
                       value={settings.carryOverMaxDays ?? undefined}
                       disabled={busy}
+                      error={fieldErrorMessage("carryOverMaxDays")}
                       onChange={(value) => set("carryOverMaxDays", typeof value === "number" ? value : null)}
                     />
                   )}
@@ -372,6 +396,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 step={0.5}
                 value={settings.maxConsecutiveDays ?? undefined}
                 disabled={busy}
+                error={fieldErrorMessage("maxConsecutiveDays")}
                 onChange={(value) => set("maxConsecutiveDays", typeof value === "number" ? value : null)}
               />
               <Select
@@ -405,6 +430,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
               max={MAX_WAITING_PERIOD_MONTHS}
               value={settings.waitingPeriodMonths}
               disabled={busy}
+              error={fieldErrorMessage("waitingPeriodMonths")}
               onChange={(value) => set("waitingPeriodMonths", typeof value === "number" ? value : 0)}
               inputWrapperOrder={["label", "input", "description"]}
             />
