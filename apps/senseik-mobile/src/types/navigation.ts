@@ -22,6 +22,7 @@ export type AppStackParamList = {
   Goals: undefined;
   Notifications: undefined;
   NotificationPreferences: undefined;
+  Requests: undefined;
 };
 
 export type MainTabsParamList = {

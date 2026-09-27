@@ -199,6 +199,58 @@ export interface LeaveAttachmentDownloadUrl {
   contentType: string;
 }
 
+/** TK-031: overtime lives in the Leave module (`MyOvertimeController.cs`), not Attendance - see TK-031 handoff. */
+const OVERTIME_BASE = `${LEAVE_BASE}/me/overtimes`;
+
+/** Mirrors `OvertimeRequestStatus` (Sense.Modules.Leave.Domain.Overtime), camelCase JsonStringEnumConverter. */
+export type OvertimeRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
+
+/** 4857 md.41 ücret oranı (%25/%50) - TK-031 decision #4: never shown to the employee to pick, always `rate50` (the company default, matching web's `OvertimeRequestBody.PayRateKind = Rate50` default). */
+export type OvertimePayRateKind = "rate25" | "rate50";
+
+export const OVERTIME_DEFAULT_PAY_RATE_KIND: OvertimePayRateKind = "rate50";
+
+/** `OvertimeRequestDto` (`OvertimeRequestFeatures.cs`). */
+export interface OvertimeRequest {
+  id: string;
+  employeeId: string;
+  workDate: string;
+  startTime: string;
+  durationMinutes: number;
+  startAt: string;
+  endAt: string;
+  dayKind: "workday" | "weeklyRest" | "publicHoliday";
+  overlapWithScheduleMinutes: number;
+  payableMinutes: number;
+  description?: string | null;
+  status: OvertimeRequestStatus;
+  submittedAt: string;
+  decidedAt?: string | null;
+  payRateKind: OvertimePayRateKind;
+  payRateMultiplier: number;
+}
+
+/** `OvertimeRequestBody` - the request payload for `POST /leave/me/overtimes`. */
+export interface OvertimeRequestInput {
+  workDate: string;
+  startTime: string;
+  durationMinutes: number;
+  description?: string | null;
+  payRateKind?: OvertimePayRateKind;
+}
+
+/**
+ * `OvertimeSubmissionDto`: non-blocking findings (`leave.warnings.*` codes) returned alongside a
+ * successfully submitted overtime request - e.g. missing written consent, annual limit exceeded.
+ * These never block submission; show them to the employee after a successful submit.
+ */
+export interface OvertimeSubmissionResult {
+  id: string;
+  overlapWithScheduleMinutes: number;
+  payableMinutes: number;
+  warnings: string[];
+}
+
 export class LeaveService {
   async getMyBalances(): Promise<EmployeeLeaveBalances> {
     const response = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/me/balances`);
@@ -277,6 +329,31 @@ export class LeaveService {
       `${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}/download-url`
     );
     return response.data;
+  }
+
+  /** TK-031: the caller's own overtime requests, newest first (server order). */
+  async getMyOvertimeRequests(): Promise<OvertimeRequest[]> {
+    const response = await apiClient.get<OvertimeRequest[]>(OVERTIME_BASE);
+    return response.data;
+  }
+
+  /**
+   * TK-031: submits an overtime request. `payRateKind` defaults to `rate50` (decision #4 - never
+   * offered as a choice in the mobile form) - sent explicitly rather than relying on the backend's
+   * own C# default parameter, since that default only applies when System.Text.Json can resolve it
+   * from the record's constructor, which is more fragile to depend on across API versions.
+   */
+  async submitOvertimeRequest(input: OvertimeRequestInput): Promise<OvertimeSubmissionResult> {
+    const response = await apiClient.post<OvertimeSubmissionResult>(OVERTIME_BASE, {
+      ...input,
+      payRateKind: input.payRateKind ?? OVERTIME_DEFAULT_PAY_RATE_KIND,
+    });
+    return response.data;
+  }
+
+  /** TK-031: withdraws a still-pending overtime request. */
+  async withdrawOvertimeRequest(id: string): Promise<void> {
+    await apiClient.post(`${OVERTIME_BASE}/${id}/withdraw`);
   }
 }
 

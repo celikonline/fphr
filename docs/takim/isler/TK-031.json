@@ -1,9 +1,9 @@
 {
   "id": "TK-031",
   "baslik": "Mobil - harcama/avans/fazla mesai talebi olusturma (RISKLI - odeme akisina yakin)",
-  "durum": "engelli",
+  "durum": "inceleme",
   "sahip": "takim-gelistirici-node",
-  "dal": "takim/mobil-harcama-avans-talep",
+  "dal": "takim/mobil-bordro-harcama",
   "kaynak": "Kolay IK arastirmasi 2026-09-23 - tek dokunusla harcama/avans/fazla mesai talebi, senseik-mobile'da yalniz onaylama var, mobilden talep acilamiyor",
   "kabul": [
     "Mobilde yeni bir ekran/form: harcama, avans ve fazla mesai talebi olusturma (Expense/Attendance modullerinin zaten var olan web API'lerini kullanarak).",
@@ -13,6 +13,6 @@
   ],
   "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY + INSAN ONAYI (odeme akisina yakin, birlestirmeden once zorunlu)",
   "riskli_alan": true,
-  "kanit": null,
+  "kanit": ".claude/takim/kanit/4d478492cf2d38f3.json",
   "handoff": "docs/takim/handoff/TK-031.md"
 }

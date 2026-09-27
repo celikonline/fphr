@@ -31,6 +31,7 @@ import ShiftScreen from "@/screens/app/ShiftScreen";
 import GoalsScreen from "@/screens/app/GoalsScreen";
 import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
+import RequestsScreen from "@/screens/app/RequestsScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -227,6 +228,11 @@ function AppNavigator() {
         name="NotificationPreferences"
         component={NotificationPreferencesScreen}
         options={{ title: "Bildirim tercihleri" }}
+      />
+      <AppStack.Screen
+        name="Requests"
+        component={RequestsScreen}
+        options={{ title: "Taleplerim" }}
       />
     </AppStack.Navigator>
   );

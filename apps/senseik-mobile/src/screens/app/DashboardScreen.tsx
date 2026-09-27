@@ -218,6 +218,14 @@ export default function DashboardScreen() {
         </View>
       )}
 
+      <TouchableOpacity
+        style={styles.createRequestRow}
+        onPress={() => navigation.navigate("Requests")}
+      >
+        <Text style={styles.createRequestRowText}>Talep oluştur</Text>
+        <Text style={styles.createRequestRowChevron}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={() => logout()}>
         <Text style={styles.logoutButtonText}>Çıkış yap</Text>
       </TouchableOpacity>
@@ -313,6 +321,25 @@ const styles = StyleSheet.create({
     ...typography.bodyXs,
     color: colors.textTertiary,
     marginTop: spacing.xs,
+  },
+  createRequestRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  createRequestRowText: {
+    ...typography.body,
+    color: colors.text,
+  },
+  createRequestRowChevron: {
+    ...typography.h4,
+    color: colors.textTertiary,
   },
   logoutButton: {
     backgroundColor: colors.error,

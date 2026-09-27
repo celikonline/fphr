@@ -149,7 +149,12 @@ export default function ProfileScreen() {
         <Text style={styles.supportRowChevron}>›</Text>
       </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>Taleplerim</Text>
+      <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Requests")}>
+        <Text style={styles.supportRowText}>Harcama / Avans / Fazla mesai</Text>
+        <Text style={styles.supportRowChevron}>›</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.sectionTitle}>Taleplerim (İzin)</Text>
       {leaveRequestsError && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{leaveRequestsError}</Text>

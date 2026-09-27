@@ -321,4 +321,99 @@ describe("LeaveService", () => {
       await expect(leaveService.getMyBalances()).rejects.toEqual(apiError);
     });
   });
+
+  describe("getMyOvertimeRequests (TK-031)", () => {
+    it("fetches the caller's own overtime requests", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "ot-1",
+            employeeId: "e-1",
+            workDate: "2026-09-27",
+            startTime: "18:00:00",
+            durationMinutes: 120,
+            status: "pending",
+          },
+        ],
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyOvertimeRequests();
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/leave/me/overtimes");
+    });
+  });
+
+  describe("submitOvertimeRequest (TK-031 decision #4: rate never chosen by the employee)", () => {
+    it("submits with the default payRateKind (rate50) when none is given", async () => {
+      const mockResponse = {
+        data: { id: "ot-1", overlapWithScheduleMinutes: 0, payableMinutes: 120, warnings: [] },
+      };
+      (apiClient.post as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.submitOvertimeRequest({
+        workDate: "2026-09-27",
+        startTime: "18:00",
+        durationMinutes: 120,
+        description: "Ay sonu kapanışı",
+      });
+
+      expect(result).toEqual(mockResponse.data);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/overtimes", {
+        workDate: "2026-09-27",
+        startTime: "18:00",
+        durationMinutes: 120,
+        description: "Ay sonu kapanışı",
+        payRateKind: "rate50",
+      });
+    });
+
+    it("respects an explicit payRateKind when given", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: { id: "ot-1", overlapWithScheduleMinutes: 0, payableMinutes: 60, warnings: [] },
+      });
+
+      await leaveService.submitOvertimeRequest({
+        workDate: "2026-09-27",
+        startTime: "09:00",
+        durationMinutes: 60,
+        payRateKind: "rate25",
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/leave/me/overtimes",
+        expect.objectContaining({ payRateKind: "rate25" })
+      );
+    });
+
+    it("returns non-blocking warnings from the submission response", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({
+        data: {
+          id: "ot-1",
+          overlapWithScheduleMinutes: 30,
+          payableMinutes: 90,
+          warnings: ["leave.warnings.overtime_consent_missing"],
+        },
+      });
+
+      const result = await leaveService.submitOvertimeRequest({
+        workDate: "2026-09-27",
+        startTime: "18:00",
+        durationMinutes: 120,
+      });
+
+      expect(result.warnings).toEqual(["leave.warnings.overtime_consent_missing"]);
+    });
+  });
+
+  describe("withdrawOvertimeRequest (TK-031)", () => {
+    it("posts to the withdraw endpoint for the given id", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: undefined });
+
+      await leaveService.withdrawOvertimeRequest("ot-1");
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/overtimes/ot-1/withdraw");
+    });
+  });
 });
