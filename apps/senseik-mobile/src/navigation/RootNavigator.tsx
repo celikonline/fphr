@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
+import { BrandMark } from "@/components/auth/BrandMark";
 import { palette } from "@/theme/theme";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
 import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
@@ -34,6 +35,9 @@ import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
 import RequestsScreen from "@/screens/app/RequestsScreen";
 import NewRequestScreen from "@/screens/app/NewRequestScreen";
+
+// expo-splash-screen's default `imageWidth` (dp); splash-icon.png is the BrandMark's full 40-unit box.
+const SPLASH_MARK_SIZE = 100;
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -162,7 +166,14 @@ export function RootNavigator() {
       <>
         <StatusBar style={statusBarStyle} />
         <View style={styles.splash}>
-          <ActivityIndicator size="large" color={palette.brand} />
+          {/* Native splash's mark at the same size/centre, settled (no entrance animation). */}
+          <BrandMark size={SPLASH_MARK_SIZE} animated={false} />
+          <ActivityIndicator
+            size="large"
+            color={palette.brand}
+            accessibilityLabel="Yükleniyor"
+            style={styles.splashSpinner}
+          />
         </View>
       </>
     );
@@ -206,5 +217,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: palette.night,
+  },
+  // Below the centred mark without pushing it off-centre (the native splash has no spinner).
+  splashSpinner: {
+    position: "absolute",
+    top: "50%",
+    marginTop: SPLASH_MARK_SIZE / 2 + 32,
   },
 });
