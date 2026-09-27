@@ -57,7 +57,7 @@ export function LogoutConfirmSheet({ visible, onClose }: Props) {
 
   return (
     <BottomSheet visible={visible} onClose={handleClose} title="Çıkış yapılsın mı?">
-      <Text style={styles.body}>Tekrar giriş yapman gerekecek.</Text>
+      <Text style={styles.body}>Tekrar giriş yapmanız gerekecek.</Text>
       {error ? <AuthFormError message={error} /> : null}
       <View style={styles.actions}>
         <PrimaryButton

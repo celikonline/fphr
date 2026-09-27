@@ -1,6 +1,6 @@
 import React from "react";
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from "react-test-renderer";
-import { Alert, Text, TextInput } from "react-native";
+import { AccessibilityInfo, Alert, Platform, Text, TextInput } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import ForgotPasswordScreen from "@/screens/auth/ForgotPasswordScreen";
 import BiometricPromptScreen from "@/screens/auth/BiometricPromptScreen";
@@ -67,10 +67,15 @@ describe("ForgotPasswordScreen", () => {
   beforeEach(() => {
     goBack.mockClear();
     (authService.forgotPassword as jest.Mock).mockReset();
+    (AccessibilityInfo.announceForAccessibility as jest.Mock).mockClear();
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    Platform.OS = "ios";
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    Platform.OS = "ios";
+  });
 
   it("shows an inline error (no native alert), stays on the screen and makes no request when it is empty", () => {
     const renderer = render(<ForgotPasswordScreen {...props} />);
@@ -182,6 +187,33 @@ describe("ForgotPasswordScreen", () => {
 
     expect(goBack).toHaveBeenCalledTimes(1);
   });
+
+  it("announces the success message to VoiceOver on iOS once the request resolves", async () => {
+    (authService.forgotPassword as jest.Mock).mockResolvedValue(undefined);
+    const renderer = render(<ForgotPasswordScreen {...props} />);
+
+    act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
+    await act(async () => {
+      findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress();
+    });
+
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      "E-posta kayıtlıysa sıfırlama bağlantısı gönderildi."
+    );
+  });
+
+  it("does not announce the success message on Android (accessibilityLiveRegion covers it there)", async () => {
+    Platform.OS = "android";
+    (authService.forgotPassword as jest.Mock).mockResolvedValue(undefined);
+    const renderer = render(<ForgotPasswordScreen {...props} />);
+
+    act(() => renderer.root.findByType(TextInput).props.onChangeText("ad@sirket.com"));
+    await act(async () => {
+      findButton(renderer, "Sıfırlama bağlantısı gönder").props.onPress();
+    });
+
+    expect(AccessibilityInfo.announceForAccessibility).not.toHaveBeenCalled();
+  });
 });
 
 describe("BiometricPromptScreen", () => {
@@ -197,10 +229,15 @@ describe("BiometricPromptScreen", () => {
     goBack.mockClear();
     loginWithBiometric.mockReset();
     (useAuthStore as unknown as jest.Mock).mockReturnValue({ loginWithBiometric });
+    (AccessibilityInfo.announceForAccessibility as jest.Mock).mockClear();
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    Platform.OS = "ios";
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    Platform.OS = "ios";
+  });
 
   it("starts the biometric login for the e-mail on mount", async () => {
     loginWithBiometric.mockResolvedValue(undefined);
@@ -223,6 +260,27 @@ describe("BiometricPromptScreen", () => {
     );
     expect(Alert.alert).not.toHaveBeenCalled();
     expect(goBack).not.toHaveBeenCalled();
+  });
+
+  it("announces the failure message to VoiceOver on iOS when the attempt fails", async () => {
+    loginWithBiometric.mockRejectedValue(new Error("cancelled"));
+
+    render(<BiometricPromptScreen {...props} />);
+    await act(async () => {});
+
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenCalledWith(
+      "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın."
+    );
+  });
+
+  it("does not announce the failure message on Android (accessibilityLiveRegion covers it there)", async () => {
+    Platform.OS = "android";
+    loginWithBiometric.mockRejectedValue(new Error("cancelled"));
+
+    render(<BiometricPromptScreen {...props} />);
+    await act(async () => {});
+
+    expect(AccessibilityInfo.announceForAccessibility).not.toHaveBeenCalled();
   });
 
   it("retries the biometric login from the failure message", async () => {

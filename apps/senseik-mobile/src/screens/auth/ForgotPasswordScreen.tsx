@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
@@ -28,6 +28,14 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   // Ref guard (not state): a second rapid tap must be rejected synchronously, before React has a
   // chance to re-render with the disabled button - see BiometricPromptScreen's `inFlightRef`.
   const submittingRef = useRef(false);
+
+  // The success text below uses `accessibilityLiveRegion`, which Android reads automatically but
+  // iOS ignores - announce it to VoiceOver explicitly once the panel appears.
+  useEffect(() => {
+    if (sent && Platform.OS === "ios") {
+      AccessibilityInfo.announceForAccessibility(SENT_MESSAGE);
+    }
+  }, [sent]);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);

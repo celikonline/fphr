@@ -45,7 +45,7 @@ describe("LogoutConfirmSheet", () => {
     expect(allTexts(renderer)).toEqual(
       expect.arrayContaining([
         "Çıkış yapılsın mı?",
-        "Tekrar giriş yapman gerekecek.",
+        "Tekrar giriş yapmanız gerekecek.",
         "Çıkış yap",
         "Vazgeç",
       ])

@@ -1,5 +1,13 @@
-import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { sectionTitleText } from "@/components/ui/SectionHeader";
 import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 
@@ -16,6 +24,14 @@ export function AuthFooter() {
 
 /** Inline form error of the auth panels (wrong credentials, empty field, failed biometric...). */
 export function AuthFormError({ message }: { message: string }) {
+  // `accessibilityLiveRegion` only has an effect on Android - VoiceOver on iOS needs an imperative
+  // announcement whenever the error appears or its text changes.
+  useEffect(() => {
+    if (Platform.OS === "ios") {
+      AccessibilityInfo.announceForAccessibility(message);
+    }
+  }, [message]);
+
   return (
     <View style={styles.errorBanner} accessibilityLiveRegion="polite" accessibilityRole="alert">
       <Text style={styles.errorText}>{message}</Text>
