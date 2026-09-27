@@ -34,7 +34,9 @@ export type ApprovalCardHeading = {
 /** `amount`/`typeCaption`'ı kartın gösterebileceği tek bir çifte indirger - `amountText` yoksa
  *  (Masraf/Avans/... için sunucu henüz özet vermiyor) `heading` tür etiketine düşer ve `subtitle`
  *  boş kalır, aksi halde ikisi de ayrı ayrı gösterilir. */
-export function approvalCardHeading(task: Pick<InboxTask, "requestType" | "summary">): ApprovalCardHeading {
+export function approvalCardHeading(
+  task: Pick<InboxTask, "requestType" | "summary">
+): ApprovalCardHeading {
   const amount = approvalAmountText(task);
   const typeCaption = approvalTypeCaption(task);
   if (amount) {

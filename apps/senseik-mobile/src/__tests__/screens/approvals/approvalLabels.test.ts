@@ -1,7 +1,4 @@
-import {
-  approvalTypeKey,
-  requestTypeLabel,
-} from "@/screens/app/approvals/approvalLabels";
+import { approvalTypeKey, requestTypeLabel } from "@/screens/app/approvals/approvalLabels";
 
 describe("approvalTypeKey (QA-103: one normalizer for both labels and the 'Tür' filter)", () => {
   it("maps every known request/entity key to its filter key, case-insensitively", () => {
