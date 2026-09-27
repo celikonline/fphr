@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } fr
 import { Ionicons } from "@expo/vector-icons";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { formatShortRange } from "@/components/form/dateRange";
-import { REQUEST_OPTIONS } from "@/navigation/RequestSheet";
+import { REQUEST_OPTIONS } from "@/lib/requestOptions";
 import { accents, fontFor, palette, text, tones, type Tone } from "@/theme/theme";
 import {
   leaveService,

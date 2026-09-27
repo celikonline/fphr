@@ -1,51 +1,10 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { BottomSheet } from "@/components/ui";
-import { accents, fontFor, palette, text, type AccentKey } from "@/theme/theme";
+import { BottomSheet, IconCircleButton } from "@/components/ui";
+import { REQUEST_OPTIONS } from "@/lib/requestOptions";
+import { accents, fontFor, palette, text } from "@/theme/theme";
 import type { RequestKind } from "@/types/navigation";
-
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-type RequestOption = {
-  kind: RequestKind;
-  label: string;
-  description: string;
-  icon: IoniconName;
-  accent: AccentKey;
-};
-
-/** The request types the FAB can start, in sheet order (mockup `.sheet .req`). */
-export const REQUEST_OPTIONS: readonly RequestOption[] = [
-  {
-    kind: "leave",
-    label: "İzin",
-    description: "Yıllık, mazeret, raporlu…",
-    icon: "sunny-outline",
-    accent: "green",
-  },
-  {
-    kind: "overtime",
-    label: "Fazla mesai",
-    description: "Planlanan veya yapılan mesai",
-    icon: "time-outline",
-    accent: "blue",
-  },
-  {
-    kind: "expense",
-    label: "Masraf",
-    description: "Fiş veya fatura ile",
-    icon: "receipt-outline",
-    accent: "amber",
-  },
-  {
-    kind: "advance",
-    label: "Avans",
-    description: "Maaştan mahsup edilir",
-    icon: "wallet-outline",
-    accent: "coral",
-  },
-];
 
 type Props = {
   visible: boolean;
@@ -53,10 +12,19 @@ type Props = {
   onSelect: (kind: RequestKind) => void;
 };
 
-/** "Yeni talep" bottom sheet opened by the tab bar's FAB. */
+/** "Yeni talep" bottom sheet opened by the tab bar's FAB. The sheet's Modal covers the tab bar (so
+ * the FAB's "+" -> "x" turn is hidden while it is open); the top-right "x" is the visible close. */
 export function RequestSheet({ visible, onClose, onSelect }: Props) {
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Yeni talep">
+    <BottomSheet visible={visible} onClose={onClose}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Yeni talep</Text>
+        <IconCircleButton
+          icon="close"
+          onPress={onClose}
+          accessibilityLabel="Talep menüsünü kapat"
+        />
+      </View>
       <Text style={styles.subtitle}>Ne için talep oluşturmak istiyorsun?</Text>
       {REQUEST_OPTIONS.map((option, index) => {
         const accent = accents[option.accent];
@@ -86,6 +54,19 @@ export function RequestSheet({ visible, onClose, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    // Pulls the 40px button's extra height out so the title keeps BottomSheet's own title spacing.
+    marginTop: -8,
+    marginRight: -8,
+    marginBottom: -2,
+  },
+  title: {
+    ...text.heading,
+    flex: 1,
+  },
   subtitle: {
     ...text.bodyMuted,
     fontSize: 13,

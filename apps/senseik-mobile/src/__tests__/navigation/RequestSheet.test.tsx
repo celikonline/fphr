@@ -56,4 +56,13 @@ describe("RequestSheet", () => {
 
     expect(onSelect).toHaveBeenCalledWith("expense");
   });
+
+  it("closes from the top-right close button (the FAB's x is hidden under the sheet)", () => {
+    const onClose = jest.fn();
+    const renderer = render(<RequestSheet visible onClose={onClose} onSelect={jest.fn()} />);
+
+    act(() => findButton(renderer, "Talep menüsünü kapat").props.onPress());
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

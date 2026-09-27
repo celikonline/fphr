@@ -2,7 +2,7 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassCard, StatusPill } from "@/components/ui";
-import { REQUEST_OPTIONS } from "@/navigation/RequestSheet";
+import { REQUEST_OPTIONS } from "@/lib/requestOptions";
 import { accents, fontFor, palette, text } from "@/theme/theme";
 import type { RequestCard } from "./requestCards";
 
