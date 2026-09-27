@@ -10,7 +10,15 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Avatar, EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader, TextField } from "@/components/ui";
+import {
+  Avatar,
+  EmptyState,
+  ErrorBanner,
+  GlassCard,
+  Screen,
+  ScreenHeader,
+  TextField,
+} from "@/components/ui";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
 import { palette, text } from "@/theme/theme";
 

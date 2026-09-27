@@ -32,7 +32,8 @@ export function buildProfileGroups(profile: MyProfile): ProfileGroup[] {
   const job: ProfileField[] = [];
   if (profile.titleName) job.push({ label: "Unvan", value: profile.titleName });
   if (profile.departmentName) job.push({ label: "Birim", value: profile.departmentName });
-  if (profile.hireDate) job.push({ label: "İşe giriş tarihi", value: formatHireDate(profile.hireDate) });
+  if (profile.hireDate)
+    job.push({ label: "İşe giriş tarihi", value: formatHireDate(profile.hireDate) });
 
   const groups: ProfileGroup[] = [
     { key: "personal", label: "Kişisel", fields: personal },

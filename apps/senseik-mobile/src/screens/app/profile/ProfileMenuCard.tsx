@@ -8,12 +8,7 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 /** Parameterless `AppStackParamList` screens the profile menu links to. */
 export type ProfileMenuRoute =
-  | "People"
-  | "Goals"
-  | "Requests"
-  | "Leave"
-  | "NotificationPreferences"
-  | "Support";
+  "People" | "Goals" | "Requests" | "Leave" | "NotificationPreferences" | "Support";
 
 type MenuItem = { route: ProfileMenuRoute; label: string; icon: IoniconName };
 

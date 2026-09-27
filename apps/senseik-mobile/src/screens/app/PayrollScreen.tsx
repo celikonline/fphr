@@ -178,10 +178,7 @@ export default function PayrollScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {!error && payslips.length === 0 ? (
-        <EmptyState
-          icon="wallet-outline"
-          title="Henüz görüntülenebilir bordro pusulanız yok."
-        />
+        <EmptyState icon="wallet-outline" title="Henüz görüntülenebilir bordro pusulanız yok." />
       ) : null}
 
       {latest ? (

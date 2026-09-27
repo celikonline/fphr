@@ -47,9 +47,9 @@ describe("payslipsLoadErrorMessage (TK-030 riskli alan: never leak the server's 
   it("returns the same generic Turkish message regardless of the underlying error", () => {
     const message = "Bordro pusulaları yüklenemedi. Lütfen tekrar deneyin.";
     expect(payslipsLoadErrorMessage({ response: { status: 403 } })).toBe(message);
-    expect(payslipsLoadErrorMessage({ response: { status: 404, data: { detail: "Gizli ayrıntı" } } })).toBe(
-      message
-    );
+    expect(
+      payslipsLoadErrorMessage({ response: { status: 404, data: { detail: "Gizli ayrıntı" } } })
+    ).toBe(message);
     expect(payslipsLoadErrorMessage(new Error("Network Error"))).toBe(message);
     expect(payslipsLoadErrorMessage(undefined)).toBe(message);
   });
@@ -81,7 +81,9 @@ describe("payslipAcknowledgeErrorMessage (TK-030 kabul kriteri 2, riskli alan)",
   });
 
   it("never echoes back any text from the error object", () => {
-    const sensitiveError = { response: { status: 404, data: { detail: "Bu talebe ait maaş bilgisi: 45000 TRY" } } };
+    const sensitiveError = {
+      response: { status: 404, data: { detail: "Bu talebe ait maaş bilgisi: 45000 TRY" } },
+    };
     expect(payslipAcknowledgeErrorMessage(sensitiveError)).not.toContain("45000");
   });
 });

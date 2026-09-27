@@ -31,9 +31,7 @@ export function TicketCard({ ticket }: Props) {
         <StatusPill label={TICKET_STATUS_LABELS[status]} tone={supportTicketStatusTone(status)} />
       </View>
       <Text style={styles.subtext}>{formatDateTime(ticket.createdAt)}</Text>
-      {ticket.resolution ? (
-        <Text style={styles.resolution}>Yanıt: {ticket.resolution}</Text>
-      ) : null}
+      {ticket.resolution ? <Text style={styles.resolution}>Yanıt: {ticket.resolution}</Text> : null}
     </GlassCard>
   );
 }

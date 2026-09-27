@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
@@ -167,9 +160,7 @@ export default function NotificationsScreen() {
           onEndReached={() => void loadMore()}
           ListEmptyComponent={<EmptyState icon="notifications-outline" title="Bildiriminiz yok." />}
           ListFooterComponent={
-            loadingMore ? (
-              <ActivityIndicator style={styles.footer} color={palette.white} />
-            ) : null
+            loadingMore ? <ActivityIndicator style={styles.footer} color={palette.white} /> : null
           }
         />
       </View>
