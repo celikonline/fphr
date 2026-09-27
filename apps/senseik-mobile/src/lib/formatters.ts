@@ -105,3 +105,8 @@ export function formatRelativeTime(iso: string, now: Date = new Date()): string 
   }
   return then.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
 }
+
+/** TK-031: "1.234,56 ₺" - Turkish currency formatting for expense/advance/overtime amounts (TRY only, the only payroll-reimbursed currency). */
+export function formatCurrencyTRY(amount: number): string {
+  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount);
+}
