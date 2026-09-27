@@ -202,7 +202,13 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.hello}>
-        <Avatar name={fullName} self size={60} radius={18} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Profile")}
+          accessibilityRole="button"
+          accessibilityLabel="Profilim"
+        >
+          <Avatar name={fullName} self size={60} radius={18} />
+        </TouchableOpacity>
         <View style={styles.helloText}>
           <Text style={styles.greeting} numberOfLines={1}>
             Hoş geldin, {firstName}
