@@ -37,8 +37,22 @@ function placeLabel(location: DeviceLocation, lastResult: SelfCheckInResult | nu
     return `${location.coords.latitude.toFixed(5)}, ${location.coords.longitude.toFixed(5)}`;
   }
   if (location.status === "denied") return "Konum izni verilmedi";
+  if (location.status === "servicesOff") return "Cihazınızda konum kapalı";
   if (location.status === "unavailable") return "Konum alınamadı";
   return "Konum alınıyor…";
+}
+
+/** Android: jumps straight to the location toggle; iOS has no such deep link, falls back to app settings. */
+async function openLocationSettings(): Promise<void> {
+  if (Platform.OS === "android") {
+    try {
+      await Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
+      return;
+    } catch {
+      // Fall through to the app's own settings screen below.
+    }
+  }
+  await Linking.openSettings();
 }
 
 function successMessage(result: SelfCheckInResult): string {
@@ -183,6 +197,15 @@ export default function CheckInScreen() {
             message="Konum izni verilmedi. Konumla giriş/çıkış için ayarlardan konum iznini açın."
             actionLabel="Ayarları aç"
             onRetry={() => void Linking.openSettings()}
+          />
+        </View>
+      ) : null}
+      {location.status === "servicesOff" ? (
+        <View style={styles.banner}>
+          <ErrorBanner
+            message="Cihazınızda konum kapalı. Konumla giriş/çıkış için cihaz ayarlarından konumu açın."
+            actionLabel="Ayarları aç"
+            onRetry={() => void openLocationSettings()}
           />
         </View>
       ) : null}

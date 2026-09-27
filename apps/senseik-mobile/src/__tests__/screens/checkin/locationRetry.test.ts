@@ -9,6 +9,10 @@ describe("shouldRetryOnForeground", () => {
     expect(shouldRetryOnForeground("unavailable")).toBe(false);
   });
 
+  it("re-checks after 'servicesOff': the user may be back from turning location services on", () => {
+    expect(shouldRetryOnForeground("servicesOff")).toBe(true);
+  });
+
   it("leaves a running watch alone once a fix is 'ready'", () => {
     expect(shouldRetryOnForeground("ready")).toBe(false);
   });

@@ -14,13 +14,19 @@ export type DeviceLocation = {
 const INITIAL: DeviceLocation = { status: "pending", coords: null, accuracy: null };
 /** Only re-render for movements that matter at the map's 60 m circle scale. */
 const DISTANCE_INTERVAL_METERS = 10;
+/**
+ * No fix within this window surfaces "unavailable" (with its "Tekrar dene") instead of spinning on
+ * "Konum alınıyor…" forever - Balanced accuracy can stall indoors or with a weak GPS lock.
+ */
+const FIRST_FIX_TIMEOUT_MS = 15000;
 
 /**
  * Watches the device position while `active` (the tab is focused) and stops on blur/unmount.
  * `retry` restarts the watch (the explicit "Tekrar dene"). `recheck` - run on return to the
- * foreground and on pull-to-refresh - only acts after a denied permission: it reads the permission
- * without prompting and restarts once it is granted, so granting it in the system settings
- * ("Ayarları aç") takes effect without leaving the tab (see `shouldRetryOnForeground`).
+ * foreground and on pull-to-refresh - only acts after a denied permission or disabled location
+ * services: it reads that state without prompting and restarts once it is resolved, so granting the
+ * permission or turning services back on ("Ayarları aç") takes effect without leaving the tab (see
+ * `shouldRetryOnForeground`).
  */
 export function useDeviceLocation(
   active: boolean
@@ -32,6 +38,15 @@ export function useDeviceLocation(
 
   const recheck = useCallback(() => {
     if (!shouldRetryOnForeground(statusRef.current)) return;
+    if (statusRef.current === "servicesOff") {
+      Location.hasServicesEnabledAsync()
+        .then((enabled) => {
+          if (enabled) retry();
+        })
+        // Still off as far as we can tell; the banner keeps offering "Ayarları aç".
+        .catch(() => undefined);
+      return;
+    }
     Location.getForegroundPermissionsAsync()
       .then((permission) => {
         if (permission.status === "granted") retry();
@@ -55,23 +70,42 @@ export function useDeviceLocation(
     if (!active) return undefined;
     let cancelled = false;
     let watcher: Location.LocationSubscription | null = null;
+    let firstFixTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    function clearFirstFixTimeout() {
+      if (firstFixTimeout) {
+        clearTimeout(firstFixTimeout);
+        firstFixTimeout = null;
+      }
+    }
 
     async function start() {
       try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (cancelled) return;
+        if (!servicesEnabled) {
+          setLocation({ status: "servicesOff", coords: null, accuracy: null });
+          return;
+        }
         const permission = await Location.requestForegroundPermissionsAsync();
         if (cancelled) return;
         if (permission.status !== "granted") {
           setLocation({ status: "denied", coords: null, accuracy: null });
           return;
         }
+        firstFixTimeout = setTimeout(() => {
+          if (!cancelled) setLocation((current) => ({ ...current, status: "unavailable" }));
+        }, FIRST_FIX_TIMEOUT_MS);
         const subscription = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.Balanced, distanceInterval: DISTANCE_INTERVAL_METERS },
-          (position) =>
+          (position) => {
+            clearFirstFixTimeout();
             setLocation({
               status: "ready",
               coords: { latitude: position.coords.latitude, longitude: position.coords.longitude },
               accuracy: position.coords.accuracy ?? null,
-            })
+            });
+          }
         );
         if (cancelled) {
           subscription.remove();
@@ -79,6 +113,7 @@ export function useDeviceLocation(
         }
         watcher = subscription;
       } catch {
+        clearFirstFixTimeout();
         if (!cancelled) setLocation((current) => ({ ...current, status: "unavailable" }));
       }
     }
@@ -86,6 +121,7 @@ export function useDeviceLocation(
     void start();
     return () => {
       cancelled = true;
+      clearFirstFixTimeout();
       watcher?.remove();
     };
   }, [active, attempt]);
