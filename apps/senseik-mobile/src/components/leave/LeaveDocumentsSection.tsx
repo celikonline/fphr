@@ -63,7 +63,7 @@ export function LeaveDocumentsSection({
             onPress={() => onRemove(doc.id)}
             accessibilityRole="button"
             accessibilityLabel={`${doc.name} kaldır`}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: 14, bottom: 14, left: 12, right: 12 }}
           >
             <Text style={styles.remove}>Kaldır</Text>
           </TouchableOpacity>

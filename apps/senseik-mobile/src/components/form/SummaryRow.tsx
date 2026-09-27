@@ -12,7 +12,7 @@ type Props = {
 /** "Süre: 10 gün"-style read-only line under a request form's date/time fields. */
 export function SummaryRow({ label, value, invalid = false }: Props) {
   return (
-    <View style={styles.row} accessibilityLabel={`${label}: ${value}`}>
+    <View style={styles.row} accessible accessibilityLabel={`${label}: ${value}`}>
       <Text style={styles.label}>{label}</Text>
       <Text style={[styles.value, invalid && styles.valueInvalid]}>{value}</Text>
     </View>

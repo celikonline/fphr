@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     ...text.caption,
   },
   attachmentRow: {
-    minHeight: 36,
+    minHeight: 44,
     justifyContent: "center",
   },
   attachmentText: {
