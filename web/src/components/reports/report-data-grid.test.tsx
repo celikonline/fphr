@@ -31,8 +31,19 @@ beforeAll(() => {
   };
 });
 
-function pagedRows(items: ReportData["rows"]["items"], totalCount = items.length): ReportData["rows"] {
-  return { items, page: 1, pageSize: 50, totalCount, totalPages: Math.max(1, Math.ceil(totalCount / 50)), hasNext: false, hasPrevious: false };
+function pagedRows(
+  items: ReportData["rows"]["items"],
+  totalCount = items.length
+): ReportData["rows"] {
+  return {
+    items,
+    page: 1,
+    pageSize: 50,
+    totalCount,
+    totalPages: Math.max(1, Math.ceil(totalCount / 50)),
+    hasNext: false,
+    hasPrevious: false,
+  };
 }
 
 const DATA: ReportData = {
@@ -80,7 +91,7 @@ function renderGrid(overrides: Partial<React.ComponentProps<typeof ReportDataGri
       <MantineProvider>
         <ReportDataGrid {...props} />
       </MantineProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
   return props;
 }
@@ -117,7 +128,15 @@ describe("ReportDataGrid", () => {
 
   it("shows sheet tabs only when there are several sheets and reports the chosen one", async () => {
     const user = userEvent.setup();
-    const props = renderGrid({ data: { ...DATA, sheets: [{ index: 0, name: "Kişiler" }, { index: 1, name: "Özet" }] } });
+    const props = renderGrid({
+      data: {
+        ...DATA,
+        sheets: [
+          { index: 0, name: "Kişiler" },
+          { index: 1, name: "Özet" },
+        ],
+      },
+    });
 
     await user.click(screen.getByRole("tab", { name: "Özet" }));
 
@@ -130,10 +149,42 @@ describe("ReportDataGrid", () => {
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
   });
 
+  it("shows the pager when the report has rows", () => {
+    renderGrid();
+
+    expect(screen.getAllByLabelText("Sayfa başına satır").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Sayfa 1 \/ 1/)).toBeInTheDocument();
+  });
+
   it("says there are no records and hides the pager for an empty report", () => {
     renderGrid({ data: { ...DATA, rows: pagedRows([]) } });
 
     expect(screen.getByText("Bu filtrelerle gösterilecek kayıt yok.")).toBeInTheDocument();
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryAllByLabelText("Sayfa başına satır")).toHaveLength(0);
+    expect(screen.queryByText(/Sayfa 1 \/ /)).not.toBeInTheDocument();
+  });
+
+  it("shows an unparseable date cell as text and still renders the rest of the grid", () => {
+    renderGrid({
+      data: {
+        ...DATA,
+        columns: [
+          { header: "Ad", type: "text" },
+          { header: "İşe giriş", type: "date" },
+          { header: "Kayıt", type: "dateTime" },
+        ],
+        rows: pagedRows([
+          ["Ayşe", "belirsiz", "yarın"],
+          ["Mehmet", "2024-03-01T00:00:00", "2024-03-01T10:30:00"],
+        ]),
+      },
+    });
+
+    expect(screen.getByText("belirsiz")).toBeInTheDocument();
+    expect(screen.getByText("yarın")).toBeInTheDocument();
+    expect(screen.getByText("Mehmet")).toBeInTheDocument();
+    expect(screen.queryByText("2024-03-01T00:00:00")).not.toBeInTheDocument();
+    // Mehmet's date and dateTime cells both render as formatted dates.
+    expect(screen.getAllByText(/2024/, { selector: "td" })).toHaveLength(2);
   });
 });
