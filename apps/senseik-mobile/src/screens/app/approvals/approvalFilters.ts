@@ -1,6 +1,9 @@
-import type { InboxTask } from "@/services/ApprovalsService";
 import i18n from "@/lib/i18n";
 import { approvalTypeKey } from "./approvalLabels";
+
+/** Both `InboxTask` (Onaylarım) and `ApprovalHistoryItem` (Geçmiş, FG-008) have a `requestType` -
+ *  the filter only ever reads that field, so it works on either list. */
+type FilterableTask = { requestType: string };
 
 /** Görev 8: "Onaylarım"'ın "Tür" seçimi - `InboxTask.requestType` sunucu değerlerinden türetilir. */
 export type ApprovalFilter = "all" | "leave" | "overtime" | "expense" | "advance";
@@ -17,11 +20,13 @@ function filterLabel(filter: ApprovalFilter): string {
  * a task is only ever counted/shown under "all" (brief: "bilinmeyen tür yalnız 'Tümü'de sayılır").
  * Uses the same `approvalTypeKey` normalizer as the card's type label (QA-103: "ExpenseClaim" must
  * count as "expense" here too, not just in the label). */
-function filterOf(task: Pick<InboxTask, "requestType">): ApprovalFilter | null {
+function filterOf(task: FilterableTask): ApprovalFilter | null {
   return approvalTypeKey(task.requestType);
 }
 
-export function countByFilter(tasks: InboxTask[]): Record<ApprovalFilter, number> {
+export function countByFilter<T extends FilterableTask>(
+  tasks: T[]
+): Record<ApprovalFilter, number> {
   const counts: Record<ApprovalFilter, number> = {
     all: tasks.length,
     leave: 0,
@@ -38,7 +43,7 @@ export function countByFilter(tasks: InboxTask[]): Record<ApprovalFilter, number
   return counts;
 }
 
-export function filterTasks(tasks: InboxTask[], filter: ApprovalFilter): InboxTask[] {
+export function filterTasks<T extends FilterableTask>(tasks: T[], filter: ApprovalFilter): T[] {
   if (filter === "all") {
     return tasks;
   }

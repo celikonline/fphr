@@ -48,6 +48,24 @@ describe("countByFilter / filterTasks (QA-103: ExpenseClaim must count as 'expen
   });
 });
 
+describe("countByFilter / filterTasks work on any requestType-shaped list (FG-008 Geçmiş reuse)", () => {
+  it("filters an ApprovalHistoryItem-shaped list the same way as InboxTask", () => {
+    const historyItems = [
+      { taskId: "1", requestType: "Leave", outcome: "approved" as const },
+      { taskId: "2", requestType: "Overtime", outcome: "rejected" as const },
+    ];
+
+    expect(countByFilter(historyItems)).toEqual({
+      all: 2,
+      leave: 1,
+      overtime: 1,
+      expense: 0,
+      advance: 0,
+    });
+    expect(filterTasks(historyItems, "overtime")).toEqual([historyItems[1]]);
+  });
+});
+
 describe("approvalFilterOptions / approvalFilterSelectedText", () => {
   it("labels the expense option 'Masraf' with its count", () => {
     const counts = countByFilter([task("ExpenseClaim", "1")]);
