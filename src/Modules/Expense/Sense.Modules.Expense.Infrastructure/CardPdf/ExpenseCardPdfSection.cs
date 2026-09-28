@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Localization;
 using Sense.Modules.Employee.Contracts.CardPdf;
 using Sense.Modules.Expense.Application.Payments;
+using Sense.Modules.Expense.Domain.Advances;
+using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Infrastructure;
@@ -30,8 +32,17 @@ public sealed class ExpenseCardPdfSection(IDispatcher dispatcher, IStringLocaliz
                 .OrderByDescending(r => r.Date)
                 .Select(r => (IReadOnlyList<string>)
                 [
-                    Date(r.Date), localizer.EnumText<PaymentKind>(r.Kind) ?? Empty, Amount(r.Amount, r.Currency), r.Status, Text(r.Description),
+                    Date(r.Date), localizer.EnumText<PaymentKind>(r.Kind) ?? Empty, Amount(r.Amount, r.Currency), StatusText(r), Text(r.Description),
                 ]),
             [2])));
     }
+
+    /// <summary>Status is stored as the raw C# enum member name (<c>ToString()</c> of the source enum, which depends on
+    /// <see cref="PaymentOverviewRow.Kind"/>); Overtime/Adjustment kinds have no status enum of their own yet and print raw.</summary>
+    private string StatusText(PaymentOverviewRow row) => row.Kind switch
+    {
+        PaymentKind.Expense => localizer.EnumText(nameof(ExpenseClaimStatus), row.Status) ?? row.Status,
+        PaymentKind.Advance => localizer.EnumText(nameof(AdvanceRequestStatus), row.Status) ?? row.Status,
+        _ => row.Status,
+    };
 }

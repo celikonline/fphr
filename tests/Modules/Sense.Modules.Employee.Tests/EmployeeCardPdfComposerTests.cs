@@ -1,3 +1,4 @@
+using System.Globalization;
 using NSubstitute;
 using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.CardPdf;
@@ -44,6 +45,21 @@ public sealed class EmployeeCardPdfComposerTests
     private static EmployeeCardPdfSectionResult Text(string text) => new([new SimplePdfParagraph(text)]);
 
     private static FakeSection Fake(string key, string text) => new(key, 0, null, Text(text));
+
+    private sealed class CultureCapturingSection(Action onBuild) : IEmployeeCardPdfSection
+    {
+        public string Key => "general";
+
+        public int Order => 0;
+
+        public string? ModuleKey => null;
+
+        public Task<EmployeeCardPdfSectionResult> BuildAsync(EmployeeCardPdfRequest request, CancellationToken cancellationToken)
+        {
+            onBuild();
+            return Task.FromResult(new EmployeeCardPdfSectionResult([new SimplePdfParagraph("Genel")]));
+        }
+    }
 
     private static (EmployeeCardPdfComposer Composer, Func<SimplePdfDocument?> Document) Composer(
         IEnumerable<IEmployeeCardPdfSection> sections, params string[] disabledModules)
@@ -201,6 +217,34 @@ public sealed class EmployeeCardPdfComposerTests
         var summary = document()!.Blocks[0].ShouldBeOfType<SimplePdfKeyValues>();
         summary.Rows.ShouldContain(r => r.Key == "Çalışan" && r.Value == "Ali Veli");
         summary.Rows.ShouldContain(r => r.Key == "Dönem" && r.Value == "28.09.2025 – 28.09.2026");
+    }
+
+    [Fact]
+    public async Task Compose_SetsTurkishCultureDuringComposition_ThenRestoresCaller()
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        var enUs = CultureInfo.GetCultureInfo("en-US");
+        CultureInfo.CurrentCulture = enUs;
+        CultureInfo.CurrentUICulture = enUs;
+        try
+        {
+            string? capturedDuringBuild = null;
+            var section = new CultureCapturingSection(() => capturedDuringBuild = CultureInfo.CurrentUICulture.Name);
+            var (composer, _) = Composer([section]);
+
+            var result = await composer.ComposeAsync(Request, "Ali Veli", ["general"], CancellationToken.None);
+
+            result.IsSuccess.ShouldBeTrue();
+            capturedDuringBuild.ShouldBe("tr-TR");
+            CultureInfo.CurrentCulture.Name.ShouldBe("en-US");
+            CultureInfo.CurrentUICulture.Name.ShouldBe("en-US");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
+        }
     }
 
     [Fact]

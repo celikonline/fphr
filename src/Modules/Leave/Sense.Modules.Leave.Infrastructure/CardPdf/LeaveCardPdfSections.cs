@@ -8,6 +8,7 @@ using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Shared.Contracts.Configuration;
+using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Infrastructure;
@@ -39,7 +40,7 @@ public sealed class LeaveCardPdfSection(IDispatcher dispatcher, IStringLocalizer
             ["İzin türü", "Dönem", "Hak edilen", "Kullanılan", "Bekleyen", "Kalan"],
             dto.Balances.Select(b => (IReadOnlyList<string>)
             [
-                b.LeaveTypeName,
+                LocalizedTypeName(b.LeaveTypeName),
                 $"{Date(b.Balance.CurrentPeriodFrom)} – {Date(b.Balance.CurrentPeriodTo)}",
                 Amount(b.Balance.TotalAccrued),
                 Amount(b.Balance.TotalUsed),
@@ -61,13 +62,31 @@ public sealed class LeaveCardPdfSection(IDispatcher dispatcher, IStringLocalizer
                     TypeName(r), Date(r.StartDate), Date(r.EndDate), Amount(r.CalculatedDays),
                     localizer.EnumText<LeaveRequestStatus>(r.Status) ?? Empty, Text(r.Description),
                 ]),
-            [3]));
+            [3]).WithMaxPageSizeNote(rows.Count));
 
         return EmployeeCardPdfSectionResult.Combine(balances, requests);
     }
 
     private string TypeName(LeaveRequestDto request) =>
-        string.IsNullOrWhiteSpace(request.LeaveTypeName) ? localizer.EnumText<LeaveTypeCode>(request.LeaveTypeCode) ?? Empty : request.LeaveTypeName;
+        string.IsNullOrWhiteSpace(request.LeaveTypeName) ? localizer.EnumText<LeaveTypeCode>(request.LeaveTypeCode) ?? Empty : LocalizedTypeName(request.LeaveTypeName);
+
+    /// <summary>Seeded types store the name as a resource key ("leave.type.annual"); a custom type's name has no matching key
+    /// and passes through unchanged.</summary>
+    private string LocalizedTypeName(string name)
+    {
+        var resource = localizer[name];
+        return resource.ResourceNotFound ? name : resource.Value;
+    }
+}
+
+/// <summary>Card PDF list-truncation note: leave/overtime queries fetch at most <see cref="PagingDefaults.MaxPageSize"/> rows
+/// (no paging), so hitting that cap means older records exist that the PDF never fetched at all.</summary>
+internal static class CardPdfListTruncation
+{
+    public static IEnumerable<SimplePdfBlock> WithMaxPageSizeNote(this IEnumerable<SimplePdfBlock> blocks, int fetchedRowCount) =>
+        fetchedRowCount == PagingDefaults.MaxPageSize
+            ? blocks.Append(new SimplePdfParagraph($"Yalnızca en yeni {PagingDefaults.MaxPageSize} kayıt gösterildi."))
+            : blocks;
 }
 
 /// <summary>
@@ -110,7 +129,7 @@ public sealed class OvertimeCardPdfSection(IDispatcher dispatcher, IStringLocali
                     Date(r.WorkDate), r.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture), Amount(r.DurationMinutes / 60m),
                     localizer.EnumText<OvertimeDayKind>(r.DayKind) ?? Empty, localizer.EnumText<OvertimeRequestStatus>(r.Status) ?? Empty, Text(r.Description),
                 ]),
-            [2]));
+            [2]).WithMaxPageSizeNote(rows.Count));
 
         return EmployeeCardPdfSectionResult.Combine(usage, list);
     }

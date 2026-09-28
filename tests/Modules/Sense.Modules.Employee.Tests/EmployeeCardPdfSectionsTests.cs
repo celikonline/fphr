@@ -111,6 +111,23 @@ public sealed class EmployeeCardPdfSectionsTests
     }
 
     [Fact]
+    public async Task Account_TranslatesAccessType()
+    {
+        var dispatcher = Substitute.For<IDispatcher>();
+        var detail = DetailWithCustomFields([]) with { AccessType = "Employee" };
+        dispatcher.Query(Arg.Any<GetEmployeeQuery>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(detail)));
+        var localizer = Substitute.For<IStringLocalizer<SharedResource>>();
+        localizer[Arg.Any<string>()].Returns(call => new LocalizedString(call.Arg<string>(), call.Arg<string>(), resourceNotFound: true));
+        localizer["report.enum.AccessType.Employee"]
+            .Returns(new LocalizedString("report.enum.AccessType.Employee", "Çalışan", resourceNotFound: false));
+
+        var result = await new AccountCardPdfSection(dispatcher, localizer).BuildAsync(AdminRequest, CancellationToken.None);
+
+        var row = result.Blocks!.OfType<SimplePdfKeyValues>().ShouldHaveSingleItem().Rows.Single(r => r.Key == "Erişim tipi");
+        row.Value.ShouldBe("Çalışan");
+    }
+
+    [Fact]
     public async Task CustomFields_Boolean_RendersYesNo()
     {
         var dispatcher = Substitute.For<IDispatcher>();

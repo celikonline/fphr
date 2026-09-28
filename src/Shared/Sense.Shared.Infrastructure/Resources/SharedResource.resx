@@ -1526,6 +1526,21 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Avans</value></data>
   <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Fazla mesai</value></data>
   <data name="report.enum.PaymentKind.Adjustment" xml:space="preserve"><value>Düzeltme</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Draft" xml:space="preserve"><value>Taslak</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Submitted" xml:space="preserve"><value>Onay bekliyor</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Approved" xml:space="preserve"><value>Onaylandı</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Paid" xml:space="preserve"><value>Ödendi</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Submitted" xml:space="preserve"><value>Onay bekliyor</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Approved" xml:space="preserve"><value>Onaylandı</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Paid" xml:space="preserve"><value>Ödendi</value></data>
+  <data name="report.enum.AccessType.Employee" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="report.enum.AccessType.Manager" xml:space="preserve"><value>Müdür</value></data>
+  <data name="report.enum.AccessType.HR" xml:space="preserve"><value>İK Yöneticisi</value></data>
+  <data name="report.enum.AccessType.PayrollSpecialist" xml:space="preserve"><value>Muhasebe</value></data>
+  <data name="report.enum.AccessType.Owner" xml:space="preserve"><value>Sahip</value></data>
+  <data name="report.enum.AccessType.Admin" xml:space="preserve"><value>Yönetici</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>

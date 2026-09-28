@@ -1517,6 +1517,21 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Advance</value></data>
   <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Overtime</value></data>
   <data name="report.enum.PaymentKind.Adjustment" xml:space="preserve"><value>Adjustment</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Submitted" xml:space="preserve"><value>Pending approval</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Submitted" xml:space="preserve"><value>Pending approval</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.AccessType.Employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="report.enum.AccessType.Manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="report.enum.AccessType.HR" xml:space="preserve"><value>HR Manager</value></data>
+  <data name="report.enum.AccessType.PayrollSpecialist" xml:space="preserve"><value>Accounting</value></data>
+  <data name="report.enum.AccessType.Owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="report.enum.AccessType.Admin" xml:space="preserve"><value>Admin</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>

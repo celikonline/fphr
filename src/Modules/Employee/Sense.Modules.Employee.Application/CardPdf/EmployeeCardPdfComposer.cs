@@ -31,40 +31,54 @@ public sealed class EmployeeCardPdfComposer(
             return error;
         }
 
-        var blocks = new List<SimplePdfBlock>
+        // Spec: the card PDF is always Turkish, regardless of the caller's Accept-Language/UI culture (section
+        // providers and Table/EnumText localize with the ambient culture).
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentCulture = Turkish;
+        CultureInfo.CurrentUICulture = Turkish;
+        try
         {
-            EmployeeCardPdfFormat.KeyValues(
-                null,
-                ("Çalışan", employeeName),
-                ("Dönem", EmployeeCardPdfFormat.PeriodText(request.From, request.To))),
-        };
-        var anySection = false;
-        foreach (var key in EmployeeCardPdfSectionKeys.All.Where(sectionKeys.Contains))
-        {
-            var sectionBlocks = await BuildSectionAsync(key, request, cancellationToken);
-            if (sectionBlocks is null)
+            var blocks = new List<SimplePdfBlock>
             {
-                continue;
+                EmployeeCardPdfFormat.KeyValues(
+                    null,
+                    ("Çalışan", employeeName),
+                    ("Dönem", EmployeeCardPdfFormat.PeriodText(request.From, request.To))),
+            };
+            var anySection = false;
+            foreach (var key in EmployeeCardPdfSectionKeys.All.Where(sectionKeys.Contains))
+            {
+                var sectionBlocks = await BuildSectionAsync(key, request, cancellationToken);
+                if (sectionBlocks is null)
+                {
+                    continue;
+                }
+
+                anySection = true;
+                blocks.Add(new SimplePdfSectionHeading(EmployeeCardPdfSectionKeys.Title(key)));
+                blocks.AddRange(sectionBlocks.Count == 0 ? [new SimplePdfParagraph(EmptySectionText)] : sectionBlocks);
             }
 
-            anySection = true;
-            blocks.Add(new SimplePdfSectionHeading(EmployeeCardPdfSectionKeys.Title(key)));
-            blocks.AddRange(sectionBlocks.Count == 0 ? [new SimplePdfParagraph(EmptySectionText)] : sectionBlocks);
-        }
+            if (!anySection)
+            {
+                return Error.Forbidden(EmployeeErrors.CardPdfNoSections);
+            }
 
-        if (!anySection)
+            var now = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Istanbul);
+            var document = new SimplePdfDocument(
+                "Çalışan Kartı",
+                employeeName,
+                blocks,
+                $"Oluşturma: {now.ToString("dd.MM.yyyy HH:mm", Turkish)}");
+            var fileName = $"calisan-karti-{Slug(employeeName)}-{now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}.pdf";
+            return new ExportFileResult(fileName, "application/pdf", writer.Write(document));
+        }
+        finally
         {
-            return Error.Forbidden(EmployeeErrors.CardPdfNoSections);
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
         }
-
-        var now = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Istanbul);
-        var document = new SimplePdfDocument(
-            "Çalışan Kartı",
-            employeeName,
-            blocks,
-            $"Oluşturma: {now.ToString("dd.MM.yyyy HH:mm", Turkish)}");
-        var fileName = $"calisan-karti-{Slug(employeeName)}-{now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}.pdf";
-        return new ExportFileResult(fileName, "application/pdf", writer.Write(document));
     }
 
     private static Error? Validate(EmployeeCardPdfRequest request, IReadOnlyCollection<string> sectionKeys)

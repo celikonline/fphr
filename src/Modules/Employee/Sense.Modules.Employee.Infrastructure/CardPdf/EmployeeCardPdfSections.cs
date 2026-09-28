@@ -245,7 +245,7 @@ public sealed class AccountCardPdfSection(IDispatcher dispatcher, IStringLocaliz
             KeyValues(
                 null,
                 ("Hesap durumu", Label<UserAccountStatus>(e.AccountStatus)),
-                ("Erişim tipi", Text(e.AccessType)),
+                ("Erişim tipi", Label("AccessType", e.AccessType)),
                 ("Son davet", Timestamp(e.LastInvitationSentAt))),
         ]));
 }

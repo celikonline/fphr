@@ -32,4 +32,29 @@ public sealed class ExpenseCardPdfSectionTests
 
         result.Blocks!.OfType<SimplePdfTable>().Single().Rows.ShouldHaveSingleItem()[4].ShouldBe("Taksi");
     }
+
+    [Fact]
+    public async Task Expense_TranslatesStatusPerKind()
+    {
+        var localizer = Substitute.For<IStringLocalizer<SharedResource>>();
+        localizer[Arg.Any<string>()].Returns(call => new LocalizedString(call.Arg<string>(), call.Arg<string>(), resourceNotFound: true));
+        localizer["report.enum.ExpenseClaimStatus.Approved"]
+            .Returns(new LocalizedString("report.enum.ExpenseClaimStatus.Approved", "Onaylandı", resourceNotFound: false));
+        localizer["report.enum.AdvanceRequestStatus.Paid"]
+            .Returns(new LocalizedString("report.enum.AdvanceRequestStatus.Paid", "Ödendi", resourceNotFound: false));
+        var dispatcher = Substitute.For<IDispatcher>();
+        dispatcher.Query(Arg.Any<GetEmployeePaymentsOverviewQuery>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Result.Success<IReadOnlyList<PaymentOverviewRow>>(
+            [
+                new(PaymentKind.Expense, new DateOnly(2026, 4, 1), 100m, "TRY", "Approved", Guid.NewGuid(), "Taksi"),
+                new(PaymentKind.Advance, new DateOnly(2026, 4, 2), 900m, "TRY", "Paid", Guid.NewGuid(), null),
+            ])));
+        var request = new EmployeeCardPdfRequest(Guid.NewGuid(), Guid.NewGuid(), false, new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30));
+
+        var result = await new ExpenseCardPdfSection(dispatcher, localizer).BuildAsync(request, CancellationToken.None);
+
+        var rows = result.Blocks!.OfType<SimplePdfTable>().Single().Rows;
+        rows.ShouldContain(r => r[3] == "Onaylandı");
+        rows.ShouldContain(r => r[3] == "Ödendi");
+    }
 }
