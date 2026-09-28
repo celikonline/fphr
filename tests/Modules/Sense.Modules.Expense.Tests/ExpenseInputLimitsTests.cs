@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Expense.Application.Advances;
 using Sense.Modules.Expense.Application.ExpenseClaims;
 using Sense.Modules.Expense.Domain;
@@ -135,7 +136,9 @@ public sealed class ExpenseInputLimitsTests
         claims.GetByIdAsync(claim.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<Result<ExpenseClaim>>(claim));
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.EmployeeId.Returns(EmployeeId);
-        var handler = new AddExpenseItemHandler(currentUser, claims, Substitute.For<IExpenseCategoryRepository>(), TimeProvider.System);
+        var handler = new AddExpenseItemHandler(
+            Substitute.For<ITenantContext>(), currentUser, claims, Substitute.For<IExpenseCategoryRepository>(),
+            Substitute.For<IDocumentAttachmentLookup>(), TimeProvider.System);
 
         var result = await handler.Handle(
             new AddExpenseItemCommand(claim.Id, CategoryId, 100m, Today.AddDays(30), null, "TRY", null, null), CancellationToken.None);

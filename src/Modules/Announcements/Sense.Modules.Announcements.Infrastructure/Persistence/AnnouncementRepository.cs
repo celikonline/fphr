@@ -26,6 +26,11 @@ public sealed class AnnouncementRepository(AnnouncementsDbContext context) : IAn
             .OrderByDescending(a => a.PublishedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Announcement>> GetDueScheduledAsync(Guid tenantId, DateTime now, CancellationToken cancellationToken = default) =>
+        await context.Announcements
+            .Where(a => a.TenantId == tenantId && a.Status == AnnouncementStatus.Scheduled && a.ScheduledFor != null && a.ScheduledFor <= now)
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed AnnouncementAttachment repository.</summary>

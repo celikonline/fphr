@@ -1196,6 +1196,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.item.amount_too_large" xml:space="preserve"><value>Tutar en fazla 10.000.000 olabilir.</value></data>
   <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Desteklenmeyen para birimi. Geçerli bir ISO 4217 kodu girin (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
   <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>Fiş tarihi bugünden ileri bir tarih olamaz.</value></data>
+  <data name="expense.item.receipt_not_found" xml:space="preserve"><value>Fiş belgesi bulunamadı. Fişi yeniden yükleyip tekrar deneyin.</value></data>
   <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>Bir harcama talebindeki tüm kalemler aynı para biriminde olmalıdır.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Avans talebi bulunamadı.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>Avans talebi, onay bekleme durumunda değil.</value></data>
@@ -1447,6 +1448,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
   <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Yalnızca taslak duyurular düzenlenebilir.</value></data>
+  <data name="announcement.scheduled_for_must_be_future" xml:space="preserve"><value>Zamanlı yayın tarihi gelecekte bir tarih/saat olmalıdır.</value></data>
   <data name="announcement_attachment.not_found" xml:space="preserve"><value>Ek bulunamadı.</value></data>
   <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor.</value></data>
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>Dosya boyutu izin verilen sınırı aşıyor.</value></data>

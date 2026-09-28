@@ -9,6 +9,7 @@ public static class AnnouncementDomainErrors
     public const string AlreadyArchived = "announcement.already_archived";
     public const string NotFound = "announcement.not_found";
     public const string CannotEditPublished = "announcement.cannot_edit_published";
+    public const string ScheduledForMustBeFuture = "announcement.scheduled_for_must_be_future";
     public const string ReadRecordNotFound = "announcement_read_record.not_found";
     public const string AttachmentNotFound = "announcement_attachment.not_found";
     public const string AttachmentTypeNotAllowed = "announcement_attachment.type_not_allowed";

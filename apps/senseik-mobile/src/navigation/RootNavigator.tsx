@@ -10,6 +10,8 @@ import { BrandMark } from "@/components/auth/BrandMark";
 import { palette } from "@/theme/theme";
 import { NotchedTabBar } from "@/navigation/NotchedTabBar";
 import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
+import { navigationRef } from "@/navigation/navigationRef";
+import { usePushTapNavigation } from "@/navigation/usePushTapNavigation";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -136,6 +138,7 @@ export function RootNavigator() {
   const { t } = useTranslation();
   const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -168,6 +171,8 @@ export function RootNavigator() {
     return () => subscription.remove();
   }, [statusBarStyle]);
 
+  usePushTapNavigation(navigationRef, isAuthenticated && navigationReady);
+
   if (shouldShowRootSplash(appReady)) {
     return (
       <>
@@ -189,7 +194,7 @@ export function RootNavigator() {
   return (
     <>
       <StatusBar style={statusBarStyle} />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
         <RootStack.Navigator
           screenOptions={{
             headerShown: false,

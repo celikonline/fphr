@@ -1,0 +1,54 @@
+name: Workstation deploy
+
+# Workstation'daki canlı senseik kurulumunu (~/uygulamalar/senseik) main'e
+# eşitler. Runner: makinedeki self-hosted "workstation" (label: senseik) —
+# dışarıdan erişim gerekmez.
+
+# İnsan onayı olmadan CI/CD başlamaz: yalnız elle (Actions > Run workflow)
+# tetiklenir. Otomatik deploy'u geri açmak için aşağıdaki bloğu yorumdan çıkarın.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: workstation-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, senseik]
+    timeout-minutes: 30
+    steps:
+      - name: Canlı dizini main'e eşitle
+        run: |
+          cd "$HOME/uygulamalar/senseik"
+          git fetch "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" main
+          git reset --hard FETCH_HEAD   # .env ve override untracked — dokunulmaz
+
+      - name: Build + up
+        run: |
+          cd "$HOME/uygulamalar/senseik"
+          docker compose up -d --build
+
+      - name: Migrasyon (idempotent)
+        run: |
+          cd "$HOME/uygulamalar/senseik"
+          PGS=$(grep ^POSTGRES_PASSWORD .env | cut -d= -f2)
+          docker run --rm --network senseik_default \
+            -v "$HOME/uygulamalar/senseik":/src -w /src -v senseik_nuget:/root/.nuget \
+            -e ConnectionStrings__Database="Host=senseik-postgres;Port=5432;Database=senseik;Username=sense;Password=$PGS" \
+            mcr.microsoft.com/dotnet/sdk:10.0 dotnet run --project src/Sense.Migrator -- migrate
+
+      - name: Web'i tazele
+        # nginx upstream IP'yi açılışta çözer — api yeniden yaratıldıysa web
+        # tazelenmezse 502 verir (22.09'da yaşandı).
+        run: cd "$HOME/uygulamalar/senseik" && docker compose restart web
+
+      - name: Sağlık kontrolü
+        run: |
+          sleep 5
+          curl -fsS -o /dev/null http://localhost:13000/
+          K=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:13000/api/v1/identity/auth/login -H 'Content-Type: application/json' -d '{}')
+          echo "api-proxy login (bos govde): $K"
+          case "$K" in 400|401|422) exit 0;; *) echo "beklenmeyen: $K"; exit 1;; esac
