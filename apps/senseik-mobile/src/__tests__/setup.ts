@@ -101,8 +101,9 @@ jest.mock("react-native-reanimated", () => {
 // FG-001: tests run in Turkish regardless of the host machine's locale - the device language is
 // pinned to "tr" (nothing is saved in the AsyncStorage mock), so every existing Turkish assertion
 // keeps matching. A test that switches to English must not leak into the next one.
+// `getLocales` is a jest.fn so a test can simulate another device language (see i18n.test.ts).
 jest.mock("expo-localization", () => ({
-  getLocales: () => [{ languageCode: "tr", languageTag: "tr-TR" }],
+  getLocales: jest.fn(() => [{ languageCode: "tr", languageTag: "tr-TR" }]),
 }));
 
 beforeEach(() => {
