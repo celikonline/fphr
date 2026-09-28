@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Keyboard, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -424,8 +432,6 @@ export default function ApprovalsScreen() {
         onRequestClose={() => dispatchBulkRejectFlow({ type: "REQUEST_CLOSE" })}
         title={t("bulk.rejectTitle")}
         message={t("bulk.rejectMessage", { count: selectedCount })}
-        reasonLabel={t("bulk.reasonRequired")}
-        submitDisabled={bulkRejectReasonValue.trim().length === 0}
       />
     </>
   );

@@ -36,7 +36,8 @@
   "reject": {
     "title": "Talebi reddet",
     "message": "Bu talebi reddetmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
-    "reason": "Gerekçe (opsiyonel)",
+    "reason": "Gerekçe",
+    "reasonHint": "Reddetmek için bir gerekçe yazmanız gerekir.",
     "reasonPlaceholder": "Gerekçenizi yazın",
     "error": "Talep reddedilemedi. Lütfen tekrar deneyin."
   },
@@ -68,8 +69,6 @@
     "approveConfirmMessage": "{{count}} talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz.",
     "rejectTitle": "Seçili talepleri reddet",
     "rejectMessage": "{{count}} talebi reddetmek üzeresiniz. Bu işlem geri alınamaz.",
-    "reasonRequired": "Gerekçe (zorunlu)",
-    "reasonPlaceholder": "Gerekçenizi yazın",
     "error": "Talepler karara bağlanamadı. Lütfen tekrar deneyin."
   }
 }

@@ -36,7 +36,8 @@
   "reject": {
     "title": "Reject request",
     "message": "Are you sure you want to reject this request? This cannot be undone.",
-    "reason": "Reason (optional)",
+    "reason": "Reason",
+    "reasonHint": "A reason is required to reject.",
     "reasonPlaceholder": "Write your reason",
     "error": "The request could not be rejected. Please try again."
   },
@@ -68,8 +69,6 @@
     "approveConfirmMessage": "Are you sure you want to approve {{count}} requests? This cannot be undone.",
     "rejectTitle": "Reject selected requests",
     "rejectMessage": "You are about to reject {{count}} requests. This cannot be undone.",
-    "reasonRequired": "Reason (required)",
-    "reasonPlaceholder": "Write your reason",
     "error": "The requests could not be decided. Please try again."
   }
 }
