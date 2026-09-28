@@ -28,11 +28,23 @@ export interface InboxTaskLeaveSummary {
   description?: string | null;
 }
 
+/** `InboxTaskSummary.punchCorrection`: set when `requestType === "PunchCorrection"` (FG-004).
+ * `currentCheckIn`/`currentCheckOut` are the day's punches at the time the request was submitted. */
+export interface InboxTaskPunchCorrectionSummary {
+  date: string;
+  requestedCheckIn?: string | null;
+  requestedCheckOut?: string | null;
+  currentCheckIn?: string | null;
+  currentCheckOut?: string | null;
+  reason: string;
+}
+
 /** `InboxTaskSummaryDto`: what the requester is asking for, resolved per `requestType`. Absent on older API builds. */
 export interface InboxTaskSummary {
   requestDate: string;
   overtime?: InboxTaskOvertimeSummary | null;
   leave?: InboxTaskLeaveSummary | null;
+  punchCorrection?: InboxTaskPunchCorrectionSummary | null;
 }
 
 /** `InboxTaskDto`: one pending task in the caller's inbox (assigned directly, or via a fallback role queue). */

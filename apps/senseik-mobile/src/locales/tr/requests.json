@@ -20,13 +20,18 @@
     "advance": {
       "label": "Avans",
       "description": "Maaştan mahsup edilir"
+    },
+    "punchCorrection": {
+      "label": "Eksik giriş/çıkış",
+      "description": "Puantaj gününü düzelt"
     }
   },
   "titles": {
     "leave": "İzin talebi",
     "overtime": "Fazla mesai talebi",
     "expense": "Masraf talebi",
-    "advance": "Avans talebi"
+    "advance": "Avans talebi",
+    "punchCorrection": "Eksik giriş/çıkış talebi"
   },
   "leaveTypesLoadError": "İzin türleri yüklenemedi. Lütfen tekrar deneyin.",
   "filters": {
@@ -119,5 +124,27 @@
     "itemsTitle": "Eklenen kalemler",
     "removeItemA11y": "Kalemi kaldır: {{item}}",
     "total": "Toplam"
+  },
+  "punchCorrectionStatus": {
+    "pending": "Bekliyor",
+    "approved": "Onaylandı",
+    "applyFailed": "Uygulanamadı",
+    "rejected": "Reddedildi",
+    "withdrawn": "Geri çekildi"
+  },
+  "withdrawPunchCorrection": {
+    "confirmTitle": "Düzeltme talebini geri çek",
+    "confirmMessage": "Bu talebi geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "error": "Düzeltme talebi geri çekilemedi. Lütfen tekrar deneyin."
+  },
+  "punchCorrection": {
+    "includeCheckIn": "Giriş saatini düzelt",
+    "includeCheckOut": "Çıkış saatini düzelt",
+    "reason": "Gerekçe",
+    "reasonPlaceholder": "Nedenini kısaca yazın",
+    "invalidTimeRange": "Çıkış saati giriş saatinden sonra olmalı.",
+    "futureDateNotAllowed": "Gelecek bir tarih seçilemez.",
+    "submitted": "Düzeltme talebiniz onaya gönderildi.",
+    "submitError": "Düzeltme talebi gönderilemedi. Lütfen tekrar deneyin."
   }
 }

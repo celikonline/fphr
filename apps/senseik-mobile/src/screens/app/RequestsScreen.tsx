@@ -8,6 +8,7 @@ import { EmptyState, ErrorBanner, IconCircleButton, Screen, ScreenHeader } from 
 import { RequestSheet } from "@/navigation/RequestSheet";
 import { leaveService } from "@/services/LeaveService";
 import { expenseService } from "@/services/ExpenseService";
+import { attendanceService } from "@/services/AttendanceService";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { palette } from "@/theme/theme";
 import type { AppStackParamList, RequestKind } from "@/types/navigation";
@@ -23,7 +24,7 @@ import {
 
 /** Confirm/withdraw copy (i18n keys) per withdrawable kind (same texts the leave/overtime lists used). */
 const WITHDRAW_FLOWS: Record<
-  "leave" | "overtime",
+  "leave" | "overtime" | "punchCorrection",
   { title: string; message: string; failure: string; run: (id: string) => Promise<void> }
 > = {
   leave: {
@@ -38,10 +39,18 @@ const WITHDRAW_FLOWS: Record<
     failure: "requests:withdrawOvertime.error",
     run: (id) => leaveService.withdrawOvertimeRequest(id),
   },
+  punchCorrection: {
+    title: "requests:withdrawPunchCorrection.confirmTitle",
+    message: "requests:withdrawPunchCorrection.confirmMessage",
+    failure: "requests:withdrawPunchCorrection.error",
+    run: (id) => attendanceService.withdrawPunchCorrection(id),
+  },
 };
 
 function withdrawFlowFor(card: RequestCard) {
-  return card.kind === "leave" || card.kind === "overtime" ? WITHDRAW_FLOWS[card.kind] : null;
+  return card.kind === "leave" || card.kind === "overtime" || card.kind === "punchCorrection"
+    ? WITHDRAW_FLOWS[card.kind]
+    : null;
 }
 
 function settledValue<T>(result: PromiseSettledResult<T[]>): T[] {
@@ -66,14 +75,15 @@ export default function RequestsScreen() {
 
   // Sources load independently: one failing list never hides the others.
   const loadAll = useCallback(async () => {
-    const results = await Promise.allSettled([
-      leaveService.getMyRequests(),
-      leaveService.getMyOvertimeRequests(),
-      expenseService.getMyExpenseClaims(),
-      expenseService.getMyAdvanceRequests(),
-      expenseService.getCategories(),
-    ]);
-    const [leave, overtime, expense, advance, categories] = results;
+    const [leave, overtime, expense, advance, categories, punchCorrection] =
+      await Promise.allSettled([
+        leaveService.getMyRequests(),
+        leaveService.getMyOvertimeRequests(),
+        expenseService.getMyExpenseClaims(),
+        expenseService.getMyAdvanceRequests(),
+        expenseService.getCategories(),
+        attendanceService.getMyPunchCorrections(),
+      ]);
     setCards(
       buildRequestCards({
         leave: settledValue(leave),
@@ -81,10 +91,13 @@ export default function RequestsScreen() {
         expense: settledValue(expense),
         advance: settledValue(advance),
         categories: settledValue(categories),
+        punchCorrection: settledValue(punchCorrection),
       })
     );
     // Categories only name expense cards; their failure alone is not worth a banner.
-    const failed = results.slice(0, 4).some((result) => result.status === "rejected");
+    const failed = [leave, overtime, expense, advance, punchCorrection].some(
+      (result) => result.status === "rejected"
+    );
     setError(failed ? i18n.t("requests:list.partialLoadError") : null);
   }, []);
 

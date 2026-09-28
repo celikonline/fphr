@@ -60,6 +60,23 @@ export function isOvertimeDurationValid(durationMinutes: number): boolean {
   );
 }
 
+/** `PunchCorrectionFeatures` "future_date": the requested day cannot be after today (tenant-local calendar day). */
+export function isPunchCorrectionDateAllowed(date: string, today: Date = new Date()): boolean {
+  return dateOnlyToDate(date).getTime() <= atMidnight(today).getTime();
+}
+
+/** `PunchCorrectionRequest.Submit` "invalid_range": a check-out no later than its check-in is only
+ * checked once both are given - fixing just one of the two punches never trips it. */
+export function isPunchCorrectionTimeRangeValid(params: {
+  includeCheckIn: boolean;
+  checkInTime: string;
+  includeCheckOut: boolean;
+  checkOutTime: string;
+}): boolean {
+  if (!params.includeCheckIn || !params.includeCheckOut) return true;
+  return params.checkOutTime > params.checkInTime;
+}
+
 /**
  * Parses an amount/duration TextInput value in the active language; `null` for empty/invalid input
  * (never throws on user-typed text).

@@ -7,6 +7,7 @@ import { leaveService } from "@/services/LeaveService";
 import OvertimeRequestSection from "@/components/requests/OvertimeRequestSection";
 import ExpenseClaimSection from "@/components/requests/ExpenseClaimSection";
 import AdvanceRequestSection from "@/components/requests/AdvanceRequestSection";
+import PunchCorrectionSection from "@/components/requests/PunchCorrectionSection";
 import type { RequestKind } from "@/types/navigation";
 
 // Ionicons checks expo-font's isLoaded, which the shared expo-font mock (setup.ts) lacks.
@@ -30,6 +31,9 @@ function mockFormStub(label: string) {
 jest.mock("@/components/requests/OvertimeRequestSection", () => mockFormStub("overtime-form"));
 jest.mock("@/components/requests/ExpenseClaimSection", () => mockFormStub("expense-form"));
 jest.mock("@/components/requests/AdvanceRequestSection", () => mockFormStub("advance-form"));
+jest.mock("@/components/requests/PunchCorrectionSection", () =>
+  mockFormStub("punchCorrection-form")
+);
 
 const leaveTypes = [{ id: "annual-id", name: "Yıllık izin" }];
 
@@ -47,11 +51,11 @@ function texts(renderer: ReactTestRenderer): string[] {
   return renderer.root.findAllByType(Text).map((node) => extractText(node.children));
 }
 
-async function renderScreen(kind: RequestKind) {
+async function renderScreen(kind: RequestKind, date?: string) {
   const goBack = jest.fn();
   const props = {
     navigation: { goBack },
-    route: { key: "NewRequest-key", name: "NewRequest", params: { kind } },
+    route: { key: "NewRequest-key", name: "NewRequest", params: { kind, date } },
   } as unknown as React.ComponentProps<typeof NewRequestScreen>;
   let renderer!: ReactTestRenderer;
   await act(async () => {
@@ -75,6 +79,7 @@ describe("NewRequestScreen", () => {
     ["overtime", "Fazla mesai talebi", "overtime-form"],
     ["expense", "Masraf talebi", "expense-form"],
     ["advance", "Avans talebi", "advance-form"],
+    ["punchCorrection", "Eksik giriş/çıkış talebi", "punchCorrection-form"],
   ] as const)("shows the %s title and its existing form", async (kind, title, form) => {
     const { renderer } = await renderScreen(kind);
 
@@ -85,6 +90,7 @@ describe("NewRequestScreen", () => {
     ["overtime", OvertimeRequestSection],
     ["expense", ExpenseClaimSection],
     ["advance", AdvanceRequestSection],
+    ["punchCorrection", PunchCorrectionSection],
   ] as const)("closes after a successful %s submit", async (kind, section) => {
     const { goBack } = await renderScreen(kind);
 
@@ -92,6 +98,13 @@ describe("NewRequestScreen", () => {
     act(() => sectionProps.onSubmitted());
 
     expect(goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes the preselected date through to PunchCorrectionSection (FG-004)", async () => {
+    await renderScreen("punchCorrection", "2026-09-20");
+
+    const sectionProps = (PunchCorrectionSection as unknown as jest.Mock).mock.lastCall[0];
+    expect(sectionProps.initialDate).toBe("2026-09-20");
   });
 
   it("loads the requestable leave types, hands them to LeaveRequestForm and closes on success", async () => {

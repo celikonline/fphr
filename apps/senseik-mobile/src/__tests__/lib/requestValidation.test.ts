@@ -2,6 +2,8 @@ import {
   isAdvanceRequestedDateAllowed,
   isOvertimeDurationValid,
   isPositiveAmount,
+  isPunchCorrectionDateAllowed,
+  isPunchCorrectionTimeRangeValid,
   isReceiptDateAllowed,
   parseAmountInput,
 } from "@/lib/requestValidation";
@@ -84,6 +86,76 @@ describe("isOvertimeDurationValid (OvertimeLimits.MaxDurationMinutes = 1440)", (
 
   it("rejects a non-integer value", () => {
     expect(isOvertimeDurationValid(30.5)).toBe(false);
+  });
+});
+
+describe("isPunchCorrectionDateAllowed (FG-004: future_date)", () => {
+  const today = new Date("2026-09-27T12:00:00");
+
+  it("allows today", () => {
+    expect(isPunchCorrectionDateAllowed("2026-09-27", today)).toBe(true);
+  });
+
+  it("allows a past date", () => {
+    expect(isPunchCorrectionDateAllowed("2020-01-01", today)).toBe(true);
+  });
+
+  it("rejects tomorrow", () => {
+    expect(isPunchCorrectionDateAllowed("2026-09-28", today)).toBe(false);
+  });
+});
+
+describe("isPunchCorrectionTimeRangeValid (FG-004: invalid_range)", () => {
+  it("passes when only a check-in is being corrected", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: false,
+        checkOutTime: "18:00",
+      })
+    ).toBe(true);
+  });
+
+  it("passes when only a check-out is being corrected", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: false,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "01:00",
+      })
+    ).toBe(true);
+  });
+
+  it("passes when both are given and the check-out is after the check-in", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "18:00",
+      })
+    ).toBe(true);
+  });
+
+  it("rejects a check-out at or before the check-in once both are given", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "09:00",
+      })
+    ).toBe(false);
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "18:00",
+        includeCheckOut: true,
+        checkOutTime: "09:00",
+      })
+    ).toBe(false);
   });
 });
 

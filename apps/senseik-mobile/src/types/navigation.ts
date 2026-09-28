@@ -12,8 +12,8 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
-/** The four request types the tab bar's "Yeni talep" sheet can start. */
-export type RequestKind = "leave" | "overtime" | "expense" | "advance";
+/** The request types the tab bar's "Yeni talep" sheet can start. */
+export type RequestKind = "leave" | "overtime" | "expense" | "advance" | "punchCorrection";
 
 export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabsParamList>;
@@ -29,7 +29,8 @@ export type AppStackParamList = {
   Support: undefined;
   Notifications: undefined;
   NotificationPreferences: undefined;
-  NewRequest: { kind: RequestKind };
+  /** `date` preselects the day (FG-004: Puantaj's "Düzeltme iste" opens punchCorrection with it set). */
+  NewRequest: { kind: RequestKind; date?: string };
   ApprovalHistory: undefined;
 };
 

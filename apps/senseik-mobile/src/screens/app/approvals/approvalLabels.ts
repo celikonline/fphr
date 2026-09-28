@@ -37,6 +37,7 @@ export function approvalTypeKey(requestType: string): ApprovalTypeKey | null {
 const OTHER_REQUEST_TYPE_LABELS: Record<string, string> = {
   Requisition: "approvals:types.requisition",
   AssetAssignment: "approvals:types.assetAssignment",
+  PunchCorrection: "approvals:types.punchCorrection",
 };
 
 export function requestTypeLabel(requestType: string): string {

@@ -124,4 +124,57 @@ describe("AttendanceService", () => {
       ).rejects.toEqual(apiError);
     });
   });
+
+  describe("punch corrections (FG-004)", () => {
+    const correction = {
+      id: "corr-1",
+      date: "2026-09-20",
+      requestedCheckOut: "18:00:00",
+      currentCheckIn: "09:00:00",
+      reason: "Turnike arızalıydı",
+      status: "pending",
+      submittedAt: "2026-09-20T10:00:00Z",
+    };
+
+    it("submits a düzeltme talebi", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: correction });
+      const input = { date: "2026-09-20", checkOut: "18:00:00", reason: "Turnike arızalıydı" };
+
+      const result = await attendanceService.submitPunchCorrection(input);
+
+      expect(result).toEqual(correction);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/corrections/me", input);
+    });
+
+    it("lists the caller's own düzeltme talepleri", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: [correction] });
+
+      const result = await attendanceService.getMyPunchCorrections({ from: "2026-09-01" });
+
+      expect(result).toEqual([correction]);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/corrections/me", {
+        params: { from: "2026-09-01" },
+      });
+    });
+
+    it("defaults to no query params when none are given", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+
+      await attendanceService.getMyPunchCorrections();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/corrections/me", {
+        params: {},
+      });
+    });
+
+    it("withdraws a pending düzeltme talebi", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: undefined });
+
+      await attendanceService.withdrawPunchCorrection("corr-1");
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/attendance/corrections/me/corr-1/withdraw"
+      );
+    });
+  });
 });

@@ -46,4 +46,11 @@ export const REQUEST_OPTIONS: readonly RequestOption[] = [
     icon: "wallet-outline",
     accent: "coral",
   },
+  {
+    kind: "punchCorrection",
+    labelKey: "requests:options.punchCorrection.label",
+    descriptionKey: "requests:options.punchCorrection.description",
+    icon: "create-outline",
+    accent: "teal",
+  },
 ];

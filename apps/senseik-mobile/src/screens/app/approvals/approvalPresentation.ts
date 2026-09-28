@@ -4,6 +4,11 @@ import i18n from "@/lib/i18n";
 import { formatTime, leaveSummaryTypeLabel, requestTypeLabel } from "./approvalLabels";
 import type { InboxTask } from "@/services/ApprovalsService";
 
+/** Requested time - "—" when that side wasn't asked for (only one punch is being corrected). */
+function formatOptionalTime(value?: string | null): string {
+  return value ? formatTime(value) : "—";
+}
+
 /** Kartın ikinci satırındaki büyük değer ("2 sa 30 dk" / "5 gün") - özet yoksa (Masraf/Avans/...
  * henüz sunucu tarafında sağlanmıyor, bkz. `ApprovalsService.ts`) `null`. */
 export function approvalAmountText(task: Pick<InboxTask, "summary">): string | null {
@@ -13,6 +18,10 @@ export function approvalAmountText(task: Pick<InboxTask, "summary">): string | n
   }
   if (task.summary?.overtime) {
     return formatDurationMinutes(task.summary.overtime.durationMinutes);
+  }
+  if (task.summary?.punchCorrection) {
+    const { requestedCheckIn, requestedCheckOut } = task.summary.punchCorrection;
+    return `${formatOptionalTime(requestedCheckIn)} – ${formatOptionalTime(requestedCheckOut)}`;
   }
   return null;
 }
@@ -71,6 +80,16 @@ export function approvalDetailRows(task: Pick<InboxTask, "summary">): ApprovalDe
         value: `${formatLeaveDateOnly(workDate)} · ${formatTime(startTime)}`,
       },
       { label: i18n.t("approvals:rows.amount"), value: formatDurationMinutes(durationMinutes) },
+    ];
+  }
+  if (task.summary?.punchCorrection) {
+    const { date, currentCheckIn, currentCheckOut } = task.summary.punchCorrection;
+    return [
+      { label: i18n.t("approvals:rows.date"), value: formatLeaveDateOnly(date) },
+      {
+        label: i18n.t("approvals:rows.current"),
+        value: `${formatOptionalTime(currentCheckIn)} – ${formatOptionalTime(currentCheckOut)}`,
+      },
     ];
   }
   return [];

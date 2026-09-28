@@ -33,7 +33,8 @@
     "a11yWorked": "worked time {{worked}}",
     "worked": "Worked time",
     "plan": "Plan: {{start}} – {{end}}",
-    "notPlanned": "Not a planned work day"
+    "notPlanned": "Not a planned work day",
+    "requestCorrection": "Request correction"
   },
   "summary": {
     "workedDays": "Days worked",

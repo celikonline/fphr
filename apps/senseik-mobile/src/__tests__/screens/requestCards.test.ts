@@ -5,9 +5,11 @@ import {
   filterRequestCards,
   leaveRequestCard,
   overtimeRequestCard,
+  punchCorrectionRequestCard,
 } from "@/screens/app/requests/requestCards";
 import type { LeaveRequest, OvertimeRequest } from "@/services/LeaveService";
 import type { AdvanceRequest, ExpenseClaim } from "@/services/ExpenseService";
+import type { PunchCorrectionRequest } from "@/services/AttendanceService";
 
 function leave(overrides: Partial<LeaveRequest> = {}): LeaveRequest {
   return {
@@ -75,6 +77,18 @@ function advance(overrides: Partial<AdvanceRequest> = {}): AdvanceRequest {
     requestedDate: "2026-09-01",
     isInstallmentRequested: false,
     status: "rejected",
+    ...overrides,
+  };
+}
+
+function punchCorrection(overrides: Partial<PunchCorrectionRequest> = {}): PunchCorrectionRequest {
+  return {
+    id: "corr-1",
+    date: "2026-09-18",
+    requestedCheckOut: "18:00:00",
+    reason: "Turnike arızalıydı",
+    status: "pending",
+    submittedAt: "2026-09-19T08:00:00Z",
     ...overrides,
   };
 }
@@ -287,5 +301,75 @@ describe("request cards (Taleplerim)", () => {
     expect(filterRequestCards(cards, "all")).toHaveLength(3);
     expect(filterRequestCards(cards, "overtime").map((card) => card.id)).toEqual(["ot-1"]);
     expect(filterRequestCards(cards, "expense")).toEqual([]);
+  });
+
+  describe("punchCorrectionRequestCard (FG-004)", () => {
+    it("maps a pending request to its requested times and warning tone; withdrawable", () => {
+      const card = punchCorrectionRequestCard(
+        punchCorrection({ requestedCheckIn: "08:55:00", requestedCheckOut: "18:00:00" })
+      );
+      expect(card).toMatchObject({
+        kind: "punchCorrection",
+        title: "Eksik giriş/çıkış",
+        dateLabel: "18 Eyl 2026",
+        detail: "08:55 – 18:00",
+        statusLabel: "Bekliyor",
+        tone: "warning",
+        description: "Turnike arızalıydı",
+        canWithdraw: true,
+      });
+    });
+
+    it("shows only the requested side when only one punch is being corrected", () => {
+      expect(punchCorrectionRequestCard(punchCorrection()).detail).toBe("18:00");
+    });
+
+    it("is never withdrawable once decided", () => {
+      expect(punchCorrectionRequestCard(punchCorrection({ status: "approved" })).tone).toBe(
+        "success"
+      );
+      expect(
+        punchCorrectionRequestCard(punchCorrection({ status: "approved" })).canWithdraw
+      ).toBe(false);
+      expect(punchCorrectionRequestCard(punchCorrection({ status: "rejected" })).tone).toBe(
+        "danger"
+      );
+      expect(punchCorrectionRequestCard(punchCorrection({ status: "applyFailed" })).tone).toBe(
+        "danger"
+      );
+      expect(punchCorrectionRequestCard(punchCorrection({ status: "withdrawn" })).tone).toBe(
+        "neutral"
+      );
+    });
+
+    it("sorts by the local day it was submitted, falling back to its own date", () => {
+      expect(punchCorrectionRequestCard(punchCorrection({ submittedAt: "" })).sortDate).toBe(
+        "2026-09-18"
+      );
+    });
+  });
+
+  it("includes punch-correction requests in the merged list and 'Tümü' filter", () => {
+    const cards = buildRequestCards({
+      leave: [],
+      overtime: [],
+      expense: [],
+      advance: [],
+      punchCorrection: [punchCorrection()],
+      categories: [],
+    });
+    expect(cards.map((card) => card.kind)).toEqual(["punchCorrection"]);
+    expect(filterRequestCards(cards, "punchCorrection")).toHaveLength(1);
+  });
+
+  it("keeps working when punchCorrection is omitted (callers built before FG-004)", () => {
+    const cards = buildRequestCards({
+      leave: [leave()],
+      overtime: [],
+      expense: [],
+      advance: [],
+      categories: [],
+    });
+    expect(cards).toHaveLength(1);
   });
 });

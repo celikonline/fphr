@@ -33,7 +33,8 @@
     "a11yWorked": "çalışma süresi {{worked}}",
     "worked": "Çalışma süresi",
     "plan": "Plan: {{start}} – {{end}}",
-    "notPlanned": "Planlı çalışma günü değil"
+    "notPlanned": "Planlı çalışma günü değil",
+    "requestCorrection": "Düzeltme iste"
   },
   "summary": {
     "workedDays": "Çalışılan gün",

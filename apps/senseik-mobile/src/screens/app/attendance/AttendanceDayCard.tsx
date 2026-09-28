@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
@@ -20,10 +20,12 @@ type Props = {
   day: AttendanceDay;
   /** "Fazla mesai: 1 sa 0 dk" / "Eksik mesai: ..." or `null` (`formatOvertimeUndertime`). */
   overtimeText: string | null;
+  /** FG-004: shown only on a "missing" day; opens the punch-correction form with the day preselected. */
+  onRequestCorrection?: (date: string) => void;
 };
 
 /** Puantaj day card (spec §5): big day number, worked time, status pill, punches; tap for detail. */
-export function AttendanceDayCard({ day, overtimeText }: Props) {
+export function AttendanceDayCard({ day, overtimeText, onRequestCorrection }: Props) {
   const { t } = useTranslation("attendance");
   const [expanded, setExpanded] = useState(false);
   const { year, month0, day: dayOfMonth } = parseDateOnly(day.date);
@@ -75,6 +77,15 @@ export function AttendanceDayCard({ day, overtimeText }: Props) {
       </View>
       {leaveTypeText ? <Text style={styles.caption}>{leaveTypeText}</Text> : null}
       {overtimeText ? <Text style={styles.caption}>{overtimeText}</Text> : null}
+      {dayStatus === "missing" && onRequestCorrection ? (
+        <TouchableOpacity
+          onPress={() => onRequestCorrection(day.date)}
+          accessibilityRole="button"
+          accessibilityLabel={t("dayCard.requestCorrection")}
+        >
+          <Text style={styles.correctionLink}>{t("dayCard.requestCorrection")}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {expanded ? (
         <View style={styles.details}>
@@ -132,6 +143,10 @@ const styles = StyleSheet.create({
   },
   caption: {
     ...text.caption,
+  },
+  correctionLink: {
+    ...text.caption,
+    color: palette.brandText,
   },
   bottom: {
     flexDirection: "row",

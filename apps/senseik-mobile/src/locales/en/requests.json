@@ -20,13 +20,18 @@
     "advance": {
       "label": "Advance",
       "description": "Deducted from your salary"
+    },
+    "punchCorrection": {
+      "label": "Missing punch",
+      "description": "Correct a timesheet day"
     }
   },
   "titles": {
     "leave": "Leave request",
     "overtime": "Overtime request",
     "expense": "Expense request",
-    "advance": "Advance request"
+    "advance": "Advance request",
+    "punchCorrection": "Missing punch request"
   },
   "leaveTypesLoadError": "Leave types could not be loaded. Please try again.",
   "filters": {
@@ -119,5 +124,27 @@
     "itemsTitle": "Added items",
     "removeItemA11y": "Remove item: {{item}}",
     "total": "Total"
+  },
+  "punchCorrectionStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "applyFailed": "Could not be applied",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn"
+  },
+  "withdrawPunchCorrection": {
+    "confirmTitle": "Withdraw correction request",
+    "confirmMessage": "Are you sure you want to withdraw this request? This cannot be undone.",
+    "error": "The correction request could not be withdrawn. Please try again."
+  },
+  "punchCorrection": {
+    "includeCheckIn": "Correct check-in time",
+    "includeCheckOut": "Correct check-out time",
+    "reason": "Reason",
+    "reasonPlaceholder": "Briefly explain why",
+    "invalidTimeRange": "The check-out time must be after the check-in time.",
+    "futureDateNotAllowed": "A future date cannot be selected.",
+    "submitted": "Your correction request has been sent for approval.",
+    "submitError": "The correction request could not be sent. Please try again."
   }
 }

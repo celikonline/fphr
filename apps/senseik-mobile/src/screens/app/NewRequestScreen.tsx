@@ -9,6 +9,7 @@ import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import OvertimeRequestSection from "@/components/requests/OvertimeRequestSection";
 import ExpenseClaimSection from "@/components/requests/ExpenseClaimSection";
 import AdvanceRequestSection from "@/components/requests/AdvanceRequestSection";
+import PunchCorrectionSection from "@/components/requests/PunchCorrectionSection";
 import { leaveService, type RequestableLeaveType } from "@/services/LeaveService";
 import { palette, radius, text } from "@/theme/theme";
 import type { AppStackParamList, RequestKind } from "@/types/navigation";
@@ -27,7 +28,7 @@ export function newRequestTitle(kind: RequestKind): string {
  */
 export default function NewRequestScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
-  const { kind } = route.params;
+  const { kind, date } = route.params;
   const insets = useSafeAreaInsets();
   const close = () => navigation.goBack();
 
@@ -44,7 +45,7 @@ export default function NewRequestScreen({ navigation, route }: Props) {
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
-          <RequestForm kind={kind} onSubmitted={close} />
+          <RequestForm kind={kind} date={date} onSubmitted={close} />
         </ScrollView>
       </View>
     </View>
@@ -52,8 +53,17 @@ export default function NewRequestScreen({ navigation, route }: Props) {
 }
 
 /** Mounts the form for `kind`; every form calls `onSubmitted` after a successful submit, which
- * closes the screen (Taleplerim/İzinlerim reload on focus). */
-function RequestForm({ kind, onSubmitted }: { kind: RequestKind; onSubmitted: () => void }) {
+ * closes the screen (Taleplerim/İzinlerim reload on focus). `date` only applies to punchCorrection
+ * (FG-004: Puantaj's "Düzeltme iste" preselects the day). */
+function RequestForm({
+  kind,
+  date,
+  onSubmitted,
+}: {
+  kind: RequestKind;
+  date?: string;
+  onSubmitted: () => void;
+}) {
   switch (kind) {
     case "leave":
       return <LeaveRequestBody onSubmitted={onSubmitted} />;
@@ -63,6 +73,8 @@ function RequestForm({ kind, onSubmitted }: { kind: RequestKind; onSubmitted: ()
       return <ExpenseClaimSection onSubmitted={onSubmitted} />;
     case "advance":
       return <AdvanceRequestSection onSubmitted={onSubmitted} />;
+    case "punchCorrection":
+      return <PunchCorrectionSection initialDate={date} onSubmitted={onSubmitted} />;
   }
 }
 

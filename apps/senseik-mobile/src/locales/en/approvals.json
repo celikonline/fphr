@@ -13,12 +13,15 @@
   "types": {
     "requisition": "Headcount request",
     "assetAssignment": "Asset assignment",
-    "fallback": "Request"
+    "fallback": "Request",
+    "punchCorrection": "Missing punch"
   },
   "rows": {
     "start": "Start",
     "end": "End",
-    "amount": "Amount"
+    "amount": "Amount",
+    "date": "Day",
+    "current": "Current"
   },
   "attachmentsCount_one": "{{count}} document:",
   "attachmentsCount_other": "{{count}} documents:",

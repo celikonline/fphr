@@ -121,6 +121,9 @@ export function ApprovalTaskCard({
       {task.summary?.overtime?.reason ? (
         <Text style={styles.note}>{task.summary.overtime.reason}</Text>
       ) : null}
+      {task.summary?.punchCorrection?.reason ? (
+        <Text style={styles.note}>{task.summary.punchCorrection.reason}</Text>
+      ) : null}
       <ApprovalAttachmentsLine task={task} />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}

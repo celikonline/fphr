@@ -173,7 +173,14 @@ export default function AttendanceScreen() {
       ) : (
         visibleDays.map((day) => (
           // `key`d by `date`, not `id`: leave-only rows all share the empty-guid `id`.
-          <AttendanceDayCard key={day.date} day={day} overtimeText={formatOvertimeUndertime(day)} />
+          <AttendanceDayCard
+            key={day.date}
+            day={day}
+            overtimeText={formatOvertimeUndertime(day)}
+            onRequestCorrection={(date) =>
+              navigation.navigate("NewRequest", { kind: "punchCorrection", date })
+            }
+          />
         ))
       )}
 

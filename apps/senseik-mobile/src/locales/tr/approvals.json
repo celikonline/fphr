@@ -13,12 +13,15 @@
   "types": {
     "requisition": "Kadro talebi",
     "assetAssignment": "Zimmet",
-    "fallback": "Talep"
+    "fallback": "Talep",
+    "punchCorrection": "Eksik giriş/çıkış"
   },
   "rows": {
     "start": "Başlangıç",
     "end": "Bitiş",
-    "amount": "Tutar"
+    "amount": "Tutar",
+    "date": "Gün",
+    "current": "Mevcut"
   },
   "attachmentsCount_one": "{{count}} belge:",
   "attachmentsCount_other": "{{count}} belge:",

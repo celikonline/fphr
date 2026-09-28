@@ -20,6 +20,7 @@ import type {
   ExpenseClaim,
   ExpenseClaimStatus,
 } from "@/services/ExpenseService";
+import type { PunchCorrectionRequest, PunchCorrectionStatus } from "@/services/AttendanceService";
 import type { Tone } from "@/theme/theme";
 import type { RequestKind } from "@/types/navigation";
 
@@ -32,6 +33,7 @@ export const REQUEST_FILTERS: { value: RequestFilter; labelKey: string }[] = [
   { value: "overtime", labelKey: "requests:options.overtime.label" },
   { value: "expense", labelKey: "requests:options.expense.label" },
   { value: "advance", labelKey: "requests:options.advance.label" },
+  { value: "punchCorrection", labelKey: "requests:options.punchCorrection.label" },
 ];
 
 /** One Taleplerim card, whatever the request type. `sortDate` is the local `DateOnly` the request
@@ -186,6 +188,40 @@ export function advanceRequestCard(request: AdvanceRequest): RequestCard {
   };
 }
 
+const PUNCH_CORRECTION_STATUS_TONES: Record<PunchCorrectionStatus, Tone> = {
+  pending: "warning",
+  approved: "success",
+  applyFailed: "danger",
+  rejected: "danger",
+  withdrawn: "neutral",
+};
+
+function punchCorrectionStatusLabel(status: PunchCorrectionStatus): string {
+  return i18n.t(`requests:punchCorrectionStatus.${status}`);
+}
+
+export function punchCorrectionRequestCard(request: PunchCorrectionRequest): RequestCard {
+  const times = [request.requestedCheckIn, request.requestedCheckOut]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.slice(0, 5))
+    .join(" – ");
+  return {
+    key: `punchCorrection-${request.id}`,
+    id: request.id,
+    kind: "punchCorrection",
+    title: i18n.t("requests:options.punchCorrection.label"),
+    dateLabel: formatDayMonthYear(request.date),
+    detail: times,
+    statusLabel: punchCorrectionStatusLabel(request.status),
+    tone: PUNCH_CORRECTION_STATUS_TONES[request.status],
+    description: request.reason,
+    lines: [],
+    canWithdraw: request.status === "pending",
+    sortDate: submittedDay(request.submittedAt) ?? request.date,
+    sortInstant: submittedInstant(request.submittedAt),
+  };
+}
+
 /** Every loaded request as one list, most recently submitted first (a source that failed to load
  * is just `[]`). Same-day cards go by submission time; those without one keep list order. */
 export function buildRequestCards(sources: {
@@ -193,6 +229,8 @@ export function buildRequestCards(sources: {
   overtime: OvertimeRequest[];
   expense: ExpenseClaim[];
   advance: AdvanceRequest[];
+  /** Optional so existing callers/tests built before FG-004 keep working unchanged. */
+  punchCorrection?: PunchCorrectionRequest[];
   categories: CategoryRef[];
 }): RequestCard[] {
   return [
@@ -200,6 +238,7 @@ export function buildRequestCards(sources: {
     ...sources.overtime.map(overtimeRequestCard),
     ...sources.expense.map((claim) => expenseClaimCard(claim, sources.categories)),
     ...sources.advance.map(advanceRequestCard),
+    ...(sources.punchCorrection ?? []).map(punchCorrectionRequestCard),
   ].sort((a, b) => b.sortDate.localeCompare(a.sortDate) || b.sortInstant - a.sortInstant);
 }
 
