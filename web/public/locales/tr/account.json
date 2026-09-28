@@ -39,5 +39,6 @@
   "preferences": "Tercihler",
   "preferencesHint": "Dil, tema ve renk paleti tercihleriniz bu tarayıcıda saklanır.",
   "supportHint": "Yardım Merkezi ve Desteğe bağlan.",
-  "logoutHint": "Oturumunuzu sonlandırın."
+  "logoutHint": "Oturumunuzu sonlandırın.",
+  "mfaRequiredByPolicyHint": "Şirketinizin güvenlik politikası rolünüz için iki adımlı doğrulamayı zorunlu kılıyor; kapatılamaz."
 }

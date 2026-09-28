@@ -39,5 +39,6 @@
   "preferences": "Einstellungen",
   "preferencesHint": "Ihre Einstellungen für Sprache, Design und Farbpalette werden in diesem Browser gespeichert.",
   "supportHint": "Hilfe-Center und Support kontaktieren.",
-  "logoutHint": "Beenden Sie Ihre Sitzung."
+  "logoutHint": "Beenden Sie Ihre Sitzung.",
+  "mfaRequiredByPolicyHint": "Die Sicherheitsrichtlinie Ihres Unternehmens schreibt für Ihre Rolle die Zwei-Faktor-Authentifizierung vor; sie kann nicht deaktiviert werden."
 }
