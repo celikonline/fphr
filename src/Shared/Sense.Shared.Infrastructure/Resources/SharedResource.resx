@@ -1564,4 +1564,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="employee.my.team" xml:space="preserve"><value>Ekibimi görüntüleme</value></data>
   <data name="attendance.my.team" xml:space="preserve"><value>Ekibimin puantajını görüntüleme</value></data>
   <data name="leave.my.team" xml:space="preserve"><value>Ekibimin izinlerini görüntüleme</value></data>
+  <data name="report.col.tenureDays" xml:space="preserve"><value>Kıdem (gün)</value></data>
+  <data name="report.col.year" xml:space="preserve"><value>Yıl</value></data>
+  <data name="report.col.terminationCount" xml:space="preserve"><value>Ayrılan çalışan sayısı</value></data>
+  <data name="report.col.activeHeadcount" xml:space="preserve"><value>Aktif çalışan sayısı</value></data>
+  <data name="report.col.turnoverRate" xml:space="preserve"><value>İşten ayrılma oranı</value></data>
+  <data name="report.sheet.departedEmployees" xml:space="preserve"><value>İşten ayrılan çalışanlar</value></data>
+  <data name="report.sheet.employeeBirthdays" xml:space="preserve"><value>Doğum günü listesi</value></data>
+  <data name="report.sheet.turnoverSummary" xml:space="preserve"><value>Turnover özeti</value></data>
+  <data name="report.sheet.turnoverDetail" xml:space="preserve"><value>Ayrılan çalışanlar</value></data>
 </root>

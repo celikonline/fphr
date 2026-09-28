@@ -128,6 +128,9 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeReportReader, EmployeeReportReader>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeListReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.SalaryListReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.DepartedEmployeesReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeBirthdayReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeTurnoverReportProvider>();
 
         // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
         services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();

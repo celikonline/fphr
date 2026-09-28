@@ -1555,4 +1555,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee.my.team" xml:space="preserve"><value>View my team</value></data>
   <data name="attendance.my.team" xml:space="preserve"><value>View my team's timesheet</value></data>
   <data name="leave.my.team" xml:space="preserve"><value>View my team's leave</value></data>
+  <data name="report.col.tenureDays" xml:space="preserve"><value>Tenure (days)</value></data>
+  <data name="report.col.year" xml:space="preserve"><value>Year</value></data>
+  <data name="report.col.terminationCount" xml:space="preserve"><value>Departed employees</value></data>
+  <data name="report.col.activeHeadcount" xml:space="preserve"><value>Active headcount</value></data>
+  <data name="report.col.turnoverRate" xml:space="preserve"><value>Turnover rate</value></data>
+  <data name="report.sheet.departedEmployees" xml:space="preserve"><value>Departed employees</value></data>
+  <data name="report.sheet.employeeBirthdays" xml:space="preserve"><value>Birthday list</value></data>
+  <data name="report.sheet.turnoverSummary" xml:space="preserve"><value>Turnover summary</value></data>
+  <data name="report.sheet.turnoverDetail" xml:space="preserve"><value>Departed employees</value></data>
 </root>
