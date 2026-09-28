@@ -92,6 +92,7 @@ public static class AttendanceDomainErrors
     public const string TerminalGroupNameRequired = "attendance.terminal_group.name_required";
     public const string TerminalCredentialValueRequired = "attendance.terminal_credential.value_required";
     public const string TerminalCredentialNotFound = "attendance.terminal_credential.not_found";
+    public const string TerminalCredentialInUse = "attendance.terminal_credential.in_use";
 }
 
 /// <summary>Domain limits.</summary>

@@ -6,8 +6,8 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
-using Sense.Modules.Attendance.Domain.PunchRequests;
 using Sense.Modules.Attendance.Domain.Punches;
+using Sense.Modules.Attendance.Domain.PunchRequests;
 using Sense.Modules.Attendance.Domain.Rotations;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
@@ -582,4 +582,27 @@ public sealed class TerminalRepository(AttendanceDbContext context) : ITerminalR
             .Where(c => c.EmployeeId == employeeId)
             .OrderBy(c => c.Kind)
             .ToListAsync(cancellationToken);
+
+    public void RemoveGroup(TerminalGroup group) => context.TerminalGroups.Remove(group);
+
+    public Task<bool> AnyTerminalInGroupAsync(Guid groupId, CancellationToken cancellationToken = default) =>
+        context.Terminals.AnyAsync(t => t.TerminalGroupId == groupId, cancellationToken);
+
+    public Task MarkTerminalSeenAsync(Guid tenantId, Guid terminalId, DateTime seenAtUtc, CancellationToken cancellationToken = default) =>
+        context.Terminals.IgnoreQueryFilters([ModuleDbContext.TenantFilter])
+            .Where(t => t.TenantId == tenantId && t.Id == terminalId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LastSeenAtUtc, seenAtUtc), cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeTerminalCredential>> ListActiveCredentialsByValuesAsync(
+        Guid tenantId, IReadOnlyCollection<string> values, CancellationToken cancellationToken = default)
+    {
+        if (values.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.EmployeeTerminalCredentials.IgnoreQueryFilters([ModuleDbContext.TenantFilter])
+            .Where(c => c.TenantId == tenantId && c.IsActive && values.Contains(c.Value))
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -1737,4 +1737,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>In</value></data>
   <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Out</value></data>
   <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="attendance.terminal.code_duplicate" xml:space="preserve"><value>A terminal with this code already exists.</value></data>
+  <data name="attendance.terminal.location_not_found" xml:space="preserve"><value>The location to bind the terminal to was not found or is inactive.</value></data>
+  <data name="attendance.terminal_group.in_use" xml:space="preserve"><value>Terminals are assigned to this group; move them to another group first.</value></data>
+  <data name="attendance.terminal_ingest.batch_size_invalid" xml:space="preserve"><value>A punch request must contain at least 1 and at most {max} items.</value></data>
+  <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>This terminal credential is in active use; deactivate it before reassigning.</value></data>
+  <data name="problem.title.service_unavailable" xml:space="preserve"><value>Service unavailable</value></data>
+  <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal credential (card/PIN) operations are not configured on this server. Contact your system administrator.</value></data>
 </root>

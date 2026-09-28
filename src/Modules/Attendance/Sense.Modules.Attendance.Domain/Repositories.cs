@@ -285,4 +285,19 @@ public interface ITerminalRepository
         Guid tenantId, Terminals.TerminalCredentialKind kind, string value, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListCredentialsForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    void RemoveGroup(Terminals.TerminalGroup group);
+
+    /// <summary>Grup silinmeden önce: gruba bağlı (aktif ya da pasif) terminal var mı.</summary>
+    Task<bool> AnyTerminalInGroupAsync(Guid groupId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Terminal nabzı/okutması (Z5.1): <c>LastSeenAtUtc</c>'yi doğrudan günceller - değişiklik izlemeden geçmez, bu yüzden her nabız
+    /// için denetim kaydı üretmez. Kiracı bağlamı gerekmez; açık <paramref name="tenantId"/> ile süzülür.
+    /// </summary>
+    Task MarkTerminalSeenAsync(Guid tenantId, Guid terminalId, DateTime seenAtUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Terminal okutmalarını toplu eşler: kiracı içindeki, değeri (HMAC özeti) listede olan aktif kimlikler.</summary>
+    Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListActiveCredentialsByValuesAsync(
+        Guid tenantId, IReadOnlyCollection<string> values, CancellationToken cancellationToken = default);
 }

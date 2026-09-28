@@ -1746,4 +1746,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>Giriş</value></data>
   <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Çıkış</value></data>
   <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Yönsüz</value></data>
+  <data name="attendance.terminal.code_duplicate" xml:space="preserve"><value>Bu kodla bir terminal zaten var.</value></data>
+  <data name="attendance.terminal.location_not_found" xml:space="preserve"><value>Terminale bağlanacak lokasyon bulunamadı ya da pasif.</value></data>
+  <data name="attendance.terminal_group.in_use" xml:space="preserve"><value>Bu gruba bağlı terminaller var; önce terminalleri başka gruba taşıyın.</value></data>
+  <data name="attendance.terminal_ingest.batch_size_invalid" xml:space="preserve"><value>Okutma isteği en az 1, en fazla {max} kalem içermelidir.</value></data>
+  <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>Bu terminal kimliği aktif olarak kullanılıyor; yeniden atamadan önce pasife alın.</value></data>
+  <data name="problem.title.service_unavailable" xml:space="preserve"><value>Hizmet şu an kullanılamıyor</value></data>
+  <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal kimlik (kart/PIN) işlemleri bu sunucuda yapılandırılmamış. Sistem yöneticinize başvurun.</value></data>
 </root>

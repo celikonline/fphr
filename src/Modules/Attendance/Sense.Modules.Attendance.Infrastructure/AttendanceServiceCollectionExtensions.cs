@@ -1,13 +1,15 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
-using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.PunchRequests;
+using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
+using Sense.Modules.Attendance.Application.Terminals;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
@@ -15,6 +17,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Attendance.Infrastructure.Terminals;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Shared.Contracts.Events;
@@ -48,6 +51,16 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.CurrentlyInsideReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.BreaksReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IntermediatePunchesReportProvider>();
+
+        // Z5.1 terminal yönetimi + okutma ucu (T1, API-only). Kimlik (kart/PIN) özet pepper'ı gizli yapılandırmadan; zorunlu değil:
+        // yoksa API açılır, başlangıçta uyarı loglanır, yalnız kimlik işlemleri 503 döner (lazy doğrulama).
+        services.AddOptions<TerminalSecurityOptions>().Bind(configuration.GetSection(TerminalSecurityOptions.Section));
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, TerminalSecurityStartupCheck>());
+        services.TryAddSingleton<ITerminalCredentialHasher, HmacTerminalCredentialHasher>();
+        services.TryAddScoped<ITerminalKeyAuthenticator, TerminalKeyAuthenticator>();
+        services.AddOptions<TerminalIngestOptions>().Bind(configuration.GetSection(TerminalIngestOptions.Section));
+        services.TryAddSingleton<TerminalCredentialFailureMonitor>();
+        services.TryAddScoped<TerminalPunchIngest>();
         return services;
     }
 
