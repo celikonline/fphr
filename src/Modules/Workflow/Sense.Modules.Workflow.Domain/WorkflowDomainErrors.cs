@@ -18,6 +18,9 @@ public static class WorkflowDomainErrors
     public const string RequestNoSteps = "workflow.request.no_steps";
     public const string RequestRequesterRequired = "workflow.request.requester_required";
 
+    /// <summary>TK-009: the approver list on a request may be edited once - a second edit attempt hits this.</summary>
+    public const string RequestApproversAlreadyEdited = "workflow.request.approvers_already_edited";
+
     public const string TaskNotFound = "workflow.task.not_found";
     public const string TaskNotCurrent = "workflow.task.not_current";
     public const string TaskNotPending = "workflow.task.not_pending";
@@ -25,6 +28,12 @@ public static class WorkflowDomainErrors
 
     /// <summary>Ürün kararı (denetim A10): bir görevi reddederken yorum (ret gerekçesi) zorunlu; onayda isteğe bağlı.</summary>
     public const string RejectionCommentRequired = "workflow.task.rejection_comment_required";
+
+    /// <summary>FG-009: a cancelled request takes no more comments.</summary>
+    public const string CommentRequestClosed = "workflow.comment.request_closed";
+
+    /// <summary>FG-009: an empty/whitespace-only comment.</summary>
+    public const string CommentTextRequired = "workflow.comment.text_required";
 
     public const string TokenNotFound = "workflow.token.not_found";
     public const string TokenExpired = "workflow.token.expired";
@@ -41,6 +50,9 @@ public static class WorkflowLimits
     public const int IpAddressMaxLength = 64;
     public const int UserAgentMaxLength = 500;
     public const int RoleCodeMaxLength = 50;
+
+    /// <summary>FG-008: most tasks one decide-bulk call may carry (each is decided in its own transaction).</summary>
+    public const int BulkDecisionMaxTasks = 50;
 
     /// <summary>How long a "decide by e-mail" link stays valid after it is minted.</summary>
     public static readonly TimeSpan EmailDecisionTokenLifetime = TimeSpan.FromDays(7);

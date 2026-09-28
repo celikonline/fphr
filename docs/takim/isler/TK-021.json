@@ -1,0 +1,18 @@
+{
+  "id": "TK-021",
+  "baslik": "Recruitment - talep formu sablonlarina departman bazli alan ozellestirme",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/recruitment-departman-sablon",
+  "kaynak": "docs/analysis/kolayik-video/faz6-durum-takibi.md:30 (#87 - departman bazli sablon/alan ozellestirme yok)",
+  "kabul": [
+    "Requisition (talep formu) sablonlari artik departman bazinda ozellestirilebiliyor (hangi alanlarin gorunecegi/zorunlu oldugu).",
+    "Departman ozellestirmesi olmayan durumda mevcut varsayilan sablon davranisi DEGISMEDI.",
+    "Butce araligi/faydalar/sorumluluklar gibi tamamen yeni alan TIPLERI eklemek KAPSAM DISI - yalniz var olan alanlarin departmana gore gosterilme/zorunluluk kontrolu.",
+    "Sense.Modules.Recruitment.Tests tek basina yesil."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-021.md"
+}

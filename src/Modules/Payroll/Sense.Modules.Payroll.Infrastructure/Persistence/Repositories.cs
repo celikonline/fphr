@@ -51,6 +51,17 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
         await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
 }
 
+public sealed class PayslipDeliveryRepository(PayrollDbContext context) : IPayslipDeliveryRepository
+{
+    public void Add(PayslipDelivery delivery) => context.PayslipDeliveries.Add(delivery);
+
+    public async Task<PayslipDelivery?> FindByPayslipIdAsync(Guid payslipId, CancellationToken cancellationToken = default) =>
+        await context.PayslipDeliveries.FirstOrDefaultAsync(d => d.PayslipId == payslipId, cancellationToken);
+
+    public async Task<IReadOnlyList<PayslipDelivery>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.PayslipDeliveries.Where(d => d.EmployeeId == employeeId).ToListAsync(cancellationToken);
+}
+
 public sealed class PayslipDirtyFlagRepository(PayrollDbContext context) : IPayslipDirtyFlagRepository
 {
     public void Add(PayslipDirtyFlag flag) => context.DirtyFlags.Add(flag);

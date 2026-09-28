@@ -1,0 +1,77 @@
+{
+  "title": "Onaylarım",
+  "loadError": "Onay kutusu yüklenemedi. Lütfen tekrar deneyin.",
+  "empty": "Onay bekleyen talep yok",
+  "filters": {
+    "all": "Tümü",
+    "leave": "İzin",
+    "overtime": "Fazla mesai",
+    "expense": "Masraf",
+    "advance": "Avans"
+  },
+  "filterWithCount": "{{label}} ({{count}})",
+  "types": {
+    "requisition": "Kadro talebi",
+    "assetAssignment": "Zimmet",
+    "fallback": "Talep",
+    "punchCorrection": "Eksik giriş/çıkış"
+  },
+  "rows": {
+    "start": "Başlangıç",
+    "end": "Bitiş",
+    "amount": "Tutar",
+    "date": "Gün",
+    "current": "Mevcut"
+  },
+  "attachmentsCount_one": "{{count}} belge:",
+  "attachmentsCount_other": "{{count}} belge:",
+  "typeLabel": "Tür",
+  "typeA11y": "Tür: {{value}}",
+  "actions": {
+    "approve": "Onayla",
+    "reject": "Reddet"
+  },
+  "approve": {
+    "error": "Talep onaylanamadı. Lütfen tekrar deneyin.",
+    "confirmTitle": "Talebi onayla",
+    "confirmMessage": "Bu talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz."
+  },
+  "reject": {
+    "title": "Talebi reddet",
+    "message": "Bu talebi reddetmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "reason": "Gerekçe",
+    "reasonHint": "Reddetmek için bir gerekçe yazmanız gerekir.",
+    "reasonPlaceholder": "Gerekçenizi yazın",
+    "error": "Talep reddedilemedi. Lütfen tekrar deneyin."
+  },
+  "card": {
+    "step": "Adım {{step}}",
+    "fallbackApprover": "Yedek onaylayan",
+    "unknownRequester": "Bilinmiyor",
+    "pending": "Bekliyor"
+  },
+  "history": {
+    "pill": "Geçmiş",
+    "title": "Geçmiş",
+    "loadError": "Geçmiş yüklenemedi. Lütfen tekrar deneyin.",
+    "empty": "Karar verdiğiniz talep yok",
+    "outcome": {
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi"
+    }
+  },
+  "selection": {
+    "select": "Seç",
+    "cancel": "İptal",
+    "selectAll": "Tümünü seç"
+  },
+  "bulk": {
+    "approve": "Onayla ({{count}})",
+    "reject": "Reddet ({{count}})",
+    "approveConfirmTitle": "Seçili talepleri onayla",
+    "approveConfirmMessage": "{{count}} talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "rejectTitle": "Seçili talepleri reddet",
+    "rejectMessage": "{{count}} talebi reddetmek üzeresiniz. Bu işlem geri alınamaz.",
+    "error": "Talepler karara bağlanamadı. Lütfen tekrar deneyin."
+  }
+}

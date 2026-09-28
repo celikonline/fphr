@@ -1,7 +1,10 @@
 using FluentValidation;
+using Sense.Modules.Onboarding.Application;
+using Sense.Modules.Onboarding.Contracts.Events;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -52,14 +55,14 @@ public sealed class MaterializeTasksForEmployeeValidator : AbstractValidator<Mat
 }
 
 public sealed class MaterializeTasksForEmployeeHandler(
-    ITenantContext tenant, IOnboardingTaskTemplateRepository templates, IEmployeeOnboardingTaskRepository tasks)
+    ITenantContext tenant, IOnboardingTaskTemplateRepository templates, IEmployeeOnboardingTaskRepository tasks, IIntegrationEventOutbox outbox)
     : ICommandHandler<MaterializeTasksForEmployeeCommand, IReadOnlyList<EmployeeOnboardingTaskDto>>
 {
     public async Task<Result<IReadOnlyList<EmployeeOnboardingTaskDto>>> Handle(
         MaterializeTasksForEmployeeCommand command, CancellationToken cancellationToken)
     {
         var created = await OnboardingTaskMaterializer.MaterializeAsync(
-            tenant.TenantId, templates, tasks, command.EmployeeId, command.Stage, command.ReferenceDate, cancellationToken);
+            tenant.TenantId, templates, tasks, outbox, command.EmployeeId, command.Stage, command.ReferenceDate, cancellationToken);
         return Result.Success<IReadOnlyList<EmployeeOnboardingTaskDto>>(created.Select(EmployeeOnboardingTaskDto.From).ToList());
     }
 }
@@ -72,7 +75,8 @@ public sealed class CompleteTaskValidator : AbstractValidator<CompleteTaskComman
     public CompleteTaskValidator() => RuleFor(x => x.TaskId).NotEmpty();
 }
 
-public sealed class CompleteTaskHandler(ICurrentUser currentUser, IEmployeeOnboardingTaskRepository tasks)
+public sealed class CompleteTaskHandler(
+    ICurrentUser currentUser, IEmployeeOnboardingTaskRepository tasks, IOnboardingTaskTemplateRepository templates, IIntegrationEventOutbox outbox)
     : ICommandHandler<CompleteTaskCommand, EmployeeOnboardingTaskDto>
 {
     public async Task<Result<EmployeeOnboardingTaskDto>> Handle(CompleteTaskCommand command, CancellationToken cancellationToken)
@@ -84,7 +88,13 @@ public sealed class CompleteTaskHandler(ICurrentUser currentUser, IEmployeeOnboa
         }
 
         var completed = task.Value.Complete(currentUser.UserId ?? Guid.Empty);
-        return completed.IsFailure ? completed.Error : EmployeeOnboardingTaskDto.From(task.Value);
+        if (completed.IsFailure)
+        {
+            return completed.Error;
+        }
+
+        await OnboardingTaskNotices.EnqueueCompletedAsync(templates, outbox, task.Value, cancellationToken);
+        return EmployeeOnboardingTaskDto.From(task.Value);
     }
 }
 
@@ -113,5 +123,66 @@ public sealed class WaiveTaskHandler(ICurrentUser currentUser, IEmployeeOnboardi
 
         var waived = task.Value.Waive(command.Reason, currentUser.UserId ?? Guid.Empty);
         return waived.IsFailure ? waived.Error : EmployeeOnboardingTaskDto.From(task.Value);
+    }
+}
+
+/// <summary>Self-service: the caller completes one of their own materialized tasks.</summary>
+[RequiresPermission("onboarding.my.tasks")]
+public sealed record CompleteMyTaskCommand(Guid TaskId) : ICommand<EmployeeOnboardingTaskDto>;
+
+public sealed class CompleteMyTaskValidator : AbstractValidator<CompleteMyTaskCommand>
+{
+    public CompleteMyTaskValidator() => RuleFor(x => x.TaskId).NotEmpty();
+}
+
+public sealed class CompleteMyTaskHandler(
+    ICurrentUser currentUser, IEmployeeOnboardingTaskRepository tasks, IOnboardingTaskTemplateRepository templates, IIntegrationEventOutbox outbox)
+    : ICommandHandler<CompleteMyTaskCommand, EmployeeOnboardingTaskDto>
+{
+    public async Task<Result<EmployeeOnboardingTaskDto>> Handle(CompleteMyTaskCommand command, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(OnboardingErrors.NoEmployeeForUser);
+        }
+
+        var task = await tasks.GetByIdAsync(command.TaskId, cancellationToken);
+        if (task.IsFailure)
+        {
+            return task.Error;
+        }
+
+        if (task.Value.EmployeeId != employeeId)
+        {
+            return Error.Forbidden(OnboardingErrors.NotOwner);
+        }
+
+        var completed = task.Value.Complete(currentUser.UserId ?? Guid.Empty);
+        if (completed.IsFailure)
+        {
+            return completed.Error;
+        }
+
+        await OnboardingTaskNotices.EnqueueCompletedAsync(templates, outbox, task.Value, cancellationToken);
+        return EmployeeOnboardingTaskDto.From(task.Value);
+    }
+}
+
+/// <summary>Shared by <see cref="CompleteTaskHandler"/> and <see cref="CompleteMyTaskHandler"/>: looks up the
+/// completed task's template for its title/responsible role and enqueues the notice. A missing template (should not
+/// happen - templates aren't deleted, only deactivated) is not fatal to the completion itself.</summary>
+internal static class OnboardingTaskNotices
+{
+    public static async Task EnqueueCompletedAsync(
+        IOnboardingTaskTemplateRepository templates, IIntegrationEventOutbox outbox, EmployeeOnboardingTask task, CancellationToken cancellationToken)
+    {
+        var template = await templates.GetByIdAsync(task.TemplateId, cancellationToken);
+        if (template.IsFailure)
+        {
+            return;
+        }
+
+        outbox.Enqueue(new OnboardingTaskCompleted(
+            task.TenantId, task.Id, task.EmployeeId, template.Value.ResponsibleRoleCode, template.Value.Title));
     }
 }

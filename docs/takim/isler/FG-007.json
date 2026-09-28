@@ -1,0 +1,52 @@
+{
+  "id": "FG-007",
+  "baslik": "Ekibim (yönetici): ekip puantajı, ekip listesi, ekip izinleri",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "Attendance ekranında 'My / Subordinates' attendance' sekmeleri (tanıtım videosu + mağaza ekran görüntüleri (spec 2026-09-27 referansı)); 'Team Attendance Oversight', 'Team Directory Access', 'Team Schedule Management' - resmi kaynak: zenhr.com/en/mobile; ikincil (ChatGPT), doğrulanamadı 'TEAM ATTENDANCE, team members list'. NOT: spec §5/§9 yeni 'Ekibim' puantaj backend'ini kapsam dışı bıraktı; ZenHR MSS'in çekirdeği olduğu için kart açıldı.",
+  "senseik_durumu": "web'de var mobilde yok (web: pages/attendance/team-timesheet.tsx, leave takvimi). Ayrıca yetki boşluğu: yöneticiler artık 'Çalışan' grubunda (SystemRoleDefinitions yorumu) ve Employee rolünde attendance.timesheet.view / leave.requests.read yok.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/attendance/timesheet/team?weekStart=&orgUnitId= (attendance.timesheet.view)",
+      "GET /api/v1/attendance/timesheet/team/month (attendance.timesheet.view)",
+      "GET /api/v1/leave/team/requests (leave.requests.read)",
+      "GET /api/v1/leave/calendar (leave.my.calendar / leave.calendar.read)",
+      "GET /api/v1/attendance/board/live (attendance.board.view)",
+      "GET /api/v1/employees?managerEmployeeId= (employee.employees.read)"
+    ],
+    "gereken_yeni": [
+      "Raporlama hattına göre kapsamlanan self uçlar veya yeni anahtarlar: ör. 'attendance.my.team_timesheet', 'employee.my.team' (DataScope.Team ile değil, ManagerEmployeeId zinciri ile) - Employee grubundaki yöneticiler çağırabilsin",
+      "GET /api/v1/employees/me/team (doğrudan bağlılar: ad, unvan, bugünkü durum)"
+    ],
+    "izin": "Bugün Employee rolü çağıramaz (attendance.timesheet.view, leave.requests.read, employee.employees.read yok). Manager rolü çağırabilir ama yöneticiler Çalışan grubunda. İzin modeli kararı gerekir (insan onayı)."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/AttendanceScreen.tsx (SegmentedControl: 'Benim' / 'Ekibim' - yalnız ekibi varsa)",
+      "apps/senseik-mobile/src/screens/app/team/TeamScreen.tsx (yeni: ekip listesi + bugünkü durum: ofiste/izinde/uzaktan/gelmedi)",
+      "apps/senseik-mobile/src/services/TeamService.ts (yeni)",
+      "apps/senseik-mobile/src/screens/app/home/ActionGrid.tsx ('Ekibim' kutucuğu, yalnız yöneticiye)"
+    ],
+    "navigasyon": "İşlemlerim ızgarası 'Ekibim' + Puantaj ekranında segment"
+  },
+  "kabul": [
+    "Doğrudan bağlısı olan kullanıcı Puantaj'da 'Ekibim' segmentini görür; bağlısı olmayan görmez",
+    "Ekip puantajı seçilen hafta/ay için çalışan başına çalışma süresi ve anomali sayısını listeler; satıra dokununca günlük kırılım açılır",
+    "Ekibim ekranı bugünkü durumu gösterir (giriş yaptı / izinde / uzaktan / henüz giriş yok)",
+    "Ekip izin talepleri listesi (bekleyen/onaylı) görünür; bekleyenler Onaylarım'a yönlendirir",
+    "Kapsam dışı çalışanın verisi 404/403 döner (yetki testi: başka ekibin çalışanı görünmez)",
+    "Backend yetki testleri + mobil saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "Ekip satırı: Avatar + ad + unvan, sağda StatusPill (ofiste yeşil, izinde mor, uzaktan turkuaz, giriş yok amber). Puantaj segmenti mevcut SegmentedControl.",
+  "buyukluk": "L - yetki modeli kararı + birkaç uç + iki ekran",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "Yetki modeli kararı (insan onayı)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

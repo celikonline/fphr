@@ -2,23 +2,54 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { SecureStorage } from "./storage";
+import { currentLanguage } from "./i18n";
 
 /** Header names mirror SenseHeaderNames on the API (Sense.Shared.Contracts.Security). */
 const SenseHeaders = {
   CorrelationId: "X-Correlation-Id",
   ClientApp: "X-Client-App",
   ClientVersion: "X-Client-Version",
-  ClientPlatform: "X-Client-Platform"
+  ClientPlatform: "X-Client-Platform",
 } as const;
 
 const clientVersion = Constants.expoConfig?.version ?? "dev";
 
 /** Hermes has no crypto.randomUUID; a v4-shaped random id is enough for log/trace correlation. */
 const newCorrelationId = (): string =>
-  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
+
+// Paths mirror IdentityRoutes/AuthController.cs (Sense.Modules.Identity.Api): every anonymous
+// endpoint under AUTH_BASE except `logout` (Bearer-authenticated, so a 401 there IS a real expired
+// session and should still go through the refresh flow below).
+const AUTH_BASE = "/api/v1/identity/auth";
+const ANONYMOUS_AUTH_PATHS = [
+  `${AUTH_BASE}/login`,
+  `${AUTH_BASE}/mfa/complete`,
+  `${AUTH_BASE}/refresh`,
+  `${AUTH_BASE}/forgot-password`,
+  `${AUTH_BASE}/reset-password`,
+];
+
+/**
+ * B16: a 401 from an anonymous auth endpoint (wrong password, wrong TOTP code, ...) is NOT an
+ * expired access token - the request never carried one. Treating it as one used to (a) try a token
+ * refresh with whatever refresh token happened to be stored from a previous session, (b) silently
+ * retry the SAME login/MFA request with a newly "refreshed" Authorization header if that succeeded,
+ * and (c) log a scary "Login failed." / trigger `onUnauthorized` (session-expired logout) if it
+ * didn't - none of which have anything to do with the user's actual wrong password. The same applies
+ * to any request that never had an Authorization header in the first place (belt-and-suspenders for
+ * other anonymous endpoints).
+ */
+function isAnonymousAuthRequest(config: { url?: string; headers?: unknown } | undefined): boolean {
+  if (!config) return false;
+  const url = config.url ?? "";
+  if (ANONYMOUS_AUTH_PATHS.some((path) => url.includes(path))) return true;
+  const headers = config.headers as Record<string, unknown> | undefined;
+  return !headers?.Authorization;
+}
 
 interface QueuedRequest {
   resolve: (token?: string | null) => void;
@@ -40,7 +71,7 @@ export const setUnauthorizedHandler = (handler: (() => void) | null): void => {
 };
 
 const processQueue = (error: unknown, token?: string | null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -83,8 +114,8 @@ class ApiClient {
       baseURL,
       timeout: 30000,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     });
     // Bare instance for the refresh call itself: it must not carry the expired
     // Authorization header and must not re-enter the 401 queue.
@@ -92,8 +123,8 @@ class ApiClient {
       baseURL,
       timeout: 30000,
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     this.setupInterceptors();
@@ -102,13 +133,17 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor
     this.instance.interceptors.request.use(
-      async config => {
+      async (config) => {
         if (!config.headers.has(SenseHeaders.CorrelationId)) {
           config.headers.set(SenseHeaders.CorrelationId, newCorrelationId());
         }
         config.headers.set(SenseHeaders.ClientApp, "mobile");
         config.headers.set(SenseHeaders.ClientPlatform, Platform.OS);
         config.headers.set(SenseHeaders.ClientVersion, clientVersion);
+        // FG-001: endpoints that localize server-side (e.g. `/leave/me/requests`'s `leaveTypeName`,
+        // ProblemDetails error `detail`) answer in the app's active language, read per request so a
+        // language switch applies without restarting.
+        config.headers.set("Accept-Language", currentLanguage());
 
         const token = await SecureStorage.getAccessToken();
         if (token) {
@@ -116,25 +151,29 @@ class ApiClient {
         }
         return config;
       },
-      error => Promise.reject(error)
+      (error) => Promise.reject(error)
     );
 
     // Response interceptor
     this.instance.interceptors.response.use(
-      response => response,
-      async error => {
+      (response) => response,
+      async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAnonymousAuthRequest(originalRequest)
+        ) {
           if (isRefreshing) {
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
             })
-              .then(token => {
+              .then((token) => {
                 originalRequest.headers.Authorization = `Bearer ${token}`;
                 return this.instance(originalRequest);
               })
-              .catch(error => Promise.reject(error));
+              .catch((error) => Promise.reject(error));
           }
 
           originalRequest._retry = true;
@@ -146,16 +185,22 @@ class ApiClient {
               throw new Error("No refresh token available");
             }
 
-            const response = await this.refreshInstance.post("/api/auth/refresh", {
-              refreshToken
+            const response = await this.refreshInstance.post(`${AUTH_BASE}/refresh`, {
+              refreshToken,
             });
 
             // Validate the shape before trusting it - a malformed body must not
             // overwrite good tokens with `undefined` ("Bearer undefined" retries).
-            const data = response.data?.data;
+            // AuthTokensDto is returned unwrapped (no `data` envelope).
+            const data = response.data;
             const accessToken: unknown = data?.accessToken;
             const newRefreshToken: unknown = data?.refreshToken;
-            if (typeof accessToken !== "string" || !accessToken || typeof newRefreshToken !== "string" || !newRefreshToken) {
+            if (
+              typeof accessToken !== "string" ||
+              !accessToken ||
+              typeof newRefreshToken !== "string" ||
+              !newRefreshToken
+            ) {
               throw new Error("Invalid refresh response");
             }
 

@@ -58,10 +58,12 @@ public sealed class LeaveDocumentTests : TestFixture
         services.AddSingleton(holidays);
         services.AddSingleton(Substitute.For<IEmployeeLookup>());
 
-        // Varsayılan: istenen her belge Active (katı senaryolar test içinde yeniden yapılandırır).
+        // Varsayılan: istenen her belge Active ve talep sahibi tarafından yüklenmiş (katı/sahiplik senaryoları
+        // test içinde yeniden yapılandırır). _currentUser.UserId, çağrı anına kadar HireAsync tarafından set
+        // edildiğinden closure burada gecikmeli okunur.
         _documents.GetActiveAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
-                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "rapor.pdf", "application/pdf", 1024)));
+                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "rapor.pdf", "application/pdf", 1024, _currentUser.UserId ?? Guid.Empty, null)));
         services.AddSingleton(_documents);
 
         // Detay derleyici: kişi adları boş, onay durumu yok (ek listesi etkilenmez).
@@ -157,7 +159,7 @@ public sealed class LeaveDocumentTests : TestFixture
         _documents.GetActiveAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
                 .Where(id => id == docId)
-                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "rapor.pdf", "application/pdf", 1024)));
+                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "rapor.pdf", "application/pdf", 1024, _currentUser.UserId ?? Guid.Empty, null)));
         var monday = NextWeekMonday();
 
         var result = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
@@ -323,5 +325,182 @@ public sealed class LeaveDocumentTests : TestFixture
             .Error.Code.ShouldBe(LeaveDomainErrors.RequestInvalidAttachment);
         LeaveRequestAttachment.Attach(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "  rapor.pdf ", null, DateTime.UtcNow)
             .Value.FileName.ShouldBe("rapor.pdf");
+    }
+
+    /// <summary>IDOR: Active olsa da başka birinin yüklediği/başka bir çalışana ait belge kendi talebine eklenemez.</summary>
+    [Fact]
+    public async Task Submit_ForeignDocument_IsRejected()
+    {
+        var (tenantId, _, _, annualId) = await HireAsync();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+        var foreignDocId = Guid.NewGuid();
+        _documents.GetActiveAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
+                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "baskasinin-raporu.pdf", "application/pdf", 1024, Guid.NewGuid(), Guid.NewGuid())));
+
+        var result = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null, DocumentIds: [foreignDocId]), CancellationToken.None),
+            _currentUser, _workflow);
+
+        result.Error.Code.ShouldBe(LeaveRequestErrors.DocumentNotFound);
+    }
+
+    /// <summary>Aynı IDOR guard, ek ekleme (attach) ucunda: başkasının belgesi bekleyen talebe eklenemez.</summary>
+    [Fact]
+    public async Task Attach_ForeignDocument_IsRejected()
+    {
+        var (tenantId, _, _, annualId) = await HireAsync();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+
+        var submitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null), CancellationToken.None),
+            _currentUser, _workflow);
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+
+        var foreignDocId = Guid.NewGuid();
+        _documents.GetActiveAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<IReadOnlyCollection<Guid>>(1)
+                .ToDictionary(id => id, id => new AttachedDocumentInfo(id, "baskasinin-raporu.pdf", "application/pdf", 1024, Guid.NewGuid(), Guid.NewGuid())));
+
+        var result = await RunAsync<AttachMyLeaveDocumentHandler>(
+            h => h.Handle(new AttachMyLeaveDocumentCommand(submitted.Value.Id, foreignDocId), CancellationToken.None),
+            _currentUser);
+
+        result.Error.Code.ShouldBe(LeaveRequestErrors.DocumentNotFound);
+    }
+
+    /// <summary>
+    /// On-behalf kuralı: belge ya işlemi yapan (HR/yönetici) tarafından yüklenmiş OLMALI ya da hedef çalışana ait
+    /// (ör. sistem tarafından teslim edilmiş bir kopya) OLMALI; ne biri ne diğeri olan (üçüncü bir kişinin belgesi)
+    /// reddedilir.
+    /// </summary>
+    [Fact]
+    public async Task OnBehalf_DocumentOwnedByActorOrTargetEmployee_Succeeds_ThirdPartyDocument_IsRejected()
+    {
+        var (tenantId, employeeId, _, annualId) = await HireAsync();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+        var actingUserId = _currentUser.UserId!.Value;
+        var uploadedByActorDocId = Guid.NewGuid();
+        var deliveredToTargetDocId = Guid.NewGuid();
+        var thirdPartyDocId = Guid.NewGuid();
+
+        _documents.GetActiveAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<IReadOnlyCollection<Guid>>(1).ToDictionary(id => id, id => id switch
+            {
+                _ when id == uploadedByActorDocId => new AttachedDocumentInfo(id, "hr-yukledi.pdf", "application/pdf", 1024, actingUserId, null),
+                _ when id == deliveredToTargetDocId => new AttachedDocumentInfo(id, "sistem-teslimi.pdf", "application/pdf", 1024, Guid.Empty, employeeId),
+                _ => new AttachedDocumentInfo(id, "ucuncu-kisi.pdf", "application/pdf", 1024, Guid.NewGuid(), Guid.NewGuid()),
+            }));
+
+        var actorUploaded = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday, null, true, DocumentIds: [uploadedByActorDocId]), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        actorUploaded.IsSuccess.ShouldBeTrue(actorUploaded.IsFailure ? actorUploaded.Error.Code : null);
+
+        var deliveredToTarget = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday.AddDays(7), monday.AddDays(7), null, true, DocumentIds: [deliveredToTargetDocId]), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        deliveredToTarget.IsSuccess.ShouldBeTrue(deliveredToTarget.IsFailure ? deliveredToTarget.Error.Code : null);
+
+        var thirdParty = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday.AddDays(14), monday.AddDays(14), null, true, DocumentIds: [thirdPartyDocId]), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        thirdParty.Error.Code.ShouldBe(LeaveRequestErrors.DocumentNotFound);
+    }
+
+    /// <summary>Onaycı/İK ucu: detay ucuyla aynı yetki (leave.requests.read + dataScope). İlgisiz çalışan yasak,
+    /// talebe ekli olmayan belge "yok" hükmünde.</summary>
+    [Fact]
+    public async Task DownloadUrl_ApproverOrHr_Succeeds_UnrelatedEmployeeForbidden_UnattachedDocumentIsNotFound()
+    {
+        var (tenantId, employeeId, _, annualId) = await HireAsync();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+        var docId = Guid.NewGuid();
+
+        var submitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null, DocumentIds: [docId]), CancellationToken.None),
+            _currentUser, _workflow);
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+
+        _documents.GetDownloadUrlAsync(tenantId, docId, Arg.Any<CancellationToken>())
+            .Returns(new AttachedDocumentDownloadUrl("https://storage/rapor?sig=abc", DateTime.UtcNow.AddMinutes(15), "rapor.pdf", "application/pdf"));
+
+        var ok = await RunAsync<GetEmployeeLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+            h => h.Handle(new GetEmployeeLeaveRequestAttachmentDownloadUrlQuery(employeeId, submitted.Value.Id, docId), CancellationToken.None),
+            _dataScope);
+        ok.IsSuccess.ShouldBeTrue(ok.IsFailure ? ok.Error.Code : null);
+        ok.Value.ShouldSatisfyAllConditions(
+            v => v.Url.ShouldBe("https://storage/rapor?sig=abc"),
+            v => v.FileName.ShouldBe("rapor.pdf"),
+            v => v.ContentType.ShouldBe("application/pdf"));
+
+        var forbidden = await RunAsync<GetEmployeeLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+            h => h.Handle(new GetEmployeeLeaveRequestAttachmentDownloadUrlQuery(Guid.NewGuid(), submitted.Value.Id, docId), CancellationToken.None),
+            _dataScope);
+        forbidden.Error.Code.ShouldBe(LeaveErrors.EmployeeNotInScope);
+
+        var notAttached = await RunAsync<GetEmployeeLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+            h => h.Handle(new GetEmployeeLeaveRequestAttachmentDownloadUrlQuery(employeeId, submitted.Value.Id, Guid.NewGuid()), CancellationToken.None),
+            _dataScope);
+        notAttached.Error.Code.ShouldBe(LeaveRequestErrors.AttachmentNotFound);
+    }
+
+    /// <summary>Talep sahibi ucu (mobil): kendi eki indirilebilir, başka çalışanın talebi "yok" hükmünde.</summary>
+    [Fact]
+    public async Task DownloadUrl_Self_Succeeds_OtherEmployeesRequestIsNotFound()
+    {
+        var (tenantId, employeeId, _, annualId) = await HireAsync();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+        var docId = Guid.NewGuid();
+
+        var submitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null, DocumentIds: [docId]), CancellationToken.None),
+            _currentUser, _workflow);
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+
+        _documents.GetDownloadUrlAsync(tenantId, docId, Arg.Any<CancellationToken>())
+            .Returns(new AttachedDocumentDownloadUrl("https://storage/rapor?sig=abc", DateTime.UtcNow.AddMinutes(15), "rapor.pdf", "application/pdf"));
+
+        var mine = await RunAsync<GetMyLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+            h => h.Handle(new GetMyLeaveRequestAttachmentDownloadUrlQuery(submitted.Value.Id, docId), CancellationToken.None),
+            _currentUser);
+        mine.IsSuccess.ShouldBeTrue(mine.IsFailure ? mine.Error.Code : null);
+
+        _currentUser.EmployeeId.Returns(Guid.NewGuid());
+        var otherEmployee = await RunAsync<GetMyLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+            h => h.Handle(new GetMyLeaveRequestAttachmentDownloadUrlQuery(submitted.Value.Id, docId), CancellationToken.None),
+            _currentUser);
+        otherEmployee.Error.Code.ShouldBe(LeaveDomainErrors.RequestNotFound);
+        _currentUser.EmployeeId.Returns(employeeId);
+    }
+
+    /// <summary>Kiracı izolasyonu: başka bir kiracının bağlamında aynı talep kimliği "yok" hükmünde (global tenant filtresi).</summary>
+    [Fact]
+    public async Task DownloadUrl_CrossTenant_IsNotFound()
+    {
+        var (tenantId, _, _, annualId) = await HireAsync();
+        var monday = NextWeekMonday();
+        Guid requestId;
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            var submitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+                h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null), CancellationToken.None),
+                _currentUser, _workflow);
+            submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+            requestId = submitted.Value.Id;
+        }
+
+        using (TenantContextSetter!.BeginScope(Guid.NewGuid()))
+        {
+            var result = await RunAsync<GetMyLeaveRequestAttachmentDownloadUrlHandler, LeaveRequestAttachmentDownloadUrlDto>(
+                h => h.Handle(new GetMyLeaveRequestAttachmentDownloadUrlQuery(requestId, Guid.NewGuid()), CancellationToken.None),
+                _currentUser);
+            result.Error.Code.ShouldBe(LeaveDomainErrors.RequestNotFound);
+        }
     }
 }

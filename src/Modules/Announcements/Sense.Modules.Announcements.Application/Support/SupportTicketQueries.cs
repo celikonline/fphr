@@ -29,7 +29,7 @@ public sealed class ListMySupportTicketsHandler(ITenantContext tenant, ICurrentU
     }
 
     internal static SupportTicketDto ToDto(SupportTicket t) => new(
-        t.Id, t.RequestedByUserId, t.Subject, t.Body, t.Category.ToString(), t.Channel.ToString(), t.Status.ToString(),
+        t.Id, t.RequestedByUserId, t.Subject, t.Body, t.Category, t.Channel, t.Status,
         t.SourceRoute, t.Resolution, t.AnsweredAt, t.ClosedAt, t.CreatedAt);
 }
 

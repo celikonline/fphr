@@ -1,0 +1,55 @@
+{
+  "$aciklama": "Headless koşular için: claude -p \"…\" --settings .claude/takim/headless-settings.json (güvenilmemiş klasörde de geçerli).",
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/takim/betikler/test-kapisi.mjs)",
+      "PowerShell(node .claude/takim/betikler/test-kapisi.mjs)",
+      "Bash(node .claude/takim/betikler/kapi-dogrula.mjs)",
+      "PowerShell(node .claude/takim/betikler/kapi-dogrula.mjs)",
+      "Bash(dotnet build Sense.slnx)",
+      "PowerShell(dotnet build Sense.slnx)",
+      "Bash(pnpm run build)",
+      "PowerShell(pnpm run build)",
+      "Bash(pnpm run lint)",
+      "PowerShell(pnpm run lint)",
+      "Bash(pnpm run type-check)",
+      "PowerShell(pnpm run type-check)",
+      "Bash(dotnet test Sense.slnx)",
+      "PowerShell(dotnet test Sense.slnx)",
+      "Bash(pnpm test)",
+      "PowerShell(pnpm test)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "PowerShell(git push --force:*)",
+      "Bash(git push -f:*)",
+      "PowerShell(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "PowerShell(git reset --hard:*)",
+      "Bash(git clean -fdx:*)",
+      "PowerShell(git clean -fdx:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/takim/betikler/kanca-komut.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/takim/betikler/kanca-dosya.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

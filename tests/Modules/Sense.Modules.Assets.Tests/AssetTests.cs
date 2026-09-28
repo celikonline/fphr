@@ -82,6 +82,142 @@ public sealed class AssetTests
         result.Error.Code.ShouldBe(AssetsDomainErrors.AlreadyAssigned);
     }
 
+    /// <summary>Test helper: RequestAssignment -> AttachApproval -> CompleteAssignment, the full path a real approval takes.</summary>
+    private static Guid AssignViaWorkflow(Asset asset, Guid employeeId, DateOnly issuedAt)
+    {
+        asset.RequestAssignment(employeeId, issuedAt);
+        var approvalRequestId = Guid.NewGuid();
+        asset.AttachApproval(approvalRequestId);
+        asset.CompleteAssignment(approvalRequestId, issuedAt);
+        return approvalRequestId;
+    }
+
+    [Fact]
+    public void RequestAssignment_WhenUnassigned_MovesToPendingAssignment()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        var issuedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var result = asset.RequestAssignment(EmployeeId, issuedAt);
+
+        result.IsSuccess.ShouldBeTrue();
+        asset.Status.ShouldBe(AssetStatus.PendingAssignment);
+        asset.PendingEmployeeId.ShouldBe(EmployeeId);
+        asset.PendingIssuedAt.ShouldBe(issuedAt);
+        asset.AssignedEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RequestAssignment_WhenAlreadyAssigned_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        AssignViaWorkflow(asset, EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var result = asset.RequestAssignment(Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AlreadyAssigned);
+    }
+
+    [Fact]
+    public void RequestAssignment_WhenRetired_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.Retire();
+
+        var result = asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AlreadyAssigned);
+    }
+
+    [Fact]
+    public void RequestAssignment_WhenAlreadyPending_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var result = asset.RequestAssignment(Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AlreadyAssigned);
+    }
+
+    [Fact]
+    public void CompleteAssignment_WithMatchingApproval_Succeeds()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        var issuedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        asset.RequestAssignment(EmployeeId, issuedAt);
+        var approvalRequestId = Guid.NewGuid();
+        asset.AttachApproval(approvalRequestId);
+
+        var result = asset.CompleteAssignment(approvalRequestId, issuedAt);
+
+        result.IsSuccess.ShouldBeTrue();
+        asset.Status.ShouldBe(AssetStatus.Assigned);
+        asset.AssignedEmployeeId.ShouldBe(EmployeeId);
+        asset.IssuedAt.ShouldBe(issuedAt);
+        asset.PendingEmployeeId.ShouldBeNull();
+        asset.ApprovalRequestId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CompleteAssignment_WithMismatchedApproval_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+        asset.AttachApproval(Guid.NewGuid());
+
+        var result = asset.CompleteAssignment(Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AssignmentApprovalMismatch);
+        asset.Status.ShouldBe(AssetStatus.PendingAssignment);
+    }
+
+    [Fact]
+    public void CompleteAssignment_WhenNotPending_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+
+        var result = asset.CompleteAssignment(Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AssignmentApprovalMismatch);
+    }
+
+    [Fact]
+    public void RejectAssignment_WithMatchingApproval_ReturnsToUnassigned()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+        var approvalRequestId = Guid.NewGuid();
+        asset.AttachApproval(approvalRequestId);
+
+        var result = asset.RejectAssignment(approvalRequestId);
+
+        result.IsSuccess.ShouldBeTrue();
+        asset.Status.ShouldBe(AssetStatus.Unassigned);
+        asset.PendingEmployeeId.ShouldBeNull();
+        asset.ApprovalRequestId.ShouldBeNull();
+        asset.AssignedEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RejectAssignment_WithMismatchedApproval_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+        asset.AttachApproval(Guid.NewGuid());
+
+        var result = asset.RejectAssignment(Guid.NewGuid());
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.AssignmentApprovalMismatch);
+        asset.Status.ShouldBe(AssetStatus.PendingAssignment);
+    }
+
     [Fact]
     public void Return_WhenAssigned_ClearsAssignmentAndSetsReturnedAt()
     {
@@ -133,6 +269,18 @@ public sealed class AssetTests
     }
 
     [Fact]
+    public void Retire_WhilePendingAssignment_Fails()
+    {
+        var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
+        asset.RequestAssignment(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
+
+        var result = asset.Retire();
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AssetsDomainErrors.CannotRetireWhileAssigned);
+    }
+
+    [Fact]
     public void FullLifecycle_AssignReturnThenReassign_Succeeds()
     {
         var asset = Asset.Create(TenantId, CategoryId, "MacBook Pro 14", null, null).Value;
@@ -143,9 +291,10 @@ public sealed class AssetTests
         asset.Return(DateOnly.FromDateTime(DateTime.UtcNow)).IsSuccess.ShouldBeTrue();
         asset.Status.ShouldBe(AssetStatus.Unassigned);
 
-        var reassigned = asset.Assign(secondEmployee, DateOnly.FromDateTime(DateTime.UtcNow));
+        var requested = asset.RequestAssignment(secondEmployee, DateOnly.FromDateTime(DateTime.UtcNow));
 
-        reassigned.IsSuccess.ShouldBeTrue();
-        asset.AssignedEmployeeId.ShouldBe(secondEmployee);
+        requested.IsSuccess.ShouldBeTrue();
+        asset.Status.ShouldBe(AssetStatus.PendingAssignment);
+        asset.PendingEmployeeId.ShouldBe(secondEmployee);
     }
 }

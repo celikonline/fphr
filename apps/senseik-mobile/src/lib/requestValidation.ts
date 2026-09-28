@@ -1,0 +1,99 @@
+import { dateOnlyToDate, toLocalDateOnly } from "@/lib/formatters";
+import { currentLanguage, type AppLanguage } from "@/lib/i18n";
+
+/** Strips the time-of-day so comparisons against `dateOnlyToDate` (always midnight) aren't skewed by "now"'s clock time. */
+function atMidnight(date: Date): Date {
+  return dateOnlyToDate(toLocalDateOnly(date));
+}
+
+/**
+ * TK-031: client-side sanity checks mirroring the backend validators exactly, so the mobile form can
+ * fail fast with a Turkish message instead of a raw server rejection - same pattern as
+ * `DocumentService.ts`'s `isDocumentFileSizeAllowed`. The backend remains the source of truth; these
+ * never replace server-side validation.
+ */
+
+/** `CreateAdvanceRequestValidator`/`AddExpenseItemValidator`: `Amount` must be `> 0` (`ExpenseClaimCommands.cs`). */
+export function isPositiveAmount(amount: number): boolean {
+  return amount > 0;
+}
+
+/** `ExpenseLimits.MaxReceiptDateDaysAhead` (`ExpenseDomainErrors.cs:53`) - a receipt may be dated at most 1 day ahead of today. */
+const MAX_RECEIPT_DATE_DAYS_AHEAD = 1;
+
+/**
+ * Client-side sanity ceiling for the number of items in one expense claim - `ExpenseLimits`
+ * (`ExpenseDomainErrors.cs`) has no server-side cap on item count, only per-item amount/date rules.
+ */
+export const EXPENSE_CLAIM_MAX_ITEMS = 20;
+
+export function isReceiptDateAllowed(receiptDate: string, today: Date = new Date()): boolean {
+  const max = atMidnight(today);
+  max.setDate(max.getDate() + MAX_RECEIPT_DATE_DAYS_AHEAD);
+  return dateOnlyToDate(receiptDate).getTime() <= max.getTime();
+}
+
+/** `ExpenseLimits.AdvanceDateMaxPastDays`/`AdvanceDateMaxFutureDays` (`ExpenseDomainErrors.cs:47-50`). */
+const ADVANCE_DATE_MAX_PAST_DAYS = 30;
+const ADVANCE_DATE_MAX_FUTURE_DAYS = 90;
+
+export function isAdvanceRequestedDateAllowed(
+  requestedDate: string,
+  today: Date = new Date()
+): boolean {
+  const min = atMidnight(today);
+  min.setDate(min.getDate() - ADVANCE_DATE_MAX_PAST_DAYS);
+  const max = atMidnight(today);
+  max.setDate(max.getDate() + ADVANCE_DATE_MAX_FUTURE_DAYS);
+  const value = dateOnlyToDate(requestedDate).getTime();
+  return value >= min.getTime() && value <= max.getTime();
+}
+
+/** `OvertimeLimits.MaxDurationMinutes` (`OvertimeRequest.cs:227`) - a single record is at most one day long. */
+const OVERTIME_MAX_DURATION_MINUTES = 24 * 60;
+
+export function isOvertimeDurationValid(durationMinutes: number): boolean {
+  return (
+    Number.isInteger(durationMinutes) &&
+    durationMinutes >= 1 &&
+    durationMinutes <= OVERTIME_MAX_DURATION_MINUTES
+  );
+}
+
+/** `PunchCorrectionFeatures` "future_date": the requested day cannot be after today (tenant-local calendar day). */
+export function isPunchCorrectionDateAllowed(date: string, today: Date = new Date()): boolean {
+  return dateOnlyToDate(date).getTime() <= atMidnight(today).getTime();
+}
+
+/** `PunchCorrectionRequest.Submit` "invalid_range": a check-out no later than its check-in is only
+ * checked once both are given - fixing just one of the two punches never trips it. */
+export function isPunchCorrectionTimeRangeValid(params: {
+  includeCheckIn: boolean;
+  checkInTime: string;
+  includeCheckOut: boolean;
+  checkOutTime: string;
+}): boolean {
+  if (!params.includeCheckIn || !params.includeCheckOut) return true;
+  return params.checkOutTime > params.checkInTime;
+}
+
+/**
+ * Parses an amount/duration TextInput value in the active language; `null` for empty/invalid input
+ * (never throws on user-typed text).
+ * - Turkish (unchanged): the comma is the decimal separator ("125,50"), a dot-decimal value
+ *   ("125.50") is accepted too.
+ * - English (FG-001b): the dot is the decimal separator and commas are thousands separators, which
+ *   are ignored ("1,234.56" -> 1234.56).
+ */
+export function parseAmountInput(
+  text: string,
+  language: AppLanguage = currentLanguage()
+): number | null {
+  const trimmed = text.trim();
+  const normalized = language === "en" ? trimmed.replace(/,/g, "") : trimmed.replace(",", ".");
+  if (normalized.length === 0) {
+    return null;
+  }
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}

@@ -1,0 +1,50 @@
+{
+  "id": "FG-010",
+  "baslik": "Genel İK talebi ve İK yazısı talebi (HR letter / miscellaneous)",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'HR Letters: request and view generated HR letters' - resmi kaynak: zenhr.com/en/mobile; 'Documents tab: HR letters', 'HR Letters: view, approve, reject, add', 'Miscellaneous Requests' - ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); ikincil (ChatGPT), doğrulanamadı 'salary certificate / employment letter'.",
+  "senseik_durumu": "backend'de yok (genel yazı talebi yok). Kısmi karşılıklar: çalışma belgesi PDF'i yalnız işten ayrılmış çalışan için (GET employees/{id}/work-certificate, İK); vize belge talebi süreci var (bkz. FG-011).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/employees/{id}/work-certificate (yalnız ayrılmış çalışan, İK yetkisi)",
+      "Workflow onay + Documents yükleme altyapısı (documents.my.files)"
+    ],
+    "gereken_yeni": [
+      "Documents veya Employee modülünde 'LetterRequest': tür kataloğu (çalışma belgesi (aktif çalışan), maaş yazısı, 'diğer' serbest talep), durum, üretilen/yüklenen belge - migration",
+      "POST/GET /api/v1/documents/letters/me, GET /api/v1/documents/letters/me/{id}/download-url",
+      "İK tarafı: şablondan PDF üretimi (maaş yazısı için employee.salary.view gerekir) veya elle yükleme",
+      "Workflow türü 'documents.letter' + bildirim şablonları"
+    ],
+    "izin": "Yeni self anahtar 'documents.my.letters' (*.my.* → Employee). İK işleme anahtarı 'documents.letters.manage'. Maaş içeren yazı → hassas veri, insan onayı."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/lib/requestOptions.ts (FAB: 'Belge / yazı talebi')",
+      "apps/senseik-mobile/src/screens/app/NewRequestScreen.tsx (kind 'letter')",
+      "apps/senseik-mobile/src/screens/app/documents/DocumentsScreen.tsx (FG-013) 'Yazılarım' bölümü",
+      "apps/senseik-mobile/src/services/DocumentService.ts"
+    ],
+    "navigasyon": "FAB 'Yeni talep' sheet'i + Belgelerim ekranı"
+  },
+  "kabul": [
+    "Çalışan FAB'dan 'Belge / yazı talebi' seçip türü (çalışma belgesi, maaş yazısı, diğer) ve amaç/açıklamayı girerek gönderir",
+    "Talep Taleplerim'de ve Onaylarım'da (İK/onaylayıcı) yeni türle görünür",
+    "Onaylanıp belge üretilince/yüklenince çalışana bildirim gider ve belge Belgelerim > Yazılarım'da indirilebilir/paylaşılabilir",
+    "Reddedilen talepte gerekçe görünür",
+    "'Diğer' türü serbest metinli genel talep olarak İK'ya düşer (ZenHR Miscellaneous karşılığı)",
+    "Backend yetki testleri: başkasının yazısını indirme 404"
+  ],
+  "tasarim_notu": "NewRequest kabuğunda tür seçimi SelectField, açıklama TextField; belge satırı PayslipRow benzeri (belge ikonu + ad + tarih + indir IconCircleButton).",
+  "buyukluk": "L - yeni aggregate + belge üretimi + workflow + mobil",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "FG-013"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

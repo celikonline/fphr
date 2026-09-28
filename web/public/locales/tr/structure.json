@@ -60,7 +60,8 @@
       "Leave": "İzin onay süreci",
       "Advance": "Avans onay süreci",
       "Expense": "Harcama onay süreci",
-      "Overtime": "Fazla mesai onay süreci"
+      "Overtime": "Fazla mesai onay süreci",
+      "PunchCorrection": "Eksik giriş/çıkış onay süreci"
     },
     "inherit": "Üst birimden devral",
     "inheritedFrom": "Üst birimden: {{unit}}",

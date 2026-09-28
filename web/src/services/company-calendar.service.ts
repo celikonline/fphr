@@ -9,7 +9,7 @@ const EVENTS_BASE = "/v1/announcements/events";
 
 export type CompanyEventType = "companyEvent" | "meeting" | "birthday" | "leaveStart";
 
-/** `CompanyCalendarEntryDto`. Only `companyEvent`/`meeting` entries can be created or deleted. */
+/** `CompanyCalendarEntryDto`. Only `companyEvent`/`meeting` entries can be created, edited or deleted. */
 export interface CompanyCalendarEntry {
   id: string | null;
   title: string;
@@ -45,6 +45,10 @@ export interface CreateCompanyEventInput {
 export async function createCompanyEvent(input: CreateCompanyEventInput): Promise<string> {
   const { data } = await apiClient.post<string>(EVENTS_BASE, input);
   return data;
+}
+
+export async function updateCompanyEvent(id: string, input: CreateCompanyEventInput): Promise<void> {
+  await apiClient.put(`${EVENTS_BASE}/${id}`, input);
 }
 
 export async function deleteCompanyEvent(id: string): Promise<void> {

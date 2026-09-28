@@ -117,6 +117,12 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> MyCareer(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyCareerQuery(), ct));
 
+    /// <summary>"Ekibim" (FG-007): the caller's direct reports; empty when the caller manages nobody.</summary>
+    [HttpGet("me/team")]
+    [ProducesResponseType<IReadOnlyList<MyTeamMemberDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyTeam(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyTeamQuery(), ct));
+
     /// <summary>Self-service edit ("Self-servis düzenleme"): own contact fields + own employee-editable custom field values.</summary>
     [HttpPut("me/profile")]
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]

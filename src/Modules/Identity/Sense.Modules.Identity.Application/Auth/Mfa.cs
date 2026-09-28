@@ -17,8 +17,14 @@ namespace Sense.Modules.Identity.Application.Auth;
 /// </summary>
 public sealed record GetMfaStatusQuery : IQuery<MfaStatusDto>;
 
-/// <summary>Güvenlik ekranı açılışı (S-12): MFA açık mı, kayıt yarım mı kaldı (<see cref="MfaStatusDto.PendingEnrollment"/>).</summary>
-public sealed class GetMfaStatusHandler(ICurrentUser currentUser, IUserRepository users) : IQueryHandler<GetMfaStatusQuery, MfaStatusDto>
+/// <summary>Güvenlik ekranı açılışı (S-12): MFA açık mı, kayıt yarım mı kaldı (<see cref="MfaStatusDto.PendingEnrollment"/>),
+/// kiracı politikası zorunlu kılıyor mu (<see cref="MfaStatusDto.RequiredByPolicy"/>, FG-022).</summary>
+public sealed class GetMfaStatusHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenantContext,
+    IUserRepository users,
+    ITenantRepository tenants,
+    IRoleRepository roles) : IQueryHandler<GetMfaStatusQuery, MfaStatusDto>
 {
     public async Task<Result<MfaStatusDto>> Handle(GetMfaStatusQuery query, CancellationToken cancellationToken)
     {
@@ -33,7 +39,8 @@ public sealed class GetMfaStatusHandler(ICurrentUser currentUser, IUserRepositor
             return Error.Unauthorized(ErrorCodes.Unauthenticated);
         }
 
-        return new MfaStatusDto(user.MfaEnabled, !user.MfaEnabled && user.TotpSecretEncrypted is not null);
+        var requiredByPolicy = await MfaPolicy.IsRequiredAsync(user, tenantContext, tenants, roles, cancellationToken).ConfigureAwait(false);
+        return new MfaStatusDto(user.MfaEnabled, !user.MfaEnabled && user.TotpSecretEncrypted is not null, requiredByPolicy);
     }
 }
 
@@ -107,7 +114,8 @@ public sealed class VerifyMfaEnrollmentHandler(
 }
 
 /// <summary>Self-servis MFA kapatma (kod ile). Yönetici tarafından sıfırlama için ayrı bir komut var: <c>ResetUserMfaCommand</c>
-/// (UserCommands.cs, <c>identity.users.manage</c> izni, kendi hesabına 409).</summary>
+/// (UserCommands.cs, <c>identity.users.manage</c> izni, kendi hesabına 409). FG-022: kiracı güvenlik politikası kullanıcının
+/// rollerinden biri için 2FA'yı zorunlu kılıyorsa kod denetiminden önce <see cref="IdentityErrors.MfaRequiredByPolicy"/> (400) döner.</summary>
 public sealed record DisableMfaCommand(string Code) : ICommand;
 
 public sealed class DisableMfaValidator : AbstractValidator<DisableMfaCommand>
@@ -117,7 +125,10 @@ public sealed class DisableMfaValidator : AbstractValidator<DisableMfaCommand>
 
 public sealed class DisableMfaHandler(
     ICurrentUser currentUser,
+    ITenantContext tenantContext,
     IUserRepository users,
+    ITenantRepository tenants,
+    IRoleRepository roles,
     ITotpService totp,
     IEncryptionProvider encryption) : ICommandHandler<DisableMfaCommand>
 {
@@ -129,14 +140,41 @@ public sealed class DisableMfaHandler(
         }
 
         var user = await users.GetByIdAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
-        if (user is null || !user.MfaEnabled || user.TotpSecretEncrypted is null
-            || !totp.ValidateCode(encryption.Decrypt(user.TotpSecretEncrypted), command.Code))
+        if (user is null || !user.MfaEnabled || user.TotpSecretEncrypted is null)
+        {
+            return Error.Validation(IdentityErrors.MfaInvalidCode);
+        }
+
+        if (await MfaPolicy.IsRequiredAsync(user, tenantContext, tenants, roles, cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Validation(IdentityErrors.MfaRequiredByPolicy);
+        }
+
+        if (!totp.ValidateCode(encryption.Decrypt(user.TotpSecretEncrypted), command.Code))
         {
             return Error.Validation(IdentityErrors.MfaInvalidCode);
         }
 
         user.DisableMfa();
         return Result.Success();
+    }
+}
+
+/// <summary>FG-022: kiracı güvenlik politikası (<c>TenantSecurityPolicy.RequireMfaForRoles</c>) ∩ kullanıcının rol kodları.
+/// Kiracı bulunamazsa politika uygulanmaz (false). GetMe'nin <c>MfaSetupRequired</c> hesabıyla aynı kaynak.</summary>
+internal static class MfaPolicy
+{
+    public static async Task<bool> IsRequiredAsync(
+        User user, ITenantContext tenantContext, ITenantRepository tenants, IRoleRepository roles, CancellationToken cancellationToken)
+    {
+        var tenant = await tenants.GetByIdAsync(tenantContext.TenantId, cancellationToken).ConfigureAwait(false);
+        if (tenant is null || tenant.SecurityPolicy.RequireMfaForRoles.Count == 0)
+        {
+            return false;
+        }
+
+        var userRoles = await roles.GetByIdsAsync(user.Roles.Select(r => r.RoleId), cancellationToken).ConfigureAwait(false);
+        return tenant.SecurityPolicy.RequiresMfa(userRoles.Select(r => r.Code));
     }
 }
 

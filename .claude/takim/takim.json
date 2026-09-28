@@ -1,0 +1,48 @@
+{
+  "surum": 1,
+  "proje_adi": "senseik",
+  "boyut": "M",
+  "boyut_kaynagi": "oneri",
+  "korumali_dallar": [
+    "main"
+  ],
+  "dal_korumasi_dogrulandi": true,
+  "yazilabilir_disari": [],
+  "taban_dal": "dev",
+  "board": {
+    "mod": "dosya"
+  },
+  "kapi": {
+    "komutlar": [
+      {
+        "kategori": "build",
+        "komut": "dotnet build Sense.slnx"
+      },
+      {
+        "kategori": "build",
+        "komut": "pnpm run build"
+      },
+      {
+        "kategori": "lint",
+        "komut": "pnpm run lint"
+      },
+      {
+        "kategori": "typecheck",
+        "komut": "pnpm run type-check"
+      },
+      {
+        "kategori": "test",
+        "komut": "dotnet test Sense.slnx"
+      },
+      {
+        "kategori": "test",
+        "komut": "pnpm test"
+      }
+    ],
+    "taban_sayi": 3683,
+    "zaman_asimi_sn": 900,
+    "desenler": {
+      "dotnet test Sense.slnx": "^\\s*(?:Passed|Failed|Başarılı|Başarısız)!\\s+-\\s+(?:Failed|Başarısız):\\s*\\d+,\\s*(?:Passed|Başarılı):\\s*(\\d+)"
+    }
+  }
+}

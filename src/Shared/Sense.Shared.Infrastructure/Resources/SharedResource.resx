@@ -662,8 +662,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="workflow.request.not_found" xml:space="preserve"><value>Onay talebi bulunamadı.</value></data>
   <data name="workflow.request.not_pending" xml:space="preserve"><value>Onay talebi artık bekleme durumunda değil.</value></data>
   <data name="workflow.request.requester_not_found" xml:space="preserve"><value>Talep sahibi bulunamadı.</value></data>
+  <data name="workflow.request.approvers_already_edited" xml:space="preserve"><value>Bu talebin onaycı listesi daha önce düzenlendi; yalnızca bir kez düzenlenebilir.</value></data>
+  <data name="workflow.request.edit_approvers_not_authorized" xml:space="preserve"><value>Onaycı listesini yalnızca talep sahibi veya yöneticisi düzenleyebilir.</value></data>
   <data name="workflow.task.not_found" xml:space="preserve"><value>Onay görevi bulunamadı.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>Bu görev artık sırada değil.</value></data>
+  <data name="workflow.task.not_pending" xml:space="preserve"><value>Bu görev zaten karara bağlanmış; artık düzenlenemez.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>Bu onay görevine karar verme yetkiniz yok.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>Kendi talebiniz için onay kararı veremezsiniz.</value></data>
   <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>Bir talebi reddederken gerekçe (yorum) yazmanız zorunludur.</value></data>
@@ -677,6 +680,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="notifications.preference.unknown_template" xml:space="preserve"><value>Bilinmeyen bildirim türü: {TemplateKey}.</value></data>
   <data name="notifications.preference.unknown_channel" xml:space="preserve"><value>Bu bildirim türü "{Channel}" kanalından gönderilmiyor.</value></data>
   <data name="notifications.preference.not_configurable" xml:space="preserve"><value>Bu bildirim zorunludur, kapatılamaz.</value></data>
+  <data name="notifications.device.invalid_token" xml:space="preserve"><value>Geçersiz push bildirim token'ı.</value></data>
+  <data name="notifications.device.invalid_platform" xml:space="preserve"><value>Geçersiz platform; "ios" veya "android" olmalı.</value></data>
   <data name="leave.rule_sets.read" xml:space="preserve"><value>İzin kurallarını görüntüleme</value></data>
   <data name="leave.rule_sets.manage" xml:space="preserve"><value>İzin kurallarını yönetme</value></data>
   <data name="leave.rule_sets.assign" xml:space="preserve"><value>İzin kuralı atama</value></data>
@@ -792,6 +797,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.errors.preview_parameters_required" xml:space="preserve"><value>İzin türü, başlangıç ve bitiş tarihi zorunludur.</value></data>
   <data name="leave.errors.preview_range_too_large" xml:space="preserve"><value>Tarih aralığı en fazla {max} gün olabilir.</value></data>
+  <data name="leave.errors.recalculate_from_in_future" xml:space="preserve"><value>Yeniden hesaplama başlangıç tarihi gelecekte olamaz.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>Devamsızlık kayıtlarını görüntüleme</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Devamsızlık kayıtlarını yönetme</value></data>
@@ -905,6 +911,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (Faz 3 P5): sendika / dayanışma aidatı (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Sendikaları ve üyelikleri yönetme</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Sendika bulunamadı.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>Sendika adı zorunludur.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>Sendika adı çok uzun.</value></data>
@@ -949,6 +956,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Yalnızca taslak veya onay bekleyen talep formu iptal edilebilir.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>Bağlı talep formu henüz onaylanmadığı için ilan yayınlanamaz.</value></data>
+  <data name="recruitment.requisition_field_template.rules_required" xml:space="preserve"><value>En az bir alan kuralı gereklidir.</value></data>
+  <data name="recruitment.requisition_field_template.duplicate_field" xml:space="preserve"><value>Bir alan için yalnızca bir kural tanımlanabilir.</value></data>
+  <data name="recruitment.requisition_field_template.required_field_must_be_visible" xml:space="preserve"><value>Zorunlu bir alan gizlenemez.</value></data>
+  <data name="recruitment.requisition_field_template.default_value_required" xml:space="preserve"><value>Zorunlu olmayan bir alan için geçerli bir varsayılan değer gereklidir.</value></data>
+  <data name="recruitment.requisition.employment_type_required" xml:space="preserve"><value>Çalışma şekli zorunludur.</value></data>
+  <data name="recruitment.requisition.reason_required" xml:space="preserve"><value>Talep gerekçesi zorunludur.</value></data>
+  <data name="recruitment.requisition.justification_required" xml:space="preserve"><value>Açıklama bu departman için zorunludur.</value></data>
   <data name="recruitment.tags.read" xml:space="preserve"><value>Etiket kataloğunu görüntüleme</value></data>
   <data name="recruitment.tags.manage" xml:space="preserve"><value>Etiket oluşturma veya devre dışı bırakma</value></data>
   <data name="recruitment.tag.not_found" xml:space="preserve"><value>Etiket bulunamadı.</value></data>
@@ -1064,6 +1078,25 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Zimmet</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
+  <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>Kategori adı sistemde yoksa otomatik oluşturulur; büyük/küçük harf ve boşluk farkı gözetilmeden mevcut kategoriyle eşleştirilir.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>İade tarihi doldurulursa satır kapalı (iade edilmiş) bir zimmet olarak, boş bırakılırsa açık (üzerinde duran) bir zimmet olarak işlenir.</value></data>
+  <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Doğru: hâlâ çalışanın üzerinde duran bir zimmet.</value></data>
+  <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Doğru: iade edilmiş, geçmiş bir zimmet.</value></data>
+  <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.assets.categoryName" xml:space="preserve"><value>Kategori</value></data>
+  <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Ekipman kategorisi (örn. Bilgisayar, Telefon, Araç); yoksa otomatik oluşturulur.</value></data>
+  <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Seri numarası</value></data>
+  <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>Varsa cihazın seri numarası; aynı kategori + seri no ile mevcut zimmet güncellenir, boşsa yeni zimmet oluşturulur.</value></data>
+  <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Zimmet veriliş tarihi</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY).</value></data>
+  <data name="import.column.assets.returnedAt" xml:space="preserve"><value>İade tarihi</value></data>
+  <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>Ekipmanın iade edildiği tarih (GG.AA.YYYY); boş bırakılırsa zimmet hâlâ açık kabul edilir.</value></data>
+  <data name="import.column.assets.note" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="import.column.assets.note.description" xml:space="preserve"><value>Zimmetin önemli detayları (marka/model vb.); opsiyonel.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>
@@ -1163,6 +1196,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.item.amount_too_large" xml:space="preserve"><value>Tutar en fazla 10.000.000 olabilir.</value></data>
   <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Desteklenmeyen para birimi. Geçerli bir ISO 4217 kodu girin (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
   <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>Fiş tarihi bugünden ileri bir tarih olamaz.</value></data>
+  <data name="expense.item.receipt_not_found" xml:space="preserve"><value>Fiş belgesi bulunamadı. Fişi yeniden yükleyip tekrar deneyin.</value></data>
   <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>Bir harcama talebindeki tüm kalemler aynı para biriminde olmalıdır.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Avans talebi bulunamadı.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>Avans talebi, onay bekleme durumunda değil.</value></data>
@@ -1190,6 +1224,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>Atanmış bir zimmet emekliye ayrılamaz; önce iade edilmelidir.</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>Bu seri numaralı cihaz şu anda başka bir çalışana zimmetli.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>İade tarihi zimmet veriliş tarihinden önce olamaz.</value></data>
+  <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>Bu zimmet ataması onay bekleyen durumda değil ya da farklı bir onay sürecine ait.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>Zimmet veriliş tarihi çalışanın işe giriş tarihinden önce olamaz.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
@@ -1413,11 +1448,16 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
   <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Yalnızca taslak duyurular düzenlenebilir.</value></data>
+  <data name="announcement.scheduled_for_must_be_future" xml:space="preserve"><value>Zamanlı yayın tarihi gelecekte bir tarih/saat olmalıdır.</value></data>
   <data name="announcement_attachment.not_found" xml:space="preserve"><value>Ek bulunamadı.</value></data>
   <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor.</value></data>
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>Dosya boyutu izin verilen sınırı aşıyor.</value></data>
   <data name="announcement_attachment.too_many" xml:space="preserve"><value>Bu duyuruya eklenebilecek azami dosya sayısına ulaşıldı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
+  <data name="recognition.message_required" xml:space="preserve"><value>Takdir mesajı gereklidir ve 300 karakteri aşamaz.</value></data>
+  <data name="recognition.cannot_recognize_self" xml:space="preserve"><value>Kendinize takdir mesajı gönderemezsiniz.</value></data>
+  <data name="recognition.sender_not_found" xml:space="preserve"><value>Takdir mesajı göndermek için bir çalışan kaydınız olmalı.</value></data>
+  <data name="recognition.receiver_not_found" xml:space="preserve"><value>Alıcı çalışan bulunamadı.</value></data>
   <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
   <data name="announcements.my.feed" xml:space="preserve"><value>Duyuru akışım</value></data>
@@ -1482,6 +1522,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="onboarding.templates.manage" xml:space="preserve"><value>Oryantasyon şablonu yönetimi</value></data>
   <data name="onboarding.tasks.view" xml:space="preserve"><value>Oryantasyon görevlerini görüntüleme</value></data>
   <data name="onboarding.tasks.manage" xml:space="preserve"><value>Oryantasyon görevi yönetimi</value></data>
+  <data name="onboarding.my.tasks" xml:space="preserve"><value>Kendi oryantasyon görevlerim</value></data>
   <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Görev şablonu bulunamadı.</value></data>
   <data name="onboarding_task_template.title_required" xml:space="preserve"><value>Görev başlığı zorunludur.</value></data>
   <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>Görev başlığı 200 karakteri aşamaz.</value></data>
@@ -1489,6 +1530,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Görev bulunamadı.</value></data>
   <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>Görev zaten tamamlanmış ya da muaf tutulmuş.</value></data>
   <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>Muaf tutma nedeni zorunludur.</value></data>
+  <data name="onboarding.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="onboarding.task.not_owner" xml:space="preserve"><value>Bu görev size ait değil.</value></data>
   <data name="ohs.services.view" xml:space="preserve"><value>İSG hizmetlerini görüntüleme</value></data>
   <data name="ohs.services.manage" xml:space="preserve"><value>İSG hizmetlerini yönetme</value></data>
   <data name="ohs_assignment.not_found" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
@@ -1499,4 +1542,26 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>Kayıt zaten sonlandırılmış.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıçtan önce olamaz.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>Yenileme aralığı 1 ile 3650 gün arasında olmalıdır.</value></data>
+  <data name="attendance.self_checkin.break_not_checked_in" xml:space="preserve"><value>Molaya başlamak için önce giriş yapmalısınız.</value></data>
+  <data name="attendance.self_checkin.break_already_open" xml:space="preserve"><value>Zaten açık bir molanız var.</value></data>
+  <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>Bitirilecek açık bir mola yok.</value></data>
+  <data name="identity.mfa.required_by_policy" xml:space="preserve"><value>Şirketinizin güvenlik politikası rolünüz için iki adımlı doğrulamayı zorunlu kılıyor; kapatılamaz.</value></data>
+  <data name="identity.user.language_unsupported" xml:space="preserve"><value>Seçilen dil desteklenmiyor.</value></data>
+  <data name="workflow.bulk.empty" xml:space="preserve"><value>Karar verilecek en az bir talep seçin.</value></data>
+  <data name="workflow.bulk.too_many_tasks" xml:space="preserve"><value>Tek seferde en fazla {max} talep için karar verilebilir.</value></data>
+  <data name="attendance.correction.future_date" xml:space="preserve"><value>Henüz başlamamış bir gün için giriş/çıkış düzeltmesi istenemez.</value></data>
+  <data name="attendance.correction.period_locked" xml:space="preserve"><value>Bu ayın puantajı kilitli veya onaylanmış; düzeltme talebi oluşturulamaz.</value></data>
+  <data name="attendance.correction.pending_exists" xml:space="preserve"><value>Bu gün için bekleyen bir düzeltme talebiniz zaten var.</value></data>
+  <data name="attendance.correction.times_required" xml:space="preserve"><value>Giriş veya çıkış saatinden en az birini girin.</value></data>
+  <data name="attendance.correction.invalid_range" xml:space="preserve"><value>Çıkış saati giriş saatinden sonra olmalıdır.</value></data>
+  <data name="attendance.correction.reason_required" xml:space="preserve"><value>Düzeltme talebi için gerekçe zorunludur.</value></data>
+  <data name="attendance.correction.not_found" xml:space="preserve"><value>Düzeltme talebi bulunamadı.</value></data>
+  <data name="attendance.correction.not_pending" xml:space="preserve"><value>Yalnız bekleyen bir düzeltme talebi geri çekilebilir.</value></data>
+  <data name="attendance.my.corrections" xml:space="preserve"><value>Kendi eksik giriş/çıkış düzeltme taleplerimi oluşturma ve geri çekme</value></data>
+  <data name="workflow.comment.request_closed" xml:space="preserve"><value>İptal edilmiş bir talebe yorum yazılamaz.</value></data>
+  <data name="workflow.comment.text_required" xml:space="preserve"><value>Yorum metni boş olamaz.</value></data>
+  <data name="attendance.work_schedule.range_too_long" xml:space="preserve"><value>En fazla {max} günlük bir aralık sorgulanabilir.</value></data>
+  <data name="employee.my.team" xml:space="preserve"><value>Ekibimi görüntüleme</value></data>
+  <data name="attendance.my.team" xml:space="preserve"><value>Ekibimin puantajını görüntüleme</value></data>
+  <data name="leave.my.team" xml:space="preserve"><value>Ekibimin izinlerini görüntüleme</value></data>
 </root>

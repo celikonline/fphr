@@ -1,0 +1,18 @@
+{
+  "id": "TK-006",
+  "baslik": "Onboarding — çalışanın kendi görev listesi (self-servis)",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/onboarding-self-servis",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:24 (self-servis görev listesi ve bildirim yok)",
+  "kabul": [
+    "Çalışan kendi onboarding görevlerini 'me' uç noktasından görüp tamamlandı olarak işaretleyebiliyor.",
+    "Bildirim kısmı KAPSAM DIŞI — ayrı iş (Notifications'a bağımlı).",
+    "Yetki kontrolü: çalışan yalnız kendi görevlerini görür/işaretler, başkasınınkini değil.",
+    "Sense.Modules.Onboarding.Tests tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-006.md"
+}

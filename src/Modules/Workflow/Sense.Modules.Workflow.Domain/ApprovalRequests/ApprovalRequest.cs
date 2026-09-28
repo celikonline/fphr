@@ -30,6 +30,9 @@ public enum ApprovalChannel
     Web,
     Email,
     Api,
+
+    /// <summary>FG-008: decided from the mobile app (the call carried <c>X-Client-App: mobile</c>).</summary>
+    Mobile,
 }
 
 public enum ApprovalHistoryEventType
@@ -39,6 +42,10 @@ public enum ApprovalHistoryEventType
     Completed,
     Rejected,
     Cancelled,
+    ApproversEdited,
+
+    /// <summary>FG-009: a party of the request (requester, approver, override holder) left a comment - the text is <see cref="ApprovalHistoryEntry.Note"/>.</summary>
+    Commented,
 }
 
 /// <summary>One resolved step to seed an <see cref="ApprovalRequest"/> with - either a specific employee or (no policy/manager resolved) a role queue.</summary>
@@ -248,6 +255,62 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
         return Result.Success();
     }
 
+    /// <summary>
+    /// TK-009 "talep anında onaycı listesi düzenleme": reassigns one or more still-pending tasks to a different
+    /// specific employee - the source policy/template is never touched, only this request's own task snapshot. A
+    /// one-time operation per request (a second call fails with <see cref="WorkflowDomainErrors.RequestApproversAlreadyEdited"/>,
+    /// detected via <see cref="History"/> rather than a dedicated flag column), and only while the request itself is
+    /// Pending and every targeted task is still Pending (not yet decided). Caller/manager authorization is the
+    /// Application layer's job, same split as <see cref="Decide"/>.
+    /// </summary>
+    public Result EditApprovers(IReadOnlyList<(int StepNumber, Guid ApproverEmployeeId)> edits, Guid actorEmployeeId, DateTime now)
+    {
+        if (Status != ApprovalRequestStatus.Pending)
+        {
+            return Error.Rule(WorkflowDomainErrors.RequestNotPending);
+        }
+
+        if (edits.Count == 0)
+        {
+            return Error.Validation(WorkflowDomainErrors.RequestNoSteps);
+        }
+
+        if (_history.Any(h => h.EventType == ApprovalHistoryEventType.ApproversEdited))
+        {
+            return Error.Rule(WorkflowDomainErrors.RequestApproversAlreadyEdited);
+        }
+
+        var tasksToEdit = new List<ApprovalTask>(edits.Count);
+        foreach (var (stepNumber, approverEmployeeId) in edits)
+        {
+            var task = _tasks.SingleOrDefault(t => t.StepNumber == stepNumber);
+            if (task is null)
+            {
+                return Error.NotFound(WorkflowDomainErrors.TaskNotFound);
+            }
+
+            if (task.Status != ApprovalTaskStatus.Pending)
+            {
+                return Error.Rule(WorkflowDomainErrors.TaskNotPending);
+            }
+
+            if (approverEmployeeId == Guid.Empty)
+            {
+                return Error.Validation(WorkflowDomainErrors.PolicyStepApproverRequired);
+            }
+
+            tasksToEdit.Add(task);
+        }
+
+        foreach (var (task, edit) in tasksToEdit.Zip(edits))
+        {
+            task.ReassignApprover(edit.ApproverEmployeeId);
+        }
+
+        AddHistory(ApprovalHistoryEventType.ApproversEdited, CurrentStepNumber, actorEmployeeId, null, null, null, null, now, null);
+        return Result.Success();
+    }
+
     public Result Cancel(Guid actorEmployeeId, DateTime now)
     {
         if (Status != ApprovalRequestStatus.Pending)
@@ -260,6 +323,28 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
         CompletedAt = now;
         AddHistory(ApprovalHistoryEventType.Cancelled, null, actorEmployeeId, null, null, null, null, now, null);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// FG-009: appends a comment to the request's history (append-only, like every other history entry). Allowed while
+    /// the request is pending and after it was approved/rejected (e.g. asking about a rejection), not once cancelled.
+    /// Who may comment is the Application layer's job (same split as <see cref="Decide"/>); the length limit is
+    /// enforced by the command validator before this runs.
+    /// </summary>
+    public Result<ApprovalHistoryEntry> AddComment(Guid authorEmployeeId, string? text, DateTime now)
+    {
+        if (Status == ApprovalRequestStatus.Cancelled)
+        {
+            return Error.Validation(WorkflowDomainErrors.CommentRequestClosed);
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Error.Validation(WorkflowDomainErrors.CommentTextRequired);
+        }
+
+        AddHistory(ApprovalHistoryEventType.Commented, CurrentStepNumber, authorEmployeeId, null, null, null, null, now, text);
+        return _history[^1];
     }
 
     private void AddHistory(

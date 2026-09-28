@@ -45,6 +45,25 @@ public sealed class GetJobPostingHandler(IJobPostingRepository postings) : IQuer
     }
 }
 
+/// <summary>The user ids explicitly granted access to a posting (roadmap #83 "ilan bazlı erişim listesi"), beyond the owner/hiring manager.</summary>
+[RequiresPermission("recruitment.postings.read")]
+public sealed record GetJobPostingAccessQuery(Guid PostingId) : IQuery<IReadOnlyList<Guid>>;
+
+public sealed class GetJobPostingAccessHandler(IJobPostingRepository postings) : IQueryHandler<GetJobPostingAccessQuery, IReadOnlyList<Guid>>
+{
+    public async Task<Result<IReadOnlyList<Guid>>> Handle(GetJobPostingAccessQuery query, CancellationToken cancellationToken)
+    {
+        var existing = await postings.GetByIdAsync(query.PostingId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        IReadOnlyList<Guid> accessUserIds = existing.Value.Access.Select(a => a.UserId).ToList();
+        return Result.Success(accessUserIds);
+    }
+}
+
 internal static class JobPostingMapper
 {
     public static JobPostingDto ToDto(JobPosting posting) =>

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "SenseİK Mobile",
+    "name": "Sense HR",
     "slug": "senseik-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTabletMode": true,
       "bundleIdentifier": "com.algosense.senseik",
@@ -18,8 +18,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png",
+        "backgroundColor": "#0E0033"
       },
       "package": "com.algosense.senseik",
       "versionCode": 1,
@@ -32,22 +34,38 @@
       "expo-local-authentication",
       [
         "expo-camera",
-        { "cameraPermission": "Lokasyon girişindeki QR kodu okutmak için kamera erişimi gerekir." }
+        {
+          "cameraPermission": "Lokasyon girişindeki QR kodu okutmak için kamera erişimi gerekir."
+        }
       ],
       [
         "expo-location",
-        { "locationWhenInUsePermission": "Lokasyon geofence doğrulaması için konumunuz kullanılır." }
+        {
+          "locationWhenInUsePermission": "Lokasyon geofence doğrulaması için konumunuz kullanılır."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Belge eklemek için fotoğraf galerinize erişim gerekir.",
+          "cameraPermission": "Belge fotoğrafı çekmek için kamera erişimi gerekir."
+        }
       ],
       "expo-notifications",
       "expo-secure-store",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
+          "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0E0033"
         }
-      ]
+      ],
+      "./plugins/withAndroidBuildFixes.js",
+      "@react-native-community/datetimepicker",
+      "expo-web-browser",
+      "expo-sharing",
+      "expo-font"
     ],
     "extra": {
       "eas": {

@@ -92,6 +92,12 @@ public static class IdentityErrors
     /// <summary>Yönetici MFA sıfırlama ucu (Faz 3 Tur 1, S-12): kullanıcı kendi hesabını bu uçtan sıfırlayamaz.</summary>
     public const string MfaSelfResetForbidden = "identity.mfa.self_reset_forbidden";
 
+    /// <summary>FG-022: kiracı güvenlik politikası kullanıcının rollerinden biri için 2FA'yı zorunlu kılıyor; self-servis kapatma reddedilir.</summary>
+    public const string MfaRequiredByPolicy = "identity.mfa.required_by_policy";
+
+    /// <summary>FG-001: <c>PUT identity/me/language</c> — dil, yapılandırılmış kültürlerin (Localization:SupportedCultures) iki harfli dillerinden biri değil.</summary>
+    public const string UserLanguageUnsupported = "identity.user.language_unsupported";
+
     public const string TenantInvalidSlug = "tenant.invalid_slug";
     public const string TenantSlugTaken = "tenant.slug_taken";
     public const string TenantNotFound = "tenant.not_found";

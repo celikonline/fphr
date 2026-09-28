@@ -653,8 +653,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.request.not_found" xml:space="preserve"><value>Approval request not found.</value></data>
   <data name="workflow.request.not_pending" xml:space="preserve"><value>The approval request is no longer pending.</value></data>
   <data name="workflow.request.requester_not_found" xml:space="preserve"><value>Requester not found.</value></data>
+  <data name="workflow.request.approvers_already_edited" xml:space="preserve"><value>This request's approver list has already been edited once and cannot be edited again.</value></data>
+  <data name="workflow.request.edit_approvers_not_authorized" xml:space="preserve"><value>Only the requester or their manager can edit the approver list.</value></data>
   <data name="workflow.task.not_found" xml:space="preserve"><value>Approval task not found.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>This task is no longer the current step.</value></data>
+  <data name="workflow.task.not_pending" xml:space="preserve"><value>This task has already been decided and can no longer be edited.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>You cannot decide on your own request.</value></data>
   <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>A reason (comment) is required when rejecting a request.</value></data>
@@ -668,6 +671,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="notifications.preference.unknown_template" xml:space="preserve"><value>Unknown notification type: {TemplateKey}.</value></data>
   <data name="notifications.preference.unknown_channel" xml:space="preserve"><value>This notification type is not delivered over the "{Channel}" channel.</value></data>
   <data name="notifications.preference.not_configurable" xml:space="preserve"><value>This notification is mandatory and cannot be turned off.</value></data>
+  <data name="notifications.device.invalid_token" xml:space="preserve"><value>Invalid push notification token.</value></data>
+  <data name="notifications.device.invalid_platform" xml:space="preserve"><value>Invalid platform; must be "ios" or "android".</value></data>
   <data name="leave.rule_sets.read" xml:space="preserve"><value>View leave rule sets</value></data>
   <data name="leave.rule_sets.manage" xml:space="preserve"><value>Manage leave rule sets</value></data>
   <data name="leave.rule_sets.assign" xml:space="preserve"><value>Assign leave rule sets</value></data>
@@ -783,6 +788,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>The calendar range can be at most {max} days.</value></data>
   <data name="leave.errors.preview_parameters_required" xml:space="preserve"><value>Leave type, start date and end date are required.</value></data>
   <data name="leave.errors.preview_range_too_large" xml:space="preserve"><value>The date range can be at most {max} days.</value></data>
+  <data name="leave.errors.recalculate_from_in_future" xml:space="preserve"><value>The recalculation start date cannot be in the future.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>View absence records</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Manage absence records</value></data>
@@ -896,6 +902,7 @@ The report you requested has been generated. Click the link to view and download
 
   <!-- Payroll (Faz 3 P5): union / solidarity dues (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Manage unions and memberships</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>View my own payslips</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Union not found.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>The union name is too long.</value></data>
@@ -940,6 +947,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Only a draft or pending requisition can be cancelled.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>The linked requisition has not been approved yet, so this posting cannot be published.</value></data>
+  <data name="recruitment.requisition_field_template.rules_required" xml:space="preserve"><value>At least one field rule is required.</value></data>
+  <data name="recruitment.requisition_field_template.duplicate_field" xml:space="preserve"><value>A field can only have one rule.</value></data>
+  <data name="recruitment.requisition_field_template.required_field_must_be_visible" xml:space="preserve"><value>A required field cannot be hidden.</value></data>
+  <data name="recruitment.requisition_field_template.default_value_required" xml:space="preserve"><value>An optional field needs a valid default value.</value></data>
+  <data name="recruitment.requisition.employment_type_required" xml:space="preserve"><value>Employment type is required.</value></data>
+  <data name="recruitment.requisition.reason_required" xml:space="preserve"><value>Requisition reason is required.</value></data>
+  <data name="recruitment.requisition.justification_required" xml:space="preserve"><value>Justification is required for this department.</value></data>
   <data name="recruitment.tags.read" xml:space="preserve"><value>View Tag Catalog</value></data>
   <data name="recruitment.tags.manage" xml:space="preserve"><value>Create or deactivate a tag</value></data>
   <data name="recruitment.tag.not_found" xml:space="preserve"><value>Tag not found.</value></data>
@@ -1055,6 +1069,25 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Equipment</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Bulk-import equipment (computers, phones, vehicles, etc.) assigned to employees.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Employees are matched by national id; a row with no matching active employee is an error.</value></data>
+  <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>A category name that doesn't exist yet is created automatically; matching against existing categories ignores case and whitespace.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>A filled-in return date makes the row a closed (already returned) item; leaving it blank makes it an open (currently held) item.</value></data>
+  <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Valid: still held by the employee.</value></data>
+  <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Valid: a returned, past item.</value></data>
+  <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>National id</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11-digit national id; the employee is matched by this number.</value></data>
+  <data name="import.column.assets.categoryName" xml:space="preserve"><value>Category</value></data>
+  <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Equipment category (e.g. Computer, Phone, Vehicle); created automatically if it doesn't exist.</value></data>
+  <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Serial number</value></data>
+  <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>The device's serial number, if any; the same category + serial number updates the existing item, otherwise a new item is created.</value></data>
+  <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Issue date</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>The date the equipment was issued to the employee (dd.MM.yyyy).</value></data>
+  <data name="import.column.assets.returnedAt" xml:space="preserve"><value>Return date</value></data>
+  <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>The date the equipment was returned (dd.MM.yyyy); left blank, the item is still considered open.</value></data>
+  <data name="import.column.assets.note" xml:space="preserve"><value>Description</value></data>
+  <data name="import.column.assets.note.description" xml:space="preserve"><value>Notable details about the item (brand/model etc.); optional.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>
@@ -1154,6 +1187,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.item.amount_too_large" xml:space="preserve"><value>The amount cannot exceed 10,000,000.</value></data>
   <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Unsupported currency. Enter a valid ISO 4217 code (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
   <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>The receipt date cannot be in the future.</value></data>
+  <data name="expense.item.receipt_not_found" xml:space="preserve"><value>Receipt document not found. Upload the receipt again and retry.</value></data>
   <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>All items of an expense claim must use the same currency.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Advance request not found.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
@@ -1181,6 +1215,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>A device with this serial number is currently assigned to another employee.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>The return date cannot be before the issue date.</value></data>
+  <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>This asset's assignment is not pending approval, or belongs to a different approval process.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Employee not found.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>The issue date cannot be before the employee's hire date.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
@@ -1404,11 +1439,16 @@ The report you requested has been generated. Click the link to view and download
   <data name="announcement.already_archived" xml:space="preserve"><value>This announcement is already archived.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Announcement not found.</value></data>
   <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Only draft announcements can be edited.</value></data>
+  <data name="announcement.scheduled_for_must_be_future" xml:space="preserve"><value>The scheduled publish date/time must be in the future.</value></data>
   <data name="announcement_attachment.not_found" xml:space="preserve"><value>Attachment not found.</value></data>
   <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>This file type is not allowed.</value></data>
   <data name="announcement_attachment.too_large" xml:space="preserve"><value>The file exceeds the allowed size.</value></data>
   <data name="announcement_attachment.too_many" xml:space="preserve"><value>This announcement has reached its maximum number of attachments.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Read record not found.</value></data>
+  <data name="recognition.message_required" xml:space="preserve"><value>A recognition message is required and cannot exceed 300 characters.</value></data>
+  <data name="recognition.cannot_recognize_self" xml:space="preserve"><value>You cannot send a recognition message to yourself.</value></data>
+  <data name="recognition.sender_not_found" xml:space="preserve"><value>You must have an employee record to send a recognition message.</value></data>
+  <data name="recognition.receiver_not_found" xml:space="preserve"><value>Recipient employee not found.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>A ticket subject is required and cannot exceed 200 characters.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Ticket content is required.</value></data>
   <data name="support_ticket.not_found" xml:space="preserve"><value>Support ticket not found.</value></data>
@@ -1473,6 +1513,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="onboarding.templates.manage" xml:space="preserve"><value>Manage onboarding templates</value></data>
   <data name="onboarding.tasks.view" xml:space="preserve"><value>View onboarding tasks</value></data>
   <data name="onboarding.tasks.manage" xml:space="preserve"><value>Manage onboarding tasks</value></data>
+  <data name="onboarding.my.tasks" xml:space="preserve"><value>My onboarding tasks</value></data>
   <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Task template not found.</value></data>
   <data name="onboarding_task_template.title_required" xml:space="preserve"><value>A task title is required.</value></data>
   <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>The task title cannot exceed 200 characters.</value></data>
@@ -1480,6 +1521,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Task not found.</value></data>
   <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>The task is already completed or waived.</value></data>
   <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>A reason is required to waive the task.</value></data>
+  <data name="onboarding.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
+  <data name="onboarding.task.not_owner" xml:space="preserve"><value>This task does not belong to you.</value></data>
   <data name="ohs.services.view" xml:space="preserve"><value>View OHS services</value></data>
   <data name="ohs.services.manage" xml:space="preserve"><value>Manage OHS services</value></data>
   <data name="ohs_assignment.not_found" xml:space="preserve"><value>Record not found.</value></data>
@@ -1490,4 +1533,26 @@ The report you requested has been generated. Click the link to view and download
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>The record has already ended.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>The replacement interval must be between 1 and 3650 days.</value></data>
+  <data name="attendance.self_checkin.break_not_checked_in" xml:space="preserve"><value>Check in before starting a break.</value></data>
+  <data name="attendance.self_checkin.break_already_open" xml:space="preserve"><value>You already have an open break.</value></data>
+  <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>There is no open break to end.</value></data>
+  <data name="identity.mfa.required_by_policy" xml:space="preserve"><value>Your company's security policy requires two-factor authentication for your role; it cannot be disabled.</value></data>
+  <data name="identity.user.language_unsupported" xml:space="preserve"><value>The selected language is not supported.</value></data>
+  <data name="workflow.bulk.empty" xml:space="preserve"><value>Select at least one request to decide.</value></data>
+  <data name="workflow.bulk.too_many_tasks" xml:space="preserve"><value>You can decide at most {max} requests at once.</value></data>
+  <data name="attendance.correction.future_date" xml:space="preserve"><value>A punch correction cannot be requested for a day that has not started yet.</value></data>
+  <data name="attendance.correction.period_locked" xml:space="preserve"><value>This month's timesheet is locked or approved; a correction cannot be requested.</value></data>
+  <data name="attendance.correction.pending_exists" xml:space="preserve"><value>You already have a pending correction request for this day.</value></data>
+  <data name="attendance.correction.times_required" xml:space="preserve"><value>Enter at least a check-in or a check-out time.</value></data>
+  <data name="attendance.correction.invalid_range" xml:space="preserve"><value>The check-out time must be after the check-in time.</value></data>
+  <data name="attendance.correction.reason_required" xml:space="preserve"><value>A reason is required for a correction request.</value></data>
+  <data name="attendance.correction.not_found" xml:space="preserve"><value>The correction request was not found.</value></data>
+  <data name="attendance.correction.not_pending" xml:space="preserve"><value>Only a pending correction request can be withdrawn.</value></data>
+  <data name="attendance.my.corrections" xml:space="preserve"><value>Create and withdraw my own missing punch correction requests</value></data>
+  <data name="workflow.comment.request_closed" xml:space="preserve"><value>A cancelled request cannot be commented on.</value></data>
+  <data name="workflow.comment.text_required" xml:space="preserve"><value>The comment text cannot be empty.</value></data>
+  <data name="attendance.work_schedule.range_too_long" xml:space="preserve"><value>You can query a range of at most {max} days.</value></data>
+  <data name="employee.my.team" xml:space="preserve"><value>View my team</value></data>
+  <data name="attendance.my.team" xml:space="preserve"><value>View my team's timesheet</value></data>
+  <data name="leave.my.team" xml:space="preserve"><value>View my team's leave</value></data>
 </root>

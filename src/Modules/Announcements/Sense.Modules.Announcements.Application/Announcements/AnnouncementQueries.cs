@@ -25,7 +25,7 @@ public sealed class ListAnnouncementsHandler(IAnnouncementRepository announcemen
 
     internal static AnnouncementDto ToDto(Announcement a) => new(
         a.Id, a.Title, a.Content, a.Type.ToString(), a.Priority.ToString(), a.Status.ToString(),
-        a.PublishedBy, a.PublishedAt, a.ExpiresAt, a.TargetAudience, a.CreatedAt);
+        a.PublishedBy, a.PublishedAt, a.ExpiresAt, a.TargetAudience, a.CreatedAt, a.ScheduledFor);
 }
 
 /// <summary>Duyuruyu id'ye göre getir.</summary>

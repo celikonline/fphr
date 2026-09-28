@@ -1,0 +1,43 @@
+{
+  "title": "My shift",
+  "loadError": "Shift details could not be loaded. Please try again.",
+  "employeeLabel": "Employee #{{id}}",
+  "previousWeek": "Previous week",
+  "nextWeek": "Next week",
+  "night": "Night",
+  "allDay": "All day",
+  "sections": {
+    "myWeek": "My shifts this week",
+    "team": "Team shifts",
+    "unavailable": "I'm unavailable",
+    "myAvailability": "My availability records"
+  },
+  "empty": {
+    "week": {
+      "mine": "You have no published shifts this week.",
+      "team": "There are no team shifts you can view this week."
+    },
+    "day": {
+      "mine": "You have no shifts on this day.",
+      "team": "There are no team shifts you can view on this day."
+    }
+  },
+  "availability": {
+    "kinds": {
+      "unavailable": "I don't want to work today",
+      "weeklyRestRequest": "I want to use my weekly rest day"
+    },
+    "date": "Date",
+    "kind": "Type",
+    "kindPlaceholder": "Select a type",
+    "note": "Note (optional)",
+    "notePlaceholder": "Add details",
+    "cancel": "Cancel",
+    "dateRequired": "Please enter a date.",
+    "saved": "Your availability has been saved.",
+    "saveError": "Availability could not be saved. Please try again.",
+    "cancelError": "The record could not be cancelled. Please try again.",
+    "cancelConfirmTitle": "Cancel record",
+    "cancelConfirmMessage": "Are you sure you want to cancel this availability record? This cannot be undone."
+  }
+}

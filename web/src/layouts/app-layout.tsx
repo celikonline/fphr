@@ -1,4 +1,4 @@
-import { Link, NavLink as RouterNavLink, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@mantine/hooks";
@@ -12,7 +12,6 @@ import {
   Group,
   Indicator,
   Menu,
-  NavLink,
   Stack,
   Text,
   Tooltip,
@@ -31,20 +30,14 @@ import {
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
-import { useWorkflowInboxCount } from "@/hooks/use-workflow-inbox-count";
-import {
-  APP_LAUNCHER_ITEMS,
-  NAV_FOOTER_ITEMS,
-  NAV_ITEMS,
-  navIconColor,
-  type NavItem,
-} from "@/config/navigation";
+import { APP_LAUNCHER_ITEMS, navIconColor } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
 import SettingsSubNav from "@/components/settings-subnav";
 import ScreenSearch from "@/components/screen-search";
 import ModuleRouteGuard from "@/components/module-disabled";
+import { NavList } from "./sidebar-nav";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -52,99 +45,6 @@ const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefine
 
 /** Per-viewer convenience, not shared state - remembered locally, never sent to the server. */
 const SIDEBAR_COLLAPSED_KEY = "senseik.sidebar.collapsed";
-
-function NavList({ collapsed }: { collapsed: boolean }) {
-  const { t } = useTranslation(["navigation"]);
-  const items = useVisibleItems(NAV_ITEMS);
-  // Notifications and the profile live in the top bar (NotificationsButton / UserMenu), not the sidebar.
-  const footerItems = useVisibleItems(NAV_FOOTER_ITEMS).filter((item) => item.key !== "account");
-
-  return (
-    <>
-      <Stack component="nav" gap={4} className="flex-1 overflow-y-auto px-2 py-4">
-        {items.map((item) =>
-          item.key === "workflowInbox" ? (
-            <WorkflowInboxNavItem
-              key={item.key}
-              item={item}
-              collapsed={collapsed}
-              label={t(item.labelKey)}
-            />
-          ) : (
-            <NavItemLink
-              key={item.key}
-              item={item}
-              collapsed={collapsed}
-              label={t(item.labelKey)}
-            />
-          )
-        )}
-      </Stack>
-      <Stack component="nav" gap={4} className={`px-2 py-3 ${classes.footerNav}`}>
-        {footerItems.map((item) => (
-          <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
-        ))}
-      </Stack>
-    </>
-  );
-}
-
-const NAV_LINK_CLASS_NAMES = {
-  root: classes.navLink,
-  section: classes.navSection,
-  body: classes.navBody,
-};
-
-/** "Onay kutusu" sidebar entry: pending task count on the icon (senseik-047 D-01/D-03), mirrors NotificationsNavItem's Indicator. */
-function WorkflowInboxNavItem({
-  item,
-  collapsed,
-  label,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  label: string;
-}) {
-  const Icon = item.icon;
-  const pendingCount = useWorkflowInboxCount();
-
-  const link = (
-    <NavLink
-      component={RouterNavLink}
-      to={item.path}
-      end={item.end}
-      variant="light"
-      aria-label={collapsed ? label : undefined}
-      mod={{ collapsed }}
-      classNames={NAV_LINK_CLASS_NAMES}
-      styles={{ section: { color: navIconColor(item) } }}
-      leftSection={
-        <Indicator
-          color="red"
-          size={16}
-          offset={2}
-          label={pendingCount}
-          maxValue={99}
-          disabled={pendingCount === 0}
-          styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
-          inline
-        >
-          <Icon size={20} />
-        </Indicator>
-      }
-      label={collapsed ? undefined : label}
-      noWrap
-    />
-  );
-
-  if (!collapsed) return link;
-
-  return (
-    <Tooltip label={label} position="right" openDelay={300}>
-      {link}
-    </Tooltip>
-  );
-}
 
 /** Bell at the top right: unread count badge, dropdown with the latest notifications opens below it. */
 function NotificationsButton() {
@@ -227,51 +127,6 @@ function UserMenu() {
   );
 }
 
-function NavItemLink({
-  item,
-  collapsed,
-  label,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  label: string;
-}) {
-  const { t } = useTranslation(["navigation"]);
-  const Icon = item.icon;
-
-  // React Router sets aria-current="page" on the matching link, which Mantine's NavLink styles as active.
-  const link = (
-    <NavLink
-      component={RouterNavLink}
-      to={item.path}
-      end={item.end}
-      variant="light"
-      aria-label={collapsed ? label : undefined}
-      mod={{ collapsed }}
-      classNames={NAV_LINK_CLASS_NAMES}
-      styles={{ section: { color: navIconColor(item) } }}
-      leftSection={<Icon size={20} />}
-      label={collapsed ? undefined : label}
-      noWrap
-      rightSection={
-        !collapsed && item.phase !== undefined ? (
-          <Badge size="xs" variant="light" color="gray" tt="none">
-            {t("navigation:phase", { phase: item.phase })}
-          </Badge>
-        ) : undefined
-      }
-    />
-  );
-
-  if (!collapsed) return link;
-
-  return (
-    <Tooltip label={label} position="right" openDelay={300}>
-      {link}
-    </Tooltip>
-  );
-}
-
 /**
  * Collapse/expand control on the seam between the sidebar and the content. It stays invisible until the pointer
  * nears the top of that seam (or the button gets keyboard focus), so it does not clutter the menu.
@@ -282,7 +137,7 @@ function SidebarEdgeToggle({ collapsed, onToggle }: { collapsed: boolean; onTogg
   const Icon = collapsed ? ChevronRight : ChevronLeft;
 
   return (
-    <div className="group/edge absolute top-0 -right-4 z-20 h-16 w-8">
+    <div className="group/edge absolute top-0 -right-4 z-20 h-16 w-9">
       <Tooltip label={label} position="right" openDelay={300}>
         <ActionIcon
           variant="default"
@@ -290,7 +145,7 @@ function SidebarEdgeToggle({ collapsed, onToggle }: { collapsed: boolean; onTogg
           radius="xl"
           aria-label={label}
           onClick={onToggle}
-          className="absolute top-3 left-1/2 -translate-x-1/2 opacity-0 shadow-sm transition-opacity group-hover/edge:opacity-100 focus-visible:opacity-100"
+          className="absolute top-3 left-1/2 -translate-x-1/2 opacity-70 shadow-sm transition-opacity hover:opacity-100 group-hover/edge:opacity-100 focus-visible:opacity-100"
         >
           <Icon size={16} />
         </ActionIcon>
@@ -390,7 +245,7 @@ function Brand() {
   return (
     <Link
       to="/app"
-      className={`flex w-14 shrink-0 items-center justify-center md:w-52 md:justify-start md:px-5 ${classes.brand}`}
+      className={`flex w-14 shrink-0 items-center justify-center md:w-64 md:justify-start md:px-5 ${classes.brand}`}
     >
       <Text fz={22} fw={700} lh={1} className="hidden md:block">
         SenseHR
@@ -517,7 +372,7 @@ export default function AppLayout() {
             <div className="relative hidden shrink-0 md:flex">
               <aside
                 data-testid="sidebar-desktop"
-                className={`${collapsed ? "w-14" : "w-52"} flex shrink-0 flex-col ${classes.sidebar}`}
+                className={`${collapsed ? "w-14" : "w-64"} flex shrink-0 flex-col ${classes.sidebar}`}
               >
                 <NavList collapsed={collapsed} />
               </aside>

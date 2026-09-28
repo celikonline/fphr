@@ -24,6 +24,7 @@ public sealed class AttendanceMonthlySummaryReportProvider(
     IOrgUnitLookup orgUnits,
     IEmployeeReportReader employees,
     IReportExporter exporter,
+    ISimplePdfWriter pdfWriter,
     IStringLocalizer<SharedResource> localizer) : IReportProvider
 {
     public const string ReportKey = "attendance.monthly.summary";
@@ -90,7 +91,15 @@ public sealed class AttendanceMonthlySummaryReportProvider(
         }
 
         var sheet = localizer.Sheet("attendanceMonthlySummary");
-        var file = exporter.ExportToExcel($"{sheet} {from:yyyy-MM}.xlsx", [new ExportTable(sheet, columns, data)], cancellationToken);
+        var fileNameStem = $"{sheet} {from:yyyy-MM}";
+
+        if (AttendanceReportPdfExport.IsPdfRequested(parameters))
+        {
+            var document = AttendanceReportPdfExport.BuildDocument(sheet, columns, data, from, to);
+            return AttendanceReportPdfExport.Write(pdfWriter, document, fileNameStem);
+        }
+
+        var file = exporter.ExportToExcel($"{fileNameStem}.xlsx", [new ExportTable(sheet, columns, data)], cancellationToken);
         return new ReportFileResult(file.FileName, file.ContentType, file.Content);
     }
 }

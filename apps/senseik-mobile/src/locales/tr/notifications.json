@@ -1,0 +1,65 @@
+{
+  "title": "Bildirimler",
+  "loadError": "Bildirimler yüklenemedi. Lütfen tekrar deneyin.",
+  "markAllRead": "Tümünü okundu yap",
+  "markAllReadError": "Bildirimler okundu olarak işaretlenemedi. Lütfen tekrar deneyin.",
+  "empty": "Bildiriminiz yok.",
+  "preferences": {
+    "title": "Bildirim tercihleri",
+    "subtitle": "Hangi bildirimleri e-posta ile ve uygulama içinde alacağınızı seçin.",
+    "loadError": "Bildirim tercihleri yüklenemedi. Lütfen tekrar deneyin.",
+    "saveError": "Bildirim tercihi kaydedilemedi. Lütfen tekrar deneyin.",
+    "empty": "Ayarlanabilir bildirim yok.",
+    "mandatory": "Kapatılamaz"
+  },
+  "templates": {
+    "request": {
+      "created": "Talebim oluşturulduğunda",
+      "approved": "Talebim onaylandığında",
+      "rejected": "Talebim reddedildiğinde"
+    },
+    "approval": {
+      "task_assigned": "Onayımı bekleyen bir talep olduğunda"
+    },
+    "documents": {
+      "expiry_reminder": "Belge süresi dolmak üzere olduğunda"
+    },
+    "ohs": {
+      "sgk_notification_due": "İş kazasının SGK bildirim süresi yaklaştığında ya da geçtiğinde"
+    },
+    "employee": {
+      "hired": "Yeni bir çalışan işe başladığında",
+      "welcome": "İşe başladığımda hoş geldin e-postası",
+      "terminated": "Bir çalışan işten ayrıldığında",
+      "work_certificate": "İşten ayrılışta çalışma belgesi",
+      "birthday": "Doğum günümde"
+    },
+    "announcement": {
+      "published": "Yeni bir duyuru yayınlandığında"
+    },
+    "payroll": {
+      "payslip_ready": "Ücret pusulam hazır olduğunda"
+    },
+    "leave": {
+      "added_on_behalf": "Adıma bir izin talebi eklendiğinde"
+    },
+    "onboarding": {
+      "task_assigned": "Bana bir oryantasyon görevi atandığında",
+      "task_completed": "Bir oryantasyon görevi tamamlandığında"
+    }
+  },
+  "categories": {
+    "account": "Hesap",
+    "request": "Talepler",
+    "approval": "Onaylar",
+    "reminder": "Hatırlatmalar",
+    "employee": "Çalışanlar",
+    "announcement": "Duyurular",
+    "payroll": "Bordro",
+    "onboarding": "Oryantasyon"
+  },
+  "channels": {
+    "email": "E-posta",
+    "in_app": "Uygulama içi"
+  }
+}

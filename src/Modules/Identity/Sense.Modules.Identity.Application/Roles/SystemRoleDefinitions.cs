@@ -67,7 +67,7 @@ public static class PermissionPatterns
 
     public static readonly string[] ReadOnly = ["*.view", "*.view_all", "*.read", "*.export", "*.list", "*.report", "*.reports"];
     public static readonly string[] Sensitive = ["*.salary.*", "*.sensitive.*", "*.sensitive_view", "identity.audit.sensitive_view"];
-    public static readonly string[] SelfService = ["*.self.*", "*.my.*", "me.*"];
+    public static readonly string[] SelfService = ["*.self", "*.self.*", "*.my.*", "me.*"];
     public static readonly string[] Writes = ["*.manage", "*.create", "*.update", "*.delete", "*.approve", "*.lock", "*.publish", "*.submit"];
 }
 

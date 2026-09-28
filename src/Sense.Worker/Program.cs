@@ -134,6 +134,7 @@ builder.Services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
+builder.Services.AddHostedService<PushDeliveryPollingService>();
 // Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
 // (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
 // Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
@@ -257,6 +258,11 @@ builder.Services.AddModuleHandlers(
     typeof(AssetsDbContext).Assembly,
     typeof(Sense.Modules.Assets.Contracts.AssetsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AssetsDbContext>>();
+// The scan above includes the Assets Application assembly, so it also picks up the API-only AssignAssetHandler, which
+// (TK-018) submits to Workflow through IWorkflowService - registered only by the API host. The Worker never serves
+// commands, so drop it here or the host fails DI validation at startup (mirrors the Leave ledger query above).
+Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll<
+    Sense.Shared.Contracts.Messaging.ICommandHandler<Sense.Modules.Assets.Application.Assets.AssignAssetCommand>>(builder.Services);
 
 // Integrations (Faz 8 #61): consumes Employee's employee.* lifecycle events and turns them into outbound webhook
 // deliveries for tenants with an active subscription (see faz8-durum-takibi.md). Writes nothing to its own outbox
@@ -285,6 +291,10 @@ builder.Services.AddModuleHandlers(
     typeof(AnnouncementsDbContext).Assembly,
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
+// PublishScheduledAnnouncements job (TK-016): a Create with a future ScheduledFor lands as Status=Scheduled;
+// this polls (every minute) for announcements whose schedule is due and publishes them, tenant by tenant - the
+// same BackgroundService pattern as Leave's AddLeaveBalanceRecalculationJob above (no Hangfire in this codebase).
+builder.Services.AddAnnouncementsScheduledPublishJob();
 
 // Occupational Safety (İSG, senseik-015): hazard classification + risk assessments, and (senseik-015 devamı)
 // RecordIncidentHandler, which needs Employee's IEmployeeLookup to validate the reporting employee - registered

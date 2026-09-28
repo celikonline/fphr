@@ -32,9 +32,11 @@ public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRe
         int take = 20,
         CancellationToken cancellationToken = default)
     {
-        // Query is automatically filtered by tenant via global filter in DbContext
+        // Query is automatically filtered by tenant via global filter in DbContext. System-generated deliveries
+        // (visa copies, SourceModule-tagged copies like Assets' handover form) live in the employee's own folder,
+        // not the generic tenant-wide list - same treatment for both, mirroring the existing VisaDocumentRequestId exclusion.
         var documents = await context.Documents
-            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null)
+            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null && d.SourceModule == null)
             .OrderByDescending(d => d.UploadedAt)
             .Skip(skip)
             .Take(take)
@@ -51,11 +53,17 @@ public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRe
             .OrderBy(d => d.Title)
             .ToListAsync(cancellationToken);
 
+    public async Task<Document?> FindBySourceAsync(
+        string sourceModule, string sourceRef, CancellationToken cancellationToken = default) =>
+        await context.Documents
+            .Where(d => d.SourceModule == sourceModule && d.SourceRef == sourceRef && d.Status != DocumentStatus.Deleted)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<int> CountByTenantAsync(CancellationToken cancellationToken = default)
     {
         // Query is automatically filtered by tenant via global filter in DbContext
         return await context.Documents
-            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null)
+            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null && d.SourceModule == null)
             .CountAsync(cancellationToken);
     }
 

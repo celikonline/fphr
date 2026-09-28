@@ -25,7 +25,18 @@
     "back": "Back",
     "workflowInbox": "Approval inbox",
     "sharedFiles": "Shared files",
-    "platformTenants": "Companies (Platform)"
+    "platformTenants": "Companies (Platform)",
+    "comingSoon": "Coming soon",
+    "sidebarSearchPlaceholder": "Search menu…"
+  },
+  "navGroups": {
+    "humanResources": "Human Resources",
+    "timeManagement": "Time Management",
+    "leave": "Leave",
+    "expensePayroll": "Expenses & Payroll",
+    "performance": "Performance",
+    "recruitment": "Recruitment",
+    "employeeExperience": "Employee Experience"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

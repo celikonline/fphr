@@ -1,0 +1,9 @@
+{
+  "title": "People",
+  "loadError": "The employee list could not be loaded. Please try again.",
+  "search": "Search",
+  "searchPlaceholder": "Search by name, title or department",
+  "empty": "No records found.",
+  "callA11y": "{{name}} - call",
+  "emailA11y": "{{name}} - send an email"
+}

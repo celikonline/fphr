@@ -29,13 +29,12 @@ public sealed record TenantSecurityPolicy
     /// Kullanıcının rollerinden biri zorunlu listede VE MFA'sı kapalıysa true — ön yüzün kurulum akışına
     /// yönlendirmesi gereken durum. MFA zaten açıksa veya zorunlu rol listesi boşsa her zaman false.
     /// </summary>
-    public bool RequiresMfaSetup(IEnumerable<string> userRoleCodes, bool mfaEnabled)
-    {
-        if (mfaEnabled || RequireMfaForRoles.Count == 0)
-        {
-            return false;
-        }
+    public bool RequiresMfaSetup(IEnumerable<string> userRoleCodes, bool mfaEnabled) =>
+        !mfaEnabled && RequiresMfa(userRoleCodes);
 
-        return userRoleCodes.Any(code => RequireMfaForRoles.Contains(code, StringComparer.OrdinalIgnoreCase));
-    }
+    /// <summary>Kullanıcının rollerinden biri zorunlu listede mi (MFA durumundan bağımsız). FG-022: true ise kullanıcı
+    /// MFA'yı self-servis kapatamaz (<c>DisableMfaHandler</c>), güvenlik ekranı bunu <c>MfaStatusDto.RequiredByPolicy</c> ile gösterir.</summary>
+    public bool RequiresMfa(IEnumerable<string> userRoleCodes) =>
+        RequireMfaForRoles.Count > 0
+        && userRoleCodes.Any(code => RequireMfaForRoles.Contains(code, StringComparer.OrdinalIgnoreCase));
 }

@@ -31,11 +31,21 @@ public static class OnboardingPermissions
         "Oryantasyon",
         "Çalışanların işe alım/işten ayrılış görevlerini oluşturma, tamamlama ve muaf tutma");
 
+    /// <summary>Self-service: view and complete the caller's own onboarding/offboarding tasks. Matches the
+    /// "*.my.*" self-service wildcard, so every tenant's Employee/Manager system role grants it automatically.</summary>
+    public static readonly Permission TasksMine = new(
+        "onboarding.my.tasks",
+        Module,
+        "Kendi Oryantasyon Görevlerim",
+        "Oryantasyon",
+        "Çalışanın kendi işe alım/işten ayrılış görevlerini görüntüleme ve tamamlama");
+
     /// <summary>All Onboarding module permissions.</summary>
     public static IEnumerable<Permission> All =>
     [
         TemplatesManage,
         TasksView,
         TasksManage,
+        TasksMine,
     ];
 }

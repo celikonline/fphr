@@ -61,7 +61,9 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim> {
 }
 
 export async function createExpenseClaim(description?: string | null): Promise<string> {
-  const { data } = await apiClient.post<string>(`${EXPENSE_BASE}/claims`, { description: description ?? null });
+  const { data } = await apiClient.post<string>(`${EXPENSE_BASE}/claims`, {
+    description: description ?? null,
+  });
   return data;
 }
 
@@ -80,13 +82,17 @@ export async function submitExpenseClaim(claimId: string): Promise<void> {
 
 /** HR/Finance worklist: tenant-wide non-Draft claims, optionally filtered to one status (e.g. "approved", awaiting pay). */
 export async function listExpenseClaims(status?: ExpenseClaimStatus): Promise<ExpenseClaim[]> {
-  const { data } = await apiClient.get<ExpenseClaim[]>(`${EXPENSE_BASE}/claims`, { params: status ? { status } : undefined });
+  const { data } = await apiClient.get<ExpenseClaim[]>(`${EXPENSE_BASE}/claims`, {
+    params: status ? { status } : undefined,
+  });
   return data;
 }
 
 /** HR/Finance marks an Approved claim as paid. */
 export async function payExpenseClaim(claimId: string, paymentNote?: string | null): Promise<void> {
-  await apiClient.post(`${EXPENSE_BASE}/claims/${claimId}/pay`, { paymentNote: paymentNote ?? null });
+  await apiClient.post(`${EXPENSE_BASE}/claims/${claimId}/pay`, {
+    paymentNote: paymentNote ?? null,
+  });
 }
 
 export interface AdvanceRequest {
@@ -126,14 +132,23 @@ export async function createAdvanceRequest(input: CreateAdvanceRequestInput): Pr
 }
 
 /** HR/Finance worklist: tenant-wide advance requests, optionally filtered to one status (e.g. "approved", awaiting pay). */
-export async function listAdvanceRequests(status?: AdvanceRequestStatus): Promise<AdvanceRequest[]> {
-  const { data } = await apiClient.get<AdvanceRequest[]>(`${EXPENSE_BASE}/advances`, { params: status ? { status } : undefined });
+export async function listAdvanceRequests(
+  status?: AdvanceRequestStatus
+): Promise<AdvanceRequest[]> {
+  const { data } = await apiClient.get<AdvanceRequest[]>(`${EXPENSE_BASE}/advances`, {
+    params: status ? { status } : undefined,
+  });
   return data;
 }
 
 /** HR/Finance marks an Approved advance request as paid. */
-export async function payAdvanceRequest(requestId: string, paymentNote?: string | null): Promise<void> {
-  await apiClient.post(`${EXPENSE_BASE}/advances/${requestId}/pay`, { paymentNote: paymentNote ?? null });
+export async function payAdvanceRequest(
+  requestId: string,
+  paymentNote?: string | null
+): Promise<void> {
+  await apiClient.post(`${EXPENSE_BASE}/advances/${requestId}/pay`, {
+    paymentNote: paymentNote ?? null,
+  });
 }
 
 export type PaymentKind = "expense" | "advance" | "overtime" | "adjustment";
@@ -153,6 +168,14 @@ export async function listMyPayments(): Promise<PaymentOverviewRow[]> {
   return data;
 }
 
+/** Employee card "Ödemeler" tab (HR/Finance): the same overview, scoped to one employee. */
+export async function getEmployeePayments(employeeId: string): Promise<PaymentOverviewRow[]> {
+  const { data } = await apiClient.get<PaymentOverviewRow[]>(
+    `${EXPENSE_BASE}/payments/employee/${employeeId}`
+  );
+  return data;
+}
+
 export interface ExpenseCategory {
   id: string;
   code: string;
@@ -165,7 +188,9 @@ export interface ExpenseCategory {
 }
 
 export async function listExpenseCategories(includeInactive = false): Promise<ExpenseCategory[]> {
-  const { data } = await apiClient.get<ExpenseCategory[]>(`${EXPENSE_BASE}/categories`, { params: { includeInactive } });
+  const { data } = await apiClient.get<ExpenseCategory[]>(`${EXPENSE_BASE}/categories`, {
+    params: { includeInactive },
+  });
   return data;
 }
 
@@ -188,7 +213,10 @@ export async function createExpenseCategory(input: CreateExpenseCategoryInput): 
 }
 
 /** HR/Finance (`expense.categories.manage`) activates or deactivates a category. */
-export async function setExpenseCategoryActive(categoryId: string, isActive: boolean): Promise<void> {
+export async function setExpenseCategoryActive(
+  categoryId: string,
+  isActive: boolean
+): Promise<void> {
   await apiClient.put(`${EXPENSE_BASE}/categories/${categoryId}/active`, { isActive });
 }
 
@@ -201,7 +229,10 @@ export interface UpdateExpenseCategoryInput {
  * HR/Finance (`expense.categories.manage`) renames a category and/or sets its limit (S-9 `PUT /categories/{id}`).
  * System-seeded categories reject a name change with 409 `expense.category.system_immutable` (server-localized message).
  */
-export async function updateExpenseCategory(categoryId: string, input: UpdateExpenseCategoryInput): Promise<void> {
+export async function updateExpenseCategory(
+  categoryId: string,
+  input: UpdateExpenseCategoryInput
+): Promise<void> {
   await apiClient.put(`${EXPENSE_BASE}/categories/${categoryId}`, {
     name: input.name,
     maxAmount: input.maxAmount ?? null,

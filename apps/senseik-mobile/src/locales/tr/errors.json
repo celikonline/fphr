@@ -1,0 +1,8 @@
+{
+  "boundary": {
+    "title": "Bir şeyler ters gitti",
+    "description": "Beklenmeyen bir hata oluştu. Yeniden deneyebilirsiniz.",
+    "retry": "Yeniden dene"
+  },
+  "attachmentOpen": "Belge açılamadı. Lütfen tekrar deneyin."
+}

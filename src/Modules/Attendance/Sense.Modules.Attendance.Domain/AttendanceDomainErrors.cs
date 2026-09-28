@@ -49,6 +49,11 @@ public static class AttendanceDomainErrors
     public const string EqualizationPeriodNotOpen = "attendance.equalization.period_not_open";
     public const string EqualizationPeriodNotYetEnded = "attendance.equalization.period_not_yet_ended";
     public const string EqualizationMinutesInvalid = "attendance.equalization.minutes_invalid";
+    public const string CorrectionTimesRequired = "attendance.correction.times_required";
+    public const string CorrectionInvalidRange = "attendance.correction.invalid_range";
+    public const string CorrectionReasonRequired = "attendance.correction.reason_required";
+    public const string CorrectionNotFound = "attendance.correction.not_found";
+    public const string CorrectionNotPending = "attendance.correction.not_pending";
 }
 
 /// <summary>Domain limits.</summary>

@@ -4,13 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Announcements.Application.Announcements;
 using Sense.Modules.Announcements.Application.Attachments;
 using Sense.Modules.Announcements.Application.ReadRecords;
+using Sense.Modules.Announcements.Application.Recognitions;
 using Sense.Modules.Announcements.Domain;
 using Sense.Modules.Announcements.Domain.Attachments;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Announcements.Api.Controllers;
 
-public sealed record CreateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience);
+/// <summary><see cref="ScheduledFor"/> (TK-016): verilirse (gelecek tarih/saat) duyuru hemen değil, o zaman yayına girer.</summary>
+public sealed record CreateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience, DateTime? ScheduledFor = null);
+
+public sealed record SendRecognitionRequest(Guid ReceiverEmployeeId, string Message);
 
 public sealed record UpdateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience);
 
@@ -56,7 +60,8 @@ public sealed class AnnouncementsController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateAnnouncementRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateAnnouncementCommand(request.Title, request.Content, request.Type, request.Priority, request.TargetAudience), ct));
+        FromResult(await Dispatcher.Send(
+            new CreateAnnouncementCommand(request.Title, request.Content, request.Type, request.Priority, request.TargetAudience, request.ScheduledFor), ct));
 
     /// <summary>Taslak duyuruyu düzenle (tam sayfa editör).</summary>
     [HttpPut(ApiRoutes.IdParam)]
@@ -104,4 +109,10 @@ public sealed class AnnouncementsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAttachment(Guid id, Guid attachmentId, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new DeleteAnnouncementAttachmentCommand(attachmentId), ct));
+
+    /// <summary>Bir çalışana kısa bir takdir/teşekkür mesajı gönderir; mesaj akışta (Feed) görünür.</summary>
+    [HttpPost("recognitions")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendRecognition([FromBody] SendRecognitionRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SendRecognitionCommand(request.ReceiverEmployeeId, request.Message), ct));
 }

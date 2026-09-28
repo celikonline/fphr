@@ -17,6 +17,8 @@ public sealed class Enrollment : TenantAggregateRoot<Guid>, IAuditLogged
     public DateTime EnrolledAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public string? CertificateNumber { get; private set; }
+    public DateTime? CancelledAt { get; private set; }
+    public string? CancellationReason { get; private set; }
 
     public static Result<Enrollment> Create(
         Guid trainingProgramId,
@@ -47,6 +49,22 @@ public sealed class Enrollment : TenantAggregateRoot<Guid>, IAuditLogged
         Status = EnrollmentStatus.Completed;
         CompletedAt = DateTime.UtcNow;
         CertificateNumber = certificateNumber;
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Katılımcıyı iptal edildi durumuna al. Kayıt silinmez; iptal tarihi ve (varsa) nedeni saklanır
+    /// (roadmap #72 — iptal geçmişi tutulsun).
+    /// </summary>
+    public Result Cancel(string? reason = null)
+    {
+        if (Status == EnrollmentStatus.Cancelled)
+            return TrainingDomainErrors.AlreadyCancelled;
+
+        Status = EnrollmentStatus.Cancelled;
+        CancelledAt = DateTime.UtcNow;
+        CancellationReason = reason;
 
         return Result.Success();
     }

@@ -1,0 +1,18 @@
+{
+  "id": "TK-029",
+  "baslik": "Mobil - puantaj ekranina mola/resmi tatil/fazla mesai kirilimi",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/mobil-puantaj-kirilim",
+  "kaynak": "Kolay IK arastirmasi 2026-09-23 - tek ekranda giris-cikis+mola+tatil+eksik/fazla mesai, senseik-mobile'da yalniz giris-cikis+toplam sure var",
+  "kabul": [
+    "AttendanceScreen.tsx artik backend'in zaten dondurdugu (varsa) mola suresi, resmi tatil gunu ve fazla/eksik mesai bilgisini ayri alanlar olarak gosteriyor.",
+    "AttendanceService.ts'teki DTO'lar backend'in gercekte dondurdugu alanlara gore genisletildi (backend'de alan yoksa YENI backend alani EKLEME - SORU olarak isaretle).",
+    "Mevcut giris-cikis saatleri ve uyusmazlik rozeti goruntusu DEGISMEDI.",
+    "En az bir test yeni alanlarin dogru gosterildigini dogruluyor."
+  ],
+  "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-029.md"
+}

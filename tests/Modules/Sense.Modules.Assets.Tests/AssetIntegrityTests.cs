@@ -6,6 +6,8 @@ using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Kernel.Results;
@@ -23,7 +25,7 @@ public sealed class AssetIntegrityTests
     private static readonly Guid EmployeeId = Guid.NewGuid();
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-    private static (AssignAssetHandler Handler, Asset Asset, IAssetRepository Assets, IIntegrationEventOutbox Outbox) Build(
+    private static (AssignAssetHandler Handler, Asset Asset, IAssetRepository Assets, IWorkflowService Workflow) Build(
         EmployeeEmploymentDates? employment, string? serialNumber = "SN-1")
     {
         var tenant = Substitute.For<ITenantContext>();
@@ -33,14 +35,17 @@ public sealed class AssetIntegrityTests
         assets.GetByIdAsync(asset.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(asset));
         var lookup = Substitute.For<IEmployeeSalaryLookup>();
         lookup.GetEmploymentDatesAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult(employment));
-        var outbox = Substitute.For<IIntegrationEventOutbox>();
-        return (new AssignAssetHandler(tenant, assets, outbox, lookup), asset, assets, outbox);
+        var workflow = Substitute.For<IWorkflowService>();
+        workflow.StartAsync(
+                Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Result.Success(Guid.NewGuid())));
+        return (new AssignAssetHandler(tenant, assets, lookup, workflow), asset, assets, workflow);
     }
 
     [Fact]
     public async Task Assign_ToAnEmployeeThatDoesNotExist_IsNotFound_AndRaisesNoEvent()
     {
-        var (handler, asset, _, outbox) = Build(employment: null);
+        var (handler, asset, _, workflow) = Build(employment: null);
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, EmployeeId, Today), CancellationToken.None);
 
@@ -48,25 +53,27 @@ public sealed class AssetIntegrityTests
         result.Error.Code.ShouldBe(AssetsErrors.EmployeeNotFound);
         result.Error.Type.ShouldBe(ErrorType.NotFound);
         asset.Status.ShouldBe(AssetStatus.Unassigned);
-        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
+        await workflow.DidNotReceive().StartAsync(
+            Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Assign_WithAnIssueDateBeforeTheHireDate_IsRejected()
     {
-        var (handler, asset, _, outbox) = Build(new EmployeeEmploymentDates(Today, null));
+        var (handler, asset, _, workflow) = Build(new EmployeeEmploymentDates(Today, null));
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, EmployeeId, Today.AddDays(-10)), CancellationToken.None);
 
         result.Error.Code.ShouldBe(AssetsErrors.IssuedBeforeHire);
         result.Error.Type.ShouldBe(ErrorType.Validation);
-        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
+        await workflow.DidNotReceive().StartAsync(
+            Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Assign_WhenTheSameSerialNumberIsAlreadyAssignedElsewhere_IsAConflict()
     {
-        var (handler, asset, assets, outbox) = Build(new EmployeeEmploymentDates(Today.AddYears(-1), null));
+        var (handler, asset, assets, workflow) = Build(new EmployeeEmploymentDates(Today.AddYears(-1), null));
         assets.IsSerialNumberAssignedElsewhereAsync("SN-1", asset.Id, Arg.Any<CancellationToken>()).Returns(true);
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, EmployeeId, Today), CancellationToken.None);
@@ -74,18 +81,21 @@ public sealed class AssetIntegrityTests
         result.Error.Code.ShouldBe(AssetsDomainErrors.SerialNumberInUse);
         result.Error.Type.ShouldBe(ErrorType.Conflict);
         asset.Status.ShouldBe(AssetStatus.Unassigned);
-        outbox.DidNotReceive().Enqueue(Arg.Any<IIntegrationEvent>());
+        await workflow.DidNotReceive().StartAsync(
+            Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Assign_ForAValidEmployeeAndSerial_Succeeds()
+    public async Task Assign_ForAValidEmployeeAndSerial_StartsWorkflowApproval()
     {
-        var (handler, asset, _, outbox) = Build(new EmployeeEmploymentDates(Today.AddYears(-1), null));
+        var (handler, asset, _, workflow) = Build(new EmployeeEmploymentDates(Today.AddYears(-1), null));
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, EmployeeId, Today), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
-        outbox.Received(1).Enqueue(Arg.Any<AssetAssigned>());
+        asset.Status.ShouldBe(AssetStatus.PendingAssignment);
+        await workflow.Received(1).StartAsync(
+            ApprovalRequestTypes.AssetAssignment, asset.Id, EmployeeId, null, null, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]

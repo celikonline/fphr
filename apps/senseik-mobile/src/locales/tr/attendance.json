@@ -1,0 +1,47 @@
+{
+  "title": "Puantajım",
+  "loadError": "Puantaj bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+  "status": {
+    "completed": "Tamamlandı",
+    "missing": "Eksik",
+    "anomaly": "Anomali",
+    "onLeave": "İzinli günde çalışma",
+    "leave": "İzinli"
+  },
+  "filters": {
+    "all": "Tümü",
+    "missing": "Eksik",
+    "anomaly": "Anomali"
+  },
+  "filterTitle": "Filtre",
+  "anomaly": {
+    "noData": "Kayıt yok",
+    "missingCheckIn": "Giriş eksik",
+    "missingCheckOut": "Çıkış eksik",
+    "lateArrival": "Geç giriş",
+    "earlyLeave": "Erken çıkış",
+    "lateLeave": "Geç çıkış",
+    "overwork": "Fazla çalışma",
+    "underwork": "Az çalışma",
+    "unplannedWork": "Plansız çalışma",
+    "workedWhileOnLeave": "İzinli günde çalışma"
+  },
+  "punchLine": "Giriş {{checkIn}} · Çıkış {{checkOut}}",
+  "overtime": "Fazla mesai: {{duration}}",
+  "undertime": "Eksik mesai: {{duration}}",
+  "dayCard": {
+    "a11yWorked": "çalışma süresi {{worked}}",
+    "worked": "Çalışma süresi",
+    "plan": "Plan: {{start}} – {{end}}",
+    "notPlanned": "Planlı çalışma günü değil",
+    "requestCorrection": "Düzeltme iste"
+  },
+  "summary": {
+    "workedDays": "Çalışılan gün",
+    "workedTime": "Çalışılan süre"
+  },
+  "empty": {
+    "month": "Bu ay için kayıtlı puantaj günü yok.",
+    "filter": "Bu filtreye uyan gün yok."
+  }
+}

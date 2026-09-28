@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sense.Modules.Notifications.Application;
 using Sense.Modules.Notifications.Application.Deliveries;
+using Sense.Modules.Notifications.Contracts;
 using Sense.Modules.Notifications.Domain.Deliveries;
 using Sense.Modules.Notifications.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
@@ -40,7 +41,7 @@ public sealed partial class EmailDeliveryProcessor(
         var dueIds = await db.Deliveries
             .IgnoreQueryFilters()
             .AsNoTracking()
-            .Where(d => d.Status == NotificationDeliveryStatus.Pending && d.NextAttemptAt <= now)
+            .Where(d => d.Channel == NotificationChannels.Email && d.Status == NotificationDeliveryStatus.Pending && d.NextAttemptAt <= now)
             .OrderBy(d => d.NextAttemptAt).ThenBy(d => d.Id)
             .Take(options.Value.Delivery.BatchSize)
             .Select(d => d.Id)

@@ -1,0 +1,18 @@
+{
+  "id": "TK-003",
+  "baslik": "Assets — zimmet aktarımına 'sadece güncelleme modu' eklenmesi",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/assets-guncelleme-modu",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:18,146 (aktarım yalnız Upsert, güncelleme modu yok)",
+  "kabul": [
+    "Assets Excel aktarım şablonuna (AssetImportTemplate/AssetImportRowHandler), DataTransfer'daki diğer şablonlarda zaten var olan 'yalnız güncelle' moduna eşdeğer bir seçenek eklendi.",
+    "Var olan Upsert davranışı DEĞİŞMEDİ; yeni mod ayrı bir seçenek/parametre olarak eklendi.",
+    "Sınır değerleri test edildi: var olmayan zimmet ID'siyle güncelleme denemesi, güncelleme modunda yeni satır oluşturulmaması.",
+    "Sense.Modules.Assets.Tests tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY (genel test kapısı TK-001 ayrı işte düzeltiliyor, bu kart onu beklemez)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-003.md"
+}

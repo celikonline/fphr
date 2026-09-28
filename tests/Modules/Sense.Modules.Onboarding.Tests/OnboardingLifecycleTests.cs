@@ -2,8 +2,10 @@ using NSubstitute;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Onboarding.Application;
 using Sense.Modules.Onboarding.Application.Tasks;
+using Sense.Modules.Onboarding.Contracts.Events;
 using Sense.Modules.Onboarding.Domain;
 using Sense.Modules.Onboarding.Domain.Tasks;
+using Sense.Shared.Contracts.Events;
 using Xunit;
 
 namespace Sense.Modules.Onboarding.Tests;
@@ -19,6 +21,7 @@ public class OnboardingLifecycleTests
     private readonly IOnboardingTaskTemplateRepository _templates = Substitute.For<IOnboardingTaskTemplateRepository>();
     private readonly IEmployeeOnboardingTaskRepository _tasks = Substitute.For<IEmployeeOnboardingTaskRepository>();
     private readonly IOnboardingUnitOfWork _unitOfWork = Substitute.For<IOnboardingUnitOfWork>();
+    private readonly IIntegrationEventOutbox _outbox = Substitute.For<IIntegrationEventOutbox>();
     private readonly List<EmployeeOnboardingTask> _added = [];
 
     public OnboardingLifecycleTests() => _tasks.Add(Arg.Do<EmployeeOnboardingTask>(_added.Add));
@@ -53,7 +56,7 @@ public class OnboardingLifecycleTests
         _templates.ListActiveByStageAsync(OnboardingStage.Onboarding, Arg.Any<CancellationToken>()).Returns([sgk, probation]);
         var hireDate = new DateOnly(2026, 10, 1);
 
-        await new EmployeeHiredOnboardingHandler(_templates, _tasks, _unitOfWork)
+        await new EmployeeHiredOnboardingHandler(_templates, _tasks, _unitOfWork, _outbox)
             .Handle(new EmployeeHired(_tenantId, employeeId, hireDate, hireDate), CancellationToken.None);
 
         Assert.Equal(2, _added.Count);
@@ -61,6 +64,7 @@ public class OnboardingLifecycleTests
         Assert.Equal(new DateOnly(2026, 11, 25), _added.Single(t => t.TemplateId == probation.Id).DueDate);
         Assert.All(_added, t => Assert.Equal(employeeId, t.EmployeeId));
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        _outbox.Received(2).Enqueue(Arg.Any<OnboardingTaskAssigned>());
     }
 
     [Fact]
@@ -73,10 +77,11 @@ public class OnboardingLifecycleTests
         _tasks.FindAsync(employeeId, sgk.Id, Arg.Any<CancellationToken>())
             .Returns(EmployeeOnboardingTask.Materialize(_tenantId, employeeId, sgk.Id, OnboardingStage.Onboarding, new DateOnly(2026, 9, 30)));
 
-        await new EmployeeHiredOnboardingHandler(_templates, _tasks, _unitOfWork)
+        await new EmployeeHiredOnboardingHandler(_templates, _tasks, _unitOfWork, _outbox)
             .Handle(new EmployeeHired(_tenantId, employeeId, new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 1)), CancellationToken.None);
 
         Assert.Empty(_added);
+        _outbox.DidNotReceive().Enqueue(Arg.Any<OnboardingTaskAssigned>());
     }
 
     [Fact]
@@ -88,7 +93,7 @@ public class OnboardingLifecycleTests
         _templates.ListActiveByStageAsync(OnboardingStage.Offboarding, Arg.Any<CancellationToken>()).Returns([sgkExit]);
         var clock = new FixedClock(new DateTimeOffset(2026, 9, 22, 9, 0, 0, TimeSpan.Zero));
 
-        await new EmployeeTerminatedOffboardingHandler(_templates, _tasks, _unitOfWork, clock)
+        await new EmployeeTerminatedOffboardingHandler(_templates, _tasks, _unitOfWork, _outbox, clock)
             .Handle(new EmployeeTerminated(_tenantId, employeeId, default, "04", null), CancellationToken.None);
 
         var task = Assert.Single(_added);

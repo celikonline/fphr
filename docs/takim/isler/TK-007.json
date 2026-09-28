@@ -1,0 +1,18 @@
+{
+  "id": "TK-007",
+  "baslik": "Organization — şirket profilinin (tüzel bilgiler) gerçek API'ye bağlanması",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/organization-sirket-profili",
+  "kaynak": "docs/analysis/kolayik-video/faz0-durum-takibi.md:16,38 (company-profile.tsx hâlâ localStorage mock)",
+  "kabul": [
+    "Şirketin tüzel bilgilerini (unvan, vergi no vb.) tutan bir Organization uç noktası (GET/PUT) eklendi.",
+    "web/.../company-profile.tsx artık localStorage yerine bu uç noktayı kullanıyor.",
+    "Yetki: yalnız tenant.manage ya da eşdeğer izne sahip kullanıcı güncelleyebiliyor.",
+    "Sense.Modules.Organization.Tests tek başına yeşil; web tarafı pnpm test'te ilgili component testiyle geçiyor."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-007.md"
+}

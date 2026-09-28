@@ -33,9 +33,7 @@ describe("leaveService", () => {
 
       await leaveService.getMyLeaveBalances();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        "/v1/leave/me/balances"
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith("/v1/leave/me/balances");
     });
 
     it("uses /employees/{id} endpoint when employeeId provided", async () => {
@@ -51,9 +49,7 @@ describe("leaveService", () => {
 
       await leaveService.getEmployeeLeaveBalances(employeeId);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        `/v1/leave/employees/${employeeId}/balances`
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(`/v1/leave/employees/${employeeId}/balances`);
     });
 
     it("uses /me for requests endpoint without employeeId", async () => {
@@ -61,9 +57,7 @@ describe("leaveService", () => {
 
       await leaveService.getMyLeaveRequests();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        "/v1/leave/me/requests"
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith("/v1/leave/me/requests");
     });
 
     it("uses /employees/{id} for requests endpoint with employeeId", async () => {
@@ -72,9 +66,52 @@ describe("leaveService", () => {
 
       await leaveService.getEmployeeLeaveRequests(employeeId);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        `/v1/leave/employees/${employeeId}/requests`
+      expect(mockApiClient.get).toHaveBeenCalledWith(`/v1/leave/employees/${employeeId}/requests`);
+    });
+  });
+
+  describe("attachment download URL (denetim A5-belge)", () => {
+    it("uses the /me endpoint for the caller's own request", async () => {
+      mockApiClient.get.mockResolvedValue({
+        data: {
+          url: "https://files.example/a.pdf",
+          expiresAt: "2026-09-20T10:20:00Z",
+          fileName: "a.pdf",
+          contentType: "application/pdf",
+        },
+      });
+
+      const result = await leaveService.getMyLeaveRequestAttachmentDownloadUrl(
+        "request-1",
+        "doc-1"
       );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        "/v1/leave/me/requests/request-1/attachments/doc-1/download-url"
+      );
+      expect(result.url).toBe("https://files.example/a.pdf");
+    });
+
+    it("uses the /employees/{id} endpoint for the approver/HR view", async () => {
+      mockApiClient.get.mockResolvedValue({
+        data: {
+          url: "https://files.example/b.pdf",
+          expiresAt: "2026-09-20T10:20:00Z",
+          fileName: "b.pdf",
+          contentType: "application/pdf",
+        },
+      });
+
+      const result = await leaveService.getEmployeeLeaveRequestAttachmentDownloadUrl(
+        "emp-1",
+        "request-1",
+        "doc-1"
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        "/v1/leave/employees/emp-1/requests/request-1/attachments/doc-1/download-url"
+      );
+      expect(result.fileName).toBe("b.pdf");
     });
   });
 
@@ -165,7 +202,8 @@ describe("leaveService", () => {
           },
           {
             leaveTypeName: "Future Type",
-            leaveTypeCode: "futureType" as unknown as EmployeeLeaveBalances["balances"][number]["leaveTypeCode"], // Simulate new API type not in our enum
+            leaveTypeCode:
+              "futureType" as unknown as EmployeeLeaveBalances["balances"][number]["leaveTypeCode"], // Simulate new API type not in our enum
             balance: {
               leaveTypeId: "type-2",
               currentPeriodFrom: "2026-01-01",
@@ -219,7 +257,9 @@ describe("leaveService", () => {
       const result = await leaveService.getMyLeaveRequests();
 
       expect(result).toHaveLength(1);
-      expect((result[0] as unknown as { leaveTypeCode: string }).leaveTypeCode).toBe("customNewType");
+      expect((result[0] as unknown as { leaveTypeCode: string }).leaveTypeCode).toBe(
+        "customNewType"
+      );
     });
   });
 

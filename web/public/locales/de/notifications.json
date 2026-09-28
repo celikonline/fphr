@@ -12,7 +12,8 @@
     "request": {
       "created": "Mein Antrag wurde erstellt",
       "approved": "Mein Antrag wurde genehmigt",
-      "rejected": "Mein Antrag wurde abgelehnt"
+      "rejected": "Mein Antrag wurde abgelehnt",
+      "comment_added": "Ein Kommentar zu meinem Antrag oder einer von mir genehmigten Anfrage hinzugefügt wird"
     },
     "approval": {
       "task_assigned": "Ein Antrag wartet auf meine Genehmigung"
@@ -35,6 +36,13 @@
     },
     "payroll": {
       "payslip_ready": "Wenn meine Gehaltsabrechnung bereit ist"
+    },
+    "leave": {
+      "added_on_behalf": "Wenn in meinem Namen ein Urlaubsantrag hinzugefügt wird"
+    },
+    "onboarding": {
+      "task_assigned": "Wenn mir eine Onboarding-Aufgabe zugewiesen wird",
+      "task_completed": "Wenn eine Onboarding-Aufgabe abgeschlossen wird"
     }
   },
   "preferences": {
@@ -56,7 +64,8 @@
     "reminder": "Erinnerungen",
     "employee": "Mitarbeitende",
     "announcement": "Ankündigungen",
-    "payroll": "Lohnabrechnung"
+    "payroll": "Lohnabrechnung",
+    "onboarding": "Onboarding"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"

@@ -38,6 +38,7 @@ public sealed class TemplateWorkbookTests
             "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu",
             "Uyruk", "Yabancı kimlik numarası", "Pasaport numarası", "SGK meslek kodu", "Sözleşme türü", "Çalışma şekli",
             "Maaş geçerlilik tarihi", "Maaş", "Para birimi", "Maaş türü", "Ödeme düzeni", "Yol yardımı", "Yemek yardımı",
+            "IBAN", "Banka hesap türü", "Banka adı", "Hesap para birimi",
             "Şirket", "Departman"]);
 
         var keys = data.Row(2).CellsUsed().Select(c => c.GetString()).ToList();
@@ -47,6 +48,7 @@ public sealed class TemplateWorkbookTests
             "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode",
             "nationality", "foreignIdNumber", "passportNumber", "sgkOccupationCode", "contractType", "employmentType",
             "salaryEffectiveFrom", "salaryAmount", "salaryCurrency", "salaryType", "payFrequency", "transportAllowance", "mealAllowance",
+            "bankIban", "bankAccountType", "bankName", "bankCurrency",
             "orgUnit:Company", "orgUnit:Department"]);
         data.Row(2).IsHidden.ShouldBeTrue();
         data.RowsUsed(XLCellsUsedOptions.Contents).Count().ShouldBe(2);
@@ -62,9 +64,9 @@ public sealed class TemplateWorkbookTests
         departmentValidation.Value.ShouldContain("Listeler");
         departmentValidation.Ranges.Single().RangeAddress.FirstAddress.RowNumber.ShouldBe(3);
 
-        // One dropdown per option-bearing column: the two org levels plus the twelve enum columns (E6 personnel
-        // fields + salary type/pay frequency + Nationality, senseik-009/F-02).
-        data.DataValidations.Count().ShouldBe(14);
+        // One dropdown per option-bearing column: the two org levels plus the thirteen enum columns (E6 personnel
+        // fields + salary type/pay frequency + Nationality, senseik-009/F-02 + bank account type, G-01 bank block).
+        data.DataValidations.Count().ShouldBe(15);
 
         var instructions = workbook.Worksheet("Açıklamalar");
         instructions.Cell(1, 1).GetString().ShouldBe("Veri aktarım kuralları");

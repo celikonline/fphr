@@ -9,6 +9,8 @@ public static class WorkflowErrors
 
     public const string RequestNotFound = "workflow.request.not_found";
     public const string RequestNotPending = "workflow.request.not_pending";
+    public const string RequestApproversAlreadyEdited = "workflow.request.approvers_already_edited";
+    public const string EditApproversNotAuthorized = "workflow.request.edit_approvers_not_authorized";
 
     public const string TaskNotFound = "workflow.task.not_found";
     public const string TaskNotCurrent = "workflow.task.not_current";
@@ -20,4 +22,7 @@ public static class WorkflowErrors
     public const string TokenAlreadyUsed = "workflow.token.already_used";
 
     public const string RequesterNotFound = "workflow.request.requester_not_found";
+
+    public const string BulkEmpty = "workflow.bulk.empty";
+    public const string BulkTooManyTasks = "workflow.bulk.too_many_tasks";
 }

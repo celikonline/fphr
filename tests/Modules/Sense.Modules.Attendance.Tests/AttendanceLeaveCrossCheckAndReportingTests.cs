@@ -68,6 +68,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         // Report providers render localized Excel headers (SharedResource) through the shared exporter.
         services.AddLocalization(o => o.ResourcesPath = "Resources");
         services.TryAddSingleton<IReportExporter, ExcelReportExporter>();
+        services.TryAddSingleton<ISimplePdfWriter, QuestPdfSimpleWriter>(); // TK-004: opsiyonel format=pdf yolu için.
         services.AddSingleton(_dataScope);
         services.AddSingleton(_orgUnits);
         services.AddSingleton(_employeeReportReader);
@@ -182,6 +183,59 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         var repo = scope.ServiceProvider.GetRequiredService<IAttendanceDayRepository>();
         var loaded = (await repo.GetByIdAsync(dayId, TestContext.Current.CancellationToken)).Value;
         loaded.Anomalies.ShouldBe(AttendanceAnomaly.None);
+    }
+
+    /// <summary>
+    /// Leave.Contracts.IApprovedLeaveDateLookup.GetApprovedLeaveDaysWithTypeAsync on real PostgreSQL (mobil Puantaj): one row
+    /// per approved date clipped to the range, the type's name for a visible type, null for a sensitive (KVKK) one; pending
+    /// requests and other employees are left out.
+    /// </summary>
+    [Fact]
+    public async Task ApprovedLeaveDaysWithType_NamesVisibleTypes_MasksSensitiveOnes()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSet = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(tenantId, StatutoryLeaveDurations.Turkey2026);
+            db.RuleSets.Add(ruleSet);
+            var annual = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual);
+            var sick = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Sick);
+
+            LeaveRequest Approved(Guid employee, LeaveType type, DateOnly start, DateOnly end)
+            {
+                var request = LeaveRequest.Submit(
+                    tenantId, employee, type.Id, type.Code, start, end, end.DayNumber - start.DayNumber + 1, null,
+                    LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+                var approvalId = Guid.NewGuid();
+                request.AttachApproval(approvalId);
+                request.Approve(approvalId, DateTime.UtcNow);
+                return request;
+            }
+
+            db.Requests.Add(Approved(employeeId, annual, new DateOnly(2026, 8, 31), new DateOnly(2026, 9, 1)));
+            db.Requests.Add(Approved(employeeId, sick, new DateOnly(2026, 9, 3), new DateOnly(2026, 9, 3)));
+            db.Requests.Add(Approved(Guid.NewGuid(), annual, new DateOnly(2026, 9, 2), new DateOnly(2026, 9, 2)));
+            db.Requests.Add(LeaveRequest.Submit(
+                tenantId, employeeId, annual.Id, annual.Code, new DateOnly(2026, 9, 4), new DateOnly(2026, 9, 4), 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider!.CreateScope();
+        var lookup = read.ServiceProvider.GetRequiredService<IApprovedLeaveDateLookup>();
+
+        var days = await lookup.GetApprovedLeaveDaysWithTypeAsync(
+            tenantId, employeeId, new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 30), TestContext.Current.CancellationToken);
+
+        days.ShouldBe(
+        [
+            new ApprovedLeaveDayDetail(new DateOnly(2026, 9, 1), "leave.type.annual"),
+            new ApprovedLeaveDayDetail(new DateOnly(2026, 9, 3), null),
+        ]);
     }
 
     private static IDataScopeService AllowAllScope()
@@ -311,6 +365,38 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
     }
 
     [Fact]
+    public async Task MonthlySummaryReport_FormatPdf_ReturnsPdfWithSameDataAsExcel()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, employeeId, new DateOnly(2026, 9, 7), new TimeOnly(9, 0), new TimeOnly(17, 0),
+                new TimeOnly(9, 0), new TimeOnly(17, 0), 8 * 60, 0, AttendanceDaySource.Manual));
+            await db.SaveChangesAsync();
+        }
+
+        _employeeReportReader.ListAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<IReadOnlyCollection<Guid>?>(), false, Arg.Any<CancellationToken>())
+            .Returns([Row(employeeId, "Ayşe", "Yılmaz")]);
+
+        using var scope = ServiceProvider!.CreateScope();
+        var provider = scope.ServiceProvider.GetServices<IReportProvider>().Single(p => p.Key == AttendanceMonthlySummaryReportProvider.ReportKey);
+        var parameters = new Dictionary<string, string> { ["year"] = "2026", ["month"] = "9", ["format"] = "pdf" };
+
+        var file = await provider.GenerateAsync(tenantId, parameters, TestContext.Current.CancellationToken);
+
+        // Excel davranışı değişmedi (bkz. MonthlySummaryReport_ComputesAggregatesFromAttendanceDays); bu yalnız yeni format seçeneği.
+        file.ContentType.ShouldBe("application/pdf");
+        file.FileName.ShouldEndWith(".pdf");
+        System.Text.Encoding.ASCII.GetString(file.Content, 0, 5).ShouldBe("%PDF-"); // gerçek QuestPDF çıktısı, sahte bayt değil
+    }
+
+    [Fact]
     public async Task ClosingReport_IncludesLeaveBucketsAndApprovalStatus()
     {
         var tenantId = Guid.NewGuid();
@@ -335,6 +421,31 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         Cell(sheet, 2, "Çalışılan gün").ShouldBe("1");
         Cell(sheet, 2, "Ücretli izin günü").ShouldBe("2");
         Cell(sheet, 2, "Ay kapatıldı mı").ShouldBe("Hayır"); // ApproveMonthlyTimesheetCommand hiç çalıştırılmadı
+    }
+
+    [Fact]
+    public async Task ClosingReport_FormatPdf_ReturnsPdf()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+        var date = new DateOnly(2026, 9, 21);
+
+        await SeedPunchedDayAsync(tenantId, employeeId, date);
+
+        _employeeReportReader.ListAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<IReadOnlyCollection<Guid>?>(), false, Arg.Any<CancellationToken>())
+            .Returns([Row(employeeId, "Mehmet", "Kaya")]);
+
+        using var scope = ServiceProvider!.CreateScope();
+        var provider = scope.ServiceProvider.GetServices<IReportProvider>().Single(p => p.Key == AttendanceMonthlyClosingReportProvider.ReportKey);
+        var parameters = new Dictionary<string, string> { ["year"] = "2026", ["month"] = "9", ["format"] = "pdf" };
+
+        var file = await provider.GenerateAsync(tenantId, parameters, TestContext.Current.CancellationToken);
+
+        file.ContentType.ShouldBe("application/pdf");
+        file.FileName.ShouldEndWith(".pdf");
+        System.Text.Encoding.ASCII.GetString(file.Content, 0, 5).ShouldBe("%PDF-");
     }
 
     private static IXLWorksheet FirstSheet(ReportFileResult file)

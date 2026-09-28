@@ -2,10 +2,12 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Assets.Application;
+using Sense.Modules.Assets.Application.Import;
 using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Assets.Infrastructure;
 using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Audit;
+using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -46,5 +48,8 @@ public sealed class AssetsModule : IModule
             typeof(AssetsPermissions).Assembly);
 
         services.AddAssetsCoreServices();
+
+        services.AddScoped<IImportTemplate, AssetImportTemplate>();
+        services.AddScoped<IImportRowHandler, AssetImportRowHandler>();
     }
 }

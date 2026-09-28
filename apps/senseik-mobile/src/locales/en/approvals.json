@@ -1,0 +1,77 @@
+{
+  "title": "My approvals",
+  "loadError": "The approval inbox could not be loaded. Please try again.",
+  "empty": "No requests awaiting approval",
+  "filters": {
+    "all": "All",
+    "leave": "Leave",
+    "overtime": "Overtime",
+    "expense": "Expense",
+    "advance": "Advance"
+  },
+  "filterWithCount": "{{label}} ({{count}})",
+  "types": {
+    "requisition": "Headcount request",
+    "assetAssignment": "Asset assignment",
+    "fallback": "Request",
+    "punchCorrection": "Missing punch"
+  },
+  "rows": {
+    "start": "Start",
+    "end": "End",
+    "amount": "Amount",
+    "date": "Day",
+    "current": "Current"
+  },
+  "attachmentsCount_one": "{{count}} document:",
+  "attachmentsCount_other": "{{count}} documents:",
+  "typeLabel": "Type",
+  "typeA11y": "Type: {{value}}",
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "approve": {
+    "error": "The request could not be approved. Please try again.",
+    "confirmTitle": "Approve request",
+    "confirmMessage": "Are you sure you want to approve this request? This cannot be undone."
+  },
+  "reject": {
+    "title": "Reject request",
+    "message": "Are you sure you want to reject this request? This cannot be undone.",
+    "reason": "Reason",
+    "reasonHint": "A reason is required to reject.",
+    "reasonPlaceholder": "Write your reason",
+    "error": "The request could not be rejected. Please try again."
+  },
+  "card": {
+    "step": "Step {{step}}",
+    "fallbackApprover": "Backup approver",
+    "unknownRequester": "Unknown",
+    "pending": "Pending"
+  },
+  "history": {
+    "pill": "History",
+    "title": "History",
+    "loadError": "The history could not be loaded. Please try again.",
+    "empty": "You haven't decided on any requests yet",
+    "outcome": {
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  },
+  "selection": {
+    "select": "Select",
+    "cancel": "Cancel",
+    "selectAll": "Select all"
+  },
+  "bulk": {
+    "approve": "Approve ({{count}})",
+    "reject": "Reject ({{count}})",
+    "approveConfirmTitle": "Approve selected requests",
+    "approveConfirmMessage": "Are you sure you want to approve {{count}} requests? This cannot be undone.",
+    "rejectTitle": "Reject selected requests",
+    "rejectMessage": "You are about to reject {{count}} requests. This cannot be undone.",
+    "error": "The requests could not be decided. Please try again."
+  }
+}

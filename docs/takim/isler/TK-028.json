@@ -1,0 +1,18 @@
+{
+  "id": "TK-028",
+  "baslik": "Mobil - performans: hedef gorme/onaylama/ilerleme takibi",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/mobil-performans",
+  "kaynak": "Kolay IK arastirmasi 2026-09-23 - performans degerlendirme mobilden yapilabiliyor, senseik-mobile'da hic yok",
+  "kabul": [
+    "Performance modulunde zaten var olan hedef (goal) API'lerini kullanan yeni bir mobil ekran: kullanicinin kendi hedeflerini goruyor.",
+    "Kullanici hedeflerini onaylayabiliyor (mevcut backend akisi varsa). [PO KARARI: backend onay akisi yok, bu kriter KAPSAM DISI birakildi, ayri iş TK-032 olarak acilacak]",
+    "Ilerleme durumu (yuzde/durum) goruntuleniyor.",
+    "Yeni backend uc noktasi GEREKIYORSA bunu yapma, SORU olarak birak - bu kart yalniz mobil UI, var olan API'leri tuketir."
+  ],
+  "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-028.md"
+}

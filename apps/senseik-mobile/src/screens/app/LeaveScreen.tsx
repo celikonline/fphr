@@ -1,66 +1,78 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+  BottomSheet,
+  EmptyState,
+  ErrorBanner,
+  PrimaryButton,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
+} from "@/components/ui";
 import {
   leaveService,
-  type EmployeeLeaveBalances,
+  type LeaveBalanceItem,
   type LeaveRequest,
-  type LeaveRequestStatus,
-  type RequestableLeaveType
+  type RequestableLeaveType,
 } from "@/services/LeaveService";
+import { sortBalancesAnnualFirst } from "@/services/HomeFeedService";
+import { LeaveBalanceCard } from "@/components/leave/LeaveBalanceCard";
+import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
+import { getApiErrorMessage } from "@/lib/apiError";
+import i18n from "@/lib/i18n";
+import { palette, text } from "@/theme/theme";
+import type { AppStackParamList } from "@/types/navigation";
+import { BalanceCarousel } from "./home/BalanceCarousel";
 
-/** `DateOnly` string the API expects ("yyyy-MM-dd"); today, as a sane default for the form. */
-function todayDateOnly(): string {
-  return new Date().toISOString().slice(0, 10);
+/** H1: only a request still awaiting a decision can be withdrawn (`POST .../requests/{id}/withdraw`). */
+export function canWithdrawLeaveRequest(request: Pick<LeaveRequest, "status">): boolean {
+  return request.status === "pending";
 }
 
-function formatDateOnly(value: string): string {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+/**
+ * B21: the "Ekler" (attachments) link used to show on every card, including hourly/annual/etc.
+ * requests that can never have a document - misleading, since most turned out empty on tap. The
+ * `/leave/me/requests` list DTO has no `attachmentCount`/`hasAttachments` field to check directly
+ * (confirmed against `LeaveRequestDto`, `LeaveRequestCore.cs:74-78`), so this matches the request's
+ * `leaveTypeId` against the requestable-types catalog's `requiresDocument` instead.
+ *
+ * This is not a heuristic - it's exact for how attachments can exist today: `LeaveRequestForm.tsx`
+ * only ever sends `documentIds` when `selectedType.requiresDocument` is true (`showDocuments =
+ * !!selectedType?.requiresDocument`), and the same is true on web (`leave-request-dialog.tsx`'s
+ * `showDocuments`/`documentIds` are both gated on `selected?.requiresDocument`). The one other way
+ * to attach a file - `POST requests/{id}/attachments` (`attachMyLeaveDocument`, used by web's edit
+ * dialog) - is itself only reachable when that same `showDocuments` gate is open, so a
+ * non-`requiresDocument` request can never end up with an attachment from either client. A type no
+ * longer in the (active-only) requestable-types list - e.g. deactivated since the request was made -
+ * defaults to `false` (hide), consistent with "don't show a link that's overwhelmingly likely to be
+ * empty".
+ */
+export function canLeaveRequestHaveAttachments(
+  leaveTypeId: string,
+  requestableTypes: Pick<RequestableLeaveType, "id" | "requiresDocument">[]
+): boolean {
+  return requestableTypes.some((type) => type.id === leaveTypeId && type.requiresDocument);
 }
 
-const STATUS_LABELS: Record<LeaveRequestStatus, string> = {
-  pending: "Onay bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-  withdrawn: "Geri çekildi",
-  cancelled: "İptal edildi"
-};
-
-const STATUS_COLORS: Record<LeaveRequestStatus, string> = {
-  pending: colors.warning,
-  approved: colors.success,
-  rejected: colors.error,
-  withdrawn: colors.textTertiary,
-  cancelled: colors.textTertiary
-};
-
+/**
+ * İzinlerim: balance cards (same carousel as the home screen; a tap shows the period breakdown),
+ * the "Yeni izin talebi" button (opens NewRequest) and the own request list with withdraw and
+ * attachments. Reloads on focus, so a request sent from NewRequest shows up on return.
+ */
 export default function LeaveScreen() {
-  const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
+  const { t } = useTranslation("leave");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const [balances, setBalances] = useState<LeaveBalanceItem[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [requestableTypes, setRequestableTypes] = useState<RequestableLeaveType[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState(todayDateOnly());
-  const [endDate, setEndDate] = useState(todayDateOnly());
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [withdrawingRequestId, setWithdrawingRequestId] = useState<string | null>(null);
+  const [balanceDetail, setBalanceDetail] = useState<LeaveBalanceItem | null>(null);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -68,21 +80,21 @@ export default function LeaveScreen() {
       const [balancesResult, requestsResult, typesResult] = await Promise.all([
         leaveService.getMyBalances(),
         leaveService.getMyRequests(),
-        leaveService.getMyRequestableLeaveTypes()
+        leaveService.getMyRequestableLeaveTypes(),
       ]);
-      setBalances(balancesResult);
+      setBalances(sortBalancesAnnualFirst(balancesResult.balances));
       setRequests(requestsResult);
       setRequestableTypes(typesResult);
-      setSelectedTypeId((current) => current ?? typesResult[0]?.id ?? null);
     } catch {
-      setError("İzin bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("leave:loadError"));
     }
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    void loadAll().finally(() => setLoading(false));
-  }, [loadAll]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadAll().finally(() => setLoading(false));
+    }, [loadAll])
+  );
 
   async function onRefresh() {
     setRefreshing(true);
@@ -90,295 +102,101 @@ export default function LeaveScreen() {
     setRefreshing(false);
   }
 
-  const selectedType = requestableTypes.find((t) => t.id === selectedTypeId) ?? null;
-
-  async function submitRequest() {
-    if (!selectedTypeId) {
-      Alert.alert("Eksik bilgi", "Lütfen bir izin türü seçin.");
-      return;
-    }
-    if (!startDate || !endDate) {
-      Alert.alert("Eksik bilgi", "Lütfen başlangıç ve bitiş tarihini girin.");
-      return;
-    }
-    if (endDate < startDate) {
-      Alert.alert("Geçersiz tarih", "Bitiş tarihi başlangıç tarihinden önce olamaz.");
-      return;
-    }
-    if (selectedType?.requiresDescription && description.trim().length === 0) {
-      Alert.alert("Eksik bilgi", "Bu izin türü için açıklama zorunludur.");
-      return;
-    }
-
-    setSubmitting(true);
+  async function withdrawRequest(requestId: string) {
+    setWithdrawingRequestId(requestId);
     try {
-      await leaveService.submitLeaveRequest({
-        leaveTypeId: selectedTypeId,
-        startDate,
-        endDate,
-        description: description.trim().length > 0 ? description.trim() : null
-      });
-      setDescription("");
+      await leaveService.withdrawLeaveRequest(requestId);
       await loadAll();
-      Alert.alert("Gönderildi", "İzin talebiniz onaya gönderildi.");
-    } catch {
-      Alert.alert("Hata", "İzin talebi gönderilemedi. Lütfen tekrar deneyin.");
+    } catch (withdrawError) {
+      Alert.alert(t("common:alerts.error"), getApiErrorMessage(withdrawError, t("withdraw.error")));
     } finally {
-      setSubmitting(false);
+      setWithdrawingRequestId(null);
     }
   }
 
+  // H1: irreversible action - confirm before withdrawing instead of acting on the first tap.
+  function confirmWithdraw(requestId: string) {
+    Alert.alert(t("withdraw.confirmTitle"), t("withdraw.confirmMessage"), [
+      { text: t("common:actions.cancel"), style: "cancel" },
+      {
+        text: t("withdraw.action"),
+        style: "destructive",
+        onPress: () => void withdrawRequest(requestId),
+      },
+    ]);
+  }
+
+  const header = <ScreenHeader title={t("title")} />;
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Screen scroll={false} header={header}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={palette.white} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-    >
-      <Text style={styles.title}>İzinlerim</Text>
+    <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
+      {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <Text style={styles.sectionTitle}>Bakiyelerim</Text>
-      {balances && balances.balances.length > 0 ? (
-        balances.balances.map((item) => (
-          <View key={item.leaveTypeCode + item.leaveTypeName} style={styles.card}>
-            <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
-            <Text style={styles.cardValue}>{item.balance.availableBalance} gün kullanılabilir</Text>
-            <Text style={styles.cardSubtext}>
-              {item.balance.totalAccrued} tahakkuk · {item.balance.totalUsed} kullanılan
-            </Text>
-          </View>
-        ))
+      <SectionHeader title={t("home:sections.balances")} />
+      {balances.length > 0 ? (
+        <BalanceCarousel items={balances} onPressItem={setBalanceDetail} />
       ) : (
-        <Text style={styles.emptyText}>Bakiye kaydı bulunamadı.</Text>
+        <Text style={styles.emptyText}>{t("balancesEmpty")}</Text>
       )}
 
-      <Text style={styles.sectionTitle}>Yeni izin talebi</Text>
-      <View style={styles.card}>
-        {requestableTypes.length === 0 ? (
-          <Text style={styles.emptyText}>Talep edebileceğiniz bir izin türü yok.</Text>
-        ) : (
-          <>
-            <Text style={styles.fieldLabel}>İzin türü</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-              {requestableTypes.map((type) => {
-                const selected = type.id === selectedTypeId;
-                return (
-                  <TouchableOpacity
-                    key={type.id}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => setSelectedTypeId(type.id)}
-                  >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{type.name}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            <Text style={styles.fieldLabel}>Başlangıç tarihi (yyyy-aa-gg)</Text>
-            <TextInput
-              style={styles.input}
-              value={startDate}
-              onChangeText={setStartDate}
-              placeholder="2026-09-16"
-              autoCapitalize="none"
-            />
-
-            <Text style={styles.fieldLabel}>Bitiş tarihi (yyyy-aa-gg)</Text>
-            <TextInput style={styles.input} value={endDate} onChangeText={setEndDate} placeholder="2026-09-18" autoCapitalize="none" />
-
-            <Text style={styles.fieldLabel}>
-              Açıklama {selectedType?.requiresDescription ? "(zorunlu)" : "(opsiyonel)"}
-            </Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Talebinizle ilgili not ekleyin"
-              multiline
-              numberOfLines={3}
-            />
-
-            <TouchableOpacity
-              style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-              onPress={() => void submitRequest()}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <Text style={styles.submitButtonText}>Talebi gönder</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        )}
+      <View style={styles.newRequest}>
+        <PrimaryButton
+          label={t("newRequest")}
+          icon="add"
+          onPress={() => navigation.navigate("NewRequest", { kind: "leave" })}
+        />
       </View>
 
-      <Text style={styles.sectionTitle}>Taleplerim</Text>
+      <SectionHeader title={t("myRequests")} />
       {requests.length === 0 ? (
-        <Text style={styles.emptyText}>Henüz izin talebiniz yok.</Text>
+        <EmptyState icon="sunny-outline" title={t("requestsEmpty")} />
       ) : (
         requests.map((request) => (
-          <View key={request.id} style={styles.card}>
-            <View style={styles.requestHeader}>
-              <Text style={styles.cardLabel}>{request.leaveTypeName ?? request.leaveTypeCode}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[request.status] }]}>
-                <Text style={styles.statusBadgeText}>{STATUS_LABELS[request.status]}</Text>
-              </View>
-            </View>
-            <Text style={styles.cardSubtext}>
-              {formatDateOnly(request.startDate)} – {formatDateOnly(request.endDate)} · {request.calculatedDays} gün
-            </Text>
-          </View>
+          <LeaveRequestListItem
+            key={request.id}
+            request={request}
+            onWithdraw={
+              canWithdrawLeaveRequest(request) ? () => confirmWithdraw(request.id) : undefined
+            }
+            isWithdrawing={withdrawingRequestId === request.id}
+            showAttachments={canLeaveRequestHaveAttachments(request.leaveTypeId, requestableTypes)}
+          />
         ))
       )}
-    </ScrollView>
+
+      <BottomSheet
+        visible={balanceDetail !== null}
+        onClose={() => setBalanceDetail(null)}
+        title={t("balanceDetail")}
+      >
+        {balanceDetail ? <LeaveBalanceCard item={balanceDetail} /> : null}
+      </BottomSheet>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  content: {
-    padding: spacing.xl,
-    paddingBottom: spacing.xxxl
-  },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.lg
-  },
-  sectionTitle: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm
-  },
-  cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary
-  },
-  cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs
-  },
-  cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs
   },
   emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary
+    ...text.bodyMuted,
+    paddingHorizontal: 20,
   },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md
+  newRequest: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error
-  },
-  fieldLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs
-  },
-  chipRow: {
-    flexDirection: "row"
-  },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginRight: spacing.sm,
-    backgroundColor: colors.gray50
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary
-  },
-  chipText: {
-    ...typography.bodySm,
-    color: colors.text
-  },
-  chipTextSelected: {
-    color: colors.white
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.white
-  },
-  textArea: {
-    minHeight: 72,
-    textAlignVertical: "top"
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    marginTop: spacing.lg
-  },
-  submitButtonDisabled: {
-    opacity: 0.6
-  },
-  submitButtonText: {
-    ...typography.button,
-    color: colors.white
-  },
-  requestHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  statusBadge: {
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2
-  },
-  statusBadgeText: {
-    ...typography.caption,
-    color: colors.white
-  }
 });

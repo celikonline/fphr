@@ -1,0 +1,17 @@
+{
+  "id": "TK-020",
+  "baslik": "Analytics - turnover gonullu/gonulsuz ayrilis kirilim eksik",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/analytics-turnover-kirilim",
+  "kaynak": "docs/analysis/kolayik-video/faz7-durum-takibi.md (satir 14-15) - 99d1/99d2 turnover KPI ayrilis turune gore (gonullu/gonulsuz) kirilim yok",
+  "kabul": [
+    "Turnover KPI sorgusu artik ayrilis turune (gonullu/gonulsuz) gore kirilim donduruyor; bu bilgi mevcut Employee/Termination kaydindaki alandan geliyor (yeni alan gerekiyorsa once var olani kontrol et, YAGNI).",
+    "Mevcut toplam turnover hesaplama DEGISMEDI, yalniz kirilim eklendi.",
+    "Sense.Modules.Analytics.Tests tek basina yesil, en az bir test gonullu/gonulsuz ayrimini dogruluyor."
+  ],
+  "birlestirme_kapisi": "modul testleri YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-020.md"
+}

@@ -491,6 +491,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
             createLeaveRequestOnBehalf(employee.id, { ...input, bypassApproval })
           }
           allowBypass={canBypassApproval}
+          allowManualDays
           requesterEmployeeId={employee.id}
           onClose={() => setAddOpen(false)}
           onSaved={() => {

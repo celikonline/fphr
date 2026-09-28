@@ -1,0 +1,45 @@
+{
+  "id": "FG-024",
+  "baslik": "Aile bilgileri (bakmakla yükümlü olunan kişiler)",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Family Info Tab: family member records' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "backend'de yok (EmployeeDetailDto yalnız MaritalStatus ve ChildCount taşıyor; aile üyesi kaydı yok).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/employees/me (MaritalStatus, ChildCount)"
+    ],
+    "gereken_yeni": [
+      "Employee modülünde FamilyMember varlığı (yakınlık, ad, doğum tarihi, T.C. kimlik (şifreli), engellilik, SGK bakmakla yükümlü bayrağı) + migration",
+      "GET /api/v1/employees/me/family (salt okuma) + İK CRUD uçları; (isteğe bağlı) çalışan değişiklik talebi workflow'u",
+      "AGİ kalktığı için bordroya doğrudan etkisi yok; özel sağlık sigortası/aile yardımı yan hakları için kullanılabilir"
+    ],
+    "izin": "Yeni 'employee.my.family' (*.my.*) + İK 'employee.family.edit'; hassas veri (T.C. kimlik) → employee.sensitive.view kuralı. KVKK: özel nitelikli veri değil ama 3. kişi verisi - aydınlatma metni gerekir."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/ProfileService.ts (getMyFamily)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Aile' sekmesi)"
+    ],
+    "navigasyon": "Profil 'Aile' sekmesi"
+  },
+  "kabul": [
+    "Aile sekmesi aile üyelerini yakınlık, ad ve doğum tarihiyle listeler; T.C. kimlik gösterilmez veya maskelenir",
+    "Kayıt yoksa sekme gizlenir",
+    "İK web'den aile üyesi ekler/düzenler (web kapsamı ayrıca)",
+    "Başkasının aile verisi 404 (backend testi)",
+    "Migration ve şifreleme alanı testleri"
+  ],
+  "tasarim_notu": "Mevcut ProfileInfoCard listesi; yakınlık ikonu (kalp, accent pembe).",
+  "buyukluk": "M - yeni varlık + migration + salt okuma mobil",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "FG-014"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

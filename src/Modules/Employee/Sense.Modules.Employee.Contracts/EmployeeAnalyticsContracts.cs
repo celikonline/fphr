@@ -6,8 +6,14 @@ public sealed record CareerPathChangeCounts(int Promotion, int LateralMove, int 
     public int Total => Promotion + LateralMove + Demotion + TitleChange;
 }
 
-/// <summary>Terminations in a period (roadmap #99 turnover KPI); <see cref="WithinFirstSixMonths"/> is the early-attrition slice (tenure &lt; 182 days at termination).</summary>
-public sealed record TerminationCounts(int Total, int WithinFirstSixMonths);
+/// <summary>
+/// Terminations in a period (roadmap #99 turnover KPI); <see cref="WithinFirstSixMonths"/> is the early-attrition
+/// slice (tenure &lt; 182 days at termination). <see cref="Voluntary"/>/<see cref="Involuntary"/> (TK-020, roadmap
+/// #99d1 "gönüllü/gönülsüz kırılım") classify each termination's existing <c>Employee.TerminationType</c> - see
+/// <c>EmployeeAnalyticsQueries.IsVoluntary</c> for the mapping. Rows whose TerminationType is somehow null count
+/// toward <see cref="Total"/> but neither bucket, so Voluntary + Involuntary may be &lt;= Total.
+/// </summary>
+public sealed record TerminationCounts(int Total, int WithinFirstSixMonths, int Voluntary = 0, int Involuntary = 0);
 
 /// <summary>Active-employee headcount for one (org unit, gender) pair (roadmap #99c "cinsiyet × pozisyon grubu"); null OrgUnitId groups employees with no unit assigned.</summary>
 public sealed record GenderByOrgUnitCount(Guid? OrgUnitId, string Gender, int Count);

@@ -1,0 +1,13 @@
+{
+  "$aciklama": "Dosya modu iş kartı (/takim-kur). Board Algo Project ise bu dosya kullanılmaz; aynı alanlar işin açıklamasına yazılır.",
+  "id": "",
+  "baslik": "",
+  "durum": "backlog",
+  "sahip": "",
+  "dal": "",
+  "kabul": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": ""
+}

@@ -1,222 +1,365 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import {
+  ActivityIndicator,
+  AppState,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
-import { leaveService, type EmployeeLeaveBalances, type LeaveBalanceItem } from "@/services/LeaveService";
-import { attendanceService, type MyTimesheetSummary } from "@/services/AttendanceService";
-import type { MainTabsParamList } from "@/types/navigation";
+import { BrandMark } from "@/components/auth/BrandMark";
+import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
+import { Avatar, ErrorBanner, IconCircleButton, Screen, SectionHeader } from "@/components/ui";
+import { leaveService, type LeaveBalanceItem } from "@/services/LeaveService";
+import { approvalsService } from "@/services/ApprovalsService";
+import { notificationsService } from "@/services/NotificationsService";
+import {
+  homeFeedService,
+  selectAnnouncements,
+  selectPeopleOffToday,
+  selectUpcomingBirthdays,
+  selectUpcomingEvents,
+  sortBalancesAnnualFirst,
+  type AnnouncementFeedItem,
+  type CompanyCalendarEntry,
+  type PersonOff,
+  type UpcomingBirthday,
+} from "@/services/HomeFeedService";
+import { toLocalDateOnly } from "@/lib/formatters";
+import { fontFor, palette, text } from "@/theme/theme";
+import type { AppStackParamList } from "@/types/navigation";
+import { ActionGrid } from "./home/ActionGrid";
+import { AnnouncementCard } from "./home/AnnouncementCard";
+import { BalanceCarousel } from "./home/BalanceCarousel";
+import { BirthdayCard } from "./home/BirthdayCard";
+import { EventCard } from "./home/EventCard";
+import { HomeMenu, type HomeMenuAction } from "./home/HomeMenu";
+import { PeopleOffCard } from "./home/PeopleOffCard";
+import { sectionFrom } from "./home/homeSections";
 
-/** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference` (Puantajım kalıbıyla aynı). */
-function currentMonthRange(): { from: string; to: string } {
+type DashboardNavigationProp = NativeStackNavigationProp<AppStackParamList>;
+
+/** N1: badge caps at "9+" instead of growing the pill indefinitely. */
+export function formatUnreadBadge(count: number): string {
+  return count > 9 ? "9+" : String(count);
+}
+
+/** Spec §4: birthdays and company events are looked up this many days ahead. */
+const LOOKAHEAD_DAYS = 30;
+
+/** `null` = the section is hidden (request failed or nothing to show), see `sectionFrom`. */
+type FeedSections = {
+  peopleOff: PersonOff[] | null;
+  birthdays: Array<UpcomingBirthday & { daysLeft: number }> | null;
+  events: CompanyCalendarEntry[] | null;
+  announcements: AnnouncementFeedItem[] | null;
+};
+
+const EMPTY_SECTIONS: FeedSections = {
+  peopleOff: null,
+  birthdays: null,
+  events: null,
+  announcements: null,
+};
+
+function daysFromToday(days: number): Date {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1);
-  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
-}
-
-function formatWorkedMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remaining = minutes % 60;
-  return `${hours} sa ${remaining} dk`;
-}
-
-/**
- * G-10-07: yalnız yıllık izin bakiyesini göstermek istiyoruz - olay bazlı izinler (evlilik, doğum,
- * mazeret ...) toplama karışmaz. `leaveTypeCode` ile yıllık türü ayırt edebiliyorsak onu döneriz;
- * ayırt edilemiyorsa (tenant'ın yıllık izin türü hiç tanımlı değilse) ilk 3 türü ayrı satır olarak
- * kartta listeleriz - kartın kendisi tek bir toplam göstermez.
- */
-function annualLeaveBalance(balances: EmployeeLeaveBalances | null): LeaveBalanceItem | null {
-  if (!balances) return null;
-  return balances.balances.find((item) => item.leaveTypeCode === "annual") ?? null;
-}
-
-function firstLeaveBalances(balances: EmployeeLeaveBalances | null, count: number): LeaveBalanceItem[] {
-  if (!balances) return [];
-  return balances.balances.slice(0, count);
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
 }
 
 export default function DashboardScreen() {
-  const { user, logout } = useAuthStore();
-  const navigation = useNavigation<BottomTabNavigationProp<MainTabsParamList>>();
+  const { t, i18n } = useTranslation("home");
+  const { user } = useAuthStore();
+  const navigation = useNavigation<DashboardNavigationProp>();
+  const selfEmployeeId = user?.employeeId ?? undefined;
 
-  const [balances, setBalances] = useState<EmployeeLeaveBalances | null>(null);
-  const [summary, setSummary] = useState<MyTimesheetSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [balances, setBalances] = useState<LeaveBalanceItem[] | null>(null);
+  const [balanceError, setBalanceError] = useState(false);
+  const [approvalsCount, setApprovalsCount] = useState(0);
+  const [sections, setSections] = useState<FeedSections>(EMPTY_SECTIONS);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
-  const loadAll = useCallback(async () => {
-    setError(null);
+  const loadUnreadCount = useCallback(async () => {
     try {
-      const [balancesResult, summaryResult] = await Promise.all([
-        leaveService.getMyBalances(),
-        attendanceService.getMyTimesheetSummary(currentMonthRange())
-      ]);
-      setBalances(balancesResult);
-      setSummary(summaryResult);
+      setUnreadCount(await notificationsService.getUnreadCount());
     } catch {
-      setError("Özet bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      // Bell badge just stays at its last known value - not worth an error banner over.
     }
   }, []);
 
+  // FG-008: the "Onaylarım" badge, refreshed the same way as the bell above - a toplu/single karar
+  // given on `ApprovalsScreen` (pushed on top of this tab, still mounted underneath) only shows up
+  // here once the user comes back to Home, which is exactly when this fires.
+  const loadApprovalsCount = useCallback(async () => {
+    try {
+      setApprovalsCount((await approvalsService.getInbox()).length);
+    } catch {
+      // Approvals badge just stays at its last known value too - same as the bell above.
+    }
+  }, []);
+
+  // N1: refresh the bell badge whenever this screen regains focus, and whenever the app comes back
+  // to the foreground while already on it - no polling interval (coordinator's explicit ask).
+  useFocusEffect(
+    useCallback(() => {
+      void loadUnreadCount();
+      void loadApprovalsCount();
+    }, [loadUnreadCount, loadApprovalsCount])
+  );
+
   useEffect(() => {
-    setLoading(true);
-    void loadAll().finally(() => setLoading(false));
-  }, [loadAll]);
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        void loadUnreadCount();
+        void loadApprovalsCount();
+      }
+    });
+    return () => subscription.remove();
+  }, [loadUnreadCount, loadApprovalsCount]);
+
+  /** Every section loads independently (spec §4): one failing request never hides the others. */
+  const loadAll = useCallback(async () => {
+    const today = toLocalDateOnly(new Date());
+    const lookaheadEnd = toLocalDateOnly(daysFromToday(LOOKAHEAD_DAYS));
+    const [balancesResult, inboxResult, leaveResult, birthdaysResult, eventsResult, feedResult] =
+      await Promise.allSettled([
+        leaveService.getMyBalances(),
+        approvalsService.getInbox(),
+        homeFeedService.getLeaveCalendar(today, today),
+        homeFeedService.getUpcomingBirthdays(LOOKAHEAD_DAYS),
+        homeFeedService.getCompanyCalendar(today, lookaheadEnd),
+        homeFeedService.getAnnouncementFeed(),
+      ]);
+
+    if (balancesResult.status === "fulfilled") {
+      setBalances(sortBalancesAnnualFirst(balancesResult.value.balances));
+      setBalanceError(false);
+    } else {
+      setBalanceError(true);
+    }
+    // Approvals badge: a failed inbox read keeps the last known count (spec §4: "hata sessiz").
+    if (inboxResult.status === "fulfilled") {
+      setApprovalsCount(inboxResult.value.length);
+    }
+    setSections({
+      peopleOff: sectionFrom(leaveResult, (items) => selectPeopleOffToday(items, selfEmployeeId)),
+      birthdays: sectionFrom(birthdaysResult, (items) => selectUpcomingBirthdays(items, today)),
+      events: sectionFrom(eventsResult, selectUpcomingEvents),
+      announcements: sectionFrom(feedResult, selectAnnouncements),
+    });
+  }, [selfEmployeeId]);
+
+  // Re-fetched on a language switch too: leave type names and the people-off labels are localized
+  // at load time (server-side via Accept-Language, client-side in `selectPeopleOffToday`).
+  useEffect(() => {
+    void loadAll();
+  }, [loadAll, i18n.language]);
 
   async function onRefresh() {
     setRefreshing(true);
-    await loadAll();
+    await Promise.all([loadAll(), loadUnreadCount()]);
     setRefreshing(false);
   }
 
-  const annualBalance = annualLeaveBalance(balances);
+  function onMenuSelect(action: HomeMenuAction) {
+    switch (action) {
+      case "profile":
+        navigation.navigate("Profile");
+        break;
+      case "notificationPreferences":
+        navigation.navigate("NotificationPreferences");
+        break;
+      case "support":
+        navigation.navigate("Support");
+        break;
+      case "logout":
+        setLogoutConfirmVisible(true);
+        break;
+    }
+  }
+
+  const firstName = user?.firstName ?? "";
+  const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
+  const bellLabel =
+    unreadCount > 0
+      ? t("topBar.notificationsUnread", { count: unreadCount })
+      : t("topBar.notifications");
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-    >
-      <Text style={styles.title}>Ana Sayfa</Text>
-      {user && (
-        <Text style={styles.welcome}>
-          Merhaba, {user.firstName} {user.lastName}
-        </Text>
-      )}
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
+    <Screen withTabBar refreshing={refreshing} onRefresh={() => void onRefresh()}>
+      <View style={styles.topBar}>
+        <View style={styles.brand}>
+          <BrandMark size={30} animated={false} />
+          <Text style={styles.wordmark} accessibilityRole="header">
+            Sense<Text style={styles.wordmarkAccent}>HR</Text>
+          </Text>
         </View>
-      )}
-
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <View style={styles.cardRow}>
-          <TouchableOpacity
-            style={[styles.card, styles.summaryCard]}
+        <View style={styles.topActions}>
+          <IconCircleButton
+            icon="calendar-outline"
             onPress={() => navigation.navigate("Leave")}
-          >
-            {annualBalance ? (
-              <>
-                <Text style={styles.cardLabel}>Yıllık izin bakiyem</Text>
-                <Text style={styles.cardValue}>{annualBalance.balance.availableBalance} gün</Text>
-                <Text style={styles.cardSubtext}>kullanılabilir</Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.cardLabel}>İzin bakiyelerim</Text>
-                {firstLeaveBalances(balances, 3).length === 0 ? (
-                  <Text style={styles.cardSubtext}>Bakiye kaydı yok</Text>
-                ) : (
-                  firstLeaveBalances(balances, 3).map((item) => (
-                    <Text key={item.leaveTypeCode + item.leaveTypeName} style={styles.cardSubtext}>
-                      {item.leaveTypeName}: {item.balance.availableBalance} gün
-                    </Text>
-                  ))
-                )}
-              </>
-            )}
-          </TouchableOpacity>
+            accessibilityLabel={t("topBar.myLeaves")}
+          />
+          <IconCircleButton
+            icon="notifications-outline"
+            onPress={() => navigation.navigate("Notifications")}
+            accessibilityLabel={bellLabel}
+            badge={unreadCount > 0 ? formatUnreadBadge(unreadCount) : undefined}
+          />
+          <IconCircleButton
+            icon="ellipsis-vertical"
+            onPress={() => setMenuVisible(true)}
+            accessibilityLabel={t("topBar.moreOptions")}
+          />
+        </View>
+      </View>
 
+      <View style={styles.hello}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Profile")}
+          accessibilityRole="button"
+          accessibilityLabel={t("hello.myProfile")}
+        >
+          <Avatar name={fullName} self size={60} radius={18} />
+        </TouchableOpacity>
+        <View style={styles.helloText}>
+          <Text style={styles.greeting} numberOfLines={1}>
+            {t("hello.greeting", { name: firstName })}
+          </Text>
           <TouchableOpacity
-            style={[styles.card, styles.summaryCard]}
-            onPress={() => navigation.navigate("Attendance")}
+            onPress={() => navigation.navigate("Profile")}
+            accessibilityRole="link"
+            accessibilityLabel={t("hello.viewProfile")}
+            hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}
           >
-            <Text style={styles.cardLabel}>Bu ay puantaj</Text>
-            <Text style={styles.cardValue}>{summary?.workedDays ?? 0} gün</Text>
-            <Text style={styles.cardSubtext}>{formatWorkedMinutes(summary?.workedMinutes ?? 0)} çalışıldı</Text>
+            <Text style={styles.profileLink}>{t("hello.viewProfile")}</Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      <SectionHeader title={t("sections.balances")} />
+      {balanceError ? (
+        <ErrorBanner message={t("balances.loadError")} onRetry={() => void onRefresh()} />
+      ) : balances === null ? (
+        <ActivityIndicator style={styles.balanceLoading} color={palette.white} />
+      ) : balances.length === 0 ? (
+        <Text style={styles.emptyBalances}>{t("balances.empty")}</Text>
+      ) : (
+        <BalanceCarousel items={balances} onPressItem={() => navigation.navigate("Leave")} />
       )}
 
-      <TouchableOpacity style={styles.logoutButton} onPress={() => logout()}>
-        <Text style={styles.logoutButtonText}>Çıkış yap</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      <SectionHeader title={t("sections.actions")} />
+      <ActionGrid
+        approvalsCount={approvalsCount}
+        onNavigate={(route) => navigation.navigate(route)}
+      />
+
+      {sections.peopleOff ? (
+        <>
+          <SectionHeader title={t("sections.peopleOff")} />
+          <PeopleOffCard people={sections.peopleOff} />
+        </>
+      ) : null}
+
+      {sections.birthdays ? (
+        <>
+          <SectionHeader title={t("sections.birthdays")} />
+          <BirthdayCard birthdays={sections.birthdays} />
+        </>
+      ) : null}
+
+      {sections.events ? (
+        <>
+          <SectionHeader title={t("sections.events")} />
+          {sections.events.map((event, index) => (
+            <EventCard key={event.id ?? `${event.date}-${index}`} event={event} />
+          ))}
+        </>
+      ) : null}
+
+      {sections.announcements ? (
+        <>
+          <SectionHeader title={t("sections.announcements")} />
+          {sections.announcements.map((announcement) => (
+            <AnnouncementCard key={announcement.id} announcement={announcement} />
+          ))}
+        </>
+      ) : null}
+
+      <HomeMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onSelect={onMenuSelect}
+      />
+      <LogoutConfirmSheet
+        visible={logoutConfirmVisible}
+        onClose={() => setLogoutConfirmVisible(false)}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  content: {
-    padding: spacing.xl,
-    paddingBottom: spacing.xxxl
-  },
-  centered: {
-    paddingVertical: spacing.xxxl,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.sm
-  },
-  welcome: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error
-  },
-  cardRow: {
+  topBar: {
     flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.xl
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg
+  brand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  summaryCard: {
-    flex: 1
+  wordmark: {
+    fontSize: 23,
+    letterSpacing: -1,
+    color: palette.white,
+    ...fontFor(800),
   },
-  cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary
+  wordmarkAccent: {
+    color: palette.brand,
   },
-  cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs
+  topActions: {
+    flexDirection: "row",
+    gap: 4,
   },
-  cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs
+  hello: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 6,
   },
-  logoutButton: {
-    backgroundColor: colors.error,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: "center"
+  helloText: {
+    flex: 1,
+    minWidth: 0,
   },
-  logoutButtonText: {
-    ...typography.button,
-    color: colors.white
-  }
+  greeting: {
+    ...text.title,
+  },
+  profileLink: {
+    marginTop: 4,
+    fontSize: 14,
+    color: palette.brandText,
+    ...fontFor(700),
+  },
+  balanceLoading: {
+    paddingVertical: 24,
+  },
+  emptyBalances: {
+    ...text.bodyMuted,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
 });

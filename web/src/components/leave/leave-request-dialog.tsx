@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Alert, Button, FileInput, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Alert, Button, FileInput, Group, Input, NumberInput, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { FileText, Paperclip, Users, X } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
@@ -54,6 +54,8 @@ interface LeaveRequestDialogProps {
   /** Saves the request; `bypassApproval` is only sent when `allowBypass` shows the switch. */
   save: (input: LeaveRequestInput, bypassApproval: boolean) => Promise<unknown>;
   allowBypass?: boolean;
+  /** Shows a manual day-count override (TK-014, on-behalf only); never set for self-service requests. */
+  allowManualDays?: boolean;
   /** The employee the leave is for; never offered as their own substitute. */
   requesterEmployeeId?: string;
   /** Resolves the substitute's name when editing/resubmitting a request that only carries the id. */
@@ -90,6 +92,7 @@ export function LeaveRequestDialog({
   preview,
   save,
   allowBypass = false,
+  allowManualDays = false,
   requesterEmployeeId,
   loadDetail,
   documentUploadScope,
@@ -108,6 +111,8 @@ export function LeaveRequestDialog({
   const [endTime, setEndTime] = useState(source?.endTime ? formatTimeOnly(source.endTime) : "");
   const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod | "">(source?.halfDayPeriod ?? "");
   const [bypassApproval, setBypassApproval] = useState(false);
+  // Untouched (null) omits `manualDays` from the payload so the server keeps using the calculated day count.
+  const [manualDays, setManualDays] = useState<number | null>(null);
   const [substitute, setSubstitute] = useState<PickedEmployee | null>(
     source?.substituteEmployeeId
       ? { id: source.substituteEmployeeId, displayName: (source as Partial<LeaveRequestDetail>).substituteName ?? "" }
@@ -246,7 +251,7 @@ export function LeaveRequestDialog({
   });
 
   const mutation = useMutation({
-    mutationFn: (input: LeaveRequestInput) => save(input, allowBypass && bypassApproval),
+    mutationFn: (input: LeaveRequestInput & { manualDays?: number }) => save(input, allowBypass && bypassApproval),
     onSuccess: onSaved,
     onError: (err) => setError(getApiErrorMessage(err, t("leave:genericError"))),
   });
@@ -281,6 +286,7 @@ export function LeaveRequestDialog({
       substituteEmployeeId: selected?.requiresSubstitute ? substitute?.id : undefined,
       // Edit mode links/unlinks live above; only a fresh submit carries the staged ids.
       documentIds: !editing && selected?.requiresDocument ? stagedDocs.map((doc) => doc.id) : undefined,
+      manualDays: allowManualDays && manualDays !== null ? manualDays : undefined,
     });
   }
 
@@ -450,6 +456,19 @@ export function LeaveRequestDialog({
                     </>
                   ) : null}
                 </Paper>
+              )}
+              {allowManualDays && (
+                <NumberInput
+                  id="leave-manual-days"
+                  label={t("leave:form.manualDays")}
+                  description={t("leave:form.manualDaysHint")}
+                  placeholder={t("leave:form.manualDaysPlaceholder")}
+                  min={0.5}
+                  step={0.5}
+                  disabled={busy}
+                  value={manualDays ?? undefined}
+                  onChange={(value) => setManualDays(typeof value === "number" ? value : null)}
+                />
               )}
               {canPreview && previewQuery.data?.teamOverlap && previewQuery.data.teamOverlap.count > 0 && (
                 <Alert color="blue" variant="light" icon={<Users size={16} />}>

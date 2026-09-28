@@ -1,3 +1,4 @@
+using Sense.Modules.Workflow.Application.ApprovalRequests;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
 using Sense.Shared.Kernel.Results;
 
@@ -31,4 +32,15 @@ public sealed record ApproverResolution(
 public interface IApproverResolver
 {
     Task<Result<ApproverResolution>> ResolveAsync(Guid tenantId, string requestType, Guid requesterEmployeeId, CancellationToken ct = default);
+}
+
+/// <summary>
+/// FG-008 decide-bulk: runs one <see cref="DecideApprovalTaskCommand"/> through the full command pipeline in its own DI
+/// scope (fresh DbContext, own UnitOfWork transaction) on behalf of the current caller, so one task's failure - a
+/// business rule or an unexpected exception - can neither roll back nor leak tracked changes into another task.
+/// Implemented by Sense.Modules.Workflow.Infrastructure.
+/// </summary>
+public interface IIsolatedApprovalDecisionRunner
+{
+    Task<Result> DecideAsync(DecideApprovalTaskCommand command, CancellationToken ct = default);
 }

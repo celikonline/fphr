@@ -23,6 +23,7 @@ public sealed class AnnouncementsDbContext(DbContextOptions<AnnouncementsDbConte
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<HelpSearchLog> HelpSearchLogs => Set<HelpSearchLog>();
     public DbSet<CompanyEvent> CompanyEvents => Set<CompanyEvent>();
+    public DbSet<Recognition> Recognitions => Set<Recognition>();
 
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();

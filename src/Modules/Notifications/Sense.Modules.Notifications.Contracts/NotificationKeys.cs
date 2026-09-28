@@ -44,15 +44,28 @@ public static class NotificationTemplateKeys
 
     /// <summary>The employee: ücret pusulası PDF attached (Payroll.PayrollPeriodPaid).</summary>
     public const string PayslipReady = "payroll.payslip_ready";
+
+    /// <summary>Members of the task's responsible role (hr/it/manager/payroll): a checklist task was assigned to them (Onboarding.OnboardingTaskAssigned).</summary>
+    public const string OnboardingTaskAssigned = "onboarding.task_assigned";
+
+    /// <summary>Members of the task's responsible role: a checklist task was completed (Onboarding.OnboardingTaskCompleted).</summary>
+    public const string OnboardingTaskCompleted = "onboarding.task_completed";
+
+    /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
+    public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
+
+    /// <summary>The other parties of an approval request (requester, approvers, deciders): someone commented on it (Workflow.ApprovalRequestCommented). In-app only.</summary>
+    public const string RequestCommentAdded = "request.comment_added";
 }
 
-/// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>
+/// <summary>Delivery channels. Web Push (browser) is not covered yet - only Expo (mobile) push.</summary>
 public static class NotificationChannels
 {
     public const string Email = "email";
     public const string InApp = "in_app";
+    public const string Push = "push";
 
-    public static IReadOnlyList<string> All { get; } = [Email, InApp];
+    public static IReadOnlyList<string> All { get; } = [Email, InApp, Push];
 }
 
 /// <summary>SignalR client method names on /hubs/notifications for this module.</summary>

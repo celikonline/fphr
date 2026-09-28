@@ -1,6 +1,7 @@
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.Corrections;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
@@ -116,6 +117,12 @@ public interface IMonthlyTimesheetApprovalRepository
 public interface ISelfCheckInRepository
 {
     void Add(SelfCheckIn checkIn);
+
+    /// <summary>The employee's latest <see cref="PunchDirection.BreakStart"/>/<see cref="PunchDirection.BreakEnd"/> row at or after <paramref name="sinceUtc"/>; null when there is none.</summary>
+    Task<SelfCheckIn?> FindLatestBreakPunchAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>The employee's <see cref="PunchDirection.BreakStart"/>/<see cref="PunchDirection.BreakEnd"/>/<see cref="PunchDirection.Out"/> rows at or after <paramref name="sinceUtc"/>, oldest first (an "out" closes an open break).</summary>
+    Task<IReadOnlyList<SelfCheckIn>> ListBreakAndOutPunchesAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 }
 
 public interface ICompensatoryWorkLedgerRepository
@@ -139,4 +146,19 @@ public interface IEqualizationPeriodRepository
     /// <summary>Closed periods whose PeriodEnd falls inside [from, to] (Payroll bridge: attributes the true-up to the month a period closes in).</summary>
     Task<IReadOnlyList<EqualizationPeriod>> ListClosedEndingInRangeAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Eksik giriş/çıkış düzeltme talepleri (FG-004).</summary>
+public interface IPunchCorrectionRequestRepository
+{
+    void Add(PunchCorrectionRequest request);
+
+    Task<PunchCorrectionRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>True when the employee already has a Pending request for <paramref name="date"/>.</summary>
+    Task<bool> HasPendingAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
+
+    /// <summary>The employee's requests whose day falls in [from, to] (either bound optional), newest submission first, at most <paramref name="take"/>.</summary>
+    Task<IReadOnlyList<PunchCorrectionRequest>> ListForEmployeeAsync(
+        Guid employeeId, DateOnly? from, DateOnly? to, int take, CancellationToken cancellationToken = default);
 }

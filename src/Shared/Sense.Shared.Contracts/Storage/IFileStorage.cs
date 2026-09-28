@@ -106,4 +106,17 @@ public interface IFileStorage
         string destinationBucketName,
         string destinationKey,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Writes bytes a module already produced in memory (e.g. a generated PDF) straight into storage under
+    /// <paramref name="key"/>, skipping the presigned-upload round trip - for system-generated files there is no
+    /// client to hand a presigned URL to. Tenant isolation and bucket auto-creation match every other operation here.
+    /// </summary>
+    Task PutObjectAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        string contentType,
+        byte[] content,
+        CancellationToken cancellationToken = default);
 }

@@ -46,6 +46,7 @@ public static class NotificationsServiceCollectionExtensions
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
         services.AddScoped<INotificationDeliveryRepository, NotificationDeliveryRepository>();
         services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
+        services.AddScoped<IPushDeviceTokenRepository, PushDeviceTokenRepository>();
         services.AddScoped<INotificationsUnitOfWork>(sp => sp.GetRequiredService<NotificationsDbContext>());
 
         services.AddSingleton<INotificationTemplateRenderer, ScribanNotificationTemplateRenderer>();
@@ -60,6 +61,14 @@ public static class NotificationsServiceCollectionExtensions
         services.AddScoped<IEmailAttachmentProvider, WorkCertificateAttachmentProvider>();
         services.AddScoped<EmailDeliverySender>();
         services.AddScoped<EmailDeliveryProcessor>();
+
+        services.AddScoped<PushDeliverySender>();
+        services.AddScoped<PushDeliveryProcessor>();
+        services.AddHttpClient<IExpoPushSender, ExpoPushSender>(c =>
+        {
+            c.BaseAddress = new Uri("https://exp.host/");
+            c.Timeout = TimeSpan.FromSeconds(10);
+        });
 
         // Same provider switch as IdentityModule (TryAdd: whichever module registers first wins, both pick the same type).
         var emailProvider = configuration.GetSection(ConfigurationSections.Email).Get<EmailOptions>()?.Provider ?? EmailProviders.Smtp;

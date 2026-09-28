@@ -38,10 +38,12 @@ export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
 export type LeaveEligibleGender = "any" | "female" | "male";
 /** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
 export type LeaveHalfDayPeriod = "morning" | "afternoon";
-export type LeaveLedgerEntryType = "openingBalance" | "accrual" | "carryOver" | "usage" | "adjustment" | "extraGrant" | "reversal";
+export type LeaveLedgerEntryType =
+  "openingBalance" | "accrual" | "carryOver" | "usage" | "adjustment" | "extraGrant" | "reversal";
 export type LeaveLedgerSource = "system" | "manual" | "import" | "request" | "overtimeConversion";
 export type LeaveRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
-export type LeaveRequestSource = "selfService" | "onBehalf" | "import" | "attendance" | "resubmission";
+export type LeaveRequestSource =
+  "selfService" | "onBehalf" | "import" | "attendance" | "resubmission";
 
 /** `LeaveBalance` projection of one PerYear type (days). */
 export interface LeaveBalance {
@@ -345,29 +347,45 @@ export async function cloneLeaveRuleSet(id: string, name: string): Promise<strin
 }
 
 export async function getEmployeeLeaveBalances(employeeId: string): Promise<EmployeeLeaveBalances> {
-  const { data } = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/employees/${employeeId}/balances`);
+  const { data } = await apiClient.get<EmployeeLeaveBalances>(
+    `${LEAVE_BASE}/employees/${employeeId}/balances`
+  );
   return data;
 }
 
 export async function getEmployeeLeaveRequests(employeeId: string): Promise<LeaveRequest[]> {
-  const { data } = await apiClient.get<LeaveRequest[]>(`${LEAVE_BASE}/employees/${employeeId}/requests`);
+  const { data } = await apiClient.get<LeaveRequest[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/requests`
+  );
   return data;
 }
 
-export async function getEmployeeLeaveLedger(employeeId: string, leaveTypeId?: string): Promise<LeaveLedgerEntry[]> {
-  const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/employees/${employeeId}/ledger`, {
-    params: leaveTypeId ? { leaveTypeId } : undefined,
-  });
+export async function getEmployeeLeaveLedger(
+  employeeId: string,
+  leaveTypeId?: string
+): Promise<LeaveLedgerEntry[]> {
+  const { data } = await apiClient.get<LeaveLedgerEntry[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/ledger`,
+    {
+      params: leaveTypeId ? { leaveTypeId } : undefined,
+    }
+  );
   return data;
 }
 
-export async function getEmployeeSickLeaveAbsenceStatus(employeeId: string): Promise<SickLeaveAbsenceStatus> {
-  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/employees/${employeeId}/sick-leave-absence-status`);
+export async function getEmployeeSickLeaveAbsenceStatus(
+  employeeId: string
+): Promise<SickLeaveAbsenceStatus> {
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(
+    `${LEAVE_BASE}/employees/${employeeId}/sick-leave-absence-status`
+  );
   return data;
 }
 
 export async function getMySickLeaveAbsenceStatus(): Promise<SickLeaveAbsenceStatus> {
-  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/me/sick-leave-absence-status`);
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(
+    `${LEAVE_BASE}/me/sick-leave-absence-status`
+  );
   return data;
 }
 
@@ -386,28 +404,48 @@ export async function getMyRequestableLeaveTypes(): Promise<RequestableLeaveType
   return data;
 }
 
-export async function previewMyLeaveRequest(input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
-  const { data } = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/me/requests/preview`, { params: input });
+export async function previewMyLeaveRequest(
+  input: LeaveRequestPreviewInput
+): Promise<LeaveRequestPreview> {
+  const { data } = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/me/requests/preview`, {
+    params: input,
+  });
   return data;
 }
 
-export async function previewEmployeeLeaveRequest(employeeId: string, input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
-  const { data } = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/employees/${employeeId}/requests/preview`, { params: input });
+export async function previewEmployeeLeaveRequest(
+  employeeId: string,
+  input: LeaveRequestPreviewInput
+): Promise<LeaveRequestPreview> {
+  const { data } = await apiClient.get<LeaveRequestPreview>(
+    `${LEAVE_BASE}/employees/${employeeId}/requests/preview`,
+    { params: input }
+  );
   return data;
 }
 
 export async function getMyLeaveLedger(leaveTypeId?: string): Promise<LeaveLedgerEntry[]> {
-  const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/me/ledger`, { params: leaveTypeId ? { leaveTypeId } : undefined });
+  const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/me/ledger`, {
+    params: leaveTypeId ? { leaveTypeId } : undefined,
+  });
   return data;
 }
 
 /** `LeaveRequestOnBehalfBody` (İşlemler → İzin Ekle); `bypassApproval` needs leave.requests.bypass_approval. */
 export interface LeaveRequestOnBehalfInput extends LeaveRequestInput {
   bypassApproval: boolean;
+  /** Overrides the system-calculated day count (TK-014); omit to keep the calculated value. */
+  manualDays?: number;
 }
 
-export async function createLeaveRequestOnBehalf(employeeId: string, input: LeaveRequestOnBehalfInput): Promise<LeaveRequest> {
-  const { data } = await apiClient.post<LeaveRequest>(`${LEAVE_BASE}/employees/${employeeId}/requests`, input);
+export async function createLeaveRequestOnBehalf(
+  employeeId: string,
+  input: LeaveRequestOnBehalfInput
+): Promise<LeaveRequest> {
+  const { data } = await apiClient.post<LeaveRequest>(
+    `${LEAVE_BASE}/employees/${employeeId}/requests`,
+    input
+  );
   return data;
 }
 
@@ -421,7 +459,10 @@ export async function submitLeaveRequest(input: MyLeaveRequestInput): Promise<Le
   return data;
 }
 
-export async function updatePendingLeaveRequest(id: string, input: LeaveRequestInput): Promise<void> {
+export async function updatePendingLeaveRequest(
+  id: string,
+  input: LeaveRequestInput
+): Promise<void> {
   await apiClient.put(`${LEAVE_BASE}/me/requests/${id}`, input);
 }
 
@@ -439,6 +480,37 @@ export async function detachMyLeaveDocument(requestId: string, documentId: strin
   await apiClient.delete(`${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}`);
 }
 
+/** `LeaveRequestAttachmentDownloadUrlDto`: short-lived (15 min) presigned link - fetched on demand, never cached. */
+export interface LeaveRequestAttachmentDownloadUrl {
+  url: string;
+  expiresAt: string;
+  fileName: string;
+  contentType: string;
+}
+
+/** Own request's attachment (leave.my.requests). 403 leave.employee.not_in_scope, 404 leave.request.not_found | leave.errors.attachment_not_found | leave.errors.document_not_found. */
+export async function getMyLeaveRequestAttachmentDownloadUrl(
+  requestId: string,
+  documentId: string
+): Promise<LeaveRequestAttachmentDownloadUrl> {
+  const { data } = await apiClient.get<LeaveRequestAttachmentDownloadUrl>(
+    `${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}/download-url`
+  );
+  return data;
+}
+
+/** Approver/HR view of an employee's request attachment (leave.requests.read + data scope). Same errors as {@link getMyLeaveRequestAttachmentDownloadUrl}. */
+export async function getEmployeeLeaveRequestAttachmentDownloadUrl(
+  employeeId: string,
+  requestId: string,
+  documentId: string
+): Promise<LeaveRequestAttachmentDownloadUrl> {
+  const { data } = await apiClient.get<LeaveRequestAttachmentDownloadUrl>(
+    `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}/attachments/${documentId}/download-url`
+  );
+  return data;
+}
+
 /** `AdjustLeaveBalanceRequest` ("Bakiye düzeltmesi"): signed days, mandatory reason. */
 export interface LeaveAdjustmentInput {
   leaveTypeId: string;
@@ -447,8 +519,14 @@ export interface LeaveAdjustmentInput {
   reason: string;
 }
 
-export async function adjustLeaveBalance(employeeId: string, input: LeaveAdjustmentInput): Promise<string> {
-  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/employees/${employeeId}/adjustments`, input);
+export async function adjustLeaveBalance(
+  employeeId: string,
+  input: LeaveAdjustmentInput
+): Promise<string> {
+  const { data } = await apiClient.post<string>(
+    `${LEAVE_BASE}/employees/${employeeId}/adjustments`,
+    input
+  );
   return data;
 }
 
@@ -472,24 +550,46 @@ export async function deleteLeaveRuleSet(id: string): Promise<void> {
 }
 
 /** Moves the employees to the rule set (leave.rule_sets.assign). */
-export async function assignLeaveRuleSet(id: string, employeeIds: string[]): Promise<LeaveRuleSetAssignmentResult> {
-  const { data } = await apiClient.post<LeaveRuleSetAssignmentResult>(`${LEAVE_BASE}/rule-sets/${id}/assign`, { employeeIds });
+export async function assignLeaveRuleSet(
+  id: string,
+  employeeIds: string[]
+): Promise<LeaveRuleSetAssignmentResult> {
+  const { data } = await apiClient.post<LeaveRuleSetAssignmentResult>(
+    `${LEAVE_BASE}/rule-sets/${id}/assign`,
+    { employeeIds }
+  );
   return { assignedCount: data.assignedCount ?? 0, warnings: data.warnings ?? [] };
 }
 
 /** "Yeni Tür ve Kural Ekle": adds a leave type to the rule set; returns the new type's id. */
-export async function addLeaveType(ruleSetId: string, settings: LeaveTypeSettings): Promise<string> {
-  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types`, settings);
+export async function addLeaveType(
+  ruleSetId: string,
+  settings: LeaveTypeSettings
+): Promise<string> {
+  const { data } = await apiClient.post<string>(
+    `${LEAVE_BASE}/rule-sets/${ruleSetId}/types`,
+    settings
+  );
   return data;
 }
 
-export async function updateLeaveType(ruleSetId: string, typeId: string, settings: LeaveTypeSettings): Promise<void> {
+export async function updateLeaveType(
+  ruleSetId: string,
+  typeId: string,
+  settings: LeaveTypeSettings
+): Promise<void> {
   await apiClient.put(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types/${typeId}`, settings);
 }
 
 /** Hides/reactivates a type without deleting it (its history and ledger rows stay put). */
-export async function setLeaveTypeDisabled(ruleSetId: string, typeId: string, disabled: boolean): Promise<void> {
-  await apiClient.put(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types/${typeId}/disabled`, { disabled });
+export async function setLeaveTypeDisabled(
+  ruleSetId: string,
+  typeId: string,
+  disabled: boolean
+): Promise<void> {
+  await apiClient.put(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types/${typeId}/disabled`, {
+    disabled,
+  });
 }
 
 // ---------------------------------------------------------------- Request detail / cancel / calendar
@@ -499,20 +599,33 @@ export async function getMyLeaveRequest(id: string): Promise<LeaveRequestDetail>
   return data;
 }
 
-export async function getEmployeeLeaveRequest(employeeId: string, id: string): Promise<LeaveRequestDetail> {
-  const { data } = await apiClient.get<LeaveRequestDetail>(`${LEAVE_BASE}/employees/${employeeId}/requests/${id}`);
+export async function getEmployeeLeaveRequest(
+  employeeId: string,
+  id: string
+): Promise<LeaveRequestDetail> {
+  const { data } = await apiClient.get<LeaveRequestDetail>(
+    `${LEAVE_BASE}/employees/${employeeId}/requests/${id}`
+  );
   return data;
 }
 
 /** Cancels a pending or approved request (leave.requests.cancel_approved); reason required, ≤500 chars. 409 leave.errors.request_not_cancellable. */
-export async function cancelLeaveRequest(employeeId: string, id: string, reason: string): Promise<void> {
+export async function cancelLeaveRequest(
+  employeeId: string,
+  id: string,
+  reason: string
+): Promise<void> {
   await apiClient.post(`${LEAVE_BASE}/employees/${employeeId}/requests/${id}/cancel`, { reason });
 }
 
 /** Leave calendar (leave.my.calendar + Calendar.ShowMenu); at most 93 days (400 leave.errors.calendar_range_too_large). */
 export async function getLeaveCalendar(query: LeaveCalendarQuery): Promise<LeaveCalendarEntry[]> {
   const { data } = await apiClient.get<LeaveCalendarEntry[]>(`${LEAVE_BASE}/calendar`, {
-    params: { from: query.from, to: query.to, ...(query.orgUnitId ? { orgUnitId: query.orgUnitId } : {}) },
+    params: {
+      from: query.from,
+      to: query.to,
+      ...(query.orgUnitId ? { orgUnitId: query.orgUnitId } : {}),
+    },
   });
   return data;
 }
@@ -549,20 +662,37 @@ export interface AbsenceInput {
 }
 
 /** leave.absences.view */
-export async function listAbsences(employeeId: string, from: string, to: string): Promise<Absence[]> {
-  const { data } = await apiClient.get<Absence[]>(`${LEAVE_BASE}/employees/${employeeId}/absences`, { params: { from, to } });
+export async function listAbsences(
+  employeeId: string,
+  from: string,
+  to: string
+): Promise<Absence[]> {
+  const { data } = await apiClient.get<Absence[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/absences`,
+    { params: { from, to } }
+  );
   return data;
 }
 
 /** leave.absences.manage */
 export async function addAbsence(employeeId: string, input: AbsenceInput): Promise<string> {
-  const { data } = await apiClient.post<{ id: string }>(`${LEAVE_BASE}/employees/${employeeId}/absences`, input);
+  const { data } = await apiClient.post<{ id: string }>(
+    `${LEAVE_BASE}/employees/${employeeId}/absences`,
+    input
+  );
   return data.id;
 }
 
 /** Corrects a record with a reversal entry (append-only, no delete); 409 leave.absence.already_reversed. */
-export async function reverseAbsence(employeeId: string, id: string, reason: string): Promise<string> {
-  const { data } = await apiClient.post<{ id: string }>(`${LEAVE_BASE}/employees/${employeeId}/absences/${id}/reverse`, { reason });
+export async function reverseAbsence(
+  employeeId: string,
+  id: string,
+  reason: string
+): Promise<string> {
+  const { data } = await apiClient.post<{ id: string }>(
+    `${LEAVE_BASE}/employees/${employeeId}/absences/${id}/reverse`,
+    { reason }
+  );
   return data.id;
 }
 
@@ -695,58 +825,105 @@ export async function withdrawMyOvertime(id: string): Promise<void> {
 
 /** leave.my.overtimes: 270 saat yıllık sınır göstergesi. */
 export async function getMyOvertimeAnnualUsage(year?: number): Promise<AnnualOvertimeUsage> {
-  const { data } = await apiClient.get<AnnualOvertimeUsage>(`${LEAVE_BASE}/me/overtimes/annual-usage`, { params: { year } });
+  const { data } = await apiClient.get<AnnualOvertimeUsage>(
+    `${LEAVE_BASE}/me/overtimes/annual-usage`,
+    { params: { year } }
+  );
   return data;
 }
 
 /** leave.overtimes.read */
 export async function getEmployeeOvertimes(employeeId: string): Promise<OvertimeRequest[]> {
-  const { data } = await apiClient.get<OvertimeRequest[]>(`${LEAVE_BASE}/employees/${employeeId}/overtimes`);
+  const { data } = await apiClient.get<OvertimeRequest[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtimes`
+  );
   return data;
 }
 
 /** leave.overtimes.read: 270 saat yıllık sınır göstergesi (çalışan kartı). */
-export async function getEmployeeOvertimeAnnualUsage(employeeId: string, year?: number): Promise<AnnualOvertimeUsage> {
-  const { data } = await apiClient.get<AnnualOvertimeUsage>(`${LEAVE_BASE}/employees/${employeeId}/overtimes/annual-usage`, { params: { year } });
+export async function getEmployeeOvertimeAnnualUsage(
+  employeeId: string,
+  year?: number
+): Promise<AnnualOvertimeUsage> {
+  const { data } = await apiClient.get<AnnualOvertimeUsage>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtimes/annual-usage`,
+    { params: { year } }
+  );
   return data;
 }
 
 /** leave.overtimes.create_on_behalf: HR/yönetici oran düzeltmesi (yalnız Pending). */
-export async function changeOvertimePayRateKind(employeeId: string, id: string, payRateKind: OvertimePayRateKind): Promise<void> {
-  await apiClient.post(`${LEAVE_BASE}/employees/${employeeId}/overtimes/${id}/pay-rate`, { payRateKind });
+export async function changeOvertimePayRateKind(
+  employeeId: string,
+  id: string,
+  payRateKind: OvertimePayRateKind
+): Promise<void> {
+  await apiClient.post(`${LEAVE_BASE}/employees/${employeeId}/overtimes/${id}/pay-rate`, {
+    payRateKind,
+  });
 }
 
 /** leave.overtimes.create_on_behalf (approval still runs). */
-export async function createOvertimeOnBehalf(employeeId: string, input: OvertimeRequestInput): Promise<OvertimeSubmission> {
-  const { data } = await apiClient.post<OvertimeSubmission>(`${LEAVE_BASE}/employees/${employeeId}/overtimes`, input);
+export async function createOvertimeOnBehalf(
+  employeeId: string,
+  input: OvertimeRequestInput
+): Promise<OvertimeSubmission> {
+  const { data } = await apiClient.post<OvertimeSubmission>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtimes`,
+    input
+  );
   return data;
 }
 
 /** leave.overtimes.convert; `minutesBasis: "full"` also needs leave.overtimes.override_payable. */
-export async function convertOvertimeToTimeOff(employeeId: string, id: string, input: OvertimeConversionInput): Promise<OvertimeConversion> {
-  const { data } = await apiClient.post<OvertimeConversion>(`${LEAVE_BASE}/employees/${employeeId}/overtimes/${id}/convert-to-time-off`, input);
+export async function convertOvertimeToTimeOff(
+  employeeId: string,
+  id: string,
+  input: OvertimeConversionInput
+): Promise<OvertimeConversion> {
+  const { data } = await apiClient.post<OvertimeConversion>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtimes/${id}/convert-to-time-off`,
+    input
+  );
   return data;
 }
 
 export async function getOvertimeConversions(employeeId: string): Promise<OvertimeConversion[]> {
-  const { data } = await apiClient.get<OvertimeConversion[]>(`${LEAVE_BASE}/employees/${employeeId}/overtime-conversions`);
+  const { data } = await apiClient.get<OvertimeConversion[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtime-conversions`
+  );
   return data;
 }
 
 /** leave.overtime_consents.manage */
 export async function getOvertimeConsents(employeeId: string): Promise<OvertimeConsent[]> {
-  const { data } = await apiClient.get<OvertimeConsent[]>(`${LEAVE_BASE}/employees/${employeeId}/overtime-consents`);
+  const { data } = await apiClient.get<OvertimeConsent[]>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtime-consents`
+  );
   return data;
 }
 
-export async function recordOvertimeConsent(employeeId: string, input: OvertimeConsentInput): Promise<string> {
-  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/employees/${employeeId}/overtime-consents`, input);
+export async function recordOvertimeConsent(
+  employeeId: string,
+  input: OvertimeConsentInput
+): Promise<string> {
+  const { data } = await apiClient.post<string>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtime-consents`,
+    input
+  );
   return data;
 }
 
 /** Written revocation notice; the API returns the updated consent with `revocationEffectiveAt`. */
-export async function revokeOvertimeConsent(employeeId: string, id: string, noticeAt: string): Promise<OvertimeConsent> {
-  const { data } = await apiClient.post<OvertimeConsent>(`${LEAVE_BASE}/employees/${employeeId}/overtime-consents/${id}/revoke`, { noticeAt });
+export async function revokeOvertimeConsent(
+  employeeId: string,
+  id: string,
+  noticeAt: string
+): Promise<OvertimeConsent> {
+  const { data } = await apiClient.post<OvertimeConsent>(
+    `${LEAVE_BASE}/employees/${employeeId}/overtime-consents/${id}/revoke`,
+    { noticeAt }
+  );
   return data;
 }
 
@@ -784,7 +961,9 @@ export interface CompanyLeaveLedgerQuery {
 }
 
 /** leave.company_ledger.read - company-wide "who is on leave / balance ranking / annual overtime limit" screen, next to "İzinlerim"/"Fazla mesailerim". */
-export async function getCompanyLeaveLedger(query: CompanyLeaveLedgerQuery): Promise<CompanyLeaveLedger> {
+export async function getCompanyLeaveLedger(
+  query: CompanyLeaveLedgerQuery
+): Promise<CompanyLeaveLedger> {
   const { data } = await apiClient.get<CompanyLeaveLedger>(`${LEAVE_BASE}/company/ledger`, {
     params: {
       year: query.year,

@@ -34,6 +34,14 @@ public static class RecruitmentDomainErrors
     public const string RequisitionNotPending = "recruitment.requisition.not_pending";
     public const string RequisitionNotCancellable = "recruitment.requisition.not_cancellable";
 
+    public const string RequisitionFieldTemplateRulesRequired = "recruitment.requisition_field_template.rules_required";
+    public const string RequisitionFieldTemplateDuplicateField = "recruitment.requisition_field_template.duplicate_field";
+    public const string RequisitionFieldTemplateRequiredFieldMustBeVisible = "recruitment.requisition_field_template.required_field_must_be_visible";
+    public const string RequisitionFieldTemplateDefaultValueRequired = "recruitment.requisition_field_template.default_value_required";
+    public const string RequisitionEmploymentTypeRequired = "recruitment.requisition.employment_type_required";
+    public const string RequisitionReasonRequired = "recruitment.requisition.reason_required";
+    public const string RequisitionJustificationRequired = "recruitment.requisition.justification_required";
+
     public const string TagNotFound = "recruitment.tag.not_found";
     public const string TagNameRequired = "recruitment.tag.name_required";
     public const string TagAlreadyInactive = "recruitment.tag.already_inactive";

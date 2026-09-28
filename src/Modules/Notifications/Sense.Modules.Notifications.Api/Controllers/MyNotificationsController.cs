@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Notifications.Application.Preferences;
+using Sense.Modules.Notifications.Application.PushDevices;
 using Sense.Modules.Notifications.Application.UserNotifications;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
@@ -9,6 +10,10 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Notifications.Api.Controllers;
 
 public sealed record UpdateNotificationPreferencesBody(IReadOnlyList<NotificationPreferenceInput> Items);
+
+public sealed record RegisterMyPushDeviceBody(string Token, string Platform, string? DeviceName);
+
+public sealed record RevokeMyPushDeviceBody(string Token);
 
 /// <summary>The caller's own in-app notifications (bell / home page) and notification settings.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -49,4 +54,19 @@ public sealed class MyNotificationsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdatePreferences([FromBody] UpdateNotificationPreferencesBody body, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new UpdateMyNotificationPreferencesCommand(body.Items), ct));
+
+    /// <summary>Registers (or re-registers) the caller's Expo push token for this device. Idempotent upsert.</summary>
+    [HttpPost("devices")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RegisterDevice([FromBody] RegisterMyPushDeviceBody body, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RegisterMyPushDeviceCommand(body.Token, body.Platform, body.DeviceName), ct));
+
+    /// <summary>
+    /// Revokes the caller's own Expo push token (e.g. on logout). Body carries the token instead of a path segment
+    /// because Expo tokens contain "[" "]" characters. Idempotent and safe for a token the caller does not own.
+    /// </summary>
+    [HttpPost("devices/revoke")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RevokeDevice([FromBody] RevokeMyPushDeviceBody body, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RevokeMyPushDeviceCommand(body.Token), ct));
 }

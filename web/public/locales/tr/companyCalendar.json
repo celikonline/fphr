@@ -8,11 +8,13 @@
   "genericError": "Takvim yüklenirken bir sorun oluştu.",
   "moreCount": "+{{count}} daha",
   "create": "Etkinlik Oluştur",
+  "edit": "Etkinliği Düzenle",
   "delete": "Sil",
   "deleteConfirmTitle": "Etkinliği sil",
   "deleteConfirmMessage": "\"{{title}}\" etkinliğini silmek istediğinize emin misiniz?",
   "deleted": "Etkinlik silindi.",
   "saved": "Etkinlik oluşturuldu.",
+  "updated": "Etkinlik güncellendi.",
   "type": {
     "companyEvent": "Şirket Etkinliği",
     "meeting": "Toplantı",

@@ -1,0 +1,18 @@
+{
+  "id": "TK-008",
+  "baslik": "Training — mentör atama ekranı",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/training-mentor-atama",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:22 (mentör atama ekranı yok)",
+  "kabul": [
+    "Var olan Employee.MentorEmployeeId alanına dayanan bir 'mentör ata' uç noktası/ekranı eklendi.",
+    "İptal geçmişi ve eğitim bitince bildirim KAPSAM DIŞI — ayrı iş.",
+    "Bir çalışana yalnız bir mentör atanabiliyor; kendine mentör atama engelleniyor.",
+    "İlgili modül test projesi tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-008.md"
+}

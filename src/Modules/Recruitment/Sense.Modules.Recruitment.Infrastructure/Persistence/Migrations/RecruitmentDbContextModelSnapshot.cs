@@ -544,6 +544,50 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                     b.ToTable("job_requisitions", "recruitment");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobRequisitions.RequisitionFieldTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("OrgUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_unit_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_requisition_field_templates");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_requisition_field_templates_tenant_id");
+
+                    b.HasIndex("TenantId", "OrgUnitId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_requisition_field_templates_tenant_id_org_unit_id");
+
+                    b.ToTable("requisition_field_templates", "recruitment");
+                });
+
             modelBuilder.Entity("Sense.Modules.Recruitment.Domain.Tags.Tag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -990,6 +1034,45 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Access");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobRequisitions.RequisitionFieldTemplate", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Recruitment.Domain.JobRequisitions.RequisitionFieldRule", "Rules", b1 =>
+                        {
+                            b1.Property<Guid>("TemplateId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("template_id");
+
+                            b1.Property<string>("Field")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("field");
+
+                            b1.Property<string>("DefaultValue")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("default_value");
+
+                            b1.Property<bool>("IsRequired")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_required");
+
+                            b1.Property<bool>("IsVisible")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_visible");
+
+                            b1.HasKey("TemplateId", "Field")
+                                .HasName("pk_requisition_field_template_rules");
+
+                            b1.ToTable("requisition_field_template_rules", "recruitment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TemplateId")
+                                .HasConstraintName("fk_requisition_field_template_rules_requisition_field_template");
+                        });
+
+                    b.Navigation("Rules");
                 });
 #pragma warning restore 612, 618
         }

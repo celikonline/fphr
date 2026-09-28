@@ -13,12 +13,13 @@ namespace Sense.Modules.Onboarding.Application.Tasks;
 public sealed class EmployeeHiredOnboardingHandler(
     IOnboardingTaskTemplateRepository templates,
     IEmployeeOnboardingTaskRepository tasks,
-    IOnboardingUnitOfWork unitOfWork) : IIntegrationEventHandler<EmployeeHired>
+    IOnboardingUnitOfWork unitOfWork,
+    IIntegrationEventOutbox outbox) : IIntegrationEventHandler<EmployeeHired>
 {
     public async Task Handle(EmployeeHired integrationEvent, CancellationToken cancellationToken)
     {
         await EmployeeLifecycleTasks.CreateAsync(
-            templates, tasks, unitOfWork, integrationEvent.TenantId, integrationEvent.EmployeeId,
+            templates, tasks, unitOfWork, outbox, integrationEvent.TenantId, integrationEvent.EmployeeId,
             OnboardingStage.Onboarding, integrationEvent.HireDate, cancellationToken);
     }
 }
@@ -28,13 +29,14 @@ public sealed class EmployeeTerminatedOffboardingHandler(
     IOnboardingTaskTemplateRepository templates,
     IEmployeeOnboardingTaskRepository tasks,
     IOnboardingUnitOfWork unitOfWork,
+    IIntegrationEventOutbox outbox,
     TimeProvider clock) : IIntegrationEventHandler<EmployeeTerminated>
 {
     public async Task Handle(EmployeeTerminated integrationEvent, CancellationToken cancellationToken)
     {
         var referenceDate = integrationEvent.TerminationDate ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         await EmployeeLifecycleTasks.CreateAsync(
-            templates, tasks, unitOfWork, integrationEvent.TenantId, integrationEvent.EmployeeId,
+            templates, tasks, unitOfWork, outbox, integrationEvent.TenantId, integrationEvent.EmployeeId,
             OnboardingStage.Offboarding, referenceDate, cancellationToken);
     }
 }
@@ -45,6 +47,7 @@ internal static class EmployeeLifecycleTasks
         IOnboardingTaskTemplateRepository templates,
         IEmployeeOnboardingTaskRepository tasks,
         IOnboardingUnitOfWork unitOfWork,
+        IIntegrationEventOutbox outbox,
         Guid tenantId,
         Guid employeeId,
         OnboardingStage stage,
@@ -58,7 +61,7 @@ internal static class EmployeeLifecycleTasks
         }
 
         await OnboardingTaskMaterializer.MaterializeAsync(
-            tenantId, templates, tasks, employeeId, stage, referenceDate, cancellationToken);
+            tenantId, templates, tasks, outbox, employeeId, stage, referenceDate, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

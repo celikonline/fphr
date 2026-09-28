@@ -7,7 +7,7 @@ import * as SecureStore from "expo-secure-store";
  */
 function logError(...args: unknown[]): void {
   if (__DEV__) {
-    logError(...args);
+    console.error(...args);
   }
 }
 
@@ -16,7 +16,7 @@ function logError(...args: unknown[]): void {
  * Android uses the default encrypted SharedPreferences backend.
  */
 const TOKEN_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
-  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
 
 // Secure Storage for sensitive data (tokens)
@@ -123,7 +123,7 @@ export const SecureStorage = {
       logError("Failed to clear secure storage:", error);
       throw error;
     }
-  }
+  },
 };
 
 // Async Storage for non-sensitive data (preferences)
@@ -208,5 +208,5 @@ export const PreferenceStorage = {
     } catch (error) {
       logError("Failed to clear preference storage:", error);
     }
-  }
+  },
 };

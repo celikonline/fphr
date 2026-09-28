@@ -1,0 +1,47 @@
+{
+  "title": "My timesheet",
+  "loadError": "Timesheet could not be loaded. Please try again.",
+  "status": {
+    "completed": "Completed",
+    "missing": "Missing",
+    "anomaly": "Anomaly",
+    "onLeave": "Worked while on leave",
+    "leave": "On leave"
+  },
+  "filters": {
+    "all": "All",
+    "missing": "Missing",
+    "anomaly": "Anomaly"
+  },
+  "filterTitle": "Filter",
+  "anomaly": {
+    "noData": "No record",
+    "missingCheckIn": "Missing clock-in",
+    "missingCheckOut": "Missing clock-out",
+    "lateArrival": "Late arrival",
+    "earlyLeave": "Early leave",
+    "lateLeave": "Late leave",
+    "overwork": "Overwork",
+    "underwork": "Underwork",
+    "unplannedWork": "Unplanned work",
+    "workedWhileOnLeave": "Worked while on leave"
+  },
+  "punchLine": "In {{checkIn}} · Out {{checkOut}}",
+  "overtime": "Overtime: {{duration}}",
+  "undertime": "Undertime: {{duration}}",
+  "dayCard": {
+    "a11yWorked": "worked time {{worked}}",
+    "worked": "Worked time",
+    "plan": "Plan: {{start}} – {{end}}",
+    "notPlanned": "Not a planned work day",
+    "requestCorrection": "Request correction"
+  },
+  "summary": {
+    "workedDays": "Days worked",
+    "workedTime": "Time worked"
+  },
+  "empty": {
+    "month": "No timesheet days recorded this month.",
+    "filter": "No days match this filter."
+  }
+}

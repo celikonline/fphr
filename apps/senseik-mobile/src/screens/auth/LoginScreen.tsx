@@ -1,19 +1,45 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { biometricService } from "@/lib/biometric";
+import { getApiProblem } from "@/lib/apiError";
+import { TenantChoice } from "@/types";
+import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
+import { AuthFooter as Footer } from "@/components/auth/AuthForm";
+import { AuthHero } from "@/components/auth/AuthShell";
+import { LoginFormPanel } from "./login/LoginFormPanel";
+import { LoginHero } from "./login/LoginHero";
+import { MfaCodePanel } from "./login/MfaCodePanel";
+import { TenantChoicePanel } from "./login/TenantChoicePanel";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<"email" | "password" | "mfaCode" | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const { login, isLoading } = useAuthStore();
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const {
+    login,
+    completeMfa,
+    clearMfaChallenge,
+    isLoading,
+    tenantChoices,
+    clearTenantChoices,
+    mfaToken,
+  } = useAuthStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkBiometric = async () => {
       const available = await biometricService.isBiometricAvailable();
       setBiometricAvailable(available.available);
@@ -21,99 +47,157 @@ export default function LoginScreen({ navigation }: Props) {
     checkBiometric();
   }, []);
 
-  const handleLogin = async () => {
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (formError) setFormError(null);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (formError) setFormError(null);
+  };
+
+  const handleLogin = async (tenantSlug?: string) => {
     if (!email || !password) {
-      Alert.alert("Hata", "Lütfen e-posta ve şifrenizi girin");
+      setFormError(t("errors.credentialsRequired"));
       return;
     }
 
     try {
-      await login(email, password);
+      // Resolves to "ok" (store marks the session authenticated - navigation reacts to that),
+      // "select_tenant" (store fills `tenantChoices`, rendered below instead of the form), or
+      // "mfaRequired" (store fills `mfaToken`, the code-entry step below replaces the form).
+      await login(email, password, tenantSlug);
     } catch {
-      // Generic message: backend/axios errors can leak status codes, hosts or endpoint
-      // details into screenshots, and precise messages enable user enumeration.
-      Alert.alert("Giriş başarısız", "E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
+      // Generic message: backend/axios errors can leak status codes, hosts or endpoint details into
+      // screenshots, and precise messages enable user enumeration.
+      setFormError(t("errors.invalidCredentials"));
     }
   };
 
-  const handleBiometricLogin = async () => {
+  const handleSelectTenant = (tenant: TenantChoice) => {
+    void handleLogin(tenant.slug);
+  };
+
+  const handleMfaCodeChange = (value: string) => {
+    setMfaCode(value.replace(/[^0-9]/g, "").slice(0, 6));
+    if (mfaError) setMfaError(null);
+  };
+
+  const handleMfaSubmit = async () => {
+    if (mfaCode.length !== 6) return;
+
+    try {
+      await completeMfa(mfaCode);
+    } catch (error) {
+      const problem = getApiProblem(error);
+      if (problem?.code === "identity.mfa.token_expired") {
+        // The challenge itself expired (not the code): only a fresh login can issue a new one.
+        clearMfaChallenge();
+        setMfaCode("");
+        setFormError(t("errors.mfaExpired"));
+      } else {
+        setMfaCode("");
+        setMfaError(t("errors.mfaInvalidCode"));
+      }
+    }
+  };
+
+  const handleCancelMfa = () => {
+    setFormError(null);
+    setMfaError(null);
+    setMfaCode("");
+    clearMfaChallenge();
+  };
+
+  const handleBiometricLogin = () => {
     if (!email) {
-      Alert.alert("Hata", "Lütfen önce e-posta adresinizi girin");
+      setFormError(t("errors.emailRequiredForBiometric"));
       return;
     }
     navigation.navigate("BiometricPrompt", { email });
   };
 
+  const handleClearTenantChoices = () => {
+    setFormError(null);
+    clearTenantChoices();
+  };
+
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
-      <Text style={{ fontSize: 28, fontWeight: "bold", marginBottom: 20 }}>SenseİK Mobile</Text>
-
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          marginBottom: 15,
-          borderRadius: 8
-        }}
-        placeholder="E-posta"
-        value={email}
-        onChangeText={setEmail}
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          marginBottom: 20,
-          borderRadius: 8
-        }}
-        placeholder="Şifre"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        editable={!isLoading}
-      />
-
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#0066cc",
-          padding: 15,
-          borderRadius: 8,
-          alignItems: "center",
-          marginBottom: 10
-        }}
-        onPress={handleLogin}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Giriş yap</Text>
-        )}
-      </TouchableOpacity>
-
-      {biometricAvailable && (
-        <TouchableOpacity
-          style={{
-            backgroundColor: "#34c759",
-            padding: 15,
-            borderRadius: 8,
-            alignItems: "center",
-            marginBottom: 10
-          }}
-          onPress={handleBiometricLogin}
-          disabled={isLoading}
+    <AuthBackdrop>
+      <SafeAreaView style={styles.flexOne} edges={["top", "bottom"]}>
+        <KeyboardAvoidingView
+          style={styles.flexOne}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Parmak izi ile giriş yap</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-        <Text style={{ color: "#0066cc", textAlign: "center" }}>Şifremi unuttum</Text>
-      </TouchableOpacity>
-    </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {mfaToken ? (
+              <>
+                <AuthHero />
+                <MfaCodePanel
+                  code={mfaCode}
+                  error={mfaError}
+                  focused={focusedField === "mfaCode"}
+                  isLoading={isLoading}
+                  onChangeCode={handleMfaCodeChange}
+                  onFocus={() => setFocusedField("mfaCode")}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmit={() => handleMfaSubmit()}
+                  onCancel={handleCancelMfa}
+                />
+                <Footer />
+              </>
+            ) : tenantChoices ? (
+              <>
+                <AuthHero />
+                <TenantChoicePanel
+                  tenants={tenantChoices}
+                  onSelect={handleSelectTenant}
+                  isLoading={isLoading}
+                  onCancel={handleClearTenantChoices}
+                />
+                <Footer />
+              </>
+            ) : (
+              <>
+                <LoginHero />
+                <LoginFormPanel
+                  email={email}
+                  password={password}
+                  showPassword={showPassword}
+                  focusedField={focusedField}
+                  formError={formError}
+                  isLoading={isLoading}
+                  biometricAvailable={biometricAvailable}
+                  passwordRef={passwordRef}
+                  onEmailChange={handleEmailChange}
+                  onPasswordChange={handlePasswordChange}
+                  onFocusField={(field) => setFocusedField(field)}
+                  onBlurField={() => setFocusedField(null)}
+                  onToggleShowPassword={() => setShowPassword((value) => !value)}
+                  onSubmit={() => handleLogin()}
+                  onBiometricLogin={handleBiometricLogin}
+                  onForgotPassword={() => navigation.navigate("ForgotPassword")}
+                />
+                <Footer />
+              </>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthBackdrop>
   );
 }
+
+const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+});

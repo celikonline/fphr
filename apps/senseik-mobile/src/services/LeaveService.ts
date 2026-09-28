@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import { leaveTypeDisplayName } from "@/lib/leaveTypeNames";
 
 /**
  * Leave module (self-service): mirrors `LeaveControllers.cs`'s `/leave/me` group
@@ -31,8 +32,17 @@ export type LeaveTypeCode =
 
 export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
 export type LeaveRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
+/** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
+export type LeaveHalfDayPeriod = "morning" | "afternoon";
 
-/** `LeaveBalance` projection of one PerYear type (days). */
+/**
+ * `LeaveBalance` projection of one PerYear type (days). `totalAccrued`/`totalUsed` are LIFETIME
+ * sums (or period sums for "resets each period" types - see `LeaveBalanceEngine.Project`), so they
+ * generally do NOT add up to `availableBalance`; the fields that do are the period-scoped ones:
+ * `availableBalance = carriedOverIntoPeriod + lastPeriodAccrued + extraGrants + adjustments -
+ * currentPeriodUsed - futureApprovedInPeriod` (`LeaveBalanceEngine.cs:239-256`, server-computed -
+ * the mobile app never recomputes it, only breaks it down for display, B8).
+ */
 export interface LeaveBalance {
   leaveTypeId: string;
   currentPeriodFrom: string;
@@ -40,16 +50,34 @@ export interface LeaveBalance {
   nextAccrualDate: string;
   totalAccrued: number;
   totalUsed: number;
+  /** Carried over from the previous period into this one. */
+  carriedOverIntoPeriod: number;
+  /** This period's accrual (may differ from lifetime `totalAccrued`). */
+  lastPeriodAccrued: number;
+  /** Manually granted extra days in this period. */
+  extraGrants: number;
+  /** Manual balance corrections in this period (opening balance included); signed - can be negative. */
+  adjustments: number;
+  /** Days used so far in this period (may differ from lifetime `totalUsed`). */
+  currentPeriodUsed: number;
+  /** Approved leave with a future start date in this period - already subtracted from `availableBalance`. */
+  futureApprovedInPeriod: number;
   currentBalance: number;
   availableBalance: number;
   negativeBalanceLimit?: number | null;
 }
 
-/** `LeaveBalanceDto`: `leaveTypeName` may be a raw resource key for seeded types; `getMyBalances` resolves it (`leaveTypeDisplayName`). */
+/**
+ * `LeaveBalanceDto`: `leaveTypeName` may be a raw resource key for seeded types; `getMyBalances`
+ * resolves it (`leaveTypeDisplayName`). `pendingDays`: days of the employee's still-pending (not
+ * yet decided) requests of this type - not yet deducted from `balance.availableBalance` by this
+ * DTO itself, but `LeaveRequestRules` deducts it when validating a new request. Absent on older API builds.
+ */
 export interface LeaveBalanceItem {
   leaveTypeName: string;
   leaveTypeCode: LeaveTypeCode;
   balance: LeaveBalance;
+  pendingDays?: number;
 }
 
 export interface EmployeeLeaveBalances {
@@ -94,44 +122,137 @@ export interface RequestableLeaveType {
   requiresDescription: boolean;
   requiresDocument: boolean;
   countsNonWorkingDays: boolean;
+  /** "Vekil" gerektiren türler; absent on older API builds (treated as `false`, mirrors `web/src/services/leave.service.ts`). */
+  requiresSubstitute?: boolean;
 }
 
-/** Self-service submit body (`LeaveRequestBody`); `previousRequestId` resubmits a rejected own request. */
+/**
+ * Self-service submit body (`LeaveRequestBody`); `previousRequestId` resubmits a rejected own
+ * request. `halfDayPeriod` is required when the selected type's `unit` is `"halfDay"`; `startTime`/
+ * `endTime` ("HH:mm:ss") when it's `"hourly"` (start/end date are the same single day in both
+ * cases). `substituteEmployeeId` is required when the type's `requiresSubstitute` is set
+ * (`LeaveRequestRules.ValidateSubstituteAsync` - server rejects a missing substitute, the requester
+ * themself, an inactive employee, or one already on leave over the same dates). `documentIds`
+ * (uploaded via `DocumentService.uploadMyDocument`) is required when `requiresDocument` is set.
+ */
 export interface MyLeaveRequestInput {
   leaveTypeId: string;
   startDate: string;
   endDate: string;
   description: string | null;
+  halfDayPeriod?: LeaveHalfDayPeriod;
+  startTime?: string;
+  endTime?: string;
+  substituteEmployeeId?: string;
+  documentIds?: string[];
   previousRequestId?: string | null;
 }
 
 /**
- * Turkish names of the seeded leave-type resource keys (mirror of `leave.type.*` in SharedResource.resx; the mobile
- * app has no i18n and is Turkish-only). The leave API returns these keys raw on `/me/balances` and `/me/leave-types`
- * (the web resolves them with its own i18n), so the service resolves them before the screens render them.
+ * `LeaveRequestPreviewResponse` (`GET /leave/me/requests/preview`): live day-count preview shown
+ * while filling the form (B-mobil-006) - `days` is what will actually be deducted (e.g. Sunday-only
+ * "full day" requests can preview `0` when the day isn't a working day); `warnings[].message` is
+ * already localized server-side. Mirrors `web/src/services/leave.service.ts`'s `LeaveRequestPreview`
+ * (mobile only reads `days`/`warnings`, not `weeklyRestDays`/`publicHolidayDays`/`teamOverlap`).
  */
-const LEAVE_TYPE_NAMES: Readonly<Record<string, string>> = {
-  "leave.type.annual": "Yıllık izin",
-  "leave.type.excuse": "Mazeret izni",
-  "leave.type.sick": "Hastalık izni",
-  "leave.type.job_search": "Yeni iş arama izni",
-  "leave.type.marriage": "Evlilik izni",
-  "leave.type.bereavement": "Ölüm izni",
-  "leave.type.paternity": "Babalık izni",
-  "leave.type.maternity": "Doğum izni",
-  "leave.type.postnatal_unpaid": "Doğum sonrası ücretsiz izin",
-  "leave.type.paid_military_service": "Bedelli askerlik izni",
-  "leave.type.unpaid": "Ücretsiz izin",
-  "leave.type.foster_care": "Koruyucu aile izni",
-  "leave.type.breastfeeding": "Süt izni",
-  "leave.type.disabled_child": "Engelli/süreğen hastalıklı çocuk izni",
-  "leave.type.template.remote_work": "Uzaktan Çalışma",
-  "leave.type.template.birthday": "Doğum günü izni",
-};
+export interface LeaveRequestPreview {
+  days: number;
+  weeklyRestDays: number;
+  publicHolidayDays: number;
+  warnings: { code: string; message: string }[];
+}
 
-/** Resolves a seeded leave-type resource key to its Turkish name; free-form (user-entered) names pass through. */
-export function leaveTypeDisplayName(name: string): string {
-  return LEAVE_TYPE_NAMES[name] ?? name;
+export interface LeaveRequestPreviewInput {
+  leaveTypeId: string;
+  start: string;
+  end: string;
+  startTime?: string;
+  endTime?: string;
+  halfDayPeriod?: LeaveHalfDayPeriod;
+}
+
+/** `LeaveRequestAttachmentDto` (`LeaveRequestAttachments.cs:12`): one file linked to a request. */
+export interface LeaveRequestAttachment {
+  documentId: string;
+  fileName: string;
+  attachedAt: string;
+}
+
+/**
+ * `LeaveRequestDetailDto` (`GET /leave/employees/{employeeId}/requests/{id}` and
+ * `GET /leave/me/requests/{id}`) - A1/senseik-mobile-011: only the field mobile needs
+ * (`attachments`); the rest of the (much larger) DTO isn't modeled here.
+ */
+export interface LeaveRequestDetail {
+  attachments?: LeaveRequestAttachment[] | null;
+}
+
+/**
+ * `download-url` response (senseik-mobile-011): a 15-minute presigned link to the attachment's
+ * bytes. Never cache this - fetch it fresh on every "open" tap and never log/persist `url` (it
+ * carries a signature), same rule as `DocumentService.ts`'s upload presigned URL.
+ */
+export interface LeaveAttachmentDownloadUrl {
+  url: string;
+  expiresAt: string;
+  fileName: string;
+  contentType: string;
+}
+
+/** TK-031: overtime lives in the Leave module (`MyOvertimeController.cs`), not Attendance - see TK-031 handoff. */
+const OVERTIME_BASE = `${LEAVE_BASE}/me/overtimes`;
+
+/** Mirrors `OvertimeRequestStatus` (Sense.Modules.Leave.Domain.Overtime), camelCase JsonStringEnumConverter. */
+export type OvertimeRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
+
+/**
+ * 4857 md.41 ücret oranı: Rate50 = %50 fazlası (asıl m.41 fazla çalışma, haftalık 45 saati aşan
+ * kısım - varsayılan), Rate25 = %25 fazlası (fazla sürelerle çalışma, sözleşmeyle kısaltılmış
+ * haftalık süre üstü). Mirrors web's `OvertimePayRateKind` (`web/src/services/leave.service.ts`).
+ */
+export type OvertimePayRateKind = "rate25" | "rate50";
+
+export const OVERTIME_DEFAULT_PAY_RATE_KIND: OvertimePayRateKind = "rate50";
+
+/** `OvertimeRequestDto` (`OvertimeRequestFeatures.cs`). */
+export interface OvertimeRequest {
+  id: string;
+  employeeId: string;
+  workDate: string;
+  startTime: string;
+  durationMinutes: number;
+  startAt: string;
+  endAt: string;
+  dayKind: "workday" | "weeklyRest" | "publicHoliday";
+  overlapWithScheduleMinutes: number;
+  payableMinutes: number;
+  description?: string | null;
+  status: OvertimeRequestStatus;
+  submittedAt: string;
+  decidedAt?: string | null;
+  payRateKind: OvertimePayRateKind;
+  payRateMultiplier: number;
+}
+
+/** `OvertimeRequestBody` - the request payload for `POST /leave/me/overtimes`. */
+export interface OvertimeRequestInput {
+  workDate: string;
+  startTime: string;
+  durationMinutes: number;
+  description?: string | null;
+  payRateKind?: OvertimePayRateKind;
+}
+
+/**
+ * `OvertimeSubmissionDto`: non-blocking findings (`leave.warnings.*` codes) returned alongside a
+ * successfully submitted overtime request - e.g. missing written consent, annual limit exceeded.
+ * These never block submission; show them to the employee after a successful submit.
+ */
+export interface OvertimeSubmissionResult {
+  id: string;
+  overlapWithScheduleMinutes: number;
+  payableMinutes: number;
+  warnings: string[];
 }
 
 export class LeaveService {
@@ -139,7 +260,10 @@ export class LeaveService {
     const response = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/me/balances`);
     return {
       ...response.data,
-      balances: response.data.balances.map((item) => ({ ...item, leaveTypeName: leaveTypeDisplayName(item.leaveTypeName) })),
+      balances: response.data.balances.map((item) => ({
+        ...item,
+        leaveTypeName: leaveTypeDisplayName(item.leaveTypeName),
+      })),
     };
   }
 
@@ -153,6 +277,13 @@ export class LeaveService {
     return response.data.map((type) => ({ ...type, name: leaveTypeDisplayName(type.name) }));
   }
 
+  async previewMyLeaveRequest(input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
+    const response = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/me/requests/preview`, {
+      params: input,
+    });
+    return response.data;
+  }
+
   async submitLeaveRequest(input: MyLeaveRequestInput): Promise<LeaveRequest> {
     const response = await apiClient.post<LeaveRequest>(`${LEAVE_BASE}/me/requests`, input);
     return response.data;
@@ -160,6 +291,73 @@ export class LeaveService {
 
   async withdrawLeaveRequest(id: string): Promise<void> {
     await apiClient.post(`${LEAVE_BASE}/me/requests/${id}/withdraw`);
+  }
+
+  /** A1 (onaycı): Manager-scoped detail read, used only to surface a leave task's `attachments`. */
+  async getEmployeeLeaveRequest(
+    employeeId: string,
+    requestId: string
+  ): Promise<LeaveRequestDetail> {
+    const response = await apiClient.get<LeaveRequestDetail>(
+      `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: self-service detail read, used only to lazily surface a request's `attachments`. */
+  async getMyLeaveRequest(requestId: string): Promise<LeaveRequestDetail> {
+    const response = await apiClient.get<LeaveRequestDetail>(
+      `${LEAVE_BASE}/me/requests/${requestId}`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: onaycı/İK - manager-scoped presigned download URL for one attachment. */
+  async getEmployeeAttachmentDownloadUrl(
+    employeeId: string,
+    requestId: string,
+    documentId: string
+  ): Promise<LeaveAttachmentDownloadUrl> {
+    const response = await apiClient.get<LeaveAttachmentDownloadUrl>(
+      `${LEAVE_BASE}/employees/${employeeId}/requests/${requestId}/attachments/${documentId}/download-url`
+    );
+    return response.data;
+  }
+
+  /** senseik-mobile-011: talep sahibi - self-service presigned download URL for one attachment. */
+  async getMyAttachmentDownloadUrl(
+    requestId: string,
+    documentId: string
+  ): Promise<LeaveAttachmentDownloadUrl> {
+    const response = await apiClient.get<LeaveAttachmentDownloadUrl>(
+      `${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}/download-url`
+    );
+    return response.data;
+  }
+
+  /** TK-031: the caller's own overtime requests, newest first (server order). */
+  async getMyOvertimeRequests(): Promise<OvertimeRequest[]> {
+    const response = await apiClient.get<OvertimeRequest[]>(OVERTIME_BASE);
+    return response.data;
+  }
+
+  /**
+   * TK-031 (web parity): submits an overtime request. The form lets the employee pick `payRateKind`
+   * (defaulting to `rate50`); it's sent explicitly here rather than relying on the backend's own C#
+   * default parameter, since that default only applies when System.Text.Json can resolve it from
+   * the record's constructor, which is more fragile to depend on across API versions.
+   */
+  async submitOvertimeRequest(input: OvertimeRequestInput): Promise<OvertimeSubmissionResult> {
+    const response = await apiClient.post<OvertimeSubmissionResult>(OVERTIME_BASE, {
+      ...input,
+      payRateKind: input.payRateKind ?? OVERTIME_DEFAULT_PAY_RATE_KIND,
+    });
+    return response.data;
+  }
+
+  /** TK-031: withdraws a still-pending overtime request. */
+  async withdrawOvertimeRequest(id: string): Promise<void> {
+    await apiClient.post(`${OVERTIME_BASE}/${id}/withdraw`);
   }
 }
 

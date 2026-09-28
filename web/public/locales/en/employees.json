@@ -537,6 +537,10 @@
         "invalid": "The IBAN is invalid; check its length (TR + 24 digits) and check digits.",
         "countryUnsupported": "Only IBANs starting with TR are accepted for now."
       }
+    },
+    "expense": {
+      "title": "Expenses and advances",
+      "empty": "No expense or advance requests yet."
     }
   },
   "customFields": {
@@ -613,7 +617,7 @@
       "type": "Termination type",
       "typeHint": "Left empty, the reason's default applies.",
       "sgkExitCode": "SGK exit code",
-      "sgkExitCodeHint": "Comes from the chosen reason's verified SGK code table; read-only.",
+      "sgkExitCodeHint": "Comes from the verified SGK code table for the chosen reason and termination type; changing the type updates the code. Read-only.",
       "sgkSubCode": "SGK sub-code",
       "sgkSubCodeHint": "This reason has more than one valid SGK code - pick one.",
       "sgkSubCodeRequired": "Pick an SGK sub-code for this reason.",
@@ -682,7 +686,12 @@
         "status": "Period status",
         "gross": "Gross",
         "net": "Net",
-        "employerCost": "Employer cost"
+        "employerCost": "Employer cost",
+        "delivery": "Payslip"
+      },
+      "delivery": {
+        "shared": "Shared",
+        "notShared": "Not shared"
       },
       "download": "Download",
       "downloadError": "The payslip could not be downloaded."

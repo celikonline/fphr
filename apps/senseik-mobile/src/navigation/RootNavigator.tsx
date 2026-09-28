@@ -2,8 +2,16 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
+import { BrandMark } from "@/components/auth/BrandMark";
+import { palette } from "@/theme/theme";
+import { NotchedTabBar } from "@/navigation/NotchedTabBar";
+import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
+import { navigationRef } from "@/navigation/navigationRef";
+import { usePushTapNavigation } from "@/navigation/usePushTapNavigation";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -23,11 +31,52 @@ import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
 import ProfileScreen from "@/screens/app/ProfileScreen";
 import SupportScreen from "@/screens/app/SupportScreen";
 import CheckInScreen from "@/screens/app/CheckInScreen";
+import PeopleScreen from "@/screens/app/PeopleScreen";
+import ShiftScreen from "@/screens/app/ShiftScreen";
+import GoalsScreen from "@/screens/app/GoalsScreen";
+import NotificationsScreen from "@/screens/app/NotificationsScreen";
+import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
+import RequestsScreen from "@/screens/app/RequestsScreen";
+import NewRequestScreen from "@/screens/app/NewRequestScreen";
+import ApprovalHistoryScreen from "@/screens/app/approvals/ApprovalHistoryScreen";
+import RequestDetailScreen from "@/screens/app/requests/RequestDetailScreen";
+
+// expo-splash-screen's default `imageWidth` (dp); splash-icon.png is the BrandMark's full 40-unit box.
+const SPLASH_MARK_SIZE = 100;
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
+
+/**
+ * Whether the root spinner (full-screen, replaces the whole navigator) should render instead of the
+ * Auth/App navigator stack. Gated ONLY on the initial `checkAuth()` finishing (`appReady`) - never on
+ * `isLoading` from later store actions (`login`, `completeMfa`, `logout`, `refreshToken`,
+ * `loginWithBiometric`). Those set `isLoading` on the SAME screen the user is already looking at;
+ * gating this splash on `isLoading` used to swap the whole navigator out for the spinner the instant
+ * `login`/`completeMfa` started, unmounting `LoginScreen` and wiping its local state (typed
+ * email/password/MFA code, the inline error banner) before the request even resolved - B14/B15.
+ * Those actions show their own inline spinner instead (`LoginScreen`'s submit button).
+ * Exported as a pure function so the fix is unit-testable without mounting the full navigator.
+ */
+export function shouldShowRootSplash(appReady: boolean): boolean {
+  return !appReady;
+}
+
+export { resolveStatusBarStyle };
+
+/**
+ * B18: the app was observed reverting to the wrong status bar style after returning from the
+ * background. `expo-status-bar`'s declarative
+ * `<StatusBar style={...}>` only re-applies the native style when its own prop changes - it never
+ * changes here across a background/foreground cycle, so nothing re-asserts it if anything else
+ * (the OS, or a native dialog window opened earlier) altered the status bar appearance while
+ * backgrounded. Re-apply it imperatively whenever the app becomes active again.
+ */
+export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): boolean {
+  return nextAppState === "active";
+}
 
 function AuthNavigator() {
   return (
@@ -44,101 +93,61 @@ function AuthNavigator() {
 }
 
 function MainTabsNavigator() {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
+      tabBar={(props) => <NotchedTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: "#0066cc",
-        tabBarInactiveTintColor: "#999999",
-        headerShown: true,
+        headerShown: false,
+        // The custom tab bar overlays the scene (its notch corners are transparent), so the scene
+        // behind it must be the dark backdrop, not the default light theme background.
+        sceneStyle: { backgroundColor: palette.night },
       }}
     >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          title: "Anasayfa",
-          tabBarLabel: "Anasayfa",
-        }}
-      />
-      <Tab.Screen
-        name="Attendance"
-        component={AttendanceScreen}
-        options={{
-          title: "Puantaj",
-          tabBarLabel: "Puantaj",
-        }}
-      />
-      <Tab.Screen
-        name="Leave"
-        component={LeaveScreen}
-        options={{
-          title: "İzin",
-          tabBarLabel: "İzin",
-        }}
-      />
-      <Tab.Screen
-        name="Payroll"
-        component={PayrollScreen}
-        options={{
-          title: "Bordro",
-          tabBarLabel: "Bordro",
-        }}
-      />
-      <Tab.Screen
-        name="Approvals"
-        component={ApprovalsScreen}
-        options={{
-          title: "Onaylarım",
-          tabBarLabel: "Onaylarım",
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: "Profil",
-          tabBarLabel: "Profil",
-        }}
-      />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{ title: t("tabs.home") }} />
+      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: t("tabs.checkIn") }} />
     </Tab.Navigator>
   );
 }
 
 function AppNavigator() {
   return (
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: true,
-      }}
-    >
-      <AppStack.Screen
-        name="MainTabs"
-        component={MainTabsNavigator}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
-      <AppStack.Screen
-        name="CheckIn"
-        component={CheckInScreen}
-        options={{ title: "Giriş / Çıkış" }}
-      />
+    // Every stack screen draws its own header (`ScreenHeader`) - see spec §3.
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      <AppStack.Screen name="MainTabs" component={MainTabsNavigator} />
+      <AppStack.Screen name="Attendance" component={AttendanceScreen} />
+      <AppStack.Screen name="Leave" component={LeaveScreen} />
+      <AppStack.Screen name="Payroll" component={PayrollScreen} />
+      <AppStack.Screen name="Approvals" component={ApprovalsScreen} />
+      <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="Requests" component={RequestsScreen} />
+      <AppStack.Screen name="People" component={PeopleScreen} />
+      <AppStack.Screen name="Shift" component={ShiftScreen} />
+      <AppStack.Screen name="Goals" component={GoalsScreen} />
+      <AppStack.Screen name="Support" component={SupportScreen} />
+      <AppStack.Screen name="Notifications" component={NotificationsScreen} />
+      <AppStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+      <AppStack.Screen name="NewRequest" component={NewRequestScreen} />
+      <AppStack.Screen name="ApprovalHistory" component={ApprovalHistoryScreen} />
+      <AppStack.Screen name="RequestDetail" component={RequestDetailScreen} />
     </AppStack.Navigator>
   );
 }
 
 export function RootNavigator() {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { t } = useTranslation();
+  const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
         await checkAuth();
-      } catch (error) {
+      } catch {
+        // Never log the error object here either - `checkAuth` already stores it in `error` state.
         if (__DEV__) {
-          console.error("Failed to check authentication:", error);
+          console.error("Failed to check authentication.");
         }
       } finally {
         setAppReady(true);
@@ -148,39 +157,83 @@ export function RootNavigator() {
     initializeApp();
   }, [checkAuth]);
 
-  if (!appReady || isLoading) {
+  const statusBarStyle = resolveStatusBarStyle();
+
+  // B18: see `shouldReapplyStatusBarOnAppStateChange` - re-assert the current style whenever the app
+  // returns to the foreground, since nothing else in this component's own props changes across a
+  // background/foreground cycle to trigger `<StatusBar>` to re-apply it natively.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (shouldReapplyStatusBarOnAppStateChange(nextAppState)) {
+        StatusBar.setStyle(statusBarStyle);
+      }
+    });
+    return () => subscription.remove();
+  }, [statusBarStyle]);
+
+  usePushTapNavigation(navigationRef, isAuthenticated && navigationReady);
+
+  if (shouldShowRootSplash(appReady)) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0066cc" />
-      </View>
+      <>
+        <StatusBar style={statusBarStyle} />
+        <View style={styles.splash}>
+          {/* Native splash's mark at the same size/centre, settled (no entrance animation). */}
+          <BrandMark size={SPLASH_MARK_SIZE} animated={false} />
+          <ActivityIndicator
+            size="large"
+            color={palette.brand}
+            accessibilityLabel={t("status.loading")}
+            style={styles.splashSpinner}
+          />
+        </View>
+      </>
     );
   }
 
   return (
-    <NavigationContainer>
-      <RootStack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        {!isAuthenticated ? (
-          <RootStack.Screen
-            name="Auth"
-            component={AuthNavigator}
-            options={{
-              animation: "none",
-            }}
-          />
-        ) : (
-          <RootStack.Screen
-            name="App"
-            component={AppNavigator}
-            options={{
-              animation: "none",
-            }}
-          />
-        )}
-      </RootStack.Navigator>
-    </NavigationContainer>
+    <>
+      <StatusBar style={statusBarStyle} />
+      <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          {!isAuthenticated ? (
+            <RootStack.Screen
+              name="Auth"
+              component={AuthNavigator}
+              options={{
+                animation: "none",
+              }}
+            />
+          ) : (
+            <RootStack.Screen
+              name="App"
+              component={AppNavigator}
+              options={{
+                animation: "none",
+              }}
+            />
+          )}
+        </RootStack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: palette.night,
+  },
+  // Below the centred mark without pushing it off-centre (the native splash has no spinner).
+  splashSpinner: {
+    position: "absolute",
+    top: "50%",
+    marginTop: SPLASH_MARK_SIZE / 2 + 32,
+  },
+});

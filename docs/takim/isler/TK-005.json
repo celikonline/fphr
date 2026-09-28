@@ -1,0 +1,18 @@
+{
+  "id": "TK-005",
+  "baslik": "Documents — eksik belge raporuna çalışan adına göre arama",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/documents-rapor-arama",
+  "kaynak": "docs/analysis/kolayik-video/faz4-durum-takibi.md:68 (GetMissingDocumentReportQuery bir q parametresi almıyor)",
+  "kabul": [
+    "GetMissingDocumentReportQuery / ListReportAsync artık isteğe bağlı bir 'q' (çalışan adı) filtre parametresi alıyor.",
+    "Filtre IEmployeeContactLookup (ya da modülün zaten kullandığı eşdeğer cross-module sözleşme) üzerinden çalışıyor; Documents modülü Employee'ye doğrudan referans vermiyor.",
+    "q boşken davranış DEĞİŞMEDİ (tüm sonuçlar dönüyor).",
+    "Sense.Modules.Documents.Tests tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY (genel test kapısı TK-001 ayrı işte düzeltiliyor, bu kart onu beklemez)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-005.md"
+}

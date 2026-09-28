@@ -26,6 +26,11 @@ public sealed class AnnouncementRepository(AnnouncementsDbContext context) : IAn
             .OrderByDescending(a => a.PublishedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Announcement>> GetDueScheduledAsync(Guid tenantId, DateTime now, CancellationToken cancellationToken = default) =>
+        await context.Announcements
+            .Where(a => a.TenantId == tenantId && a.Status == AnnouncementStatus.Scheduled && a.ScheduledFor != null && a.ScheduledFor <= now)
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed AnnouncementAttachment repository.</summary>
@@ -71,5 +76,18 @@ public sealed class AnnouncementReadRecordRepository(AnnouncementsDbContext cont
         await context.AnnouncementReadRecords
             .Where(r => r.TenantId == tenantId && r.EmployeeId == employeeId)
             .Select(r => r.AnnouncementId)
+            .ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed Recognition repository.</summary>
+public sealed class RecognitionRepository(AnnouncementsDbContext context) : IRecognitionRepository
+{
+    public void Add(Recognition recognition) => context.Recognitions.Add(recognition);
+
+    public async Task<IReadOnlyList<Recognition>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default) =>
+        await context.Recognitions
+            .Where(r => r.TenantId == tenantId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(take)
             .ToListAsync(cancellationToken);
 }

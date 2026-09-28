@@ -5,6 +5,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.Corrections;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
@@ -47,6 +48,8 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<EqualizationPeriod> EqualizationPeriods => Set<EqualizationPeriod>();
     public DbSet<SelfCheckIn> SelfCheckIns => Set<SelfCheckIn>();
 
+    public DbSet<PunchCorrectionRequest> PunchCorrectionRequests => Set<PunchCorrectionRequest>();
+
     /// <summary>attendance.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -72,6 +75,7 @@ internal static class AttendanceTables
     public const string MonthlyTimesheetApprovals = "monthly_timesheet_approvals";
     public const string EqualizationPeriods = "equalization_periods";
     public const string SelfCheckIns = "self_check_ins";
+    public const string PunchCorrectionRequests = "punch_correction_requests";
     public const int OverrideReasonMaxLength = 1000;
     public const int LinkedEntityTypeMaxLength = 50;
     public const int NoteMaxLength = 1000;
@@ -250,6 +254,23 @@ public sealed class EqualizationPeriodConfiguration : IEntityTypeConfiguration<E
         b.Property(x => x.Status).HasConversion<string>();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PeriodStart }).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Status, x.PeriodEnd });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class PunchCorrectionRequestConfiguration : IEntityTypeConfiguration<PunchCorrectionRequest>
+{
+    public void Configure(EntityTypeBuilder<PunchCorrectionRequest> b)
+    {
+        b.ToTable(AttendanceTables.PunchCorrectionRequests);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Status).HasConversion<string>();
+        b.Property(x => x.Reason).HasMaxLength(PunchCorrectionLimits.ReasonMaxLength).IsRequired();
+
+        // FG-004: one open (Pending) request per employee and day; closed ones stay as history.
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.AttendanceDate }).IsUnique().HasFilter("status = 'Pending'");
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.SubmittedAt });
         b.Ignore(x => x.DomainEvents);
     }
 }

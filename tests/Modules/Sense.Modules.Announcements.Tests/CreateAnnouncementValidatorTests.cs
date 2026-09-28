@@ -25,4 +25,21 @@ public class CreateAnnouncementValidatorTests
     [Fact]
     public void TargetAudienceLongerThanColumn_IsRejected() =>
         Assert.False(new CreateAnnouncementValidator().Validate(Command(audience: new string('x', AnnouncementsLimits.TargetAudienceMaxLength + 1))).IsValid);
+
+    /// <summary>TK-016: ScheduledFor bir geçmiş tarih olamaz - "gelecek tarih" kabul kriteri burada uygulanır.</summary>
+    [Fact]
+    public void ScheduledForInThePast_IsRejected()
+    {
+        var command = new CreateAnnouncementCommand("Başlık", "İçerik", AnnouncementType.General, AnnouncementPriority.Normal, ScheduledFor: DateTime.UtcNow.AddMinutes(-5));
+
+        Assert.False(new CreateAnnouncementValidator().Validate(command).IsValid);
+    }
+
+    [Fact]
+    public void ScheduledForInTheFuture_IsAccepted()
+    {
+        var command = new CreateAnnouncementCommand("Başlık", "İçerik", AnnouncementType.General, AnnouncementPriority.Normal, ScheduledFor: DateTime.UtcNow.AddDays(1));
+
+        Assert.True(new CreateAnnouncementValidator().Validate(command).IsValid);
+    }
 }

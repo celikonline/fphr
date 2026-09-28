@@ -1,0 +1,18 @@
+{
+  "id": "TK-004",
+  "baslik": "Attendance — aylık puantaj raporuna PDF çıktısı eklenmesi",
+  "durum": "birlesti",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/attendance-pdf-rapor",
+  "kaynak": "docs/analysis/kolayik-video/faz2-durum-takibi.md:23 (A5 — PDF çıktı yok, yalnız Excel)",
+  "kabul": [
+    "attendance.monthly.summary / attendance.monthly.closing raporları için mevcut Excel sağlayıcısına ek olarak PDF export seçeneği eklendi (aynı veri, farklı format).",
+    "Var olan Excel export davranışı DEĞİŞMEDİ.",
+    "PDF içeriği en az mevcut Excel'deki sütun/özet bilgilerini içeriyor.",
+    "Sense.Modules.Attendance.Tests tek başına yeşil."
+  ],
+  "birlestirme_kapisi": "modül testleri YEŞİL + gözden geçirici ONAY (genel test kapısı TK-001 ayrı işte düzeltiliyor, bu kart onu beklemez)",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-004.md"
+}

@@ -44,7 +44,11 @@
     "closeSuccess": "Posting closed.",
     "archiveSuccess": "Posting archived.",
     "empty": "No postings yet.",
-    "viewDetail": "View posting"
+    "viewDetail": "View posting",
+    "access": "Access",
+    "accessHint": "Manage which users, beyond the owner and hiring manager, can access this posting.",
+    "accessEmpty": "No additional access granted beyond the owner and hiring manager.",
+    "accessSaved": "Access list updated."
   },
   "postingDetail": {
     "careerLink": {

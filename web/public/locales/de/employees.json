@@ -537,6 +537,10 @@
         "invalid": "Die IBAN ist ungültig; prüfen Sie Länge (TR + 24 Ziffern) und Prüfziffern.",
         "countryUnsupported": "Derzeit werden nur IBANs akzeptiert, die mit TR beginnen."
       }
+    },
+    "expense": {
+      "title": "Ausgaben und Vorschüsse",
+      "empty": "Noch keine Ausgaben- oder Vorschussanträge."
     }
   },
   "customFields": {
@@ -613,7 +617,7 @@
       "type": "Austrittsart",
       "typeHint": "Bleibt das Feld leer, gilt der Standard des Grundes.",
       "sgkExitCode": "SGK-Austrittscode",
-      "sgkExitCodeHint": "Stammt aus der geprüften SGK-Codetabelle des gewählten Grundes; schreibgeschützt.",
+      "sgkExitCodeHint": "Stammt aus der geprüften SGK-Codetabelle für den gewählten Grund und die Kündigungsart; bei Änderung der Art wird der Code angepasst. Schreibgeschützt.",
       "sgkSubCode": "SGK-Untercode",
       "sgkSubCodeHint": "Dieser Grund hat mehr als einen gültigen SGK-Code - wählen Sie einen aus.",
       "sgkSubCodeRequired": "Wählen Sie für diesen Grund einen SGK-Untercode aus.",
@@ -682,7 +686,12 @@
         "status": "Status",
         "gross": "Brutto",
         "net": "Netto",
-        "employerCost": "Arbeitgeberkosten"
+        "employerCost": "Arbeitgeberkosten",
+        "delivery": "Abrechnung"
+      },
+      "delivery": {
+        "shared": "Geteilt",
+        "notShared": "Nicht geteilt"
       },
       "download": "Herunterladen",
       "downloadError": "Die Lohnabrechnung konnte nicht heruntergeladen werden."

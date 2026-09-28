@@ -1,0 +1,47 @@
+{
+  "id": "FG-009",
+  "baslik": "Talep detayı: onay zinciri, durum ve yorumlar",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'Transactions: track all your transactions in one timeline' - zenhr.com/en/mobile; App Store 30.9.2 notu: 'reactions and comments on Transactions & Approvals' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "mobilde kısmi: Taleplerim kartları durum etiketini gösteriyor; talebin onay adımları/kimde beklediği ve yorum yok. Backend'de talep durumu/geçmişi ucu var, yorum/tepki yok.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/workflow/requests/{id}/status (talep eden veya onaylayıcı görebilir - handler içinde kontrol)",
+      "GET /api/v1/workflow/my-requests (workflow.my.requests)",
+      "GET /api/v1/leave/me/requests/{id}"
+    ],
+    "gereken_yeni": [
+      "Yorum: POST/GET /api/v1/workflow/requests/{id}/comments (talep eden + adımdaki onaylayıcılar) + bildirim şablonu",
+      "(isteğe bağlı) tepki: POST /api/v1/workflow/requests/{id}/reactions"
+    ],
+    "izin": "workflow.my.requests (Employee'de var); yorum için yeni anahtar gerekmez, erişim talep taraflarıyla sınırlı."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/requests/RequestDetailScreen.tsx (yeni)",
+      "apps/senseik-mobile/src/screens/app/requests/RequestCardView.tsx (dokununca detay)",
+      "apps/senseik-mobile/src/services/WorkflowService.ts (yeni: getStatus, comments)"
+    ],
+    "navigasyon": "Taleplerim > kart > detay; Onaylarım kartından da aynı detay"
+  },
+  "kabul": [
+    "Taleplerim'de bir karta dokununca detay açılır: tür, tarihler/tutar, ekler, mevcut durum",
+    "Onay zinciri adım adım görünür: adım no, onaylayıcı adı, karar ve tarih; bekleyen adım vurgulu",
+    "Talep eden ve onaylayıcı yorum yazabilir; yeni yorum karşı tarafa bildirim olarak gider",
+    "Yorum yetkisi olmayan kullanıcı (taraf olmayan) 403 alır (backend testi)",
+    "Bildirimden gelen derin bağlantı doğrudan talep detayını açar"
+  ],
+  "tasarim_notu": "Dikey zaman çizelgesi: adım noktaları (tamamlanan yeşil, bekleyen amber, reddedilen mercan) + GlassCard içinde yorum balonları; alt kısımda cam TextField + gönder IconCircleButton.",
+  "buyukluk": "M - detay ekranı (mevcut uçla) + yorum ucu",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-008 (aynı Workflow alanı)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

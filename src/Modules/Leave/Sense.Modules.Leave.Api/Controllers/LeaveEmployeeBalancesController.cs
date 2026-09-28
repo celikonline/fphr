@@ -45,6 +45,12 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     public async Task<IActionResult> RequestDetail(Guid employeeId, Guid id, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
         FromResult((await Dispatcher.Query(new GetEmployeeLeaveRequestQuery(employeeId, id), ct)).Localize(localizer));
 
+    /// <summary>Onaycı/İK: talebe ekli belgenin kısa ömürlü indirme bağlantısı.</summary>
+    [HttpGet("requests/" + ApiRoutes.IdParam + "/attachments/{documentId:guid}/download-url")]
+    [ProducesResponseType<LeaveRequestAttachmentDownloadUrlDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RequestAttachmentDownloadUrl(Guid employeeId, Guid id, Guid documentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeLeaveRequestAttachmentDownloadUrlQuery(employeeId, id, documentId), ct));
+
     /// <summary>Cancels a pending or approved leave (decision #16: approved leave is cancelled, never edited).</summary>
     [HttpPost("requests/" + ApiRoutes.IdParam + "/cancel")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -80,8 +86,9 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     public async Task<IActionResult> Adjust(Guid employeeId, [FromBody] AdjustLeaveBalanceRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AdjustLeaveBalanceCommand(employeeId, request.LeaveTypeId, request.Days, request.EffectiveDate, request.Reason), ct));
 
+    /// <summary>TK-013: optional <paramref name="recalculateFrom"/> rebuilds accruals/carry-overs only from that date onward.</summary>
     [HttpPost("recalculate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Recalculate(Guid employeeId, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new RecalculateLeaveBalancesCommand(employeeId), ct));
+    public async Task<IActionResult> Recalculate(Guid employeeId, [FromQuery] DateOnly? recalculateFrom, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RecalculateLeaveBalancesCommand(employeeId, recalculateFrom), ct));
 }

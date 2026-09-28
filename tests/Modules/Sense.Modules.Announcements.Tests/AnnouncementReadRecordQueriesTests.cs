@@ -2,6 +2,7 @@ using NSubstitute;
 using Sense.Modules.Announcements.Application.Announcements;
 using Sense.Modules.Announcements.Application.ReadRecords;
 using Sense.Modules.Announcements.Domain;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Xunit;
 
@@ -127,8 +128,11 @@ public class AnnouncementReadRecordQueriesTests
         announcements.GetPublishedAsync(tenantId, Arg.Any<CancellationToken>()).Returns([unread, read]);
         var readRecords = Substitute.For<IAnnouncementReadRecordRepository>();
         readRecords.GetReadAnnouncementIdsAsync(tenantId, employeeId, Arg.Any<CancellationToken>()).Returns([read.Id]);
+        var recognitions = Substitute.For<IRecognitionRepository>();
+        recognitions.GetRecentAsync(tenantId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
+        var employeeContacts = Substitute.For<IEmployeeContactLookup>();
 
-        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, tenant, currentUser);
+        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, recognitions, employeeContacts, tenant, currentUser);
         var result = await handler.Handle(new ListMyAnnouncementFeedQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
@@ -148,13 +152,81 @@ public class AnnouncementReadRecordQueriesTests
         var announcements = Substitute.For<IAnnouncementRepository>();
         announcements.GetPublishedAsync(tenantId, Arg.Any<CancellationToken>()).Returns([Published(tenantId, "Duyuru")]);
         var readRecords = Substitute.For<IAnnouncementReadRecordRepository>();
+        var recognitions = Substitute.For<IRecognitionRepository>();
+        recognitions.GetRecentAsync(tenantId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
+        var employeeContacts = Substitute.For<IEmployeeContactLookup>();
 
-        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, tenant, currentUser);
+        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, recognitions, employeeContacts, tenant, currentUser);
         var result = await handler.Handle(new ListMyAnnouncementFeedQuery(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.False(Assert.Single(result.Value).IsRead);
         await readRecords.DidNotReceiveWithAnyArgs().GetReadAnnouncementIdsAsync(default, default, default);
+    }
+
+    [Fact]
+    public async Task ListMyAnnouncementFeed_ReturnsTypeAndPriorityAsCamelCase()
+    {
+        var tenantId = Guid.NewGuid();
+        var announcement = Announcement.Create(
+            tenantId, "Yeni yan haklar", "İçerik", AnnouncementType.HR, AnnouncementPriority.Urgent).Value;
+        announcement.Publish(Guid.NewGuid());
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns((Guid?)null);
+        var announcements = Substitute.For<IAnnouncementRepository>();
+        announcements.GetPublishedAsync(tenantId, Arg.Any<CancellationToken>()).Returns([announcement]);
+        var readRecords = Substitute.For<IAnnouncementReadRecordRepository>();
+        var recognitions = Substitute.For<IRecognitionRepository>();
+        recognitions.GetRecentAsync(tenantId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
+        var employeeContacts = Substitute.For<IEmployeeContactLookup>();
+
+        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, recognitions, employeeContacts, tenant, currentUser);
+        var result = await handler.Handle(new ListMyAnnouncementFeedQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var item = Assert.Single(result.Value);
+        Assert.Equal("hr", item.Type);
+        Assert.Equal("urgent", item.Priority);
+        Assert.Equal("announcement", item.Kind);
+    }
+
+    [Fact]
+    public async Task ListMyAnnouncementFeed_IncludesRecentRecognitionMessages()
+    {
+        var tenantId = Guid.NewGuid();
+        var senderId = Guid.NewGuid();
+        var receiverId = Guid.NewGuid();
+        var recognition = Recognition.Create(tenantId, senderId, receiverId, "Harika iş çıkardın!").Value;
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns((Guid?)null);
+        var announcements = Substitute.For<IAnnouncementRepository>();
+        announcements.GetPublishedAsync(tenantId, Arg.Any<CancellationToken>()).Returns([]);
+        var readRecords = Substitute.For<IAnnouncementReadRecordRepository>();
+        var recognitions = Substitute.For<IRecognitionRepository>();
+        recognitions.GetRecentAsync(tenantId, Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([recognition]);
+        var employeeContacts = Substitute.For<IEmployeeContactLookup>();
+        employeeContacts.GetContactsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(senderId)), Arg.Any<CancellationToken>())
+            .Returns([new EmployeeContact(senderId, "Ayşe", "Yılmaz", "ayse@sirket.com", null, null, "Active")]);
+
+        var handler = new ListMyAnnouncementFeedHandler(announcements, readRecords, recognitions, employeeContacts, tenant, currentUser);
+        var result = await handler.Handle(new ListMyAnnouncementFeedQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var item = Assert.Single(result.Value);
+        Assert.Equal(AnnouncementFeedItemKind.Recognition, item.Kind);
+        Assert.Equal("recognition", item.Type);
+        Assert.Equal("normal", item.Priority);
+        Assert.Equal("Ayşe Yılmaz", item.Title);
+        Assert.Equal("Harika iş çıkardın!", item.Content);
+        Assert.Equal(senderId, item.SenderEmployeeId);
+        Assert.Equal(receiverId, item.ReceiverEmployeeId);
+        Assert.True(item.IsRead);
     }
 
     private static Announcement Published(Guid tenantId, string title)

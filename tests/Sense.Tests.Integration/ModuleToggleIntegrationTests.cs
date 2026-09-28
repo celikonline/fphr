@@ -156,6 +156,7 @@ public sealed class ModuleToggleIntegrationTests : IdentityStackTestBase
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public void EveryHostedModule_IsInTheProductModuleCatalog()
     {
         // Yeni bir modül ModuleCatalog'a eklenip ProductModules'a eklenmezse uçları hiçbir zaman engellenmez

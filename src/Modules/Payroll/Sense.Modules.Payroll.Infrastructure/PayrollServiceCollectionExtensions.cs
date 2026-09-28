@@ -33,6 +33,7 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
         services.AddScoped<IPayslipRepository, PayslipRepository>();
         services.AddScoped<IPayslipCalculationTraceRepository, PayslipCalculationTraceRepository>();
+        services.AddScoped<IPayslipDeliveryRepository, PayslipDeliveryRepository>();
         services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         services.AddScoped<IPayslipDirtyFlagRepository, PayslipDirtyFlagRepository>();
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();

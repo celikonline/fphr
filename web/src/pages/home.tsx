@@ -1013,7 +1013,9 @@ function AnnouncementsWidget() {
       title={t("home:announcements.title")}
       icon={<Megaphone size={18} />}
       action={
-        <LinkMenu items={[{ to: "/app/announcements", label: t("navigation:apps.announcements") }]} />
+        <LinkMenu
+          items={[{ to: "/app/announcements", label: t("navigation:apps.announcements") }]}
+        />
       }
     >
       {isLoading ? (

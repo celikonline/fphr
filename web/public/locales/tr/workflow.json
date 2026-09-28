@@ -4,7 +4,8 @@
     "Advance": "Avans",
     "Expense": "Harcama",
     "Overtime": "Fazla mesai",
-    "VisaDocument": "Vize belgesi"
+    "VisaDocument": "Vize belgesi",
+    "PunchCorrection": "Eksik giriş/çıkış"
   },
   "policies": {
     "listTitle": "Onay süreçleri",

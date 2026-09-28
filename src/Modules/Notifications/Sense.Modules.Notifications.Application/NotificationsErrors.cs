@@ -7,4 +7,6 @@ public static class NotificationsErrors
     public const string UnknownTemplate = "notifications.preference.unknown_template";
     public const string UnknownChannel = "notifications.preference.unknown_channel";
     public const string TemplateNotConfigurable = "notifications.preference.not_configurable";
+    public const string InvalidPushToken = "notifications.device.invalid_token";
+    public const string InvalidPushPlatform = "notifications.device.invalid_platform";
 }

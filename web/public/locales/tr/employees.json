@@ -537,6 +537,10 @@
         "invalid": "IBAN geçersiz; uzunluğu (TR + 24 hane) ve kontrol hanelerini kontrol edin.",
         "countryUnsupported": "Şimdilik yalnızca TR ile başlayan IBAN'lar kabul edilir."
       }
+    },
+    "expense": {
+      "title": "Harcama ve avanslar",
+      "empty": "Henüz harcama veya avans talebi yok."
     }
   },
   "customFields": {
@@ -613,7 +617,7 @@
       "type": "Fesih türü",
       "typeHint": "Boş bırakılırsa nedenin varsayılanı uygulanır.",
       "sgkExitCode": "SGK çıkış kodu",
-      "sgkExitCodeHint": "Seçilen nedenin doğrulanmış SGK kod tablosundan gelir; salt okunurdur.",
+      "sgkExitCodeHint": "Seçilen neden ve fesih türüne göre doğrulanmış SGK kod tablosundan gelir; tür değişince kod da güncellenir. Salt okunurdur.",
       "sgkSubCode": "SGK alt kodu",
       "sgkSubCodeHint": "Bu neden birden fazla geçerli SGK koduna sahip; aralarından birini seçin.",
       "sgkSubCodeRequired": "Bu neden için bir SGK alt kodu seçmelisiniz.",
@@ -682,7 +686,12 @@
         "status": "Dönem durumu",
         "gross": "Brüt",
         "net": "Net",
-        "employerCost": "İşveren maliyeti"
+        "employerCost": "İşveren maliyeti",
+        "delivery": "Pusula"
+      },
+      "delivery": {
+        "shared": "Paylaşıldı",
+        "notShared": "Paylaşılmadı"
       },
       "download": "İndir",
       "downloadError": "Ücret pusulası indirilemedi."

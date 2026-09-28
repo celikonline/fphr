@@ -106,4 +106,10 @@ public sealed class MyLeaveController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DetachDocument(Guid id, Guid documentId, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new DetachMyLeaveDocumentCommand(id, documentId), ct));
+
+    /// <summary>Talep sahibi: kendi talebine ekli belgenin kısa ömürlü indirme bağlantısı.</summary>
+    [HttpGet("requests/" + ApiRoutes.IdParam + "/attachments/{documentId:guid}/download-url")]
+    [ProducesResponseType<LeaveRequestAttachmentDownloadUrlDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RequestAttachmentDownloadUrl(Guid id, Guid documentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyLeaveRequestAttachmentDownloadUrlQuery(id, documentId), ct));
 }

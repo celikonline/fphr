@@ -58,12 +58,28 @@ const fullDayType: LeaveRequestTypeOption = {
   availableBalance: null,
   unit: "fullDay",
 };
-const hourlyType: LeaveRequestTypeOption = { ...fullDayType, id: "type-hourly", name: "Saatlik izin", unit: "hourly" };
+const hourlyType: LeaveRequestTypeOption = {
+  ...fullDayType,
+  id: "type-hourly",
+  name: "Saatlik izin",
+  unit: "hourly",
+};
 
-const previewResult = { days: 1, weeklyRestDays: 0, publicHolidayDays: 0, warnings: [] } as unknown as LeaveRequestPreview;
+const previewResult = {
+  days: 1,
+  weeklyRestDays: 0,
+  publicHolidayDays: 0,
+  warnings: [],
+} as unknown as LeaveRequestPreview;
 
-function renderDialog(options: { types: LeaveRequestTypeOption[]; prefill?: LeaveRequest | null; onClose?: () => void }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+function renderDialog(options: {
+  types: LeaveRequestTypeOption[];
+  prefill?: LeaveRequest | null;
+  onClose?: () => void;
+}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const preview = vi.fn().mockResolvedValue(previewResult);
   const save = vi.fn().mockResolvedValue(undefined);
   const onClose = options.onClose ?? vi.fn();
@@ -86,7 +102,7 @@ function renderDialog(options: { types: LeaveRequestTypeOption[]; prefill?: Leav
           />
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
   return { preview, save, onClose };
 }
@@ -144,19 +160,47 @@ describe("LeaveRequestDialog", () => {
   });
 
   it("shows the day preview when the hourly range is valid", async () => {
-    renderDialog({ types: [hourlyType], prefill: prefillRequest({ startTime: "09:00:00", endTime: "10:00:00" }) });
+    renderDialog({
+      types: [hourlyType],
+      prefill: prefillRequest({ startTime: "09:00:00", endTime: "10:00:00" }),
+    });
 
     expect(await screen.findByText(/Hesaplanan gün: 1/)).not.toBeNull();
     expect(screen.queryByText(trLeave.form.validation.timeRequired)).toBeNull();
   });
 
   it("gives every hourly control a unique id and keeps label-to-input association (B8)", () => {
-    renderDialog({ types: [hourlyType], prefill: prefillRequest({ startTime: "09:00:00", endTime: "10:00:00" }) });
+    renderDialog({
+      types: [hourlyType],
+      prefill: prefillRequest({ startTime: "09:00:00", endTime: "10:00:00" }),
+    });
 
     for (const id of ["leave-hour-start", "leave-hour-end", "leave-start"]) {
       expect(document.querySelectorAll(`[id="${id}"]`)).toHaveLength(1);
     }
-    expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyStart)) as HTMLElement).id).toBe("leave-hour-start");
-    expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyEnd)) as HTMLElement).id).toBe("leave-hour-end");
+    expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyStart)) as HTMLElement).id).toBe(
+      "leave-hour-start"
+    );
+    expect((screen.getByLabelText(new RegExp(trLeave.form.hourlyEnd)) as HTMLElement).id).toBe(
+      "leave-hour-end"
+    );
+  });
+
+  it("offers only the caller-supplied (policy-allowed) types in a single type selector, not a button/page per type (TK-022)", async () => {
+    renderDialog({ types: [fullDayType, hourlyType] });
+
+    // Tek modal + tek "İzin türü" seçici: her tür için ayrı buton/sayfa yok, tek Select var.
+    const typeSelects = screen.getAllByRole("combobox", { name: trLeave.form.type });
+    expect(typeSelects).toHaveLength(1);
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+
+    fireEvent.click(typeSelects[0]);
+    const options = await screen.findAllByRole("option");
+    // Yalnız `types` prop'uyla (backend'in politika filtresinden geçmiş liste) verilen türler listeleniyor.
+    expect(options.map((option) => option.textContent)).toEqual([
+      fullDayType.name,
+      hourlyType.name,
+    ]);
+    expect(screen.queryByText("Politika dışı izin türü")).toBeNull();
   });
 });
