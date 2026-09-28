@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using Microsoft.Extensions.Localization;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
@@ -5,6 +7,7 @@ using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts.CardPdf;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Export;
@@ -124,12 +127,38 @@ public sealed class CustomFieldsCardPdfSection(IDispatcher dispatcher, IStringLo
 {
     public override string Key => EmployeeCardPdfSectionKeys.CustomFields;
 
+    private static readonly JsonSerializerOptions MultiSelectJson = new(JsonSerializerDefaults.Web);
+
     // Custom fields are already filtered by EmployeeDetailBuilder (sensitive fields + AccountShowCustomFields setting).
     public override async Task<EmployeeCardPdfSectionResult> BuildAsync(EmployeeCardPdfRequest request, CancellationToken cancellationToken) =>
         EmployeeCardPdfSectionResult.Combine(EmployeeCardPdfSectionResult.Part(await DetailAsync(request, cancellationToken), e =>
             e.CustomFields is { Count: > 0 } fields
-                ? [KeyValues(null, fields.Select(f => (f.Name, Text(f.Value))).ToArray())]
+                ? [KeyValues(null, fields.Select(f => (f.Name, ValueText(f))).ToArray())]
                 : Array.Empty<SimplePdfBlock>()));
+
+    /// <summary>
+    /// <see cref="CustomFieldValueDto.Value"/> is the canonical string <see cref="CustomFieldValueCoercion"/> stores
+    /// (Boolean "true"/"false", MultiSelect a JSON array, Date "yyyy-MM-dd"); render it per <see cref="CustomFieldDataType"/>
+    /// instead of printing the raw stored form.
+    /// </summary>
+    private static string ValueText(CustomFieldValueDto field)
+    {
+        if (string.IsNullOrWhiteSpace(field.Value))
+        {
+            return Empty;
+        }
+
+        return field.DataType switch
+        {
+            CustomFieldDataType.Boolean => YesNo(field.Value == "true"),
+            CustomFieldDataType.MultiSelect => string.Join(
+                ", ", JsonSerializer.Deserialize<List<string>>(field.Value, MultiSelectJson) ?? []),
+            CustomFieldDataType.Date => DateOnly.TryParseExact(field.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? Date(date)
+                : Text(field.Value),
+            _ => Text(field.Value),
+        };
+    }
 }
 
 public sealed class CareerCardPdfSection(IDispatcher dispatcher, IStringLocalizer<SharedResource> localizer)

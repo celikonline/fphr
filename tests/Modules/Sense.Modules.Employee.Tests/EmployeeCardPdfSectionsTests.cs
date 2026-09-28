@@ -4,7 +4,10 @@ using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Contracts.CardPdf;
+using Sense.Modules.Employee.Domain.CustomFields;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.CardPdf;
+using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Infrastructure;
@@ -26,6 +29,47 @@ public sealed class EmployeeCardPdfSectionsTests
         localizer[Arg.Any<string>()].Returns(call => new LocalizedString(call.Arg<string>(), call.Arg<string>(), resourceNotFound: true));
         return localizer;
     }
+
+    private static CustomFieldValueDto CustomField(string name, CustomFieldDataType dataType, string? value) =>
+        new(Guid.NewGuid(), name, name, dataType, CustomFieldSection.Other, [], IsRequired: false, IsEmployeeEditable: false, IsSensitive: false, Value: value);
+
+    private static EmployeeDetailDto DetailWithCustomFields(IReadOnlyList<CustomFieldValueDto> customFields) =>
+        new(
+            Id: EmployeeId,
+            FirstName: "Ali",
+            LastName: "Veli",
+            DisplayName: "Ali Veli",
+            NationalId: null,
+            WorkEmail: null,
+            PersonalEmail: null,
+            WorkPhone: null,
+            HireDate: null,
+            BirthDate: null,
+            Status: "active",
+            OrgUnitId: null,
+            ManagerEmployeeId: null,
+            ManagerDisplayName: null,
+            UserId: null,
+            AccountStatus: UserAccountStatus.None,
+            AccessType: null,
+            LastInvitationSentAt: null,
+            Gender: Gender.Unspecified,
+            MaritalStatus: MaritalStatus.Unspecified,
+            ChildCount: null,
+            EducationStatus: null,
+            HighestEducationLevel: null,
+            MilitaryStatus: null,
+            DisabilityDegree: null,
+            BloodType: null,
+            MobilePhone: null,
+            HomePhone: null,
+            AddressLine: null,
+            City: null,
+            PostalCode: null,
+            ContractType: null,
+            EmploymentType: null,
+            SuspensionReason: null,
+            CustomFields: customFields);
 
     [Fact]
     public async Task General_WhenEmployeeQueryForbidden_IsUnavailable()
@@ -64,5 +108,43 @@ public sealed class EmployeeCardPdfSectionsTests
         var result = await new EmployeePaymentsCardPdfSection(dispatcher, Localizer()).BuildAsync(AdminRequest, CancellationToken.None);
 
         result.Blocks!.OfType<SimplePdfParagraph>().ShouldHaveSingleItem().Text.ShouldBe("Banka hesapları: kayıt yok.");
+    }
+
+    [Fact]
+    public async Task CustomFields_Boolean_RendersYesNo()
+    {
+        var dispatcher = Substitute.For<IDispatcher>();
+        var detail = DetailWithCustomFields([CustomField("Sürücü belgesi var mı", CustomFieldDataType.Boolean, "true")]);
+        dispatcher.Query(Arg.Any<GetEmployeeQuery>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(detail)));
+
+        var result = await new CustomFieldsCardPdfSection(dispatcher, Localizer()).BuildAsync(AdminRequest, CancellationToken.None);
+
+        var row = result.Blocks!.OfType<SimplePdfKeyValues>().ShouldHaveSingleItem().Rows.ShouldHaveSingleItem();
+        row.Key.ShouldBe("Sürücü belgesi var mı");
+        row.Value.ShouldBe("Evet");
+    }
+
+    [Fact]
+    public async Task CustomFields_MultiSelect_JoinsOptionsWithComma()
+    {
+        var dispatcher = Substitute.For<IDispatcher>();
+        var detail = DetailWithCustomFields([CustomField("Yetkinlikler", CustomFieldDataType.MultiSelect, "[\"A\",\"B\"]")]);
+        dispatcher.Query(Arg.Any<GetEmployeeQuery>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(detail)));
+
+        var result = await new CustomFieldsCardPdfSection(dispatcher, Localizer()).BuildAsync(AdminRequest, CancellationToken.None);
+
+        result.Blocks!.OfType<SimplePdfKeyValues>().ShouldHaveSingleItem().Rows.ShouldHaveSingleItem().Value.ShouldBe("A, B");
+    }
+
+    [Fact]
+    public async Task CustomFields_Date_RendersTurkishDate()
+    {
+        var dispatcher = Substitute.For<IDispatcher>();
+        var detail = DetailWithCustomFields([CustomField("Sözleşme tarihi", CustomFieldDataType.Date, "2026-03-01")]);
+        dispatcher.Query(Arg.Any<GetEmployeeQuery>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(detail)));
+
+        var result = await new CustomFieldsCardPdfSection(dispatcher, Localizer()).BuildAsync(AdminRequest, CancellationToken.None);
+
+        result.Blocks!.OfType<SimplePdfKeyValues>().ShouldHaveSingleItem().Rows.ShouldHaveSingleItem().Value.ShouldBe("01.03.2026");
     }
 }
