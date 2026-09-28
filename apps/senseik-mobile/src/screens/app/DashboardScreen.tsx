@@ -94,22 +94,35 @@ export default function DashboardScreen() {
     }
   }, []);
 
+  // FG-008: the "Onaylarım" badge, refreshed the same way as the bell above - a toplu/single karar
+  // given on `ApprovalsScreen` (pushed on top of this tab, still mounted underneath) only shows up
+  // here once the user comes back to Home, which is exactly when this fires.
+  const loadApprovalsCount = useCallback(async () => {
+    try {
+      setApprovalsCount((await approvalsService.getInbox()).length);
+    } catch {
+      // Approvals badge just stays at its last known value too - same as the bell above.
+    }
+  }, []);
+
   // N1: refresh the bell badge whenever this screen regains focus, and whenever the app comes back
   // to the foreground while already on it - no polling interval (coordinator's explicit ask).
   useFocusEffect(
     useCallback(() => {
       void loadUnreadCount();
-    }, [loadUnreadCount])
+      void loadApprovalsCount();
+    }, [loadUnreadCount, loadApprovalsCount])
   );
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
         void loadUnreadCount();
+        void loadApprovalsCount();
       }
     });
     return () => subscription.remove();
-  }, [loadUnreadCount]);
+  }, [loadUnreadCount, loadApprovalsCount]);
 
   /** Every section loads independently (spec §4): one failing request never hides the others. */
   const loadAll = useCallback(async () => {
