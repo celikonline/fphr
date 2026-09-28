@@ -751,6 +751,29 @@ export async function downloadWorkCertificate(
   };
 }
 
+export interface EmployeeCardPdfOptions {
+  sections: string[];
+  from?: string;
+  to?: string;
+}
+
+/** Employee card PDF (selected tabs + optional period); `target` is an employee id or "me" for the own card. */
+export async function downloadEmployeeCardPdf(
+  target: string,
+  options: EmployeeCardPdfOptions
+): Promise<{ blob: Blob; fileName: string }> {
+  const response = await apiClient.get<Blob>(`${EMPLOYEES_BASE}/${target}/card-pdf`, {
+    params: { sections: options.sections.join(","), from: options.from, to: options.to },
+    responseType: "blob",
+  });
+  const disposition = response.headers["content-disposition"];
+  return {
+    blob: response.data,
+    fileName:
+      parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ?? "calisan-karti.pdf",
+  };
+}
+
 export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {
   const { data } = await apiClient.get<EmploymentHistory>(
     `${EMPLOYEES_BASE}/${employeeId}/employment-periods`

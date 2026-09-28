@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
-import { ArrowLeft, Lock, LogOut, Mail, MoreVertical, PauseCircle, PlayCircle, SearchX, UserPlus } from "lucide-react";
+import { ArrowLeft, FileDown, Lock, LogOut, Mail, MoreVertical, PauseCircle, PlayCircle, SearchX, UserPlus } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import { EmployeeLifecycleDialogs, lifecycleActionsFor, type LifecycleAction } from "@/components/employees/lifecycle-actions";
+import { EmployeeCardPdfDialog } from "@/components/employees/employee-card-pdf-dialog";
 
 function LifecycleIcon({ action }: { action: LifecycleAction }) {
   const size = 16;
@@ -102,7 +103,7 @@ export default function EmployeeCardPage() {
       >
         {t("employees:card.backToList")}
       </Button>
-      <CardHeaderBlock key={`header-${employee.id}`} employee={employee} />
+      <CardHeaderBlock key={`header-${employee.id}`} employee={employee} isOwnCard={isOwnCard} />
       <Tabs value={active.key} onChange={(value) => value && navigate(`/app/employees/${id}/${value}`)}>
         <Tabs.List>
           {tabs.map((candidate) => (
@@ -117,7 +118,7 @@ export default function EmployeeCardPage() {
   );
 }
 
-function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
+function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; isOwnCard: boolean }) {
   const { t } = useTranslation(["employees", "common"]);
   const queryClient = useQueryClient();
   const { nameById } = useOrgUnits();
@@ -125,6 +126,7 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
   const canUpdate = usePermission("employee.employees.update");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lifecycleAction, setLifecycleAction] = useState<LifecycleAction | null>(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const lifecycleActions = canUpdate ? lifecycleActionsFor(employee.status) : [];
 
   const targetEmail = employee.workEmail ?? employee.personalEmail;
@@ -171,6 +173,18 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
             <AccountStatusBadge status={employee.accountStatus} label={t("employees:card.accountStatusLabel")} />
           </Group>
         </div>
+        <Tooltip label={t("employees:card.pdf.button")}>
+          <ActionIcon
+            type="button"
+            variant="subtle"
+            color="gray"
+            size="lg"
+            aria-label={t("employees:card.pdf.button")}
+            onClick={() => setPdfOpen(true)}
+          >
+            <FileDown size={20} />
+          </ActionIcon>
+        </Tooltip>
         {(showInvite || lifecycleActions.length > 0) && (
           <Menu position="bottom-end" width={256}>
             <Tooltip label={t("common:actions")}>
@@ -208,6 +222,7 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
       </Group>
 
       <EmployeeLifecycleDialogs employee={employee} action={lifecycleAction} onClose={() => setLifecycleAction(null)} />
+      {pdfOpen && <EmployeeCardPdfDialog employeeId={employee.id} isOwnCard={isOwnCard} onClose={() => setPdfOpen(false)} />}
 
       <ConfirmDialog
         open={confirmOpen}

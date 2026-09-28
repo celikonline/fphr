@@ -323,6 +323,21 @@
   },
   "card": {
     "backToList": "Back to employees",
+    "pdf": {
+      "button": "Download as PDF",
+      "title": "Download employee card as PDF",
+      "sections": "Sections",
+      "selectAll": "Select all",
+      "clearAll": "Clear",
+      "period": "Period",
+      "periodHint": "Leave, overtime, payslip, asset and payment lists are filtered by this period; other data is shown as of today.",
+      "presets": { "last12Months": "Last 12 months", "thisYear": "This year", "allTime": "All time", "custom": "Custom" },
+      "from": "From",
+      "to": "To",
+      "invalidPeriod": "The end cannot be before the start.",
+      "generate": "Create PDF",
+      "failed": "The PDF could not be created."
+    },
     "notFoundTitle": "Employee not found",
     "notFoundDescription": "The record may have been removed or is outside your access scope.",
     "saved": "Employee details saved.",
