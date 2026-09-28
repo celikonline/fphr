@@ -1556,4 +1556,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.correction.not_found" xml:space="preserve"><value>Düzeltme talebi bulunamadı.</value></data>
   <data name="attendance.correction.not_pending" xml:space="preserve"><value>Yalnız bekleyen bir düzeltme talebi geri çekilebilir.</value></data>
   <data name="attendance.my.corrections" xml:space="preserve"><value>Kendi eksik giriş/çıkış düzeltme taleplerimi oluşturma ve geri çekme</value></data>
+  <data name="workflow.comment.request_closed" xml:space="preserve"><value>İptal edilmiş bir talebe yorum yazılamaz.</value></data>
+  <data name="workflow.comment.text_required" xml:space="preserve"><value>Yorum metni boş olamaz.</value></data>
 </root>

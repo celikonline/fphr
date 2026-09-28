@@ -35,3 +35,19 @@ public sealed record ApprovalTaskAssigned(
     Guid? ApproverEmployeeId,
     string? FallbackRoleCode)
     : IntegrationEvent(TenantId);
+
+/// <summary>
+/// FG-009: published (via Workflow's outbox) when a party of an approval request leaves a comment on it.
+/// <paramref name="RecipientEmployeeIds"/> is already resolved by Workflow - the requester plus every concrete approver
+/// and decider of the request's tasks (and the fallback role members of a pending role-queue step), author excluded -
+/// so consumers only notify, they do not re-derive who is a party. The comment text itself is not carried.
+/// </summary>
+public sealed record ApprovalRequestCommented(
+    Guid TenantId,
+    Guid ApprovalRequestId,
+    string RequestType,
+    Guid SubjectId,
+    Guid RequesterEmployeeId,
+    Guid AuthorEmployeeId,
+    IReadOnlyList<Guid> RecipientEmployeeIds)
+    : IntegrationEvent(TenantId);

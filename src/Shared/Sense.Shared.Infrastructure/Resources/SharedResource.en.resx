@@ -1547,4 +1547,6 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.correction.not_found" xml:space="preserve"><value>The correction request was not found.</value></data>
   <data name="attendance.correction.not_pending" xml:space="preserve"><value>Only a pending correction request can be withdrawn.</value></data>
   <data name="attendance.my.corrections" xml:space="preserve"><value>Create and withdraw my own missing punch correction requests</value></data>
+  <data name="workflow.comment.request_closed" xml:space="preserve"><value>A cancelled request cannot be commented on.</value></data>
+  <data name="workflow.comment.text_required" xml:space="preserve"><value>The comment text cannot be empty.</value></data>
 </root>

@@ -43,6 +43,9 @@ public enum ApprovalHistoryEventType
     Rejected,
     Cancelled,
     ApproversEdited,
+
+    /// <summary>FG-009: a party of the request (requester, approver, override holder) left a comment - the text is <see cref="ApprovalHistoryEntry.Note"/>.</summary>
+    Commented,
 }
 
 /// <summary>One resolved step to seed an <see cref="ApprovalRequest"/> with - either a specific employee or (no policy/manager resolved) a role queue.</summary>
@@ -320,6 +323,28 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
         CompletedAt = now;
         AddHistory(ApprovalHistoryEventType.Cancelled, null, actorEmployeeId, null, null, null, null, now, null);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// FG-009: appends a comment to the request's history (append-only, like every other history entry). Allowed while
+    /// the request is pending and after it was approved/rejected (e.g. asking about a rejection), not once cancelled.
+    /// Who may comment is the Application layer's job (same split as <see cref="Decide"/>); the length limit is
+    /// enforced by the command validator before this runs.
+    /// </summary>
+    public Result<ApprovalHistoryEntry> AddComment(Guid authorEmployeeId, string? text, DateTime now)
+    {
+        if (Status == ApprovalRequestStatus.Cancelled)
+        {
+            return Error.Validation(WorkflowDomainErrors.CommentRequestClosed);
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Error.Validation(WorkflowDomainErrors.CommentTextRequired);
+        }
+
+        AddHistory(ApprovalHistoryEventType.Commented, CurrentStepNumber, authorEmployeeId, null, null, null, null, now, text);
+        return _history[^1];
     }
 
     private void AddHistory(

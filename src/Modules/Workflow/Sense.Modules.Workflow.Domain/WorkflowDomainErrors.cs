@@ -29,6 +29,12 @@ public static class WorkflowDomainErrors
     /// <summary>Ürün kararı (denetim A10): bir görevi reddederken yorum (ret gerekçesi) zorunlu; onayda isteğe bağlı.</summary>
     public const string RejectionCommentRequired = "workflow.task.rejection_comment_required";
 
+    /// <summary>FG-009: a cancelled request takes no more comments.</summary>
+    public const string CommentRequestClosed = "workflow.comment.request_closed";
+
+    /// <summary>FG-009: an empty/whitespace-only comment.</summary>
+    public const string CommentTextRequired = "workflow.comment.text_required";
+
     public const string TokenNotFound = "workflow.token.not_found";
     public const string TokenExpired = "workflow.token.expired";
     public const string TokenAlreadyUsed = "workflow.token.already_used";

@@ -459,6 +459,94 @@ public sealed class DecideByEmailTokenHandler(
 }
 
 /// <summary>
+/// FG-009: a party of the request (see <see cref="ApprovalRequestAccess"/>) leaves a comment - recorded as a
+/// <see cref="ApprovalHistoryEventType.Commented"/> history entry, no separate table. Non-parties get NotFound, like the
+/// status read. Raises <see cref="ApprovalRequestCommented"/> for the other parties' in-app notification.
+/// </summary>
+public sealed record AddApprovalRequestCommentCommand(Guid ApprovalRequestId, Guid AuthorEmployeeId, string? Text) : ICommand<Guid>;
+
+public sealed class AddApprovalRequestCommentValidator : AbstractValidator<AddApprovalRequestCommentCommand>
+{
+    public AddApprovalRequestCommentValidator()
+    {
+        RuleFor(x => x.ApprovalRequestId).NotEmpty();
+        RuleFor(x => x.AuthorEmployeeId).NotEmpty();
+        RuleFor(x => x.Text).MaximumLength(WorkflowLimits.CommentMaxLength);
+    }
+}
+
+public sealed class AddApprovalRequestCommentHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IRoleAssignmentLookup roleAssignments,
+    IPermissionService permissions,
+    IIntegrationEventOutbox outbox,
+    TimeProvider clock) : ICommandHandler<AddApprovalRequestCommentCommand, Guid>
+{
+    public async Task<Result<Guid>> Handle(AddApprovalRequestCommentCommand command, CancellationToken cancellationToken)
+    {
+        var loaded = await requests.GetByIdAsync(command.ApprovalRequestId, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var request = loaded.Value;
+        if (!await ApprovalRequestAccess.IsPartyAsync(
+                request, command.AuthorEmployeeId, currentUser.UserId, tenant.TenantId, roleAssignments, permissions, cancellationToken))
+        {
+            return Error.NotFound(WorkflowErrors.RequestNotFound);
+        }
+
+        var added = request.AddComment(command.AuthorEmployeeId, command.Text, clock.GetUtcNow().UtcDateTime);
+        if (added.IsFailure)
+        {
+            return added.Error;
+        }
+
+        var recipients = await ResolveRecipientsAsync(request, command.AuthorEmployeeId, cancellationToken);
+        if (recipients.Count > 0)
+        {
+            outbox.Enqueue(new ApprovalRequestCommented(
+                tenant.TenantId, request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId,
+                command.AuthorEmployeeId, recipients));
+        }
+
+        return added.Value.Id;
+    }
+
+    /// <summary>
+    /// The requester, every concrete approver/decider of the request's tasks and - while the current step waits on a
+    /// role queue - that role's members; never the author.
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> ResolveRecipientsAsync(ApprovalRequest request, Guid authorEmployeeId, CancellationToken cancellationToken)
+    {
+        var recipients = new HashSet<Guid> { request.RequesterEmployeeId };
+        foreach (var task in request.Tasks)
+        {
+            if (task.ApproverEmployeeId is { } approverId)
+            {
+                recipients.Add(approverId);
+            }
+
+            if (task.DecidedByEmployeeId is { } deciderId)
+            {
+                recipients.Add(deciderId);
+            }
+        }
+
+        if (request.CurrentTask is { ApproverEmployeeId: null, FallbackRoleCode: { } roleCode })
+        {
+            recipients.UnionWith(await roleAssignments.ListEmployeeIdsInRoleAsync(tenant.TenantId, roleCode, cancellationToken));
+        }
+
+        recipients.Remove(authorEmployeeId);
+        return recipients.ToList();
+    }
+}
+
+/// <summary>
 /// Post-decision effects shared by DecideApprovalTaskCommand, OverrideDecideApprovalTaskCommand and
 /// DecideByEmailTokenCommand (and, for the first task, SubmitApprovalRequestCommand): enqueue ApprovalTaskAssigned for
 /// whichever task is now current, or - once the request reaches a terminal state - ApprovalCompleted/ApprovalRejected.
