@@ -1550,4 +1550,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.comment.request_closed" xml:space="preserve"><value>A cancelled request cannot be commented on.</value></data>
   <data name="workflow.comment.text_required" xml:space="preserve"><value>The comment text cannot be empty.</value></data>
   <data name="attendance.work_schedule.range_too_long" xml:space="preserve"><value>You can query a range of at most {max} days.</value></data>
+  <data name="employee.my.team" xml:space="preserve"><value>View my team</value></data>
+  <data name="attendance.my.team" xml:space="preserve"><value>View my team's timesheet</value></data>
+  <data name="leave.my.team" xml:space="preserve"><value>View my team's leave</value></data>
 </root>
