@@ -18,6 +18,7 @@ const ResetPasswordPage = lazy(() => import("@/pages/auth/reset-password"));
 const HomePage = lazy(() => import("@/pages/home"));
 const CompanyProfilePage = lazy(() => import("@/pages/company-profile"));
 const ReportsPage = lazy(() => import("@/pages/reports"));
+const ReportViewerPage = lazy(() => import("@/pages/report-viewer"));
 const LocationsPage = lazy(() => import("@/pages/locations"));
 const UsersRolesPage = lazy(() => import("@/pages/users-roles"));
 const AuditLogPage = lazy(() => import("@/pages/audit-log"));
@@ -148,6 +149,7 @@ export default function App() {
             <Route path="requests/visa" element={<VisaRequestsPage />} />
             <Route path="shared-files" element={<SharedFilesPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="reports/:key" element={<ReportViewerPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />
             <Route path="account" element={<AccountPage />} />

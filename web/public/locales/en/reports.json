@@ -125,7 +125,14 @@
   },
   "viewer": {
     "search": "Search results",
-    "noRows": "No records match these filters."
+    "noRows": "No records match these filters.",
+    "back": "Back to reports",
+    "apply": "Apply",
+    "downloadExcel": "Download Excel",
+    "notFound": "This report was not found or you do not have access.",
+    "previewUnavailable": "This report cannot be shown on screen; you can download it as Excel.",
+    "runError": "The report could not be generated.",
+    "idle": "Choose the required filters and press Apply."
   },
   "params": {
     "orgUnitIds": "Units",

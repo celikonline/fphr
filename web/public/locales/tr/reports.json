@@ -125,7 +125,14 @@
   },
   "viewer": {
     "search": "Sonuçlarda ara",
-    "noRows": "Bu filtrelerle gösterilecek kayıt yok."
+    "noRows": "Bu filtrelerle gösterilecek kayıt yok.",
+    "back": "Raporlara dön",
+    "apply": "Uygula",
+    "downloadExcel": "Excel indir",
+    "notFound": "Bu rapor bulunamadı ya da erişiminiz yok.",
+    "previewUnavailable": "Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.",
+    "runError": "Rapor oluşturulamadı.",
+    "idle": "Zorunlu filtreleri seçip Uygula'ya basın."
   },
   "params": {
     "orgUnitIds": "Birimler",

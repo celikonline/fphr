@@ -125,7 +125,14 @@
   },
   "viewer": {
     "search": "In den Ergebnissen suchen",
-    "noRows": "Keine Datensätze für diese Filter."
+    "noRows": "Keine Datensätze für diese Filter.",
+    "back": "Zurück zu den Berichten",
+    "apply": "Anwenden",
+    "downloadExcel": "Excel herunterladen",
+    "notFound": "Dieser Bericht wurde nicht gefunden oder Sie haben keinen Zugriff.",
+    "previewUnavailable": "Dieser Bericht kann nicht am Bildschirm angezeigt werden; Sie können ihn als Excel herunterladen.",
+    "runError": "Der Bericht konnte nicht erstellt werden.",
+    "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden."
   },
   "params": {
     "orgUnitIds": "Einheiten",
