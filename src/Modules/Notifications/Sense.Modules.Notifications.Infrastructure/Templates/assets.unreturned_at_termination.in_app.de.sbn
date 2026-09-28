@@ -1,0 +1,3 @@
+{{- subject = "Nicht zurückgegebene Ausrüstung: " + employee_name -}}
+{{- if asset_name != null && asset_name != ""; subject = "Nicht zurückgegebene Ausrüstung: " + employee_name + " (" + asset_name + ")"; end -}}
+{{ employee_name }} hat das Unternehmen verlassen, ohne {{ if asset_name != null && asset_name != "" }}{{ asset_name }}{{ else }}die Ausrüstung{{ end }} zurückzugeben.

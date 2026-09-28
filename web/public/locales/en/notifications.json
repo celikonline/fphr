@@ -43,6 +43,11 @@
     "onboarding": {
       "task_assigned": "When an onboarding task is assigned to me",
       "task_completed": "When an onboarding task is completed"
+    },
+    "assets": {
+      "assignment_created": "When equipment is assigned to me",
+      "assignment_returned": "When my equipment return is recorded",
+      "unreturned_at_termination": "When an employee leaves with unreturned equipment"
     }
   },
   "preferences": {
@@ -65,7 +70,8 @@
     "employee": "Employees",
     "announcement": "Announcements",
     "payroll": "Payroll",
-    "onboarding": "Onboarding"
+    "onboarding": "Onboarding",
+    "assets": "Equipment"
   },
   "types": {
     "documentExpiryReminder": "Document expiring soon"

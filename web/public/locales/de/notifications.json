@@ -43,6 +43,11 @@
     "onboarding": {
       "task_assigned": "Wenn mir eine Onboarding-Aufgabe zugewiesen wird",
       "task_completed": "Wenn eine Onboarding-Aufgabe abgeschlossen wird"
+    },
+    "assets": {
+      "assignment_created": "Wenn mir Ausrüstung zugewiesen wird",
+      "assignment_returned": "Wenn meine Rückgabe erfasst wird",
+      "unreturned_at_termination": "Wenn ein/e Mitarbeiter/in mit nicht zurückgegebener Ausrüstung austritt"
     }
   },
   "preferences": {
@@ -65,7 +70,8 @@
     "employee": "Mitarbeitende",
     "announcement": "Ankündigungen",
     "payroll": "Lohnabrechnung",
-    "onboarding": "Onboarding"
+    "onboarding": "Onboarding",
+    "assets": "Ausrüstung"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"

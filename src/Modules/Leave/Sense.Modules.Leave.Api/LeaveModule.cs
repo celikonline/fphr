@@ -7,6 +7,7 @@ using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Audit;
+using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -44,5 +45,9 @@ public sealed class LeaveModule : IModule
             typeof(ILeaveRuleSetRepository).Assembly,
             typeof(LeavePermissions).Assembly);
         services.AddLeaveServices(configuration);
+
+        // "İzin Günleri" Excel import template "leave.days" (collected by the DataTransfer module).
+        services.AddScoped<IImportTemplate, Application.Import.LeaveDaysImportTemplate>();
+        services.AddScoped<IImportRowHandler, Application.Import.LeaveDaysImportRowHandler>();
     }
 }

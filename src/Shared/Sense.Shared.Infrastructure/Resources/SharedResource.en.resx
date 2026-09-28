@@ -1555,4 +1555,38 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee.my.team" xml:space="preserve"><value>View my team</value></data>
   <data name="attendance.my.team" xml:space="preserve"><value>View my team's timesheet</value></data>
   <data name="leave.my.team" xml:space="preserve"><value>View my team's leave</value></data>
+  <data name="report.col.tenureDays" xml:space="preserve"><value>Tenure (days)</value></data>
+  <data name="report.col.year" xml:space="preserve"><value>Year</value></data>
+  <data name="report.col.terminationCount" xml:space="preserve"><value>Departed employees</value></data>
+  <data name="report.col.activeHeadcount" xml:space="preserve"><value>Active headcount</value></data>
+  <data name="report.col.turnoverRate" xml:space="preserve"><value>Turnover rate</value></data>
+  <data name="report.sheet.departedEmployees" xml:space="preserve"><value>Departed employees</value></data>
+  <data name="report.sheet.employeeBirthdays" xml:space="preserve"><value>Birthday list</value></data>
+  <data name="report.sheet.turnoverSummary" xml:space="preserve"><value>Turnover summary</value></data>
+  <data name="report.sheet.turnoverDetail" xml:space="preserve"><value>Departed employees</value></data>
+  <data name="leave.requests.import" xml:space="preserve"><value>Bulk-import leave days from Excel</value></data>
+  <data name="leave.import.error.no_profile" xml:space="preserve"><value>This employee has no leave profile/rule set assigned yet.</value></data>
+  <data name="leave.import.error.unsupported_unit" xml:space="preserve"><value>'{value}' is an hourly or half-day leave type; this template only supports full-day types.</value></data>
+  <data name="leave.import.error.invalid_days" xml:space="preserve"><value>Invalid number of days: '{value}'. Enter a decimal number greater than 0 (e.g. 2.5).</value></data>
+  <data name="import.template.leave.days.name" xml:space="preserve"><value>Leave Days</value></data>
+  <data name="import.template.leave.days.description" xml:space="preserve"><value>Bulk-import historical/opening leave usage from a previous system or paper records.</value></data>
+  <data name="import.template.leave.days.instruction.match" xml:space="preserve"><value>Employees are matched by national id; the employee record and a leave rule set must already exist.</value></data>
+  <data name="import.template.leave.days.instruction.type" xml:space="preserve"><value>The leave type must match exactly (case/whitespace-insensitive) one of the types in the employee's rule set; custom types must be defined first.</value></data>
+  <data name="import.template.leave.days.instruction.days" xml:space="preserve"><value>The number of days used is recorded as given, independent of the start/end dates; the system does not recompute it from the date range.</value></data>
+  <data name="import.template.leave.days.instruction.full_day_only" xml:space="preserve"><value>This template only supports full-day leave types; hourly and half-day types cannot be imported.</value></data>
+  <data name="import.template.leave.days.sample.valid" xml:space="preserve"><value>Valid: a 5-day annual leave usage.</value></data>
+  <data name="import.template.leave.days.sample.invalid_type" xml:space="preserve"><value>Invalid: the leave type is not defined in the employee's rule set.</value></data>
+  <data name="import.column.leave.nationalId" xml:space="preserve"><value>National id</value></data>
+  <data name="import.column.leave.nationalId.description" xml:space="preserve"><value>The employee's national id; used to match the row to an employee.</value></data>
+  <data name="import.column.leave.leaveTypeName" xml:space="preserve"><value>Leave type</value></data>
+  <data name="import.column.leave.leaveTypeName.description" xml:space="preserve"><value>The name of a leave type defined in the employee's rule set (full-day types only).</value></data>
+  <data name="import.column.leave.startDate" xml:space="preserve"><value>Start date</value></data>
+  <data name="import.column.leave.startDate.description" xml:space="preserve"><value>The leave's start date (DD.MM.YYYY).</value></data>
+  <data name="import.column.leave.endDate" xml:space="preserve"><value>End date</value></data>
+  <data name="import.column.leave.endDate.description" xml:space="preserve"><value>The leave's end date (DD.MM.YYYY).</value></data>
+  <data name="import.column.leave.days" xml:space="preserve"><value>Days used</value></data>
+  <data name="import.column.leave.days.description" xml:space="preserve"><value>Number of leave days used; decimals are allowed (e.g. 2.5). Recorded as given, independent of the date range.</value></data>
+  <data name="import.column.leave.description" xml:space="preserve"><value>Description</value></data>
+  <data name="import.column.leave.description.description" xml:space="preserve"><value>Optional note; recommended for balancing/reconciliation rows.</value></data>
+  <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Leave usage report</value></data>
 </root>

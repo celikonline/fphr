@@ -52,7 +52,7 @@ export async function markAllNotificationsRead(): Promise<void> {
 }
 
 export type NotificationChannel = "email" | "in_app";
-export type NotificationCategory = "account" | "request" | "approval";
+export type NotificationCategory = "account" | "request" | "approval" | "assets";
 
 export interface NotificationChannelSettingDto {
   channel: NotificationChannel;
