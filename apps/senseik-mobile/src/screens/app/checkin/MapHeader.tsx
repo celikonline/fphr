@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import { palette, radius, text, tones } from "@/theme/theme";
+import type { Geofence } from "./geofence";
 
 export type Coordinates = { latitude: number; longitude: number };
 
@@ -21,10 +22,12 @@ type Props = {
   position: Coordinates | null;
   /** Location name from the last punch, the coordinates, or a status such as "Konum alınıyor…". */
   placeLabel: string;
+  /** FG-005: the office geofence, drawn as a brand circle on the map only (no map, no circle). */
+  geofence?: Geofence | null;
 };
 
 /** Map with the user's position and a 60 m circle, or a glass "Konumun" card when no map can render. */
-export function MapHeader({ showMap, position, placeLabel }: Props) {
+export function MapHeader({ showMap, position, placeLabel, geofence = null }: Props) {
   const { t } = useTranslation("checkin");
   const { height } = useWindowDimensions();
 
@@ -47,11 +50,20 @@ export function MapHeader({ showMap, position, placeLabel }: Props) {
           rotateEnabled={false}
           toolbarEnabled={false}
         >
+          {geofence ? (
+            <Circle
+              testID="geofence-circle"
+              center={geofence.center}
+              radius={geofence.radiusMeters}
+              strokeColor={palette.brand}
+              fillColor={tones.info.bg}
+            />
+          ) : null}
           <Circle
             center={position}
             radius={CIRCLE_METERS}
-            strokeColor={palette.brand}
-            fillColor={tones.info.bg}
+            strokeColor={palette.ice}
+            fillColor={tones.neutral.bg}
           />
           <Marker coordinate={position} pinColor={palette.brand} />
         </MapView>

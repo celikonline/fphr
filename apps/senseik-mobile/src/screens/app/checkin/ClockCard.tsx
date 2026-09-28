@@ -10,6 +10,7 @@ import {
   formatGmtOffset,
 } from "@/lib/punch";
 import { palette, text } from "@/theme/theme";
+import { formatDistance, isInsideGeofence, type NearestLocation } from "./geofence";
 
 const TICK_MS = 1000;
 
@@ -20,6 +21,8 @@ type Props = {
   workingSince: string | null;
   /** `expo-location` `coords.accuracy` in meters; `null` when unknown. */
   accuracyMeters: number | null;
+  /** FG-005: the caller's check-in location (nearest), `null` for a roaming employee - no line, no pill. */
+  location: NearestLocation | null;
 };
 
 function formatClock(date: Date): string {
@@ -33,7 +36,7 @@ function formatClock(date: Date): string {
  * GMT offset + date, location accuracy badge; then the "Girişten beri …" line below the card. The
  * tick lives here so only this card re-renders every second, not the map above it.
  */
-export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
+export function ClockCard({ active, workingSince, accuracyMeters, location }: Props) {
   const { t } = useTranslation("checkin");
   const [now, setNow] = useState(() => new Date());
 
@@ -48,6 +51,15 @@ export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
   const level = accuracyLevel(accuracyMeters);
   const elapsed = workingSince ? elapsedSinceCheckIn(workingSince, now) : null;
   const clock = formatClock(now);
+  const inside = isInsideGeofence(location);
+  const locationLine = location
+    ? location.distanceMeters === null
+      ? location.location.name
+      : t("geofence.distance", {
+          name: location.location.name,
+          distance: formatDistance(location.distanceMeters),
+        })
+    : null;
 
   return (
     <>
@@ -74,7 +86,18 @@ export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
           {accuracy ? (
             <StatusPill label={accuracy} tone={level === "good" ? "success" : "warning"} />
           ) : null}
+          {inside === null ? null : (
+            <StatusPill
+              label={inside ? t("geofence.inside") : t("geofence.outside")}
+              tone={inside ? "success" : "danger"}
+            />
+          )}
         </View>
+        {locationLine ? (
+          <Text style={styles.location} numberOfLines={1}>
+            {locationLine}
+          </Text>
+        ) : null}
       </GlassCard>
       {elapsed ? <Text style={styles.elapsed}>{t("clock.sinceCheckIn", { elapsed })}</Text> : null}
     </>
@@ -107,6 +130,11 @@ const styles = StyleSheet.create({
     borderTopColor: palette.line,
     alignSelf: "stretch",
     justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  location: {
+    ...text.caption,
+    marginTop: 8,
   },
   accuracyText: {
     ...text.bodyMuted,

@@ -74,6 +74,18 @@ export class BiometricService {
     }
   }
 
+  /**
+   * FG-005 (Karar 3): confirms an action (a punch) with biometrics when the device has them enrolled;
+   * a device without enrolled biometrics is not asked (resolves `true`). With biometrics, a cancelled
+   * or failed prompt resolves `false`. Goes through `authenticate`, so `disableDeviceFallback` holds -
+   * never falls back to the device PIN. Independent of the login's "biometric enabled" setting.
+   */
+  async confirmAction(reason: string): Promise<boolean> {
+    const { available } = await this.isBiometricAvailable();
+    if (!available) return true;
+    return this.authenticate(reason);
+  }
+
   async enableBiometric(): Promise<void> {
     const available = await this.isBiometricAvailable();
     if (!available.available) {

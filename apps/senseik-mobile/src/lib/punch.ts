@@ -1,4 +1,5 @@
 import type { CheckInBreak, MyCheckInStatus } from "@/services/AttendanceService";
+import { getApiErrorMessage, getApiProblem } from "@/lib/apiError";
 import { formatDate, formatDurationMinutes } from "@/lib/formatters";
 import i18n from "@/lib/i18n";
 
@@ -111,6 +112,32 @@ export function punchTimes(
     breakStart: latest ? hhmm(latest.start) : hhmm(session.breakStart),
     breakEnd: latest ? hhmm(latest.end) : hhmm(session.breakEnd),
   };
+}
+
+/** Server code for a GPS/QR punch outside the location's radius (`SelfCheckInOutsideGeofence`). */
+export const OUTSIDE_GEOFENCE_CODE = "attendance.self_checkin.outside_geofence";
+
+/**
+ * Punch error text. Outside the geofence gets the app's own message (the server's text says
+ * "check-in" even for Çıkış/Mola); anything else is the server's localized detail or the fallback.
+ */
+export function punchErrorMessage(error: unknown): string {
+  if (getApiProblem(error)?.code === OUTSIDE_GEOFENCE_CODE) {
+    return i18n.t("checkin:geofence.outsideError");
+  }
+  return getApiErrorMessage(error, i18n.t("checkin:errors.punch"));
+}
+
+/**
+ * FG-005 (Karar 3): runs the biometric `confirm` first and only then `send`s the punch; a declined or
+ * cancelled confirmation sends nothing and resolves `null`.
+ */
+export async function sendConfirmedPunch<T>(
+  confirm: () => Promise<boolean>,
+  send: () => Promise<T>
+): Promise<T | null> {
+  if (!(await confirm())) return null;
+  return send();
 }
 
 /** "27 Eyl 2026". */

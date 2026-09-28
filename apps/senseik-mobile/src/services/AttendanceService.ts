@@ -123,6 +123,18 @@ export interface GpsCheckInInput {
   direction: PunchDirection;
 }
 
+/**
+ * `CheckInLocationDto` (FG-005, `GET self-checkin/locations`): the caller's unit's effective location
+ * (0 or 1 item). `latitude`/`longitude`/`radiusMeters` are omitted when no geofence is configured.
+ */
+export interface CheckInLocation {
+  locationId: string;
+  name: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  radiusMeters?: number | null;
+}
+
 /** `PunchCorrectionStatus` (FG-004). */
 export type PunchCorrectionStatus =
   "pending" | "approved" | "applyFailed" | "rejected" | "withdrawn";
@@ -180,6 +192,14 @@ export class AttendanceService {
     const response = await apiClient.post<SelfCheckInResult>(
       `${ATTENDANCE_BASE}/self-checkin/gps`,
       input
+    );
+    return response.data;
+  }
+
+  /** FG-005: locations the caller checks in against (attendance.my.checkin); `[]` for a roaming employee. */
+  async getCheckInLocations(): Promise<CheckInLocation[]> {
+    const response = await apiClient.get<CheckInLocation[]>(
+      `${ATTENDANCE_BASE}/self-checkin/locations`
     );
     return response.data;
   }

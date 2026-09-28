@@ -50,6 +50,24 @@ describe("AttendanceService", () => {
       expect(result).toEqual(data);
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/gps", input);
     });
+
+    it("reads the caller's check-in locations (FG-005)", async () => {
+      const data = [
+        {
+          locationId: "loc-1",
+          name: "Merkez Ofis",
+          latitude: 39.92,
+          longitude: 32.85,
+          radiusMeters: 150,
+        },
+      ];
+      (apiClient.get as jest.Mock).mockResolvedValue({ data });
+
+      const result = await attendanceService.getCheckInLocations();
+
+      expect(result).toEqual(data);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/locations");
+    });
   });
 
   describe("getMyAttendanceDays", () => {

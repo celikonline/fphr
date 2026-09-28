@@ -66,5 +66,16 @@
     "openSettings": "Open settings"
   },
   "breakTotal": "Today's break: {{minutes}} min",
-  "doneToday": "Done for today"
+  "doneToday": "Done for today",
+  "geofence": {
+    "inside": "In office area",
+    "outside": "Outside area",
+    "distance": "{{name}} · {{distance}}",
+    "kilometers": "{{value}} km",
+    "outsideError": "You are outside the office area; nothing was recorded. Move into the office area and try again."
+  },
+  "biometric": {
+    "punchPrompt": "Verify your identity to record the clock entry",
+    "cancelled": "Identity not verified; nothing was recorded."
+  }
 }

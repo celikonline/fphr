@@ -66,5 +66,16 @@
     "openSettings": "Ayarları aç"
   },
   "breakTotal": "Bugünkü mola: {{minutes}} dk",
-  "doneToday": "Bugün tamamlandı"
+  "doneToday": "Bugün tamamlandı",
+  "geofence": {
+    "inside": "Ofis alanında",
+    "outside": "Alan dışında",
+    "distance": "{{name}} · {{distance}}",
+    "kilometers": "{{value}} km",
+    "outsideError": "Ofis alanının dışındasınız; kayıt oluşturulmadı. Ofis alanına girip tekrar deneyin."
+  },
+  "biometric": {
+    "punchPrompt": "Giriş/çıkış kaydı için kimliğinizi doğrulayın",
+    "cancelled": "Kimlik doğrulanmadı; kayıt oluşturulmadı."
+  }
 }

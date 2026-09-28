@@ -7,23 +7,28 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { ErrorBanner, PrimaryButton, Screen } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/apiError";
+import { biometricService } from "@/lib/biometric";
 import {
   PUNCH_ACTIONS,
   availableActions,
   nextPunchAction,
+  punchErrorMessage,
   punchLabel,
   punchTimes,
   qrButtonLabel,
+  sendConfirmedPunch,
   shouldRenderMap,
   type PunchAction,
 } from "@/lib/punch";
 import {
   attendanceService,
+  type CheckInLocation,
   type MyCheckInStatus,
   type SelfCheckInResult,
 } from "@/services/AttendanceService";
 import { palette, radius, text, tones } from "@/theme/theme";
 import { ClockCard } from "./checkin/ClockCard";
+import { nearestLocation, punchLocationId } from "./checkin/geofence";
 import { MapHeader, type Coordinates } from "./checkin/MapHeader";
 import { PunchTiles } from "./checkin/PunchTiles";
 import { useDeviceLocation, type DeviceLocation } from "./checkin/useDeviceLocation";
@@ -81,6 +86,8 @@ export default function CheckInScreen() {
   const [busy, setBusy] = useState<PunchAction | "qr" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<SelfCheckInResult | null>(null);
+  // FG-005: the caller's check-in location(s); `[]` (roaming, or not loaded) keeps today's behavior.
+  const [locations, setLocations] = useState<CheckInLocation[]>([]);
   // This session's punch times, keyed by attendance day so an overnight-open app never shows
   // yesterday's break on today's tiles.
   const [session, setSession] = useState<{
@@ -98,24 +105,43 @@ export default function CheckInScreen() {
     }
   }, []);
 
+  const loadLocations = useCallback(async () => {
+    try {
+      setLocations(await attendanceService.getCheckInLocations());
+    } catch {
+      // Not blocking: without a location the punch goes without `locationId`, as before FG-005.
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void loadStatus();
-    }, [loadStatus])
+      void loadLocations();
+    }, [loadStatus, loadLocations])
   );
 
   useEffect(() => {
     if (!isFocused) setScanning(false);
   }, [isFocused]);
 
-  /** Runs one punch; the status is the source of truth afterwards, so it is always refetched. */
+  /**
+   * Runs one punch after the biometric confirmation (FG-005, every punch kind incl. QR); a cancelled
+   * confirmation sends nothing. The status is the source of truth afterwards, so it is always refetched.
+   */
   async function submit(kind: PunchAction | "qr", send: () => Promise<SelfCheckInResult>) {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     setBusy(kind);
     setError(null);
     try {
-      const result = await send();
+      const result = await sendConfirmedPunch(
+        () => biometricService.confirmAction(t("biometric.punchPrompt")),
+        send
+      );
+      if (!result) {
+        setError(t("biometric.cancelled"));
+        return;
+      }
       setLastResult(result);
       setSession((current) => ({
         date: result.date,
@@ -126,7 +152,7 @@ export default function CheckInScreen() {
       }));
       await loadStatus();
     } catch (err) {
-      setError(getApiErrorMessage(err, i18n.t("checkin:errors.punch")));
+      setError(punchErrorMessage(err));
     } finally {
       inFlightRef.current = false;
       setBusy(null);
@@ -134,7 +160,15 @@ export default function CheckInScreen() {
   }
 
   function punch(action: PunchAction, coords: Coordinates) {
-    void submit(action, () => attendanceService.gpsCheckIn({ ...coords, direction: action }));
+    // Karar 2: `locationId` only for a location with a radius - the server then enforces it.
+    const locationId = punchLocationId(nearestLocation(locations, coords));
+    void submit(action, () =>
+      attendanceService.gpsCheckIn({
+        ...coords,
+        ...(locationId ? { locationId } : {}),
+        direction: action,
+      })
+    );
   }
 
   async function startScan() {
@@ -163,7 +197,7 @@ export default function CheckInScreen() {
     setRefreshing(true);
     // Never `retry` here: after "unavailable" that would reopen the declined accuracy dialog.
     location.recheck();
-    await loadStatus();
+    await Promise.all([loadStatus(), loadLocations()]);
     setRefreshing(false);
   }
 
@@ -190,6 +224,7 @@ export default function CheckInScreen() {
   }
 
   const coords = location.coords;
+  const nearest = nearestLocation(locations, coords);
   const workingSince = status?.checkIn && !status.checkOut ? status.checkIn : null;
   const breakMinutes = status?.breakMinutesToday ?? 0;
 
@@ -199,6 +234,7 @@ export default function CheckInScreen() {
         showMap={SHOW_MAP}
         position={coords}
         placeLabel={placeLabel(location, lastResult)}
+        geofence={nearest?.geofence ?? null}
       />
       {location.status === "denied" ? (
         <View style={styles.banner}>
@@ -228,6 +264,7 @@ export default function CheckInScreen() {
         active={isFocused}
         workingSince={workingSince}
         accuracyMeters={location.accuracy}
+        location={nearest}
       />
 
       {statusError ? (

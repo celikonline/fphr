@@ -6,10 +6,13 @@ import {
   formatGmtOffset,
   latestBreak,
   nextPunchAction,
+  punchErrorMessage,
   punchTimes,
   qrButtonLabel,
+  sendConfirmedPunch,
   shouldRenderMap,
 } from "@/lib/punch";
+import { AxiosError, AxiosHeaders } from "axios";
 
 const d = "2026-09-27";
 
@@ -212,5 +215,51 @@ describe("clock caption", () => {
     expect(formatGmtOffset(date)).toBe("GMT");
     spy.mockReturnValue(240);
     expect(formatGmtOffset(date)).toBe("GMT-4");
+  });
+});
+
+function problemError(data: object): AxiosError {
+  const config = { headers: new AxiosHeaders() };
+  return new AxiosError("Request failed", "ERR_BAD_REQUEST", config, null, {
+    data,
+    status: 400,
+    statusText: "Bad Request",
+    headers: {},
+    config,
+  });
+}
+
+describe("punchErrorMessage (FG-005)", () => {
+  it("explains an outside-geofence rejection with the app's own message", () => {
+    const error = problemError({
+      code: "attendance.self_checkin.outside_geofence",
+      detail: "Konumunuz bu lokasyonun izin verilen alanı dışında; check-in reddedildi.",
+    });
+    expect(punchErrorMessage(error)).toBe(
+      "Ofis alanının dışındasınız; kayıt oluşturulmadı. Ofis alanına girip tekrar deneyin."
+    );
+  });
+
+  it("keeps the server's localized detail for other errors, else the generic fallback", () => {
+    expect(punchErrorMessage(problemError({ code: "x", detail: "Sunucu mesajı" }))).toBe(
+      "Sunucu mesajı"
+    );
+    expect(punchErrorMessage(new Error("network"))).toBe(
+      "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin."
+    );
+  });
+});
+
+describe("sendConfirmedPunch (FG-005 biometric confirmation)", () => {
+  it("sends the punch after a confirmed prompt", async () => {
+    const send = jest.fn().mockResolvedValue("sent");
+    await expect(sendConfirmedPunch(() => Promise.resolve(true), send)).resolves.toBe("sent");
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends nothing when the prompt is cancelled", async () => {
+    const send = jest.fn().mockResolvedValue("sent");
+    await expect(sendConfirmedPunch(() => Promise.resolve(false), send)).resolves.toBeNull();
+    expect(send).not.toHaveBeenCalled();
   });
 });
