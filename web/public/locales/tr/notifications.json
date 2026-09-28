@@ -43,6 +43,11 @@
     "onboarding": {
       "task_assigned": "Bana bir oryantasyon görevi atandığında",
       "task_completed": "Bir oryantasyon görevi tamamlandığında"
+    },
+    "assets": {
+      "assignment_created": "Bana bir zimmet verildiğinde",
+      "assignment_returned": "Zimmet iadem kaydedildiğinde",
+      "unreturned_at_termination": "Bir çalışan iade edilmemiş zimmetle işten ayrıldığında"
     }
   },
   "preferences": {
@@ -65,7 +70,8 @@
     "employee": "Çalışanlar",
     "announcement": "Duyurular",
     "payroll": "Bordro",
-    "onboarding": "Oryantasyon"
+    "onboarding": "Oryantasyon",
+    "assets": "Zimmet"
   },
   "types": {
     "documentExpiryReminder": "Belge süresi dolmak üzere"
