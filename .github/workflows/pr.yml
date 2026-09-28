@@ -76,7 +76,7 @@ jobs:
         ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
           cache: true
