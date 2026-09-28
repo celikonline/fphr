@@ -6,6 +6,7 @@
     "ExpenseClaim": "Spesen",
     "Overtime": "Überstunden",
     "Requisition": "Stellenanforderung",
-    "VisaDocument": "Visadokument"
+    "VisaDocument": "Visadokument",
+    "PunchCorrection": "Fehlende Stempelung"
   }
 }
