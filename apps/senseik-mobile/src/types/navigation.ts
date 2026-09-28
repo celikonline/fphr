@@ -30,6 +30,7 @@ export type AppStackParamList = {
   Notifications: undefined;
   NotificationPreferences: undefined;
   NewRequest: { kind: RequestKind };
+  ApprovalHistory: undefined;
 };
 
 export type MainTabsParamList = {

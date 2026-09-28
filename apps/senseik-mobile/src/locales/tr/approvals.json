@@ -45,5 +45,31 @@
     "fallbackApprover": "Yedek onaylayan",
     "unknownRequester": "Bilinmiyor",
     "pending": "Bekliyor"
+  },
+  "history": {
+    "pill": "Geçmiş",
+    "title": "Geçmiş",
+    "loadError": "Geçmiş yüklenemedi. Lütfen tekrar deneyin.",
+    "empty": "Karar verdiğiniz talep yok",
+    "outcome": {
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi"
+    }
+  },
+  "selection": {
+    "select": "Seç",
+    "cancel": "İptal",
+    "selectAll": "Tümünü seç"
+  },
+  "bulk": {
+    "approve": "Onayla ({{count}})",
+    "reject": "Reddet ({{count}})",
+    "approveConfirmTitle": "Seçili talepleri onayla",
+    "approveConfirmMessage": "{{count}} talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "rejectTitle": "Seçili talepleri reddet",
+    "rejectMessage": "{{count}} talebi reddetmek üzeresiniz. Bu işlem geri alınamaz.",
+    "reasonRequired": "Gerekçe (zorunlu)",
+    "reasonPlaceholder": "Gerekçenizi yazın",
+    "error": "Talepler karara bağlanamadı. Lütfen tekrar deneyin."
   }
 }

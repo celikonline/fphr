@@ -36,6 +36,7 @@ import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
 import RequestsScreen from "@/screens/app/RequestsScreen";
 import NewRequestScreen from "@/screens/app/NewRequestScreen";
+import ApprovalHistoryScreen from "@/screens/app/approvals/ApprovalHistoryScreen";
 
 // expo-splash-screen's default `imageWidth` (dp); splash-icon.png is the BrandMark's full 40-unit box.
 const SPLASH_MARK_SIZE = 100;
@@ -124,6 +125,7 @@ function AppNavigator() {
       <AppStack.Screen name="Notifications" component={NotificationsScreen} />
       <AppStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <AppStack.Screen name="NewRequest" component={NewRequestScreen} />
+      <AppStack.Screen name="ApprovalHistory" component={ApprovalHistoryScreen} />
     </AppStack.Navigator>
   );
 }

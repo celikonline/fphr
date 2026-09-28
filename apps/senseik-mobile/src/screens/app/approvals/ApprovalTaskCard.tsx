@@ -1,9 +1,10 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Avatar, GlassCard, PrimaryButton, StatusPill } from "@/components/ui";
 import type { InboxTask } from "@/services/ApprovalsService";
-import { fontFor, palette, text } from "@/theme/theme";
+import { fontFor, palette, text, tones } from "@/theme/theme";
 import i18n from "@/lib/i18n";
 import { activeLocale } from "@/lib/formatters";
 import { ApprovalAttachmentsLine } from "./ApprovalAttachmentsLine";
@@ -35,23 +36,42 @@ function approverCaption(task: InboxTask): string {
   return parts.join(" · ");
 }
 
+/** FG-008: toplu seçim modunda kartın onay kutusu - `onToggle` yerine `onReject`/`onApprove`. */
+type SelectionProps = {
+  selected: boolean;
+  onToggle: () => void;
+  disabled: boolean;
+};
+
 type Props = {
   task: InboxTask;
   isDeciding: boolean;
   isApproving: boolean;
   onApprove: () => void;
   onReject: () => void;
+  /** FG-008: set while "Onaylarım" is in toplu seçim mode - replaces the action row with a checkbox. */
+  selection?: SelectionProps;
+  /** FG-008: this task's own decide-bulk failure (set only after a partial bulk failure), already localized server-side. */
+  errorMessage?: string | null;
 };
 
 /** Görev 8: "Onaylarım" kart görünümü (spec §5 / ZenHR "My Approvals" referansı). */
-export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onReject }: Props) {
+export function ApprovalTaskCard({
+  task,
+  isDeciding,
+  isApproving,
+  onApprove,
+  onReject,
+  selection,
+  errorMessage,
+}: Props) {
   const { t } = useTranslation("approvals");
   const { heading, subtitle } = approvalCardHeading(task);
   const detailRows = approvalDetailRows(task);
   const requesterName = task.requesterName ?? t("card.unknownRequester");
 
-  return (
-    <GlassCard style={styles.card}>
+  const cardBody = (
+    <>
       <View style={styles.headerRow}>
         <Avatar name={requesterName} size={44} radius={14} />
         <View style={styles.headerTexts}>
@@ -62,9 +82,17 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
             {approverCaption(task)}
           </Text>
         </View>
-        <Text style={styles.chevron} accessibilityElementsHidden importantForAccessibility="no">
-          ›
-        </Text>
+        {selection ? (
+          <Ionicons
+            name={selection.selected ? "checkmark-circle" : "ellipse-outline"}
+            size={24}
+            color={selection.selected ? palette.brand : palette.textFaint}
+          />
+        ) : (
+          <Text style={styles.chevron} accessibilityElementsHidden importantForAccessibility="no">
+            ›
+          </Text>
+        )}
       </View>
 
       <View style={styles.amountRow}>
@@ -95,28 +123,49 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
       ) : null}
       <ApprovalAttachmentsLine task={task} />
 
-      <View style={styles.actionRow}>
-        <View style={styles.actionButton}>
-          <PrimaryButton
-            label={t("actions.reject")}
-            variant="danger"
-            onPress={onReject}
-            disabled={isDeciding}
-            icon="close"
-          />
+      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+      {selection ? null : (
+        <View style={styles.actionRow}>
+          <View style={styles.actionButton}>
+            <PrimaryButton
+              label={t("actions.reject")}
+              variant="danger"
+              onPress={onReject}
+              disabled={isDeciding}
+              icon="close"
+            />
+          </View>
+          <View style={styles.actionButton}>
+            <PrimaryButton
+              label={t("actions.approve")}
+              onPress={onApprove}
+              disabled={isDeciding}
+              loading={isApproving}
+              icon="checkmark"
+            />
+          </View>
         </View>
-        <View style={styles.actionButton}>
-          <PrimaryButton
-            label={t("actions.approve")}
-            onPress={onApprove}
-            disabled={isDeciding}
-            loading={isApproving}
-            icon="checkmark"
-          />
-        </View>
-      </View>
-    </GlassCard>
+      )}
+    </>
   );
+
+  if (selection) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={selection.onToggle}
+        disabled={selection.disabled}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selection.selected, disabled: selection.disabled }}
+        accessibilityLabel={requesterName}
+      >
+        <GlassCard style={styles.card}>{cardBody}</GlassCard>
+      </TouchableOpacity>
+    );
+  }
+
+  return <GlassCard style={styles.card}>{cardBody}</GlassCard>;
 }
 
 const styles = StyleSheet.create({
@@ -183,6 +232,10 @@ const styles = StyleSheet.create({
   },
   note: {
     ...text.bodyMuted,
+  },
+  errorText: {
+    ...text.caption,
+    color: tones.danger.fg,
   },
   actionRow: {
     flexDirection: "row",
