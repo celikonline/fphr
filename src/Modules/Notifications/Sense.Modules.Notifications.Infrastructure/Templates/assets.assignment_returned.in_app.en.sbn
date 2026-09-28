@@ -1,0 +1,3 @@
+{{- subject = "Equipment return recorded" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Equipment return recorded: " + asset_name; end -}}
+Your {{ if asset_name != null && asset_name != "" }}return of {{ asset_name }}{{ else }}equipment return{{ end }} on {{ returned_at }} was recorded.

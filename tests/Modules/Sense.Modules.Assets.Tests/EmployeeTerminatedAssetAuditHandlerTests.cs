@@ -38,8 +38,8 @@ public sealed class EmployeeTerminatedAssetAuditHandlerTests
 
         await handler.Handle(integrationEvent, CancellationToken.None);
 
-        outbox.Received(1).Enqueue(Arg.Is<AssetUnreturnedAtTermination>(e => e.AssetId == laptop.Id && e.EmployeeId == EmployeeId));
-        outbox.Received(1).Enqueue(Arg.Is<AssetUnreturnedAtTermination>(e => e.AssetId == phone.Id && e.EmployeeId == EmployeeId));
+        outbox.Received(1).Enqueue(Arg.Is<AssetUnreturnedAtTermination>(e => e.AssetId == laptop.Id && e.EmployeeId == EmployeeId && e.AssetName == "MacBook Pro 14"));
+        outbox.Received(1).Enqueue(Arg.Is<AssetUnreturnedAtTermination>(e => e.AssetId == phone.Id && e.EmployeeId == EmployeeId && e.AssetName == "iPhone 15"));
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 

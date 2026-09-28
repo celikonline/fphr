@@ -1,0 +1,3 @@
+{{- subject = "New equipment assigned to you" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Equipment assigned to you: " + asset_name; end -}}
+{{ if asset_name != null && asset_name != "" }}{{ asset_name }} was{{ else }}New equipment was{{ end }} assigned to you on {{ issued_at }}.

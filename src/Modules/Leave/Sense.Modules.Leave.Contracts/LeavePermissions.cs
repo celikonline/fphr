@@ -67,6 +67,13 @@ public static class LeavePermissions
     public static readonly Permission RequestsCreateOnBehalf = new(
         "leave.requests.create_on_behalf", Module, "Çalışan Adına İzin Ekleme", Group, "Çalışanlar adına izin talebi oluşturma (İşlemler → İzin Ekle)");
 
+    /// <summary>
+    /// Ayarlar → Veri aktar → İzin Günleri (11.3.15 leave.days): geçmiş/açılış izin kullanımlarını Excel ile toplu yükleme.
+    /// HR/PayrollSpecialist/Owner "*" ile alır; Manager/Employee açık listelerinde yok, SystemRoleDefinitions değişmez.
+    /// </summary>
+    public static readonly Permission RequestsImport = new(
+        "leave.requests.import", Module, "İzin Günlerini Aktarma", Group, "İzin günleri şablonuyla geçmiş/açılış izin kullanımlarını Excel ile toplu yükleme");
+
     public static readonly Permission RequestsBypassApproval = new(
         "leave.requests.bypass_approval", Module, "Onay Süreci Olmadan İzin Onaylama", Group, "Çalışanlar için eklenen izni onay sürecine gerek kalmadan onaylanmış olarak kaydetme");
 
@@ -114,5 +121,5 @@ public static class LeavePermissions
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
          RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, RequestsApproveWithoutWorkflow, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead,
-         MyTeam];
+         MyTeam, RequestsImport];
 }

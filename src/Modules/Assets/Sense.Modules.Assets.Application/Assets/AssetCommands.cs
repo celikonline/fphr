@@ -172,7 +172,7 @@ public sealed class ReturnAssetHandler(IAssetRepository assets, IIntegrationEven
 
         if (employeeId is { } id)
         {
-            outbox.Enqueue(new AssetReturned(asset.TenantId, asset.Id, id, command.ReturnedAt));
+            outbox.Enqueue(new AssetReturned(asset.TenantId, asset.Id, id, command.ReturnedAt, asset.Name));
         }
 
         return Result.Success();

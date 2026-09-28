@@ -27,7 +27,7 @@ public sealed class AssetAssignmentApprovalCompletedHandler(IAssetRepository ass
             return;
         }
 
-        outbox.Enqueue(new AssetAssigned(asset.TenantId, asset.Id, asset.AssignedEmployeeId!.Value, asset.IssuedAt!.Value));
+        outbox.Enqueue(new AssetAssigned(asset.TenantId, asset.Id, asset.AssignedEmployeeId!.Value, asset.IssuedAt!.Value, asset.Name));
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

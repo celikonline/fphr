@@ -1,0 +1,7 @@
+{{- subject = "Zimmet iadeniz kaydedildi" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Zimmet iadeniz kaydedildi: " + asset_name; end -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ returned_at }} tarihli {{ if asset_name != null && asset_name != "" }}{{ asset_name | html.escape }} zimmet iadeniz{{ else }}zimmet iadeniz{{ end }} kaydedildi.</p>
+{{~ if action_url ~}}
+{{ button "Zimmetlerimi görüntüle" action_url }}
+{{~ end ~}}

@@ -17,6 +17,8 @@
     <ProjectReference Include="../../Onboarding/Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
     <!-- TK-014: consumes Leave.Contracts.Events.LeaveAddedOnBehalf. -->
     <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
+    <!-- Consumes Assets.Contracts.Events.AssetAssigned/AssetReturned/AssetUnreturnedAtTermination. -->
+    <ProjectReference Include="../../Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 
