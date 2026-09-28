@@ -3,6 +3,7 @@ import { formatDays, formatDurationMinutes } from "@/lib/formatters";
 import i18n from "@/lib/i18n";
 import { formatTime, leaveSummaryTypeLabel, requestTypeLabel } from "./approvalLabels";
 import type { InboxTask } from "@/services/ApprovalsService";
+import type { RequestDetailSummary } from "@/types/navigation";
 
 /** Requested time - "—" when that side wasn't asked for (only one punch is being corrected). */
 function formatOptionalTime(value?: string | null): string {
@@ -93,4 +94,23 @@ export function approvalDetailRows(task: Pick<InboxTask, "summary">): ApprovalDe
     ];
   }
   return [];
+}
+
+/** FG-009: passed as `RequestDetail`'s `summary` param when the "Onaylarım" card is tapped - reuses
+ * the same heading/rows this card already renders, so the detail screen shows type/amount/reason
+ * instantly instead of waiting on a second call. */
+export function approvalRequestDetailSummary(
+  task: Pick<InboxTask, "requestType" | "summary">
+): RequestDetailSummary {
+  const { heading, subtitle } = approvalCardHeading(task);
+  return {
+    title: subtitle ?? heading,
+    dateLabel: "",
+    detail: heading,
+    description:
+      task.summary?.leave?.description ??
+      task.summary?.overtime?.reason ??
+      task.summary?.punchCorrection?.reason ??
+      null,
+  };
 }

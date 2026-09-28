@@ -146,5 +146,24 @@
     "futureDateNotAllowed": "A future date cannot be selected.",
     "submitted": "Your correction request has been sent for approval.",
     "submitError": "The correction request could not be sent. Please try again."
+  },
+  "detail": {
+    "title": "Request detail",
+    "loadError": "The request detail could not be loaded.",
+    "timelineTitle": "Approval chain",
+    "step": "Step {{step}}",
+    "stepStatus": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending"
+    },
+    "hiddenApprover": "Approver",
+    "unknownAuthor": "Unknown",
+    "commentsTitle": "Comments",
+    "commentsEmpty": "No comments yet.",
+    "commentsClosed": "This request was cancelled, so it can no longer take comments.",
+    "commentPlaceholder": "Write a comment…",
+    "commentSend": "Send",
+    "commentSendError": "The comment could not be sent. Please try again."
   }
 }

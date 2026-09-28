@@ -146,5 +146,24 @@
     "futureDateNotAllowed": "Gelecek bir tarih seçilemez.",
     "submitted": "Düzeltme talebiniz onaya gönderildi.",
     "submitError": "Düzeltme talebi gönderilemedi. Lütfen tekrar deneyin."
+  },
+  "detail": {
+    "title": "Talep detayı",
+    "loadError": "Talep detayı yüklenemedi.",
+    "timelineTitle": "Onay zinciri",
+    "step": "{{step}}. adım",
+    "stepStatus": {
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "pending": "Bekliyor"
+    },
+    "hiddenApprover": "Onaylayıcı",
+    "unknownAuthor": "Bilinmiyor",
+    "commentsTitle": "Yorumlar",
+    "commentsEmpty": "Henüz yorum yok.",
+    "commentsClosed": "Bu talep iptal edildiği için yorum yapılamaz.",
+    "commentPlaceholder": "Yorum yaz…",
+    "commentSend": "Gönder",
+    "commentSendError": "Yorum gönderilemedi. Lütfen tekrar deneyin."
   }
 }

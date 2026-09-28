@@ -38,6 +38,7 @@ import type { AppStackParamList } from "@/types/navigation";
 import { ApprovalRejectSheet } from "./approvals/ApprovalRejectSheet";
 import { ApprovalTaskCard } from "./approvals/ApprovalTaskCard";
 import { ApprovalTypeSelect } from "./approvals/ApprovalTypeSelect";
+import { approvalRequestDetailSummary } from "./approvals/approvalPresentation";
 import {
   approvalFilterOptions,
   approvalFilterSelectedText,
@@ -374,6 +375,12 @@ export default function ApprovalsScreen() {
                 isApproving={decidingTaskId === task.taskId}
                 onApprove={() => confirmApprove(task.taskId)}
                 onReject={() => dispatchRejectFlow({ type: "START_REJECT", taskId: task.taskId })}
+                onPress={() =>
+                  navigation.navigate("RequestDetail", {
+                    approvalRequestId: task.approvalRequestId,
+                    summary: approvalRequestDetailSummary(task),
+                  })
+                }
               />
             );
           })

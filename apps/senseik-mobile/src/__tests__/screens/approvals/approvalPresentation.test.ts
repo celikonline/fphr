@@ -2,6 +2,7 @@ import {
   approvalAmountText,
   approvalCardHeading,
   approvalDetailRows,
+  approvalRequestDetailSummary,
   approvalTypeCaption,
 } from "@/screens/app/approvals/approvalPresentation";
 import type { InboxTask } from "@/services/ApprovalsService";
@@ -215,5 +216,56 @@ describe("approvalDetailRows (görev 8: Başlangıç/Bitiş/Tutar)", () => {
       { label: "Gün", value: expect.any(String) },
       { label: "Mevcut", value: "09:00 – —" },
     ]);
+  });
+});
+
+describe("approvalRequestDetailSummary (FG-009: Onaylarım kartından detaya geçiş)", () => {
+  it("uses the type label as title and the amount as detail when a summary is present", () => {
+    expect(
+      approvalRequestDetailSummary({
+        requestType: "Leave",
+        summary: {
+          requestDate: "2026-09-20",
+          leave: {
+            startDate: "2026-10-01",
+            endDate: "2026-10-05",
+            leaveTypeCode: "annual",
+            leaveTypeName: "leave.type.annual",
+            days: 5,
+            description: "Aile ziyareti",
+          },
+        },
+      })
+    ).toEqual({
+      title: "Yıllık izin",
+      dateLabel: "",
+      detail: "5 gün",
+      description: "Aile ziyareti",
+    });
+  });
+
+  it("falls back to the type label alone (no summary) for an expense/advance task, with no description", () => {
+    expect(approvalRequestDetailSummary({ requestType: "Advance", summary: null })).toEqual({
+      title: "Avans",
+      dateLabel: "",
+      detail: "Avans",
+      description: null,
+    });
+  });
+
+  it("takes the description from the punch-correction reason", () => {
+    expect(
+      approvalRequestDetailSummary({
+        requestType: "PunchCorrection",
+        summary: {
+          requestDate: "2026-09-20",
+          punchCorrection: {
+            date: "2026-09-18",
+            requestedCheckOut: "18:00:00",
+            reason: "Turnike arızalıydı",
+          },
+        },
+      }).description
+    ).toBe("Turnike arızalıydı");
   });
 });

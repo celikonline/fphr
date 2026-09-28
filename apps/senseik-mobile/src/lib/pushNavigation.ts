@@ -47,6 +47,17 @@ const NOTIFICATION_TYPE_TARGETS: Record<string, NavigationTarget> = {
 };
 
 /**
+ * FG-009: `request.comment_added` is deliberately left out of both this table and
+ * `ALLOWED_PUSH_SCREENS` above. Its target (`RequestDetail`) needs an `approvalRequestId`, which
+ * `NavigationTarget` (a static stack/tab, no params) cannot carry - and the backend only sends this
+ * template's push `data` as `{ type, id }` where `id` is the delivery id, not the request id (see the
+ * FG-009 backend/P06 report), so there is nothing to resolve here anyway. It also never reaches this
+ * function's push-open path today - this template's only channel is `in_app` (Karar 8). The in-app
+ * notification center (`lib/notificationNavigation.ts`'s `resolveRequestDetailTarget`, reading
+ * `actionUrl`) is the one working deep link for it.
+ */
+
+/**
  * Resolves where a push notification's `data` payload should open, or `null` when the payload
  * names no known screen/type. Own keys only, so "constructor"/"toString" never resolve to an
  * `Object.prototype` member.

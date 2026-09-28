@@ -53,6 +53,9 @@ type Props = {
   selection?: SelectionProps;
   /** FG-008: this task's own decide-bulk failure (set only after a partial bulk failure), already localized server-side. */
   errorMessage?: string | null;
+  /** FG-009: opens the request's detail (timeline + comments); ignored while `selection` is set
+   * (the whole card is already a toggle then - the chevron only shows outside selection mode). */
+  onPress?: () => void;
 };
 
 /** Görev 8: "Onaylarım" kart görünümü (spec §5 / ZenHR "My Approvals" referansı). */
@@ -64,6 +67,7 @@ export function ApprovalTaskCard({
   onReject,
   selection,
   errorMessage,
+  onPress,
 }: Props) {
   const { t } = useTranslation("approvals");
   const { heading, subtitle } = approvalCardHeading(task);
@@ -165,6 +169,14 @@ export function ApprovalTaskCard({
       >
         <GlassCard style={styles.card}>{cardBody}</GlassCard>
       </TouchableOpacity>
+    );
+  }
+
+  if (onPress) {
+    return (
+      <GlassCard style={styles.card} onPress={onPress} accessibilityLabel={requesterName}>
+        {cardBody}
+      </GlassCard>
     );
   }
 

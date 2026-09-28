@@ -9,6 +9,7 @@ import { notificationsService, type UserNotification } from "@/services/Notifica
 import {
   navigateToTarget,
   resolveNotificationNavigationTarget,
+  resolveRequestDetailTarget,
 } from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
 import { palette } from "@/theme/theme";
@@ -99,6 +100,14 @@ export default function NotificationsScreen() {
         // Navigating away regardless - a failed "mark read" just leaves it unread until the next
         // reload; not worth blocking navigation or alerting over.
       }
+    }
+
+    // FG-009: `request.comment_added` has no static target (its screen needs an id) - resolved from
+    // `actionUrl` instead, see `resolveRequestDetailTarget`'s doc comment.
+    const requestDetail = resolveRequestDetailTarget(notification.actionUrl);
+    if (requestDetail) {
+      navigation.navigate("RequestDetail", requestDetail);
+      return;
     }
 
     const target = resolveNotificationNavigationTarget(notification.templateKey);

@@ -9,11 +9,13 @@ import { RequestSheet } from "@/navigation/RequestSheet";
 import { leaveService } from "@/services/LeaveService";
 import { expenseService } from "@/services/ExpenseService";
 import { attendanceService } from "@/services/AttendanceService";
+import { workflowService, type MyApprovalRequestSummary } from "@/services/WorkflowService";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { palette } from "@/theme/theme";
 import type { AppStackParamList, RequestKind } from "@/types/navigation";
 import { FilterChips } from "./requests/FilterChips";
 import { RequestCardView } from "./requests/RequestCardView";
+import { findApprovalRequestId } from "./requests/requestTimeline";
 import {
   REQUEST_FILTERS,
   buildRequestCards,
@@ -72,10 +74,13 @@ export default function RequestsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [withdrawingKey, setWithdrawingKey] = useState<string | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
+  // FG-009: subjectId -> approvalRequestId lookup for the card tap -> detail navigation. A failed
+  // load just leaves cards non-tappable (kontrolcü notu) - never its own error banner.
+  const [myApprovalRequests, setMyApprovalRequests] = useState<MyApprovalRequestSummary[]>([]);
 
   // Sources load independently: one failing list never hides the others.
   const loadAll = useCallback(async () => {
-    const [leave, overtime, expense, advance, categories, punchCorrection] =
+    const [leave, overtime, expense, advance, categories, punchCorrection, myRequests] =
       await Promise.allSettled([
         leaveService.getMyRequests(),
         leaveService.getMyOvertimeRequests(),
@@ -83,6 +88,7 @@ export default function RequestsScreen() {
         expenseService.getMyAdvanceRequests(),
         expenseService.getCategories(),
         attendanceService.getMyPunchCorrections(),
+        workflowService.getMyRequests(),
       ]);
     setCards(
       buildRequestCards({
@@ -94,6 +100,7 @@ export default function RequestsScreen() {
         punchCorrection: settledValue(punchCorrection),
       })
     );
+    setMyApprovalRequests(settledValue(myRequests));
     // Categories only name expense cards; their failure alone is not worth a banner.
     const failed = [leave, overtime, expense, advance, punchCorrection].some(
       (result) => result.status === "rejected"
@@ -144,6 +151,20 @@ export default function RequestsScreen() {
   function startRequest(kind: RequestKind) {
     setSheetVisible(false);
     navigation.navigate("NewRequest", { kind });
+  }
+
+  // FG-009: the summary already loaded for the card is passed along so the detail screen's header
+  // shows instantly, without waiting on a second network round-trip.
+  function openRequestDetail(card: RequestCard, approvalRequestId: string) {
+    navigation.navigate("RequestDetail", {
+      approvalRequestId,
+      summary: {
+        title: card.title,
+        dateLabel: card.dateLabel,
+        detail: card.detail,
+        description: card.description,
+      },
+    });
   }
 
   const header = (
@@ -200,14 +221,20 @@ export default function RequestsScreen() {
             onAction={() => (filter === "all" ? setSheetVisible(true) : startRequest(filter))}
           />
         ) : (
-          visibleCards.map((card) => (
-            <RequestCardView
-              key={card.key}
-              card={card}
-              isWithdrawing={withdrawingKey === card.key}
-              onWithdraw={() => confirmWithdraw(card)}
-            />
-          ))
+          visibleCards.map((card) => {
+            const approvalRequestId = findApprovalRequestId(myApprovalRequests, card.id, card.kind);
+            return (
+              <RequestCardView
+                key={card.key}
+                card={card}
+                isWithdrawing={withdrawingKey === card.key}
+                onWithdraw={() => confirmWithdraw(card)}
+                onPress={
+                  approvalRequestId ? () => openRequestDetail(card, approvalRequestId) : undefined
+                }
+              />
+            );
+          })
         )}
       </View>
       {sheet}

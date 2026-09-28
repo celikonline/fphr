@@ -2,6 +2,7 @@ import type { NavigationProp } from "@react-navigation/native";
 import {
   navigateToTarget,
   resolveNotificationNavigationTarget,
+  resolveRequestDetailTarget,
 } from "@/lib/notificationNavigation";
 import type { AppStackParamList } from "@/types/navigation";
 
@@ -48,6 +49,29 @@ describe("resolveNotificationNavigationTarget (N1)", () => {
     expect(resolveNotificationNavigationTarget("documents.expiry_reminder")).toBeNull();
     expect(resolveNotificationNavigationTarget("onboarding.task_assigned")).toBeNull();
     expect(resolveNotificationNavigationTarget("ohs.sgk_notification_due")).toBeNull();
+  });
+});
+
+describe("resolveRequestDetailTarget (FG-009: request.comment_added's actionUrl-based deep link)", () => {
+  it("extracts the approvalRequestId from a well-formed /app/requests/{guid} path", () => {
+    expect(
+      resolveRequestDetailTarget("/app/requests/3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    ).toEqual({ approvalRequestId: "3fa85f64-5717-4562-b3fc-2c963f66afa6" });
+  });
+
+  it("returns null for a path with no id, a web-only path, or garbage", () => {
+    expect(resolveRequestDetailTarget("/app/requests")).toBeNull();
+    expect(resolveRequestDetailTarget("/app/inbox")).toBeNull();
+    expect(resolveRequestDetailTarget("/app/requests/not-a-guid")).toBeNull();
+    expect(
+      resolveRequestDetailTarget("/app/requests/3fa85f64-5717-4562-b3fc-2c963f66afa6/extra")
+    ).toBeNull();
+  });
+
+  it("returns null for a missing actionUrl", () => {
+    expect(resolveRequestDetailTarget(null)).toBeNull();
+    expect(resolveRequestDetailTarget(undefined)).toBeNull();
+    expect(resolveRequestDetailTarget("")).toBeNull();
   });
 });
 
