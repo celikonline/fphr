@@ -226,7 +226,8 @@ function ReportCatalogAndHistory() {
 
           <div className="lg:col-span-5">
             {selected ? (
-              <ReportRunPanel key={selected.key} report={selected} canGenerate={canGenerate} />
+              // The full-page viewer needs reports.my.executions as well, so the open button requires both.
+              <ReportRunPanel key={selected.key} report={selected} canGenerate={canGenerate && canViewHistory} />
             ) : (
               <Card withBorder padding="lg" radius="md" className="h-full">
                 <Stack align="center" justify="center" gap="xs" className="min-h-40">

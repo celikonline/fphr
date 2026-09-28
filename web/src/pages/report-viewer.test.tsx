@@ -37,8 +37,10 @@ vi.mock("@/services/reports.service", async () => {
   };
 });
 
+const permissions = vi.hoisted(() => ({ denied: new Set<string>() }));
+
 vi.mock("@/components/permission-guard", () => ({
-  usePermission: () => true,
+  usePermission: (permission: string) => !permissions.denied.has(permission),
   useAnyPermission: () => true,
 }));
 
@@ -119,6 +121,7 @@ function renderPage(entry: string, { strict = false } = {}) {
 
 describe("ReportViewerPage", () => {
   beforeEach(() => {
+    permissions.denied.clear();
     vi.mocked(getReportCatalog).mockResolvedValue([NO_FILTER, WITH_YEAR]);
     vi.mocked(requestReport).mockResolvedValue(EXECUTION);
     vi.mocked(getReportExecution).mockResolvedValue(EXECUTION);
@@ -196,5 +199,118 @@ describe("ReportViewerPage", () => {
 
     expect(await screen.findByText("Bu rapor bulunamadı ya da erişiminiz yok.")).toBeInTheDocument();
     expect(requestReport).not.toHaveBeenCalled();
+  });
+
+  it("shows the load error, not the empty-result text, when the report data cannot be fetched", async () => {
+    const response = { status: 500, data: {} } as AxiosResponse;
+    vi.mocked(getReportExecutionData).mockRejectedValue(new AxiosError("boom", "ERR_BAD_RESPONSE", undefined, undefined, response));
+
+    renderPage("/app/reports/employee.list?execution=exec-1");
+
+    expect(await screen.findByText("Rapor verisi yüklenemedi.")).toBeInTheDocument();
+    expect(screen.queryByText("Bu filtrelerle gösterilecek kayıt yok.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Excel indir" })).toBeEnabled();
+  });
+
+  it("shows the load error for a plain network failure too", async () => {
+    vi.mocked(getReportExecutionData).mockRejectedValue(new Error("timeout"));
+
+    renderPage("/app/reports/employee.list?execution=exec-1");
+
+    expect(await screen.findByText("Rapor verisi yüklenemedi.")).toBeInTheDocument();
+    expect(screen.queryByText("Bu filtrelerle gösterilecek kayıt yok.")).not.toBeInTheDocument();
+  });
+
+  it("searches the rows after the debounce, and sends no q for an empty or whitespace-only box", async () => {
+    const user = userEvent.setup();
+    renderPage("/app/reports/employee.list?execution=exec-1");
+    await screen.findByText("Ayşe");
+    const box = screen.getByRole("textbox", { name: "Sonuçlarda ara" });
+
+    await user.type(box, "Ay");
+    await waitFor(() => expect(getReportExecutionData).toHaveBeenCalledWith("exec-1", expect.objectContaining({ q: "Ay", page: 1 })), {
+      timeout: 3000,
+    });
+
+    await user.clear(box);
+    await user.type(box, "   ");
+    await waitFor(
+      () => {
+        const [, query] = vi.mocked(getReportExecutionData).mock.lastCall ?? [];
+        expect(query).toEqual(expect.objectContaining({ page: 1 }));
+        expect(query?.q).toBeUndefined();
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it("sorts by the clicked column: ascending first, then descending", async () => {
+    const user = userEvent.setup();
+    renderPage("/app/reports/employee.list?execution=exec-1");
+    await screen.findByText("Ayşe");
+
+    await user.click(screen.getByRole("button", { name: "Ad" }));
+    await waitFor(() => expect(getReportExecutionData).toHaveBeenCalledWith("exec-1", expect.objectContaining({ sort: "0", page: 1 })));
+
+    await user.click(screen.getByRole("button", { name: "Ad" }));
+    await waitFor(() => expect(getReportExecutionData).toHaveBeenCalledWith("exec-1", expect.objectContaining({ sort: "-0", page: 1 })));
+  });
+
+  it("requests the next page from the pager", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getReportExecutionData).mockResolvedValue({
+      ...DATA,
+      rows: { items: [["Ayşe"], ["Mehmet"]], page: 1, pageSize: 50, totalCount: 120, totalPages: 3, hasNext: true, hasPrevious: false },
+    });
+    renderPage("/app/reports/employee.list?execution=exec-1");
+    await screen.findByText("Ayşe");
+
+    await user.click(screen.getByRole("button", { name: "2" }));
+
+    await waitFor(() => expect(getReportExecutionData).toHaveBeenCalledWith("exec-1", expect.objectContaining({ page: 2, pageSize: 50 })));
+  });
+
+  it("generates again from Uygula and then downloads the new execution's file", async () => {
+    const user = userEvent.setup();
+    const regenerated: ReportExecution = { ...EXECUTION, id: "exec-2", resultFileName: "Yeni.xlsx" };
+    vi.mocked(getReportExecution).mockImplementation((id: string) => Promise.resolve(id === "exec-2" ? regenerated : EXECUTION));
+    vi.mocked(requestReport).mockResolvedValue(regenerated);
+    renderPage("/app/reports/employee.list?execution=exec-1");
+    await screen.findByText("Ayşe");
+    expect(requestReport).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Uygula" }));
+
+    await waitFor(() => expect(requestReport).toHaveBeenCalledWith("employee.list", {}, { notify: false }));
+    await waitFor(() => expect(getReportExecutionData).toHaveBeenCalledWith("exec-2", expect.anything()));
+    await user.click(screen.getByRole("button", { name: "Excel indir" }));
+
+    await waitFor(() => expect(downloadReportExecution).toHaveBeenCalledWith("exec-2", "Yeni.xlsx"));
+    expect(requestReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops an ?execution= that belongs to another report and generates this one", async () => {
+    vi.mocked(getReportExecution).mockImplementation((id: string) =>
+      Promise.resolve(id === "foreign" ? { ...EXECUTION, id, reportKey: "employee.departed" } : { ...EXECUTION, id })
+    );
+
+    renderPage("/app/reports/employee.list?execution=foreign");
+
+    expect(await screen.findByText("Ayşe")).toBeInTheDocument();
+    expect(requestReport).toHaveBeenCalledTimes(1);
+    expect(requestReport).toHaveBeenCalledWith("employee.list", {}, { notify: false });
+    expect(getReportExecutionData).not.toHaveBeenCalledWith("foreign", expect.anything());
+  });
+
+  it.each(["reports.my.executions", "reports.catalog.view"])("shows the no-access page without generating when %s is missing", async (permission) => {
+    permissions.denied.add(permission);
+
+    renderPage("/app/reports/employee.list");
+
+    expect(await screen.findByText("Bu sayfaya erişiminiz yok")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Excel indir" })).not.toBeInTheDocument();
+    expect(requestReport).not.toHaveBeenCalled();
+    if (permission === "reports.catalog.view") expect(getReportCatalog).not.toHaveBeenCalled();
   });
 });

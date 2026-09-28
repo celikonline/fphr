@@ -139,6 +139,7 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
     retry: false,
   });
   const previewUnavailable = getApiProblem(dataQuery.error)?.code === REPORT_PREVIEW_UNAVAILABLE_CODE;
+  const dataFailed = dataQuery.isError && !previewUnavailable;
 
   const downloadMutation = useMutation({
     mutationFn: () => downloadReportExecution(execution?.id ?? "", execution?.resultFileName ?? `${report.key}.xlsx`),
@@ -199,6 +200,11 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
           {t("reports:viewer.previewUnavailable")}
         </Alert>
       )}
+      {dataFailed && (
+        <Alert color="red" variant="light">
+          {getApiErrorMessage(dataQuery.error, t("reports:viewer.dataError"))}
+        </Alert>
+      )}
       {showIdleHint && (
         <Text size="sm" c="dimmed">
           {t("reports:viewer.idle")}
@@ -209,7 +215,8 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
         <Skeleton h={240} radius="md" />
       ) : (
         succeeded &&
-        !previewUnavailable && (
+        !previewUnavailable &&
+        !dataFailed && (
           <ReportDataGrid
             data={dataQuery.data}
             isLoading={dataQuery.isLoading}

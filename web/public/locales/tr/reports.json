@@ -132,6 +132,7 @@
     "notFound": "Bu rapor bulunamadı ya da erişiminiz yok.",
     "previewUnavailable": "Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.",
     "runError": "Rapor oluşturulamadı.",
+    "dataError": "Rapor verisi yüklenemedi.",
     "idle": "Zorunlu filtreleri seçip Uygula'ya basın."
   },
   "params": {

@@ -132,6 +132,7 @@
     "notFound": "Dieser Bericht wurde nicht gefunden oder Sie haben keinen Zugriff.",
     "previewUnavailable": "Dieser Bericht kann nicht am Bildschirm angezeigt werden; Sie können ihn als Excel herunterladen.",
     "runError": "Der Bericht konnte nicht erstellt werden.",
+    "dataError": "Die Berichtsdaten konnten nicht geladen werden.",
     "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden."
   },
   "params": {

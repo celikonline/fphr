@@ -132,6 +132,7 @@
     "notFound": "This report was not found or you do not have access.",
     "previewUnavailable": "This report cannot be shown on screen; you can download it as Excel.",
     "runError": "The report could not be generated.",
+    "dataError": "The report data could not be loaded.",
     "idle": "Choose the required filters and press Apply."
   },
   "params": {

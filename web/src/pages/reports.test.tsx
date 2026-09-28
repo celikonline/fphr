@@ -25,8 +25,11 @@ vi.mock("@/services/reports.service", async () => {
 });
 
 // Everything except the KPI tab is allowed: the page then renders just the catalog + history.
+const permissions = vi.hoisted(() => ({ denied: new Set<string>() }));
+
 vi.mock("@/components/permission-guard", () => ({
-  usePermission: (permission: string) => permission !== "analytics.kpi.view",
+  usePermission: (permission: string) =>
+    permission !== "analytics.kpi.view" && !permissions.denied.has(permission),
   useAnyPermission: () => true,
 }));
 
@@ -125,6 +128,7 @@ function renderPage() {
 describe("ReportsPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    permissions.denied.clear();
     vi.mocked(getReportCatalog).mockResolvedValue(CATALOG);
     vi.mocked(listReportExecutions).mockImplementation(async (params) =>
       executionsFor(params?.page ?? 1)
@@ -190,5 +194,16 @@ describe("ReportsPage", () => {
     await user.click(screen.getByRole("button", { name: "Raporu aç" }));
 
     expect(await screen.findByTestId("viewer-location")).toHaveTextContent("/app/reports/employee.list");
+  });
+
+  it("hides the open button when the viewer page would be off limits (no reports.my.executions)", async () => {
+    const user = userEvent.setup();
+    permissions.denied.add("reports.my.executions");
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+
+    expect(await screen.findByText("Rapor oluştur")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Raporu aç" })).not.toBeInTheDocument();
   });
 });
