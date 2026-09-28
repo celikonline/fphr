@@ -328,9 +328,9 @@ describe("request cards (Taleplerim)", () => {
       expect(punchCorrectionRequestCard(punchCorrection({ status: "approved" })).tone).toBe(
         "success"
       );
-      expect(
-        punchCorrectionRequestCard(punchCorrection({ status: "approved" })).canWithdraw
-      ).toBe(false);
+      expect(punchCorrectionRequestCard(punchCorrection({ status: "approved" })).canWithdraw).toBe(
+        false
+      );
       expect(punchCorrectionRequestCard(punchCorrection({ status: "rejected" })).tone).toBe(
         "danger"
       );
