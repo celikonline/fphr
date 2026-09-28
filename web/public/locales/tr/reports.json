@@ -123,6 +123,10 @@
     "requiredHint": "* zorunlu filtre",
     "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz."
   },
+  "viewer": {
+    "search": "Sonuçlarda ara",
+    "noRows": "Bu filtrelerle gösterilecek kayıt yok."
+  },
   "params": {
     "orgUnitIds": "Birimler",
     "orgUnitIdsPlaceholder": "Tüm birimler",

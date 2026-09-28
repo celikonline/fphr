@@ -123,6 +123,10 @@
     "requiredHint": "* required filter",
     "noFilters": "This report takes no filters; you can generate it right away."
   },
+  "viewer": {
+    "search": "Search results",
+    "noRows": "No records match these filters."
+  },
   "params": {
     "orgUnitIds": "Units",
     "orgUnitIdsPlaceholder": "All units",

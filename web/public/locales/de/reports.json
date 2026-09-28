@@ -123,6 +123,10 @@
     "requiredHint": "* Pflichtfilter",
     "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen."
   },
+  "viewer": {
+    "search": "In den Ergebnissen suchen",
+    "noRows": "Keine Datensätze für diese Filter."
+  },
   "params": {
     "orgUnitIds": "Einheiten",
     "orgUnitIdsPlaceholder": "Alle Einheiten",
