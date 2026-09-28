@@ -45,9 +45,10 @@ E-posta bağlantısının (`/app/reports?execution=<id>` → otomatik indirme) m
   yalnızca Contracts'a bağlı kalır, yeni paket referansı gerekmez.
   - Okuma kuralı: 1. satır başlık; sayfa başına sütun tipi = o sütunun ilk dolu hücresinin tipi (karışıksa `Text`);
     tarih hücresi biçimi saat içeriyorsa `DateTime`, içermiyorsa `Date`.
-- **Uç:** `GET /v1/reports/executions/{id}/data?sheet=0&page=1&pageSize=50&q=&sort=<sütun-indeksi>&desc=false`
+- **Uç:** `GET /v1/reports/executions/{id}/data?sheet=0&page=1&pageSize=50&q=&sort=` (`sort` sütun indeksi, azalan için `-` öneki: `sort=-2`; kod tabanının ortak `PagedQuery` kuralı)
   - İzin ve sahiplik/"hazır mı" kontrolleri `GetReportExecutionFileQuery` ile aynıdır (`reports.my.executions`).
-  - Yanıt: `sheets[] {index, name}`, `columns[] {header, type}`, `rows[][]` (o sayfa), `total`, `page`, `pageSize`.
+  - Yanıt: `sheets[] {index, name}`, `sheetIndex`, `columns[] {header, type}`, `rows` (ortak `PagedResult`: `items[][]`, `page`,
+    `pageSize`, `totalCount`, `totalPages`, `hasNext`, `hasPrevious`).
     Hücreler: metin → string, sayı → number, `Date` → `yyyy-MM-dd`, `DateTime` → ISO 8601, boolean → bool, boş → null.
   - `q`: tüm hücre metinlerinde büyük/küçük harf duyarsız (tr kültürü) arama. `sort`: tek sütun, tipe göre karşılaştırma,
     boşlar sonda. Dosya bellekte zaten ayrıştırıldığından arama/sıralama/sayfalama sunucuda yapılır.
@@ -60,7 +61,9 @@ E-posta bağlantısının (`/app/reports?execution=<id>` → otomatik indirme) m
 ### 3. Web
 
 - **`ReportParameterForm`** (`web/src/components/reports/`): `ReportRunPanel` içindeki parametre formu buraya çıkarılır
-  ve katalog paneli ile yeni sayfa aynı formu kullanır (kopya yok). `reports.tsx` küçülür.
+  ve katalog paneli ile yeni sayfa aynı formu kullanır (kopya yok). `reports.tsx` küçülür. Panelin **Oluştur** düğmesi
+  **Raporu aç** olur ve seçilen filtrelerle `/app/reports/:key` adresine gider (panelden doğrudan Excel indirme yok;
+  geçmiş tablosundaki indirme kalır).
 - **`report-viewer.tsx`** (`web/src/pages/`, rota `reports/:key`, `App.tsx`'te `reports` satırının altına eklenir):
   - Üst: geri bağlantısı, rapor adı/açıklaması, filtre kartı (**Uygula**, **Excel indir**).
   - Alt: birden çok sayfa varsa sekmeler; arama kutusu; dinamik sütunlu `DataTable` (sayı sağa hizalı, tarihler locale'e

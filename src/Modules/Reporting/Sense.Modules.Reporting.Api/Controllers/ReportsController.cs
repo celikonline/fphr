@@ -7,7 +7,7 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Reporting.Api.Controllers;
 
-public sealed record RequestReportRequest(string ReportKey, Dictionary<string, string>? Parameters);
+public sealed record RequestReportRequest(string ReportKey, Dictionary<string, string>? Parameters, bool? Notify = null);
 
 /// <summary>Report catalog + on-demand generation + execution history (roadmap #70, R0: synchronous generation, email-linked delivery).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -25,7 +25,7 @@ public sealed class ReportsController : ApiControllerBase
     [HttpPost("executions")]
     [ProducesResponseType<ReportExecutionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> RequestReport([FromBody] RequestReportRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new RequestReportCommand(request.ReportKey, request.Parameters), ct));
+        FromResult(await Dispatcher.Send(new RequestReportCommand(request.ReportKey, request.Parameters, request.Notify ?? true), ct));
 
     /// <summary>The caller's own report execution history, newest first.</summary>
     [HttpGet("executions")]
@@ -38,6 +38,12 @@ public sealed class ReportsController : ApiControllerBase
     [ProducesResponseType<ReportExecutionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetReportExecutionQuery(id), ct));
+
+    /// <summary>A succeeded execution's workbook as grid data: sheets, columns and one searched/sorted/paged slice of rows.</summary>
+    [HttpGet("executions/{id:guid}/data")]
+    [ProducesResponseType<ReportDataDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Data(Guid id, [FromQuery] int sheet, [FromQuery] PagedQuery paging, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetReportExecutionDataQuery(id, sheet, paging), ct));
 
     /// <summary>Downloads a succeeded execution's generated file.</summary>
     [HttpGet("executions/{id:guid}/download")]
