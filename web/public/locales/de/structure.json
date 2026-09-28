@@ -60,7 +60,8 @@
       "Leave": "Genehmigungsprozess für Urlaub",
       "Advance": "Genehmigungsprozess für Vorschüsse",
       "Expense": "Genehmigungsprozess für Spesen",
-      "Overtime": "Genehmigungsprozess für Überstunden"
+      "Overtime": "Genehmigungsprozess für Überstunden",
+      "PunchCorrection": "Genehmigungsprozess für fehlende Stempelung"
     },
     "inherit": "Von übergeordneter Einheit erben",
     "inheritedFrom": "Von übergeordneter Einheit: {{unit}}",

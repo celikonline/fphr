@@ -60,7 +60,8 @@
       "Leave": "Leave approval process",
       "Advance": "Advance approval process",
       "Expense": "Expense approval process",
-      "Overtime": "Overtime approval process"
+      "Overtime": "Overtime approval process",
+      "PunchCorrection": "Missing punch approval process"
     },
     "inherit": "Inherit from parent unit",
     "inheritedFrom": "From parent unit: {{unit}}",
