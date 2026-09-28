@@ -12,7 +12,8 @@
     "request": {
       "created": "Mein Antrag wurde erstellt",
       "approved": "Mein Antrag wurde genehmigt",
-      "rejected": "Mein Antrag wurde abgelehnt"
+      "rejected": "Mein Antrag wurde abgelehnt",
+      "comment_added": "Ein Kommentar zu meinem Antrag oder einer von mir genehmigten Anfrage hinzugefügt wird"
     },
     "approval": {
       "task_assigned": "Ein Antrag wartet auf meine Genehmigung"
