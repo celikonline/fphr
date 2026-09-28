@@ -1,6 +1,7 @@
 {{- subject = "Rückgabe erfasst" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Rückgabe erfasst: " + asset_name; end -}}
 <p>Hallo {{ recipient_name | html.escape }},</p>
-<p>Ihre Ausrüstungsrückgabe vom {{ returned_at }} wurde erfasst.</p>
+<p>Ihre {{ if asset_name != null && asset_name != "" }}Rückgabe von {{ asset_name | html.escape }}{{ else }}Ausrüstungsrückgabe{{ end }} vom {{ returned_at }} wurde erfasst.</p>
 {{~ if action_url ~}}
 {{ button "Meine Ausrüstung ansehen" action_url }}
 {{~ end ~}}

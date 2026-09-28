@@ -1,2 +1,3 @@
 {{- subject = "Unreturned equipment: " + employee_name -}}
-{{ employee_name }} has left, but has equipment that was not returned.
+{{- if asset_name != null && asset_name != ""; subject = "Unreturned equipment: " + employee_name + " (" + asset_name + ")"; end -}}
+{{ employee_name }} has left, but {{ if asset_name != null && asset_name != "" }}{{ asset_name }} was not returned{{ else }}has equipment that was not returned{{ end }}.

@@ -1,6 +1,7 @@
 {{- subject = "Equipment return recorded" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Equipment return recorded: " + asset_name; end -}}
 <p>Hi {{ recipient_name | html.escape }},</p>
-<p>Your equipment return on {{ returned_at }} was recorded.</p>
+<p>Your {{ if asset_name != null && asset_name != "" }}return of {{ asset_name | html.escape }}{{ else }}equipment return{{ end }} on {{ returned_at }} was recorded.</p>
 {{~ if action_url ~}}
 {{ button "View my equipment" action_url }}
 {{~ end ~}}

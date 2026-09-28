@@ -149,6 +149,45 @@ public sealed class TemplateRendererTests
         text.ShouldBe("Hi & welcome\n\nOpen: https://x.test/a?b=1&c=2");
     }
 
+    [Theory]
+    [InlineData(NotificationTemplateKeys.AssetAssigned)]
+    [InlineData(NotificationTemplateKeys.AssetReturned)]
+    [InlineData(NotificationTemplateKeys.AssetUnreturnedAtTermination)]
+    public void AssetTemplates_ShowAssetNameWhenPresent_AndFallBackToNamelessTextWhenMissingOrEmpty(string templateKey)
+    {
+        foreach (var channel in new[] { NotificationChannels.InApp, NotificationChannels.Email })
+        {
+            foreach (var language in ScribanNotificationTemplateRenderer.SupportedLanguages)
+            {
+                var named = SampleModel();
+                named["asset_name"] = "MacBook <Pro> 14";
+                named["employee_name"] = "Ayşe Yılmaz";
+                var withName = Renderer.Render(templateKey, channel, language, named);
+                withName.Subject.ShouldContain("MacBook <Pro> 14");
+                withName.Body.ShouldContain("MacBook <Pro> 14");
+                if (channel == NotificationChannels.Email)
+                {
+                    withName.HtmlBody!.ShouldContain("MacBook &lt;Pro&gt; 14");
+                }
+
+                var nameless = SampleModel();
+                nameless["employee_name"] = "Ayşe Yılmaz";
+                var withoutName = Renderer.Render(templateKey, channel, language, nameless);
+                foreach (var emptyName in new object?[] { null, string.Empty })
+                {
+                    var model = SampleModel();
+                    model["employee_name"] = "Ayşe Yılmaz";
+                    model["asset_name"] = emptyName;
+                    var rendered = Renderer.Render(templateKey, channel, language, model);
+                    rendered.Subject.ShouldBe(withoutName.Subject);
+                    rendered.Body.ShouldBe(withoutName.Body);
+                    rendered.Subject.ShouldNotContain("()");
+                    rendered.Body.ShouldNotContain("MacBook");
+                }
+            }
+        }
+    }
+
     private static Dictionary<string, object?> SampleModel() => new(StringComparer.Ordinal)
     {
         [NotificationPublisher.RecipientNameKey] = "Mehmet Demir",

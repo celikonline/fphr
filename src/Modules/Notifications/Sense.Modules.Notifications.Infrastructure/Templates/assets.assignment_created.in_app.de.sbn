@@ -1,2 +1,3 @@
 {{- subject = "Ihnen wurde neue Ausrüstung zugewiesen" -}}
-Ihnen wurde am {{ issued_at }} neue Ausrüstung zugewiesen.
+{{- if asset_name != null && asset_name != ""; subject = "Ihnen wurde Ausrüstung zugewiesen: " + asset_name; end -}}
+Ihnen wurde am {{ issued_at }} {{ if asset_name != null && asset_name != "" }}{{ asset_name }}{{ else }}neue Ausrüstung{{ end }} zugewiesen.

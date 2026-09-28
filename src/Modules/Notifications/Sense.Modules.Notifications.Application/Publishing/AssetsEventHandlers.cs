@@ -8,11 +8,12 @@ using Sense.Shared.Contracts.Events;
 namespace Sense.Modules.Notifications.Application.Publishing;
 
 /// <summary>
-/// Template variable names and helpers for the assets.* templates. The Assets events carry ids and dates only (no
-/// asset name), so the templates point to the assets screen for the details instead of naming the equipment.
+/// Template variable names and helpers for the assets.* templates. The Assets events carry the (denormalized) asset
+/// name; when it is missing (events queued before it was added) the templates fall back to the nameless wording.
 /// </summary>
 public static class AssetsTemplateModel
 {
+    public const string AssetName = "asset_name";
     public const string IssuedAt = "issued_at";
     public const string ReturnedAt = "returned_at";
     public const string EmployeeName = "employee_name";
@@ -43,6 +44,7 @@ public sealed class AssetAssignedNotificationHandler(NotificationRecipientResolv
                 to,
                 new Dictionary<string, string?>
                 {
+                    [AssetsTemplateModel.AssetName] = integrationEvent.AssetName,
                     [AssetsTemplateModel.IssuedAt] = AssetsTemplateModel.FormatDate(integrationEvent.IssuedAt),
                 },
                 AssetsTemplateModel.AssetsPath),
@@ -70,6 +72,7 @@ public sealed class AssetReturnedNotificationHandler(NotificationRecipientResolv
                 to,
                 new Dictionary<string, string?>
                 {
+                    [AssetsTemplateModel.AssetName] = integrationEvent.AssetName,
                     [AssetsTemplateModel.ReturnedAt] = AssetsTemplateModel.FormatDate(integrationEvent.ReturnedAt),
                 },
                 AssetsTemplateModel.AssetsPath),
@@ -113,6 +116,7 @@ public sealed class AssetUnreturnedAtTerminationNotificationHandler(
                 to,
                 new Dictionary<string, string?>
                 {
+                    [AssetsTemplateModel.AssetName] = integrationEvent.AssetName,
                     [AssetsTemplateModel.EmployeeName] = leaverName,
                 },
                 AssetsTemplateModel.AssetsPath),

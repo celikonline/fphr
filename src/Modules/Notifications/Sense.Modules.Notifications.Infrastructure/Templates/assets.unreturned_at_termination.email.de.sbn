@@ -1,6 +1,7 @@
 {{- subject = "Nicht zurückgegebene Ausrüstung: " + employee_name -}}
+{{- if asset_name != null && asset_name != ""; subject = "Nicht zurückgegebene Ausrüstung: " + employee_name + " (" + asset_name + ")"; end -}}
 <p>Hallo {{ recipient_name | html.escape }},</p>
-<p><strong>{{ employee_name | html.escape }}</strong> hat das Unternehmen verlassen, ohne die Ausrüstung zurückzugeben.</p>
+<p><strong>{{ employee_name | html.escape }}</strong> hat das Unternehmen verlassen, ohne {{ if asset_name != null && asset_name != "" }}{{ asset_name | html.escape }}{{ else }}die Ausrüstung{{ end }} zurückzugeben.</p>
 {{~ if action_url ~}}
 {{ button "Ausrüstung ansehen" action_url }}
 {{~ end ~}}

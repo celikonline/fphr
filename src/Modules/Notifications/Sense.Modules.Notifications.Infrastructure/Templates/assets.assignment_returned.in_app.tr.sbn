@@ -1,2 +1,3 @@
 {{- subject = "Zimmet iadeniz kaydedildi" -}}
-{{ returned_at }} tarihli zimmet iadeniz kaydedildi.
+{{- if asset_name != null && asset_name != ""; subject = "Zimmet iadeniz kaydedildi: " + asset_name; end -}}
+{{ returned_at }} tarihli {{ if asset_name != null && asset_name != "" }}{{ asset_name }} zimmet iadeniz{{ else }}zimmet iadeniz{{ end }} kaydedildi.

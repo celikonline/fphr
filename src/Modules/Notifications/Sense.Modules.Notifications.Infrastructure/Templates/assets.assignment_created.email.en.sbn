@@ -1,6 +1,7 @@
 {{- subject = "New equipment assigned to you" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Equipment assigned to you: " + asset_name; end -}}
 <p>Hi {{ recipient_name | html.escape }},</p>
-<p>New equipment was assigned to you on {{ issued_at }}. You can see the details on the My equipment page.</p>
+<p>{{ if asset_name != null && asset_name != "" }}<strong>{{ asset_name | html.escape }}</strong> was{{ else }}New equipment was{{ end }} assigned to you on {{ issued_at }}. You can see the details on the My equipment page.</p>
 {{~ if action_url ~}}
 {{ button "View my equipment" action_url }}
 {{~ end ~}}

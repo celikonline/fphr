@@ -1,6 +1,7 @@
 {{- subject = "İade edilmemiş zimmet: " + employee_name -}}
+{{- if asset_name != null && asset_name != ""; subject = "İade edilmemiş zimmet: " + employee_name + " (" + asset_name + ")"; end -}}
 <p>Merhaba {{ recipient_name | html.escape }},</p>
-<p><strong>{{ employee_name | html.escape }}</strong> işten ayrıldı, ancak iade edilmemiş bir zimmeti var.</p>
+<p><strong>{{ employee_name | html.escape }}</strong> işten ayrıldı, ancak {{ if asset_name != null && asset_name != "" }}{{ asset_name | html.escape }} zimmeti iade edilmedi{{ else }}iade edilmemiş bir zimmeti var{{ end }}.</p>
 {{~ if action_url ~}}
 {{ button "Zimmetleri görüntüle" action_url }}
 {{~ end ~}}
