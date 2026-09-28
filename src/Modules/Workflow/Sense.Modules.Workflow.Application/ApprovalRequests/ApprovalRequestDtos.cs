@@ -1,4 +1,6 @@
 using Sense.Modules.Workflow.Contracts;
+using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Workflow.Application.ApprovalRequests;
 
@@ -43,3 +45,28 @@ public sealed record MyApprovalRequestDto(
     int? CurrentStepNumber,
     DateTime SubmittedAt,
     DateTime? CompletedAt);
+
+/// <summary>
+/// FG-008: one task the caller decided, for the approval history list (newest decision first). Outcome is the caller's
+/// own decision on this task; RequestStatus is the parent request's current state (a step-1 approval can still end
+/// in a later step's rejection). RequesterName/Summary are best-effort like <see cref="InboxTaskDto"/>.
+/// </summary>
+public sealed record ApprovalHistoryItemDto(
+    Guid TaskId,
+    Guid ApprovalRequestId,
+    string RequestType,
+    Guid SubjectId,
+    Guid RequesterEmployeeId,
+    string? RequesterName,
+    int StepNumber,
+    ApprovalOutcome Outcome,
+    DateTime DecidedAt,
+    string? Comment,
+    ApprovalRequestStatus RequestStatus,
+    ApprovalRequestSummary? Summary);
+
+/// <summary>FG-008 decide-bulk: one task's outcome - <see cref="Error"/> is null when the task was decided.</summary>
+public sealed record BulkDecisionTaskResult(Guid TaskId, Error? Error)
+{
+    public bool Succeeded => Error is null;
+}

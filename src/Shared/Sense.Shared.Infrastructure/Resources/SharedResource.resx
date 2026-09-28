@@ -1545,4 +1545,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>Bitirilecek açık bir mola yok.</value></data>
   <data name="identity.mfa.required_by_policy" xml:space="preserve"><value>Şirketinizin güvenlik politikası rolünüz için iki adımlı doğrulamayı zorunlu kılıyor; kapatılamaz.</value></data>
   <data name="identity.user.language_unsupported" xml:space="preserve"><value>Seçilen dil desteklenmiyor.</value></data>
+  <data name="workflow.bulk.empty" xml:space="preserve"><value>Karar verilecek en az bir talep seçin.</value></data>
+  <data name="workflow.bulk.too_many_tasks" xml:space="preserve"><value>Tek seferde en fazla {max} talep için karar verilebilir.</value></data>
 </root>

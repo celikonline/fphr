@@ -22,4 +22,7 @@ public static class WorkflowErrors
     public const string TokenAlreadyUsed = "workflow.token.already_used";
 
     public const string RequesterNotFound = "workflow.request.requester_not_found";
+
+    public const string BulkEmpty = "workflow.bulk.empty";
+    public const string BulkTooManyTasks = "workflow.bulk.too_many_tasks";
 }

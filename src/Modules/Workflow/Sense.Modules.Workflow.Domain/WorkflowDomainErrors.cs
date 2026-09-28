@@ -45,6 +45,9 @@ public static class WorkflowLimits
     public const int UserAgentMaxLength = 500;
     public const int RoleCodeMaxLength = 50;
 
+    /// <summary>FG-008: most tasks one decide-bulk call may carry (each is decided in its own transaction).</summary>
+    public const int BulkDecisionMaxTasks = 50;
+
     /// <summary>How long a "decide by e-mail" link stays valid after it is minted.</summary>
     public static readonly TimeSpan EmailDecisionTokenLifetime = TimeSpan.FromDays(7);
 }

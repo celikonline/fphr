@@ -30,6 +30,9 @@ public enum ApprovalChannel
     Web,
     Email,
     Api,
+
+    /// <summary>FG-008: decided from the mobile app (the call carried <c>X-Client-App: mobile</c>).</summary>
+    Mobile,
 }
 
 public enum ApprovalHistoryEventType

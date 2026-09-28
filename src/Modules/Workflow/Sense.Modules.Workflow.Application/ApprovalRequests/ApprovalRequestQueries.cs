@@ -3,8 +3,10 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
 
@@ -129,6 +131,70 @@ public sealed class ListInboxHandler(
             .ToList();
 
         return Result.Success(dtos);
+    }
+}
+
+/// <summary>
+/// FG-008: the tasks the caller decided (DecidedByEmployeeId == caller - direct, fallback-role and override decisions
+/// alike), newest decision first. <see cref="From"/>/<see cref="To"/> are inclusive UTC decision days; <see cref="Type"/>
+/// is an exact RequestType. Page/PageSize follow the list-endpoint defaults (1-based, 20, capped at 200).
+/// </summary>
+[RequiresPermission("workflow.inbox.view")]
+public sealed record ListApprovalHistoryQuery(
+    DateOnly? From, DateOnly? To, string? Type, int Page = PagingDefaults.FirstPage, int PageSize = PagingDefaults.DefaultPageSize)
+    : IQuery<PagedResult<ApprovalHistoryItemDto>>;
+
+public sealed class ListApprovalHistoryHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IEmployeeDirectory employeeDirectory,
+    IEnumerable<IApprovalRequestSummaryProvider> summaryProviders) : IQueryHandler<ListApprovalHistoryQuery, PagedResult<ApprovalHistoryItemDto>>
+{
+    public async Task<Result<PagedResult<ApprovalHistoryItemDto>>> Handle(ListApprovalHistoryQuery query, CancellationToken cancellationToken)
+    {
+        var page = Math.Max(query.Page, PagingDefaults.FirstPage);
+        var pageSize = query.PageSize < 1 ? PagingDefaults.DefaultPageSize : Math.Min(query.PageSize, PagingDefaults.MaxPageSize);
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return new PagedResult<ApprovalHistoryItemDto>([], page, pageSize, 0);
+        }
+
+        DateTime? fromUtc = query.From is { } from ? DateTime.SpecifyKind(from.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc) : null;
+        DateTime? toUtcExclusive = query.To is { } to && to < DateOnly.MaxValue
+            ? DateTime.SpecifyKind(to.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+        var type = string.IsNullOrWhiteSpace(query.Type) ? null : query.Type.Trim();
+
+        var decided = await requests.ListDecidedTasksAsync(
+            employeeId, fromUtc, toUtcExclusive, type, (page - PagingDefaults.FirstPage) * pageSize, pageSize, cancellationToken);
+        if (decided.Items.Count == 0)
+        {
+            return new PagedResult<ApprovalHistoryItemDto>([], page, pageSize, decided.TotalCount);
+        }
+
+        var requesterIds = decided.Items.Select(r => r.RequesterEmployeeId).Distinct().ToList();
+        var contacts = await employeeDirectory.GetContactsAsync(tenant.TenantId, requesterIds, cancellationToken);
+        var requesterNames = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+        var providersByRequestType = summaryProviders.ToDictionary(p => p.RequestType, StringComparer.Ordinal);
+        var summariesByRequestId = new Dictionary<Guid, ApprovalRequestSummary?>();
+        foreach (var row in decided.Items.DistinctBy(r => r.ApprovalRequestId))
+        {
+            summariesByRequestId[row.ApprovalRequestId] = providersByRequestType.TryGetValue(row.RequestType, out var provider)
+                ? await provider.GetSummaryAsync(tenant.TenantId, row.SubjectId, cancellationToken)
+                : null;
+        }
+
+        IReadOnlyList<ApprovalHistoryItemDto> items = decided.Items
+            .Select(r => new ApprovalHistoryItemDto(
+                r.TaskId, r.ApprovalRequestId, r.RequestType, r.SubjectId, r.RequesterEmployeeId,
+                requesterNames.GetValueOrDefault(r.RequesterEmployeeId), r.StepNumber,
+                r.TaskStatus == ApprovalTaskStatus.Approved ? ApprovalOutcome.Approved : ApprovalOutcome.Rejected,
+                r.DecidedAt, r.Comment, r.RequestStatus, summariesByRequestId.GetValueOrDefault(r.ApprovalRequestId)))
+            .ToList();
+
+        return new PagedResult<ApprovalHistoryItemDto>(items, page, pageSize, decided.TotalCount);
     }
 }
 
