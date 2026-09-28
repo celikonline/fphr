@@ -23,7 +23,8 @@ public sealed class EmployeeOnboardingTask : TenantAggregateRoot<Guid>, IAuditLo
     }
 
     private EmployeeOnboardingTask(
-        Guid id, Guid tenantId, Guid employeeId, Guid templateId, OnboardingStage stage, DateOnly dueDate)
+        Guid id, Guid tenantId, Guid employeeId, Guid templateId, OnboardingStage stage, DateOnly dueDate,
+        Guid? categoryId, OnboardingImportance importance, bool requiresEDocument, Guid? templateSetId)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
@@ -31,7 +32,21 @@ public sealed class EmployeeOnboardingTask : TenantAggregateRoot<Guid>, IAuditLo
         Stage = stage;
         DueDate = dueDate;
         Status = EmployeeOnboardingTaskStatus.Pending;
+        CategoryId = categoryId;
+        Importance = importance;
+        RequiresEDocument = requiresEDocument;
+        TemplateSetId = templateSetId;
     }
+
+    /// <summary>Snapshot of the template's category at materialization (null = uncategorized).</summary>
+    public Guid? CategoryId { get; private set; }
+
+    public OnboardingImportance Importance { get; private set; }
+
+    public bool RequiresEDocument { get; private set; }
+
+    /// <summary>Set when the task came from a named template set started for the employee.</summary>
+    public Guid? TemplateSetId { get; private set; }
 
     public Guid EmployeeId { get; private set; }
 
@@ -54,8 +69,10 @@ public sealed class EmployeeOnboardingTask : TenantAggregateRoot<Guid>, IAuditLo
     public DateTime? WaivedAt { get; private set; }
 
     public static EmployeeOnboardingTask Materialize(
-        Guid tenantId, Guid employeeId, Guid templateId, OnboardingStage stage, DateOnly dueDate) =>
-        new(Guid.CreateVersion7(), tenantId, employeeId, templateId, stage, dueDate);
+        Guid tenantId, Guid employeeId, Guid templateId, OnboardingStage stage, DateOnly dueDate,
+        Guid? categoryId = null, OnboardingImportance importance = OnboardingImportance.Normal,
+        bool requiresEDocument = false, Guid? templateSetId = null) =>
+        new(Guid.CreateVersion7(), tenantId, employeeId, templateId, stage, dueDate, categoryId, importance, requiresEDocument, templateSetId);
 
     public Result Complete(Guid completedBy)
     {

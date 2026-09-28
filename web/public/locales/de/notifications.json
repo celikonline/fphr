@@ -31,17 +31,30 @@
       "birthday": "An meinem Geburtstag"
     },
     "announcement": {
-      "published": "Wenn eine neue Ankündigung veröffentlicht wird"
+      "published": "Wenn eine neue Ankündigung veröffentlicht wird",
+      "event_invitation": "Wenn ich zu einer Firmenveranstaltung eingeladen werde"
     },
     "payroll": {
-      "payslip_ready": "Wenn meine Gehaltsabrechnung bereit ist"
+      "payslip_ready": "Wenn meine Gehaltsabrechnung bereit ist",
+      "payslip_acknowledgement_reminder": "Erinnerung, wenn ich meine Gehaltsabrechnung noch nicht bestätigt habe",
+      "payslip_document_uploaded": "Wenn mein Gehaltsabrechnungsdokument hochgeladen wird",
+      "payslip_objection_accepted": "Wenn ein Einspruch gegen eine Gehaltsabrechnung angenommen wurde und eine Korrektur nötig ist"
     },
     "leave": {
-      "added_on_behalf": "Wenn in meinem Namen ein Urlaubsantrag hinzugefügt wird"
+      "added_on_behalf": "Wenn ein Urlaubsantrag in meinem Namen erfasst wird"
     },
     "onboarding": {
-      "task_assigned": "Wenn mir eine Onboarding-Aufgabe zugewiesen wird",
-      "task_completed": "Wenn eine Onboarding-Aufgabe abgeschlossen wird"
+      "task_assigned": "Wenn meiner Rolle eine Onboarding-/Offboarding-Aufgabe zugewiesen wird",
+      "task_completed": "Wenn eine Aufgabe meiner Rolle abgeschlossen wird"
+    },
+    "attendance": {
+      "missing_punch_reminder": "Erinnerung bei fehlender oder nicht berechenbarer Zeiterfassung"
+    },
+    "hr": {
+      "message": "Wenn ich eine Nachricht von der Personalabteilung erhalte"
+    },
+    "workflow": {
+      "delegation_assigned": "Wenn mir eine Genehmigungsvertretung übertragen wird"
     }
   },
   "preferences": {
@@ -64,7 +77,7 @@
     "employee": "Mitarbeitende",
     "announcement": "Ankündigungen",
     "payroll": "Lohnabrechnung",
-    "onboarding": "Onboarding"
+    "onboarding": "Onboarding / Offboarding"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"

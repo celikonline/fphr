@@ -189,7 +189,7 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
     /// </summary>
     public Result Decide(
         int stepNumber, Guid decidingEmployeeId, ApprovalOutcome outcome, string? comment, bool wasOverride,
-        ApprovalChannel channel, string? ipAddress, string? userAgent, DateTime now)
+        ApprovalChannel channel, string? ipAddress, string? userAgent, DateTime now, Guid? onBehalfOfEmployeeId = null)
     {
         if (Status != ApprovalRequestStatus.Pending)
         {
@@ -218,7 +218,7 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(WorkflowDomainErrors.TaskNotPending);
         }
 
-        task.Decide(decidingEmployeeId, outcome, comment, wasOverride, channel, ipAddress, userAgent, now);
+        task.Decide(decidingEmployeeId, outcome, comment, wasOverride, channel, ipAddress, userAgent, now, onBehalfOfEmployeeId);
         AddHistory(ApprovalHistoryEventType.Decided, stepNumber, decidingEmployeeId, outcome, channel, ipAddress, userAgent, now, comment);
 
         // A reject on a required step terminates the request; an optional step's reject is recorded but the request

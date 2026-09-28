@@ -15,6 +15,19 @@ public static class OnboardingDomainErrors
     public const string EmployeeTaskAlreadyFinalized = "employee_onboarding_task.already_finalized";
 
     public const string EmployeeTaskWaiveReasonRequired = "employee_onboarding_task.waive_reason_required";
+
+    public const string CategoryNotFound = "onboarding.category_not_found";
+    public const string CategoryInUse = "onboarding.category_in_use";
+    public const string CategoryNameRequired = "onboarding_category.name_required";
+    public const string CategoryNameTooLong = "onboarding_category.name_too_long";
+
+    public const string TemplateSetNotFound = "onboarding_template_set.not_found";
+    public const string TemplateSetNameRequired = "onboarding_template_set.name_required";
+    public const string TemplateSetNameTooLong = "onboarding_template_set.name_too_long";
+    public const string TemplateSetEmpty = "onboarding_template_set.empty";
+    public const string TemplateSetInactive = "onboarding_template_set.inactive";
+    public const string TemplateSetUnknownTemplate = "onboarding_template_set.unknown_template";
+    public const string TemplateSetAlreadyStarted = "onboarding_template_set.already_started";
 }
 
 /// <summary>Domain constants and limits.</summary>
@@ -24,4 +37,6 @@ public static class OnboardingLimits
 
     public const int WaivedReasonMaxLength = 500;
     public const int ResponsibleRoleCodeMaxLength = 50;
+    public const int CategoryNameMaxLength = 100;
+    public const int TemplateSetNameMaxLength = 150;
 }

@@ -1,0 +1,6 @@
+{{- subject = "Ihnen wurde eine Genehmigungsvertretung übertragen" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>{{ delegator_name | html.escape }} hat Ihnen die Genehmigungsbefugnis für einen Zeitraum übertragen. Die Aufgaben erscheinen in dieser Zeit in Ihrem Posteingang.</p>
+{{~ if action_url ~}}
+{{ button "Posteingang öffnen" action_url }}
+{{~ end ~}}

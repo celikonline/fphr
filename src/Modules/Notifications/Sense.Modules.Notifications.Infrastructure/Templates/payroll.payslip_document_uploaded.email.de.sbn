@@ -1,0 +1,6 @@
+{{- subject = "Ihre neue Gehaltsabrechnung wurde hochgeladen" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihre Gehaltsabrechnung wurde Ihren Dokumenten hinzugefügt.</p>
+{{~ if action_url ~}}
+{{ button "Meine Dokumente öffnen" action_url }}
+{{~ end ~}}

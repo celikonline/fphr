@@ -48,6 +48,8 @@ services:
       # tek hesap). Boş bırakılırsa atlanır. Parola en az 10 karakter ve güçlü olmalı; mevcut hesabın parolasını değiştirmez.
       Platform__SuperAdmin__Email: ${PLATFORM_SUPERADMIN_EMAIL:-}
       Platform__SuperAdmin__Password: ${PLATFORM_SUPERADMIN_PASSWORD:-}
+      # Terminal kimlik (kart/PIN) özet pepper'ı (Z5.1): gizli, zorunlu değil; terminal kimlikleri için gerekli (boşsa kimlik işlemleri 503).
+      Attendance__Terminals__CredentialPepper: ${ATTENDANCE_TERMINAL_CREDENTIAL_PEPPER:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       # Observability (profile "obs" ile jaeger/loki/prometheus/grafana ayaktaysa veri akar; değilse exporter'lar sessizce düşer).
       Observability__OtlpEndpoint: http://jaeger:4317

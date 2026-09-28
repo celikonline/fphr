@@ -1,0 +1,6 @@
+{{- subject = "Einladung: " + event_title -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Sie sind zu <strong>{{ event_title | html.escape }}</strong> eingeladen.</p>
+{{~ if action_url ~}}
+{{ button "Veranstaltung öffnen" action_url }}
+{{~ end ~}}

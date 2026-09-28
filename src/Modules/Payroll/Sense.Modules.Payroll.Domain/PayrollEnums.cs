@@ -68,10 +68,11 @@ public enum GarnishmentType
     Nafaka = 1,
 }
 
-/// <summary>E-pusula tebliğ kanalı (TK-030, 11.3.07-bordro.md "E-pusula tebliğ kanıtı" `PayslipDelivery.Channel`).
-/// Email/Kep tebliğ kanalları henüz yok (bu dilim yalnız çalışanın kendi görüntüleme/onay akışını kapsar).</summary>
-public enum PayslipDeliveryChannel
+/// <summary>E2: the employee's objection to a published payslip, decided through the Workflow "PayslipObjection" request.</summary>
+public enum PayslipObjectionStatus
 {
-    Web = 0,
-    Mobile = 1,
+    None = 0,
+    Pending = 1,
+    Accepted = 2,
+    Rejected = 3,
 }

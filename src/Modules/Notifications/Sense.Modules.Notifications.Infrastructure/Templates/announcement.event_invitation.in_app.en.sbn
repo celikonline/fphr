@@ -1,0 +1,2 @@
+{{- subject = "Event invitation: " + event_title -}}
+Click for event details.

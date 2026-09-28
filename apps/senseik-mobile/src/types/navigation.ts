@@ -23,6 +23,8 @@ export type AppStackParamList = {
   Notifications: undefined;
   NotificationPreferences: undefined;
   Requests: undefined;
+  PunchRequest: undefined;
+  PayslipDetail: { payslip: import("@/services/PayslipService").MyPayslip };
 };
 
 export type MainTabsParamList = {

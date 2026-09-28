@@ -194,7 +194,7 @@ public sealed class ApprovalRequestIntegrationTests : TestFixture
         using var readScope = ServiceProvider!.CreateScope();
         var repository = readScope.ServiceProvider.GetRequiredService<IApprovalRequestRepository>();
 
-        var inbox = await repository.ListInboxTasksAsync(approver, []);
+        var inbox = await repository.ListInboxTasksAsync(approver, [], []);
 
         inbox.Select(t => t.ApprovalRequestId).ShouldBe([pendingId]);
         inbox.ShouldNotContain(t => t.ApprovalRequestId == cancelledId || t.ApprovalRequestId == rejectedId);

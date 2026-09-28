@@ -45,6 +45,8 @@ export interface AttendanceDay {
   plannedMinutes: number;
   workedMinutes: number;
   anomalies: string;
+  /** Set when the day is incalculable: `unknownDirection|brokenSequence|channelConflict|noPlan|nightShiftOverlap|ambiguousShift` (open-ended). */
+  incalculableReason?: string | null;
   resolutionState: AttendanceResolutionState;
   source: AttendanceDaySource;
   allowedActions: AnomalyResolutionAction[];
@@ -101,6 +103,8 @@ export interface TeamWeekDay {
   dailyLimitExceeded: boolean;
   /** m.69: gece çalışması 7,5 saat üst sınırı aşıldı mı. */
   nightLimitExceeded: boolean;
+  /** Optional: set by the backend when the day is incalculable (same open-ended codes as `AttendanceDay`). */
+  incalculableReason?: string | null;
 }
 
 /** `EqualizationStatusDto` (m.63 denkleştirme, kart senseik-014 §4): `enabled` false ise diğer alanlar anlamsızdır. */

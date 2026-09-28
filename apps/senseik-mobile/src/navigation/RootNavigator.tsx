@@ -32,6 +32,8 @@ import GoalsScreen from "@/screens/app/GoalsScreen";
 import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
 import RequestsScreen from "@/screens/app/RequestsScreen";
+import PunchRequestScreen from "@/screens/app/PunchRequestScreen";
+import PayslipDetailScreen from "@/screens/app/PayslipDetailScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -233,6 +235,16 @@ function AppNavigator() {
         name="Requests"
         component={RequestsScreen}
         options={{ title: "Taleplerim" }}
+      />
+      <AppStack.Screen
+        name="PunchRequest"
+        component={PunchRequestScreen}
+        options={{ title: "Kayıt talebi" }}
+      />
+      <AppStack.Screen
+        name="PayslipDetail"
+        component={PayslipDetailScreen}
+        options={{ title: "Bordro pusulası" }}
       />
     </AppStack.Navigator>
   );

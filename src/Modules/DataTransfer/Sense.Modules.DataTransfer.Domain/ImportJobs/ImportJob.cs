@@ -30,6 +30,9 @@ public enum ImportJobRowOutcome
     Updated = 1,
     Skipped = 2,
     Error = 3,
+
+    /// <summary>Applied, insert/update not disclosed (secret values, see Shared ImportRowOutcome.Processed).</summary>
+    Processed = 4,
 }
 
 public enum ImportFileFormat
@@ -275,4 +278,13 @@ public interface IImportJobRepository
     Task<ImportJob?> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<ImportSourceFile?> GetSourceFileAsync(Guid importJobId, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the uploaded file (on save) - templates with sensitive columns keep no copy of the file once the job has run.</summary>
+    void RemoveSourceFile(ImportSourceFile sourceFile);
+
+    /// <summary>
+    /// Deletes (immediately, current tenant) the uploaded files of jobs whose template is one of <paramref name="templateCodes"/> and that
+    /// have finished (Completed/CompletedWithErrors/Failed) or were uploaded before <paramref name="uploadedBefore"/>. Returns the count.
+    /// </summary>
+    Task<int> DeleteSourceFilesAsync(IReadOnlyCollection<string> templateCodes, DateTime uploadedBefore, CancellationToken cancellationToken = default);
 }

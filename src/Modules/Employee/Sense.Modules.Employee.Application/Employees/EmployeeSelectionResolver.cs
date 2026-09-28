@@ -39,12 +39,24 @@ public sealed class EmployeeSelectionResolver(IEmployeeReadStore store, IOrgUnit
             return null;
         }
 
-        IReadOnlyCollection<Guid>? orgUnitIds = null;
+        var requestedUnits = new List<Guid>();
         if (filter.OrgUnitId is { } orgUnitId)
         {
+            requestedUnits.Add(orgUnitId);
+        }
+
+        if (filter.OrgUnitIds is { Count: > 0 } extraUnits)
+        {
+            requestedUnits.AddRange(extraUnits);
+        }
+
+        IReadOnlyCollection<Guid>? orgUnitIds = null;
+        if (requestedUnits.Count > 0)
+        {
+            var distinctUnits = requestedUnits.Distinct().ToList();
             orgUnitIds = filter.IncludeSubUnits
-                ? await orgUnits.GetSelfAndDescendantIdsAsync(tenantId, [orgUnitId], ct).ConfigureAwait(false)
-                : [orgUnitId];
+                ? await orgUnits.GetSelfAndDescendantIdsAsync(tenantId, distinctUnits, ct).ConfigureAwait(false)
+                : distinctUnits;
         }
 
         // Unknown enum text is ignored rather than rejected: the grid's own selects can only send valid values, and a
@@ -65,7 +77,8 @@ public sealed class EmployeeSelectionResolver(IEmployeeReadStore store, IOrgUnit
             VisibleIds: visible,
             EmploymentType: employmentType,
             ContractType: contractType,
-            MissingInfo: filter.MissingInfo);
+            MissingInfo: filter.MissingInfo,
+            ActiveOnly: !filter.IncludeTerminated && status is null);
     }
 
     public async Task<IReadOnlyList<Guid>> ResolveAsync(Guid tenantId, EmployeeSelection selection, string permission, CancellationToken ct)

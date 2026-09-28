@@ -406,6 +406,10 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<Guid?>("TypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("type_id");
+
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("uploaded_at");
@@ -420,6 +424,12 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("visibility");
 
+                    b.Property<bool>("VisibleOnMobile")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("visible_on_mobile");
+
                     b.HasKey("Id")
                         .HasName("pk_shared_company_files");
 
@@ -433,7 +443,68 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("ix_shared_company_files_tenant_id_status");
 
+                    b.HasIndex("TenantId", "TypeId")
+                        .HasDatabaseName("ix_shared_company_files_tenant_id_type_id");
+
                     b.ToTable("shared_company_files", "documents");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Documents.Domain.SharedFiles.SharedFileType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<bool>("VisibleOnMobile")
+                        .HasColumnType("boolean")
+                        .HasColumnName("visible_on_mobile");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shared_file_types");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_shared_file_types_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shared_file_types_tenant_id_name");
+
+                    b.ToTable("shared_file_types", "documents");
                 });
 
             modelBuilder.Entity("Sense.Modules.Documents.Domain.VisaDocuments.VisaDocumentProcess", b =>

@@ -3,7 +3,9 @@
   "tabs": {
     "pending": "Açık görevler",
     "employee": "Çalışan görev listesi",
-    "templates": "Şablonlar"
+    "templates": "Şablonlar",
+    "categories": "Kategoriler",
+    "sets": "Şablon setleri"
   },
   "loadError": "Görevler yüklenemedi.",
   "actionFailed": "İşlem tamamlanamadı.",
@@ -34,7 +36,10 @@
     "status": "Durum",
     "mandatory": "Zorunlu",
     "offset": "Son gün (gün farkı)",
-    "active": "Aktif"
+    "active": "Aktif",
+    "importance": "Önem",
+    "category": "Kategori",
+    "eDocument": "E-evrak gerekli"
   },
   "offset": {
     "sameDay": "Aynı gün",
@@ -72,5 +77,36 @@
     "stageEmpty": "Bu aşama için görev yok.",
     "offsetHintHire": "İşe giriş tarihine göre; eksi değer girişten önceyi gösterir (ör. SGK bildirgesi -1).",
     "offsetHintExit": "Çıkış tarihine göre gün sayısı (ör. SGK işten ayrılış bildirgesi 10)."
+  },
+  "importance": {
+    "normal": "Normal",
+    "high": "Yüksek",
+    "critical": "Kritik"
+  },
+  "categories": {
+    "hint": "Görev şablonlarını gruplamak için kategoriler.",
+    "add": "Kategori ekle",
+    "addTitle": "Kategori ekle",
+    "editTitle": "Kategoriyi düzenle",
+    "empty": "Henüz kategori yok.",
+    "name": "Ad",
+    "sortOrder": "Sıra",
+    "delete": "Sil",
+    "confirmDelete": "\"{{name}}\" kategorisi silinsin mi?",
+    "uncategorized": "Kategorisiz"
+  },
+  "sets": {
+    "hint": "Bir çalışan için tek seferde başlatılabilen isimli görev setleri.",
+    "add": "Set ekle",
+    "addTitle": "Şablon seti ekle",
+    "editTitle": "Şablon setini düzenle",
+    "empty": "Henüz şablon seti yok.",
+    "name": "Set adı",
+    "taskCount": "Görev sayısı",
+    "pick": "Görevler (yalnız aynı aşamadan)",
+    "noTemplates": "Bu aşama için görev şablonu yok.",
+    "order": "Sıra",
+    "moveUp": "{{title}} görevini yukarı taşı",
+    "moveDown": "{{title}} görevini aşağı taşı"
   }
 }

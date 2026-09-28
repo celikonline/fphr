@@ -71,6 +71,13 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailInAppAndPush, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskAssigned, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskCompleted, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
+        new(NotificationTemplateKeys.AttendanceMissingPunchReminder, NotificationCategory.Reminder, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipAcknowledgementReminder, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipDocumentUploaded, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.HrMessage, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.CompanyEventInvitation, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.ApprovalDelegationAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipObjectionAccepted, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>

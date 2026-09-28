@@ -1,0 +1,14 @@
+{{-
+if message_subject
+  subject = message_subject
+else
+  subject = "New HR message"
+end
+-}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+{{~ if message_body ~}}
+<p>{{ message_body | html.escape }}</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Open the message" action_url }}
+{{~ end ~}}

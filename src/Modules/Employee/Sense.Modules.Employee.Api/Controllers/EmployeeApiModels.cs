@@ -132,6 +132,12 @@ public sealed record EmployeeListFilterRequest
 
     /// <summary>"Eksik bilgi": true lists only records with an unfilled personnel field, false only complete ones.</summary>
     public bool? MissingInfo { get; init; }
+
+    /// <summary>Additional units (repeat the query key), unioned with <see cref="OrgUnitId"/>.</summary>
+    public IReadOnlyList<Guid>? OrgUnitIds { get; init; }
+
+    /// <summary>The grid keeps listing terminated employees by default (status filter narrows); pass false to hide them.</summary>
+    public bool IncludeTerminated { get; init; } = true;
 }
 
 public sealed record BulkAssignManagerRequest(EmployeeSelection Selection, Guid ManagerEmployeeId);

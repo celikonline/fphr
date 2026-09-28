@@ -1,5 +1,7 @@
+import { incalculableReasonText } from "@/components/attendance/incalculable-hint";
 import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAttendanceErrorMessage } from "@/lib/attendance-error";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ActionIcon,
@@ -26,7 +28,7 @@ import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
+import { getApiErrorStatus } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime, toDateOnly } from "@/lib/dates";
 import {
   approveAllMonthlyTimesheets,
@@ -112,7 +114,7 @@ function MonthlyTimesheet() {
     const message =
       getApiErrorStatus(error) === 403
         ? t("attendance:monthlyTimesheet.forbidden")
-        : getApiErrorMessage(error, t("attendance:genericError"));
+        : getAttendanceErrorMessage(error, t("attendance:genericError"), t);
     toast({ variant: "destructive", description: message });
   }
 
@@ -219,7 +221,7 @@ function MonthlyTimesheet() {
         </Stack>
       ) : monthly.isError ? (
         <Text size="sm" c="red">
-          {getApiErrorMessage(monthly.error, t("attendance:genericError"))}
+          {getAttendanceErrorMessage(monthly.error, t("attendance:genericError"), t)}
         </Text>
       ) : rows.length === 0 ? (
         <Text size="sm" c="dimmed">
@@ -486,6 +488,7 @@ function DayStrip({
           formatDateOnly(day.date, i18n.language, { day: "2-digit", month: "short" }),
           hours,
           ...flags,
+          ...(day.incalculableReason ? [incalculableReasonText(t, day.incalculableReason)] : []),
         ].join(" · ");
         return (
           <Tooltip key={day.date} label={label} multiline maw={260}>

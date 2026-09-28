@@ -28,4 +28,48 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>Zaman-devam Z0.3: recalculation range starts after it ends.</summary>
+    public const string RecalculationRangeInvalid = "attendance.recalculation.range_invalid";
+
+    /// <summary>Zaman-devam Z0.3: recalculation range longer than a year.</summary>
+    public const string RecalculationRangeTooLong = "attendance.recalculation.range_too_long";
+
+    /// <summary>Zaman-devam Z0.3: no recalculation job with this id for the tenant (or it was lost on restart).</summary>
+    public const string RecalculationJobNotFound = "attendance.recalculation.job_not_found";
+    /// <summary>Z2.1: the employee's month is closed (approved monthly timesheet, K6), so no missing-punch request can be raised for it.</summary>
+    public const string PunchRequestPeriodLocked = "attendance.punch_request.period_locked";
+
+    /// <summary>Z2.1: a pending request for the same employee/time/direction already exists.</summary>
+    public const string PunchRequestDuplicate = "attendance.punch_request.duplicate";
+
+    /// <summary>Z2.1: only the requesting employee can cancel a request.</summary>
+    public const string PunchRequestNotOwner = "attendance.punch_request.not_owner";
+    /// <summary>Z0.2: another shift definition of the tenant already uses this code.</summary>
+    public const string ShiftDefinitionCodeDuplicate = "attendance.shift_definition.code_duplicate";
+
+    /// <summary>Z0.2: a definition referenced by an assignment, rotation step or plan template cannot be deleted, only deactivated.</summary>
+    public const string ShiftDefinitionInUse = "attendance.shift_definition.in_use";
+    /// <summary>Manual punch add/delete needs a written reason.</summary>
+    public const string PunchReasonRequired = "attendance.punch.reason_required";
+
+    /// <summary>K6: the employee's month has an approved MonthlyTimesheetApproval; punches can no longer be added or deleted.</summary>
+    public const string PeriodLocked = "attendance.timesheet.period_locked";
+
+    public const string PunchNotFound = "attendance.punch.not_found";
+
+    /// <summary>IPunchRecorder girişi: okutma yönü tanımlı değerlerden biri değil.</summary>
+    public const string PunchDirectionInvalid = "attendance.punch.direction_invalid";
+
+    /// <summary>IPunchRecorder girişi: okutma kaynağı tanımlı değerlerden biri değil.</summary>
+    public const string PunchSourceInvalid = "attendance.punch.source_invalid";
+
+    /// <summary>IPunchRecorder girişi: kaynak referansı (SourceRef) izin verilen uzunluğu aşıyor - sessizce kesilmez.</summary>
+    public const string PunchSourceRefTooLong = "attendance.punch.source_ref_too_long";
+
+    /// <summary>IPunchRecorder: okutmanın kiracısı ortam kiracısıyla (ITenantContext) aynı değil ya da toplu alım birden çok kiracı içeriyor.</summary>
+    public const string PunchTenantMismatch = "attendance.punch.tenant_mismatch";
+
+    /// <summary>I0: aynı puantaj günü eşzamanlı yazma çakışması yeniden denemelere rağmen çözülemedi - istemci tekrar denemeli.</summary>
+    public const string DayConcurrentUpdate = "attendance.day.concurrent_update";
 }

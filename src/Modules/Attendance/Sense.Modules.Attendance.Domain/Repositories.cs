@@ -54,6 +54,18 @@ public interface IAttendanceDayRepository
 
     /// <summary>Ekip haftalık ızgarası (11.3.6): every recorded day in [from, to] across a set of employees, in one query.</summary>
     Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Eklenmiş ama kaydedilmemiş bir günü değişiklik izlemeden çıkarır (eşzamanlı aynı gün oluşturma yarışı sonrası yeniden deneme).</summary>
+    void Discard(AttendanceDay day);
+
+    /// <summary>Kaydetme hatası günün eşzamanlılık belirteci (xmin) çakışması mı - başka işlem aynı günü önce güncelledi.</summary>
+    bool IsConcurrencyConflict(Exception exception);
+
+    /// <summary>Kayıtlı günün değerlerini ve eşzamanlılık belirtecini veritabanından yeniden yükler (çakışma sonrası yeniden türetme).</summary>
+    Task ReloadAsync(AttendanceDay day, CancellationToken cancellationToken = default);
+
+    /// <summary>Drops every tracked entity so the next read is fresh (toplu yeniden hesapta çakışan parçayı baştan işlemek için).</summary>
+    void ClearTracked();
 }
 
 public interface IAnomalyResolutionRepository
@@ -73,6 +85,8 @@ public interface IShiftSettingsRepository
 public interface IShiftAssignmentRepository
 {
     void Add(ShiftAssignment assignment);
+
+    void Remove(ShiftAssignment assignment);
 
     Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -139,4 +153,155 @@ public interface IEqualizationPeriodRepository
     /// <summary>Closed periods whose PeriodEnd falls inside [from, to] (Payroll bridge: attributes the true-up to the month a period closes in).</summary>
     Task<IReadOnlyList<EqualizationPeriod>> ListClosedEndingInRangeAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Ham okutmalar (zaman-devam Z0.1). Sorgular açık <c>tenantId</c> alır: yeniden hesaplama arka planda kiracı bağlamı
+/// olmadan da çalışır. Yumuşak silinmiş okutmalar hiçbir sorguda dönmez.
+/// </summary>
+public interface IPunchRepository
+{
+    void Add(Punches.Punch punch);
+
+    /// <summary>Tek okutma (tenant içinde); silinmiş okutma dönmez.</summary>
+    Task<Punches.Punch?> FindAsync(Guid tenantId, Guid punchId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Punches.Punch>> ListForDayAsync(Guid tenantId, Guid employeeId, DateOnly workDate, CancellationToken cancellationToken = default);
+
+    /// <summary>[from, to] aralığındaki WorkDate'ler; <paramref name="employeeIds"/> null ise kiracının tüm çalışanları.</summary>
+    Task<IReadOnlyList<Punches.Punch>> ListForRangeAsync(
+        Guid tenantId, DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Tekillik anahtarı (Tenant, Employee, OccurredAtUtc, Direction, Source) silinmemiş bir okutmada var mı - idempotent alım için.</summary>
+    Task<bool> ExistsAsync(
+        Guid tenantId, Guid employeeId, DateTime occurredAtUtc, PunchDirection direction, Punches.PunchSource source,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Kimliğe göre okutma (silinmiş olsa da döner - silme/denetim akışı kendisi karar verir); açık <paramref name="tenantId"/> ile süzülür.</summary>
+    Task<Punches.Punch?> FindByIdAsync(Guid tenantId, Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kaydetme hatası eşzamanlı yazma tekillik ihlali mi - okutma indeksi (aynı okutma: hata değil, yoksayma) ya da puantaj günü
+    /// (Tenant, Employee, Date) indeksi (aynı günü iki işlem birden oluşturdu: yeniden denenir, gün güncellenir).
+    /// </summary>
+    bool IsDuplicateKeyViolation(Exception exception);
+
+    /// <summary>Eklenmiş ama kaydedilmemiş bir okutmayı değişiklik izlemeden çıkarır (başarısız toplu alım / tekillik yarışı sonrası).</summary>
+    void Discard(Punches.Punch punch);
+}
+
+public interface IShiftDefinitionRepository
+{
+    void Add(ShiftDefinition definition);
+
+    void Remove(ShiftDefinition definition);
+
+    Task<Result<ShiftDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShiftDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShiftDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>Kod tenant içinde tekil mi (<paramref name="excludeId"/> güncellenen tanımın kendisi).</summary>
+    Task<bool> CodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default);
+
+    /// <summary>"Geçmişe uygula" etki alanı: bu tanımlardan birine bağlı, tarihi [from, to] içindeki vardiya atamaları.</summary>
+    Task<IReadOnlyList<ShiftAssignment>> ListAssignmentsUsingAsync(
+        IReadOnlyCollection<Guid> definitionIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>shift_definition_id FK'sız (uygulama bütünlüğü): bir atama, rotasyon adımı ya da plan şablonu hücresi bu tanıma bağlı mı.</summary>
+    Task<bool> IsInUseAsync(Guid definitionId, CancellationToken cancellationToken = default);
+}
+
+public interface IPunchRequestRepository
+{
+    void Add(PunchRequests.PunchRequest request);
+
+    Task<Result<PunchRequests.PunchRequest>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<PunchRequests.PunchRequest?> FindByApprovalRequestIdAsync(Guid approvalRequestId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PunchRequests.PunchRequest>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Yönetici listesi: tenant'ın talepleri, isteğe bağlı durum süzgeciyle, en yeni önce.</summary>
+    Task<IReadOnlyList<PunchRequests.PunchRequest>> ListAsync(PunchRequests.PunchRequestStatus? status, CancellationToken cancellationToken = default);
+}
+
+public interface IShiftPlanTemplateRepository
+{
+    void Add(ShiftPlanTemplate template);
+
+    void Remove(ShiftPlanTemplate template);
+
+    Task<Result<ShiftPlanTemplate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShiftPlanTemplate>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IRotationRepository
+{
+    void AddPattern(Rotations.RotationPattern pattern);
+
+    Task<Result<Rotations.RotationPattern>> GetPatternByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Rotations.RotationPattern>> ListPatternsAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    Task<bool> PatternCodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default);
+
+    void AddAssignment(Rotations.RotationAssignment assignment);
+
+    Task<Result<Rotations.RotationAssignment>> GetAssignmentByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>[from, to] ile kesişen atamalar; <paramref name="employeeIds"/> null ise tümü.</summary>
+    Task<IReadOnlyList<Rotations.RotationAssignment>> ListAssignmentsOverlappingAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
+}
+
+public interface ITerminalRepository
+{
+    void AddTerminal(Terminals.Terminal terminal);
+
+    Task<Result<Terminals.Terminal>> GetTerminalByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Terminals.Terminal>> ListTerminalsAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> TerminalCodeExistsAsync(string code, Guid? excludeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Terminal alım ucu (kiracı bağlamı henüz yok): anahtar önekine göre tüm kiracılarda aktif terminalleri arar; özet karşılaştırması çağırandadır.</summary>
+    Task<IReadOnlyList<Terminals.Terminal>> ListActiveByApiKeyPrefixAcrossTenantsAsync(string apiKeyPrefix, CancellationToken cancellationToken = default);
+
+    void AddGroup(Terminals.TerminalGroup group);
+
+    Task<Result<Terminals.TerminalGroup>> GetGroupByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Terminals.TerminalGroup>> ListGroupsAsync(CancellationToken cancellationToken = default);
+
+    void AddCredential(Terminals.EmployeeTerminalCredential credential);
+
+    Task<Result<Terminals.EmployeeTerminalCredential>> GetCredentialByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Terminal okutmasını çalışana eşler: kiracı + tür + değer (yalnız aktif kimlikler).</summary>
+    Task<Terminals.EmployeeTerminalCredential?> FindActiveCredentialAsync(
+        Guid tenantId, Terminals.TerminalCredentialKind kind, string value, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListCredentialsForEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    void RemoveGroup(Terminals.TerminalGroup group);
+
+    /// <summary>Grup silinmeden önce: gruba bağlı (aktif ya da pasif) terminal var mı.</summary>
+    Task<bool> AnyTerminalInGroupAsync(Guid groupId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Terminal nabzı/okutması (Z5.1): <c>LastSeenAtUtc</c>'yi doğrudan günceller - değişiklik izlemeden geçmez, bu yüzden her nabız
+    /// için denetim kaydı üretmez. Kiracı bağlamı gerekmez; açık <paramref name="tenantId"/> ile süzülür.
+    /// </summary>
+    Task MarkTerminalSeenAsync(Guid tenantId, Guid terminalId, DateTime seenAtUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Terminal okutmalarını toplu eşler: kiracı içindeki, değeri (HMAC özeti) listede olan aktif kimlikler.</summary>
+    Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListActiveCredentialsByValuesAsync(
+        Guid tenantId, IReadOnlyCollection<string> values, CancellationToken cancellationToken = default);
+
+    /// <summary>Kimlik tanımlama/içe aktarma (Z5.4): geçerli kiracıda değeri (HMAC özeti) listede olan aktif ya da pasif kimlikler (izlenen).</summary>
+    Task<IReadOnlyList<Terminals.EmployeeTerminalCredential>> ListCredentialsByValuesAsync(
+        IReadOnlyCollection<string> values, CancellationToken cancellationToken = default);
 }

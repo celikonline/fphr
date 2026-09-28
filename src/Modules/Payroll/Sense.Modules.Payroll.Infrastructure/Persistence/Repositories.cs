@@ -49,17 +49,14 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
 
     public async Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
-}
 
-public sealed class PayslipDeliveryRepository(PayrollDbContext context) : IPayslipDeliveryRepository
-{
-    public void Add(PayslipDelivery delivery) => context.PayslipDeliveries.Add(delivery);
-
-    public async Task<PayslipDelivery?> FindByPayslipIdAsync(Guid payslipId, CancellationToken cancellationToken = default) =>
-        await context.PayslipDeliveries.FirstOrDefaultAsync(d => d.PayslipId == payslipId, cancellationToken);
-
-    public async Task<IReadOnlyList<PayslipDelivery>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
-        await context.PayslipDeliveries.Where(d => d.EmployeeId == employeeId).ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<Payslip>> ListPublishedUnacknowledgedAsync(
+        Guid? payrollPeriodId, DateTimeOffset? publishedSince, CancellationToken cancellationToken = default) =>
+        await context.Payslips
+            .Where(p => p.PublishedAt != null && p.AcknowledgedAt == null
+                && (payrollPeriodId == null || p.PayrollPeriodId == payrollPeriodId)
+                && (publishedSince == null || p.PublishedAt >= publishedSince))
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class PayslipDirtyFlagRepository(PayrollDbContext context) : IPayslipDirtyFlagRepository

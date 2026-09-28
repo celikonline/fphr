@@ -32,7 +32,27 @@
     "status": "Status",
     "inside": "Inside",
     "outside": "Outside",
-    "empty": "No employees to show."
+    "empty": "No employees to show.",
+    "terminals": {
+      "title": "Terminals",
+      "online": "Online",
+      "offline": "Offline",
+      "inactive": "Inactive",
+      "todayCount": "Today: {{count}} punches",
+      "lastPunch": "Last punch",
+      "lastSeen": "Last seen",
+      "never": "Never seen",
+      "empty": "No registered terminals."
+    },
+    "lastPunch": "Last punch",
+    "sources": {
+      "manual": "Manual",
+      "import": "Import",
+      "device": "Device",
+      "selfService": "Self-service",
+      "request": "Request",
+      "terminal": "Terminal"
+    }
   },
   "empty": "No records for this period.",
   "genericError": "Something went wrong.",
@@ -249,7 +269,32 @@
     "unlockTitle": "Unlock period",
     "unlockReasonLabel": "Reason",
     "unlockReasonRequired": "A reason is required to unlock the period.",
-    "unlocked": "Period unlocked."
+    "unlocked": "Period unlocked.",
+    "paletteTitle": "Shift palette",
+    "paletteHint": "Drag a shift or day type onto a cell, or select cells and click one.",
+    "paletteEmpty": "No shifts defined.",
+    "dayTypeTitle": "Day types",
+    "dayType": {
+      "work": "Work",
+      "weeklyRest": "Weekly rest",
+      "restDay": "Rest day",
+      "publicHoliday": "Public holiday"
+    },
+    "selectedCells": "{{count}} cells selected",
+    "clearSelection": "Clear selection",
+    "clearShifts": "Delete selected shifts",
+    "clearShiftsTitle": "Delete shifts",
+    "clearShiftsDescription": "Shifts in {{count}} cells will be deleted. Do you confirm?",
+    "unassignedOnly": "Employees without shifts",
+    "unassignedEmpty": "No employees without shifts this week.",
+    "totalsLabel": "Total",
+    "totalHours": "{{hours}} h",
+    "totalHoursMinutes": "{{hours}} h {{minutes}} min",
+    "totalMinutes": "{{minutes}} min",
+    "totalPeople": "{{count}} people",
+    "bulkDone": "{{count}} cells updated.",
+    "bulkSkipped": "{{count}} cells skipped (locked period or published shift).",
+    "lockedEditHint": "The period is locked; shifts cannot be edited."
   },
   "myAvailability": {
     "title": "My Availability",
@@ -311,5 +356,57 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Plan templates",
+    "tabSave": "Save template",
+    "tabApply": "Apply template",
+    "tabImport": "Import Excel",
+    "selectionEmpty": "Select assigned cells on the calendar to save.",
+    "selectionSummary": "{{entries}} assignments over a {{days}}-day period will be saved.",
+    "name": "Template name",
+    "save": "Save template",
+    "saved": "Template saved.",
+    "noTemplates": "No saved templates.",
+    "pick": "Template",
+    "days": "{{count}} days",
+    "startDate": "Start date",
+    "keepPublished": "Keep published",
+    "overwritePublished": "Overwrite published",
+    "apply": "Apply",
+    "applied": "{{count}} cells planned.",
+    "importHint": "Download the template file, fill it in and upload; erroneous rows are listed below.",
+    "downloadTemplate": "Download Excel template",
+    "dropzoneTitle": "Drop or pick an Excel/CSV file",
+    "importing": "Importing…",
+    "invalidFile": "Invalid file (.xlsx/.csv only, max 10 MB).",
+    "importSummary": "{{inserted}} rows processed, {{errors}} rows with errors.",
+    "errorsHint": "Erroneous rows were skipped; fix and upload again.",
+    "colRow": "Row",
+    "colKey": "Key",
+    "colError": "Error",
+    "deleted": "Template deleted.",
+    "delete": "Delete template {{name}}",
+    "deleteConfirm": "Delete template \"{{name}}\"?",
+    "skippedHint": "{{count}} cells were skipped:",
+    "colDate": "Date",
+    "colReason": "Reason",
+    "skipReason": {
+      "locked": "Locked period",
+      "published": "Published shift"
+    }
+  },
+  "errors": {
+    "periodLocked": "This month's timesheet is approved and locked; punches cannot be added, deleted or changed."
+  },
+  "incalculableReason": {
+    "label": "Incalculable",
+    "unknown": "Reason for incalculable",
+    "unknownDirection": "Punch direction unknown",
+    "brokenSequence": "Broken punch sequence (inconsistent in/out order or an odd number of punches)",
+    "channelConflict": "Channel conflict (manual + device punches)",
+    "noPlan": "Unplanned punch (no shift plan for that day)",
+    "nightShiftOverlap": "Night shift overlap (punch is close to both days)",
+    "ambiguousShift": "Ambiguous shift (punch matches more than one shift)"
   }
 }

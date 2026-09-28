@@ -32,6 +32,12 @@ public static class WorkflowDomainErrors
     public const string TokenNotFound = "workflow.token.not_found";
     public const string TokenExpired = "workflow.token.expired";
     public const string TokenAlreadyUsed = "workflow.token.already_used";
+
+    public const string DelegationNotFound = "workflow.delegation.not_found";
+    public const string DelegationEmployeeRequired = "workflow.delegation.employee_required";
+    public const string DelegationToSelfNotAllowed = "workflow.delegation.to_self_not_allowed";
+    public const string DelegationRangeInvalid = "workflow.delegation.range_invalid";
+    public const string DelegationAlreadyRevoked = "workflow.delegation.already_revoked";
 }
 
 /// <summary>Domain constants and length limits.</summary>

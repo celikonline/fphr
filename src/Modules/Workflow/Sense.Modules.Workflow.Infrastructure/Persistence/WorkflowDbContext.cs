@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalPolicies;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Modules.Workflow.Domain.Delegations;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Audit;
@@ -27,6 +28,8 @@ public sealed class WorkflowDbContext(DbContextOptions<WorkflowDbContext> option
 
     public DbSet<EmailDecisionToken> EmailDecisionTokens => Set<EmailDecisionToken>();
 
+    public DbSet<ApprovalDelegation> ApprovalDelegations => Set<ApprovalDelegation>();
+
     /// <summary>senseik-049: workflow.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -49,6 +52,7 @@ internal static class WorkflowTables
     public const string ApprovalTasks = "approval_tasks";
     public const string ApprovalHistoryEntries = "approval_history_entries";
     public const string EmailDecisionTokens = "email_decision_tokens";
+    public const string ApprovalDelegations = "approval_delegations";
 
     /// <summary>String length for enum-as-string columns (Status, EventType, Outcome, Channel...).</summary>
     public const int EnumCodeLength = 30;
@@ -182,5 +186,23 @@ public sealed class EmailDecisionTokenConfiguration : IEntityTypeConfiguration<E
 
         b.HasIndex(x => x.TokenHash).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.ApprovalTaskId });
+    }
+}
+
+public sealed class ApprovalDelegationConfiguration : IEntityTypeConfiguration<ApprovalDelegation>
+{
+    public void Configure(EntityTypeBuilder<ApprovalDelegation> b)
+    {
+        b.ToTable(WorkflowTables.ApprovalDelegations);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        // Comma-joined request type codes: up to ~20 codes of RequestTypeMaxLength is plenty; null = all types.
+        b.Property(x => x.RequestTypes).HasMaxLength(WorkflowLimits.RequestTypeMaxLength * 20);
+        b.Ignore(x => x.IsRevoked);
+        b.Ignore(x => x.RequestTypeList);
+
+        b.HasIndex(x => new { x.TenantId, x.DelegateEmployeeId });
+        b.HasIndex(x => new { x.TenantId, x.DelegatorEmployeeId });
     }
 }

@@ -1,16 +1,23 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
+using Sense.Modules.Attendance.Application.PunchRequests;
+using Sense.Modules.Attendance.Application.Recalculation;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
+using Sense.Modules.Attendance.Application.Terminals;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Infrastructure.Jobs;
 using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Attendance.Infrastructure.Terminals;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Shared.Contracts.Events;
@@ -26,6 +33,34 @@ public static class AttendanceServiceCollectionExtensions
         // Raporlar menüsü katkıları (senseik-029) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlySummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
+        // Günlük puantaj listeleri (Z1.1): IDataScopeService/IOrgUnitLookup/ILeaveOnDateReader yalnız API'de var.
+        services.AddScoped<IDailyAttendanceQuery, Application.Daily.DailyAttendanceQuery>();
+
+        // Zaman-devam Z0.3: yeniden hesaplama kuyruğunu yalnız API süreci boşaltır (iş durumu bellekte; durum ucu API'de). Servisler
+        // AddAttendanceCoreServices'te (Worker'daki onaylı okutma talebi RecalculateNowAsync çağırır).
+        services.AddHostedService<RecalculationHostedService>();
+        services.AddSingleton<RecalculationQueueConsumer>();
+        // Zaman raporları (Z4.1a, R1): günlük sorgu + vardiya planı okuyucuları yalnız API'de var.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IncalculableReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.NoShiftAssignedReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.DailyStatusListsReportProvider>();
+        // Okutma tabanlı zaman raporları (Z4.1b, R2).
+        services.TryAddScoped<Reporting.IPunchReportReader, Reporting.PunchReportReader>();
+        services.TryAddScoped<ITerminalRepository, TerminalRepository>(); // Terminal adı sütunu; Z5.1 aynı kaydı eklerse TryAdd çakışmaz.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.ManualEntriesReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.CurrentlyInsideReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.BreaksReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.IntermediatePunchesReportProvider>();
+
+        // Z5.1 terminal yönetimi + okutma ucu (T1, API-only). Kimlik (kart/PIN) özet pepper'ı gizli yapılandırmadan; zorunlu değil:
+        // yoksa API açılır, başlangıçta uyarı loglanır, yalnız kimlik işlemleri 503 döner (lazy doğrulama).
+        services.AddOptions<TerminalSecurityOptions>().Bind(configuration.GetSection(TerminalSecurityOptions.Section));
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, TerminalSecurityStartupCheck>());
+        services.TryAddSingleton<ITerminalCredentialHasher, HmacTerminalCredentialHasher>();
+        services.TryAddScoped<ITerminalKeyAuthenticator, TerminalKeyAuthenticator>();
+        services.AddOptions<TerminalIngestOptions>().Bind(configuration.GetSection(TerminalIngestOptions.Section));
+        services.TryAddSingleton<TerminalCredentialFailureMonitor>();
+        services.TryAddScoped<TerminalPunchIngest>();
         return services;
     }
 
@@ -59,14 +94,41 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<LeaveOverlapChecker>();
         // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
         services.AddScoped<NonWorkingDayResolver>();
+        services.AddScoped<IAttendanceDailyKpiReader, AttendanceDailyKpiReader>();
+        services.AddScoped<IShiftPlanTemplateRepository, ShiftPlanTemplateRepository>();
+        // Eksik kayıt talebi (Z2.1, B6).
+        services.AddScoped<IPunchRequestRepository, PunchRequestRepository>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PunchRequestApprovalSummaryProvider>();
+        // Z3.1 toplu atama (B8): vardiya tanımı okuma; B2 aynı kaydı eklerse tekrar harmsızdır (son kayıt kazanır).
+        services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        services.AddScoped<IRotationRepository, RotationRepository>();
+        // Z0.2 vardiya kataloğu + K2 plan çözümleme (B2).
+        // TryAdd: B9 (rotasyon) da aynı repository'yi kaydeder; birleşmede çift kayıt olmasın.
+        services.TryAddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        services.TryAddScoped<IPlannedDayResolver, PlannedDayResolver>();
+        // Zaman-devam B1 (Z0.1): ham okutma deposu + tek yazma yolu. TryAdd: aynı dalgada başka şeritler de depoyu kaydedebilir.
+        services.TryAddScoped<IPunchRepository, PunchRepository>();
+        services.TryAddScoped<IPunchRecorder, Application.Punches.PunchRecorder>();
+        // Zaman-devam I0: okutma tabanlı yeniden hesap (B3 + B1 + B2) - API ve Worker. RecalculationExecutor'un IEmployeeDirectory'si
+        // opsiyoneldir (Worker'da yok; orada çağıranlar çalışan listesi verir).
+        services.AddScoped<IDayRebuilder, PunchDayRebuilder>();
+        services.AddScoped<RecalculationExecutor>();
+        services.AddSingleton<RecalculationJobStore>();
+        services.AddSingleton<AttendanceDayRecalculator>();
+        services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
+        // Z5.4: EmployeeTerminated → terminal kimliklerini pasifleştirme (Worker'da da çözülür). TryAdd: API'de AddAttendanceServices da kaydeder.
+        services.TryAddScoped<ITerminalRepository, TerminalRepository>();
         return services;
     }
 
-    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted), registered explicitly for Sense.Worker.</summary>
+    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted, EmployeeTerminated, …), registered explicitly for Sense.Worker.</summary>
     public static IServiceCollection AddAttendanceIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
         services.AddScoped<IIntegrationEventHandler<TimesheetWeekCompleted>, TimesheetWeekCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalCompleted>, PunchRequestApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalRejected>, PunchRequestApprovalRejectedHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedTerminalCredentialsHandler>();
         return services;
     }
 }

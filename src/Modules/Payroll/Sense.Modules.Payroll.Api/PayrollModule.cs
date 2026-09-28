@@ -54,5 +54,9 @@ public sealed class PayrollModule : IModule
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>();
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.IClosingChecklistGate>(
             sp => sp.GetRequiredService<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>());
+
+        // E2: daily "imzalamayanlara hatırlatma" (Hangfire runs in Sense.Api, like EmployeeModule's birthday job).
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Sense.Modules.Payroll.Application.Payslips.PayslipAcknowledgementReminderJobHandler>();
     }
 }

@@ -35,3 +35,8 @@ public sealed record ApprovalTaskAssigned(
     Guid? ApproverEmployeeId,
     string? FallbackRoleCode)
     : IntegrationEvent(TenantId);
+
+/// <summary>Published (via Workflow's outbox) when an approval delegation is created - the delegate is notified (Z2.2).</summary>
+public sealed record ApprovalDelegationAssigned(
+    Guid TenantId, Guid DelegationId, Guid DelegatorEmployeeId, Guid DelegateEmployeeId, DateOnly StartDate, DateOnly EndDate)
+    : IntegrationEvent(TenantId);

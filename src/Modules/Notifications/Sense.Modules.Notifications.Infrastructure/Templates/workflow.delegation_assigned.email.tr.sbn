@@ -1,0 +1,6 @@
+{{- subject = "Onay yetkisi size devredildi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ delegator_name | html.escape }} onay yetkisini belirli bir süre için size devretti. Bu süre boyunca onay görevleri Onay Kutunuzda görünür.</p>
+{{~ if action_url ~}}
+{{ button "Onay kutusunu aç" action_url }}
+{{~ end ~}}

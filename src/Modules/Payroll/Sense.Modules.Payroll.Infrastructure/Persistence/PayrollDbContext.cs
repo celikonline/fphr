@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -31,8 +32,6 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
     public DbSet<Payslip> Payslips => Set<Payslip>();
 
     public DbSet<PayslipCalculationTrace> CalculationTraces => Set<PayslipCalculationTrace>();
-
-    public DbSet<PayslipDelivery> PayslipDeliveries => Set<PayslipDelivery>();
 
     public DbSet<EmployeePayrollProfile> EmployeePayrollProfiles => Set<EmployeePayrollProfile>();
 
@@ -67,7 +66,6 @@ internal static class PayrollTables
 {
     public const string Periods = "payroll_periods";
     public const string Payslips = "payslips";
-    public const string PayslipDeliveries = "payslip_deliveries";
     public const string CalculationTraces = "payslip_calculation_traces";
     public const string EmployeePayrollProfiles = "employee_payroll_profiles";
     public const string DirtyFlags = "payslip_dirty_flags";
@@ -84,6 +82,9 @@ internal static class PayrollTables
     public const int HashLength = 128;
     public const int ReasonCodeLength = 40;
     public const int CaseReferenceMaxLength = 100;
+
+    /// <summary>Shadow concurrency token mapped to PostgreSQL's xmin (Payslip).</summary>
+    public const string RowVersion = "RowVersion";
 }
 
 public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<PayrollPeriod>
@@ -101,6 +102,16 @@ public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payrol
 
 public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
 {
+    private static readonly JsonSerializerOptions HistoryJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    private static readonly ValueComparer<IReadOnlyList<PayslipAcknowledgementRecord>> HistoryComparer = new(
+        (a, b) => (a ?? Array.Empty<PayslipAcknowledgementRecord>()).SequenceEqual(b ?? Array.Empty<PayslipAcknowledgementRecord>()),
+        v => v.Aggregate(0, (hash, r) => HashCode.Combine(hash, r)),
+        v => v.ToList());
+
     public void Configure(EntityTypeBuilder<Payslip> b)
     {
         b.ToTable(PayrollTables.Payslips);
@@ -108,22 +119,27 @@ public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.InputSnapshot).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.Property(x => x.InputHash).HasMaxLength(PayrollTables.HashLength).IsRequired();
+        b.Property(x => x.AcknowledgedFromIp).HasMaxLength(PayrollLimits.ClientIpMaxLength);
+        b.Property(x => x.AcknowledgedUserAgent).HasMaxLength(PayrollLimits.UserAgentMaxLength);
+        b.Property(x => x.ObjectionStatus).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength).IsRequired().HasDefaultValue(PayslipObjectionStatus.None);
+        b.Property(x => x.ObjectionReason).HasMaxLength(PayrollLimits.ObjectionReasonMaxLength);
+        b.Ignore(x => x.AwaitsAcknowledgement);
+
+        // Optimistic concurrency on PostgreSQL's xmin system column (no schema change): two acknowledgements, or an
+        // acknowledgement racing an objection, cannot both win - the loser gets DbUpdateConcurrencyException (409).
+        b.Property<uint>(PayrollTables.RowVersion).HasColumnName("xmin").HasColumnType("xid").IsRowVersion();
+
+        // K4: append-only evidence of earlier versions' acknowledgements/objections (Payslip.Recalculate archives them).
+        b.Property(x => x.AcknowledgementHistory)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, HistoryJsonOptions),
+                v => JsonSerializer.Deserialize<List<PayslipAcknowledgementRecord>>(v, HistoryJsonOptions) ?? new List<PayslipAcknowledgementRecord>())
+            .Metadata.SetValueComparer(HistoryComparer);
+        b.Property(x => x.AcknowledgementHistory)
+            .HasColumnName("acknowledgement_history").HasColumnType(PersistenceDefaults.JsonbColumnType)
+            .IsRequired().HasDefaultValueSql("'[]'::jsonb");
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PayrollPeriodId }).IsUnique();
         b.Ignore(x => x.DomainEvents);
-    }
-}
-
-public sealed class PayslipDeliveryConfiguration : IEntityTypeConfiguration<PayslipDelivery>
-{
-    public void Configure(EntityTypeBuilder<PayslipDelivery> b)
-    {
-        b.ToTable(PayrollTables.PayslipDeliveries);
-        b.HasKey(x => x.Id);
-        b.Property(x => x.Id).ValueGeneratedNever();
-        b.Property(x => x.Channel).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
-        b.Property(x => x.EvidenceHash).HasMaxLength(PayrollTables.HashLength);
-        b.HasIndex(x => x.PayslipId).IsUnique();
-        b.HasIndex(x => new { x.TenantId, x.EmployeeId });
     }
 }
 

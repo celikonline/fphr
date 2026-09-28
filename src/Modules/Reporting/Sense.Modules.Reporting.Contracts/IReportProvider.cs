@@ -15,7 +15,10 @@ public static class ReportCategories
     public const string Leave = "leave";
     public const string Finance = "finance";
 
-    public static readonly IReadOnlyList<string> All = [Administrative, Employee, Leave, Finance];
+    /// <summary>Zaman &amp; devam reports (daily attendance, late/early, overtime).</summary>
+    public const string Time = "time";
+
+    public static readonly IReadOnlyList<string> All = [Administrative, Employee, Leave, Finance, Time];
 
     /// <summary>Katalog sıralaması için; bilinmeyen kategori sona düşer.</summary>
     public static int SortOrder(string categoryKey)
@@ -53,10 +56,14 @@ public enum ReportParameterKind
 
     /// <summary>"true"/"false" anahtarı (örn. işten ayrılanları dahil et).</summary>
     Boolean = 4,
+
+    /// <summary>Tek seçimli liste: değer <see cref="ReportParameterDescriptor.Options"/>'tan biri olmalıdır (örn. günlük durum, çıktı biçimi).</summary>
+    Select = 5,
 }
 
 /// <summary>Bir raporun tek bir filtresi. <see cref="ReportParameterKind.DateRange"/> için <paramref name="Key"/> mantıksal addır, gerçek anahtarlar from/to'dur.</summary>
-public sealed record ReportParameterDescriptor(string Key, ReportParameterKind Kind, bool IsRequired = false);
+/// <param name="Options"><see cref="ReportParameterKind.Select"/> için izinli değerler (web etiketi <c>reports:params.{Key}Options.{değer}</c>); diğer türlerde null.</param>
+public sealed record ReportParameterDescriptor(string Key, ReportParameterKind Kind, bool IsRequired = false, IReadOnlyList<string>? Options = null);
 
 /// <summary>Sağlayıcıların ortak kullandığı parametre anahtarları (web ile paylaşılan sözleşme).</summary>
 public static class ReportParameterKeys
@@ -68,6 +75,9 @@ public static class ReportParameterKeys
     public const string From = "from";
     public const string To = "to";
     public const string IncludeTerminated = "includeTerminated";
+
+    /// <summary>Single date (yyyy-MM-dd), e.g. the day of a daily attendance report.</summary>
+    public const string Date = "date";
 }
 
 /// <summary>
