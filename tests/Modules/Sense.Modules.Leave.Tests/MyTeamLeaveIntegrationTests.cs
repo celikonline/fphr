@@ -82,6 +82,7 @@ public sealed class MyTeamLeaveIntegrationTests : TestFixture
         annual.IsMasked.ShouldBeFalse();
         annual.LeaveTypeCode.ShouldBe(LeaveTypeCode.Annual);
         annual.EmployeeName.ShouldBe("Ayşe Demir");
+        annual.OverlappingApprovedCount.ShouldBe(1);
         var sick = mine.Single(e => e.RequestId == s.AyseSick);
         sick.Status.ShouldBe(LeaveRequestStatus.Approved);
         sick.IsMasked.ShouldBeTrue();
@@ -138,10 +139,12 @@ public sealed class MyTeamLeaveIntegrationTests : TestFixture
         var employees = scope.ServiceProvider.GetRequiredService<EmployeeDbContext>();
         var managerA = NewEmployee(tenantId, "Ahmet", "Yılmaz", null);
         var managerB = NewEmployee(tenantId, "Burak", "Kaya", null);
-        var ayse = NewEmployee(tenantId, "Ayşe", "Demir", managerA.Id);
+        var salesUnit = Guid.NewGuid();
+        var ayse = NewEmployee(tenantId, "Ayşe", "Demir", managerA.Id, salesUnit);
+        var fatma = NewEmployee(tenantId, "Fatma", "Yan", null, salesUnit);
         var deniz = NewEmployee(tenantId, "Deniz", "Ak", managerB.Id);
         var elif = NewEmployee(tenantId, "Elif", "Can", ayse.Id);
-        employees.Employees.AddRange(managerA, managerB, ayse, deniz, elif);
+        employees.Employees.AddRange(managerA, managerB, ayse, deniz, elif, fatma);
         await employees.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var ruleSet = await scope.ServiceProvider.GetRequiredService<LeaveBalanceService>().EnsureDefaultRuleSetAsync(tenantId, TestContext.Current.CancellationToken);
@@ -157,9 +160,11 @@ public sealed class MyTeamLeaveIntegrationTests : TestFixture
         ayseRejected.Reject(approvalId, Now).IsSuccess.ShouldBeTrue();
         var denizAnnual = Approved(Request(tenantId, deniz.Id, annualType, new DateOnly(2026, 10, 5)));
         var elifAnnual = Request(tenantId, elif.Id, annualType, new DateOnly(2026, 10, 7));
+        // Fatma (same unit as Ayşe, nobody's report) is off on the day Ayşe's annual leave starts: overlap count only, never listed.
+        var fatmaAnnual = Approved(Request(tenantId, fatma.Id, annualType, new DateOnly(2026, 10, 5)));
 
         var leave = scope.ServiceProvider.GetRequiredService<LeaveDbContext>();
-        leave.Requests.AddRange(ayseAnnual, ayseSick, ayseRejected, denizAnnual, elifAnnual);
+        leave.Requests.AddRange(ayseAnnual, ayseSick, ayseRejected, denizAnnual, elifAnnual, fatmaAnnual);
         await leave.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         _directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
@@ -169,12 +174,16 @@ public sealed class MyTeamLeaveIntegrationTests : TestFixture
                 new(deniz.Id, "Deniz", "Ak", null, null, null, "Active"),
                 new(elif.Id, "Elif", "Can", null, null, null, "Active"),
             });
+        _directory.ListActiveEmployeeIdsInOrgUnitsAsync(
+                tenantId, Arg.Is<IReadOnlyCollection<Guid>>(units => units.Contains(salesUnit)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { ayse.Id, fatma.Id });
 
         return new Seeded(tenantId, managerA.Id, managerB.Id, ayse.Id, deniz.Id, ayseAnnual.Id, ayseSick.Id, denizAnnual.Id, elifAnnual.Id);
     }
 
-    private static EmployeeEntity NewEmployee(Guid tenantId, string firstName, string lastName, Guid? managerId) =>
-        EmployeeEntity.Create(tenantId, new EmployeeInfo(firstName, lastName, null, null, null, null, null, null), null, null, managerId).Value;
+
+    private static EmployeeEntity NewEmployee(Guid tenantId, string firstName, string lastName, Guid? managerId, Guid? orgUnitId = null) =>
+        EmployeeEntity.Create(tenantId, new EmployeeInfo(firstName, lastName, null, null, null, null, null, null), null, orgUnitId, managerId).Value;
 
     private static LeaveRequest Request(Guid tenantId, Guid employeeId, LeaveType type, DateOnly day) =>
         LeaveRequest.Submit(tenantId, employeeId, type.Id, type.Code, day, day, 1m, null, LeaveRequestSource.SelfService, Now, null, null).Value;

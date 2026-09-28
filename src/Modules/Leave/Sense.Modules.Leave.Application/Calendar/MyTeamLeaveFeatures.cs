@@ -59,6 +59,14 @@ public sealed class ListMyTeamLeaveRequestsHandler(
         var names = (await employees.GetContactsAsync(tenant.TenantId, leaves.Select(l => l.EmployeeId).Distinct().ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
-        return Result.Success(LeaveCalendar.Build(leaves, types, names));
+        var entries = new List<LeaveCalendarEntryDto>();
+        foreach (var entry in LeaveCalendar.Build(leaves, types, names))
+        {
+            var overlapping = await LeaveCalendar.ApprovedOverlapCountAsync(
+                tenant.TenantId, entry.EmployeeId, entry.StartDate, employeeLookup, employees, requests, cancellationToken);
+            entries.Add(entry with { OverlappingApprovedCount = overlapping });
+        }
+
+        return Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>(entries);
     }
 }
