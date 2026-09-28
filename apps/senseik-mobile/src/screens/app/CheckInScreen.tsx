@@ -1,175 +1,320 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Linking, Platform, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
-import * as Location from "expo-location";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import Constants from "expo-constants";
+import { ErrorBanner, PrimaryButton, Screen } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/apiError";
+import {
+  PUNCH_LABELS,
+  availableActions,
+  nextPunchAction,
+  punchTimes,
+  qrButtonLabel,
+  shouldRenderMap,
+  type PunchAction,
+} from "@/lib/punch";
 import {
   attendanceService,
   type MyCheckInStatus,
   type SelfCheckInResult,
 } from "@/services/AttendanceService";
+import { palette, radius, text, tones } from "@/theme/theme";
+import { ClockCard } from "./checkin/ClockCard";
+import { MapHeader, type Coordinates } from "./checkin/MapHeader";
+import { PunchTiles } from "./checkin/PunchTiles";
+import { useDeviceLocation, type DeviceLocation } from "./checkin/useDeviceLocation";
 
-/** Best-effort device position; geofence'siz lokasyonda konum zorunlu olmadığı için izin/okuma hatası engel değildir. */
-async function tryGetPosition(): Promise<{ latitude: number; longitude: number } | undefined> {
-  try {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (permission.status !== "granted") return undefined;
-    const position = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    return { latitude: position.coords.latitude, longitude: position.coords.longitude };
-  } catch {
-    return undefined;
+const PUNCH_ERROR = "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin.";
+const SHOW_MAP = shouldRenderMap(
+  Constants.expoConfig?.extra as { hasMapsKey?: boolean } | undefined,
+  Platform.OS
+);
+
+function placeLabel(location: DeviceLocation, lastResult: SelfCheckInResult | null): string {
+  if (lastResult?.locationName) return lastResult.locationName;
+  if (location.coords) {
+    return `${location.coords.latitude.toFixed(5)}, ${location.coords.longitude.toFixed(5)}`;
   }
+  if (location.status === "denied") return "Konum izni verilmedi";
+  if (location.status === "servicesOff") return "Cihazınızda konum kapalı";
+  if (location.status === "unavailable") return "Konum alınamadı";
+  return "Konum alınıyor…";
 }
 
-function errorMessage(error: unknown): string {
-  const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-  return detail || "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin.";
+/** Android: jumps straight to the location toggle; iOS has no such deep link, falls back to app settings. */
+async function openLocationSettings(): Promise<void> {
+  if (Platform.OS === "android") {
+    try {
+      await Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
+      return;
+    } catch {
+      // Fall through to the app's own settings screen below.
+    }
+  }
+  await Linking.openSettings();
 }
 
+function successMessage(result: SelfCheckInResult): string {
+  const tile = PUNCH_LABELS[result.direction]?.tile ?? "Kayıt";
+  const place = result.locationName ? ` · ${result.locationName}` : "";
+  return `${tile} kaydedildi: ${result.time.slice(0, 5)}${place}`;
+}
+
+/**
+ * Giriş / Çıkış tab (spec §6): map (or location card), live clock, 2×2 punch tiles and one primary
+ * button for the next punch, all by GPS. QR scanning stays as the secondary way in.
+ */
 export default function CheckInScreen() {
-  const [permission, requestPermission] = useCameraPermissions();
+  const isFocused = useIsFocused();
+  const location = useDeviceLocation(isFocused);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [status, setStatus] = useState<MyCheckInStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<SelfCheckInResult | null>(null);
+  const [busy, setBusy] = useState<PunchAction | "qr" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const handlingRef = useRef(false);
+  const [lastResult, setLastResult] = useState<SelfCheckInResult | null>(null);
+  // This session's punch times, keyed by attendance day so an overnight-open app never shows
+  // yesterday's break on today's tiles.
+  const [session, setSession] = useState<{
+    date: string;
+    times: Partial<Record<PunchAction, string>>;
+  }>({ date: "", times: {} });
+  const inFlightRef = useRef(false);
 
   const loadStatus = useCallback(async () => {
     try {
       setStatus(await attendanceService.getMyCheckInStatus());
-    } catch {
-      setStatus(null);
+      setStatusError(null);
+    } catch (err) {
+      setStatusError(getApiErrorMessage(err, "Giriş/çıkış durumu yüklenemedi."));
     }
   }, []);
 
-  useEffect(() => {
-    void loadStatus();
-  }, [loadStatus]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadStatus();
+    }, [loadStatus])
+  );
 
-  const direction = status?.isCheckedIn ? "out" : "in";
-  const actionLabel = direction === "in" ? "Giriş yap" : "Çıkış yap";
+  useEffect(() => {
+    if (!isFocused) setScanning(false);
+  }, [isFocused]);
+
+  /** Runs one punch; the status is the source of truth afterwards, so it is always refetched. */
+  async function submit(kind: PunchAction | "qr", send: () => Promise<SelfCheckInResult>) {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    setBusy(kind);
+    setError(null);
+    try {
+      const result = await send();
+      setLastResult(result);
+      setSession((current) => ({
+        date: result.date,
+        times: {
+          ...(current.date === result.date ? current.times : {}),
+          [result.direction]: result.time,
+        },
+      }));
+      await loadStatus();
+    } catch (err) {
+      setError(getApiErrorMessage(err, PUNCH_ERROR));
+    } finally {
+      inFlightRef.current = false;
+      setBusy(null);
+    }
+  }
+
+  function punch(action: PunchAction, coords: Coordinates) {
+    void submit(action, () => attendanceService.gpsCheckIn({ ...coords, direction: action }));
+  }
 
   async function startScan() {
     setError(null);
-    setResult(null);
-    if (!permission?.granted) {
-      const response = await requestPermission();
+    if (!cameraPermission?.granted) {
+      const response = await requestCameraPermission();
       if (!response.granted) {
         setError("Kamera izni verilmedi. QR kodu okutmak için ayarlardan kamera iznini açın.");
         return;
       }
     }
-    handlingRef.current = false;
     setScanning(true);
   }
 
-  async function onScanned({ data }: BarcodeScanningResult) {
-    if (handlingRef.current) return;
-    handlingRef.current = true;
+  function onScanned({ data }: BarcodeScanningResult, direction: PunchAction) {
+    if (inFlightRef.current) return;
     setScanning(false);
-    setBusy(true);
-    try {
-      const position = await tryGetPosition();
-      const response = await attendanceService.qrCheckIn({
-        code: data.trim().toUpperCase(),
-        direction,
-        ...(position ?? {}),
-      });
-      setResult(response);
-      await loadStatus();
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
+    // Geofence'siz lokasyonda konum zorunlu değil: konum yoksa QR yine de denenir, sunucu karar verir.
+    const coords = location.coords ?? {};
+    void submit("qr", () =>
+      attendanceService.qrCheckIn({ code: data.trim().toUpperCase(), direction, ...coords })
+    );
   }
 
-  if (scanning) {
+  async function onRefresh() {
+    setRefreshing(true);
+    // Never `retry` here: after "unavailable" that would reopen the declined accuracy dialog.
+    location.recheck();
+    await loadStatus();
+    setRefreshing(false);
+  }
+
+  const next = status ? nextPunchAction(status) : null;
+
+  if (scanning && next && next !== "done") {
     return (
-      <View style={styles.container}>
+      <Screen withTabBar scroll={false}>
         <CameraView
           style={styles.camera}
           facing="back"
           barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          onBarcodeScanned={(event) => void onScanned(event)}
+          onBarcodeScanned={(event) => onScanned(event, next)}
         />
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => setScanning(false)}>
-          <Text style={styles.secondaryButtonText}>Vazgeç</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.actions}>
+          <PrimaryButton label="Vazgeç" variant="secondary" onPress={() => setScanning(false)} />
+        </View>
+      </Screen>
     );
   }
 
+  const coords = location.coords;
+  const workingSince = status?.checkIn && !status.checkOut ? status.checkIn : null;
+  const breakMinutes = status?.breakMinutesToday ?? 0;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{status?.isCheckedIn ? "İçeridesiniz" : "Dışarıdasınız"}</Text>
-      <Text style={styles.hint}>
-        Lokasyon girişindeki QR kodu okutarak {direction === "in" ? "giriş" : "çıkış"} kaydı
-        oluşturun. Lokasyonda geofence tanımlıysa konumunuz da doğrulanır.
-      </Text>
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
+    <Screen withTabBar refreshing={refreshing} onRefresh={() => void onRefresh()}>
+      <MapHeader
+        showMap={SHOW_MAP}
+        position={coords}
+        placeLabel={placeLabel(location, lastResult)}
+      />
+      {location.status === "denied" ? (
+        <View style={styles.banner}>
+          <ErrorBanner
+            message="Konum izni verilmedi. Konumla giriş/çıkış için ayarlardan konum iznini açın."
+            actionLabel="Ayarları aç"
+            onRetry={() => void Linking.openSettings()}
+          />
         </View>
-      )}
-      {result && (
-        <View style={styles.successBanner}>
-          <Text style={styles.successText}>
-            {result.direction === "in" ? "Giriş" : "Çıkış"} kaydedildi: {result.time.slice(0, 5)}
-            {result.locationName ? ` · ${result.locationName}` : ""}
-          </Text>
+      ) : null}
+      {location.status === "servicesOff" ? (
+        <View style={styles.banner}>
+          <ErrorBanner
+            message="Cihazınızda konum kapalı. Konumla giriş/çıkış için cihaz ayarlarından konumu açın."
+            actionLabel="Ayarları aç"
+            onRetry={() => void openLocationSettings()}
+          />
         </View>
-      )}
+      ) : null}
+      {location.status === "unavailable" && !coords ? (
+        <View style={styles.banner}>
+          <ErrorBanner message="Konum alınamadı." onRetry={location.retry} />
+        </View>
+      ) : null}
 
-      {busy ? (
-        <ActivityIndicator size="large" color={colors.primary} />
-      ) : (
-        <TouchableOpacity style={styles.primaryButton} onPress={() => void startScan()}>
-          <Text style={styles.primaryButtonText}>QR okut · {actionLabel}</Text>
-        </TouchableOpacity>
+      <ClockCard
+        active={isFocused}
+        workingSince={workingSince}
+        accuracyMeters={location.accuracy}
+      />
+
+      {statusError ? (
+        <View style={styles.banner}>
+          <ErrorBanner message={statusError} onRetry={() => void loadStatus()} />
+        </View>
+      ) : null}
+
+      {status && next ? (
+        <>
+          <PunchTiles
+            times={punchTimes(status, session.date === status.date ? session.times : {})}
+            available={availableActions(status)}
+            next={next}
+            disabled={busy !== null || !coords}
+            onPress={(action) => coords && punch(action, coords)}
+          />
+          {breakMinutes > 0 ? (
+            <Text style={styles.breakTotal}>Bugünkü mola: {breakMinutes} dk</Text>
+          ) : null}
+          {error ? (
+            <View style={styles.banner}>
+              <ErrorBanner message={error} />
+            </View>
+          ) : lastResult ? (
+            <Text style={styles.success} accessibilityLiveRegion="polite">
+              {successMessage(lastResult)}
+            </Text>
+          ) : null}
+          <View style={styles.actions}>
+            {next === "done" ? (
+              <PrimaryButton label="Bugün tamamlandı" disabled onPress={() => undefined} />
+            ) : (
+              <PrimaryButton
+                label={PUNCH_LABELS[next].action}
+                onPress={() => coords && punch(next, coords)}
+                loading={busy === next}
+                disabled={busy !== null || !coords}
+              />
+            )}
+            {next === "out" ? (
+              <PrimaryButton
+                label={PUNCH_LABELS.breakStart.action}
+                variant="secondary"
+                icon="cafe-outline"
+                onPress={() => coords && punch("breakStart", coords)}
+                loading={busy === "breakStart"}
+                disabled={busy !== null || !coords}
+              />
+            ) : null}
+            <PrimaryButton
+              label={qrButtonLabel(next)}
+              variant="secondary"
+              icon="qr-code-outline"
+              onPress={() => void startScan()}
+              loading={busy === "qr"}
+              disabled={busy !== null || next === "done"}
+            />
+          </View>
+        </>
+      ) : statusError ? null : (
+        <ActivityIndicator style={styles.loading} color={palette.white} />
       )}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl },
-  camera: { flex: 1, borderRadius: 8, overflow: "hidden", marginBottom: spacing.lg },
-  title: { ...typography.h2, color: colors.text, marginBottom: spacing.sm },
-  hint: { ...typography.bodySm, color: colors.textSecondary, marginBottom: spacing.lg },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    padding: spacing.lg,
-    alignItems: "center",
+  camera: {
+    flex: 1,
+    marginHorizontal: 20,
+    marginTop: 8,
+    borderRadius: radius.card,
+    overflow: "hidden",
   },
-  primaryButtonText: { ...typography.body, color: colors.white, fontWeight: "600" },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
-    alignItems: "center",
+  banner: {
+    marginTop: 12,
   },
-  secondaryButtonText: { ...typography.body, color: colors.text },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+  breakTotal: {
+    ...text.caption,
+    textAlign: "center",
+    marginTop: 10,
   },
-  errorText: { ...typography.bodySm, color: colors.error },
-  successBanner: {
-    backgroundColor: "#e8f7ec",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+  success: {
+    ...text.bodyMuted,
+    color: tones.success.fg,
+    textAlign: "center",
+    marginTop: 12,
+    marginHorizontal: 20,
   },
-  successText: { ...typography.bodySm, color: colors.secondaryDark },
+  actions: {
+    gap: 10,
+    marginHorizontal: 20,
+    marginTop: 16,
+  },
+  loading: {
+    paddingVertical: 24,
+  },
 });

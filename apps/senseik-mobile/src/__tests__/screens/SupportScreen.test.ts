@@ -1,4 +1,4 @@
-import { normalizeTicketStatus } from "@/screens/app/SupportScreen";
+import { normalizeTicketStatus, supportTicketStatusTone } from "@/screens/app/SupportScreen";
 
 describe("normalizeTicketStatus", () => {
   it("passes camelCase values through unchanged (the target shape after the backend fix)", () => {
@@ -15,5 +15,23 @@ describe("normalizeTicketStatus", () => {
 
   it("falls back to open for an unrecognized value instead of throwing", () => {
     expect(normalizeTicketStatus("SomethingElse")).toBe("open");
+  });
+});
+
+describe("supportTicketStatusTone", () => {
+  it("maps answered to success", () => {
+    expect(supportTicketStatusTone("answered")).toBe("success");
+  });
+
+  it("maps closed to neutral", () => {
+    expect(supportTicketStatusTone("closed")).toBe("neutral");
+  });
+
+  it("maps open to warning", () => {
+    expect(supportTicketStatusTone("open")).toBe("warning");
+  });
+
+  it("falls back to warning for an unrecognized status", () => {
+    expect(supportTicketStatusTone("unknown" as never)).toBe("warning");
   });
 });

@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -10,10 +11,14 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.AttendanceDays;
 
+/// <summary>
+/// One puantaj day. <c>OnLeave</c>/<c>LeaveTypeName</c> are only filled by "Puantajım" (<see cref="GetMyAttendanceDaysQuery"/>):
+/// the date is covered by an approved leave; the name is null for a masked (sensitive) type.
+/// </summary>
 public sealed record AttendanceDayDto(
     Guid Id, Guid EmployeeId, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, TimeOnly? PlannedStart, TimeOnly? PlannedEnd,
     int PlannedMinutes, int WorkedMinutes, AttendanceAnomaly Anomalies, AttendanceResolutionState ResolutionState, AttendanceDaySource Source,
-    IReadOnlyList<AnomalyResolutionAction> AllowedActions);
+    IReadOnlyList<AnomalyResolutionAction> AllowedActions, bool OnLeave = false, string? LeaveTypeName = null);
 
 internal static class AttendanceDayMapper
 {
@@ -103,23 +108,63 @@ public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days, IDa
     }
 }
 
-/// <summary>"Puantajım" (11.3.6 self-servis): the caller's own recorded days.</summary>
+/// <summary>
+/// "Puantajım" (11.3.6 self-servis): the caller's own recorded days, each marked <c>OnLeave</c> (with the unmasked type name)
+/// when an approved leave covers it. <paramref name="IncludeLeaveDays"/> (opt-in, mobil Puantaj) also adds the scheduled
+/// working days covered by approved leave that have no AttendanceDay row as leave-only rows: <c>Id</c> = Guid.Empty (not a
+/// real record - no resolutions/actions), no punches, zero planned/worked minutes. Opt-in so the web list and anything keyed
+/// on a real row id keep today's shape.
+/// </summary>
 [RequiresPermission("attendance.my.timesheet")]
-public sealed record GetMyAttendanceDaysQuery(DateOnly From, DateOnly To) : IQuery<IReadOnlyList<AttendanceDayDto>>;
+public sealed record GetMyAttendanceDaysQuery(DateOnly From, DateOnly To, bool IncludeLeaveDays = false) : IQuery<IReadOnlyList<AttendanceDayDto>>;
 
-public sealed class GetMyAttendanceDaysHandler(IAttendanceDayRepository days, ICurrentUser currentUser)
+/// <summary>Leave's port is optional on purpose (see <see cref="NonWorkingDayResolver"/>): without Leave in the host the days carry no leave info.</summary>
+public sealed class GetMyAttendanceDaysHandler(
+    IAttendanceDayRepository days, ICurrentUser currentUser, ITenantContext tenant, IWorkScheduleReadService schedules,
+    IApprovedLeaveDateLookup? leaveDates = null)
     : IQueryHandler<GetMyAttendanceDaysQuery, IReadOnlyList<AttendanceDayDto>>
 {
     public async Task<Result<IReadOnlyList<AttendanceDayDto>>> Handle(GetMyAttendanceDaysQuery query, CancellationToken cancellationToken)
     {
-        if (currentUser.EmployeeId is null)
+        if (currentUser.EmployeeId is not { } employeeId)
         {
             return Error.NotFound(AttendanceErrors.EmployeeNotFound);
         }
 
-        var list = await days.ListForEmployeeAsync(currentUser.EmployeeId.Value, query.From, query.To, cancellationToken);
-        return list.Select(AttendanceDayMapper.ToDto).ToList();
+        var rows = (await days.ListForEmployeeAsync(employeeId, query.From, query.To, cancellationToken)).Select(AttendanceDayMapper.ToDto).ToList();
+        if (leaveDates is null)
+        {
+            return rows;
+        }
+
+        var leave = (await leaveDates.GetApprovedLeaveDaysWithTypeAsync(tenant.TenantId, employeeId, query.From, query.To, cancellationToken))
+            .ToDictionary(l => l.Date, l => l.LeaveTypeName);
+        if (leave.Count == 0)
+        {
+            return rows;
+        }
+
+        rows = rows.Select(r => leave.TryGetValue(r.Date, out var name) ? r with { OnLeave = true, LeaveTypeName = name } : r).ToList();
+        if (!query.IncludeLeaveDays)
+        {
+            return rows;
+        }
+
+        var recorded = rows.Select(r => r.Date).ToHashSet();
+        var leaveOnly = leave.Keys.Where(d => !recorded.Contains(d)).ToList();
+        if (leaveOnly.Count == 0)
+        {
+            return rows;
+        }
+
+        var workingDays = (await schedules.GetWorkingDaysAsync(employeeId, leaveOnly.Min(), leaveOnly.Max(), cancellationToken)).ToHashSet();
+        rows.AddRange(leaveOnly.Where(workingDays.Contains).Select(d => LeaveOnlyRow(employeeId, d, leave[d])));
+        return rows.OrderBy(r => r.Date).ToList();
     }
+
+    private static AttendanceDayDto LeaveOnlyRow(Guid employeeId, DateOnly date, string? leaveTypeName) =>
+        new(Guid.Empty, employeeId, date, null, null, null, null, 0, 0, AttendanceAnomaly.None, AttendanceResolutionState.Resolved,
+            AttendanceDaySource.Manual, [], OnLeave: true, LeaveTypeName: leaveTypeName);
 }
 
 /// <summary>Puantajım özet kartları (package A5, 11.3.6 "toplam çalışma günü/saati"): totals over a period, from the caller's own AttendanceDay rows.</summary>

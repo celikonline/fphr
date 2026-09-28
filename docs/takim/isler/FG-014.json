@@ -1,0 +1,48 @@
+{
+  "id": "FG-014",
+  "baslik": "Profil sekmelerini genişletme: kişisel, iş/sözleşme, özel alanlar, kariyer, iletişim düzenleme",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Profil sekmeleri 'Profile (personal and professional information)', 'Contracts', 'Custom Fields', 'Schedules' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); tanıtım videosu + mağaza ekran görüntüleri (spec 2026-09-27 referansı); ikincil (ChatGPT), doğrulanamadı 'personal info, contracts'.",
+  "senseik_durumu": "mobilde kısmi: Profil yalnız İletişim (iş e-postası, telefon) + İş (unvan, birim, işe giriş) gösteriyor; ProfileService yorumu KVKK veri minimizasyonu gereği kişisel alanları bilinçli dışarıda bırakmış. Web çalışan kartında hepsi var.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/employees/me (EmployeeDetailDto: doğum tarihi, medeni hal, çocuk sayısı, eğitim, kan grubu, adres, ContractType, EmploymentType, PositionStartDate, CustomFields…) - employee.my.view",
+      "GET /api/v1/employees/me/career (employee.my.view)",
+      "PUT /api/v1/employees/me/profile (iletişim + çalışanın düzenleyebildiği özel alanlar; employee.self.edit)",
+      "PUT/DELETE /api/v1/employees/me/photo"
+    ],
+    "gereken_yeni": [],
+    "izin": "employee.my.view ve employee.self.edit *.my.* / *.self.* kalıbıyla Employee rolünde; mobil-only. KVKK kararının (minimizasyon) tersine çevrilmesi insan onayı ister."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/ProfileService.ts (MyProfile genişletme, getMyCareer, updateMyProfile, setMyPhoto)",
+      "apps/senseik-mobile/src/screens/app/profile/profileGroups.ts (Kişisel / İletişim / İş ve sözleşme / Diğer bilgiler / Kariyer)",
+      "apps/senseik-mobile/src/screens/app/profile/EditContactSheet.tsx (yeni)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx (avatar dokununca foto değiştir)"
+    ],
+    "navigasyon": "Profil ekranı yatay sekmeleri"
+  },
+  "kabul": [
+    "Kişisel sekmesi doğum tarihi, medeni hal, eğitim, kan grubu gibi alanları gösterir; T.C. kimlik no maskeli (son 2 hane) veya hiç gösterilmez - karar belgelenir",
+    "İş ve sözleşme sekmesi sözleşme türü, çalışma türü, işe giriş ve pozisyon başlangıç tarihlerini gösterir",
+    "Özel alanlar (CustomFields) etiket/değer olarak listelenir; çalışanın düzenleyebildikleri düzenlenebilir",
+    "Kariyer sekmesi pozisyon/birim geçmişini zaman çizelgesi olarak gösterir",
+    "İletişim sekmesinde 'Düzenle' ile kişisel e-posta, cep/ev telefonu, adres güncellenir; boş gövde reddi ve doğrulama hataları gösterilir",
+    "Avatar'a dokununca kamera/galeriden fotoğraf yüklenir (≤2 MB JPEG/PNG/WebP), kaldırılabilir",
+    "Boş alan içeren sekme gizlenir (mevcut kural); enum değerleri Türkçe etiketlenir"
+  ],
+  "tasarim_notu": "Mevcut ProfileInfoCard (etiket küçük muted, değer 600); kariyer için dikey zaman çizelgesi. Düzenleme BottomSheet içinde cam TextField'lar + PrimaryButton 'Kaydet'.",
+  "buyukluk": "M - mevcut uçlar, çok alan eşlemesi + düzenleme formu",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "KVKK kararı (insan onayı)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

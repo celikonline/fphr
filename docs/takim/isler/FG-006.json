@@ -1,0 +1,47 @@
+{
+  "id": "FG-006",
+  "baslik": "Otomatik giriş/çıkış (auto clock, konum tetiklemeli)",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'Auto Clocking (geofence-based automatic clock-in/out)' Privacy & Security ayarında - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); App Store sürüm notu 30.8.16 'Enhances the auto-clocking feature' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)). NOT: yeniden tasarım spec'i §9'da kapsam dışı; ZenHR bunu çekirdek güvenlik/ayar özelliği olarak sunduğu için kart açıldı.",
+  "senseik_durumu": "mobilde yok; backend'de yok (spec §9 kapsam dışı).",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/attendance/self-checkin/gps (yön + locationId ile)",
+      "FG-005'teki self lokasyon ucu"
+    ],
+    "gereken_yeni": [
+      "Kiracı/çalışan bazında 'otomatik giriş' izni (ayar) + punch kaynağını 'auto' olarak işaretleme (SelfCheckIn.Source) - migration",
+      "Tekrarlı/sahte tetiklemeye karşı sunucu kuralı (ör. aynı yönde 5 dk içinde ikinci punch reddi)"
+    ],
+    "izin": "'attendance.my.checkin' yeterli; kiracı ayarı İK tarafında (attendance.shift.settings veya yeni ayar anahtarı)."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/lib/autoClock.ts (yeni: expo-location geofencing + expo-task-manager arka plan görevi)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx > 'Gizlilik ve güvenlik' altında 'Otomatik giriş' anahtarı",
+      "app.config.js (arka plan konum izni metinleri, Android foreground service)"
+    ],
+    "navigasyon": "Profil > Gizlilik ve güvenlik > Otomatik giriş"
+  },
+  "kabul": [
+    "Çalışan ayarı açtığında arka plan konum izni açıklamalı olarak istenir; reddedilirse anahtar kapalı kalır",
+    "Ofis geofence'ine girişte (vardiya penceresi içinde) otomatik 'Giriş', çıkışta 'Çıkış' punch'ı atılır ve yerel bildirimle haber verilir",
+    "Otomatik punch'lar puantajda 'otomatik' kaynağıyla ayırt edilir",
+    "Kiracı ayarı kapalıysa anahtar görünmez",
+    "Pil/izin iptali durumunda görev durur ve kullanıcıya ayar ekranında uyarı çıkar",
+    "Saf fonksiyon testleri (vardiya penceresi, tekrar engelleme) + backend kural testi"
+  ],
+  "tasarim_notu": "Ayar satırı GlassCard içinde anahtar (switch) + açıklama textMuted; açıkken 'Son otomatik giriş: 08:57' bilgisi.",
+  "buyukluk": "L - arka plan konum, platform izinleri, KVKK açık rıza metni, backend işaretleme",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "FG-005"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

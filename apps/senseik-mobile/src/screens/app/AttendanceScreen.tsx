@@ -1,26 +1,27 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
+import { OptionSheet } from "@/components/form/OptionSheet";
+import { formatMonthYear } from "@/components/form/dateRange";
 import type { AppStackParamList } from "@/types/navigation";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
 import {
   attendanceService,
-  parseAnomalyFlags,
   type AttendanceDay,
   type MyTimesheetSummary,
 } from "@/services/AttendanceService";
 import { formatDays, toLocalDateOnly } from "@/lib/formatters";
+import { palette, text } from "@/theme/theme";
+import { AttendanceDayCard } from "./attendance/AttendanceDayCard";
+import { PeriodStepper } from "./attendance/PeriodStepper";
+import { PillButton } from "./attendance/PillButton";
+import {
+  ATTENDANCE_FILTERS,
+  attendanceDayStatus,
+  matchesAttendanceFilter,
+  type AttendanceFilter,
+} from "./attendance/attendanceStatus";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference`. */
 function monthRange(reference: Date): { from: string; to: string } {
@@ -29,28 +30,6 @@ function monthRange(reference: Date): { from: string; to: string } {
   const from = new Date(year, month, 1);
   const to = new Date(year, month + 1, 0);
   return { from: toLocalDateOnly(from), to: toLocalDateOnly(to) };
-}
-
-function formatMonthLabel(reference: Date): string {
-  const label = reference.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function formatDayLabel(value: string): string {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  const label = date.toLocaleDateString("tr-TR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-/** `TimeOnly` ("HH:mm:ss") → "HH:mm" for display. */
-function formatTime(value: string | null | undefined): string {
-  if (!value) return "—";
-  return value.slice(0, 5);
 }
 
 function formatWorkedMinutes(minutes: number): string {
@@ -74,6 +53,10 @@ export function formatOvertimeUndertime(
   return `${label}: ${formatWorkedMinutes(Math.abs(diffMinutes))}`;
 }
 
+/**
+ * Puantajım (spec §5): month stepper + client-side "Filtre" (Tümü / Eksik / Anomali), the month's
+ * worked days/time, then one card per recorded day. Giriş / Çıkış and Vardiyam are shortcuts.
+ */
 export default function AttendanceScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [monthDate, setMonthDate] = useState(() => new Date());
@@ -82,6 +65,8 @@ export default function AttendanceScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<AttendanceFilter>("all");
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
 
   const loadAll = useCallback(async () => {
     setError(null);
@@ -89,7 +74,7 @@ export default function AttendanceScreen() {
       const range = monthRange(monthDate);
       const [summaryResult, daysResult] = await Promise.all([
         attendanceService.getMyTimesheetSummary(range),
-        attendanceService.getMyAttendanceDays(range),
+        attendanceService.getMyAttendanceDays(range, true),
       ]);
       setSummary(summaryResult);
       setDays([...daysResult].sort((a, b) => a.date.localeCompare(b.date)));
@@ -117,218 +102,135 @@ export default function AttendanceScreen() {
     setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
   }
 
+  const header = <ScreenHeader title="Puantajım" />;
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Screen scroll={false} header={header}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={palette.white} />
+        </View>
+      </Screen>
     );
   }
 
+  const visibleDays = days.filter((day) =>
+    matchesAttendanceFilter(attendanceDayStatus(day), filter)
+  );
+  const filterLabel = ATTENDANCE_FILTERS.find((option) => option.value === filter)?.label ?? "";
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-    >
-      <Text style={styles.title}>Puantajım</Text>
-
-      <TouchableOpacity style={styles.checkInButton} onPress={() => navigation.navigate("CheckIn")}>
-        <Text style={styles.checkInButtonText}>QR ile giriş / çıkış yap</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.shiftButton} onPress={() => navigation.navigate("Shift")}>
-        <Text style={styles.shiftButtonText}>Vardiyalarımı görüntüle</Text>
-      </TouchableOpacity>
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <View style={styles.monthSelector}>
-        <TouchableOpacity style={styles.monthButton} onPress={goToPreviousMonth}>
-          <Text style={styles.monthButtonText}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.monthLabel}>{formatMonthLabel(monthDate)}</Text>
-        <TouchableOpacity style={styles.monthButton} onPress={goToNextMonth}>
-          <Text style={styles.monthButtonText}>›</Text>
-        </TouchableOpacity>
+    <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
+      <View style={styles.shortcuts}>
+        <PillButton
+          icon="stopwatch-outline"
+          label="Giriş / Çıkış"
+          onPress={() => navigation.navigate("MainTabs", { screen: "CheckIn" })}
+        />
+        <PillButton
+          icon="calendar-outline"
+          label="Vardiyam"
+          onPress={() => navigation.navigate("Shift")}
+        />
       </View>
 
-      <View style={styles.summaryRow}>
-        <View style={[styles.card, styles.summaryCard]}>
-          <Text style={styles.cardLabel}>Çalışılan gün</Text>
-          <Text style={styles.cardValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
-        </View>
-        <View style={[styles.card, styles.summaryCard]}>
-          <Text style={styles.cardLabel}>Çalışılan süre</Text>
-          <Text style={styles.cardValue}>{formatWorkedMinutes(summary?.workedMinutes ?? 0)}</Text>
-        </View>
+      {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
+
+      <View style={styles.periodRow}>
+        <PeriodStepper
+          label={formatMonthYear(monthDate.getFullYear(), monthDate.getMonth())}
+          onPrev={goToPreviousMonth}
+          onNext={goToNextMonth}
+          prevLabel="Önceki ay"
+          nextLabel="Sonraki ay"
+        />
+        <PillButton
+          icon="funnel-outline"
+          label={filter === "all" ? "Filtre" : filterLabel}
+          active={filter !== "all"}
+          onPress={() => setFilterSheetVisible(true)}
+        />
       </View>
 
-      <Text style={styles.sectionTitle}>Günler</Text>
-      {days.length === 0 ? (
-        <Text style={styles.emptyText}>Bu ay için kayıtlı puantaj günü yok.</Text>
+      <GlassCard style={styles.summary}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Çalışılan gün</Text>
+          <Text style={styles.summaryValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
+        </View>
+        <View style={styles.summaryDivider} />
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Çalışılan süre</Text>
+          <Text style={styles.summaryValue}>
+            {formatWorkedMinutes(summary?.workedMinutes ?? 0)}
+          </Text>
+        </View>
+      </GlassCard>
+
+      {visibleDays.length === 0 ? (
+        <EmptyState
+          icon="time-outline"
+          title={
+            days.length === 0 ? "Bu ay için kayıtlı puantaj günü yok." : "Bu filtreye uyan gün yok."
+          }
+        />
       ) : (
-        days.map((day) => {
-          const anomalyFlags = parseAnomalyFlags(day.anomalies);
-          const overtimeText = formatOvertimeUndertime(day);
-          return (
-            <View key={day.id} style={styles.card}>
-              <View style={styles.dayHeader}>
-                <Text style={styles.cardLabel}>{formatDayLabel(day.date)}</Text>
-                {anomalyFlags.length > 0 && (
-                  <View style={styles.anomalyBadge}>
-                    <Text style={styles.anomalyBadgeText}>Uyuşmazlık</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.cardValue}>
-                {formatTime(day.checkIn)} – {formatTime(day.checkOut)}
-              </Text>
-              <Text style={styles.cardSubtext}>
-                {formatWorkedMinutes(day.workedMinutes)} çalışıldı
-              </Text>
-              {overtimeText && <Text style={styles.cardSubtext}>{overtimeText}</Text>}
-            </View>
-          );
-        })
+        visibleDays.map((day) => (
+          // `key`d by `date`, not `id`: leave-only rows all share the empty-guid `id`.
+          <AttendanceDayCard key={day.date} day={day} overtimeText={formatOvertimeUndertime(day)} />
+        ))
       )}
-    </ScrollView>
+
+      <OptionSheet
+        visible={filterSheetVisible}
+        title="Filtre"
+        options={ATTENDANCE_FILTERS}
+        selected={filter}
+        onSelect={setFilter}
+        onClose={() => setFilterSheetVisible(false)}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  checkInButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    padding: spacing.md,
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  checkInButtonText: {
-    ...typography.body,
-    color: colors.white,
-    fontWeight: "600",
-  },
-  shiftButton: {
-    backgroundColor: colors.gray100,
-    borderRadius: 8,
-    padding: spacing.md,
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  shiftButtonText: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.xl,
-    paddingBottom: spacing.xxxl,
-  },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background,
   },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.lg,
+  shortcuts: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
-  sectionTitle: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-  },
-  monthSelector: {
+  periodRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.gray50,
-    borderRadius: 12,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  monthButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  monthButtonText: {
-    ...typography.h4,
-    color: colors.primary,
-  },
-  monthLabel: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: "600",
-  },
-  summaryRow: {
+  summary: {
     flexDirection: "row",
-    gap: spacing.sm,
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 14,
   },
-  summaryCard: {
+  summaryItem: {
     flex: 1,
+    gap: 4,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+  summaryDivider: {
+    width: 1,
+    alignSelf: "stretch",
+    marginHorizontal: 14,
+    backgroundColor: palette.line,
   },
-  cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+  summaryLabel: {
+    ...text.caption,
   },
-  cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs,
-  },
-  cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary,
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error,
-  },
-  dayHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  anomalyBadge: {
-    backgroundColor: colors.warning,
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  anomalyBadgeText: {
-    ...typography.caption,
-    color: colors.white,
+  summaryValue: {
+    ...text.number,
   },
 });

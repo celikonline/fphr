@@ -1,0 +1,44 @@
+{
+  "id": "FG-016",
+  "baslik": "Zimmetlerim (atanmış varlıklar)",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Assets' sekmesi - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); 'check assigned assets' (zenhr.com/en/mobile arama özeti); varlık talebi 'Request company assets' - blog.zenhr.com mobil uygulama yazısı.",
+  "senseik_durumu": "web'de var mobilde yok (web pages/assets.tsx).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/assets/my (assets.my.assets - Employee'de var)",
+      "GET /api/v1/assets/{id}/handover-form (teslim tutanağı - assets.assets.view, Employee rolünde YOK)"
+    ],
+    "gereken_yeni": [
+      "(faz 2) Varlık talebi: POST /api/v1/assets/requests/me + workflow türü - backend'de yok"
+    ],
+    "izin": "assets.my.assets *.my.* kalıbıyla Employee rolünde; faz 1 mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/AssetsService.ts (yeni)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Zimmet' sekmesi) veya screens/app/assets/AssetsScreen.tsx"
+    ],
+    "navigasyon": "Profil 'Zimmet' sekmesi"
+  },
+  "kabul": [
+    "Zimmet sekmesi çalışana atanmış varlıkları kategori, ad, seri no ve teslim tarihiyle listeler",
+    "Varlık yoksa sekme gizlenir veya EmptyState gösterilir",
+    "Teslim tutanağı bağlantısı gösterilmez (çalışan yetkisi yok); gerekirse ayrı self uç kararı",
+    "Saf eşleme fonksiyonuna birim test",
+    "(faz 2, ayrı kart gerekirse) varlık talebi FAB sheet'ine eklenir"
+  ],
+  "tasarim_notu": "Varlık satırı: kategori ikonu (laptop/telefon/araç, accent indigo) + ad + seri no textFaint + teslim tarihi.",
+  "buyukluk": "S - tek GET ucu, liste",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-014"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

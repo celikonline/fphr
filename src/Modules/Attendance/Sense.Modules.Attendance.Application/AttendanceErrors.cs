@@ -28,4 +28,13 @@ public static class AttendanceErrors
 
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
+
+    /// <summary>Mola başı: the caller has no open (checked in, not yet checked out) attendance day.</summary>
+    public const string SelfCheckInBreakNotCheckedIn = "attendance.self_checkin.break_not_checked_in";
+
+    /// <summary>Mola başı: a break was already started and not ended yet.</summary>
+    public const string SelfCheckInBreakAlreadyOpen = "attendance.self_checkin.break_already_open";
+
+    /// <summary>Mola sonu: there is no open break to end.</summary>
+    public const string SelfCheckInBreakNotOpen = "attendance.self_checkin.break_not_open";
 }

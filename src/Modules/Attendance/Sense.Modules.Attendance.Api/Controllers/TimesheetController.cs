@@ -40,11 +40,11 @@ public sealed class TimesheetController : ApiControllerBase
     public async Task<IActionResult> Record(Guid employeeId, [FromBody] RecordAttendanceRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new RecordAttendanceCommand(employeeId, request.Date, request.CheckIn, request.CheckOut), ct));
 
-    /// <summary>"Puantajım".</summary>
+    /// <summary>"Puantajım"; <paramref name="includeLeaveDays"/> adds leave-only rows for approved leave days with no record (mobil Puantaj).</summary>
     [HttpGet("me")]
     [ProducesResponseType<IReadOnlyList<AttendanceDayDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new GetMyAttendanceDaysQuery(from, to), ct));
+    public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] bool includeLeaveDays, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyAttendanceDaysQuery(from, to, includeLeaveDays), ct));
 
     /// <summary>"Puantajım" özet kartları (toplam çalışma günü/saati).</summary>
     [HttpGet("me/summary")]

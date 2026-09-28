@@ -34,6 +34,22 @@ describe("AttendanceService", () => {
       expect(result).toEqual(data);
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/qr", input);
     });
+
+    it("posts a GPS punch, including the break directions", async () => {
+      const data = {
+        attendanceDayId: "day-1",
+        date: "2026-09-27",
+        direction: "breakStart",
+        time: "12:00:00",
+      };
+      (apiClient.post as jest.Mock).mockResolvedValue({ data });
+      const input = { latitude: 41.01, longitude: 28.97, direction: "breakStart" as const };
+
+      const result = await attendanceService.gpsCheckIn(input);
+
+      expect(result).toEqual(data);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/gps", input);
+    });
   });
 
   describe("getMyAttendanceDays", () => {
@@ -67,6 +83,16 @@ describe("AttendanceService", () => {
       expect(result).toEqual(mockResponse.data);
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/timesheet/me", {
         params: { from: "2026-09-01", to: "2026-09-30" },
+      });
+    });
+
+    it("opts into leave-only rows via includeLeaveDays, unlike the default call", async () => {
+      (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+
+      await attendanceService.getMyAttendanceDays({ from: "2026-09-01", to: "2026-09-30" }, true);
+
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/timesheet/me", {
+        params: { from: "2026-09-01", to: "2026-09-30", includeLeaveDays: true },
       });
     });
   });

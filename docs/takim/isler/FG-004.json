@@ -1,0 +1,55 @@
+{
+  "id": "FG-004",
+  "baslik": "Eksik giriş/çıkış (missing punch) düzeltme talebi",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'Missing Punches: suggested or custom punch corrections' talep türü ve Attendance ekranından eksik okutma talebi - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); ayrıca ikincil (ChatGPT), doğrulanamadı listesinde.",
+  "senseik_durumu": "backend'de yok (çalışan tarafından başlatılan düzeltme talebi yok; puantaj çözümlemesi yalnız İK/yönetici: POST attendance/timesheet/days/{id}/resolve/worked-hours, attendance.timesheet.resolve). Mobil Puantaj ekranı 'Eksik' durumunu gösteriyor ama eylem yok.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/attendance/timesheet/me (eksik giriş/çıkış anomalileri: missingCheckIn/missingCheckOut)",
+      "POST /api/v1/attendance/timesheet/days/{attendanceDayId}/resolve/worked-hours (İK/yönetici - onay sonrası uygulanacak mevcut mantık)",
+      "Workflow onay altyapısı (IIntegrationEventOutbox + workflow/inbox)"
+    ],
+    "gereken_yeni": [
+      "Attendance: PunchCorrectionRequest aggregate + EF migration (gün, istenen giriş/çıkış saatleri, gerekçe, isteğe bağlı ek)",
+      "POST /api/v1/attendance/corrections/me, GET /api/v1/attendance/corrections/me, POST /api/v1/attendance/corrections/me/{id}/withdraw",
+      "Workflow request type 'attendance.punchCorrection' - onayda saatler AttendanceDay'e uygulanır ve DailyWorkCalculator yeniden hesaplar",
+      "Onaylarım'da yeni tür (InboxTaskDto.RequestType) ve bildirim şablonları (tr/en/de)",
+      "Yerelleştirilmiş hata kodları (gelecek tarih, kilitli dönem, aynı gün açık talep)"
+    ],
+    "izin": "Yeni anahtar 'attendance.my.corrections' (self-servis kalıbı *.my.* → Employee rolü otomatik alır, SystemRolePermissionSynchronizer ile mevcut kiracılara gider). Onay: 'attendance.corrections.approve' anahtarı Manager tanımında zaten öngörülmüş ama bağlanmamış; onay atamaya dayalı workflow inbox ile yapılırsa Employee grubundaki yöneticiler de onaylayabilir."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/AttendanceScreen.tsx + attendance/AttendanceDayCard.tsx ('Eksik' günde 'Düzeltme iste' eylemi)",
+      "apps/senseik-mobile/src/screens/app/NewRequestScreen.tsx (yeni kind 'punchCorrection' bölümü)",
+      "apps/senseik-mobile/src/lib/requestOptions.ts (FAB sheet'e 'Eksik giriş/çıkış')",
+      "apps/senseik-mobile/src/services/AttendanceService.ts (corrections uçları)",
+      "apps/senseik-mobile/src/screens/app/requests/requestCards.ts (Taleplerim kartı)",
+      "apps/senseik-mobile/src/screens/app/approvals/approvalLabels.ts (yeni tür etiketi)"
+    ],
+    "navigasyon": "FAB 'Yeni talep' sheet'i + Puantaj gün kartından doğrudan (gün önceden seçili)"
+  },
+  "kabul": [
+    "Puantajda 'Eksik' görünen bir günde 'Düzeltme iste' eylemi, gün ve önerilen saat (planlanan vardiya saati) önceden dolu formu açar",
+    "Çalışan giriş ve/veya çıkış saati + gerekçe (zorunlu) girerek talep gönderir; gelecek tarih ve kilitli bordro dönemi reddedilir (yerelleştirilmiş hata)",
+    "Talep Taleplerim'de 'Bekliyor' durumuyla görünür, geri çekilebilir",
+    "Yönetici talebi Onaylarım'da 'Eksik giriş/çıkış' türüyle görür, onay/red yapar; red gerekçesi akışı çalışır",
+    "Onaylanınca günün giriş/çıkış saatleri güncellenir, çalışma süresi yeniden hesaplanır ve Puantaj'da gün 'Tamamlandı' olur",
+    "Çalışana onay/red bildirimi (push + uygulama içi) gider",
+    "Domain/handler birim testleri + Attendance entegrasyon testi (onay → gün güncellemesi); mobil saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "NewRequest kabuğu (mavi başlık bandı + koyu gövde): gün seçimi tek günlük takvim alt sayfası, saat alanları mevcut TimeField, gerekçe TextField çok satır. Gün kartında 'Eksik' StatusPill (amber) yanında küçük brandText bağlantı 'Düzeltme iste'.",
+  "buyukluk": "L - yeni aggregate + migration + workflow türü + mobil form; puantaj/bordro etkisi",
+  "riskli_alan": true,
+  "bagimliliklar": [
+    "mobil yeniden tasarım (NewRequest kabuğu)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

@@ -1,0 +1,46 @@
+{
+  "id": "FG-003",
+  "baslik": "Backend Arapça kaynakları (hata kodları, izin adları, bildirim şablonları)",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "",
+  "zenhr_karsiligi": "Arapça sunucu metinleri: ZenHR bildirim/hata metinlerini Arapça verir (ikincil (ChatGPT), doğrulanamadı).",
+  "senseik_durumu": "backend'de yok (SupportedCultures = tr, en; SharedResource.resx + SharedResource.en.resx; bildirim şablonları tr/en/de, ar yok).",
+  "backend": {
+    "mevcut_uclar": [
+      "RequestLocalization middleware (Accept-Language → CurrentUICulture), Sense.Shared.Web/DependencyInjection/WebServiceCollectionExtensions.cs",
+      "Notifications şablon render'ı delivery.Culture ile (PushDeliverySender/EmailDeliverySender)"
+    ],
+    "gereken_yeni": [
+      "src/Shared/Sense.Shared.Infrastructure/Resources/SharedResource.ar.resx (tüm anahtarlar - hata kodları, izin adları, report.col.*)",
+      "SenseOptions.SupportedCultures += 'ar' (Cultures.Arabic sabiti)",
+      "Notifications/Infrastructure/Templates/*.ar.sbn + labels.ar.json (27 şablon)",
+      "HelpArticleCatalog ve diğer kültüre göre başlık seçen yerlerde ar dalı",
+      "Kaynak eşitliği testi: tr/en/ar resx anahtar kümesi aynı"
+    ],
+    "izin": "Yeni izin yok."
+  },
+  "mobil": {
+    "ekranlar": [
+      "(mobil değişikliği yok; FG-001/FG-002 Accept-Language: ar gönderir)"
+    ],
+    "navigasyon": "-"
+  },
+  "kabul": [
+    "Accept-Language: ar ile bilinen bir doğrulama hatası (ör. SelfCheckInBreakNotCheckedIn) Arapça metinle döner",
+    "Desteklenmeyen dil (ör. fr) gelirse varsayılan tr döner (mevcut davranış bozulmaz)",
+    "SharedResource.ar.resx tr ile aynı anahtar kümesine sahiptir; eşitlik testi CI'da koşar",
+    "Arapça tercihli kullanıcıya giden push/in-app bildirimleri ar şablonuyla render edilir; şablon yoksa en'e düşer",
+    "Sayı/tarih biçimleyen sunucu çıktıları (PDF bordro hariç - Türkçe yasal belge) kültür değişiminden etkilenmez; bordro PDF'i tr kalır (belgelenir)",
+    "Test kapısı yeşil"
+  ],
+  "tasarim_notu": "-",
+  "buyukluk": "M - ~1500 satırlık resx çevirisi + 27 şablon + kültür listesi; çeviri kalitesi için insan gözden geçirmesi gerekir",
+  "riskli_alan": false,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

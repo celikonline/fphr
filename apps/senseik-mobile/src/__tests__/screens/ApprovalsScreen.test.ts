@@ -1,13 +1,31 @@
 import {
+  approvalFilterOptions,
+  approvalFilterSelectedText,
   attachmentsCountLabel,
   buildRejectDecision,
+  countByFilter,
+  filterTasks,
   formatAttachmentsSummary,
   formatTime,
   leaveSummaryTypeLabel,
   loadLeaveTaskAttachments,
   requestTypeLabel,
 } from "@/screens/app/ApprovalsScreen";
+import type { InboxTask } from "@/services/ApprovalsService";
 import { leaveService } from "@/services/LeaveService";
+
+function buildTask(
+  overrides: Partial<InboxTask> & Pick<InboxTask, "taskId" | "requestType">
+): InboxTask {
+  return {
+    approvalRequestId: `${overrides.taskId}-request`,
+    subjectId: `${overrides.taskId}-subject`,
+    requesterName: "Ayşe Yılmaz",
+    stepNumber: 1,
+    isFallbackRoleTask: false,
+    ...overrides,
+  };
+}
 
 jest.mock("@/services/LeaveService");
 
@@ -25,8 +43,12 @@ describe("requestTypeLabel", () => {
     expect(requestTypeLabel("AssetAssignment")).toBe("Zimmet");
   });
 
-  it("falls back to the raw request type when unknown", () => {
-    expect(requestTypeLabel("SomethingNew")).toBe("SomethingNew");
+  it("falls back to 'Talep' for an unknown request type, never the raw server key (QA-103)", () => {
+    expect(requestTypeLabel("SomethingNew")).toBe("Talep");
+  });
+
+  it("maps 'ExpenseClaim' (Expense's own Workflow request type) to 'Masraf' (QA-103)", () => {
+    expect(requestTypeLabel("ExpenseClaim")).toBe("Masraf");
   });
 });
 
@@ -100,6 +122,66 @@ describe("attachmentsCountLabel (senseik-mobile-011)", () => {
   it("formats the header above the tappable attachment rows", () => {
     expect(attachmentsCountLabel(1)).toBe("📎 1 belge:");
     expect(attachmentsCountLabel(3)).toBe("📎 3 belge:");
+  });
+});
+
+describe("countByFilter / filterTasks (görev 8: Onaylarım tür filtresi)", () => {
+  const tasks: InboxTask[] = [
+    buildTask({ taskId: "task-leave", requestType: "Leave" }),
+    buildTask({ taskId: "task-overtime", requestType: "Overtime" }),
+    buildTask({ taskId: "task-expense", requestType: "Expense" }),
+  ];
+
+  it("counts every task under 'all' and each task once under its own type", () => {
+    expect(countByFilter(tasks)).toEqual({
+      all: 3,
+      leave: 1,
+      overtime: 1,
+      expense: 1,
+      advance: 0,
+    });
+  });
+
+  it("counts a request type with no filter mapping (e.g. Requisition) only under 'all'", () => {
+    const withUnknownType = [
+      ...tasks,
+      buildTask({ taskId: "task-req", requestType: "Requisition" }),
+    ];
+
+    expect(countByFilter(withUnknownType)).toEqual({
+      all: 4,
+      leave: 1,
+      overtime: 1,
+      expense: 1,
+      advance: 0,
+    });
+  });
+
+  it("filters to only the matching request type", () => {
+    expect(filterTasks(tasks, "overtime")).toEqual([tasks[1]]);
+  });
+
+  it("returns every task for the 'all' filter", () => {
+    expect(filterTasks(tasks, "all")).toEqual(tasks);
+  });
+
+  it("builds the 'Tür' sheet options in Tümü/İzin/Fazla mesai/Masraf/Avans order, with counts", () => {
+    const counts = countByFilter(tasks);
+
+    expect(approvalFilterOptions(counts)).toEqual([
+      { value: "all", label: "Tümü (3)" },
+      { value: "leave", label: "İzin (1)" },
+      { value: "overtime", label: "Fazla mesai (1)" },
+      { value: "expense", label: "Masraf (1)" },
+      { value: "advance", label: "Avans (0)" },
+    ]);
+  });
+
+  it("formats the selected value shown on the 'Tür' row", () => {
+    const counts = countByFilter(tasks);
+
+    expect(approvalFilterSelectedText("overtime", counts)).toBe("Fazla mesai (1)");
+    expect(approvalFilterSelectedText("all", counts)).toBe("Tümü (3)");
   });
 });
 

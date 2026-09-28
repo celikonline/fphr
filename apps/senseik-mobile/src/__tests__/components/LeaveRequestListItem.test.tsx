@@ -6,6 +6,8 @@ import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 import { leaveService, type LeaveRequest } from "@/services/LeaveService";
 
 jest.mock("@/services/LeaveService");
+// Ionicons checks expo-font's isLoaded, which the shared expo-font mock (setup.ts) lacks.
+jest.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
 jest.mock("expo-web-browser", () => ({ openBrowserAsync: jest.fn() }));
 
 function buildRequest(overrides: Partial<LeaveRequest> = {}): LeaveRequest {

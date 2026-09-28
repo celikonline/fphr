@@ -1,46 +1,96 @@
-import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { AuthFormError } from "@/components/auth/AuthForm";
+import { AuthPanel } from "@/components/auth/AuthPanel";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { authStyles } from "@/components/auth/authStyles";
+import { PrimaryButton } from "@/components/ui";
+import { palette } from "@/theme/theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "BiometricPrompt">;
+
+const FAILURE_MESSAGE =
+  "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın.";
 
 export default function BiometricPromptScreen({ navigation, route }: Props) {
   const { loginWithBiometric } = useAuthStore();
   const { email } = route.params;
+  const [failed, setFailed] = useState(false);
+  // A successful login swaps the whole navigator (this screen unmounts) - never set state after it.
+  const mountedRef = useRef(true);
+  // Ref guard (not state): the mount effect and "Tekrar dene" can both call `attemptBiometric`, and
+  // a rapid double tap must be rejected synchronously - a state flag would still read stale on the
+  // second call within the same event loop tick.
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
-    const attemptBiometric = async () => {
-      try {
-        await loginWithBiometric(email);
-      } catch {
-        Alert.alert("Biyometrik giriş başarısız", "Lütfen tekrar deneyin veya şifrenizle giriş yapın.");
-        navigation.goBack();
-      }
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
     };
+  }, []);
 
-    attemptBiometric();
-  }, [email, loginWithBiometric, navigation]);
+  const attemptBiometric = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
+      await loginWithBiometric(email);
+    } catch {
+      if (mountedRef.current) setFailed(true);
+    } finally {
+      inFlightRef.current = false;
+    }
+  }, [email, loginWithBiometric]);
+
+  useEffect(() => {
+    void attemptBiometric();
+  }, [attemptBiometric]);
+
+  const handleRetry = () => {
+    setFailed(false);
+    void attemptBiometric();
+  };
 
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#0066cc" />
-      <Text style={{ marginTop: 20, fontSize: 16 }}>Kimlik doğrulanıyor...</Text>
-
-      <TouchableOpacity
-        style={{
-          marginTop: 30,
-          backgroundColor: "#999",
-          padding: 15,
-          borderRadius: 8,
-          minWidth: 150,
-          alignItems: "center"
-        }}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={{ color: "white", fontWeight: "bold" }}>Vazgeç</Text>
-      </TouchableOpacity>
-    </View>
+    <AuthShell>
+      <AuthPanel>
+        <Text style={authStyles.panelTitle}>Biyometrik giriş</Text>
+        {failed ? (
+          <>
+            <AuthFormError message={FAILURE_MESSAGE} />
+            <View style={styles.actions}>
+              <PrimaryButton label="Tekrar dene" onPress={handleRetry} />
+              <PrimaryButton
+                label="Şifreyle giriş yap"
+                variant="secondary"
+                onPress={() => navigation.goBack()}
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.status} accessibilityLiveRegion="polite">
+              <ActivityIndicator size="large" color={palette.brand} />
+              <Text style={authStyles.panelSubtitle}>Kimlik doğrulanıyor...</Text>
+            </View>
+            <View style={styles.actions}>
+              <PrimaryButton
+                label="Vazgeç"
+                variant="secondary"
+                onPress={() => navigation.goBack()}
+              />
+            </View>
+          </>
+        )}
+      </AuthPanel>
+    </AuthShell>
   );
 }
+
+const styles = StyleSheet.create({
+  status: { marginTop: 24, alignItems: "center", gap: 12 },
+  actions: { marginTop: 24, gap: 12 },
+});

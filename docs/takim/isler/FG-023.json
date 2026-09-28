@@ -1,0 +1,48 @@
+{
+  "id": "FG-023",
+  "baslik": "İş seyahati ve harcırah",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "Talep türü 'Business Trips: domestic/international trips with transportation and accommodation' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); App Store 30.8.7/30.8.12 notları 'per diems, expense submissions, approvals' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "backend'de yok (Masraf ve Avans var; seyahat talebi/harcırah yok; vize talebinde yalnız seyahat tarihleri tutuluyor).",
+  "backend": {
+    "mevcut_uclar": [
+      "Masraf talebi uçları (expense/claims) - seyahat masrafları için yeniden kullanılabilir",
+      "Avans (expense/advances) - seyahat avansı için"
+    ],
+    "gereken_yeni": [
+      "Expense modülünde BusinessTrip aggregate + migration (yurt içi/dışı, güzergah, tarih, ulaşım, konaklama, amaç)",
+      "Harcırah kuralları (gün başı tutar, ülke/şehir kademeleri, vergi istisnası sınırı - GVK md.24/31) ve harcırah hesaplama",
+      "POST/GET /api/v1/expense/trips/me, workflow türü 'expense.trip', onay sonrası seyahat masrafının talebe bağlanması",
+      "Bordroya harcırah aktarımı (istisna aşımı vergilendirme) - Payroll entegrasyonu"
+    ],
+    "izin": "Yeni 'expense.my.trips' (*.my.* → Employee); İK/muhasebe 'expense.trips.manage'. Vergi/bordro etkisi → insan onayı."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/lib/requestOptions.ts (FAB 'İş seyahati')",
+      "apps/senseik-mobile/src/screens/app/NewRequestScreen.tsx (kind 'trip')",
+      "apps/senseik-mobile/src/services/ExpenseService.ts",
+      "apps/senseik-mobile/src/screens/app/requests/requestCards.ts"
+    ],
+    "navigasyon": "FAB 'Yeni talep' sheet'i"
+  },
+  "kabul": [
+    "Çalışan seyahat türü, güzergah, tarih aralığı, ulaşım/konaklama ihtiyacı ve amaçla talep gönderir",
+    "Harcırah tahmini tarih aralığı ve kurala göre formda önizlenir",
+    "Talep onay akışına girer; onaylanınca masraf talepleri bu seyahate bağlanabilir",
+    "Seyahat avansı istenebilir (mevcut Avans akışıyla bağlantılı)",
+    "Harcırah istisna sınırı aşımı bordroya doğru aktarılır (backend testleri)",
+    "Taleplerim'de 'İş seyahati' kartı"
+  ],
+  "tasarim_notu": "NewRequest kabuğunda adım adım (Seyahat → Ulaşım/Konaklama → Özet); harcırah önizleme kartı PayslipHeroCard tarzı brand zemin.",
+  "buyukluk": "L - yeni aggregate + vergi kuralları + bordro entegrasyonu",
+  "riskli_alan": true,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

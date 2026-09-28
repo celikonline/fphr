@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ErrorBanner, IconCircleButton } from "@/components/ui";
+import { fontFor, palette, radius, text } from "@/theme/theme";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
 
 /** Debounce delay (ms) before a search keystroke triggers a directory reload (matches PeopleScreen). */
@@ -47,6 +47,7 @@ type Props = {
 
 /** Full-screen searchable modal to pick a "requiresSubstitute" leave type's vekil (D2/B-mobil-005). */
 export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId }: Props) {
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,40 +84,38 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Vekil seç</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.closeLink}>Kapat</Text>
-          </TouchableOpacity>
+          <IconCircleButton icon="close" onPress={onClose} accessibilityLabel="Kapat" />
         </View>
 
         <TextInput
           style={styles.searchInput}
           placeholder="İsim, unvan veya birim ara"
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={palette.textFaint}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
           autoCorrect={false}
+          accessibilityLabel="Çalışan ara"
         />
 
-        {error && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+        {error ? <ErrorBanner message={error} /> : null}
 
         {loading ? (
-          <ActivityIndicator size="large" color={colors.primary} style={styles.loading} />
+          <ActivityIndicator size="large" color={palette.white} style={styles.loading} />
         ) : (
           <FlatList
             data={candidates}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.row}
                 onPress={() => onSelect({ id: item.id, displayName: item.displayName })}
+                accessibilityRole="button"
+                accessibilityLabel={item.displayName}
               >
                 <Text style={styles.rowName}>{item.displayName}</Text>
                 {(item.titleName || item.departmentName) && (
@@ -137,64 +136,52 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.xl,
+    paddingHorizontal: 20,
+    gap: 14,
+    backgroundColor: palette.sheetBottom,
+    // New-Architecture-only style prop (RN 0.86); falls back to the solid `backgroundColor` above.
+    experimental_backgroundImage: `linear-gradient(180deg, ${palette.sheetTop}, ${palette.sheetBottom})`,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.lg,
   },
   title: {
-    ...typography.h3,
-    color: colors.text,
-  },
-  closeLink: {
-    ...typography.body,
-    color: colors.primary,
+    ...text.title,
   },
   searchInput: {
+    backgroundColor: palette.glass,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    ...typography.body,
-    color: colors.text,
-    marginBottom: spacing.md,
+    borderColor: palette.glassBorder,
+    borderRadius: radius.button,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: palette.white,
+    ...fontFor(500),
   },
   loading: {
-    marginTop: spacing.xxl,
+    marginTop: 32,
   },
   row: {
-    paddingVertical: spacing.sm,
+    minHeight: 52,
+    justifyContent: "center",
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: palette.line,
   },
   rowName: {
-    ...typography.body,
-    color: colors.text,
+    ...text.body,
+    ...fontFor(700),
   },
   rowSubtitle: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    ...text.caption,
     marginTop: 2,
   },
   emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary,
+    ...text.bodyMuted,
     textAlign: "center",
-    marginTop: spacing.xxl,
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error,
+    marginTop: 32,
   },
 });

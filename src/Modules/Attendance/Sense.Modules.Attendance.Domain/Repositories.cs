@@ -116,6 +116,12 @@ public interface IMonthlyTimesheetApprovalRepository
 public interface ISelfCheckInRepository
 {
     void Add(SelfCheckIn checkIn);
+
+    /// <summary>The employee's latest <see cref="PunchDirection.BreakStart"/>/<see cref="PunchDirection.BreakEnd"/> row at or after <paramref name="sinceUtc"/>; null when there is none.</summary>
+    Task<SelfCheckIn?> FindLatestBreakPunchAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>The employee's <see cref="PunchDirection.BreakStart"/>/<see cref="PunchDirection.BreakEnd"/>/<see cref="PunchDirection.Out"/> rows at or after <paramref name="sinceUtc"/>, oldest first (an "out" closes an open break).</summary>
+    Task<IReadOnlyList<SelfCheckIn>> ListBreakAndOutPunchesAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 }
 
 public interface ICompensatoryWorkLedgerRepository

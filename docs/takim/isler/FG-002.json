@@ -1,0 +1,51 @@
+{
+  "id": "FG-002",
+  "baslik": "Arapça dil ve sağdan sola (RTL) düzen",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Arapça arayüz (ikincil (ChatGPT), doğrulanamadı; ZenHR MENA pazarında Arapça/İngilizce çalışıyor - App Store dil listesinde görünmüyor). Kullanıcı hedefi: ar dahil.",
+  "senseik_durumu": "mobilde yok; web'de de yok (web tr/en/de).",
+  "backend": {
+    "mevcut_uclar": [
+      "FG-003 tamamlanınca Accept-Language: ar ile Arapça hata/bildirim metinleri"
+    ],
+    "gereken_yeni": [
+      "Mobil tarafında yeni uç yok; backend Arapça kaynakları FG-003'te"
+    ],
+    "izin": "Yeni izin yok."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/locales/ar/*.json (yeni)",
+      "apps/senseik-mobile/src/lib/i18n.ts (ar + RTL geçişi: I18nManager.allowRTL/forceRTL + expo-updates reloadAsync veya uygulama yeniden başlatma uyarısı)",
+      "apps/senseik-mobile/src/navigation/NotchedTabBar.tsx (oyuk SVG path'i ve sekme sırası RTL'de aynalanır)",
+      "apps/senseik-mobile/src/theme/theme.ts (fontFor: ar için Arapça destekli font ailesi - Manrope'ta Arapça glif yok; öneri @expo-google-fonts/ibm-plex-sans-arabic veya noto-sans-arabic)",
+      "yön bağımlı ikonlar (chevron-forward/back, arrow) ve marginLeft/Right → marginStart/End taraması: screens/**, components/ui/**",
+      "apps/senseik-mobile/src/screens/app/checkin/PunchTiles.tsx, home/ActionGrid.tsx, home/BalanceCarousel.tsx (yatay kaydırma yönü)"
+    ],
+    "navigasyon": "Profil > Dil > العربية; seçimde 'Uygulama yeniden başlatılacak' onay diyaloğu"
+  },
+  "kabul": [
+    "Arapça seçilince uygulama yeniden başlar ve tüm düzen sağdan sola akar (I18nManager.isRTL = true)",
+    "Alt bar (NotchedTabBar) RTL'de aynalanır: Ana sayfa sağda, Giriş/Çıkış solda; FAB oyuğu ortada bozulmadan çizilir",
+    "Yön bildiren ikonlar (›, geri oku, kaydırma karuseli) RTL'de ters döner; yön bildirmeyen ikonlar (saat, zil) dönmez",
+    "Arapça metin tüm ekranlarda Arapça destekli fontla (tofu/kutu karakter yok) görünür; Latin metin Manrope'ta kalır",
+    "Tarih/sayı ar locale ile biçimlenir; rakam biçimi kararı (Latin 0-9 vs Arap-Hint ٠-٩) belgelenir ve tutarlı uygulanır; para birimi ₺ doğru tarafta",
+    "ar locale dosyası tr/en ile anahtar eşitliği testinden geçer",
+    "tr/en'e geri dönünce LTR'ye döner (yeniden başlatma ile)",
+    "Android emülatörde ana sayfa, giriş/çıkış, izin talebi, onaylarım ekran görüntüleri RTL'de taşma/örtüşme göstermez"
+  ],
+  "tasarim_notu": "Cam kartlar ve BottomSheet aynen; ScreenHeader'daki cam geri düğmesi sağa geçer ve oku aynalanır. Bakiye karuseli sağdan başlar. Sayılar tabular-nums korunur; Arapça başlıklarda negatif tracking (−0.5) kapatılır (Arapça harf bitişikliğini bozar).",
+  "buyukluk": "L - RTL denetimi tüm ekranlar + font + tab bar SVG; alt kart gerekirse 'RTL ekran denetimi' ayrılabilir",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-001",
+    "FG-003"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

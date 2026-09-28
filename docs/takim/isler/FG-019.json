@@ -1,0 +1,42 @@
+{
+  "id": "FG-019",
+  "baslik": "Eğitimlerim ve yetkinlikler",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Profil 'Competencies Tab: skills and competencies' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "mobilde yok. Eğitim kayıtları backend'de ve web'de var (training.tsx); yetkinlik/beceri modeli backend'de YOK.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/training/enrollments/my (training.my.enrollments - Employee'de var)"
+    ],
+    "gereken_yeni": [
+      "(faz 2) Yetkinlik/beceri modeli (Employee veya Performance modülü) - backend'de yok; ayrı kart gerekirse"
+    ],
+    "izin": "training.my.enrollments *.my.* kalıbıyla Employee rolünde; eğitim kısmı mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/TrainingService.ts (yeni)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Eğitimler' sekmesi)"
+    ],
+    "navigasyon": "Profil 'Eğitimler' sekmesi"
+  },
+  "kabul": [
+    "Eğitimler sekmesi kayıtlı/tamamlanan eğitimleri program adı, tarih ve durumla listeler",
+    "Zorunlu eğitimler 'Zorunlu' etiketi taşır; süresi geçen zorunlu eğitim vurgulanır",
+    "Kayıt yoksa sekme gizlenir",
+    "Saf eşleme fonksiyonuna test"
+  ],
+  "tasarim_notu": "Eğitim satırı: kep ikonu accent mor + program adı + tarih + StatusPill (tamamlandı yeşil / planlandı nötr).",
+  "buyukluk": "S - tek GET ucu (yetkinlik hariç)",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-014"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

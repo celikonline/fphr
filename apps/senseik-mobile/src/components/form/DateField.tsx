@@ -1,10 +1,10 @@
 import React from "react";
-import { Platform, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
 import { dateOnlyToDate, formatDateWithWeekday, toLocalDateOnly } from "@/lib/formatters";
+import { palette } from "@/theme/theme";
+import { pickerFieldStyles as styles } from "./fieldStyles";
 
 type Props = {
   /** `DateOnly` ("yyyy-MM-dd"). */
@@ -13,6 +13,9 @@ type Props = {
   /** `DateOnly`; the picker won't let the user go earlier than this (e.g. an end date's start date). */
   minimumDateValue?: string;
   disabled?: boolean;
+  /** Caption shown above the glass box (and used as its accessible name). */
+  label?: string;
+  required?: boolean;
 };
 
 /**
@@ -21,9 +24,9 @@ type Props = {
  * build" - there is no documented/tested iOS dev flow yet), and `DateTimePickerAndroid`'s imperative
  * API is the library's own recommended approach on Android (its README: "we recommend using the
  * imperative API on Android"). On any other platform the field shows the value but tapping is a
- * no-op until an iOS picker is designed.
+ * no-op until an iOS picker is designed. Request forms use the JS `SheetDateField` instead.
  */
-export function DateField({ value, onChange, minimumDateValue, disabled }: Props) {
+export function DateField({ value, onChange, minimumDateValue, disabled, label, required }: Props) {
   function open() {
     if (Platform.OS !== "android" || disabled) {
       return;
@@ -41,30 +44,24 @@ export function DateField({ value, onChange, minimumDateValue, disabled }: Props
   }
 
   return (
-    <TouchableOpacity
-      style={[styles.field, disabled && styles.fieldDisabled]}
-      onPress={open}
-      disabled={disabled}
-    >
-      <Text style={styles.fieldText}>{formatDateWithWeekday(value)}</Text>
-    </TouchableOpacity>
+    <View style={styles.container}>
+      {label ? (
+        <Text style={styles.label}>
+          {label}
+          {required ? " *" : ""}
+        </Text>
+      ) : null}
+      <TouchableOpacity
+        style={[styles.field, disabled && styles.fieldDisabled]}
+        onPress={open}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={label ?? "Tarih"}
+        accessibilityState={{ disabled }}
+      >
+        <Text style={styles.fieldText}>{formatDateWithWeekday(value)}</Text>
+        <Ionicons name="calendar-outline" size={18} color={palette.textFaint} />
+      </TouchableOpacity>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  field: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.white,
-  },
-  fieldDisabled: {
-    opacity: 0.6,
-  },
-  fieldText: {
-    ...typography.body,
-    color: colors.text,
-  },
-});

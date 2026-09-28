@@ -218,6 +218,33 @@ describe("AuthService", () => {
     });
   });
 
+  describe("forgotPassword", () => {
+    it("posts the e-mail to the anonymous forgot-password endpoint", async () => {
+      (apiClient.post as jest.Mock).mockResolvedValue({ data: undefined });
+
+      await authService.forgotPassword("test@example.com");
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/identity/auth/forgot-password", {
+        email: "test@example.com",
+      });
+    });
+
+    it("logs a fixed-text message (never the error object) and rethrows on failure", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+      const serverError = Object.assign(new Error("Request failed with status code 500"), {
+        isAxiosError: true,
+        response: { status: 500, data: { detail: "Internal error" } },
+      });
+      (apiClient.post as jest.Mock).mockRejectedValue(serverError);
+
+      await expect(authService.forgotPassword("test@example.com")).rejects.toThrow();
+
+      expect(consoleError).toHaveBeenCalledWith("Forgot password request failed.");
+      expect(consoleError).not.toHaveBeenCalledWith(serverError);
+      consoleError.mockRestore();
+    });
+  });
+
   describe("logout", () => {
     it("sends the stored refresh token and allSessions: false", async () => {
       (SecureStorage.getRefreshToken as jest.Mock).mockResolvedValue("refresh-token");

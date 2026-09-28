@@ -1,0 +1,51 @@
+{
+  "id": "FG-001",
+  "baslik": "Mobil çok dil altyapısı + Türkçe/İngilizce",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Dil desteği: ZenHR Arapça + İngilizce sunar (ikincil (ChatGPT), doğrulanamadı; App Store 'Languages' alanında yalnız English listeleniyor - resmi kaynakta Arapça arayüz teyit edilemedi). Hedef dillerimiz kullanıcı kararıyla tr/en/ar.",
+  "senseik_durumu": "mobilde yok (tüm metinler Türkçe sabit; lib/apiClient.ts 'Accept-Language: tr' sabit gönderiyor; 14 dosyada 'tr-TR' sabit tarih/sayı biçimi). Web'de var: react-i18next, web/public/locales/{tr,en,de} (34 namespace).",
+  "backend": {
+    "mevcut_uclar": [
+      "Backend Accept-Language ile tr/en yerelleştiriyor (SenseOptions.SupportedCultures = tr, en; SharedResource{,.en}.resx)",
+      "GET /api/v1/identity/me (kullanıcının PreferredLanguage alanı domain'de var)",
+      "Bildirim şablonları tr/en/de (Notifications/Infrastructure/Templates/*.sbn) - push metni delivery.Culture ile render ediliyor"
+    ],
+    "gereken_yeni": [
+      "Kullanıcının kendi dil tercihini güncelleyeceği self uç yok (PreferredLanguage yalnız UsersController/admin güncellemesinde): PUT /api/v1/identity/me/language { language } önerilir - push/e-posta dili de buna uysun (opsiyonel, FG-003 ile birlikte yapılabilir)"
+    ],
+    "izin": "Yeni izin gerekmez (me.* self-servis kalıbı Employee rolünde). Dil tercihi ucu eklenirse 'me.*' kalıbına uyan anahtar/izinsiz [Authorize] yeterli."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/lib/i18n.ts (yeni: i18next + react-i18next + expo-localization, fallback 'tr')",
+      "apps/senseik-mobile/src/locales/{tr,en}/*.json (yeni; web namespace adlarıyla hizalı: common, auth, leave, attendance, notifications…)",
+      "apps/senseik-mobile/src/lib/apiClient.ts (Accept-Language aktif dilden)",
+      "apps/senseik-mobile/src/lib/formatters.ts (Intl locale aktif dilden)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx (Dil seçimi satırı + BottomSheet)",
+      "tüm screens/** ve components/** metinleri t() ile"
+    ],
+    "navigasyon": "Profil ekranı > 'Dil' satırı (BottomSheet seçici); ilk açılışta cihaz dili (tr/en değilse tr)"
+  },
+  "kabul": [
+    "Uygulama ilk açılışta cihaz dili İngilizce ise İngilizce, desteklenmeyen bir dilse Türkçe açılır",
+    "Profil > Dil ile seçilen dil kalıcıdır (SecureStore/AsyncStorage); uygulama yeniden başlatılınca korunur",
+    "Dil değişince tüm ekranlar yeniden başlatma gerekmeden yeni dilde görünür; kodda sabit Türkçe UI metni kalmaz (ESLint/test ile ham metin taraması, web'deki i18n.raw-keys.test.ts benzeri)",
+    "API istekleri seçili dili Accept-Language ile gönderir; backend hata mesajları (ör. doğrulama hataları) seçili dilde gelir",
+    "Tarih/sayı/para biçimleri seçili dile göre (tr-TR / en-GB) biçimlenir; 'tr-TR' sabiti formatters dışında kalmaz",
+    "tr ve en locale dosyalarında anahtar eşitliği testle doğrulanır (web i18n.locales.test.ts yaklaşımı)",
+    "Mevcut jest testleri kaybolmaz; tsc/eslint/jest yeşil"
+  ],
+  "tasarim_notu": "Dil seçici: GlassCard içinde SectionHeader 'Dil' + satır, dokununca BottomSheet (bayraksız, dil adları kendi dilinde: Türkçe / English / العربية). Seçili satırda brand mavi onay ikonu.",
+  "buyukluk": "L - tüm ekran metinlerinin t()'ye taşınması + altyapı + testler; mekanik ama geniş yüzey",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "mobil yeniden tasarım (a/mobil-yeniden-tasarim) birleşmiş olmalı - aynı ekran dosyalarına dokunur"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

@@ -1,0 +1,42 @@
+{
+  "id": "FG-029",
+  "baslik": "Kurumsal hesapla giriş (SSO: Microsoft / Google / Apple)",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "'Single Sign-On (Apple, Google, Microsoft)' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169).",
+  "senseik_durumu": "backend'de yok (AuthController yalnız e-posta+şifre, MFA, şifre sıfırlama).",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/identity/auth/login, /mfa/complete, /refresh"
+    ],
+    "gereken_yeni": [
+      "OIDC harici sağlayıcı girişi: POST /api/v1/identity/auth/external/{provider} (id_token doğrulama, kiracı eşleme, e-posta alan adı kısıtı), kiracı SSO ayarları",
+      "Hesap bağlama/ilk giriş kuralları (davetli kullanıcı eşleşmesi), denetim kaydı"
+    ],
+    "izin": "Kiracı ayarı 'identity.security.manage'; giriş uçları anonim. Kimlik doğrulama → insan onayı."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/auth/LoginScreen.tsx + auth/login/* ('Microsoft ile giriş' vb.)",
+      "apps/senseik-mobile/src/services/AuthService.ts (expo-auth-session)"
+    ],
+    "navigasyon": "Giriş ekranı"
+  },
+  "kabul": [
+    "Kiracı SSO'yu etkinleştirdiyse giriş ekranında sağlayıcı düğmeleri görünür",
+    "Sağlayıcıdan dönen kimlik doğrulanır ve yalnız davetli/eşleşen kullanıcı giriş yapar; eşleşmeyen için yerelleştirilmiş hata",
+    "SSO girişinde de kiracı MFA politikası uygulanır",
+    "Biyometrik hızlı giriş SSO sonrası da çalışır",
+    "Güvenlik testleri: sahte/imzasız token reddi, başka kiracı alan adı reddi"
+  ],
+  "tasarim_notu": "Giriş formu altında ayraç 'veya' + cam düğmeler (sağlayıcı logosu yok - yalnız ad ve genel ikon, marka kullanımı kurallarına göre).",
+  "buyukluk": "L - kimlik doğrulama altyapısı",
+  "riskli_alan": true,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}
