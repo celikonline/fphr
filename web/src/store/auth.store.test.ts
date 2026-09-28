@@ -272,3 +272,41 @@ describe("auth.store refresh token storage (ADR-0009: F5 must not end the sessio
     expect(sessionStorage.getItem("refresh_token")).toBeNull();
   });
 });
+
+// Şirket değiştirme = çıkış + başka tenant'a giriş, tam sayfa yenilemesi olmadan. Query anahtarları tenant
+// içermediği için (ör. ["employees", "list", ...]) React Query önbelleği temizlenmezse yeni şirkette önceki
+// şirketin çalışan listesi görünür; F5 önbelleği sildiği için "yenileyince düzeliyordu".
+describe("auth.store clears the React Query cache on session boundaries (company switch)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it("logout() drops cached server data of the previous company", async () => {
+    localStorage.setItem("auth_token", fakeJwt(600));
+    mockApiClient.post.mockResolvedValue({ data: undefined });
+    const { useAuthStore: reloaded } = await reloadStore();
+    const { queryClient } = await import("@/lib/query-client");
+    queryClient.setQueryData(["employees", "list"], [{ id: "company-a-employee" }]);
+
+    reloaded.getState().logout();
+
+    expect(queryClient.getQueryData(["employees", "list"])).toBeUndefined();
+  });
+
+  it("login() into another company starts with an empty cache", async () => {
+    const { useAuthStore: reloaded } = await reloadStore();
+    const { queryClient } = await import("@/lib/query-client");
+    const { getMe } = await import("@/services/me.service");
+    vi.mocked(getMe).mockResolvedValue(meResponseWithRoles([]));
+    mockApiClient.post.mockResolvedValue({
+      data: { status: "ok", tokens: { accessToken: fakeJwt(600), refreshToken: "company-b-refresh" } },
+    });
+    queryClient.setQueryData(["employees", "list"], [{ id: "company-a-employee" }]);
+
+    await reloaded.getState().login("hr@example.com", "secret", "company-b");
+
+    expect(queryClient.getQueryData(["employees", "list"])).toBeUndefined();
+  });
+});
