@@ -1,4 +1,6 @@
 import type { MyProfile } from "@/services/ProfileService";
+import { formatDate } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 
 export type ProfileField = { label: string; value: string };
 
@@ -11,7 +13,7 @@ export type ProfileGroup = {
 function formatHireDate(value: string): string {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDate(date, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 /**
@@ -22,23 +24,25 @@ function formatHireDate(value: string): string {
  * "Kişisel" is always omitted - this stays generic so a future field slots in without a screen change.
  */
 export function buildProfileGroups(profile: MyProfile): ProfileGroup[] {
+  const label = (key: string) => i18n.t(`profile:fields.${key}`);
   const personal: ProfileField[] = [];
 
   const contact: ProfileField[] = [];
-  if (profile.workEmail) contact.push({ label: "İş e-postası", value: profile.workEmail });
+  if (profile.workEmail) contact.push({ label: label("workEmail"), value: profile.workEmail });
   const phone = profile.mobilePhone ?? profile.workPhone;
-  if (phone) contact.push({ label: "Telefon", value: phone });
+  if (phone) contact.push({ label: label("phone"), value: phone });
 
   const job: ProfileField[] = [];
-  if (profile.titleName) job.push({ label: "Unvan", value: profile.titleName });
-  if (profile.departmentName) job.push({ label: "Birim", value: profile.departmentName });
+  if (profile.titleName) job.push({ label: label("title"), value: profile.titleName });
+  if (profile.departmentName)
+    job.push({ label: label("department"), value: profile.departmentName });
   if (profile.hireDate)
-    job.push({ label: "İşe giriş tarihi", value: formatHireDate(profile.hireDate) });
+    job.push({ label: label("hireDate"), value: formatHireDate(profile.hireDate) });
 
   const groups: ProfileGroup[] = [
-    { key: "personal", label: "Kişisel", fields: personal },
-    { key: "contact", label: "İletişim", fields: contact },
-    { key: "job", label: "İş", fields: job },
+    { key: "personal", label: i18n.t("profile:groups.personal"), fields: personal },
+    { key: "contact", label: i18n.t("profile:groups.contact"), fields: contact },
+    { key: "job", label: i18n.t("profile:groups.job"), fields: job },
   ];
   return groups.filter((group) => group.fields.length > 0);
 }

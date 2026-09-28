@@ -85,5 +85,13 @@
     "saved": "Kaydedildi",
     "missingInfo": "Eksik bilgi",
     "sent": "Gönderildi"
+  },
+  "languageNames": {
+    "tr": "Türkçe",
+    "en": "English"
+  },
+  "biometric": {
+    "authenticatePrompt": "Hesabınıza erişmek için kimliğinizi doğrulayın",
+    "enablePrompt": "Biyometrik girişi etkinleştirin"
   }
 }

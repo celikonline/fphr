@@ -1,1 +1,21 @@
-{}
+{
+  "title": "Profilim",
+  "loadError": "Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+  "notFound": "Çalışan kaydınız bulunmuyor.",
+  "groups": {
+    "personal": "Kişisel",
+    "contact": "İletişim",
+    "job": "İş"
+  },
+  "fields": {
+    "workEmail": "İş e-postası",
+    "phone": "Telefon",
+    "title": "Unvan",
+    "department": "Birim",
+    "hireDate": "İşe giriş tarihi"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil"
+  }
+}

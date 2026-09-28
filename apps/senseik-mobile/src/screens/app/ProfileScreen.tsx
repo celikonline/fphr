@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
 import {
   Avatar,
@@ -17,18 +19,19 @@ import { palette, text } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
 import { ProfileInfoCard } from "./profile/ProfileInfoCard";
 import { ProfileMenuCard, type ProfileMenuRoute } from "./profile/ProfileMenuCard";
+import { SettingsCard } from "./profile/SettingsCard";
 import { buildProfileGroups, type ProfileGroup } from "./profile/profileGroups";
 
 type ProfileNavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 export default function ProfileScreen() {
+  const { t } = useTranslation("profile");
   const navigation = useNavigation<ProfileNavigationProp>();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [groups, setGroups] = useState<ProfileGroup[]>([]);
   const [activeGroupKey, setActiveGroupKey] = useState<ProfileGroup["key"] | null>(null);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
@@ -39,7 +42,6 @@ export default function ProfileScreen() {
       const result = await profileService.getMyProfile();
       setProfile(result);
       const nextGroups = buildProfileGroups(result);
-      setGroups(nextGroups);
       setActiveGroupKey((current) =>
         current && nextGroups.some((group) => group.key === current)
           ? current
@@ -50,7 +52,7 @@ export default function ProfileScreen() {
       if (status === 404) {
         setNotFound(true);
       } else {
-        setError("Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+        setError(i18n.t("profile:loadError"));
       }
     }
   }, []);
@@ -70,7 +72,7 @@ export default function ProfileScreen() {
     navigation.navigate(route);
   }
 
-  const header = <ScreenHeader title="Profilim" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -85,6 +87,8 @@ export default function ProfileScreen() {
   const subtitle = profile
     ? [profile.titleName, profile.departmentName].filter(Boolean).join(" · ")
     : "";
+  // Built at render (not stored at load) so the group/field labels follow a language switch.
+  const groups: ProfileGroup[] = profile ? buildProfileGroups(profile) : [];
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0];
 
   return (
@@ -92,7 +96,7 @@ export default function ProfileScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {notFound ? (
-        <EmptyState icon="person-outline" title="Çalışan kaydınız bulunmuyor." />
+        <EmptyState icon="person-outline" title={t("notFound")} />
       ) : profile ? (
         <>
           <View style={styles.hero}>
@@ -118,9 +122,11 @@ export default function ProfileScreen() {
 
       <ProfileMenuCard onNavigate={onMenuNavigate} />
 
+      <SettingsCard />
+
       <View style={styles.logout}>
         <PrimaryButton
-          label="Çıkış yap"
+          label={t("home:menu.logout")}
           variant="danger"
           onPress={() => setLogoutConfirmVisible(true)}
         />

@@ -1,14 +1,20 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
-import { TICKET_STATUS_LABELS, type SupportTicket } from "@/services/SupportService";
+import type { SupportTicket } from "@/services/SupportService";
+import { formatDateTime as formatLocaleDateTime } from "@/lib/formatters";
 import { text } from "@/theme/theme";
-import { normalizeTicketStatus, supportTicketStatusTone } from "./supportTicketStatus";
+import {
+  normalizeTicketStatus,
+  supportTicketStatusLabel,
+  supportTicketStatusTone,
+} from "./supportTicketStatus";
 
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("tr-TR", {
+  return formatLocaleDateTime(date, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -22,16 +28,24 @@ type Props = {
 
 /** One "Taleplerim" row: subject + status pill, created date, and resolution if answered. */
 export function TicketCard({ ticket }: Props) {
+  const { t } = useTranslation("support");
   const status = normalizeTicketStatus(ticket.status);
 
   return (
     <GlassCard style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.subject}>{ticket.subject}</Text>
-        <StatusPill label={TICKET_STATUS_LABELS[status]} tone={supportTicketStatusTone(status)} />
+        <StatusPill
+          label={supportTicketStatusLabel(status)}
+          tone={supportTicketStatusTone(status)}
+        />
       </View>
       <Text style={styles.subtext}>{formatDateTime(ticket.createdAt)}</Text>
-      {ticket.resolution ? <Text style={styles.resolution}>Yanıt: {ticket.resolution}</Text> : null}
+      {ticket.resolution ? (
+        <Text style={styles.resolution}>
+          {t("tickets.resolution", { resolution: ticket.resolution })}
+        </Text>
+      ) : null}
     </GlassCard>
   );
 }

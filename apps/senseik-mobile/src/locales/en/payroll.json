@@ -1,1 +1,11 @@
-{}
+{
+  "hero": {
+    "caption": "Your net pay last month"
+  },
+  "openDocument": "Open document",
+  "acknowledge": "I have read and acknowledge",
+  "row": {
+    "a11y": "{{month}} {{year}} payslip, open document",
+    "saving": "Saving…"
+  }
+}

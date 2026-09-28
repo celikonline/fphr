@@ -1,14 +1,16 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, PrimaryButton, StatusPill } from "@/components/ui";
 import type { Goal } from "@/services/GoalsService";
 import { fontFor, palette, text } from "@/theme/theme";
-import { GOAL_STATUS_LABELS, goalStatusTone } from "./goalStatus";
+import { formatDate } from "@/lib/formatters";
+import { goalStatusLabel, goalStatusTone } from "./goalStatus";
 
 function formatDateOnly(value: string): string {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDate(date, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 type Props = {
@@ -22,23 +24,26 @@ type Props = {
 
 /** One goal's card: title/status, progress bar, and (when editable) a progress edit row. */
 export function GoalCard({ goal, editable, draft, saving, onDraftChange, onSave }: Props) {
+  const { t } = useTranslation("goals");
   const progress = Math.min(100, Math.max(0, goal.progress));
 
   return (
     <GlassCard style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>{goal.title}</Text>
-        <StatusPill label={GOAL_STATUS_LABELS[goal.status]} tone={goalStatusTone(goal.status)} />
+        <StatusPill label={goalStatusLabel(goal.status)} tone={goalStatusTone(goal.status)} />
       </View>
 
       {goal.description ? <Text style={styles.subtext}>{goal.description}</Text> : null}
-      <Text style={styles.subtext}>Hedef tarih: {formatDateOnly(goal.targetDate)}</Text>
+      <Text style={styles.subtext}>
+        {t("targetDate", { date: formatDateOnly(goal.targetDate) })}
+      </Text>
 
       <View style={styles.progressRow}>
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
-        <Text style={styles.progressText}>%{goal.progress}</Text>
+        <Text style={styles.progressText}>{t("percent", { value: goal.progress })}</Text>
       </View>
 
       {editable ? (
@@ -49,9 +54,9 @@ export function GoalCard({ goal, editable, draft, saving, onDraftChange, onSave 
             onChangeText={onDraftChange}
             keyboardType="number-pad"
             maxLength={3}
-            accessibilityLabel={`${goal.title} ilerleme yüzdesi`}
+            accessibilityLabel={t("progressA11y", { title: goal.title })}
           />
-          <PrimaryButton label="Kaydet" onPress={onSave} loading={saving} />
+          <PrimaryButton label={t("common:actions.save")} onPress={onSave} loading={saving} />
         </View>
       ) : null}
     </GlassCard>

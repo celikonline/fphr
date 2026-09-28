@@ -85,5 +85,13 @@
     "saved": "Saved",
     "missingInfo": "Missing information",
     "sent": "Sent"
+  },
+  "languageNames": {
+    "tr": "Türkçe",
+    "en": "English"
+  },
+  "biometric": {
+    "authenticatePrompt": "Authenticate to access your account",
+    "enablePrompt": "Enable biometric login"
   }
 }

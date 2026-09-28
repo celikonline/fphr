@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard, TextField } from "@/components/ui";
 import type { HelpArticleSummary } from "@/services/SupportService";
 import { palette, text } from "@/theme/theme";
@@ -31,6 +32,7 @@ export function HelpCenterCard({
   onOpenArticle,
   onCloseArticle,
 }: Props) {
+  const { t } = useTranslation("support");
   return (
     <GlassCard style={styles.card}>
       {selectedSlug ? (
@@ -39,10 +41,10 @@ export function HelpCenterCard({
             style={styles.backRow}
             onPress={onCloseArticle}
             accessibilityRole="button"
-            accessibilityLabel="Listeye dön"
+            accessibilityLabel={t("help.backToList")}
           >
             <Ionicons name="chevron-back" size={16} color={palette.brandText} />
-            <Text style={styles.linkText}>Listeye dön</Text>
+            <Text style={styles.linkText}>{t("help.backToList")}</Text>
           </TouchableOpacity>
           {articleLoading ? (
             <ActivityIndicator style={styles.loading} color={palette.white} />
@@ -56,8 +58,8 @@ export function HelpCenterCard({
       ) : (
         <>
           <TextField
-            label="Ara"
-            placeholder="Ne aramıştınız? Örn. veri aktarımı"
+            label={t("help.search")}
+            placeholder={t("help.searchPlaceholder")}
             value={term}
             onChangeText={onTermChange}
             autoCapitalize="none"
@@ -65,7 +67,7 @@ export function HelpCenterCard({
           {articlesLoading ? (
             <ActivityIndicator style={styles.loading} color={palette.white} />
           ) : articles.length === 0 ? (
-            <Text style={styles.emptyText}>Bu aramayla eşleşen bir makale bulunamadı.</Text>
+            <Text style={styles.emptyText}>{t("help.empty")}</Text>
           ) : (
             articles.map((article, index) => (
               <TouchableOpacity

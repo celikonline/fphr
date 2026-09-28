@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette, radius } from "@/theme/theme";
 
 type Props = {
@@ -9,18 +10,19 @@ type Props = {
 
 /** "Tümünü okundu yap" hap: `ScreenHeader`'ın `right` yuvasında gösterilir. */
 export function MarkAllReadPill({ disabled, onPress }: Props) {
+  const { t } = useTranslation("notifications");
   return (
     <TouchableOpacity
       style={[styles.pill, disabled && styles.pillDisabled]}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel="Tümünü okundu yap"
+      accessibilityLabel={t("markAllRead")}
       // Görsel yükseklik ~26px (paddingVertical 6 + 16px satır yüksekliği) - hitSlop dokunma alanını
       // >=44'e çıkarır (ScreenHeader/IconCircleButton'daki aynı desen).
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
-      <Text style={[styles.text, disabled && styles.textDisabled]}>Tümünü okundu yap</Text>
+      <Text style={[styles.text, disabled && styles.textDisabled]}>{t("markAllRead")}</Text>
     </TouchableOpacity>
   );
 }

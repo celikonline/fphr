@@ -1,1 +1,45 @@
-{}
+{
+  "title": "Destek",
+  "sections": {
+    "help": "Yardım Merkezi",
+    "contact": "Desteğe bağlan",
+    "tickets": "Taleplerim"
+  },
+  "categories": {
+    "general": "Genel",
+    "dataTransfer": "Veri aktarımı",
+    "leaveAndOvertime": "İzin ve fazla mesai",
+    "approvals": "Onay süreçleri",
+    "accessAndPermissions": "Erişim ve yetkiler",
+    "payroll": "Bordro",
+    "billing": "Faturalama",
+    "other": "Diğer"
+  },
+  "status": {
+    "open": "Açık",
+    "answered": "Yanıtlandı",
+    "closed": "Kapandı"
+  },
+  "newTicket": {
+    "intro": "Aradığınızı bulamadınız mı? Kısa bir talep açın, ekibimiz size dönsün.",
+    "category": "Kategori",
+    "subject": "Konu",
+    "subjectPlaceholder": "Talebinizi kısaca özetleyin",
+    "body": "Ayrıntı",
+    "bodyPlaceholder": "Ne yapmaya çalışıyordunuz, ne bekliyordunuz, ne oldu?",
+    "submit": "Talep gönder",
+    "missingFields": "Lütfen konu ve ayrıntı alanlarını doldurun.",
+    "submitted": "Talebiniz alındı. Destek ekibimiz size dönecek.",
+    "submitError": "Talep gönderilemedi. Lütfen tekrar deneyin."
+  },
+  "tickets": {
+    "empty": "Henüz bir destek talebiniz yok.",
+    "resolution": "Yanıt: {{resolution}}"
+  },
+  "help": {
+    "backToList": "Listeye dön",
+    "search": "Ara",
+    "searchPlaceholder": "Ne aramıştınız? Örn. veri aktarımı",
+    "empty": "Bu aramayla eşleşen bir makale bulunamadı."
+  }
+}

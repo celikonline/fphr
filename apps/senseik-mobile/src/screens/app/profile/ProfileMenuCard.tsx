@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import { palette, text } from "@/theme/theme";
 
@@ -10,16 +11,21 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 export type ProfileMenuRoute =
   "People" | "Goals" | "Requests" | "Leave" | "NotificationPreferences" | "Support";
 
-type MenuItem = { route: ProfileMenuRoute; label: string; icon: IoniconName };
+/** `labelKey` is an i18n key - render with `t(item.labelKey)`. */
+type MenuItem = { route: ProfileMenuRoute; labelKey: string; icon: IoniconName };
 
 /** Spec/brief order: Kişiler, Hedeflerim, Taleplerim, İzinlerim, Bildirim tercihleri, Destek. */
 export const PROFILE_MENU_ITEMS: MenuItem[] = [
-  { route: "People", label: "Kişiler", icon: "people-outline" },
-  { route: "Goals", label: "Hedeflerim", icon: "flag-outline" },
-  { route: "Requests", label: "Taleplerim", icon: "document-text-outline" },
-  { route: "Leave", label: "İzinlerim", icon: "sunny-outline" },
-  { route: "NotificationPreferences", label: "Bildirim tercihleri", icon: "notifications-outline" },
-  { route: "Support", label: "Destek", icon: "headset-outline" },
+  { route: "People", labelKey: "home:actions.people", icon: "people-outline" },
+  { route: "Goals", labelKey: "home:actions.goals", icon: "flag-outline" },
+  { route: "Requests", labelKey: "home:actions.requests", icon: "document-text-outline" },
+  { route: "Leave", labelKey: "home:actions.leave", icon: "sunny-outline" },
+  {
+    route: "NotificationPreferences",
+    labelKey: "home:menu.notificationPreferences",
+    icon: "notifications-outline",
+  },
+  { route: "Support", labelKey: "home:actions.support", icon: "headset-outline" },
 ];
 
 type Props = {
@@ -28,6 +34,7 @@ type Props = {
 
 /** Icon + label + chevron rows, one glass card (brief: "menü kartı ... ikonlu satırlar, ›"). */
 export function ProfileMenuCard({ onNavigate }: Props) {
+  const { t } = useTranslation();
   return (
     <GlassCard style={styles.card} padding={0}>
       {PROFILE_MENU_ITEMS.map((item, index) => (
@@ -37,10 +44,10 @@ export function ProfileMenuCard({ onNavigate }: Props) {
             style={styles.row}
             onPress={() => onNavigate(item.route)}
             accessibilityRole="button"
-            accessibilityLabel={item.label}
+            accessibilityLabel={t(item.labelKey)}
           >
             <Ionicons name={item.icon} size={20} color={palette.ice} />
-            <Text style={styles.label}>{item.label}</Text>
+            <Text style={styles.label}>{t(item.labelKey)}</Text>
             <Ionicons name="chevron-forward" size={18} color={palette.textFaint} />
           </TouchableOpacity>
         </Fragment>

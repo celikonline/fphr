@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, PrimaryButton, TextField } from "@/components/ui";
 import { SUPPORT_TICKET_CATEGORIES, type SupportTicketCategory } from "@/services/SupportService";
 import { fontFor, palette, radius, text } from "@/theme/theme";
@@ -26,28 +27,26 @@ export function NewTicketCard({
   submitting,
   onSubmit,
 }: Props) {
+  const { t } = useTranslation("support");
   return (
     <GlassCard style={styles.card}>
-      <Text style={styles.intro}>
-        Aradığınızı bulamadınız mı? Kısa bir talep açın, ekibimiz size dönsün.
-      </Text>
+      <Text style={styles.intro}>{t("newTicket.intro")}</Text>
 
-      <Text style={styles.fieldLabel}>Kategori</Text>
+      <Text style={styles.fieldLabel}>{t("newTicket.category")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-        {SUPPORT_TICKET_CATEGORIES.map((option) => {
-          const selected = option.value === category;
+        {SUPPORT_TICKET_CATEGORIES.map((value) => {
+          const selected = value === category;
+          const label = t(`categories.${value}`);
           return (
             <TouchableOpacity
-              key={option.value}
+              key={value}
               style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => onCategoryChange(option.value)}
+              onPress={() => onCategoryChange(value)}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              accessibilityLabel={option.label}
+              accessibilityLabel={label}
             >
-              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                {option.label}
-              </Text>
+              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -55,19 +54,19 @@ export function NewTicketCard({
 
       <View style={styles.field}>
         <TextField
-          label="Konu"
+          label={t("newTicket.subject")}
           value={subject}
           onChangeText={onSubjectChange}
-          placeholder="Talebinizi kısaca özetleyin"
+          placeholder={t("newTicket.subjectPlaceholder")}
         />
       </View>
 
       <View style={styles.field}>
         <TextField
-          label="Ayrıntı"
+          label={t("newTicket.body")}
           value={body}
           onChangeText={onBodyChange}
-          placeholder="Ne yapmaya çalışıyordunuz, ne bekliyordunuz, ne oldu?"
+          placeholder={t("newTicket.bodyPlaceholder")}
           multiline
           numberOfLines={3}
           style={styles.textArea}
@@ -75,7 +74,7 @@ export function NewTicketCard({
       </View>
 
       <View style={styles.submit}>
-        <PrimaryButton label="Talep gönder" onPress={onSubmit} loading={submitting} />
+        <PrimaryButton label={t("newTicket.submit")} onPress={onSubmit} loading={submitting} />
       </View>
     </GlassCard>
   );

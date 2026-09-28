@@ -1,5 +1,6 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { palette, text, type Tone } from "@/theme/theme";
 
@@ -31,11 +32,12 @@ export function PayslipRow({
   onOpen,
   onAcknowledge,
 }: Props) {
+  const { t } = useTranslation("payroll");
   return (
     <GlassCard
       style={styles.card}
       onPress={onOpen}
-      accessibilityLabel={`${monthLabel} ${year} bordrosu, belgeyi aç`}
+      accessibilityLabel={t("row.a11y", { month: monthLabel, year })}
     >
       <View style={styles.row}>
         <View>
@@ -51,13 +53,13 @@ export function PayslipRow({
               onPress={onAcknowledge}
               disabled={disabled}
               accessibilityRole="button"
-              accessibilityLabel="Okudum, onaylıyorum"
+              accessibilityLabel={t("acknowledge")}
               // `StatusPill`'in görsel yüksekliği ~24px (paddingVertical 4 + caption lineHeight 16) -
               // hitSlop dokunma alanını >=44'e çıkarır.
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <StatusPill
-                label={isAcknowledging ? "Kaydediliyor…" : statusLabel}
+                label={isAcknowledging ? t("row.saving") : statusLabel}
                 tone={statusTone}
               />
             </TouchableOpacity>

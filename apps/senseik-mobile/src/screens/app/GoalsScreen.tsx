@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { goalsService, type Goal } from "@/services/GoalsService";
 import { palette } from "@/theme/theme";
@@ -7,6 +9,7 @@ import { GoalCard } from "./goals/GoalCard";
 import { GOAL_EDITABLE_STATUSES } from "./goals/goalStatus";
 
 export default function GoalsScreen() {
+  const { t } = useTranslation("goals");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,7 +32,7 @@ export default function GoalsScreen() {
         return next;
       });
     } catch {
-      setError("Hedefler yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("goals:loadError"));
     }
   }, []);
 
@@ -48,7 +51,7 @@ export default function GoalsScreen() {
     const draft = progressDrafts[goal.id] ?? String(goal.progress);
     const parsed = Number(draft);
     if (!Number.isInteger(parsed) || parsed < 0 || parsed > 100) {
-      Alert.alert("Geçersiz değer", "İlerleme 0 ile 100 arasında bir tam sayı olmalı.");
+      Alert.alert(t("invalidTitle"), t("invalidProgress"));
       return;
     }
 
@@ -57,13 +60,13 @@ export default function GoalsScreen() {
       await goalsService.updateMyGoalProgress(goal.id, parsed);
       await loadGoals();
     } catch {
-      Alert.alert("Hata", "İlerleme güncellenemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("saveError"));
     } finally {
       setSavingId(null);
     }
   }
 
-  const header = <ScreenHeader title="Hedeflerim" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -80,7 +83,7 @@ export default function GoalsScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {!error && goals.length === 0 ? (
-        <EmptyState icon="flag-outline" title="Henüz bir hedefiniz yok." />
+        <EmptyState icon="flag-outline" title={t("empty")} />
       ) : (
         goals.map((goal) => (
           <GoalCard

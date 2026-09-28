@@ -1,1 +1,11 @@
-{}
+{
+  "hero": {
+    "caption": "Geçen ay net maaşın"
+  },
+  "openDocument": "Belgeyi aç",
+  "acknowledge": "Okudum, onaylıyorum",
+  "row": {
+    "a11y": "{{month}} {{year}} bordrosu, belgeyi aç",
+    "saving": "Kaydediliyor…"
+  }
+}
