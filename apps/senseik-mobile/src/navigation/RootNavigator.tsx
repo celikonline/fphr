@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/auth/BrandMark";
@@ -88,6 +89,7 @@ function AuthNavigator() {
 }
 
 function MainTabsNavigator() {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       tabBar={(props) => <NotchedTabBar {...props} />}
@@ -98,8 +100,8 @@ function MainTabsNavigator() {
         sceneStyle: { backgroundColor: palette.night },
       }}
     >
-      <Tab.Screen name="Home" component={DashboardScreen} options={{ title: "Ana sayfa" }} />
-      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: "Giriş / Çıkış" }} />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{ title: t("tabs.home") }} />
+      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: t("tabs.checkIn") }} />
     </Tab.Navigator>
   );
 }
@@ -127,6 +129,7 @@ function AppNavigator() {
 }
 
 export function RootNavigator() {
+  const { t } = useTranslation();
   const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
 
@@ -171,7 +174,7 @@ export function RootNavigator() {
           <ActivityIndicator
             size="large"
             color={palette.brand}
-            accessibilityLabel="Yükleniyor"
+            accessibilityLabel={t("status.loading")}
             style={styles.splashSpinner}
           />
         </View>

@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { StyleSheet, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import type { UpcomingBirthday } from "@/services/HomeFeedService";
 import { text } from "@/theme/theme";
@@ -12,6 +13,7 @@ type Props = {
 
 /** "Yaklaşan doğum günleri": day/month pill beside each avatar, "N gün kaldı" below. */
 export function BirthdayCard({ birthdays }: Props) {
+  useTranslation();
   return (
     <GlassCard style={styles.card}>
       {birthdays.map((birthday, index) => {

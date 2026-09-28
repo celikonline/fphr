@@ -1,4 +1,5 @@
 import type { InboxTask } from "@/services/ApprovalsService";
+import i18n from "@/lib/i18n";
 import { approvalTypeKey } from "./approvalLabels";
 
 /** Görev 8: "Onaylarım"'ın "Tür" seçimi - `InboxTask.requestType` sunucu değerlerinden türetilir. */
@@ -8,13 +9,9 @@ export const FILTER_ORDER: ApprovalFilter[] = ["all", "leave", "overtime", "expe
 
 /** Spec §5 dropdown metinleri (Tümü / İzin / Fazla mesai / Masraf / Avans) - kart gövdesindeki
  * `requestTypeLabel` ile aynı etiketler (QA-103: ikisi de tek `approvalTypeKey` eşlemesinden gelir). */
-export const FILTER_LABELS: Record<ApprovalFilter, string> = {
-  all: "Tümü",
-  leave: "İzin",
-  overtime: "Fazla mesai",
-  expense: "Masraf",
-  advance: "Avans",
-};
+function filterLabel(filter: ApprovalFilter): string {
+  return i18n.t(`approvals:filters.${filter}`);
+}
 
 /** `null` for a request type with no filter mapping yet (Requisition, AssetAssignment, ...) - such
  * a task is only ever counted/shown under "all" (brief: "bilinmeyen tür yalnız 'Tümü'de sayılır").
@@ -56,7 +53,7 @@ export function approvalFilterOptions(
 ): ApprovalFilterOption[] {
   return FILTER_ORDER.map((value) => ({
     value,
-    label: `${FILTER_LABELS[value]} (${counts[value]})`,
+    label: i18n.t("approvals:filterWithCount", { label: filterLabel(value), count: counts[value] }),
   }));
 }
 
@@ -65,5 +62,5 @@ export function approvalFilterSelectedText(
   filter: ApprovalFilter,
   counts: Record<ApprovalFilter, number>
 ): string {
-  return `${FILTER_LABELS[filter]} (${counts[filter]})`;
+  return i18n.t("approvals:filterWithCount", { label: filterLabel(filter), count: counts[filter] });
 }

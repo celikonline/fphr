@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import MapView, { Circle, Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import { palette, radius, text, tones } from "@/theme/theme";
 
@@ -24,6 +25,7 @@ type Props = {
 
 /** Map with the user's position and a 60 m circle, or a glass "Konumun" card when no map can render. */
 export function MapHeader({ showMap, position, placeLabel }: Props) {
+  const { t } = useTranslation("checkin");
   const { height } = useWindowDimensions();
 
   if (showMap && position) {
@@ -33,7 +35,7 @@ export function MapHeader({ showMap, position, placeLabel }: Props) {
         style={[styles.mapFrame, { height: Math.round(height * MAP_HEIGHT_RATIO) }]}
         accessible
         accessibilityRole="image"
-        accessibilityLabel={`Harita, konumun: ${placeLabel}`}
+        accessibilityLabel={t("map.a11yMap", { place: placeLabel })}
       >
         <MapView
           style={StyleSheet.absoluteFill}
@@ -59,12 +61,16 @@ export function MapHeader({ showMap, position, placeLabel }: Props) {
 
   return (
     <GlassCard style={styles.card}>
-      <View style={styles.row} accessible accessibilityLabel={`Konumun: ${placeLabel}`}>
+      <View
+        style={styles.row}
+        accessible
+        accessibilityLabel={t("map.a11yCard", { place: placeLabel })}
+      >
         <View style={styles.iconWrap}>
           <Ionicons name="location-outline" size={22} color={palette.brandText} />
         </View>
         <View style={styles.textWrap}>
-          <Text style={styles.caption}>Konumun</Text>
+          <Text style={styles.caption}>{t("map.yourLocation")}</Text>
           <Text style={styles.place} numberOfLines={2}>
             {placeLabel}
           </Text>

@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { fontFor, palette, text } from "@/theme/theme";
 
@@ -12,13 +13,14 @@ type Props = {
 
 /** One shift row (own or team): day label, "09:00 – 18:00", "Gece" pill, optional note. */
 export function ShiftCard({ title, timeRange, isNight, note }: Props) {
+  const { t } = useTranslation("shift");
   return (
     <GlassCard style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        {isNight ? <StatusPill label="Gece" tone="info" /> : null}
+        {isNight ? <StatusPill label={t("night")} tone="info" /> : null}
       </View>
       <Text style={styles.time}>{timeRange}</Text>
       {note ? <Text style={styles.note}>{note}</Text> : null}

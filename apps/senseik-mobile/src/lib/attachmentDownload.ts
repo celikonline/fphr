@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import i18n from "@/lib/i18n";
 
 /**
  * senseik-mobile-011/U1: opens a leave request attachment via its presigned `download-url` (15
@@ -24,8 +25,10 @@ export async function openLeaveAttachment(
   await WebBrowser.openBrowserAsync(url);
 }
 
-/** Generic Turkish message for any attachment-open failure (403/404/network) - no error-specific text. */
-export const ATTACHMENT_OPEN_ERROR_MESSAGE = "Belge açılamadı. Lütfen tekrar deneyin.";
+/** Generic message (active language) for any attachment-open failure (403/404/network) - no error-specific text. */
+export function attachmentOpenErrorMessage(): string {
+  return i18n.t("errors:attachmentOpen");
+}
 
 /** Double-tap guard: while `openingDocumentId` is set, every attachment row's tap is ignored. */
 export function shouldIgnoreAttachmentTap(openingDocumentId: string | null): boolean {

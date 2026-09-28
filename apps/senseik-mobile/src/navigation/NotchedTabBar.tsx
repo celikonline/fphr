@@ -10,6 +10,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette } from "@/theme/theme";
 import { buildNotchPath, FAB_SIZE, TAB_BAR_HEIGHT } from "@/navigation/layout";
 import { RequestSheet } from "@/navigation/RequestSheet";
@@ -19,11 +20,11 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 const TABS: Record<
   keyof MainTabsParamList,
-  { label: string; icon: IoniconName; activeIcon: IoniconName; side: "left" | "right" }
+  { labelKey: string; icon: IoniconName; activeIcon: IoniconName; side: "left" | "right" }
 > = {
-  Home: { label: "Ana sayfa", icon: "grid-outline", activeIcon: "grid", side: "left" },
+  Home: { labelKey: "tabs.home", icon: "grid-outline", activeIcon: "grid", side: "left" },
   CheckIn: {
-    label: "Giriş / Çıkış",
+    labelKey: "tabs.checkIn",
     icon: "stopwatch-outline",
     activeIcon: "stopwatch",
     side: "right",
@@ -46,6 +47,7 @@ const FAB_OPEN_ROTATION_DEG = 45;
  * is not a route - it opens the "Yeni talep" sheet, and picking a type opens `NewRequest`.
  */
 export function NotchedTabBar({ state, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -96,7 +98,7 @@ export function NotchedTabBar({ state, navigation }: BottomTabBarProps) {
                 : { right: TAB_CENTRE_INSET - TAB_WIDTH / 2 },
             ]}
             accessibilityRole="tab"
-            accessibilityLabel={tab.label}
+            accessibilityLabel={t(tab.labelKey)}
             accessibilityState={{ selected: isFocused }}
           >
             <Ionicons
@@ -108,7 +110,7 @@ export function NotchedTabBar({ state, navigation }: BottomTabBarProps) {
               style={[styles.tabLabel, { color: isFocused ? palette.white : palette.textMuted }]}
               numberOfLines={1}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Text>
           </Pressable>
         );
@@ -134,6 +136,7 @@ type FabProps = { left: number; open: boolean; onPress: () => void };
 /** The brand mark as a button: white square top-right, blue square bottom-left carrying the `+`,
  * which turns into an `×` (45°) while the sheet is open. */
 function RequestFab({ left, open, onPress }: FabProps) {
+  const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const rotation = useSharedValue(0);
 
@@ -151,7 +154,7 @@ function RequestFab({ left, open, onPress }: FabProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.fab, { left }, pressed && styles.fabPressed]}
       accessibilityRole="button"
-      accessibilityLabel="Yeni talep oluştur"
+      accessibilityLabel={t("tabs.newRequest")}
       accessibilityState={{ expanded: open }}
     >
       <View style={[styles.fabSquare, styles.fabBack]} />

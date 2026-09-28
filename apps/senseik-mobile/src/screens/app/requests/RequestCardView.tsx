@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { REQUEST_OPTIONS } from "@/lib/requestOptions";
 import { accents, fontFor, palette, text } from "@/theme/theme";
@@ -14,6 +15,7 @@ type Props = {
 
 /** One Taleplerim card: type icon, title + date, amount/duration, status pill, optional withdraw. */
 export function RequestCardView({ card, isWithdrawing, onWithdraw }: Props) {
+  const { t } = useTranslation("leave");
   const option = REQUEST_OPTIONS.find((item) => item.kind === card.kind);
   const accent = accents[option?.accent ?? "gray"];
 
@@ -46,14 +48,14 @@ export function RequestCardView({ card, isWithdrawing, onWithdraw }: Props) {
           onPress={onWithdraw}
           disabled={isWithdrawing}
           accessibilityRole="button"
-          accessibilityLabel="Geri çek"
+          accessibilityLabel={t("withdraw.action")}
           // Visual height ~16px; hitSlop brings the tappable area to >=44.
           hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
         >
           {isWithdrawing ? (
             <ActivityIndicator size="small" color={palette.coral} />
           ) : (
-            <Text style={styles.withdrawText}>Geri çek</Text>
+            <Text style={styles.withdrawText}>{t("withdraw.action")}</Text>
           )}
         </TouchableOpacity>
       ) : null}

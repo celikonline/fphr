@@ -2,6 +2,7 @@ import React, { type ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { palette, radius, text } from "@/theme/theme";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 
 /** Shared stack-screen header: glass round back button + large title + optional right action. */
 export function ScreenHeader({ title, onBack, right, subtitle }: Props) {
+  const { t } = useTranslation();
   const navigation = useNavigation();
 
   return (
@@ -22,7 +24,7 @@ export function ScreenHeader({ title, onBack, right, subtitle }: Props) {
         style={styles.backButton}
         onPress={onBack ?? (() => navigation.goBack())}
         accessibilityRole="button"
-        accessibilityLabel="Geri"
+        accessibilityLabel={t("actions.back")}
         // Visual size stays 40x40 (matches the top bar's glass icon buttons); hitSlop brings the
         // tappable area to >=44.
         hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}

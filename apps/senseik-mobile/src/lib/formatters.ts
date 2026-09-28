@@ -1,12 +1,56 @@
+import i18n, { currentLanguage, type AppLanguage } from "@/lib/i18n";
+
+/**
+ * FG-001: the only place app languages map to Intl locale tags - every date/number/currency
+ * format and locale-aware casing goes through `activeLocale()` instead of a hard-coded tag.
+ */
+const LOCALE_TAGS: Record<AppLanguage, string> = {
+  tr: "tr-TR",
+  en: "en-GB",
+};
+
+/** Intl locale tag of the active app language ("tr-TR" / "en-GB"). */
+export function activeLocale(): string {
+  return LOCALE_TAGS[currentLanguage()];
+}
+
+/** Locale-aware upper-casing (Turkish dotted/dotless i) - use instead of `textTransform`. */
+export function toLocaleUpper(value: string, locale: string = activeLocale()): string {
+  return value.toLocaleUpperCase(locale);
+}
+
+/** Locale-aware lower-casing, see `toLocaleUpper`. */
+export function toLocaleLower(value: string, locale: string = activeLocale()): string {
+  return value.toLocaleLowerCase(locale);
+}
+
+/** `Date#toLocaleDateString` in the active locale. */
+export function formatDate(
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+  locale: string = activeLocale()
+): string {
+  return date.toLocaleDateString(locale, options);
+}
+
+/** `Date#toLocaleString` (date and time) in the active locale. */
+export function formatDateTime(
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+  locale: string = activeLocale()
+): string {
+  return date.toLocaleString(locale, options);
+}
+
 /**
  * Locale-aware day-count formatting: leave balances/day totals come back from the API as raw
- * decimals (e.g. accrual rounding can produce "41.333333333333336"). The mobile UI is Turkish-only
- * (see `LeaveService.ts`), so round to at most one decimal and use the Turkish decimal comma; whole
- * numbers show no decimal at all ("41,3" gün, "5" gün, not "5,0" gün).
+ * decimals (e.g. accrual rounding can produce "41.333333333333336"). Rounds to at most one decimal
+ * in the active locale ("41,3" in Turkish, "41.3" in English); whole numbers show no decimal at
+ * all ("5", not "5,0").
  */
-export function formatDays(value: number): string {
+export function formatDays(value: number, locale: string = activeLocale()): string {
   const rounded = Math.round(value * 10) / 10;
-  return rounded.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  return rounded.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
 }
 
 /**
@@ -32,22 +76,22 @@ export function dateOnlyToDate(value: string): Date {
  * "16 Kas 2026 Pzt": day, short month, year, short weekday - the format the date picker fields
  * (`DateField`) show once a date is picked, instead of a raw "yyyy-aa-gg" text box.
  */
-export function formatDateWithWeekday(value: string): string {
+export function formatDateWithWeekday(value: string, locale: string = activeLocale()): string {
   const date = dateOnlyToDate(value);
-  const datePart = date.toLocaleDateString("tr-TR", {
+  const datePart = date.toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
-  const weekdayPart = date.toLocaleDateString("tr-TR", { weekday: "short" });
+  const weekdayPart = date.toLocaleDateString(locale, { weekday: "short" });
   return `${datePart} ${weekdayPart}`;
 }
 
-/** "2 sa 30 dk" - shared by the timesheet screens and the hourly-leave duration preview. */
+/** "2 sa 30 dk" / "2 h 30 min" - shared by the timesheet screens and the hourly-leave duration preview. */
 export function formatDurationMinutes(totalMinutes: number): string {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return `${hours} sa ${minutes} dk`;
+  return i18n.t("common:duration.hoursMinutes", { hours, minutes });
 }
 
 /** Parses a `TimeOnly`-shaped "HH:mm" string; `null` when malformed (never throws on user-typed input). */
@@ -84,7 +128,11 @@ const RELATIVE_TIME_MAX_DAYS = 7;
  * Falls back to an absolute date once the gap exceeds a week. `now` is a parameter (not `new
  * Date()` internally) so this stays pure and testable without mocking the clock.
  */
-export function formatRelativeTime(iso: string, now: Date = new Date()): string {
+export function formatRelativeTime(
+  iso: string,
+  now: Date = new Date(),
+  locale: string = activeLocale()
+): string {
   const then = new Date(iso);
   if (Number.isNaN(then.getTime())) {
     return iso;
@@ -92,21 +140,21 @@ export function formatRelativeTime(iso: string, now: Date = new Date()): string 
 
   const diffMs = now.getTime() - then.getTime();
   if (diffMs < MINUTE_MS) {
-    return "az önce";
+    return i18n.t("common:relativeTime.justNow");
   }
   if (diffMs < HOUR_MS) {
-    return `${Math.floor(diffMs / MINUTE_MS)} dk önce`;
+    return i18n.t("common:relativeTime.minutesAgo", { count: Math.floor(diffMs / MINUTE_MS) });
   }
   if (diffMs < DAY_MS) {
-    return `${Math.floor(diffMs / HOUR_MS)} sa önce`;
+    return i18n.t("common:relativeTime.hoursAgo", { count: Math.floor(diffMs / HOUR_MS) });
   }
   if (diffMs < RELATIVE_TIME_MAX_DAYS * DAY_MS) {
-    return `${Math.floor(diffMs / DAY_MS)} gün önce`;
+    return i18n.t("common:relativeTime.daysAgo", { count: Math.floor(diffMs / DAY_MS) });
   }
-  return then.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return then.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
 }
 
-/** TK-031: "1.234,56 ₺" - Turkish currency formatting for expense/advance/overtime amounts (TRY only, the only payroll-reimbursed currency). */
-export function formatCurrencyTRY(amount: number): string {
-  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(amount);
+/** TK-031: "1.234,56 ₺" - TRY formatting for expense/advance/overtime amounts (TRY is the only payroll-reimbursed currency), in the active locale. */
+export function formatCurrencyTRY(amount: number, locale: string = activeLocale()): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency: "TRY" }).format(amount);
 }

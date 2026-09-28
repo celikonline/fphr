@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import type { AnnouncementFeedItem } from "@/services/HomeFeedService";
 import { fontFor, palette, radius, text, tones } from "@/theme/theme";
+import { toLocaleUpper } from "@/lib/formatters";
 import { plainTextPreview } from "./homeSections";
 
 type Props = {
@@ -18,6 +20,7 @@ const EXPANDABLE_LENGTH = 140;
  * detail screen on mobile, so "Devamını oku" expands the body in place.
  */
 export function AnnouncementCard({ announcement }: Props) {
+  const { t } = useTranslation("home");
   const [expanded, setExpanded] = useState(false);
   const body = plainTextPreview(announcement.content);
   const expandable = body.length > EXPANDABLE_LENGTH;
@@ -26,7 +29,7 @@ export function AnnouncementCard({ announcement }: Props) {
     <GlassCard style={styles.card}>
       {!announcement.isRead ? (
         <View style={styles.newPill}>
-          <Text style={styles.newText}>YENİ</Text>
+          <Text style={styles.newText}>{toLocaleUpper(t("announcements.new"))}</Text>
         </View>
       ) : null}
       <Text style={styles.title}>{announcement.title}</Text>
@@ -39,10 +42,12 @@ export function AnnouncementCard({ announcement }: Props) {
         <TouchableOpacity
           onPress={() => setExpanded((value) => !value)}
           accessibilityRole="button"
-          accessibilityLabel={expanded ? "Daha az göster" : "Devamını oku"}
+          accessibilityLabel={expanded ? t("announcements.showLess") : t("announcements.readMore")}
           hitSlop={{ top: 10, bottom: 10, left: 4, right: 4 }}
         >
-          <Text style={styles.more}>{expanded ? "Daha az göster" : "Devamını oku"}</Text>
+          <Text style={styles.more}>
+            {expanded ? t("announcements.showLess") : t("announcements.readMore")}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </GlassCard>

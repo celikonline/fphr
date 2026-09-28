@@ -1,8 +1,11 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Avatar, GlassCard, PrimaryButton, StatusPill } from "@/components/ui";
 import type { InboxTask } from "@/services/ApprovalsService";
 import { fontFor, palette, text } from "@/theme/theme";
+import i18n from "@/lib/i18n";
+import { activeLocale } from "@/lib/formatters";
 import { ApprovalAttachmentsLine } from "./ApprovalAttachmentsLine";
 import { approvalCardHeading, approvalDetailRows } from "./approvalPresentation";
 
@@ -14,18 +17,20 @@ const SUBMITTED_DATE_FORMAT: Intl.DateTimeFormatOptions = {
 };
 
 function formatSubmittedAt(submittedAt: string): string {
-  return new Intl.DateTimeFormat("tr-TR", SUBMITTED_DATE_FORMAT).format(new Date(submittedAt));
+  return new Intl.DateTimeFormat(activeLocale(), SUBMITTED_DATE_FORMAT).format(
+    new Date(submittedAt)
+  );
 }
 
 /** Avatar satırının caption'ı - gerçek ünvan/departman alanı `InboxTask`'ta yok (bkz.
  * `ApprovalsService.ts`), bunun yerine adım no + gönderim tarihi + (varsa) yedek onaylayan notu. */
 function approverCaption(task: InboxTask): string {
-  const parts = [`Adım ${task.stepNumber}`];
+  const parts = [i18n.t("approvals:card.step", { step: task.stepNumber })];
   if (task.submittedAt) {
     parts.push(formatSubmittedAt(task.submittedAt));
   }
   if (task.isFallbackRoleTask) {
-    parts.push("Yedek onaylayan");
+    parts.push(i18n.t("approvals:card.fallbackApprover"));
   }
   return parts.join(" · ");
 }
@@ -40,9 +45,10 @@ type Props = {
 
 /** Görev 8: "Onaylarım" kart görünümü (spec §5 / ZenHR "My Approvals" referansı). */
 export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onReject }: Props) {
+  const { t } = useTranslation("approvals");
   const { heading, subtitle } = approvalCardHeading(task);
   const detailRows = approvalDetailRows(task);
-  const requesterName = task.requesterName ?? "Bilinmiyor";
+  const requesterName = task.requesterName ?? t("card.unknownRequester");
 
   return (
     <GlassCard style={styles.card}>
@@ -66,7 +72,7 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
           <Text style={styles.amount}>{heading}</Text>
           {subtitle ? <Text style={styles.typeCaption}>{subtitle}</Text> : null}
         </View>
-        <StatusPill label="Bekliyor" tone="warning" />
+        <StatusPill label={t("card.pending")} tone="warning" />
       </View>
 
       {detailRows.length > 0 && (
@@ -92,7 +98,7 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
       <View style={styles.actionRow}>
         <View style={styles.actionButton}>
           <PrimaryButton
-            label="Reddet"
+            label={t("actions.reject")}
             variant="danger"
             onPress={onReject}
             disabled={isDeciding}
@@ -101,7 +107,7 @@ export function ApprovalTaskCard({ task, isDeciding, isApproving, onApprove, onR
         </View>
         <View style={styles.actionButton}>
           <PrimaryButton
-            label="Onayla"
+            label={t("actions.approve")}
             onPress={onApprove}
             disabled={isDeciding}
             loading={isApproving}

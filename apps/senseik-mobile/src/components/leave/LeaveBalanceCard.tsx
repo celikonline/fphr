@@ -1,7 +1,9 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { LeaveBalanceItem } from "@/services/LeaveService";
 import { formatDays } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 import { palette, radius, text } from "@/theme/theme";
 
 /**
@@ -24,23 +26,25 @@ export function balanceBreakdown(item: Pick<LeaveBalanceItem, "balance" | "pendi
     currentPeriodUsed,
     futureApprovedInPeriod,
   } = item.balance;
+  const part = (key: string, value: string) => i18n.t(`leave:breakdown.${key}`, { value });
   const parts: string[] = [];
-  if (carriedOverIntoPeriod !== 0) parts.push(`${formatDays(carriedOverIntoPeriod)} devreden`);
-  if (lastPeriodAccrued !== 0) parts.push(`${formatDays(lastPeriodAccrued)} hak ediş`);
-  if (extraGrants !== 0) parts.push(`${formatDays(extraGrants)} ek hak`);
+  if (carriedOverIntoPeriod !== 0)
+    parts.push(part("carriedOver", formatDays(carriedOverIntoPeriod)));
+  if (lastPeriodAccrued !== 0) parts.push(part("accrued", formatDays(lastPeriodAccrued)));
+  if (extraGrants !== 0) parts.push(part("extraGrants", formatDays(extraGrants)));
   if (adjustments !== 0) {
     const sign = adjustments > 0 ? "+" : "-";
-    parts.push(`${sign}${formatDays(Math.abs(adjustments))} düzeltme`);
+    parts.push(part("adjustments", `${sign}${formatDays(Math.abs(adjustments))}`));
   }
-  if (currentPeriodUsed !== 0) parts.push(`${formatDays(currentPeriodUsed)} kullanılan`);
-  if (futureApprovedInPeriod !== 0) parts.push(`${formatDays(futureApprovedInPeriod)} planlanan`);
+  if (currentPeriodUsed !== 0) parts.push(part("used", formatDays(currentPeriodUsed)));
+  if (futureApprovedInPeriod !== 0) parts.push(part("planned", formatDays(futureApprovedInPeriod)));
 
   const summary = parts.join(" · ");
   const pendingDays = item.pendingDays ?? 0;
   if (pendingDays <= 0) {
     return summary;
   }
-  const pendingSuffix = `(${formatDays(pendingDays)} onay bekliyor)`;
+  const pendingSuffix = part("pending", formatDays(pendingDays));
   return summary.length > 0 ? `${summary} ${pendingSuffix}` : pendingSuffix;
 }
 
@@ -50,12 +54,14 @@ type Props = {
 
 /** One balance's detail (İzinlerim's balance sheet): kullanılabilir gün + dönem bazlı döküm (B8). */
 export function LeaveBalanceCard({ item }: Props) {
+  const { t } = useTranslation("home");
   const breakdown = balanceBreakdown(item);
+  const available = item.balance.availableBalance;
   return (
     <View style={styles.card}>
       <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
       <Text style={styles.cardValue}>
-        {formatDays(item.balance.availableBalance)} gün kullanılabilir
+        {t("balances.available", { count: available, value: formatDays(available) })}
       </Text>
       {breakdown ? <Text style={styles.cardSubtext}>{breakdown}</Text> : null}
     </View>

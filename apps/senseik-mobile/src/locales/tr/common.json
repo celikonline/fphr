@@ -1,0 +1,89 @@
+{
+  "actions": {
+    "close": "Kapat",
+    "back": "Geri",
+    "retry": "Tekrar dene",
+    "apply": "Uygula",
+    "select": "Seçin",
+    "cancel": "Vazgeç",
+    "remove": "Kaldır",
+    "save": "Kaydet"
+  },
+  "a11y": {
+    "pendingBadge": "{{label}}, {{count}} bekliyor"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} sa {{minutes}} dk"
+  },
+  "relativeTime": {
+    "justNow": "az önce",
+    "minutesAgo_one": "{{count}} dk önce",
+    "minutesAgo_other": "{{count}} dk önce",
+    "hoursAgo_one": "{{count}} sa önce",
+    "hoursAgo_other": "{{count}} sa önce",
+    "daysAgo_one": "{{count}} gün önce",
+    "daysAgo_other": "{{count}} gün önce"
+  },
+  "calendar": {
+    "months": [
+      "Ocak",
+      "Şubat",
+      "Mart",
+      "Nisan",
+      "Mayıs",
+      "Haziran",
+      "Temmuz",
+      "Ağustos",
+      "Eylül",
+      "Ekim",
+      "Kasım",
+      "Aralık"
+    ],
+    "monthsShort": [
+      "Oca",
+      "Şub",
+      "Mar",
+      "Nis",
+      "May",
+      "Haz",
+      "Tem",
+      "Ağu",
+      "Eyl",
+      "Eki",
+      "Kas",
+      "Ara"
+    ],
+    "weekdaysShort": ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay"
+  },
+  "dateSheet": {
+    "title": "Tarih seç",
+    "singleDay": "Tek gün",
+    "multipleDays": "Birden çok gün",
+    "start": "Başlangıç",
+    "end": "Bitiş",
+    "date": "Tarih",
+    "applyWithDays_one": "Uygula ({{count}} gün)",
+    "applyWithDays_other": "Uygula ({{count}} gün)",
+    "placeholder": "Tarih seçin"
+  },
+  "tabs": {
+    "home": "Ana sayfa",
+    "checkIn": "Giriş / Çıkış",
+    "newRequest": "Yeni talep oluştur"
+  },
+  "status": {
+    "loading": "Yükleniyor"
+  },
+  "units": {
+    "days_one": "{{value}} gün",
+    "days_other": "{{value}} gün"
+  },
+  "alerts": {
+    "error": "Hata",
+    "saved": "Kaydedildi",
+    "missingInfo": "Eksik bilgi",
+    "sent": "Gönderildi"
+  }
+}

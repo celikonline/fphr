@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { SummaryRow } from "@/components/form/SummaryRow";
 import { formatDayMonthYear } from "@/components/form/dateRange";
 import { formatCurrencyTRY } from "@/lib/formatters";
@@ -22,9 +23,10 @@ type Props = {
 
 /** "Eklenen kalemler" list of a multi-item expense claim being drafted, with its total (TK-031). */
 export function ExpenseItemList({ items, total, onRemove, disabled = false }: Props) {
+  const { t } = useTranslation("requests");
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Eklenen kalemler</Text>
+      <Text style={styles.title}>{t("expense.itemsTitle")}</Text>
       {items.map((item) => {
         const summary = `${formatDayMonthYear(item.receiptDate)} · ${formatCurrencyTRY(item.amount)}`;
         return (
@@ -42,7 +44,9 @@ export function ExpenseItemList({ items, total, onRemove, disabled = false }: Pr
               onPress={() => onRemove(item.localId)}
               disabled={disabled}
               accessibilityRole="button"
-              accessibilityLabel={`Kalemi kaldır: ${item.categoryLabel}, ${summary}`}
+              accessibilityLabel={t("expense.removeItemA11y", {
+                item: `${item.categoryLabel}, ${summary}`,
+              })}
               accessibilityState={{ disabled }}
             >
               <Ionicons name="trash-outline" size={20} color={tones.danger.fg} />
@@ -50,7 +54,7 @@ export function ExpenseItemList({ items, total, onRemove, disabled = false }: Pr
           </View>
         );
       })}
-      <SummaryRow label="Toplam" value={formatCurrencyTRY(total)} />
+      <SummaryRow label={t("expense.total")} value={formatCurrencyTRY(total)} />
     </View>
   );
 }

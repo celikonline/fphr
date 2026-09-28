@@ -8,6 +8,7 @@ import {
   type PickedDocumentFile,
 } from "@/services/DocumentService";
 import { getApiErrorMessage } from "@/lib/apiError";
+import i18n from "@/lib/i18n";
 import type { StagedDocument } from "./LeaveDocumentsSection";
 import { buildCapturedPhotoFileName } from "./leaveRequestRules";
 
@@ -24,8 +25,8 @@ export function useLeaveDocuments(leaveTypeName: string | undefined) {
   async function handleDocumentPicked(file: PickedDocumentFile) {
     if (!isDocumentFileSizeAllowed(file.size)) {
       Alert.alert(
-        "Dosya yüklenemedi",
-        "Dosya boyutu okunamadı ya da 100 MB sınırını aşıyor. Lütfen başka bir dosya seçin."
+        i18n.t("leave:documents.sizeErrorTitle"),
+        i18n.t("leave:documents.sizeErrorMessage")
       );
       return;
     }
@@ -35,8 +36,8 @@ export function useLeaveDocuments(leaveTypeName: string | undefined) {
       setDocuments((prev) => [...prev, { id: documentId, name: file.name }]);
     } catch (uploadError) {
       Alert.alert(
-        "Hata",
-        getApiErrorMessage(uploadError, "Belge yüklenemedi. Lütfen tekrar deneyin.")
+        i18n.t("common:alerts.error"),
+        getApiErrorMessage(uploadError, i18n.t("leave:documents.uploadError"))
       );
     } finally {
       setUploadingDocument(false);
@@ -46,10 +47,7 @@ export function useLeaveDocuments(leaveTypeName: string | undefined) {
   async function captureDocumentPhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(
-        "Kamera izni gerekli",
-        "Belge fotoğrafı çekebilmek için ayarlardan kamera iznini açmanız gerekir."
-      );
+      Alert.alert(i18n.t("leave:documents.cameraTitle"), i18n.t("leave:documents.cameraMessage"));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 });

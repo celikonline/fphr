@@ -1,5 +1,6 @@
 import { formatLeaveDateOnly } from "@/components/leave/LeaveRequestListItem";
 import { formatDays, formatDurationMinutes } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 import { formatTime, leaveSummaryTypeLabel, requestTypeLabel } from "./approvalLabels";
 import type { InboxTask } from "@/services/ApprovalsService";
 
@@ -7,7 +8,8 @@ import type { InboxTask } from "@/services/ApprovalsService";
  * henüz sunucu tarafında sağlanmıyor, bkz. `ApprovalsService.ts`) `null`. */
 export function approvalAmountText(task: Pick<InboxTask, "summary">): string | null {
   if (task.summary?.leave) {
-    return `${formatDays(task.summary.leave.days)} gün`;
+    const { days } = task.summary.leave;
+    return i18n.t("common:units.days", { count: days, value: formatDays(days) });
   }
   if (task.summary?.overtime) {
     return formatDurationMinutes(task.summary.overtime.durationMinutes);
@@ -45,21 +47,30 @@ export function approvalCardHeading(
   return { heading: typeCaption, subtitle: null };
 }
 
-export type ApprovalDetailRow = { label: "Başlangıç" | "Bitiş" | "Tutar"; value: string };
+export type ApprovalDetailRow = { label: string; value: string };
 
 /** Ayraçtan sonraki Başlangıç/Bitiş/Tutar satırları - yalnızca elde veri varsa (bkz. `approvalAmountText`). */
 export function approvalDetailRows(task: Pick<InboxTask, "summary">): ApprovalDetailRow[] {
   if (task.summary?.leave) {
     return [
-      { label: "Başlangıç", value: formatLeaveDateOnly(task.summary.leave.startDate) },
-      { label: "Bitiş", value: formatLeaveDateOnly(task.summary.leave.endDate) },
+      {
+        label: i18n.t("approvals:rows.start"),
+        value: formatLeaveDateOnly(task.summary.leave.startDate),
+      },
+      {
+        label: i18n.t("approvals:rows.end"),
+        value: formatLeaveDateOnly(task.summary.leave.endDate),
+      },
     ];
   }
   if (task.summary?.overtime) {
     const { workDate, startTime, durationMinutes } = task.summary.overtime;
     return [
-      { label: "Başlangıç", value: `${formatLeaveDateOnly(workDate)} · ${formatTime(startTime)}` },
-      { label: "Tutar", value: formatDurationMinutes(durationMinutes) },
+      {
+        label: i18n.t("approvals:rows.start"),
+        value: `${formatLeaveDateOnly(workDate)} · ${formatTime(startTime)}`,
+      },
+      { label: i18n.t("approvals:rows.amount"), value: formatDurationMinutes(durationMinutes) },
     ];
   }
   return [];

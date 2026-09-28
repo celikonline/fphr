@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette } from "@/theme/theme";
 
 export type HomeMenuAction = "profile" | "notificationPreferences" | "support" | "logout";
@@ -12,11 +13,11 @@ type Props = {
   onSelect: (action: HomeMenuAction) => void;
 };
 
-const ITEMS: Array<{ action: HomeMenuAction; label: string }> = [
-  { action: "profile", label: "Profilim" },
-  { action: "notificationPreferences", label: "Bildirim tercihleri" },
-  { action: "support", label: "Destek" },
-  { action: "logout", label: "Çıkış yap" },
+const ITEMS: Array<{ action: HomeMenuAction; labelKey: string }> = [
+  { action: "profile", labelKey: "menu.profile" },
+  { action: "notificationPreferences", labelKey: "menu.notificationPreferences" },
+  { action: "support", labelKey: "menu.support" },
+  { action: "logout", labelKey: "menu.logout" },
 ];
 
 /** Just below the top bar's 40px icon buttons (header row: 8px top padding + 40 + 4). */
@@ -27,6 +28,7 @@ const MENU_OFFSET_FROM_SAFE_TOP = 52;
  * or the Android back button closes it; picking an item closes it and reports the choice.
  */
 export function HomeMenu({ visible, onClose, onSelect }: Props) {
+  const { t } = useTranslation("home");
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
 
@@ -42,7 +44,7 @@ export function HomeMenu({ visible, onClose, onSelect }: Props) {
         style={StyleSheet.absoluteFill}
         onPress={onClose}
         accessibilityRole="button"
-        accessibilityLabel="Menüyü kapat"
+        accessibilityLabel={t("menu.close")}
       />
       <View
         style={[styles.menu, { top: insets.top + MENU_OFFSET_FROM_SAFE_TOP }]}
@@ -57,10 +59,10 @@ export function HomeMenu({ visible, onClose, onSelect }: Props) {
               onSelect(item.action);
             }}
             accessibilityRole="menuitem"
-            accessibilityLabel={item.label}
+            accessibilityLabel={t(item.labelKey)}
           >
             <Text style={[styles.label, item.action === "logout" && styles.danger]}>
-              {item.label}
+              {t(item.labelKey)}
             </Text>
           </TouchableOpacity>
         ))}

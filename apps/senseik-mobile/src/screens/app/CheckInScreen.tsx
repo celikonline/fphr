@@ -3,12 +3,15 @@ import { ActivityIndicator, Linking, Platform, StyleSheet, Text, View } from "re
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import Constants from "expo-constants";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { ErrorBanner, PrimaryButton, Screen } from "@/components/ui";
 import { getApiErrorMessage } from "@/lib/apiError";
 import {
-  PUNCH_LABELS,
+  PUNCH_ACTIONS,
   availableActions,
   nextPunchAction,
+  punchLabel,
   punchTimes,
   qrButtonLabel,
   shouldRenderMap,
@@ -25,7 +28,6 @@ import { MapHeader, type Coordinates } from "./checkin/MapHeader";
 import { PunchTiles } from "./checkin/PunchTiles";
 import { useDeviceLocation, type DeviceLocation } from "./checkin/useDeviceLocation";
 
-const PUNCH_ERROR = "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin.";
 const SHOW_MAP = shouldRenderMap(
   Constants.expoConfig?.extra as { hasMapsKey?: boolean } | undefined,
   Platform.OS
@@ -36,10 +38,10 @@ function placeLabel(location: DeviceLocation, lastResult: SelfCheckInResult | nu
   if (location.coords) {
     return `${location.coords.latitude.toFixed(5)}, ${location.coords.longitude.toFixed(5)}`;
   }
-  if (location.status === "denied") return "Konum izni verilmedi";
-  if (location.status === "servicesOff") return "Cihazınızda konum kapalı";
-  if (location.status === "unavailable") return "Konum alınamadı";
-  return "Konum alınıyor…";
+  if (location.status === "denied") return i18n.t("checkin:place.denied");
+  if (location.status === "servicesOff") return i18n.t("checkin:place.servicesOff");
+  if (location.status === "unavailable") return i18n.t("checkin:place.unavailable");
+  return i18n.t("checkin:place.locating");
 }
 
 /** Android: jumps straight to the location toggle; iOS has no such deep link, falls back to app settings. */
@@ -56,9 +58,11 @@ async function openLocationSettings(): Promise<void> {
 }
 
 function successMessage(result: SelfCheckInResult): string {
-  const tile = PUNCH_LABELS[result.direction]?.tile ?? "Kayıt";
+  const tile = PUNCH_ACTIONS.includes(result.direction)
+    ? punchLabel(result.direction).tile
+    : i18n.t("checkin:success.fallbackTile");
   const place = result.locationName ? ` · ${result.locationName}` : "";
-  return `${tile} kaydedildi: ${result.time.slice(0, 5)}${place}`;
+  return i18n.t("checkin:success.saved", { tile, time: result.time.slice(0, 5), place });
 }
 
 /**
@@ -66,6 +70,7 @@ function successMessage(result: SelfCheckInResult): string {
  * button for the next punch, all by GPS. QR scanning stays as the secondary way in.
  */
 export default function CheckInScreen() {
+  const { t } = useTranslation("checkin");
   const isFocused = useIsFocused();
   const location = useDeviceLocation(isFocused);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -89,7 +94,7 @@ export default function CheckInScreen() {
       setStatus(await attendanceService.getMyCheckInStatus());
       setStatusError(null);
     } catch (err) {
-      setStatusError(getApiErrorMessage(err, "Giriş/çıkış durumu yüklenemedi."));
+      setStatusError(getApiErrorMessage(err, i18n.t("checkin:errors.statusLoad")));
     }
   }, []);
 
@@ -121,7 +126,7 @@ export default function CheckInScreen() {
       }));
       await loadStatus();
     } catch (err) {
-      setError(getApiErrorMessage(err, PUNCH_ERROR));
+      setError(getApiErrorMessage(err, i18n.t("checkin:errors.punch")));
     } finally {
       inFlightRef.current = false;
       setBusy(null);
@@ -137,7 +142,7 @@ export default function CheckInScreen() {
     if (!cameraPermission?.granted) {
       const response = await requestCameraPermission();
       if (!response.granted) {
-        setError("Kamera izni verilmedi. QR kodu okutmak için ayarlardan kamera iznini açın.");
+        setError(t("errors.cameraDenied"));
         return;
       }
     }
@@ -174,7 +179,11 @@ export default function CheckInScreen() {
           onBarcodeScanned={(event) => onScanned(event, next)}
         />
         <View style={styles.actions}>
-          <PrimaryButton label="Vazgeç" variant="secondary" onPress={() => setScanning(false)} />
+          <PrimaryButton
+            label={t("common:actions.cancel")}
+            variant="secondary"
+            onPress={() => setScanning(false)}
+          />
         </View>
       </Screen>
     );
@@ -194,8 +203,8 @@ export default function CheckInScreen() {
       {location.status === "denied" ? (
         <View style={styles.banner}>
           <ErrorBanner
-            message="Konum izni verilmedi. Konumla giriş/çıkış için ayarlardan konum iznini açın."
-            actionLabel="Ayarları aç"
+            message={t("banners.denied")}
+            actionLabel={t("banners.openSettings")}
             onRetry={() => void Linking.openSettings()}
           />
         </View>
@@ -203,15 +212,15 @@ export default function CheckInScreen() {
       {location.status === "servicesOff" ? (
         <View style={styles.banner}>
           <ErrorBanner
-            message="Cihazınızda konum kapalı. Konumla giriş/çıkış için cihaz ayarlarından konumu açın."
-            actionLabel="Ayarları aç"
+            message={t("banners.servicesOff")}
+            actionLabel={t("banners.openSettings")}
             onRetry={() => void openLocationSettings()}
           />
         </View>
       ) : null}
       {location.status === "unavailable" && !coords ? (
         <View style={styles.banner}>
-          <ErrorBanner message="Konum alınamadı." onRetry={location.retry} />
+          <ErrorBanner message={t("banners.unavailable")} onRetry={location.retry} />
         </View>
       ) : null}
 
@@ -237,7 +246,7 @@ export default function CheckInScreen() {
             onPress={(action) => coords && punch(action, coords)}
           />
           {breakMinutes > 0 ? (
-            <Text style={styles.breakTotal}>Bugünkü mola: {breakMinutes} dk</Text>
+            <Text style={styles.breakTotal}>{t("breakTotal", { minutes: breakMinutes })}</Text>
           ) : null}
           {error ? (
             <View style={styles.banner}>
@@ -250,10 +259,10 @@ export default function CheckInScreen() {
           ) : null}
           <View style={styles.actions}>
             {next === "done" ? (
-              <PrimaryButton label="Bugün tamamlandı" disabled onPress={() => undefined} />
+              <PrimaryButton label={t("doneToday")} disabled onPress={() => undefined} />
             ) : (
               <PrimaryButton
-                label={PUNCH_LABELS[next].action}
+                label={punchLabel(next).action}
                 onPress={() => coords && punch(next, coords)}
                 loading={busy === next}
                 disabled={busy !== null || !coords}
@@ -261,7 +270,7 @@ export default function CheckInScreen() {
             )}
             {next === "out" ? (
               <PrimaryButton
-                label={PUNCH_LABELS.breakStart.action}
+                label={punchLabel("breakStart").action}
                 variant="secondary"
                 icon="cafe-outline"
                 onPress={() => coords && punch("breakStart", coords)}

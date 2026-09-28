@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
-import { accuracyLabel, elapsedSinceCheckIn, formatClockDate, formatGmtOffset } from "@/lib/punch";
+import {
+  accuracyLabel,
+  accuracyLevel,
+  elapsedSinceCheckIn,
+  formatClockDate,
+  formatGmtOffset,
+} from "@/lib/punch";
 import { palette, text } from "@/theme/theme";
 
 const TICK_MS = 1000;
@@ -27,6 +34,7 @@ function formatClock(date: Date): string {
  * tick lives here so only this card re-renders every second, not the map above it.
  */
 export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
+  const { t } = useTranslation("checkin");
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -37,6 +45,7 @@ export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
   }, [active]);
 
   const accuracy = accuracyLabel(accuracyMeters);
+  const level = accuracyLevel(accuracyMeters);
   const elapsed = workingSince ? elapsedSinceCheckIn(workingSince, now) : null;
   const clock = formatClock(now);
 
@@ -46,7 +55,7 @@ export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
         <Text
           style={styles.clock}
           accessibilityRole="text"
-          accessibilityLabel={`Saat ${clock.slice(0, 5)}`}
+          accessibilityLabel={t("clock.a11y", { time: clock.slice(0, 5) })}
         >
           {clock}
         </Text>
@@ -55,15 +64,19 @@ export function ClockCard({ active, workingSince, accuracyMeters }: Props) {
         </Text>
         <View style={styles.accuracyRow}>
           <Text style={styles.accuracyText}>
-            Konum doğruluğu:{" "}
-            {accuracyMeters === null ? "bilinmiyor" : `${Math.round(accuracyMeters)} m`}
+            {t("clock.accuracy", {
+              value:
+                accuracyMeters === null
+                  ? t("clock.accuracyUnknown")
+                  : t("clock.meters", { value: Math.round(accuracyMeters) }),
+            })}
           </Text>
           {accuracy ? (
-            <StatusPill label={accuracy} tone={accuracy === "Doğru" ? "success" : "warning"} />
+            <StatusPill label={accuracy} tone={level === "good" ? "success" : "warning"} />
           ) : null}
         </View>
       </GlassCard>
-      {elapsed ? <Text style={styles.elapsed}>Girişten beri {elapsed}</Text> : null}
+      {elapsed ? <Text style={styles.elapsed}>{t("clock.sinceCheckIn", { elapsed })}</Text> : null}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SummaryRow } from "@/components/form/SummaryRow";
 import { TimeField } from "@/components/form/TimeField";
 import { requestFormStyles as formStyles } from "@/components/requests/requestFormStyles";
@@ -21,25 +22,31 @@ export function HourlyTimeFields({
   onEndTimeChange,
   duration,
 }: Props) {
+  const { t } = useTranslation("leave");
   return (
     <>
       <View style={styles.timeRow}>
         <View style={styles.timeField}>
           <TimeField
-            label="Başlangıç saati"
+            label={t("form.hourly.startTime")}
             required
             value={startTime}
             onChange={onStartTimeChange}
           />
         </View>
         <View style={styles.timeField}>
-          <TimeField label="Bitiş saati" required value={endTime} onChange={onEndTimeChange} />
+          <TimeField
+            label={t("form.hourly.endTime")}
+            required
+            value={endTime}
+            onChange={onEndTimeChange}
+          />
         </View>
       </View>
       {duration ? (
-        <SummaryRow label="Saat" value={duration} />
+        <SummaryRow label={t("form.hourly.duration")} value={duration} />
       ) : (
-        <Text style={formStyles.warning}>Bitiş saati başlangıçtan sonra olmalı</Text>
+        <Text style={formStyles.warning}>{t("form.hourly.endAfterStart")}</Text>
       )}
     </>
   );

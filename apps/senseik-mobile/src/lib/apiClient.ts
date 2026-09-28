@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { SecureStorage } from "./storage";
+import { currentLanguage } from "./i18n";
 
 /** Header names mirror SenseHeaderNames on the API (Sense.Shared.Contracts.Security). */
 const SenseHeaders = {
@@ -114,10 +115,6 @@ class ApiClient {
       timeout: 30000,
       headers: {
         "Content-Type": "application/json",
-        // The app has no i18n and is Turkish-only (see `LeaveService.ts`); endpoints that localize
-        // server-side (e.g. `/leave/me/requests`'s `leaveTypeName`, ProblemDetails error `detail`)
-        // need this to return Turkish instead of falling back to the server's default culture.
-        "Accept-Language": "tr",
       },
     });
     // Bare instance for the refresh call itself: it must not carry the expired
@@ -143,6 +140,10 @@ class ApiClient {
         config.headers.set(SenseHeaders.ClientApp, "mobile");
         config.headers.set(SenseHeaders.ClientPlatform, Platform.OS);
         config.headers.set(SenseHeaders.ClientVersion, clientVersion);
+        // FG-001: endpoints that localize server-side (e.g. `/leave/me/requests`'s `leaveTypeName`,
+        // ProblemDetails error `detail`) answer in the app's active language, read per request so a
+        // language switch applies without restarting.
+        config.headers.set("Accept-Language", currentLanguage());
 
         const token = await SecureStorage.getAccessToken();
         if (token) {

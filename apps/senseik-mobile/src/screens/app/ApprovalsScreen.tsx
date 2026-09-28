@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Keyboard, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { OptionSheet } from "@/components/form/OptionSheet";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
@@ -39,6 +41,7 @@ export function buildRejectDecision(reason: string): DecideTaskInput {
 }
 
 export default function ApprovalsScreen() {
+  const { t } = useTranslation("approvals");
   const [tasks, setTasks] = useState<InboxTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,7 +57,7 @@ export default function ApprovalsScreen() {
       const result = await approvalsService.getInbox();
       setTasks(result);
     } catch {
-      setError("Onay kutusu yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("approvals:loadError"));
     }
   }, []);
 
@@ -108,7 +111,7 @@ export default function ApprovalsScreen() {
       await approvalsService.decideTask(taskId, { outcome: "approved" });
       await loadAll();
     } catch {
-      Alert.alert("Hata", "Talep onaylanamadı. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("approve.error"));
     } finally {
       setDecidingTaskId(null);
     }
@@ -116,14 +119,10 @@ export default function ApprovalsScreen() {
 
   // B6: irreversible decision - confirm before deciding instead of acting on the first tap.
   function confirmApprove(taskId: string) {
-    Alert.alert(
-      "Talebi onayla",
-      "Bu talebi onaylamak istediğinize emin misiniz? Bu işlem geri alınamaz.",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "Onayla", onPress: () => void approve(taskId) },
-      ]
-    );
+    Alert.alert(t("approve.confirmTitle"), t("approve.confirmMessage"), [
+      { text: t("common:actions.cancel"), style: "cancel" },
+      { text: t("actions.approve"), onPress: () => void approve(taskId) },
+    ]);
   }
 
   // B19: closing via the hardware back button/scrim and closing via "Vazgeç" both go through the
@@ -148,11 +147,11 @@ export default function ApprovalsScreen() {
       await loadAll();
     } catch {
       dispatchRejectFlow({ type: "SUBMIT_ERROR" });
-      Alert.alert("Hata", "Talep reddedilemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("reject.error"));
     }
   }
 
-  const header = <ScreenHeader title="Onaylarım" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -181,7 +180,7 @@ export default function ApprovalsScreen() {
         />
 
         {visibleTasks.length === 0 ? (
-          <EmptyState icon="checkmark-done-outline" title="Onay bekleyen talep yok" />
+          <EmptyState icon="checkmark-done-outline" title={t("empty")} />
         ) : (
           visibleTasks.map((task) => {
             const isDeciding =
@@ -203,7 +202,7 @@ export default function ApprovalsScreen() {
 
       <OptionSheet
         visible={filterSheetVisible}
-        title="Tür"
+        title={t("typeLabel")}
         options={approvalFilterOptions(counts)}
         selected={filter}
         onSelect={setFilter}

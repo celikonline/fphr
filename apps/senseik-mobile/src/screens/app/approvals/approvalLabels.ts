@@ -1,4 +1,5 @@
 import { humanizeLeaveTypeCode, leaveTypeDisplayName } from "@/lib/leaveTypeNames";
+import i18n from "@/lib/i18n";
 import type { InboxTaskLeaveSummary } from "@/services/ApprovalsService";
 
 /** The four request types the "Tür" filter (spec §5) offers - also the ones the card's amount/
@@ -29,25 +30,19 @@ export function approvalTypeKey(requestType: string): ApprovalTypeKey | null {
   return TYPE_KEY_ALIASES[requestType.toLowerCase()] ?? null;
 }
 
-const TYPE_KEY_LABELS: Record<ApprovalTypeKey, string> = {
-  leave: "İzin",
-  overtime: "Fazla mesai",
-  expense: "Masraf",
-  advance: "Avans",
-};
-
 /** `RequestType` values with a filter/summary key above use the same label there (spec §5's "Masraf"/
  *  "Avans"/...); a couple of other known types (unit-assignable but not filterable yet) keep their own
- *  label; anything else falls back to "Talep" - never the raw server key (QA-103). */
+ *  label; anything else falls back to "Talep" - never the raw server key (QA-103). Values are i18n
+ *  keys (`approvals` namespace). */
 const OTHER_REQUEST_TYPE_LABELS: Record<string, string> = {
-  Requisition: "Kadro talebi",
-  AssetAssignment: "Zimmet",
+  Requisition: "approvals:types.requisition",
+  AssetAssignment: "approvals:types.assetAssignment",
 };
 
 export function requestTypeLabel(requestType: string): string {
   const key = approvalTypeKey(requestType);
-  if (key) return TYPE_KEY_LABELS[key];
-  return OTHER_REQUEST_TYPE_LABELS[requestType] ?? "Talep";
+  if (key) return i18n.t(`approvals:filters.${key}`);
+  return i18n.t(OTHER_REQUEST_TYPE_LABELS[requestType] ?? "approvals:types.fallback");
 }
 
 /** `TimeOnly` ("HH:mm:ss") → "HH:mm" for display. */

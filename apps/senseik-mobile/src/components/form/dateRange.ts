@@ -3,41 +3,28 @@
  * `DateOnly` strings ("yyyy-MM-dd") built from year/month/day numbers - never through
  * `Date#toISOString()`, which converts to UTC and shifts the day in UTC+3 before 03:00.
  */
+import i18n from "@/lib/i18n";
 
 export type DateRangeMode = "single" | "range";
 
-export const TR_MONTHS = [
-  "Ocak",
-  "Şubat",
-  "Mart",
-  "Nisan",
-  "Mayıs",
-  "Haziran",
-  "Temmuz",
-  "Ağustos",
-  "Eylül",
-  "Ekim",
-  "Kasım",
-  "Aralık",
-] as const;
+function calendarNames(key: "months" | "monthsShort" | "weekdaysShort"): string[] {
+  return i18n.t(`common:calendar.${key}`, { returnObjects: true }) as string[];
+}
 
-export const TR_MONTHS_SHORT = [
-  "Oca",
-  "Şub",
-  "Mar",
-  "Nis",
-  "May",
-  "Haz",
-  "Tem",
-  "Ağu",
-  "Eyl",
-  "Eki",
-  "Kas",
-  "Ara",
-] as const;
+/** "Eylül" / "September" (active language), `month0` 0-11. */
+export function monthName(month0: number): string {
+  return calendarNames("months")[month0];
+}
 
-/** Monday-first, matching `monthMatrix`'s columns. */
-export const TR_WEEKDAYS_SHORT = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"] as const;
+/** "Eyl" / "Sep" (active language), `month0` 0-11. */
+export function monthNameShort(month0: number): string {
+  return calendarNames("monthsShort")[month0];
+}
+
+/** "Pzt".."Paz" / "Mon".."Sun" - Monday-first, matching `monthMatrix`'s columns. */
+export function weekdaysShort(): string[] {
+  return calendarNames("weekdaysShort");
+}
 
 const DAYS_IN_WEEK = 7;
 const GRID_ROWS = 6;
@@ -114,13 +101,13 @@ export function shiftMonth(
 
 /** "Eylül 2026" */
 export function formatMonthYear(year: number, month0: number): string {
-  return `${TR_MONTHS[month0]} ${year}`;
+  return `${monthName(month0)} ${year}`;
 }
 
 /** "29 Eyl" */
 export function formatDayMonth(value: string): string {
   const { month0, day } = parseDateOnly(value);
-  return `${day} ${TR_MONTHS_SHORT[month0]}`;
+  return `${day} ${monthNameShort(month0)}`;
 }
 
 /** "29 Eyl 2026" */

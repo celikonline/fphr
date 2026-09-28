@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { ErrorBanner, Screen, ScreenHeader, SectionHeader } from "@/components/ui";
 import {
   shiftService,
@@ -27,7 +29,7 @@ function formatTimeRange(start?: string | null, end?: string | null): string {
 
 /** Short, stable label for a colleague's shift row - the API does not return employee names on this DTO (SORU). */
 function shortEmployeeLabel(employeeId: string): string {
-  return `Çalışan #${employeeId.slice(0, 8)}`;
+  return i18n.t("shift:employeeLabel", { id: employeeId.slice(0, 8) });
 }
 
 /**
@@ -35,6 +37,7 @@ function shortEmployeeLabel(employeeId: string): string {
  * shifts as glass cards, and the "Müsait değilim" form with the active availability records.
  */
 export default function ShiftScreen() {
+  const { t } = useTranslation("shift");
   const [weekDate, setWeekDate] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [myShifts, setMyShifts] = useState<ShiftAssignment[]>([]);
@@ -62,7 +65,7 @@ export default function ShiftScreen() {
       setMyShifts([...mineResult].sort((a, b) => a.date.localeCompare(b.date)));
       setMyAvailability(availabilityResult.filter((entry) => entry.status === "active"));
     } catch {
-      setError("Vardiya bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("shift:loadError"));
     }
 
     // Ayrı try/catch: "attendance.shift.view" yetkisi olmayan bir kullanıcı için 403 gelir - bu,
@@ -112,7 +115,7 @@ export default function ShiftScreen() {
 
   async function submitAvailability() {
     if (!availabilityDate) {
-      Alert.alert("Eksik bilgi", "Lütfen bir tarih girin.");
+      Alert.alert(t("common:alerts.missingInfo"), t("availability.dateRequired"));
       return;
     }
 
@@ -125,9 +128,9 @@ export default function ShiftScreen() {
       });
       setAvailabilityNote("");
       await loadAll();
-      Alert.alert("Kaydedildi", "Müsaitlik durumunuz kaydedildi.");
+      Alert.alert(t("common:alerts.saved"), t("availability.saved"));
     } catch {
-      Alert.alert("Hata", "Müsaitlik durumu kaydedilemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("availability.saveError"));
     } finally {
       setSubmitting(false);
     }
@@ -138,23 +141,23 @@ export default function ShiftScreen() {
       await shiftService.cancelMyAvailability(id);
       await loadAll();
     } catch {
-      Alert.alert("Hata", "Kayıt iptal edilemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("availability.cancelError"));
     }
   }
 
   // B6: irreversible action - confirm before cancelling instead of acting on the first tap.
   function confirmCancelAvailability(id: string) {
-    Alert.alert(
-      "Kaydı iptal et",
-      "Bu müsaitlik kaydını iptal etmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "İptal et", style: "destructive", onPress: () => void cancelAvailability(id) },
-      ]
-    );
+    Alert.alert(t("availability.cancelConfirmTitle"), t("availability.cancelConfirmMessage"), [
+      { text: t("common:actions.cancel"), style: "cancel" },
+      {
+        text: t("availability.cancel"),
+        style: "destructive",
+        onPress: () => void cancelAvailability(id),
+      },
+    ]);
   }
 
-  const header = <ScreenHeader title="Vardiyam" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -181,8 +184,8 @@ export default function ShiftScreen() {
           label={formatWeekLabel(days)}
           onPrev={goToPreviousWeek}
           onNext={goToNextWeek}
-          prevLabel="Önceki hafta"
-          nextLabel="Sonraki hafta"
+          prevLabel={t("previousWeek")}
+          nextLabel={t("nextWeek")}
         />
       </View>
       <WeekStrip
@@ -193,9 +196,7 @@ export default function ShiftScreen() {
         onSelect={(day) => setSelectedDay((current) => (current === day ? null : day))}
       />
 
-      <SectionHeader
-        title={selectedDay ? formatDayLabel(selectedDay) : "Bu haftaki vardiyalarım"}
-      />
+      <SectionHeader title={selectedDay ? formatDayLabel(selectedDay) : t("sections.myWeek")} />
       {visibleMine.length === 0 ? (
         <Text style={styles.emptyText}>{emptyTexts.mine}</Text>
       ) : (
@@ -212,7 +213,7 @@ export default function ShiftScreen() {
 
       {teamShiftsVisible ? (
         <>
-          <SectionHeader title="Ekip vardiyaları" />
+          <SectionHeader title={t("sections.team")} />
           {visibleTeam.length === 0 ? (
             <Text style={styles.emptyText}>{emptyTexts.team}</Text>
           ) : (
@@ -228,7 +229,7 @@ export default function ShiftScreen() {
         </>
       ) : null}
 
-      <SectionHeader title="Müsait değilim" />
+      <SectionHeader title={t("sections.unavailable")} />
       <AvailabilityForm
         date={availabilityDate}
         onDateChange={setAvailabilityDate}
@@ -242,13 +243,13 @@ export default function ShiftScreen() {
 
       {myAvailability.length > 0 ? (
         <>
-          <SectionHeader title="Müsaitlik kayıtlarım" />
+          <SectionHeader title={t("sections.myAvailability")} />
           {myAvailability.map((entry) => (
             <AvailabilityEntryCard
               key={entry.id}
               entry={entry}
               timeRange={
-                entry.start && entry.end ? formatTimeRange(entry.start, entry.end) : "Tüm gün"
+                entry.start && entry.end ? formatTimeRange(entry.start, entry.end) : t("allDay")
               }
               onCancel={() => confirmCancelAvailability(entry.id)}
             />

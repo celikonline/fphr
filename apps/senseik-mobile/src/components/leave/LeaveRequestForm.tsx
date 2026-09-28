@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   leaveService,
   type LeaveHalfDayPeriod,
@@ -57,6 +58,7 @@ type Props = {
  * preview (B-mobil-006), substitute (B-mobil-005), and document upload (B-mobil-004).
  */
 export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
+  const { t } = useTranslation("leave");
   const authUser = useAuthStore((state) => state.user);
 
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(
@@ -83,7 +85,7 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const selectedType = requestableTypes.find((t) => t.id === selectedTypeId) ?? null;
+  const selectedType = requestableTypes.find((type) => type.id === selectedTypeId) ?? null;
   // B-mobil-006: re-previews whenever type/date/time/half-day changes (debounced, stale-guarded).
   const { preview, previewLoading, previewError } = useLeavePreview(
     selectedType,
@@ -152,19 +154,16 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
       clearDocuments();
       setSubstitute(null);
       await onSubmitted();
-      Alert.alert("Gönderildi", "İzin talebiniz onaya gönderildi.");
+      Alert.alert(t("common:alerts.sent"), t("form.submitted"));
     } catch (submitError) {
-      Alert.alert(
-        "Hata",
-        getApiErrorMessage(submitError, "İzin talebi gönderilemedi. Lütfen tekrar deneyin.")
-      );
+      Alert.alert(t("common:alerts.error"), getApiErrorMessage(submitError, t("form.submitError")));
     } finally {
       setSubmitting(false);
     }
   }
 
   if (requestableTypes.length === 0) {
-    return <Text style={formStyles.hint}>Talep edebileceğiniz bir izin türü yok.</Text>;
+    return <Text style={formStyles.hint}>{t("form.noTypes")}</Text>;
   }
 
   const submitDisabled = uploadingDocument || missingRequiredDocument || previewBlocksSubmit;
@@ -181,17 +180,17 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
   return (
     <View style={formStyles.form}>
       <SelectField
-        label="İzin türü"
+        label={t("form.type")}
         required
         value={selectedType?.name}
-        placeholder="İzin türü seçin"
+        placeholder={t("form.typePlaceholder")}
         onPress={() => setTypeSheetVisible(true)}
       />
       <SelectField
-        label="Tarih"
+        label={t("form.date")}
         required
         value={dateLabel}
-        placeholder="Tarih seçin"
+        placeholder={t("common:dateSheet.placeholder")}
         onPress={() => setDateSheetVisible(true)}
       />
 
@@ -217,11 +216,13 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
       />
 
       <TextField
-        label={selectedType?.requiresDescription ? "Açıklama" : "Açıklama (opsiyonel)"}
+        label={
+          selectedType?.requiresDescription ? t("form.description") : t("form.descriptionOptional")
+        }
         required={!!selectedType?.requiresDescription}
         value={description}
         onChangeText={setDescription}
-        placeholder="Talebinizle ilgili not ekleyin"
+        placeholder={t("form.descriptionPlaceholder")}
         multiline
         numberOfLines={3}
         style={formStyles.textArea}
@@ -229,10 +230,10 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
 
       {showSubstitute ? (
         <SelectField
-          label="Vekil"
+          label={t("form.substitute")}
           required
           value={substitute?.displayName}
-          placeholder="Vekil seç"
+          placeholder={t("form.substitutePlaceholder")}
           onPress={() => setSubstitutePickerVisible(true)}
         />
       ) : null}
@@ -250,7 +251,7 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
 
       <View style={formStyles.submit}>
         <PrimaryButton
-          label="Talebi gönder"
+          label={t("form.submit")}
           onPress={() => void submitRequest()}
           loading={submitting}
           disabled={submitDisabled}
@@ -259,7 +260,7 @@ export function LeaveRequestForm({ requestableTypes, onSubmitted }: Props) {
 
       <OptionSheet
         visible={typeSheetVisible}
-        title="İzin türü"
+        title={t("form.type")}
         options={typeOptions}
         selected={selectedTypeId}
         onSelect={selectType}

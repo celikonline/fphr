@@ -1,0 +1,126 @@
+{
+  "title": "My leave",
+  "loadError": "Leave details could not be loaded. Please try again.",
+  "balancesEmpty": "No balance records found.",
+  "newRequest": "New leave request",
+  "myRequests": "My requests",
+  "requestsEmpty": "You have no leave requests yet.",
+  "balanceDetail": "Balance details",
+  "types": {
+    "annual": "Annual leave",
+    "excuse": "Excuse leave",
+    "sick": "Sick leave",
+    "job_search": "Job search leave",
+    "marriage": "Marriage leave",
+    "bereavement": "Bereavement leave",
+    "paternity": "Paternity leave",
+    "maternity": "Maternity leave",
+    "postnatal_unpaid": "Unpaid postnatal leave",
+    "paid_military_service": "Paid military service leave",
+    "unpaid": "Unpaid leave",
+    "foster_care": "Foster care leave",
+    "breastfeeding": "Breastfeeding leave",
+    "disabled_child": "Leave for a child with a disability/chronic illness",
+    "template": {
+      "remote_work": "Remote work",
+      "birthday": "Birthday leave"
+    }
+  },
+  "status": {
+    "pending": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn",
+    "cancelled": "Cancelled"
+  },
+  "breakdown": {
+    "carriedOver": "{{value}} carried over",
+    "accrued": "{{value}} accrued",
+    "extraGrants": "{{value}} extra",
+    "adjustments": "{{value}} adjustment",
+    "used": "{{value}} used",
+    "planned": "{{value}} planned",
+    "pending": "({{value}} pending approval)"
+  },
+  "preview": {
+    "duration": "Duration",
+    "deducted_one": "{{value}} day will be deducted from your leave",
+    "deducted_other": "{{value}} days will be deducted from your leave",
+    "nothingDeducted": "No days would be deducted for these dates",
+    "loadError": "Preview could not be loaded."
+  },
+  "blockers": {
+    "titles": {
+      "missingInfo": "Missing information",
+      "invalidDate": "Invalid date",
+      "invalidTime": "Invalid time",
+      "noDeduction": "No days deducted"
+    },
+    "selectType": "Please select a leave type.",
+    "enterDate": "Please enter a date.",
+    "enterRange": "Please enter the start and end dates.",
+    "endBeforeStart": "The end date cannot be before the start date.",
+    "endTimeAfterStart": "The end time must be after the start time.",
+    "descriptionRequired": "A description is required for this leave type.",
+    "substituteRequired": "You must select a substitute for this leave type.",
+    "documentRequired": "You must add at least one document for this leave type.",
+    "noDeduction": "No days would be deducted from your leave for these dates."
+  },
+  "form": {
+    "submitted": "Your leave request has been sent for approval.",
+    "submitError": "The leave request could not be sent. Please try again.",
+    "noTypes": "There are no leave types you can request.",
+    "type": "Leave type",
+    "typePlaceholder": "Select a leave type",
+    "date": "Date",
+    "description": "Description",
+    "descriptionOptional": "Description (optional)",
+    "descriptionPlaceholder": "Add a note about your request",
+    "substitute": "Substitute",
+    "substitutePlaceholder": "Select a substitute",
+    "submit": "Send request",
+    "halfDay": {
+      "label": "Half of the day",
+      "morning": "Morning",
+      "afternoon": "Afternoon"
+    },
+    "hourly": {
+      "startTime": "Start time",
+      "endTime": "End time",
+      "duration": "Hours",
+      "endAfterStart": "The end time must be after the start time"
+    }
+  },
+  "documents": {
+    "add": "Add a document",
+    "takePhoto": "Take a photo",
+    "pickFile": "Choose a file",
+    "uploading": "Uploading document…",
+    "removeA11y": "Remove {{name}}",
+    "fileNameFallback": "Document",
+    "sizeErrorTitle": "File could not be uploaded",
+    "sizeErrorMessage": "The file size could not be read or exceeds the 100 MB limit. Please choose another file.",
+    "uploadError": "The document could not be uploaded. Please try again.",
+    "cameraTitle": "Camera permission required",
+    "cameraMessage": "Enable camera access in settings to take a photo of the document."
+  },
+  "attachments": {
+    "show": "Attachments",
+    "hide": "Hide attachments",
+    "loadError": "Attachments could not be loaded.",
+    "empty": "No attachments."
+  },
+  "withdraw": {
+    "action": "Withdraw",
+    "error": "The leave request could not be withdrawn. Please try again.",
+    "confirmTitle": "Withdraw leave request",
+    "confirmMessage": "Are you sure you want to withdraw this leave request? This cannot be undone."
+  },
+  "substitute": {
+    "title": "Select a substitute",
+    "loadError": "The employee list could not be loaded. Please try again.",
+    "searchPlaceholder": "Search by name, title or department",
+    "searchA11y": "Search employees",
+    "empty": "No records found."
+  }
+}

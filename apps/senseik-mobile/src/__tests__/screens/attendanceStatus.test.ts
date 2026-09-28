@@ -1,5 +1,5 @@
 import {
-  ATTENDANCE_STATUS_PILLS,
+  attendanceStatusPill,
   anomalyLabels,
   attendanceDayStatus,
   formatPunchLine,
@@ -22,7 +22,7 @@ describe("attendanceDayStatus", () => {
   it("flags work on a day covered by an approved leave as a warning, not as a plain leave day", () => {
     expect(attendanceDayStatus({ anomalies: "workedWhileOnLeave" })).toBe("onLeave");
     // The person worked that day, so the pill must not read as a plain "İzinli".
-    expect(ATTENDANCE_STATUS_PILLS.onLeave).toEqual({
+    expect(attendanceStatusPill("onLeave")).toEqual({
       label: "İzinli günde çalışma",
       tone: "warning",
     });
@@ -43,7 +43,7 @@ describe("attendanceDayStatus", () => {
     expect(attendanceDayStatus({ anomalies: "noData", onLeave: true, workedMinutes: 0 })).toBe(
       "leave"
     );
-    expect(ATTENDANCE_STATUS_PILLS.leave).toEqual({ label: "İzinli", tone: "info" });
+    expect(attendanceStatusPill("leave")).toEqual({ label: "İzinli", tone: "info" });
   });
 
   it("does not treat a leave day as plain leave once minutes were worked without the anomaly flag", () => {

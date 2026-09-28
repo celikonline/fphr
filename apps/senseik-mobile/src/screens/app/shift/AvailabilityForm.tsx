@@ -1,19 +1,18 @@
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { GlassCard, PrimaryButton, SelectField, TextField } from "@/components/ui";
 import { DateField } from "@/components/form/DateField";
 import { OptionSheet } from "@/components/form/OptionSheet";
 import type { AvailabilityKind } from "@/services/ShiftService";
 
-export const AVAILABILITY_KIND_LABELS: Record<AvailabilityKind, string> = {
-  unavailable: "Bugün çalışmak istemiyorum",
-  weeklyRestRequest: "Haftalık iznimi kullanmak istiyorum",
-};
+const AVAILABILITY_KINDS: readonly AvailabilityKind[] = ["unavailable", "weeklyRestRequest"];
 
-const KIND_OPTIONS = (Object.keys(AVAILABILITY_KIND_LABELS) as AvailabilityKind[]).map((kind) => ({
-  value: kind,
-  label: AVAILABILITY_KIND_LABELS[kind],
-}));
+/** Availability kind label in the active language. */
+export function availabilityKindLabel(kind: AvailabilityKind): string {
+  return i18n.t(`shift:availability.kinds.${kind}`);
+}
 
 type Props = {
   date: string;
@@ -37,32 +36,36 @@ export function AvailabilityForm({
   submitting,
   onSubmit,
 }: Props) {
+  const { t } = useTranslation("shift");
   const [kindSheetVisible, setKindSheetVisible] = useState(false);
-
+  const kindOptions = AVAILABILITY_KINDS.map((value) => ({
+    value,
+    label: availabilityKindLabel(value),
+  }));
   return (
     <GlassCard style={styles.card}>
-      <DateField label="Tarih" required value={date} onChange={onDateChange} />
+      <DateField label={t("availability.date")} required value={date} onChange={onDateChange} />
       <SelectField
-        label="Tür"
+        label={t("availability.kind")}
         required
-        value={AVAILABILITY_KIND_LABELS[kind]}
-        placeholder="Tür seçin"
+        value={availabilityKindLabel(kind)}
+        placeholder={t("availability.kindPlaceholder")}
         onPress={() => setKindSheetVisible(true)}
       />
       <TextField
-        label="Not (opsiyonel)"
+        label={t("availability.note")}
         value={note}
         onChangeText={onNoteChange}
-        placeholder="Ek bilgi ekleyin"
+        placeholder={t("availability.notePlaceholder")}
         multiline
         numberOfLines={3}
         style={styles.textArea}
       />
-      <PrimaryButton label="Kaydet" onPress={onSubmit} loading={submitting} />
+      <PrimaryButton label={t("common:actions.save")} onPress={onSubmit} loading={submitting} />
       <OptionSheet
         visible={kindSheetVisible}
-        title="Tür"
-        options={KIND_OPTIONS}
+        title={t("availability.kind")}
+        options={kindOptions}
         selected={kind}
         onSelect={onKindChange}
         onClose={() => setKindSheetVisible(false)}

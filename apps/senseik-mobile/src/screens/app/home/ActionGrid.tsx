@@ -8,6 +8,7 @@ import {
   type NativeSyntheticEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { ActionTile } from "@/components/ui";
 import { palette, type AccentKey } from "@/theme/theme";
 
@@ -26,7 +27,8 @@ export type ActionRoute =
   | "Support";
 
 type ActionItem = {
-  label: string;
+  /** i18n key (`home` namespace). */
+  labelKey: string;
   icon: IoniconName;
   accent: AccentKey;
   route: ActionRoute;
@@ -35,17 +37,27 @@ type ActionItem = {
 /** Spec §4 order: two pages, 3 columns x 2 rows each. */
 const ACTION_PAGES: ActionItem[][] = [
   [
-    { label: "Puantaj", icon: "time-outline", accent: "blue", route: "Attendance" },
-    { label: "İzinlerim", icon: "sunny-outline", accent: "green", route: "Leave" },
-    { label: "Bordro", icon: "wallet-outline", accent: "coral", route: "Payroll" },
-    { label: "Onaylarım", icon: "checkmark-done-outline", accent: "purple", route: "Approvals" },
-    { label: "Taleplerim", icon: "document-text-outline", accent: "amber", route: "Requests" },
-    { label: "Kişiler", icon: "people-outline", accent: "teal", route: "People" },
+    { labelKey: "actions.attendance", icon: "time-outline", accent: "blue", route: "Attendance" },
+    { labelKey: "actions.leave", icon: "sunny-outline", accent: "green", route: "Leave" },
+    { labelKey: "actions.payroll", icon: "wallet-outline", accent: "coral", route: "Payroll" },
+    {
+      labelKey: "actions.approvals",
+      icon: "checkmark-done-outline",
+      accent: "purple",
+      route: "Approvals",
+    },
+    {
+      labelKey: "actions.requests",
+      icon: "document-text-outline",
+      accent: "amber",
+      route: "Requests",
+    },
+    { labelKey: "actions.people", icon: "people-outline", accent: "teal", route: "People" },
   ],
   [
-    { label: "Vardiyam", icon: "calendar-outline", accent: "indigo", route: "Shift" },
-    { label: "Hedeflerim", icon: "flag-outline", accent: "pink", route: "Goals" },
-    { label: "Destek", icon: "headset-outline", accent: "gray", route: "Support" },
+    { labelKey: "actions.shift", icon: "calendar-outline", accent: "indigo", route: "Shift" },
+    { labelKey: "actions.goals", icon: "flag-outline", accent: "pink", route: "Goals" },
+    { labelKey: "actions.support", icon: "headset-outline", accent: "gray", route: "Support" },
   ],
 ];
 
@@ -67,6 +79,7 @@ function chunkRows(items: ActionItem[]): ActionItem[][] {
 
 /** "İşlemlerim": horizontally paged tile grid with page dots (mockup `.pager` + `.dots`). */
 export function ActionGrid({ approvalsCount, onNavigate }: Props) {
+  const { t } = useTranslation("home");
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
 
@@ -90,7 +103,7 @@ export function ActionGrid({ approvalsCount, onNavigate }: Props) {
                 {row.map((tile) => (
                   <ActionTile
                     key={tile.route}
-                    label={tile.label}
+                    label={t(tile.labelKey)}
                     icon={tile.icon}
                     accent={tile.accent}
                     badge={tile.route === "Approvals" ? approvalsCount : undefined}

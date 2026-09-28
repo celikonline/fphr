@@ -1,0 +1,8 @@
+{
+  "boundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. You can try again.",
+    "retry": "Try again"
+  },
+  "attachmentOpen": "The document could not be opened. Please try again."
+}

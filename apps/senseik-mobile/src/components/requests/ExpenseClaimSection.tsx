@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ErrorBanner, PrimaryButton, SelectField, TextField } from "@/components/ui";
 import { OptionSheet } from "@/components/form/OptionSheet";
 import { SheetDateField } from "@/components/form/SheetDateField";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/requestValidation";
 import { expenseCategoryLabel } from "@/lib/expenseLabels";
 import { getApiErrorMessage } from "@/lib/apiError";
+import i18n from "@/lib/i18n";
 import { palette } from "@/theme/theme";
 import { ExpenseItemList } from "./expense/ExpenseItemList";
 import { requestFormStyles as styles } from "./requestFormStyles";
@@ -71,6 +73,7 @@ type Props = {
  * submitted. The caller's own claim history lives on Taleplerim (`RequestsScreen`).
  */
 export default function ExpenseClaimSection({ onSubmitted }: Props) {
+  const { t } = useTranslation("requests");
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +94,7 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
       setCategories(active);
       setCategoryId((current) => current ?? active[0]?.id ?? null);
     } catch {
-      setError("Harcama bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("requests:expense.loadError"));
     }
   }, []);
 
@@ -103,19 +106,22 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
   function addItem() {
     const amount = parseAmountInput(amountText);
     if (!categoryId) {
-      Alert.alert("Hata", "Lütfen bir kategori seçin.");
+      Alert.alert(t("common:alerts.error"), t("expense.selectCategory"));
       return;
     }
     if (amount === null || !isPositiveAmount(amount)) {
-      Alert.alert("Hata", "Lütfen geçerli, sıfırdan büyük bir tutar girin.");
+      Alert.alert(t("common:alerts.error"), t("advance.invalidAmount"));
       return;
     }
     if (!isReceiptDateAllowed(receiptDate)) {
-      Alert.alert("Hata", "Fiş tarihi gelecekte olamaz.");
+      Alert.alert(t("common:alerts.error"), t("expense.receiptDateFuture"));
       return;
     }
     if (items.length >= EXPENSE_CLAIM_MAX_ITEMS) {
-      Alert.alert("Hata", `Bir talepte en fazla ${EXPENSE_CLAIM_MAX_ITEMS} kalem olabilir.`);
+      Alert.alert(
+        t("common:alerts.error"),
+        t("expense.maxItems", { max: EXPENSE_CLAIM_MAX_ITEMS })
+      );
       return;
     }
 
@@ -152,17 +158,14 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
       await expenseService.submitExpenseClaim(inputs);
       setItems([]);
       onSubmitted?.();
-      Alert.alert("Gönderildi", "Masraf talebiniz onaya gönderildi.");
+      Alert.alert(t("common:alerts.sent"), t("expense.submitted"));
     } catch (submitError) {
       if (submitError instanceof ExpenseClaimDraftIncompleteError) {
-        Alert.alert(
-          "Taslak oluşturuldu",
-          "Harcama taslağınız oluşturuldu ancak tamamlanamadı. Lütfen web uygulamasından devam edin."
-        );
+        Alert.alert(t("expense.draftTitle"), t("expense.draftMessage"));
       } else {
         Alert.alert(
-          "Hata",
-          getApiErrorMessage(submitError, "Harcama talebi gönderilemedi. Lütfen tekrar deneyin.")
+          t("common:alerts.error"),
+          getApiErrorMessage(submitError, t("expense.submitError"))
         );
       }
     } finally {
@@ -191,36 +194,41 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
       {error ? <ErrorBanner message={error} onRetry={() => void loadCategories()} /> : null}
 
       {categories.length === 0 ? (
-        <Text style={styles.hint}>Aktif harcama kategorisi bulunamadı.</Text>
+        <Text style={styles.hint}>{t("expense.noCategories")}</Text>
       ) : (
         <SelectField
-          label="Kategori"
+          label={t("expense.category")}
           required
           value={selectedCategory ? expenseCategoryLabel(selectedCategory.code) : undefined}
-          placeholder="Kategori seçin"
+          placeholder={t("expense.categoryPlaceholder")}
           onPress={() => setCategorySheetVisible(true)}
         />
       )}
       <TextField
-        label="Tutar (TRY)"
+        label={t("advance.amount")}
         required
         value={amountText}
         onChangeText={setAmountText}
-        placeholder="0,00"
+        placeholder={t("amountPlaceholder")}
         keyboardType="decimal-pad"
       />
-      <SheetDateField label="Fiş tarihi" required value={receiptDate} onChange={setReceiptDate} />
+      <SheetDateField
+        label={t("expense.receiptDate")}
+        required
+        value={receiptDate}
+        onChange={setReceiptDate}
+      />
       <TextField
-        label="Açıklama (opsiyonel)"
+        label={t("form.descriptionOptional")}
         value={description}
         onChangeText={setDescription}
-        placeholder="Örn. müşteri ziyareti"
+        placeholder={t("expense.descriptionPlaceholder")}
         multiline
         numberOfLines={3}
         style={styles.textArea}
       />
       <PrimaryButton
-        label="Kalem ekle"
+        label={t("expense.addItem")}
         variant="secondary"
         icon="add"
         onPress={addItem}
@@ -240,12 +248,12 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
           disabled={submitting}
         />
       ) : (
-        <Text style={styles.hint}>Talebi göndermek için en az bir kalem ekleyin.</Text>
+        <Text style={styles.hint}>{t("expense.addItemHint")}</Text>
       )}
 
       <View style={styles.submit}>
         <PrimaryButton
-          label="Talebi gönder"
+          label={t("form.submit")}
           onPress={() => void submit()}
           loading={submitting}
           disabled={!canSubmit}
@@ -254,7 +262,7 @@ export default function ExpenseClaimSection({ onSubmitted }: Props) {
 
       <OptionSheet
         visible={categorySheetVisible}
-        title="Kategori"
+        title={t("expense.category")}
         options={categories.map((c) => ({ value: c.id, label: expenseCategoryLabel(c.code) }))}
         selected={categoryId}
         onSelect={setCategoryId}

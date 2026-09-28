@@ -7,8 +7,10 @@ type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export type RequestOption = {
   kind: RequestKind;
-  label: string;
-  description: string;
+  /** i18n key (`requests` namespace) - render with `t(option.labelKey)`. */
+  labelKey: string;
+  /** i18n key (`requests` namespace) - render with `t(option.descriptionKey)`. */
+  descriptionKey: string;
   icon: IoniconName;
   accent: AccentKey;
 };
@@ -18,29 +20,29 @@ export type RequestOption = {
 export const REQUEST_OPTIONS: readonly RequestOption[] = [
   {
     kind: "leave",
-    label: "İzin",
-    description: "Yıllık, mazeret, raporlu…",
+    labelKey: "requests:options.leave.label",
+    descriptionKey: "requests:options.leave.description",
     icon: "sunny-outline",
     accent: "green",
   },
   {
     kind: "overtime",
-    label: "Fazla mesai",
-    description: "Planlanan veya yapılan mesai",
+    labelKey: "requests:options.overtime.label",
+    descriptionKey: "requests:options.overtime.description",
     icon: "time-outline",
     accent: "blue",
   },
   {
     kind: "expense",
-    label: "Masraf",
-    description: "Fiş veya fatura ile",
+    labelKey: "requests:options.expense.label",
+    descriptionKey: "requests:options.expense.description",
     icon: "receipt-outline",
     accent: "amber",
   },
   {
     kind: "advance",
-    label: "Avans",
-    description: "Maaştan mahsup edilir",
+    labelKey: "requests:options.advance.label",
+    descriptionKey: "requests:options.advance.description",
     icon: "wallet-outline",
     accent: "coral",
   },

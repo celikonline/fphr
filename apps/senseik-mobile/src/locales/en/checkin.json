@@ -1,0 +1,70 @@
+{
+  "punch": {
+    "in": {
+      "tile": "Clock in",
+      "action": "Clock in"
+    },
+    "out": {
+      "tile": "Clock out",
+      "action": "Clock out"
+    },
+    "breakStart": {
+      "tile": "Break start",
+      "action": "Start break"
+    },
+    "breakEnd": {
+      "tile": "Break end",
+      "action": "End break"
+    }
+  },
+  "qr": {
+    "in": "Clock in with QR",
+    "out": "Clock out with QR",
+    "breakStart": "Start break with QR",
+    "breakEnd": "End break with QR",
+    "done": "Scan QR code"
+  },
+  "accuracy": {
+    "good": "Accurate",
+    "weak": "Weak"
+  },
+  "clock": {
+    "a11y": "Time {{time}}",
+    "accuracy": "Location accuracy: {{value}}",
+    "accuracyUnknown": "unknown",
+    "meters": "{{value}} m",
+    "sinceCheckIn": "{{elapsed}} since clock-in"
+  },
+  "map": {
+    "a11yMap": "Map, your location: {{place}}",
+    "a11yCard": "Your location: {{place}}",
+    "yourLocation": "Your location"
+  },
+  "tiles": {
+    "a11y": "{{title}}, {{time}}",
+    "noRecord": "no record"
+  },
+  "place": {
+    "denied": "Location permission not granted",
+    "servicesOff": "Location is turned off on your device",
+    "unavailable": "Location unavailable",
+    "locating": "Getting location…"
+  },
+  "success": {
+    "fallbackTile": "Entry",
+    "saved": "{{tile}} recorded: {{time}}{{place}}"
+  },
+  "errors": {
+    "statusLoad": "Clock-in status could not be loaded.",
+    "punch": "Clock-in/out could not be recorded. Please try again.",
+    "cameraDenied": "Camera permission not granted. Enable camera access in settings to scan the QR code."
+  },
+  "banners": {
+    "denied": "Location permission not granted. Enable location access in settings to clock in/out by location.",
+    "servicesOff": "Location is turned off on your device. Turn it on in device settings to clock in/out by location.",
+    "unavailable": "Location unavailable.",
+    "openSettings": "Open settings"
+  },
+  "breakTotal": "Today's break: {{minutes}} min",
+  "doneToday": "Done for today"
+}

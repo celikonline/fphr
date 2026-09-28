@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import { dateOnlyToDate } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 
 /**
  * Home screen feed (spec §4): the four "who/what is coming up" sections below the balances and
@@ -73,9 +74,6 @@ const MAX_ANNOUNCEMENTS = 2;
 const DEFAULT_BIRTHDAY_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const MASKED_LEAVE_LABEL = "İzinli";
-const REMOTE_WORK_LABEL = "Uzaktan çalışıyor";
-
 /**
  * Approved leave of other employees, one row per person (first entry wins), at most `max`.
  * A masked entry (caller may not see the type) never reveals it - it reads "İzinli".
@@ -85,6 +83,8 @@ export function selectPeopleOffToday(
   selfEmployeeId: string | undefined,
   max: number = MAX_PEOPLE_OFF
 ): PersonOff[] {
+  const maskedLeaveLabel = i18n.t("home:peopleOff.onLeave");
+  const remoteWorkLabel = i18n.t("home:peopleOff.remote");
   const seen = new Set<string>();
   const people: PersonOff[] = [];
   for (const entry of entries) {
@@ -95,10 +95,10 @@ export function selectPeopleOffToday(
 
     const isRemote = !entry.isMasked && entry.leaveTypeCode === "remoteWork";
     const typeLabel = entry.isMasked
-      ? MASKED_LEAVE_LABEL
+      ? maskedLeaveLabel
       : isRemote
-        ? REMOTE_WORK_LABEL
-        : (entry.leaveTypeName ?? MASKED_LEAVE_LABEL);
+        ? remoteWorkLabel
+        : (entry.leaveTypeName ?? maskedLeaveLabel);
     people.push({
       employeeId: entry.employeeId,
       name: entry.employeeName,

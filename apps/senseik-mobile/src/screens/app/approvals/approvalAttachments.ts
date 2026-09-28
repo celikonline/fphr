@@ -1,5 +1,6 @@
 import { leaveService, type LeaveRequestAttachment } from "@/services/LeaveService";
 import type { InboxTask } from "@/services/ApprovalsService";
+import i18n from "@/lib/i18n";
 
 /**
  * A1: fetches a Leave task's attachments so the approver knows a document was attached before
@@ -33,10 +34,10 @@ export function formatAttachmentsSummary(
   if (attachments.length === 0) {
     return null;
   }
-  return `📎 ${attachments.length} belge: ${attachments.map((a) => a.fileName).join(", ")}`;
+  return `${attachmentsCountLabel(attachments.length)} ${attachments.map((a) => a.fileName).join(", ")}`;
 }
 
 /** senseik-mobile-011: "📎 N belge:" header shown above the tappable attachment rows. */
 export function attachmentsCountLabel(count: number): string {
-  return `📎 ${count} belge:`;
+  return `📎 ${i18n.t("approvals:attachmentsCount", { count })}`;
 }
