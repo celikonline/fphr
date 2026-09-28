@@ -352,6 +352,96 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.ToTable("compensatory_work_ledgers", "attendance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Corrections.PunchCorrectionRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approval_request_id");
+
+                    b.Property<DateOnly>("AttendanceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("attendance_date");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<TimeOnly?>("CurrentCheckIn")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("current_check_in");
+
+                    b.Property<TimeOnly?>("CurrentCheckOut")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("current_check_out");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<TimeOnly?>("RequestedCheckIn")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("requested_check_in");
+
+                    b.Property<TimeOnly?>("RequestedCheckOut")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("requested_check_out");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_punch_correction_requests");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_punch_correction_requests_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "AttendanceDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_punch_correction_requests_tenant_id_employee_id_attendance_")
+                        .HasFilter("status = 'Pending'");
+
+                    b.HasIndex("TenantId", "EmployeeId", "SubmittedAt")
+                        .HasDatabaseName("ix_punch_correction_requests_tenant_id_employee_id_submitted_at");
+
+                    b.ToTable("punch_correction_requests", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Equalization.EqualizationPeriod", b =>
                 {
                     b.Property<Guid>("Id")

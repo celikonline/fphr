@@ -1538,4 +1538,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="identity.user.language_unsupported" xml:space="preserve"><value>The selected language is not supported.</value></data>
   <data name="workflow.bulk.empty" xml:space="preserve"><value>Select at least one request to decide.</value></data>
   <data name="workflow.bulk.too_many_tasks" xml:space="preserve"><value>You can decide at most {max} requests at once.</value></data>
+  <data name="attendance.correction.future_date" xml:space="preserve"><value>A punch correction cannot be requested for a day that has not started yet.</value></data>
+  <data name="attendance.correction.period_locked" xml:space="preserve"><value>This month's timesheet is locked or approved; a correction cannot be requested.</value></data>
+  <data name="attendance.correction.pending_exists" xml:space="preserve"><value>You already have a pending correction request for this day.</value></data>
+  <data name="attendance.correction.times_required" xml:space="preserve"><value>Enter at least a check-in or a check-out time.</value></data>
+  <data name="attendance.correction.invalid_range" xml:space="preserve"><value>The check-out time must be after the check-in time.</value></data>
+  <data name="attendance.correction.reason_required" xml:space="preserve"><value>A reason is required for a correction request.</value></data>
+  <data name="attendance.correction.not_found" xml:space="preserve"><value>The correction request was not found.</value></data>
+  <data name="attendance.correction.not_pending" xml:space="preserve"><value>Only a pending correction request can be withdrawn.</value></data>
+  <data name="attendance.my.corrections" xml:space="preserve"><value>Create and withdraw my own missing punch correction requests</value></data>
 </root>

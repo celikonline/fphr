@@ -125,10 +125,19 @@ public static class AttendancePermissions
     public static readonly Permission BoardView = new(
         BoardViewKey, Module, "Canlı İçeride/Dışarıda Panosunu Görüntüleme", Group, "Şu an kimin içeride kimin dışarıda olduğunu canlı görüntüleme");
 
+    /// <summary>
+    /// Eksik giriş/çıkış düzeltme talebi (FG-004): submit/list/withdraw one's own requests; "*.my.*" reaches every base role.
+    /// The decision itself runs through the Workflow inbox (assignment-based, workflow.inbox.decide) - no separate approve key.
+    /// </summary>
+    public const string MyCorrectionsKey = "attendance.my.corrections";
+
+    public static readonly Permission MyCorrections = new(
+        MyCorrectionsKey, Module, "Kendi Giriş-Çıkış Düzeltme Taleplerim", Group, "Eksik giriş/çıkış için düzeltme talebi oluşturma, görüntüleme ve geri çekme");
+
     public static IEnumerable<Permission> All =>
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
             TimesheetApprove, ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
-            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView,
+            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView, MyCorrections,
         ];
 }

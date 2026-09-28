@@ -1547,4 +1547,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="identity.user.language_unsupported" xml:space="preserve"><value>Seçilen dil desteklenmiyor.</value></data>
   <data name="workflow.bulk.empty" xml:space="preserve"><value>Karar verilecek en az bir talep seçin.</value></data>
   <data name="workflow.bulk.too_many_tasks" xml:space="preserve"><value>Tek seferde en fazla {max} talep için karar verilebilir.</value></data>
+  <data name="attendance.correction.future_date" xml:space="preserve"><value>Henüz başlamamış bir gün için giriş/çıkış düzeltmesi istenemez.</value></data>
+  <data name="attendance.correction.period_locked" xml:space="preserve"><value>Bu ayın puantajı kilitli veya onaylanmış; düzeltme talebi oluşturulamaz.</value></data>
+  <data name="attendance.correction.pending_exists" xml:space="preserve"><value>Bu gün için bekleyen bir düzeltme talebiniz zaten var.</value></data>
+  <data name="attendance.correction.times_required" xml:space="preserve"><value>Giriş veya çıkış saatinden en az birini girin.</value></data>
+  <data name="attendance.correction.invalid_range" xml:space="preserve"><value>Çıkış saati giriş saatinden sonra olmalıdır.</value></data>
+  <data name="attendance.correction.reason_required" xml:space="preserve"><value>Düzeltme talebi için gerekçe zorunludur.</value></data>
+  <data name="attendance.correction.not_found" xml:space="preserve"><value>Düzeltme talebi bulunamadı.</value></data>
+  <data name="attendance.correction.not_pending" xml:space="preserve"><value>Yalnız bekleyen bir düzeltme talebi geri çekilebilir.</value></data>
+  <data name="attendance.my.corrections" xml:space="preserve"><value>Kendi eksik giriş/çıkış düzeltme taleplerimi oluşturma ve geri çekme</value></data>
 </root>
