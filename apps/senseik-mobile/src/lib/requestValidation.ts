@@ -1,4 +1,5 @@
 import { dateOnlyToDate, toLocalDateOnly } from "@/lib/formatters";
+import { currentLanguage, type AppLanguage } from "@/lib/i18n";
 
 /** Strips the time-of-day so comparisons against `dateOnlyToDate` (always midnight) aren't skewed by "now"'s clock time. */
 function atMidnight(date: Date): Date {
@@ -59,9 +60,20 @@ export function isOvertimeDurationValid(durationMinutes: number): boolean {
   );
 }
 
-/** Parses a Turkish-comma or dot-decimal amount/duration TextInput value; `null` for empty/invalid input (never throws on user-typed text). */
-export function parseAmountInput(text: string): number | null {
-  const normalized = text.trim().replace(",", ".");
+/**
+ * Parses an amount/duration TextInput value in the active language; `null` for empty/invalid input
+ * (never throws on user-typed text).
+ * - Turkish (unchanged): the comma is the decimal separator ("125,50"), a dot-decimal value
+ *   ("125.50") is accepted too.
+ * - English (FG-001b): the dot is the decimal separator and commas are thousands separators, which
+ *   are ignored ("1,234.56" -> 1234.56).
+ */
+export function parseAmountInput(
+  text: string,
+  language: AppLanguage = currentLanguage()
+): number | null {
+  const trimmed = text.trim();
+  const normalized = language === "en" ? trimmed.replace(/,/g, "") : trimmed.replace(",", ".");
   if (normalized.length === 0) {
     return null;
   }
