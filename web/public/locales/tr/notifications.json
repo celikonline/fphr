@@ -12,7 +12,8 @@
     "request": {
       "created": "Talebim oluşturulduğunda",
       "approved": "Talebim onaylandığında",
-      "rejected": "Talebim reddedildiğinde"
+      "rejected": "Talebim reddedildiğinde",
+      "comment_added": "Talebime veya onayladığım bir talebe yorum yazıldığında"
     },
     "approval": {
       "task_assigned": "Onayımı bekleyen bir talep olduğunda"

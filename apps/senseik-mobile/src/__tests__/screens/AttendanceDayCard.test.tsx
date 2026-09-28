@@ -81,4 +81,43 @@ describe("AttendanceDayCard", () => {
     expect(label).toContain("Yıllık izin");
     expect(label).toContain("Fazla mesai: 1 sa 0 dk");
   });
+
+  describe("'Düzeltme iste' (FG-004)", () => {
+    const missingDay: AttendanceDay = { ...baseDay, anomalies: "missingCheckOut" };
+
+    it("shows the link on a missing day when onRequestCorrection is given, and calls it with the date", () => {
+      const onRequestCorrection = jest.fn();
+      const renderer = renderComponent(
+        <AttendanceDayCard
+          day={missingDay}
+          overtimeText={null}
+          onRequestCorrection={onRequestCorrection}
+        />
+      );
+
+      expect(texts(renderer)).toContain("Düzeltme iste");
+      const link = renderer.root.findAll(
+        (node) =>
+          node.props.accessibilityLabel === "Düzeltme iste" &&
+          typeof node.props.onPress === "function"
+      )[0];
+      link.props.onPress();
+
+      expect(onRequestCorrection).toHaveBeenCalledWith("2026-09-22");
+    });
+
+    it("does not show the link when the prop is omitted", () => {
+      const renderer = renderComponent(<AttendanceDayCard day={missingDay} overtimeText={null} />);
+
+      expect(texts(renderer)).not.toContain("Düzeltme iste");
+    });
+
+    it("does not show the link on a completed day, even with the prop given", () => {
+      const renderer = renderComponent(
+        <AttendanceDayCard day={baseDay} overtimeText={null} onRequestCorrection={jest.fn()} />
+      );
+
+      expect(texts(renderer)).not.toContain("Düzeltme iste");
+    });
+  });
 });

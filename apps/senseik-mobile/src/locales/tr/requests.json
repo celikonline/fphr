@@ -1,0 +1,169 @@
+{
+  "sheet": {
+    "title": "Yeni talep",
+    "close": "Talep menüsünü kapat",
+    "subtitle": "Ne için talep oluşturmak istiyorsun?"
+  },
+  "options": {
+    "leave": {
+      "label": "İzin",
+      "description": "Yıllık, mazeret, raporlu…"
+    },
+    "overtime": {
+      "label": "Fazla mesai",
+      "description": "Planlanan veya yapılan mesai"
+    },
+    "expense": {
+      "label": "Masraf",
+      "description": "Fiş veya fatura ile"
+    },
+    "advance": {
+      "label": "Avans",
+      "description": "Maaştan mahsup edilir"
+    },
+    "punchCorrection": {
+      "label": "Eksik giriş/çıkış",
+      "description": "Puantaj gününü düzelt"
+    }
+  },
+  "titles": {
+    "leave": "İzin talebi",
+    "overtime": "Fazla mesai talebi",
+    "expense": "Masraf talebi",
+    "advance": "Avans talebi",
+    "punchCorrection": "Eksik giriş/çıkış talebi"
+  },
+  "leaveTypesLoadError": "İzin türleri yüklenemedi. Lütfen tekrar deneyin.",
+  "filters": {
+    "all": "Tümü"
+  },
+  "list": {
+    "title": "Taleplerim",
+    "partialLoadError": "Bazı talepler yüklenemedi. Lütfen tekrar deneyin.",
+    "emptyTitle": "Talep bulunamadı",
+    "emptyMessage": "Bu türde bir talebiniz yok."
+  },
+  "withdrawOvertime": {
+    "confirmTitle": "Fazla mesai talebini geri çek",
+    "confirmMessage": "Bu talebi geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "error": "Fazla mesai talebi geri çekilemedi. Lütfen tekrar deneyin."
+  },
+  "expenseStatus": {
+    "draft": "Taslak",
+    "submitted": "Onay bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "paid": "Ödendi"
+  },
+  "advanceStatus": {
+    "submitted": "Onay bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "paid": "Ödendi"
+  },
+  "expenseCategories": {
+    "travel": "Yolculuk ve Ulaşım",
+    "food": "Yiyecek ve İçecek"
+  },
+  "form": {
+    "date": "Tarih",
+    "descriptionOptional": "Açıklama (opsiyonel)",
+    "submit": "Talebi gönder"
+  },
+  "amountPlaceholder": "0,00",
+  "overtime": {
+    "payRates": {
+      "rate50": "%50 fazlası (fazla mesai)",
+      "rate25": "%25 fazlası (fazla sürelerle çalışma)"
+    },
+    "invalidDuration": "Lütfen 1 dakika ile 24 saat arasında geçerli bir süre girin.",
+    "sentWithWarnings": "Talep gönderildi",
+    "submitted": "Fazla mesai talebiniz onaya gönderildi.",
+    "submitError": "Fazla mesai talebi gönderilemedi. Lütfen tekrar deneyin.",
+    "startTime": "Başlangıç saati",
+    "durationMinutes": "Süre (dakika)",
+    "durationPlaceholder": "Örn. 120",
+    "duration": "Süre",
+    "payRate": "Ücret oranı",
+    "payRatePlaceholder": "Oran seçin",
+    "descriptionPlaceholder": "Örn. ay sonu kapanış çalışması",
+    "warnings": {
+      "overtime_consent_missing": "Yazılı fazla çalışma onayınız kayıtlı değil.",
+      "overtime_night_consent_missing": "Kayıt gece saatlerine denk geliyor ancak gece fazla çalışma onayınız yok.",
+      "overtime_overlaps_schedule": "Talebin bir kısmı planlı çalışma saatleri içinde; o kısım ödenecek süreden düşüldü.",
+      "overtime_annual_limit_exceeded": "Bu kayıtla yıllık fazla mesai toplamı yasal sınırı aşıyor.",
+      "overtime_daily_limit_exceeded": "Bu kayıtla günlük fazla mesai toplamı 11 saati aşıyor.",
+      "overtime_past_date_exceeded": "Bu tarih 7 günden daha eski bir geçmiş tarih."
+    }
+  },
+  "advance": {
+    "invalidAmount": "Lütfen geçerli, sıfırdan büyük bir tutar girin.",
+    "invalidDate": "Talep tarihi izin verilen aralığın dışında.",
+    "submitted": "Avans talebiniz onaya gönderildi.",
+    "submitError": "Avans talebi gönderilemedi. Lütfen tekrar deneyin.",
+    "amount": "Tutar (TRY)",
+    "requestedDate": "Talep tarihi",
+    "descriptionPlaceholder": "Örn. yol masrafı için avans"
+  },
+  "expense": {
+    "loadError": "Harcama bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+    "selectCategory": "Lütfen bir kategori seçin.",
+    "receiptDateFuture": "Fiş tarihi gelecekte olamaz.",
+    "maxItems": "Bir talepte en fazla {{max}} kalem olabilir.",
+    "submitted": "Masraf talebiniz onaya gönderildi.",
+    "draftTitle": "Taslak oluşturuldu",
+    "draftMessage": "Harcama taslağınız oluşturuldu ancak tamamlanamadı. Lütfen web uygulamasından devam edin.",
+    "submitError": "Harcama talebi gönderilemedi. Lütfen tekrar deneyin.",
+    "noCategories": "Aktif harcama kategorisi bulunamadı.",
+    "category": "Kategori",
+    "categoryPlaceholder": "Kategori seçin",
+    "receiptDate": "Fiş tarihi",
+    "descriptionPlaceholder": "Örn. müşteri ziyareti",
+    "addItem": "Kalem ekle",
+    "addItemHint": "Talebi göndermek için en az bir kalem ekleyin.",
+    "itemsTitle": "Eklenen kalemler",
+    "removeItemA11y": "Kalemi kaldır: {{item}}",
+    "total": "Toplam"
+  },
+  "punchCorrectionStatus": {
+    "pending": "Bekliyor",
+    "approved": "Onaylandı",
+    "applyFailed": "Uygulanamadı",
+    "rejected": "Reddedildi",
+    "withdrawn": "Geri çekildi"
+  },
+  "withdrawPunchCorrection": {
+    "confirmTitle": "Düzeltme talebini geri çek",
+    "confirmMessage": "Bu talebi geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    "error": "Düzeltme talebi geri çekilemedi. Lütfen tekrar deneyin."
+  },
+  "punchCorrection": {
+    "includeCheckIn": "Giriş saatini düzelt",
+    "includeCheckOut": "Çıkış saatini düzelt",
+    "reason": "Gerekçe",
+    "reasonPlaceholder": "Nedenini kısaca yazın",
+    "invalidTimeRange": "Çıkış saati giriş saatinden sonra olmalı.",
+    "futureDateNotAllowed": "Gelecek bir tarih seçilemez.",
+    "submitted": "Düzeltme talebiniz onaya gönderildi.",
+    "submitError": "Düzeltme talebi gönderilemedi. Lütfen tekrar deneyin."
+  },
+  "detail": {
+    "title": "Talep detayı",
+    "loadError": "Talep detayı yüklenemedi.",
+    "timelineTitle": "Onay zinciri",
+    "step": "{{step}}. adım",
+    "stepStatus": {
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "pending": "Bekliyor"
+    },
+    "hiddenApprover": "Onaylayıcı",
+    "unknownAuthor": "Bilinmiyor",
+    "commentsTitle": "Yorumlar",
+    "commentsEmpty": "Henüz yorum yok.",
+    "commentsClosed": "Bu talep iptal edildiği için yorum yapılamaz.",
+    "commentPlaceholder": "Yorum yaz…",
+    "commentSend": "Gönder",
+    "commentSendError": "Yorum gönderilemedi. Lütfen tekrar deneyin."
+  }
+}

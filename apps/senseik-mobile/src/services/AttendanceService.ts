@@ -123,6 +123,55 @@ export interface GpsCheckInInput {
   direction: PunchDirection;
 }
 
+/**
+ * `CheckInLocationDto` (FG-005, `GET self-checkin/locations`): the caller's unit's effective location
+ * (0 or 1 item). `latitude`/`longitude`/`radiusMeters` are omitted when no geofence is configured.
+ */
+export interface CheckInLocation {
+  locationId: string;
+  name: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  radiusMeters?: number | null;
+}
+
+/** `PunchCorrectionStatus` (FG-004). */
+export type PunchCorrectionStatus =
+  "pending" | "approved" | "applyFailed" | "rejected" | "withdrawn";
+
+/**
+ * `PunchCorrectionRequest` JSON (FG-004, `CorrectionsController`): the employee's own missing
+ * giriş/çıkış düzeltme talebi. `currentCheckIn`/`currentCheckOut` are the day's punches at the time
+ * of submission (may differ from what's on the day now, once decided); `requestedCheckIn`/`Out` are
+ * what the employee asked for. `TimeOnly` fields are "HH:mm:ss", omitted when unset.
+ */
+export interface PunchCorrectionRequest {
+  id: string;
+  date: string;
+  requestedCheckIn?: string | null;
+  requestedCheckOut?: string | null;
+  currentCheckIn?: string | null;
+  currentCheckOut?: string | null;
+  reason: string;
+  status: PunchCorrectionStatus;
+  approvalRequestId?: string | null;
+  submittedAt: string;
+  decidedAt?: string | null;
+}
+
+/** `POST attendance/corrections/me` body - at least one of `checkIn`/`checkOut` (`TimeOnly` "HH:mm:ss"). */
+export interface SubmitPunchCorrectionInput {
+  date: string;
+  checkIn?: string;
+  checkOut?: string;
+  reason: string;
+}
+
+export interface PunchCorrectionDateRangeQuery {
+  from?: string;
+  to?: string;
+}
+
 export class AttendanceService {
   async getMyCheckInStatus(): Promise<MyCheckInStatus> {
     const response = await apiClient.get<MyCheckInStatus>(`${ATTENDANCE_BASE}/self-checkin/status`);
@@ -147,6 +196,14 @@ export class AttendanceService {
     return response.data;
   }
 
+  /** FG-005: locations the caller checks in against (attendance.my.checkin); `[]` for a roaming employee. */
+  async getCheckInLocations(): Promise<CheckInLocation[]> {
+    const response = await apiClient.get<CheckInLocation[]>(
+      `${ATTENDANCE_BASE}/self-checkin/locations`
+    );
+    return response.data;
+  }
+
   /**
    * `includeLeaveDays` opts into synthetic leave-only rows (mobile Puantaj); omitted it matches every
    * other caller (web) byte-for-byte, only enriched with the additive `onLeave`/`leaveTypeName` fields.
@@ -167,6 +224,31 @@ export class AttendanceService {
       { params: query }
     );
     return response.data;
+  }
+
+  /** FG-004: submits an eksik giriş/çıkış düzeltme talebi (`attendance.my.corrections`). */
+  async submitPunchCorrection(input: SubmitPunchCorrectionInput): Promise<PunchCorrectionRequest> {
+    const response = await apiClient.post<PunchCorrectionRequest>(
+      `${ATTENDANCE_BASE}/corrections/me`,
+      input
+    );
+    return response.data;
+  }
+
+  /** FG-004: the caller's own düzeltme talepleri, newest first (max 200, server-side). */
+  async getMyPunchCorrections(
+    query: PunchCorrectionDateRangeQuery = {}
+  ): Promise<PunchCorrectionRequest[]> {
+    const response = await apiClient.get<PunchCorrectionRequest[]>(
+      `${ATTENDANCE_BASE}/corrections/me`,
+      { params: query }
+    );
+    return response.data;
+  }
+
+  /** FG-004: withdraws a still-pending düzeltme talebi. */
+  async withdrawPunchCorrection(id: string): Promise<void> {
+    await apiClient.post(`${ATTENDANCE_BASE}/corrections/me/${id}/withdraw`);
   }
 }
 

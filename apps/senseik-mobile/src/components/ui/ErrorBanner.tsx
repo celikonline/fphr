@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 
 type Props = {
@@ -11,7 +12,9 @@ type Props = {
 };
 
 /** Inline error state for a failed section load, with an optional "Tekrar dene" retry action. */
-export function ErrorBanner({ message, onRetry, actionLabel = "Tekrar dene" }: Props) {
+export function ErrorBanner({ message, onRetry, actionLabel: customActionLabel }: Props) {
+  const { t } = useTranslation();
+  const actionLabel = customActionLabel ?? t("actions.retry");
   return (
     <View style={styles.container} accessibilityRole="alert">
       <Ionicons name="alert-circle-outline" size={18} color={tones.danger.fg} />

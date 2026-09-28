@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Alert, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PrimaryButton, TextField } from "@/components/ui";
 import { SheetDateField } from "@/components/form/SheetDateField";
 import { expenseService, EXPENSE_DEFAULT_CURRENCY } from "@/services/ExpenseService";
@@ -36,6 +37,7 @@ type Props = {
  * (`RequestsScreen`).
  */
 export default function AdvanceRequestSection({ onSubmitted }: Props) {
+  const { t } = useTranslation("requests");
   const [submitting, setSubmitting] = useState(false);
   const [amountText, setAmountText] = useState("");
   const [requestedDate, setRequestedDate] = useState(todayDateOnly());
@@ -44,11 +46,11 @@ export default function AdvanceRequestSection({ onSubmitted }: Props) {
   async function submit() {
     const amount = parseAmountInput(amountText);
     if (amount === null || !isPositiveAmount(amount)) {
-      Alert.alert("Hata", "Lütfen geçerli, sıfırdan büyük bir tutar girin.");
+      Alert.alert(t("common:alerts.error"), t("advance.invalidAmount"));
       return;
     }
     if (!isAdvanceRequestedDateAllowed(requestedDate)) {
-      Alert.alert("Hata", "Talep tarihi izin verilen aralığın dışında.");
+      Alert.alert(t("common:alerts.error"), t("advance.invalidDate"));
       return;
     }
 
@@ -65,11 +67,11 @@ export default function AdvanceRequestSection({ onSubmitted }: Props) {
       setDescription("");
       setRequestedDate(todayDateOnly());
       onSubmitted?.();
-      Alert.alert("Gönderildi", "Avans talebiniz onaya gönderildi.");
+      Alert.alert(t("common:alerts.sent"), t("advance.submitted"));
     } catch (submitError) {
       Alert.alert(
-        "Hata",
-        getApiErrorMessage(submitError, "Avans talebi gönderilemedi. Lütfen tekrar deneyin.")
+        t("common:alerts.error"),
+        getApiErrorMessage(submitError, t("advance.submitError"))
       );
     } finally {
       setSubmitting(false);
@@ -81,31 +83,31 @@ export default function AdvanceRequestSection({ onSubmitted }: Props) {
   return (
     <View style={styles.form}>
       <TextField
-        label="Tutar (TRY)"
+        label={t("advance.amount")}
         required
         value={amountText}
         onChangeText={setAmountText}
-        placeholder="0,00"
+        placeholder={t("amountPlaceholder")}
         keyboardType="decimal-pad"
       />
       <SheetDateField
-        label="Talep tarihi"
+        label={t("advance.requestedDate")}
         required
         value={requestedDate}
         onChange={setRequestedDate}
       />
       <TextField
-        label="Açıklama (opsiyonel)"
+        label={t("form.descriptionOptional")}
         value={description}
         onChangeText={setDescription}
-        placeholder="Örn. yol masrafı için avans"
+        placeholder={t("advance.descriptionPlaceholder")}
         multiline
         numberOfLines={3}
         style={styles.textArea}
       />
       <View style={styles.submit}>
         <PrimaryButton
-          label="Talebi gönder"
+          label={t("form.submit")}
           onPress={() => void submit()}
           loading={submitting}
           disabled={!canSubmit}

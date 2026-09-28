@@ -4,7 +4,8 @@
     "Advance": "Advance",
     "Expense": "Expense",
     "Overtime": "Overtime",
-    "VisaDocument": "Visa document"
+    "VisaDocument": "Visa document",
+    "PunchCorrection": "Missing punch"
   },
   "policies": {
     "listTitle": "Approval processes",

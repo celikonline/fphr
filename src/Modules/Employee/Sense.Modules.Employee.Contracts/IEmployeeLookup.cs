@@ -57,4 +57,11 @@ public interface IEmployeeLookup
     /// not exist for the tenant, <see cref="EmployeeGender.Unspecified"/> when none is recorded.
     /// </summary>
     Task<EmployeeGender?> GetGenderAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// FG-007 "Ekibim": the manager's direct reports (<c>ManagerEmployeeId == managerEmployeeId</c>, not terminated), ordered by
+    /// display name. Direct reports only - unlike the Team data scope (Shared.Contracts.Security.IEmployeeScopeLookup), no
+    /// indirect chain. Empty when the employee manages nobody (or does not exist for the tenant).
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetDirectReportIdsAsync(Guid tenantId, Guid managerEmployeeId, CancellationToken cancellationToken = default);
 }

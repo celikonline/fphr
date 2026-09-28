@@ -71,4 +71,21 @@ public sealed class TenantSecurityPolicyTests
     {
         TenantSecurityPolicy.Default.RequiresMfaSetup([SystemRoleCodes.Owner], mfaEnabled: false).ShouldBeFalse();
     }
+
+    /// <summary>FG-022: RequiresMfa MFA durumundan bağımsızdır; MFA açık kullanıcı için de true (self-servis kapatmayı engeller).</summary>
+    [Fact]
+    public void RequiresMfa_UserHasEnforcedRole_ReturnsTrueEvenWhenMfaAlreadyEnabled()
+    {
+        var policy = new TenantSecurityPolicy { RequireMfaForRoles = [SystemRoleCodes.HR] };
+
+        policy.RequiresMfa([SystemRoleCodes.Employee, "hr"]).ShouldBeTrue();
+        policy.RequiresMfaSetup([SystemRoleCodes.HR], mfaEnabled: true).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RequiresMfa_RoleNotEnforcedOrEmptyPolicy_ReturnsFalse()
+    {
+        new TenantSecurityPolicy { RequireMfaForRoles = [SystemRoleCodes.Owner] }.RequiresMfa([SystemRoleCodes.Employee]).ShouldBeFalse();
+        TenantSecurityPolicy.Default.RequiresMfa([SystemRoleCodes.Owner]).ShouldBeFalse();
+    }
 }

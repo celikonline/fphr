@@ -215,7 +215,7 @@ export function pickDefaultHolidayCalendar(calendars: HolidayCalendar[]): Holida
 // ---------------------------------------------------------------- Unit approval policies ("Opsiyonel alanlar")
 
 /** Request types a unit can carry an approval policy for; mirrors Organization.Contracts.ApprovalRequestTypes.All. */
-export const APPROVAL_REQUEST_TYPES = ["Leave", "Advance", "Expense", "Overtime"] as const;
+export const APPROVAL_REQUEST_TYPES = ["Leave", "Advance", "Expense", "Overtime", "PunchCorrection"] as const;
 
 export type ApprovalRequestType = (typeof APPROVAL_REQUEST_TYPES)[number];
 

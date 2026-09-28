@@ -1,22 +1,24 @@
 import React from "react";
 import { StyleSheet, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { BrandMark } from "@/components/auth/BrandMark";
 import { Wordmark } from "@/components/auth/Wordmark";
 import { sectionTitleText } from "@/components/ui/SectionHeader";
 import { palette, text } from "@/theme/theme";
 
-// Turkish casing via "tr-TR" - never `textTransform`, which Android applies with the device locale.
-const EYEBROW = sectionTitleText("İK & Bordro · Mobil");
-
 /** Login screen's animated hero (brand mark, eyebrow, wordmark, subtitle) above the credentials panel. */
 export function LoginHero() {
+  const { t } = useTranslation("auth");
+  // Upper-cased with the active locale's casing (`sectionTitleText`) - never `textTransform`, which
+  // Android applies with the device locale.
+  const eyebrow = sectionTitleText(t("hero.eyebrow"));
   return (
     <Animated.View entering={FadeInDown.delay(250).duration(500)} style={styles.hero}>
       <BrandMark size={56} />
-      <Text style={styles.eyebrow}>{EYEBROW}</Text>
+      <Text style={styles.eyebrow}>{eyebrow}</Text>
       <Wordmark />
-      <Text style={styles.heroSubtitle}>İzin, puantaj ve bordronuz artık cebinizde.</Text>
+      <Text style={styles.heroSubtitle}>{t("hero.subtitle")}</Text>
     </Animated.View>
   );
 }

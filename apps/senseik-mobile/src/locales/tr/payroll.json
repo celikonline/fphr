@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "caption": "Geçen ay net maaşın"
+  },
+  "openDocument": "Belgeyi aç",
+  "acknowledge": "Okudum, onaylıyorum",
+  "row": {
+    "a11y": "{{month}} {{year}} bordrosu, belgeyi aç",
+    "saving": "Kaydediliyor…"
+  },
+  "title": "Bordrom",
+  "empty": "Henüz görüntülenebilir bordro pusulanız yok.",
+  "errors": {
+    "load": "Bordro pusulaları yüklenemedi. Lütfen tekrar deneyin.",
+    "open": "Bordro pusulası açılamadı. Lütfen tekrar deneyin.",
+    "acknowledge": "Onay gönderilemedi. Lütfen tekrar deneyin.",
+    "shareUnavailable": "Bu cihazda dosya açma desteklenmiyor."
+  },
+  "status": {
+    "acknowledged": "Onaylandı",
+    "pending": "Onay bekliyor",
+    "acknowledgedAt": "Onaylandı · {{time}}"
+  },
+  "confirm": {
+    "message": "Bu bordro pusulasını okuduğunuzu onaylıyor musunuz?",
+    "confirm": "Onaylıyorum"
+  }
+}

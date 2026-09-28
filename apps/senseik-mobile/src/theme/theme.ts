@@ -116,7 +116,8 @@ export const text: {
   heading: { fontSize: 16, lineHeight: 22, color: palette.white, ...fontFor(800) },
   // No `textTransform: "uppercase"` here - Android applies that at the native view layer using the
   // device locale, not necessarily Turkish, which mis-cases "İ"/"I" and "i"/"ı". Consumers uppercase
-  // the string themselves via `sectionTitleText` (`SectionHeader.tsx`), which always uses "tr-TR".
+  // the string themselves via `sectionTitleText` (`SectionHeader.tsx`), which uses the app language's
+  // locale (`formatters.toLocaleUpper`).
   section: {
     fontSize: 12,
     lineHeight: 16,

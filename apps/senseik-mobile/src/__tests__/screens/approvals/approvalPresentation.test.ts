@@ -2,6 +2,7 @@ import {
   approvalAmountText,
   approvalCardHeading,
   approvalDetailRows,
+  approvalRequestDetailSummary,
   approvalTypeCaption,
 } from "@/screens/app/approvals/approvalPresentation";
 import type { InboxTask } from "@/services/ApprovalsService";
@@ -37,6 +38,37 @@ describe("approvalAmountText (görev 8)", () => {
   it("returns null when the task has no summary yet (Expense/Advance/...)", () => {
     expect(approvalAmountText({ summary: null })).toBeNull();
     expect(approvalAmountText({})).toBeNull();
+  });
+
+  it("formats a punch-correction task's requested times (FG-004)", () => {
+    expect(
+      approvalAmountText({
+        summary: {
+          requestDate: "2026-09-20",
+          punchCorrection: {
+            date: "2026-09-18",
+            requestedCheckIn: "08:55:00",
+            requestedCheckOut: "18:00:00",
+            reason: "Turnike arızalıydı",
+          },
+        },
+      })
+    ).toBe("08:55 – 18:00");
+  });
+
+  it("shows an em-dash for the side that wasn't asked for", () => {
+    expect(
+      approvalAmountText({
+        summary: {
+          requestDate: "2026-09-20",
+          punchCorrection: {
+            date: "2026-09-18",
+            requestedCheckOut: "18:00:00",
+            reason: "Turnike arızalıydı",
+          },
+        },
+      })
+    ).toBe("— – 18:00");
   });
 });
 
@@ -112,6 +144,23 @@ describe("approvalCardHeading (QA-103: never repeat the same text as heading and
       subtitle: null,
     });
   });
+
+  it("uses the requested times as heading and 'Eksik giriş/çıkış' as subtitle (FG-004)", () => {
+    expect(
+      approvalCardHeading({
+        requestType: "PunchCorrection",
+        summary: {
+          requestDate: "2026-09-20",
+          punchCorrection: {
+            date: "2026-09-18",
+            requestedCheckIn: "08:55:00",
+            requestedCheckOut: "18:00:00",
+            reason: "Turnike arızalıydı",
+          },
+        },
+      })
+    ).toEqual({ heading: "08:55 – 18:00", subtitle: "Eksik giriş/çıkış" });
+  });
 });
 
 describe("approvalDetailRows (görev 8: Başlangıç/Bitiş/Tutar)", () => {
@@ -148,5 +197,75 @@ describe("approvalDetailRows (görev 8: Başlangıç/Bitiş/Tutar)", () => {
 
   it("returns no rows when the task has no summary yet", () => {
     expect(approvalDetailRows({ summary: null } as Pick<InboxTask, "summary">)).toEqual([]);
+  });
+
+  it("returns day/current-punch rows for a punch-correction task (FG-004)", () => {
+    const rows = approvalDetailRows({
+      summary: {
+        requestDate: "2026-09-20",
+        punchCorrection: {
+          date: "2026-09-18",
+          requestedCheckOut: "18:00:00",
+          currentCheckIn: "09:00:00",
+          reason: "Turnike arızalıydı",
+        },
+      },
+    });
+
+    expect(rows).toEqual([
+      { label: "Gün", value: expect.any(String) },
+      { label: "Mevcut", value: "09:00 – —" },
+    ]);
+  });
+});
+
+describe("approvalRequestDetailSummary (FG-009: Onaylarım kartından detaya geçiş)", () => {
+  it("uses the type label as title and the amount as detail when a summary is present", () => {
+    expect(
+      approvalRequestDetailSummary({
+        requestType: "Leave",
+        summary: {
+          requestDate: "2026-09-20",
+          leave: {
+            startDate: "2026-10-01",
+            endDate: "2026-10-05",
+            leaveTypeCode: "annual",
+            leaveTypeName: "leave.type.annual",
+            days: 5,
+            description: "Aile ziyareti",
+          },
+        },
+      })
+    ).toEqual({
+      title: "Yıllık izin",
+      dateLabel: "",
+      detail: "5 gün",
+      description: "Aile ziyareti",
+    });
+  });
+
+  it("falls back to the type label alone (no summary) for an expense/advance task, with no description", () => {
+    expect(approvalRequestDetailSummary({ requestType: "Advance", summary: null })).toEqual({
+      title: "Avans",
+      dateLabel: "",
+      detail: "Avans",
+      description: null,
+    });
+  });
+
+  it("takes the description from the punch-correction reason", () => {
+    expect(
+      approvalRequestDetailSummary({
+        requestType: "PunchCorrection",
+        summary: {
+          requestDate: "2026-09-20",
+          punchCorrection: {
+            date: "2026-09-18",
+            requestedCheckOut: "18:00:00",
+            reason: "Turnike arızalıydı",
+          },
+        },
+      }).description
+    ).toBe("Turnike arızalıydı");
   });
 });

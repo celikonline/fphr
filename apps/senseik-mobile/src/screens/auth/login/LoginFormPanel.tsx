@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   AuthField,
   AuthFormError as ErrorBanner,
@@ -52,17 +53,18 @@ export function LoginFormPanel({
   onBiometricLogin,
   onForgotPassword,
 }: Props) {
+  const { t } = useTranslation("auth");
   return (
     <Panel>
-      <Text style={authStyles.panelTitle}>Tekrar hoş geldiniz</Text>
-      <Text style={authStyles.panelSubtitle}>Devam etmek için hesabınıza giriş yapın.</Text>
+      <Text style={authStyles.panelTitle}>{t("login.title")}</Text>
+      <Text style={authStyles.panelSubtitle}>{t("login.subtitle")}</Text>
       {formError && <ErrorBanner message={formError} />}
-      <AuthField label="E-posta" focused={focusedField === "email"}>
+      <AuthField label={t("fields.email")} focused={focusedField === "email"}>
         <TextInput
           style={authFormStyles.input}
-          placeholder="ad.soyad@sirket.com"
+          placeholder={t("fields.emailPlaceholder")}
           {...authInputColors}
-          accessibilityLabel="E-posta"
+          accessibilityLabel={t("fields.email")}
           value={email}
           onChangeText={onEmailChange}
           onFocus={() => onFocusField("email")}
@@ -77,13 +79,13 @@ export function LoginFormPanel({
           onSubmitEditing={() => passwordRef.current?.focus()}
         />
       </AuthField>
-      <AuthField label="Şifre" focused={focusedField === "password"}>
+      <AuthField label={t("fields.password")} focused={focusedField === "password"}>
         <TextInput
           ref={passwordRef}
           style={authFormStyles.input}
-          placeholder="Şifrenizi girin"
+          placeholder={t("fields.passwordPlaceholder")}
           {...authInputColors}
-          accessibilityLabel="Şifre"
+          accessibilityLabel={t("fields.password")}
           value={password}
           onChangeText={onPasswordChange}
           onFocus={() => onFocusField("password")}
@@ -99,14 +101,16 @@ export function LoginFormPanel({
         <TouchableOpacity
           onPress={onToggleShowPassword}
           accessibilityRole="button"
-          accessibilityLabel={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+          accessibilityLabel={showPassword ? t("login.hidePassword") : t("login.showPassword")}
           style={styles.showHideButton}
         >
-          <Text style={styles.showHideText}>{showPassword ? "Gizle" : "Göster"}</Text>
+          <Text style={styles.showHideText}>
+            {showPassword ? t("login.hide") : t("login.show")}
+          </Text>
         </TouchableOpacity>
       </AuthField>
       <AuthSubmitButton
-        label="Giriş yap"
+        label={t("login.submit")}
         onPress={onSubmit}
         disabled={isLoading}
         loading={isLoading}
@@ -117,18 +121,18 @@ export function LoginFormPanel({
           onPress={onBiometricLogin}
           disabled={isLoading}
           accessibilityRole="button"
-          accessibilityLabel="Biyometrik ile giriş yap"
+          accessibilityLabel={t("login.biometric")}
         >
-          <Text style={styles.secondaryButtonText}>Biyometrik ile giriş yap</Text>
+          <Text style={styles.secondaryButtonText}>{t("login.biometric")}</Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity
         style={authStyles.secondaryLink}
         onPress={onForgotPassword}
         accessibilityRole="button"
-        accessibilityLabel="Şifremi unuttum"
+        accessibilityLabel={t("login.forgotPassword")}
       >
-        <Text style={authStyles.secondaryLinkText}>Şifremi unuttum</Text>
+        <Text style={authStyles.secondaryLinkText}>{t("login.forgotPassword")}</Text>
       </TouchableOpacity>
     </Panel>
   );

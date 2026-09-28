@@ -1,4 +1,5 @@
 import type { AccentKey } from "@/theme/theme";
+import { toLocaleUpper } from "@/lib/formatters";
 
 const ACCENT_ORDER: readonly AccentKey[] = [
   "blue",
@@ -20,7 +21,7 @@ export function initialsOf(fullName: string): string {
   const words = fullName.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return "?";
   const initials = words.length === 1 ? words[0][0] : `${words[0][0]}${words[words.length - 1][0]}`;
-  return initials.toLocaleUpperCase("tr-TR");
+  return toLocaleUpper(initials);
 }
 
 /** Deterministic (same name -> same accent every render) hash into the 9-color accent palette. */

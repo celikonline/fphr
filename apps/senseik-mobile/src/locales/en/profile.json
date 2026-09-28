@@ -1,0 +1,21 @@
+{
+  "title": "My profile",
+  "loadError": "Profile details could not be loaded. Please try again.",
+  "notFound": "You have no employee record.",
+  "groups": {
+    "personal": "Personal",
+    "contact": "Contact",
+    "job": "Job"
+  },
+  "fields": {
+    "workEmail": "Work email",
+    "phone": "Phone",
+    "title": "Title",
+    "department": "Department",
+    "hireDate": "Hire date"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language"
+  }
+}

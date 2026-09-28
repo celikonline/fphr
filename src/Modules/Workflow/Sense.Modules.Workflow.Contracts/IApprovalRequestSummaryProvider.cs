@@ -16,11 +16,20 @@ public sealed record LeaveApprovalSummary(
 /// so the Workflow inbox/decision screens show more than the opaque SubjectId - the requester picked a date, a duration
 /// or a range, and the approver needs that to decide, not a GUID. RequestDate is the request's own date (the overtime
 /// work date, or the leave start date), shown next to the ApprovalRequest's SubmittedAt. Exactly one of
-/// <see cref="Overtime"/>/<see cref="Leave"/> is set today, matching RequestType; both null is not constructible -
+/// <see cref="Overtime"/>/<see cref="Leave"/>/<see cref="PunchCorrection"/> is set today, matching RequestType; both null is not constructible -
 /// a provider that finds nothing returns a null <see cref="ApprovalRequestSummary"/> instead (see
 /// <see cref="IApprovalRequestSummaryProvider.GetSummaryAsync"/>).
 /// </summary>
-public sealed record ApprovalRequestSummary(DateOnly RequestDate, OvertimeApprovalSummary? Overtime = null, LeaveApprovalSummary? Leave = null);
+public sealed record ApprovalRequestSummary(
+    DateOnly RequestDate, OvertimeApprovalSummary? Overtime = null, LeaveApprovalSummary? Leave = null,
+    PunchCorrectionApprovalSummary? PunchCorrection = null);
+
+/// <summary>
+/// Eksik giriş/çıkış düzeltmesi ("PunchCorrection", FG-004) projection: the day, the times the employee asks for, and the
+/// day's check-in/out as they were when the request was submitted (null = no punch recorded then).
+/// </summary>
+public sealed record PunchCorrectionApprovalSummary(
+    DateOnly Date, TimeOnly? RequestedCheckIn, TimeOnly? RequestedCheckOut, TimeOnly? CurrentCheckIn, TimeOnly? CurrentCheckOut, string Reason);
 
 /// <summary>
 /// A producing module's read port for <see cref="ApprovalRequestSummary"/>, one implementation per RequestType

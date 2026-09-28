@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/auth/BrandMark";
 import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
@@ -71,12 +72,13 @@ function daysFromToday(days: number): Date {
 }
 
 export default function DashboardScreen() {
+  const { t, i18n } = useTranslation("home");
   const { user } = useAuthStore();
   const navigation = useNavigation<DashboardNavigationProp>();
   const selfEmployeeId = user?.employeeId ?? undefined;
 
   const [balances, setBalances] = useState<LeaveBalanceItem[] | null>(null);
-  const [balanceError, setBalanceError] = useState<string | null>(null);
+  const [balanceError, setBalanceError] = useState(false);
   const [approvalsCount, setApprovalsCount] = useState(0);
   const [sections, setSections] = useState<FeedSections>(EMPTY_SECTIONS);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,22 +94,35 @@ export default function DashboardScreen() {
     }
   }, []);
 
+  // FG-008: the "Onaylarım" badge, refreshed the same way as the bell above - a toplu/single karar
+  // given on `ApprovalsScreen` (pushed on top of this tab, still mounted underneath) only shows up
+  // here once the user comes back to Home, which is exactly when this fires.
+  const loadApprovalsCount = useCallback(async () => {
+    try {
+      setApprovalsCount((await approvalsService.getInbox()).length);
+    } catch {
+      // Approvals badge just stays at its last known value too - same as the bell above.
+    }
+  }, []);
+
   // N1: refresh the bell badge whenever this screen regains focus, and whenever the app comes back
   // to the foreground while already on it - no polling interval (coordinator's explicit ask).
   useFocusEffect(
     useCallback(() => {
       void loadUnreadCount();
-    }, [loadUnreadCount])
+      void loadApprovalsCount();
+    }, [loadUnreadCount, loadApprovalsCount])
   );
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
         void loadUnreadCount();
+        void loadApprovalsCount();
       }
     });
     return () => subscription.remove();
-  }, [loadUnreadCount]);
+  }, [loadUnreadCount, loadApprovalsCount]);
 
   /** Every section loads independently (spec §4): one failing request never hides the others. */
   const loadAll = useCallback(async () => {
@@ -125,9 +140,9 @@ export default function DashboardScreen() {
 
     if (balancesResult.status === "fulfilled") {
       setBalances(sortBalancesAnnualFirst(balancesResult.value.balances));
-      setBalanceError(null);
+      setBalanceError(false);
     } else {
-      setBalanceError("İzin bakiyeleri yüklenemedi. Lütfen tekrar deneyin.");
+      setBalanceError(true);
     }
     // Approvals badge: a failed inbox read keeps the last known count (spec §4: "hata sessiz").
     if (inboxResult.status === "fulfilled") {
@@ -141,9 +156,11 @@ export default function DashboardScreen() {
     });
   }, [selfEmployeeId]);
 
+  // Re-fetched on a language switch too: leave type names and the people-off labels are localized
+  // at load time (server-side via Accept-Language, client-side in `selectPeopleOffToday`).
   useEffect(() => {
     void loadAll();
-  }, [loadAll]);
+  }, [loadAll, i18n.language]);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -170,7 +187,10 @@ export default function DashboardScreen() {
 
   const firstName = user?.firstName ?? "";
   const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
-  const bellLabel = unreadCount > 0 ? `Bildirimler, ${unreadCount} okunmamış` : "Bildirimler";
+  const bellLabel =
+    unreadCount > 0
+      ? t("topBar.notificationsUnread", { count: unreadCount })
+      : t("topBar.notifications");
 
   return (
     <Screen withTabBar refreshing={refreshing} onRefresh={() => void onRefresh()}>
@@ -185,7 +205,7 @@ export default function DashboardScreen() {
           <IconCircleButton
             icon="calendar-outline"
             onPress={() => navigation.navigate("Leave")}
-            accessibilityLabel="İzinlerim"
+            accessibilityLabel={t("topBar.myLeaves")}
           />
           <IconCircleButton
             icon="notifications-outline"
@@ -196,7 +216,7 @@ export default function DashboardScreen() {
           <IconCircleButton
             icon="ellipsis-vertical"
             onPress={() => setMenuVisible(true)}
-            accessibilityLabel="Diğer seçenekler"
+            accessibilityLabel={t("topBar.moreOptions")}
           />
         </View>
       </View>
@@ -205,37 +225,37 @@ export default function DashboardScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate("Profile")}
           accessibilityRole="button"
-          accessibilityLabel="Profilim"
+          accessibilityLabel={t("hello.myProfile")}
         >
           <Avatar name={fullName} self size={60} radius={18} />
         </TouchableOpacity>
         <View style={styles.helloText}>
           <Text style={styles.greeting} numberOfLines={1}>
-            Hoş geldin, {firstName}
+            {t("hello.greeting", { name: firstName })}
           </Text>
           <TouchableOpacity
             onPress={() => navigation.navigate("Profile")}
             accessibilityRole="link"
-            accessibilityLabel="Profili gör"
+            accessibilityLabel={t("hello.viewProfile")}
             hitSlop={{ top: 12, bottom: 12, left: 4, right: 12 }}
           >
-            <Text style={styles.profileLink}>Profili gör</Text>
+            <Text style={styles.profileLink}>{t("hello.viewProfile")}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <SectionHeader title="Kalan bakiyem" />
+      <SectionHeader title={t("sections.balances")} />
       {balanceError ? (
-        <ErrorBanner message={balanceError} onRetry={() => void onRefresh()} />
+        <ErrorBanner message={t("balances.loadError")} onRetry={() => void onRefresh()} />
       ) : balances === null ? (
         <ActivityIndicator style={styles.balanceLoading} color={palette.white} />
       ) : balances.length === 0 ? (
-        <Text style={styles.emptyBalances}>Bakiye kaydı yok</Text>
+        <Text style={styles.emptyBalances}>{t("balances.empty")}</Text>
       ) : (
         <BalanceCarousel items={balances} onPressItem={() => navigation.navigate("Leave")} />
       )}
 
-      <SectionHeader title="İşlemlerim" />
+      <SectionHeader title={t("sections.actions")} />
       <ActionGrid
         approvalsCount={approvalsCount}
         onNavigate={(route) => navigation.navigate(route)}
@@ -243,21 +263,21 @@ export default function DashboardScreen() {
 
       {sections.peopleOff ? (
         <>
-          <SectionHeader title="Bugün izinde olanlar" />
+          <SectionHeader title={t("sections.peopleOff")} />
           <PeopleOffCard people={sections.peopleOff} />
         </>
       ) : null}
 
       {sections.birthdays ? (
         <>
-          <SectionHeader title="Yaklaşan doğum günleri" />
+          <SectionHeader title={t("sections.birthdays")} />
           <BirthdayCard birthdays={sections.birthdays} />
         </>
       ) : null}
 
       {sections.events ? (
         <>
-          <SectionHeader title="Yaklaşan etkinlikler" />
+          <SectionHeader title={t("sections.events")} />
           {sections.events.map((event, index) => (
             <EventCard key={event.id ?? `${event.date}-${index}`} event={event} />
           ))}
@@ -266,7 +286,7 @@ export default function DashboardScreen() {
 
       {sections.announcements ? (
         <>
-          <SectionHeader title="Duyurular" />
+          <SectionHeader title={t("sections.announcements")} />
           {sections.announcements.map((announcement) => (
             <AnnouncementCard key={announcement.id} announcement={announcement} />
           ))}

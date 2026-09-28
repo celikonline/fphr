@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import type { CompanyCalendarEntry } from "@/services/HomeFeedService";
 import { accents, fontFor, palette, text } from "@/theme/theme";
@@ -15,6 +16,7 @@ type Props = {
  * Not pressable - the mobile app has no event detail screen, so the mockup's chevron is omitted.
  */
 export function EventCard({ event }: Props) {
+  useTranslation();
   const isMeeting = event.type === "meeting";
   const accent = accents[isMeeting ? "purple" : "blue"];
   const meta = event.description

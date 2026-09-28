@@ -1,0 +1,43 @@
+{
+  "title": "Vardiyam",
+  "loadError": "Vardiya bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+  "employeeLabel": "Çalışan #{{id}}",
+  "previousWeek": "Önceki hafta",
+  "nextWeek": "Sonraki hafta",
+  "night": "Gece",
+  "allDay": "Tüm gün",
+  "sections": {
+    "myWeek": "Bu haftaki vardiyalarım",
+    "team": "Ekip vardiyaları",
+    "unavailable": "Müsait değilim",
+    "myAvailability": "Müsaitlik kayıtlarım"
+  },
+  "empty": {
+    "week": {
+      "mine": "Bu hafta için yayınlanmış vardiyanız yok.",
+      "team": "Bu hafta için görüntüleyebileceğiniz ekip vardiyası yok."
+    },
+    "day": {
+      "mine": "Bu gün için vardiyanız yok.",
+      "team": "Bu gün için görüntüleyebileceğiniz ekip vardiyası yok."
+    }
+  },
+  "availability": {
+    "kinds": {
+      "unavailable": "Bugün çalışmak istemiyorum",
+      "weeklyRestRequest": "Haftalık iznimi kullanmak istiyorum"
+    },
+    "date": "Tarih",
+    "kind": "Tür",
+    "kindPlaceholder": "Tür seçin",
+    "note": "Not (opsiyonel)",
+    "notePlaceholder": "Ek bilgi ekleyin",
+    "cancel": "İptal et",
+    "dateRequired": "Lütfen bir tarih girin.",
+    "saved": "Müsaitlik durumunuz kaydedildi.",
+    "saveError": "Müsaitlik durumu kaydedilemedi. Lütfen tekrar deneyin.",
+    "cancelError": "Kayıt iptal edilemedi. Lütfen tekrar deneyin.",
+    "cancelConfirmTitle": "Kaydı iptal et",
+    "cancelConfirmMessage": "Bu müsaitlik kaydını iptal etmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+  }
+}

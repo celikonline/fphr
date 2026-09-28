@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import { formatDays } from "@/lib/formatters";
 import type { LeaveBalanceItem } from "@/services/LeaveService";
@@ -20,6 +21,7 @@ const BAR_WIDTH = 170;
 
 /** "Kalan bakiyem": one snapping glass card per leave type (also reused by İzinlerim). */
 export function BalanceCarousel({ items, onPressItem }: Props) {
+  const { t } = useTranslation("home");
   const { width } = useWindowDimensions();
   const cardWidth = Math.round(width * CARD_WIDTH_RATIO);
 
@@ -30,7 +32,7 @@ export function BalanceCarousel({ items, onPressItem }: Props) {
       snapToInterval={cardWidth + CARD_GAP}
       decelerationRate="fast"
       contentContainerStyle={styles.content}
-      accessibilityLabel="İzin bakiyeleri"
+      accessibilityLabel={t("balances.a11y")}
     >
       {items.map((item) => (
         <BalanceCard
@@ -53,11 +55,16 @@ function BalanceCard({
   width: number;
   onPress: () => void;
 }) {
+  const { t } = useTranslation("home");
   const { available, entitlement, progress } = balanceFraction(item.balance);
   const summary =
     entitlement === null
-      ? `${formatDays(available)} gün kullanılabilir`
-      : `${formatDays(available)} / ${formatDays(entitlement)} gün`;
+      ? t("balances.available", { count: available, value: formatDays(available) })
+      : t("balances.fraction", {
+          count: entitlement,
+          value: formatDays(available),
+          total: formatDays(entitlement),
+        });
 
   return (
     <GlassCard
@@ -72,7 +79,9 @@ function BalanceCard({
         </Text>
         <Text style={styles.value} numberOfLines={1}>
           <Text style={styles.valueStrong}>{formatDays(available)}</Text>
-          {entitlement === null ? " gün kullanılabilir" : ` / ${formatDays(entitlement)} gün`}
+          {entitlement === null
+            ? t("balances.availableSuffix", { count: available })
+            : t("balances.fractionSuffix", { count: entitlement, total: formatDays(entitlement) })}
         </Text>
         {entitlement !== null ? (
           <View style={styles.track}>

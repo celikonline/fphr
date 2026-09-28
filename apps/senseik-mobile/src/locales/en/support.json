@@ -1,0 +1,45 @@
+{
+  "title": "Support",
+  "sections": {
+    "help": "Help Center",
+    "contact": "Contact support",
+    "tickets": "My tickets"
+  },
+  "categories": {
+    "general": "General",
+    "dataTransfer": "Data transfer",
+    "leaveAndOvertime": "Leave and overtime",
+    "approvals": "Approval processes",
+    "accessAndPermissions": "Access and permissions",
+    "payroll": "Payroll",
+    "billing": "Billing",
+    "other": "Other"
+  },
+  "status": {
+    "open": "Open",
+    "answered": "Answered",
+    "closed": "Closed"
+  },
+  "newTicket": {
+    "intro": "Couldn't find what you were looking for? Open a short ticket and our team will get back to you.",
+    "category": "Category",
+    "subject": "Subject",
+    "subjectPlaceholder": "Summarize your request briefly",
+    "body": "Details",
+    "bodyPlaceholder": "What were you trying to do, what did you expect, what happened?",
+    "submit": "Send ticket",
+    "missingFields": "Please fill in the subject and details.",
+    "submitted": "Your ticket has been received. Our support team will get back to you.",
+    "submitError": "The ticket could not be sent. Please try again."
+  },
+  "tickets": {
+    "empty": "You have no support tickets yet.",
+    "resolution": "Answer: {{resolution}}"
+  },
+  "help": {
+    "backToList": "Back to list",
+    "search": "Search",
+    "searchPlaceholder": "What are you looking for? e.g. data transfer",
+    "empty": "No articles match this search."
+  }
+}

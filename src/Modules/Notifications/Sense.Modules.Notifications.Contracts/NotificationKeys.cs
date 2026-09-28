@@ -53,6 +53,9 @@ public static class NotificationTemplateKeys
 
     /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
     public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
+
+    /// <summary>The other parties of an approval request (requester, approvers, deciders): someone commented on it (Workflow.ApprovalRequestCommented). In-app only.</summary>
+    public const string RequestCommentAdded = "request.comment_added";
 }
 
 /// <summary>Delivery channels. Web Push (browser) is not covered yet - only Expo (mobile) push.</summary>

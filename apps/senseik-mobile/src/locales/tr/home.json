@@ -1,0 +1,68 @@
+{
+  "topBar": {
+    "notifications": "Bildirimler",
+    "notificationsUnread_one": "Bildirimler, {{count}} okunmamış",
+    "notificationsUnread_other": "Bildirimler, {{count}} okunmamış",
+    "myLeaves": "İzinlerim",
+    "moreOptions": "Diğer seçenekler"
+  },
+  "hello": {
+    "myProfile": "Profilim",
+    "greeting": "Hoş geldin, {{name}}",
+    "viewProfile": "Profili gör"
+  },
+  "sections": {
+    "balances": "Kalan bakiyem",
+    "actions": "İşlemlerim",
+    "peopleOff": "Bugün izinde olanlar",
+    "birthdays": "Yaklaşan doğum günleri",
+    "events": "Yaklaşan etkinlikler",
+    "announcements": "Duyurular"
+  },
+  "balances": {
+    "loadError": "İzin bakiyeleri yüklenemedi. Lütfen tekrar deneyin.",
+    "empty": "Bakiye kaydı yok",
+    "a11y": "İzin bakiyeleri",
+    "available_one": "{{value}} gün kullanılabilir",
+    "available_other": "{{value}} gün kullanılabilir",
+    "fraction_one": "{{value}} / {{total}} gün",
+    "fraction_other": "{{value}} / {{total}} gün",
+    "availableSuffix_one": " gün kullanılabilir",
+    "availableSuffix_other": " gün kullanılabilir",
+    "fractionSuffix_one": " / {{total}} gün",
+    "fractionSuffix_other": " / {{total}} gün"
+  },
+  "actions": {
+    "attendance": "Puantaj",
+    "leave": "İzinlerim",
+    "payroll": "Bordro",
+    "approvals": "Onaylarım",
+    "requests": "Taleplerim",
+    "people": "Kişiler",
+    "shift": "Vardiyam",
+    "goals": "Hedeflerim",
+    "support": "Destek"
+  },
+  "announcements": {
+    "new": "Yeni",
+    "showLess": "Daha az göster",
+    "readMore": "Devamını oku"
+  },
+  "birthdays": {
+    "today": "Bugün",
+    "daysLeft_one": "{{count}} gün kaldı",
+    "daysLeft_other": "{{count}} gün kaldı"
+  },
+  "menu": {
+    "profile": "Profilim",
+    "notificationPreferences": "Bildirim tercihleri",
+    "support": "Destek",
+    "logout": "Çıkış yap",
+    "close": "Menüyü kapat"
+  },
+  "peopleOff": {
+    "today": "Bugün",
+    "onLeave": "İzinli",
+    "remote": "Uzaktan çalışıyor"
+  }
+}

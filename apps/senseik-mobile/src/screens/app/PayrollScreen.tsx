@@ -1,36 +1,39 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import * as Sharing from "expo-sharing";
+import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { payrollService, type MyPayslip } from "@/services/PayrollService";
 import { formatCurrencyTRY, formatRelativeTime } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
+import { monthName } from "@/components/form/dateRange";
 import { palette, type Tone } from "@/theme/theme";
 import { PayslipHeroCard } from "./payroll/PayslipHeroCard";
 import { PayslipRow } from "./payroll/PayslipRow";
 
 /**
- * TK-030 riskli alan: always the same generic Turkish message, regardless of the underlying failure
+ * TK-030 riskli alan: always the same generic (localized) message, regardless of the underlying failure
  * (403 not-in-scope, 404 `payroll.payslip.not_found`, network error, ...) - the parameter exists only
  * to document at the type level that the message never reads or forwards anything from the actual
  * error (no `getApiErrorMessage`/server `detail` here, unlike most other screens in this app).
  */
 export function payslipsLoadErrorMessage(_error: unknown): string {
-  return "Bordro pusulaları yüklenemedi. Lütfen tekrar deneyin.";
+  return i18n.t("payroll:errors.load");
 }
 
 /** Same guarantee as `payslipsLoadErrorMessage`, for the "open one payslip's PDF" action. */
 export function payslipOpenErrorMessage(_error: unknown): string {
-  return "Bordro pusulası açılamadı. Lütfen tekrar deneyin.";
+  return i18n.t("payroll:errors.open");
 }
 
 /** Same guarantee as `payslipsLoadErrorMessage`, for the "okudum, onaylıyorum" action (TK-030 kabul kriteri 2). */
 export function payslipAcknowledgeErrorMessage(_error: unknown): string {
-  return "Onay gönderilemedi. Lütfen tekrar deneyin.";
+  return i18n.t("payroll:errors.acknowledge");
 }
 
 /** "Onaylandı · 2 gün önce" once a payslip has an `acknowledgedAt` - reuses the notifications list's relative-time formatter. */
 export function formatAcknowledgedLabel(acknowledgedAt: string): string {
-  return `Onaylandı · ${formatRelativeTime(acknowledgedAt)}`;
+  return i18n.t("payroll:status.acknowledgedAt", { time: formatRelativeTime(acknowledgedAt) });
 }
 
 /** Status pill shown on every non-featured month row (TK-030). */
@@ -39,29 +42,18 @@ export function payslipAcknowledgementStatus(acknowledgedAt: string | null): {
   tone: Tone;
 } {
   return acknowledgedAt
-    ? { label: "Onaylandı", tone: "success" }
-    : { label: "Onay bekliyor", tone: "warning" };
+    ? { label: i18n.t("payroll:status.acknowledged"), tone: "success" }
+    : { label: i18n.t("payroll:status.pending"), tone: "warning" };
 }
 
-const TURKISH_MONTHS = [
-  "Ocak",
-  "Şubat",
-  "Mart",
-  "Nisan",
-  "Mayıs",
-  "Haziran",
-  "Temmuz",
-  "Ağustos",
-  "Eylül",
-  "Ekim",
-  "Kasım",
-  "Aralık",
-];
+/** Month name of a 1-based `month` in the active language; the number itself when out of range. */
+function payslipMonthName(month: number): string {
+  return monthName(month - 1) ?? String(month);
+}
 
-/** "Eylül 2026" from a `MyPayslipDto`'s 1-based `month`/`year`. */
+/** "Eylül 2026" / "September 2026" from a `MyPayslipDto`'s 1-based `month`/`year`. */
 export function formatPayslipPeriod(year: number, month: number): string {
-  const name = TURKISH_MONTHS[month - 1] ?? String(month);
-  return `${name} ${year}`;
+  return `${payslipMonthName(month)} ${year}`;
 }
 
 /** A stable, human-readable filename for the downloaded/shared PDF - never includes amounts. */
@@ -75,6 +67,8 @@ export function shouldIgnorePayslipTap(openingPayslipId: string | null): boolean
 }
 
 export default function PayrollScreen() {
+  // Re-renders on a language switch; the module-level helpers above read `i18n` at call time.
+  const { t } = useTranslation("payroll");
   const [payslips, setPayslips] = useState<MyPayslip[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -119,12 +113,12 @@ export default function PayrollScreen() {
       );
       const canShare = await Sharing.isAvailableAsync();
       if (!canShare) {
-        Alert.alert("Hata", "Bu cihazda dosya açma desteklenmiyor.");
+        Alert.alert(t("common:alerts.error"), t("errors.shareUnavailable"));
         return;
       }
       await Sharing.shareAsync(fileUri, { mimeType: "application/pdf" });
     } catch (openError) {
-      Alert.alert("Hata", payslipOpenErrorMessage(openError));
+      Alert.alert(t("common:alerts.error"), payslipOpenErrorMessage(openError));
     } finally {
       // Best-effort PII cleanup (TK-030): the share sheet's promise resolves once the chosen viewer
       // has been launched, not once the user is done looking at it, so this can't be a hard
@@ -144,7 +138,7 @@ export default function PayrollScreen() {
       // `acknowledgedAt` (and picks up any other change since the last load).
       await loadAll();
     } catch (acknowledgeError) {
-      Alert.alert("Hata", payslipAcknowledgeErrorMessage(acknowledgeError));
+      Alert.alert(t("common:alerts.error"), payslipAcknowledgeErrorMessage(acknowledgeError));
     } finally {
       setAcknowledgingPayslipId(null);
     }
@@ -152,13 +146,13 @@ export default function PayrollScreen() {
 
   // B6-style irreversible action: confirm before acknowledging instead of acting on the first tap.
   function confirmAcknowledge(payslipId: string) {
-    Alert.alert("Okudum, onaylıyorum", "Bu bordro pusulasını okuduğunuzu onaylıyor musunuz?", [
-      { text: "Vazgeç", style: "cancel" },
-      { text: "Onaylıyorum", onPress: () => void acknowledgePayslip(payslipId) },
+    Alert.alert(t("acknowledge"), t("confirm.message"), [
+      { text: t("common:actions.cancel"), style: "cancel" },
+      { text: t("confirm.confirm"), onPress: () => void acknowledgePayslip(payslipId) },
     ]);
   }
 
-  const header = <ScreenHeader title="Bordrom" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -178,7 +172,7 @@ export default function PayrollScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {!error && payslips.length === 0 ? (
-        <EmptyState icon="wallet-outline" title="Henüz görüntülenebilir bordro pusulanız yok." />
+        <EmptyState icon="wallet-outline" title={t("empty")} />
       ) : null}
 
       {latest ? (
@@ -194,12 +188,11 @@ export default function PayrollScreen() {
       ) : null}
 
       {rest.map((payslip) => {
-        const monthName = TURKISH_MONTHS[payslip.month - 1] ?? String(payslip.month);
         const status = payslipAcknowledgementStatus(payslip.acknowledgedAt);
         return (
           <PayslipRow
             key={payslip.payslipId}
-            monthLabel={monthName}
+            monthLabel={payslipMonthName(payslip.month)}
             year={payslip.year}
             netAmount={formatCurrencyTRY(payslip.netAmount)}
             isAcknowledged={Boolean(payslip.acknowledgedAt)}

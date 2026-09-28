@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Switch, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
 import {
   notificationsService,
@@ -22,6 +24,7 @@ function PreferenceRow({
   onToggle: (channel: NotificationChannel, enabled: boolean) => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation("notifications");
   return (
     <GlassCard style={styles.card}>
       <Text style={styles.cardTitle}>{notificationTemplateLabel(preference.templateKey)}</Text>
@@ -38,12 +41,15 @@ function PreferenceRow({
           />
         </View>
       ))}
-      {preference.isMandatory && <Text style={styles.mandatoryText}>Kapatılamaz</Text>}
+      {preference.isMandatory && (
+        <Text style={styles.mandatoryText}>{t("preferences.mandatory")}</Text>
+      )}
     </GlassCard>
   );
 }
 
 export default function NotificationPreferencesScreen() {
+  const { t } = useTranslation("notifications");
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,7 +61,7 @@ export default function NotificationPreferencesScreen() {
       const result = await notificationsService.getPreferences();
       setPreferences(result);
     } catch {
-      setError("Bildirim tercihleri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("notifications:preferences.loadError"));
     }
   }, []);
 
@@ -87,17 +93,14 @@ export default function NotificationPreferencesScreen() {
       await notificationsService.updatePreferences([{ templateKey, channel, enabled }]);
     } catch {
       setPreferences(previous);
-      Alert.alert("Hata", "Bildirim tercihi kaydedilemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("preferences.saveError"));
     } finally {
       setSaving(false);
     }
   }
 
   const header = (
-    <ScreenHeader
-      title="Bildirim tercihleri"
-      subtitle="Hangi bildirimleri e-posta ile ve uygulama içinde alacağınızı seçin."
-    />
+    <ScreenHeader title={t("preferences.title")} subtitle={t("preferences.subtitle")} />
   );
 
   if (loading) {
@@ -115,7 +118,7 @@ export default function NotificationPreferencesScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
       {!error && preferences.length === 0 ? (
-        <EmptyState icon="notifications-outline" title="Ayarlanabilir bildirim yok." />
+        <EmptyState icon="notifications-outline" title={t("preferences.empty")} />
       ) : (
         preferences.map((preference) => (
           <PreferenceRow

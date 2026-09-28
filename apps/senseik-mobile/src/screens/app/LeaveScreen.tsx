@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import {
   BottomSheet,
   EmptyState,
@@ -21,6 +22,7 @@ import { sortBalancesAnnualFirst } from "@/services/HomeFeedService";
 import { LeaveBalanceCard } from "@/components/leave/LeaveBalanceCard";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 import { getApiErrorMessage } from "@/lib/apiError";
+import i18n from "@/lib/i18n";
 import { palette, text } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
 import { BalanceCarousel } from "./home/BalanceCarousel";
@@ -61,6 +63,7 @@ export function canLeaveRequestHaveAttachments(
  * attachments. Reloads on focus, so a request sent from NewRequest shows up on return.
  */
 export default function LeaveScreen() {
+  const { t } = useTranslation("leave");
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [balances, setBalances] = useState<LeaveBalanceItem[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -83,7 +86,7 @@ export default function LeaveScreen() {
       setRequests(requestsResult);
       setRequestableTypes(typesResult);
     } catch {
-      setError("İzin bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("leave:loadError"));
     }
   }, []);
 
@@ -105,10 +108,7 @@ export default function LeaveScreen() {
       await leaveService.withdrawLeaveRequest(requestId);
       await loadAll();
     } catch (withdrawError) {
-      Alert.alert(
-        "Hata",
-        getApiErrorMessage(withdrawError, "İzin talebi geri çekilemedi. Lütfen tekrar deneyin.")
-      );
+      Alert.alert(t("common:alerts.error"), getApiErrorMessage(withdrawError, t("withdraw.error")));
     } finally {
       setWithdrawingRequestId(null);
     }
@@ -116,17 +116,17 @@ export default function LeaveScreen() {
 
   // H1: irreversible action - confirm before withdrawing instead of acting on the first tap.
   function confirmWithdraw(requestId: string) {
-    Alert.alert(
-      "İzin talebini geri çek",
-      "Bu izin talebini geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "Geri çek", style: "destructive", onPress: () => void withdrawRequest(requestId) },
-      ]
-    );
+    Alert.alert(t("withdraw.confirmTitle"), t("withdraw.confirmMessage"), [
+      { text: t("common:actions.cancel"), style: "cancel" },
+      {
+        text: t("withdraw.action"),
+        style: "destructive",
+        onPress: () => void withdrawRequest(requestId),
+      },
+    ]);
   }
 
-  const header = <ScreenHeader title="İzinlerim" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -142,24 +142,24 @@ export default function LeaveScreen() {
     <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
-      <SectionHeader title="Kalan bakiyem" />
+      <SectionHeader title={t("home:sections.balances")} />
       {balances.length > 0 ? (
         <BalanceCarousel items={balances} onPressItem={setBalanceDetail} />
       ) : (
-        <Text style={styles.emptyText}>Bakiye kaydı bulunamadı.</Text>
+        <Text style={styles.emptyText}>{t("balancesEmpty")}</Text>
       )}
 
       <View style={styles.newRequest}>
         <PrimaryButton
-          label="Yeni izin talebi"
+          label={t("newRequest")}
           icon="add"
           onPress={() => navigation.navigate("NewRequest", { kind: "leave" })}
         />
       </View>
 
-      <SectionHeader title="Taleplerim" />
+      <SectionHeader title={t("myRequests")} />
       {requests.length === 0 ? (
-        <EmptyState icon="sunny-outline" title="Henüz izin talebiniz yok." />
+        <EmptyState icon="sunny-outline" title={t("requestsEmpty")} />
       ) : (
         requests.map((request) => (
           <LeaveRequestListItem
@@ -177,7 +177,7 @@ export default function LeaveScreen() {
       <BottomSheet
         visible={balanceDetail !== null}
         onClose={() => setBalanceDetail(null)}
-        title="Bakiye ayrıntısı"
+        title={t("balanceDetail")}
       >
         {balanceDetail ? <LeaveBalanceCard item={balanceDetail} /> : null}
       </BottomSheet>

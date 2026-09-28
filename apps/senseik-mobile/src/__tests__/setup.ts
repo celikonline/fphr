@@ -1,3 +1,5 @@
+import testI18n from "@/lib/i18n";
+
 // Jest setup file
 jest.mock("@react-native-async-storage/async-storage", () =>
   jest.requireActual("@react-native-async-storage/async-storage/jest/async-storage-mock")
@@ -94,4 +96,18 @@ jest.mock("react-native-reanimated", () => {
     withSequence: (...animations: unknown[]) => animations[0],
     FadeInDown: chainableTiming(),
   };
+});
+
+// FG-001: tests run in Turkish regardless of the host machine's locale - the device language is
+// pinned to "tr" (nothing is saved in the AsyncStorage mock), so every existing Turkish assertion
+// keeps matching. A test that switches to English must not leak into the next one.
+// `getLocales` is a jest.fn so a test can simulate another device language (see i18n.test.ts).
+jest.mock("expo-localization", () => ({
+  getLocales: jest.fn(() => [{ languageCode: "tr", languageTag: "tr-TR" }]),
+}));
+
+beforeEach(() => {
+  if (testI18n.language !== "tr") {
+    void testI18n.changeLanguage("tr");
+  }
 });

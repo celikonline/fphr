@@ -1,6 +1,7 @@
 import React, { Fragment, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Avatar, GlassCard } from "@/components/ui";
 import { formatDays } from "@/lib/formatters";
 import type { PersonOff } from "@/services/HomeFeedService";
@@ -73,6 +74,7 @@ type Props = {
 
 /** "Bugün izinde olanlar": everyone on approved leave today in one card. */
 export function PeopleOffCard({ people }: Props) {
+  const { t } = useTranslation("home");
   return (
     <GlassCard style={styles.card}>
       {people.map((person, index) => (
@@ -83,7 +85,11 @@ export function PeopleOffCard({ people }: Props) {
             employeeId={person.employeeId}
             emoji={person.isRemote ? "💻" : "🌴"}
             pillTitle={person.typeLabel}
-            pillCaption={person.isRemote ? "Bugün" : `${formatDays(person.days)} gün`}
+            pillCaption={
+              person.isRemote
+                ? t("peopleOff.today")
+                : t("common:units.days", { count: person.days, value: formatDays(person.days) })
+            }
             meta={
               <>
                 <Text style={styles.metaText}>{formatShortDate(person.startDate)}</Text>

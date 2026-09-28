@@ -23,6 +23,12 @@ public static class WorkflowTemplateModel
 
     /// <summary>Web route of the approval inbox (web/src/App.tsx).</summary>
     public const string InboxPath = "/app/inbox";
+
+    /// <summary>FG-009: display name of whoever commented on a request.</summary>
+    public const string AuthorName = "author_name";
+
+    /// <summary>FG-009: app path of one approval request's detail - mobile opens its request detail screen from it.</summary>
+    public static string RequestPath(Guid approvalRequestId) => $"/app/requests/{approvalRequestId}";
 }
 
 /// <summary>request.created → requester.</summary>
@@ -123,6 +129,37 @@ public sealed class ApprovalRejectedNotificationHandler(NotificationRecipientRes
                     [WorkflowTemplateModel.RejectedAtStep] = integrationEvent.RejectedAtStep.ToString(CultureInfo.InvariantCulture),
                 },
                 ActionPath: null),
+            cancellationToken);
+    }
+}
+
+/// <summary>request.comment_added → the request's other parties (recipients resolved by Workflow; the author is never notified).</summary>
+public sealed class ApprovalRequestCommentedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
+    : IIntegrationEventHandler<ApprovalRequestCommented>
+{
+    public async Task Handle(ApprovalRequestCommented integrationEvent, CancellationToken cancellationToken)
+    {
+        var recipientIds = integrationEvent.RecipientEmployeeIds.Where(id => id != integrationEvent.AuthorEmployeeId).Distinct().ToList();
+        if (recipientIds.Count == 0)
+        {
+            return;
+        }
+
+        var author = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.AuthorEmployeeId], cancellationToken);
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, recipientIds, cancellationToken);
+
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.RequestCommentAdded,
+                to,
+                new Dictionary<string, string?>
+                {
+                    [WorkflowTemplateModel.RequestType] = integrationEvent.RequestType,
+                    [WorkflowTemplateModel.AuthorName] = author.FirstOrDefault()?.DisplayName,
+                },
+                WorkflowTemplateModel.RequestPath(integrationEvent.ApprovalRequestId)),
             cancellationToken);
     }
 }

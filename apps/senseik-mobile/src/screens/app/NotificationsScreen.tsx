@@ -2,11 +2,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { notificationsService, type UserNotification } from "@/services/NotificationsService";
 import {
   navigateToTarget,
   resolveNotificationNavigationTarget,
+  resolveRequestDetailTarget,
 } from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
 import { palette } from "@/theme/theme";
@@ -22,6 +25,7 @@ const PAGE_SIZE = 20;
 type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList, "Notifications">;
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation("notifications");
   const navigation = useNavigation<NotificationsNavigationProp>();
   const [items, setItems] = useState<UserNotification[]>([]);
   const [page, setPage] = useState(1);
@@ -44,7 +48,7 @@ export default function NotificationsScreen() {
       setTotalCount(result.totalCount);
       setUnreadCount(result.unreadCount);
     } catch {
-      setError("Bildirimler yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("notifications:loadError"));
     }
   }, []);
 
@@ -98,6 +102,14 @@ export default function NotificationsScreen() {
       }
     }
 
+    // FG-009: `request.comment_added` has no static target (its screen needs an id) - resolved from
+    // `actionUrl` instead, see `resolveRequestDetailTarget`'s doc comment.
+    const requestDetail = resolveRequestDetailTarget(notification.actionUrl);
+    if (requestDetail) {
+      navigation.navigate("RequestDetail", requestDetail);
+      return;
+    }
+
     const target = resolveNotificationNavigationTarget(notification.templateKey);
     if (target) {
       navigateToTarget(navigation, target);
@@ -116,13 +128,13 @@ export default function NotificationsScreen() {
     } catch {
       setItems(previousItems);
       setUnreadCount(previousUnread);
-      Alert.alert("Hata", "Bildirimler okundu olarak işaretlenemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("markAllReadError"));
     }
   }
 
   const header = (
     <ScreenHeader
-      title="Bildirimler"
+      title={t("title")}
       right={<MarkAllReadPill disabled={unreadCount === 0} onPress={() => void markAllRead()} />}
     />
   );
@@ -158,7 +170,7 @@ export default function NotificationsScreen() {
           }
           onEndReachedThreshold={0.4}
           onEndReached={() => void loadMore()}
-          ListEmptyComponent={<EmptyState icon="notifications-outline" title="Bildiriminiz yok." />}
+          ListEmptyComponent={<EmptyState icon="notifications-outline" title={t("empty")} />}
           ListFooterComponent={
             loadingMore ? <ActivityIndicator style={styles.footer} color={palette.white} /> : null
           }

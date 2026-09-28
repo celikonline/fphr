@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { palette, radius, text } from "@/theme/theme";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
  * scrim closes on tap; the Android hardware back button closes it via `onRequestClose`. On iOS the
  * sheet is padded up by the keyboard's height so a focused input and its buttons stay visible. */
 export function BottomSheet({ visible, onClose, title, children }: Props) {
+  const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
 
   return (
@@ -39,7 +41,7 @@ export function BottomSheet({ visible, onClose, title, children }: Props) {
           style={StyleSheet.absoluteFill}
           onPress={onClose}
           accessibilityRole="button"
-          accessibilityLabel="Kapat"
+          accessibilityLabel={t("actions.close")}
         />
         <View style={styles.sheet}>
           <View style={styles.grab} />

@@ -1,0 +1,9 @@
+{
+  "title": "Kişiler",
+  "loadError": "Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.",
+  "search": "Ara",
+  "searchPlaceholder": "İsim, unvan veya birim ara",
+  "empty": "Kayıt bulunamadı.",
+  "callA11y": "{{name}} - telefon ile ara",
+  "emailA11y": "{{name}} - e-posta gönder"
+}

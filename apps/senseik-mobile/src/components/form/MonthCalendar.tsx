@@ -1,15 +1,16 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { toLocalDateOnly } from "@/lib/formatters";
 import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 import {
-  TR_WEEKDAYS_SHORT,
   formatDayMonthYear,
   formatMonthYear,
   isDayInRange,
   monthMatrix,
   parseDateOnly,
+  weekdaysShort,
 } from "./dateRange";
 
 type Props = {
@@ -35,6 +36,7 @@ export function MonthCalendar({
   onNextMonth,
   onDayPress,
 }: Props) {
+  const { t } = useTranslation();
   const today = toLocalDateOnly(new Date());
   const rows = monthMatrix(year, month0);
 
@@ -45,7 +47,7 @@ export function MonthCalendar({
           style={styles.navButton}
           onPress={onPrevMonth}
           accessibilityRole="button"
-          accessibilityLabel="Önceki ay"
+          accessibilityLabel={t("calendar.previousMonth")}
         >
           <Ionicons name="chevron-back" size={20} color={palette.white} />
         </TouchableOpacity>
@@ -54,14 +56,14 @@ export function MonthCalendar({
           style={styles.navButton}
           onPress={onNextMonth}
           accessibilityRole="button"
-          accessibilityLabel="Sonraki ay"
+          accessibilityLabel={t("calendar.nextMonth")}
         >
           <Ionicons name="chevron-forward" size={20} color={palette.white} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.row}>
-        {TR_WEEKDAYS_SHORT.map((weekday) => (
+        {weekdaysShort().map((weekday) => (
           <Text key={weekday} style={styles.weekday}>
             {weekday}
           </Text>

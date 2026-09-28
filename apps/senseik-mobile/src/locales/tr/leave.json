@@ -1,0 +1,126 @@
+{
+  "title": "İzinlerim",
+  "loadError": "İzin bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+  "balancesEmpty": "Bakiye kaydı bulunamadı.",
+  "newRequest": "Yeni izin talebi",
+  "myRequests": "Taleplerim",
+  "requestsEmpty": "Henüz izin talebiniz yok.",
+  "balanceDetail": "Bakiye ayrıntısı",
+  "types": {
+    "annual": "Yıllık izin",
+    "excuse": "Mazeret izni",
+    "sick": "Hastalık izni",
+    "job_search": "Yeni iş arama izni",
+    "marriage": "Evlilik izni",
+    "bereavement": "Ölüm izni",
+    "paternity": "Babalık izni",
+    "maternity": "Doğum izni",
+    "postnatal_unpaid": "Doğum sonrası ücretsiz izin",
+    "paid_military_service": "Bedelli askerlik izni",
+    "unpaid": "Ücretsiz izin",
+    "foster_care": "Koruyucu aile izni",
+    "breastfeeding": "Süt izni",
+    "disabled_child": "Engelli/süreğen hastalıklı çocuk izni",
+    "template": {
+      "remote_work": "Uzaktan Çalışma",
+      "birthday": "Doğum günü izni"
+    }
+  },
+  "status": {
+    "pending": "Onay bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "withdrawn": "Geri çekildi",
+    "cancelled": "İptal edildi"
+  },
+  "breakdown": {
+    "carriedOver": "{{value}} devreden",
+    "accrued": "{{value}} hak ediş",
+    "extraGrants": "{{value}} ek hak",
+    "adjustments": "{{value}} düzeltme",
+    "used": "{{value}} kullanılan",
+    "planned": "{{value}} planlanan",
+    "pending": "({{value}} onay bekliyor)"
+  },
+  "preview": {
+    "duration": "Süre",
+    "deducted_one": "{{value}} gün izninizden düşülecek",
+    "deducted_other": "{{value}} gün izninizden düşülecek",
+    "nothingDeducted": "Bu tarihlerde düşülecek gün yok",
+    "loadError": "Önizleme yüklenemedi."
+  },
+  "blockers": {
+    "titles": {
+      "missingInfo": "Eksik bilgi",
+      "invalidDate": "Geçersiz tarih",
+      "invalidTime": "Geçersiz saat",
+      "noDeduction": "Gün düşülmeyecek"
+    },
+    "selectType": "Lütfen bir izin türü seçin.",
+    "enterDate": "Lütfen bir tarih girin.",
+    "enterRange": "Lütfen başlangıç ve bitiş tarihini girin.",
+    "endBeforeStart": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
+    "endTimeAfterStart": "Bitiş saati başlangıç saatinden sonra olmalıdır.",
+    "descriptionRequired": "Bu izin türü için açıklama zorunludur.",
+    "substituteRequired": "Bu izin türü için bir vekil seçmeniz gerekir.",
+    "documentRequired": "Bu izin türü için en az bir belge eklemeniz gerekir.",
+    "noDeduction": "Bu tarihlerde izninizden düşülecek gün yok."
+  },
+  "form": {
+    "submitted": "İzin talebiniz onaya gönderildi.",
+    "submitError": "İzin talebi gönderilemedi. Lütfen tekrar deneyin.",
+    "noTypes": "Talep edebileceğiniz bir izin türü yok.",
+    "type": "İzin türü",
+    "typePlaceholder": "İzin türü seçin",
+    "date": "Tarih",
+    "description": "Açıklama",
+    "descriptionOptional": "Açıklama (opsiyonel)",
+    "descriptionPlaceholder": "Talebinizle ilgili not ekleyin",
+    "substitute": "Vekil",
+    "substitutePlaceholder": "Vekil seç",
+    "submit": "Talebi gönder",
+    "halfDay": {
+      "label": "Gün yarısı",
+      "morning": "Sabah",
+      "afternoon": "Öğleden sonra"
+    },
+    "hourly": {
+      "startTime": "Başlangıç saati",
+      "endTime": "Bitiş saati",
+      "duration": "Saat",
+      "endAfterStart": "Bitiş saati başlangıçtan sonra olmalı"
+    }
+  },
+  "documents": {
+    "add": "Belge ekle",
+    "takePhoto": "Fotoğraf çek",
+    "pickFile": "Dosya seç",
+    "uploading": "Belge yükleniyor…",
+    "removeA11y": "{{name}} kaldır",
+    "fileNameFallback": "Belge",
+    "sizeErrorTitle": "Dosya yüklenemedi",
+    "sizeErrorMessage": "Dosya boyutu okunamadı ya da 100 MB sınırını aşıyor. Lütfen başka bir dosya seçin.",
+    "uploadError": "Belge yüklenemedi. Lütfen tekrar deneyin.",
+    "cameraTitle": "Kamera izni gerekli",
+    "cameraMessage": "Belge fotoğrafı çekebilmek için ayarlardan kamera iznini açmanız gerekir."
+  },
+  "attachments": {
+    "show": "Ekler",
+    "hide": "Ekleri gizle",
+    "loadError": "Ekler yüklenemedi.",
+    "empty": "Ek yok."
+  },
+  "withdraw": {
+    "action": "Geri çek",
+    "error": "İzin talebi geri çekilemedi. Lütfen tekrar deneyin.",
+    "confirmTitle": "İzin talebini geri çek",
+    "confirmMessage": "Bu izin talebini geri çekmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+  },
+  "substitute": {
+    "title": "Vekil seç",
+    "loadError": "Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.",
+    "searchPlaceholder": "İsim, unvan veya birim ara",
+    "searchA11y": "Çalışan ara",
+    "empty": "Kayıt bulunamadı."
+  }
+}

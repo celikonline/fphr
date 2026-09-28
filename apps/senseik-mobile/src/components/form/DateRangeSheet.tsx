@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { BottomSheet, PrimaryButton, SegmentedControl } from "@/components/ui";
 import { toLocalDateOnly } from "@/lib/formatters";
 import { palette, radius, text } from "@/theme/theme";
@@ -34,11 +35,6 @@ function monthOf(value?: string): MonthView {
   return { year, month0 };
 }
 
-const MODE_OPTIONS: { value: DateRangeMode; label: string }[] = [
-  { value: "single", label: "Tek gün" },
-  { value: "range", label: "Birden çok gün" },
-];
-
 /** JS "Tarih seç" bottom sheet (spec §5): mode segment, Başlangıç/Bitiş boxes, month calendar. */
 export function DateRangeSheet({
   visible,
@@ -50,6 +46,11 @@ export function DateRangeSheet({
   onApply,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
+  const modeOptions: { value: DateRangeMode; label: string }[] = [
+    { value: "single", label: t("dateSheet.singleDay") },
+    { value: "range", label: t("dateSheet.multipleDays") },
+  ];
   const [activeMode, setActiveMode] = useState<DateRangeMode>(mode);
   const [draft, setDraft] = useState<{ from?: string; to?: string }>({ from, to });
   const [view, setView] = useState<MonthView>(() => monthOf(from));
@@ -77,15 +78,18 @@ export function DateRangeSheet({
   const isRange = activeMode === "range";
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Tarih seç">
+    <BottomSheet visible={visible} onClose={onClose} title={t("dateSheet.title")}>
       <View style={styles.body}>
         {allowModeSwitch ? (
-          <SegmentedControl options={MODE_OPTIONS} value={activeMode} onChange={changeMode} />
+          <SegmentedControl options={modeOptions} value={activeMode} onChange={changeMode} />
         ) : null}
 
         <View style={styles.boxes}>
-          <DateBox label={isRange ? "Başlangıç" : "Tarih"} value={draft.from} />
-          {isRange ? <DateBox label="Bitiş" value={draft.to} /> : null}
+          <DateBox
+            label={isRange ? t("dateSheet.start") : t("dateSheet.date")}
+            value={draft.from}
+          />
+          {isRange ? <DateBox label={t("dateSheet.end")} value={draft.to} /> : null}
         </View>
 
         <MonthCalendar
@@ -102,7 +106,9 @@ export function DateRangeSheet({
         />
 
         <PrimaryButton
-          label={dayCount > 0 ? `Uygula (${dayCount} gün)` : "Uygula"}
+          label={
+            dayCount > 0 ? t("dateSheet.applyWithDays", { count: dayCount }) : t("actions.apply")
+          }
           onPress={apply}
           disabled={dayCount === 0}
         />
@@ -112,11 +118,12 @@ export function DateRangeSheet({
 }
 
 function DateBox({ label, value }: { label: string; value?: string }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.box}>
       <Text style={styles.boxLabel}>{label}</Text>
       <Text style={value ? styles.boxValue : styles.boxPlaceholder}>
-        {value ? formatDayMonthYear(value) : "Seçin"}
+        {value ? formatDayMonthYear(value) : t("actions.select")}
       </Text>
     </View>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard, StatusPill } from "@/components/ui";
 import { REQUEST_OPTIONS } from "@/lib/requestOptions";
 import { accents, fontFor, palette, text } from "@/theme/theme";
@@ -10,15 +11,20 @@ type Props = {
   card: RequestCard;
   isWithdrawing: boolean;
   onWithdraw: () => void;
+  /** FG-009: opens the request's detail (timeline + comments) - `undefined` when the card's
+   * approvalRequestId couldn't be resolved yet (kontrolcü notu: the card just isn't tappable, no
+   * error shown). */
+  onPress?: () => void;
 };
 
 /** One Taleplerim card: type icon, title + date, amount/duration, status pill, optional withdraw. */
-export function RequestCardView({ card, isWithdrawing, onWithdraw }: Props) {
+export function RequestCardView({ card, isWithdrawing, onWithdraw, onPress }: Props) {
+  const { t } = useTranslation("leave");
   const option = REQUEST_OPTIONS.find((item) => item.kind === card.kind);
   const accent = accents[option?.accent ?? "gray"];
 
-  return (
-    <GlassCard style={styles.card}>
+  const content = (
+    <>
       <View style={styles.header}>
         <View style={[styles.icon, { backgroundColor: accent.bg }]}>
           <Ionicons name={option?.icon ?? "document-text-outline"} size={20} color={accent.fg} />
@@ -46,17 +52,27 @@ export function RequestCardView({ card, isWithdrawing, onWithdraw }: Props) {
           onPress={onWithdraw}
           disabled={isWithdrawing}
           accessibilityRole="button"
-          accessibilityLabel="Geri çek"
+          accessibilityLabel={t("withdraw.action")}
           // Visual height ~16px; hitSlop brings the tappable area to >=44.
           hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
         >
           {isWithdrawing ? (
             <ActivityIndicator size="small" color={palette.coral} />
           ) : (
-            <Text style={styles.withdrawText}>Geri çek</Text>
+            <Text style={styles.withdrawText}>{t("withdraw.action")}</Text>
           )}
         </TouchableOpacity>
       ) : null}
+    </>
+  );
+
+  if (!onPress) {
+    return <GlassCard style={styles.card}>{content}</GlassCard>;
+  }
+
+  return (
+    <GlassCard style={styles.card} onPress={onPress} accessibilityLabel={card.title}>
+      {content}
     </GlassCard>
   );
 }

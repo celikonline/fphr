@@ -1,12 +1,12 @@
 import {
-  ADVANCE_STATUS_LABELS,
-  EXPENSE_CLAIM_STATUS_LABELS,
+  advanceStatusLabels,
+  expenseClaimStatusLabels,
   expenseCategoryLabel,
 } from "@/lib/expenseLabels";
 
 describe("EXPENSE_CLAIM_STATUS_LABELS (TK-031)", () => {
   it("has a Turkish label for every ExpenseClaimStatus", () => {
-    expect(EXPENSE_CLAIM_STATUS_LABELS).toEqual({
+    expect(expenseClaimStatusLabels()).toEqual({
       draft: "Taslak",
       submitted: "Onay bekliyor",
       approved: "Onaylandı",
@@ -18,7 +18,7 @@ describe("EXPENSE_CLAIM_STATUS_LABELS (TK-031)", () => {
 
 describe("ADVANCE_STATUS_LABELS (TK-031)", () => {
   it("has a Turkish label for every AdvanceRequestStatus", () => {
-    expect(ADVANCE_STATUS_LABELS).toEqual({
+    expect(advanceStatusLabels()).toEqual({
       submitted: "Onay bekliyor",
       approved: "Onaylandı",
       rejected: "Reddedildi",

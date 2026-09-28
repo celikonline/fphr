@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import { TenantChoice } from "@/types";
 import { AuthPanel as Panel } from "@/components/auth/AuthPanel";
 import { authStyles } from "@/components/auth/authStyles";
@@ -15,21 +16,20 @@ type Props = {
 /** Login's company-select step panel: title/subtitle, tenant rows, and the cancel link back to the
  * credentials form. Presentation only - LoginScreen owns the logic. */
 export function TenantChoicePanel({ tenants, onSelect, isLoading, onCancel }: Props) {
+  const { t } = useTranslation("auth");
   return (
     <Panel>
-      <Text style={authStyles.panelTitle}>Şirket seçin</Text>
-      <Text style={authStyles.panelSubtitle}>
-        Bu e-posta adresi birden fazla şirkete kayıtlı. Devam etmek için bir şirket seçin.
-      </Text>
+      <Text style={authStyles.panelTitle}>{t("tenant.title")}</Text>
+      <Text style={authStyles.panelSubtitle}>{t("tenant.subtitle")}</Text>
       <TenantChoiceList tenants={tenants} onSelect={onSelect} isLoading={isLoading} />
       <TouchableOpacity
         onPress={onCancel}
         disabled={isLoading}
         style={authStyles.secondaryLink}
         accessibilityRole="button"
-        accessibilityLabel="Farklı hesapla giriş yap"
+        accessibilityLabel={t("login.switchAccount")}
       >
-        <Text style={authStyles.secondaryLinkText}>Farklı hesapla giriş yap</Text>
+        <Text style={authStyles.secondaryLinkText}>{t("login.switchAccount")}</Text>
       </TouchableOpacity>
     </Panel>
   );

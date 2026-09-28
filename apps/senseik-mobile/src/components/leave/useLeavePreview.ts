@@ -6,6 +6,7 @@ import {
   type RequestableLeaveType,
 } from "@/services/LeaveService";
 import { getApiErrorMessage } from "@/lib/apiError";
+import i18n from "@/lib/i18n";
 import { buildPreviewInput } from "./leaveRequestRules";
 
 /** Debounce delay (ms) before a form field change triggers a new preview request (B-mobil-006). */
@@ -56,7 +57,7 @@ export function useLeavePreview(
         .catch((previewErr: unknown) => {
           if (previewRequestIdRef.current !== requestId) return;
           setPreview(null);
-          setPreviewError(getApiErrorMessage(previewErr, "Önizleme yüklenemedi."));
+          setPreviewError(getApiErrorMessage(previewErr, i18n.t("leave:preview.loadError")));
         })
         .finally(() => {
           if (previewRequestIdRef.current !== requestId) return;

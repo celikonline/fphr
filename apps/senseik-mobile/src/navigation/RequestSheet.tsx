@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { BottomSheet, IconCircleButton } from "@/components/ui";
 import { REQUEST_OPTIONS } from "@/lib/requestOptions";
 import { accents, fontFor, palette, text } from "@/theme/theme";
@@ -15,17 +16,14 @@ type Props = {
 /** "Yeni talep" bottom sheet opened by the tab bar's FAB. The sheet's Modal covers the tab bar (so
  * the FAB's "+" -> "x" turn is hidden while it is open); the top-right "x" is the visible close. */
 export function RequestSheet({ visible, onClose, onSelect }: Props) {
+  const { t } = useTranslation("requests");
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={styles.header}>
-        <Text style={styles.title}>Yeni talep</Text>
-        <IconCircleButton
-          icon="close"
-          onPress={onClose}
-          accessibilityLabel="Talep menüsünü kapat"
-        />
+        <Text style={styles.title}>{t("sheet.title")}</Text>
+        <IconCircleButton icon="close" onPress={onClose} accessibilityLabel={t("sheet.close")} />
       </View>
-      <Text style={styles.subtitle}>Ne için talep oluşturmak istiyorsun?</Text>
+      <Text style={styles.subtitle}>{t("sheet.subtitle")}</Text>
       {REQUEST_OPTIONS.map((option, index) => {
         const accent = accents[option.accent];
         const isLast = index === REQUEST_OPTIONS.length - 1;
@@ -35,15 +33,15 @@ export function RequestSheet({ visible, onClose, onSelect }: Props) {
             style={[styles.row, !isLast && styles.rowDivider]}
             onPress={() => onSelect(option.kind)}
             accessibilityRole="button"
-            accessibilityLabel={option.label}
-            accessibilityHint={option.description}
+            accessibilityLabel={t(option.labelKey)}
+            accessibilityHint={t(option.descriptionKey)}
           >
             <View style={[styles.icon, { backgroundColor: accent.bg }]}>
               <Ionicons name={option.icon} size={22} color={accent.fg} />
             </View>
             <View style={styles.texts}>
-              <Text style={styles.label}>{option.label}</Text>
-              <Text style={styles.description}>{option.description}</Text>
+              <Text style={styles.label}>{t(option.labelKey)}</Text>
+              <Text style={styles.description}>{t(option.descriptionKey)}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={palette.textMuted} />
           </TouchableOpacity>

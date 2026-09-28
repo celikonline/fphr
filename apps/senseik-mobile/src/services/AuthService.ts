@@ -2,6 +2,7 @@ import axios from "axios";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
+import i18n from "@/lib/i18n";
 import { pushNotificationService } from "@/services/PushNotificationService";
 import { User, AuthTokens, TenantChoice } from "@/types";
 
@@ -109,13 +110,13 @@ export class AuthService {
 
       if (result.status === "mfa_required") {
         if (!result.mfaToken) {
-          throw new Error("Beklenmeyen giriş yanıtı.");
+          throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
         }
         return { status: "mfaRequired", mfaToken: result.mfaToken };
       }
 
       if (result.status !== "ok" || !result.tokens) {
-        throw new Error("Beklenmeyen giriş yanıtı.");
+        throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
       }
 
       const tokens = toAuthTokens(result.tokens);
@@ -124,7 +125,7 @@ export class AuthService {
 
       const user = await this.fetchAndStoreCurrentUser();
       if (!user) {
-        throw new Error("Kullanıcı bilgileri alınamadı.");
+        throw new Error(i18n.t("auth:errors.userInfoUnavailable"));
       }
 
       await PreferenceStorage.setLastLoginEmail(email);
@@ -161,7 +162,7 @@ export class AuthService {
       const result = response.data;
 
       if (result.status !== "ok" || !result.tokens) {
-        throw new Error("Beklenmeyen giriş yanıtı.");
+        throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
       }
 
       const tokens = toAuthTokens(result.tokens);
@@ -170,7 +171,7 @@ export class AuthService {
 
       const user = await this.fetchAndStoreCurrentUser();
       if (!user) {
-        throw new Error("Kullanıcı bilgileri alınamadı.");
+        throw new Error(i18n.t("auth:errors.userInfoUnavailable"));
       }
 
       if (email) {

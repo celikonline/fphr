@@ -1,5 +1,6 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SummaryRow } from "@/components/form/SummaryRow";
 import { formatDays } from "@/lib/formatters";
 import type { LeaveRequestPreview } from "@/services/LeaveService";
@@ -15,6 +16,7 @@ type Props = {
 
 /** B-mobil-006 preview as the form's "Süre: N gün" line, plus the deduction note and warnings. */
 export function LeavePreviewSummary({ loading, preview, error, requiresDocument }: Props) {
+  const { t } = useTranslation("leave");
   if (loading) {
     return <ActivityIndicator size="small" color={palette.white} style={styles.loading} />;
   }
@@ -31,7 +33,11 @@ export function LeavePreviewSummary({ loading, preview, error, requiresDocument 
 
   return (
     <View style={styles.container}>
-      <SummaryRow label="Süre" value={`${formatDays(preview.days)} gün`} invalid={!hasDays} />
+      <SummaryRow
+        label={t("preview.duration")}
+        value={t("common:units.days", { count: preview.days, value: formatDays(preview.days) })}
+        invalid={!hasDays}
+      />
       <Text style={hasDays ? styles.note : styles.invalid}>{previewSummaryText(preview)}</Text>
       {warnings.map((warning) => (
         <Text key={warning.code} style={styles.warning}>

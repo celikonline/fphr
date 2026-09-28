@@ -6,6 +6,7 @@
     "ExpenseClaim": "Expense",
     "Overtime": "Overtime",
     "Requisition": "Job requisition",
-    "VisaDocument": "Visa document"
+    "VisaDocument": "Visa document",
+    "PunchCorrection": "Missing punch"
   }
 }

@@ -16,6 +16,7 @@ import type { NavigationTarget } from "@/lib/notificationNavigation";
 import { useAuthStore } from "@/store/authStore";
 import { PushBanner } from "@/components/ui/PushBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { loadInitialLanguage } from "@/lib/i18n";
 
 /** How long the foreground in-app banner stays visible before auto-dismissing. */
 const FOREGROUND_BANNER_DURATION_MS = 4000;
@@ -53,12 +54,23 @@ export default function App() {
   // A font load failure falls back to the system font rather than blocking the app - only the
   // still-pending (neither loaded nor errored) case keeps the splash screen up.
   const fontsReady = fontsLoaded || Boolean(fontError);
+  // FG-001: the saved language (or the device language) is applied before the splash screen goes
+  // away, so the first frame is never rendered in the wrong language. A storage failure still
+  // lets the app start (in the device/default language).
+  const [languageReady, setLanguageReady] = useState(false);
+  const ready = fontsReady && languageReady;
 
   useEffect(() => {
-    if (fontsReady) {
+    loadInitialLanguage()
+      .catch(() => undefined)
+      .finally(() => setLanguageReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => undefined);
     }
-  }, [fontsReady]);
+  }, [ready]);
 
   useEffect(() => {
     if (!foregroundBanner) {
@@ -123,7 +135,7 @@ export default function App() {
     };
   }, []);
 
-  if (!fontsReady) {
+  if (!ready) {
     // Native splash screen (kept up by preventAutoHideAsync above) is still covering the screen.
     return null;
   }

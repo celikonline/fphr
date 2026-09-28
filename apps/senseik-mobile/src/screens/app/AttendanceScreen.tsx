@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
 import { OptionSheet } from "@/components/form/OptionSheet";
 import { formatMonthYear } from "@/components/form/dateRange";
@@ -11,13 +12,14 @@ import {
   type AttendanceDay,
   type MyTimesheetSummary,
 } from "@/services/AttendanceService";
-import { formatDays, toLocalDateOnly } from "@/lib/formatters";
+import { formatDays, formatDurationMinutes, toLocalDateOnly } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 import { palette, text } from "@/theme/theme";
 import { AttendanceDayCard } from "./attendance/AttendanceDayCard";
 import { PeriodStepper } from "./attendance/PeriodStepper";
 import { PillButton } from "./attendance/PillButton";
 import {
-  ATTENDANCE_FILTERS,
+  attendanceFilters,
   attendanceDayStatus,
   matchesAttendanceFilter,
   type AttendanceFilter,
@@ -32,12 +34,6 @@ function monthRange(reference: Date): { from: string; to: string } {
   return { from: toLocalDateOnly(from), to: toLocalDateOnly(to) };
 }
 
-function formatWorkedMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remaining = minutes % 60;
-  return `${hours} sa ${remaining} dk`;
-}
-
 /**
  * Fazla/eksik mesai: backend `AttendanceDayDto`'nun zaten döndürdüğü `plannedMinutes`/`workedMinutes`
  * farkından türetilir (yeni bir backend/DTO alanı gerekmez). Planlı gün değilse (`plannedMinutes` 0,
@@ -49,8 +45,9 @@ export function formatOvertimeUndertime(
   if (day.plannedMinutes <= 0) return null;
   const diffMinutes = day.workedMinutes - day.plannedMinutes;
   if (diffMinutes === 0) return null;
-  const label = diffMinutes > 0 ? "Fazla mesai" : "Eksik mesai";
-  return `${label}: ${formatWorkedMinutes(Math.abs(diffMinutes))}`;
+  return i18n.t(diffMinutes > 0 ? "attendance:overtime" : "attendance:undertime", {
+    duration: formatDurationMinutes(Math.abs(diffMinutes)),
+  });
 }
 
 /**
@@ -58,6 +55,7 @@ export function formatOvertimeUndertime(
  * worked days/time, then one card per recorded day. Giriş / Çıkış and Vardiyam are shortcuts.
  */
 export default function AttendanceScreen() {
+  const { t } = useTranslation("attendance");
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [monthDate, setMonthDate] = useState(() => new Date());
   const [summary, setSummary] = useState<MyTimesheetSummary | null>(null);
@@ -79,7 +77,7 @@ export default function AttendanceScreen() {
       setSummary(summaryResult);
       setDays([...daysResult].sort((a, b) => a.date.localeCompare(b.date)));
     } catch {
-      setError("Puantaj bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("attendance:loadError"));
     }
   }, [monthDate]);
 
@@ -102,7 +100,7 @@ export default function AttendanceScreen() {
     setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
   }
 
-  const header = <ScreenHeader title="Puantajım" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   if (loading) {
     return (
@@ -117,19 +115,20 @@ export default function AttendanceScreen() {
   const visibleDays = days.filter((day) =>
     matchesAttendanceFilter(attendanceDayStatus(day), filter)
   );
-  const filterLabel = ATTENDANCE_FILTERS.find((option) => option.value === filter)?.label ?? "";
+  const filterOptions = attendanceFilters();
+  const filterLabel = filterOptions.find((option) => option.value === filter)?.label ?? "";
 
   return (
     <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
       <View style={styles.shortcuts}>
         <PillButton
           icon="stopwatch-outline"
-          label="Giriş / Çıkış"
+          label={t("common:tabs.checkIn")}
           onPress={() => navigation.navigate("MainTabs", { screen: "CheckIn" })}
         />
         <PillButton
           icon="calendar-outline"
-          label="Vardiyam"
+          label={t("home:actions.shift")}
           onPress={() => navigation.navigate("Shift")}
         />
       </View>
@@ -141,12 +140,12 @@ export default function AttendanceScreen() {
           label={formatMonthYear(monthDate.getFullYear(), monthDate.getMonth())}
           onPrev={goToPreviousMonth}
           onNext={goToNextMonth}
-          prevLabel="Önceki ay"
-          nextLabel="Sonraki ay"
+          prevLabel={t("common:calendar.previousMonth")}
+          nextLabel={t("common:calendar.nextMonth")}
         />
         <PillButton
           icon="funnel-outline"
-          label={filter === "all" ? "Filtre" : filterLabel}
+          label={filter === "all" ? t("filterTitle") : filterLabel}
           active={filter !== "all"}
           onPress={() => setFilterSheetVisible(true)}
         />
@@ -154,14 +153,14 @@ export default function AttendanceScreen() {
 
       <GlassCard style={styles.summary}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Çalışılan gün</Text>
+          <Text style={styles.summaryLabel}>{t("summary.workedDays")}</Text>
           <Text style={styles.summaryValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Çalışılan süre</Text>
+          <Text style={styles.summaryLabel}>{t("summary.workedTime")}</Text>
           <Text style={styles.summaryValue}>
-            {formatWorkedMinutes(summary?.workedMinutes ?? 0)}
+            {formatDurationMinutes(summary?.workedMinutes ?? 0)}
           </Text>
         </View>
       </GlassCard>
@@ -169,21 +168,26 @@ export default function AttendanceScreen() {
       {visibleDays.length === 0 ? (
         <EmptyState
           icon="time-outline"
-          title={
-            days.length === 0 ? "Bu ay için kayıtlı puantaj günü yok." : "Bu filtreye uyan gün yok."
-          }
+          title={days.length === 0 ? t("empty.month") : t("empty.filter")}
         />
       ) : (
         visibleDays.map((day) => (
           // `key`d by `date`, not `id`: leave-only rows all share the empty-guid `id`.
-          <AttendanceDayCard key={day.date} day={day} overtimeText={formatOvertimeUndertime(day)} />
+          <AttendanceDayCard
+            key={day.date}
+            day={day}
+            overtimeText={formatOvertimeUndertime(day)}
+            onRequestCorrection={(date) =>
+              navigation.navigate("NewRequest", { kind: "punchCorrection", date })
+            }
+          />
         ))
       )}
 
       <OptionSheet
         visible={filterSheetVisible}
-        title="Filtre"
-        options={ATTENDANCE_FILTERS}
+        title={t("filterTitle")}
+        options={filterOptions}
         selected={filter}
         onSelect={setFilter}
         onClose={() => setFilterSheetVisible(false)}

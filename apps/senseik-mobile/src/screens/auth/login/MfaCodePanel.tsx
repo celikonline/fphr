@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   AuthField,
   AuthFormError,
@@ -34,19 +35,18 @@ export function MfaCodePanel({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("auth");
   return (
     <AuthPanel>
-      <Text style={authStyles.panelTitle}>İki adımlı doğrulama</Text>
-      <Text style={authStyles.panelSubtitle}>
-        Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.
-      </Text>
+      <Text style={authStyles.panelTitle}>{t("mfa.title")}</Text>
+      <Text style={authStyles.panelSubtitle}>{t("mfa.subtitle")}</Text>
       {error && <AuthFormError message={error} />}
-      <AuthField label="Doğrulama kodu" focused={focused}>
+      <AuthField label={t("mfa.codeLabel")} focused={focused}>
         <TextInput
           style={authFormStyles.input}
           placeholder="000000"
           {...authInputColors}
-          accessibilityLabel="Doğrulama kodu"
+          accessibilityLabel={t("mfa.codeLabel")}
           value={code}
           onChangeText={onChangeCode}
           onFocus={onFocus}
@@ -61,7 +61,7 @@ export function MfaCodePanel({
         />
       </AuthField>
       <AuthSubmitButton
-        label="Doğrula"
+        label={t("mfa.submit")}
         onPress={onSubmit}
         disabled={isLoading || code.length !== 6}
         loading={isLoading}
@@ -71,9 +71,9 @@ export function MfaCodePanel({
         disabled={isLoading}
         style={authStyles.secondaryLink}
         accessibilityRole="button"
-        accessibilityLabel="Farklı hesapla giriş yap"
+        accessibilityLabel={t("login.switchAccount")}
       >
-        <Text style={authStyles.secondaryLinkText}>Farklı hesapla giriş yap</Text>
+        <Text style={authStyles.secondaryLinkText}>{t("login.switchAccount")}</Text>
       </TouchableOpacity>
     </AuthPanel>
   );

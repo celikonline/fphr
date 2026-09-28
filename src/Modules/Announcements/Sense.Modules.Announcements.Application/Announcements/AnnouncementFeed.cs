@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Sense.Modules.Announcements.Domain;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -10,14 +11,16 @@ namespace Sense.Modules.Announcements.Application.Announcements;
 /// <summary>Akıştaki öğe türü: duyuru veya çalışanlar arası takdir/teşekkür mesajı (roadmap #73).</summary>
 public static class AnnouncementFeedItemKind
 {
-    public const string Announcement = "Announcement";
-    public const string Recognition = "Recognition";
+    public const string Announcement = "announcement";
+    public const string Recognition = "recognition";
 }
 
 /// <summary>
 /// Akıştaki öğe: yönetim alanları (durum, yayınlayan) olmadan, çağıranın okundu bilgisiyle. <see cref="Kind"/>
-/// "Recognition" iken <see cref="Title"/> gönderenin adı, <see cref="Content"/> mesaj metni, <see cref="IsRead"/>
-/// her zaman true'dur (takdir mesajları için okundu takibi tutulmaz).
+/// "recognition" iken <see cref="Title"/> gönderenin adı, <see cref="Content"/> mesaj metni, <see cref="IsRead"/>
+/// her zaman true'dur (takdir mesajları için okundu takibi tutulmaz). <see cref="Type"/>/<see cref="Priority"/>
+/// diğer uçlarla tutarlı camelCase değerler taşır (enum tipi değil `string`; bkz. QA-006/Karar 21) - üretilirken
+/// <see cref="JsonNamingPolicy.CamelCase"/> ile dönüştürülür, `.ToString()` PascalCase üye adı kullanılmaz.
 /// </summary>
 public sealed record AnnouncementFeedItemDto(
     Guid Id,
@@ -48,6 +51,14 @@ public sealed class ListMyAnnouncementFeedHandler(
     /// <summary>Akışa dahil edilecek en yeni takdir/teşekkür mesajı sayısı (duyuru sayısı gibi ayrıca sınırlanmaz).</summary>
     private const int RecentRecognitionsTake = 50;
 
+    /// <summary>
+    /// Enum üye adını (ör. "HR") diğer uçlarla tutarlı camelCase dizgiye ("hr") çevirir; global
+    /// `JsonStringEnumConverter(CamelCase)` yalnız gerçek enum alanlarına uygulandığından `string` alanlarda bu
+    /// dönüşüm elle yapılır (QA-006/Karar 21).
+    /// </summary>
+    private static string ToCamelCase<TEnum>(TEnum value) where TEnum : struct, Enum =>
+        JsonNamingPolicy.CamelCase.ConvertName(value.ToString());
+
     public async Task<Result<IReadOnlyList<AnnouncementFeedItemDto>>> Handle(
         ListMyAnnouncementFeedQuery query, CancellationToken cancellationToken)
     {
@@ -60,7 +71,7 @@ public sealed class ListMyAnnouncementFeedHandler(
 
         IEnumerable<AnnouncementFeedItemDto> announcementItems = published
             .Select(a => new AnnouncementFeedItemDto(
-                a.Id, a.Title, a.Content, a.Type.ToString(), a.Priority.ToString(), a.PublishedAt, a.ExpiresAt, readIds.Contains(a.Id)));
+                a.Id, a.Title, a.Content, ToCamelCase(a.Type), ToCamelCase(a.Priority), a.PublishedAt, a.ExpiresAt, readIds.Contains(a.Id)));
 
         var recognitionItems = await BuildRecognitionItemsAsync(cancellationToken);
 
@@ -89,7 +100,7 @@ public sealed class ListMyAnnouncementFeedHandler(
                 Title: senderNames.GetValueOrDefault(r.SenderEmployeeId, string.Empty),
                 Content: r.Message,
                 Type: AnnouncementFeedItemKind.Recognition,
-                Priority: AnnouncementPriority.Normal.ToString(),
+                Priority: ToCamelCase(AnnouncementPriority.Normal),
                 PublishedAt: r.CreatedAt,
                 ExpiresAt: null,
                 IsRead: true,

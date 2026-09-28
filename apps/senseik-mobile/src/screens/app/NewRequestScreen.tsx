@@ -2,23 +2,24 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { ErrorBanner, IconCircleButton } from "@/components/ui";
 import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import OvertimeRequestSection from "@/components/requests/OvertimeRequestSection";
 import ExpenseClaimSection from "@/components/requests/ExpenseClaimSection";
 import AdvanceRequestSection from "@/components/requests/AdvanceRequestSection";
+import PunchCorrectionSection from "@/components/requests/PunchCorrectionSection";
 import { leaveService, type RequestableLeaveType } from "@/services/LeaveService";
 import { palette, radius, text } from "@/theme/theme";
 import type { AppStackParamList, RequestKind } from "@/types/navigation";
 
 type Props = NativeStackScreenProps<AppStackParamList, "NewRequest">;
 
-export const NEW_REQUEST_TITLES: Record<RequestKind, string> = {
-  leave: "İzin talebi",
-  overtime: "Fazla mesai talebi",
-  expense: "Masraf talebi",
-  advance: "Avans talebi",
-};
+/** Header title for a request kind ("İzin talebi"), in the active language. */
+export function newRequestTitle(kind: RequestKind): string {
+  return i18n.t(`requests:titles.${kind}`);
+}
 
 /**
  * Full-screen request form opened from the tab bar's "Yeni talep" sheet: a brand-blue title band
@@ -26,7 +27,8 @@ export const NEW_REQUEST_TITLES: Record<RequestKind, string> = {
  * themselves use the glass fields, the JS "Tarih seç" sheet and a full-width "Talebi gönder" button.
  */
 export default function NewRequestScreen({ navigation, route }: Props) {
-  const { kind } = route.params;
+  const { t } = useTranslation();
+  const { kind, date } = route.params;
   const insets = useSafeAreaInsets();
   const close = () => navigation.goBack();
 
@@ -34,16 +36,16 @@ export default function NewRequestScreen({ navigation, route }: Props) {
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.title} numberOfLines={1}>
-          {NEW_REQUEST_TITLES[kind]}
+          {newRequestTitle(kind)}
         </Text>
-        <IconCircleButton icon="close" onPress={close} accessibilityLabel="Kapat" />
+        <IconCircleButton icon="close" onPress={close} accessibilityLabel={t("actions.close")} />
       </View>
       <View style={styles.body}>
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
-          <RequestForm kind={kind} onSubmitted={close} />
+          <RequestForm kind={kind} date={date} onSubmitted={close} />
         </ScrollView>
       </View>
     </View>
@@ -51,8 +53,17 @@ export default function NewRequestScreen({ navigation, route }: Props) {
 }
 
 /** Mounts the form for `kind`; every form calls `onSubmitted` after a successful submit, which
- * closes the screen (Taleplerim/İzinlerim reload on focus). */
-function RequestForm({ kind, onSubmitted }: { kind: RequestKind; onSubmitted: () => void }) {
+ * closes the screen (Taleplerim/İzinlerim reload on focus). `date` only applies to punchCorrection
+ * (FG-004: Puantaj's "Düzeltme iste" preselects the day). */
+function RequestForm({
+  kind,
+  date,
+  onSubmitted,
+}: {
+  kind: RequestKind;
+  date?: string;
+  onSubmitted: () => void;
+}) {
   switch (kind) {
     case "leave":
       return <LeaveRequestBody onSubmitted={onSubmitted} />;
@@ -62,6 +73,8 @@ function RequestForm({ kind, onSubmitted }: { kind: RequestKind; onSubmitted: ()
       return <ExpenseClaimSection onSubmitted={onSubmitted} />;
     case "advance":
       return <AdvanceRequestSection onSubmitted={onSubmitted} />;
+    case "punchCorrection":
+      return <PunchCorrectionSection initialDate={date} onSubmitted={onSubmitted} />;
   }
 }
 
@@ -79,7 +92,7 @@ function LeaveRequestBody({ onSubmitted }: { onSubmitted: () => void }) {
         if (active) setTypes(result);
       })
       .catch(() => {
-        if (active) setError("İzin türleri yüklenemedi. Lütfen tekrar deneyin.");
+        if (active) setError(i18n.t("requests:leaveTypesLoadError"));
       });
     return () => {
       active = false;

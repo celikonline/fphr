@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
+using Sense.Modules.Attendance.Application.Corrections;
 using Sense.Modules.Attendance.Application.Employees;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Application.WorkSchedules;
@@ -13,6 +14,7 @@ using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Attendance.Infrastructure;
@@ -59,14 +61,22 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<LeaveOverlapChecker>();
         // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
         services.AddScoped<NonWorkingDayResolver>();
+        // Eksik giriş/çıkış düzeltme talebi (FG-004): repository (Api + Worker decision handlers) and the inbox summary for "PunchCorrection".
+        services.AddScoped<IPunchCorrectionRequestRepository, PunchCorrectionRequestRepository>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PunchCorrectionApprovalRequestSummaryProvider>();
         return services;
     }
 
-    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted), registered explicitly for Sense.Worker.</summary>
+    /// <summary>
+    /// Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted, and Workflow's
+    /// ApprovalCompleted/ApprovalRejected for "PunchCorrection"), registered explicitly for Sense.Worker.
+    /// </summary>
     public static IServiceCollection AddAttendanceIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
         services.AddScoped<IIntegrationEventHandler<TimesheetWeekCompleted>, TimesheetWeekCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, PunchCorrectionApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, PunchCorrectionApprovalRejectedHandler>();
         return services;
     }
 }

@@ -12,7 +12,8 @@
     "request": {
       "created": "My request was created",
       "approved": "My request was approved",
-      "rejected": "My request was rejected"
+      "rejected": "My request was rejected",
+      "comment_added": "A comment is added to my request or one I approved"
     },
     "approval": {
       "task_assigned": "A request is waiting for my approval"

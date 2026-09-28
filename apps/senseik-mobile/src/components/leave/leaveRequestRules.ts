@@ -5,6 +5,7 @@ import type {
   RequestableLeaveType,
 } from "@/services/LeaveService";
 import { formatDays, formatDurationMinutes, parseTimeOnly } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 
 /**
  * Pure rules behind `LeaveRequestForm` (split out of it for the 300-line file budget; the form
@@ -73,8 +74,8 @@ export function buildPreviewInput(
 export function previewSummaryText(preview: LeaveRequestPreview | null): string | null {
   if (!preview) return null;
   return preview.days > 0
-    ? `${formatDays(preview.days)} gün izninizden düşülecek`
-    : "Bu tarihlerde düşülecek gün yok";
+    ? i18n.t("leave:preview.deducted", { count: preview.days, value: formatDays(preview.days) })
+    : i18n.t("leave:preview.nothingDeducted");
 }
 
 /** `LeaveDomainErrors.RequestZeroDays` (`LeaveDomainErrors.cs:25`) - same fact as `previewSummaryText`'s 0-day message. */
@@ -134,7 +135,8 @@ export function buildCapturedPhotoFileName(
   capturedAt: Date,
   mimeType: string
 ): string {
-  const label = sanitizeFileNameSegment(leaveTypeName?.trim() || "Belge") || "Belge";
+  const fallback = i18n.t("leave:documents.fileNameFallback");
+  const label = sanitizeFileNameSegment(leaveTypeName?.trim() || fallback) || fallback;
   const year = capturedAt.getFullYear();
   const month = String(capturedAt.getMonth() + 1).padStart(2, "0");
   const day = String(capturedAt.getDate()).padStart(2, "0");
@@ -162,32 +164,25 @@ export function leaveRequestBlocker(input: {
   previewBlocksSubmit: boolean;
 }): { title: string; message: string } | null {
   const { selectedType, startDate, endDate } = input;
-  if (!selectedType) return { title: "Eksik bilgi", message: "Lütfen bir izin türü seçin." };
-  if (!startDate) return { title: "Eksik bilgi", message: "Lütfen bir tarih girin." };
+  const blocker = (title: string, message: string) => ({
+    title: i18n.t(`leave:blockers.titles.${title}`),
+    message: i18n.t(`leave:blockers.${message}`),
+  });
+  if (!selectedType) return blocker("missingInfo", "selectType");
+  if (!startDate) return blocker("missingInfo", "enterDate");
   const { isFullDay, isHourly } = leaveUnitFlags(selectedType.unit);
-  if (isFullDay && !endDate) {
-    return { title: "Eksik bilgi", message: "Lütfen başlangıç ve bitiş tarihini girin." };
-  }
-  if (isFullDay && endDate < startDate) {
-    return { title: "Geçersiz tarih", message: "Bitiş tarihi başlangıç tarihinden önce olamaz." };
-  }
-  if (isHourly && !input.hourlyDuration) {
-    return { title: "Geçersiz saat", message: "Bitiş saati başlangıç saatinden sonra olmalıdır." };
-  }
+  if (isFullDay && !endDate) return blocker("missingInfo", "enterRange");
+  if (isFullDay && endDate < startDate) return blocker("invalidDate", "endBeforeStart");
+  if (isHourly && !input.hourlyDuration) return blocker("invalidTime", "endTimeAfterStart");
   if (selectedType.requiresDescription && input.description.trim().length === 0) {
-    return { title: "Eksik bilgi", message: "Bu izin türü için açıklama zorunludur." };
+    return blocker("missingInfo", "descriptionRequired");
   }
   if (selectedType.requiresSubstitute && !input.hasSubstitute) {
-    return { title: "Eksik bilgi", message: "Bu izin türü için bir vekil seçmeniz gerekir." };
+    return blocker("missingInfo", "substituteRequired");
   }
   if (!hasRequiredDocument(selectedType, input.documentCount)) {
-    return {
-      title: "Eksik bilgi",
-      message: "Bu izin türü için en az bir belge eklemeniz gerekir.",
-    };
+    return blocker("missingInfo", "documentRequired");
   }
-  if (input.previewBlocksSubmit) {
-    return { title: "Gün düşülmeyecek", message: "Bu tarihlerde izninizden düşülecek gün yok." };
-  }
+  if (input.previewBlocksSubmit) return blocker("noDeduction", "noDeduction");
   return null;
 }

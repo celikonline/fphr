@@ -103,8 +103,16 @@ public static class LeavePermissions
         "leave.company_ledger.read", Module, "Şirket İzin/Fazla Mesai Defterini Görüntüleme", Group,
         "Şirket genelinde kimin izinde olduğunu, yıllık izin bakiyelerini ve yıllık fazla mesai sınırı aşımlarını görüntüleme");
 
+    /// <summary>
+    /// "Ekibim" (FG-007): pending/approved leave of the caller's own direct reports (ManagerEmployeeId == caller), not the Team data
+    /// scope; sensitive types masked like the calendar. "*.my.*" reaches every base role; a caller who manages nobody gets [].
+    /// </summary>
+    public static readonly Permission MyTeam = new(
+        "leave.my.team", Module, "Ekibimin İzinlerini Görüntüleme", Group, "Size doğrudan bağlı çalışanların bekleyen ve onaylı izinlerini görüntüleme");
+
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
-         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, RequestsApproveWithoutWorkflow, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead];
+         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, RequestsApproveWithoutWorkflow, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead,
+         MyTeam];
 }

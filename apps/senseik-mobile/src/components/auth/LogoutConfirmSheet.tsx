@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { text } from "@/theme/theme";
 import { AuthFormError } from "./AuthForm";
-
-const LOGOUT_FAILED_MESSAGE = "Çıkış yapılamadı. Lütfen tekrar deneyin.";
 
 type Props = {
   visible: boolean;
@@ -20,6 +19,7 @@ type Props = {
  * on failure the user stays signed in and sees an inline error.
  */
 export function LogoutConfirmSheet({ visible, onClose }: Props) {
+  const { t } = useTranslation("auth");
   const { logout } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function LogoutConfirmSheet({ visible, onClose }: Props) {
     try {
       await logout();
     } catch {
-      if (mountedRef.current) setError(LOGOUT_FAILED_MESSAGE);
+      if (mountedRef.current) setError(t("errors.logoutFailed"));
     } finally {
       inFlightRef.current = false;
       if (mountedRef.current) setIsLoggingOut(false);
@@ -56,18 +56,18 @@ export function LogoutConfirmSheet({ visible, onClose }: Props) {
   };
 
   return (
-    <BottomSheet visible={visible} onClose={handleClose} title="Çıkış yapılsın mı?">
-      <Text style={styles.body}>Tekrar giriş yapmanız gerekecek.</Text>
+    <BottomSheet visible={visible} onClose={handleClose} title={t("logout.title")}>
+      <Text style={styles.body}>{t("logout.body")}</Text>
       {error ? <AuthFormError message={error} /> : null}
       <View style={styles.actions}>
         <PrimaryButton
-          label="Çıkış yap"
+          label={t("logout.confirm")}
           variant="danger"
           loading={isLoggingOut}
           onPress={() => void handleConfirm()}
         />
         <PrimaryButton
-          label="Vazgeç"
+          label={t("common:actions.cancel")}
           variant="secondary"
           disabled={isLoggingOut}
           onPress={handleClose}

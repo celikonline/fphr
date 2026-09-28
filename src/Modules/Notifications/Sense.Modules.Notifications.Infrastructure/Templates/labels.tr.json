@@ -6,6 +6,7 @@
     "ExpenseClaim": "Harcama",
     "Overtime": "Fazla mesai",
     "Requisition": "Kadro",
-    "VisaDocument": "Vize belgesi"
+    "VisaDocument": "Vize belgesi",
+    "PunchCorrection": "Eksik giriş/çıkış"
   }
 }

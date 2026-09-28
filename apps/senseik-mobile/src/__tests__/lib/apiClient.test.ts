@@ -1,22 +1,57 @@
 import { apiClient, setUnauthorizedHandler } from "@/lib/apiClient";
 import { SecureStorage } from "@/lib/storage";
 import { isExpectedAuthFailure } from "@/services/AuthService";
+import i18n from "@/lib/i18n";
 
 jest.mock("@/lib/storage");
 
 /**
  * `apiClient` is normally imported through `jest.mock("@/lib/apiClient")` by the service tests, so
- * this is the one place the real axios instance's defaults get exercised. Reaches into the private
- * `instance` field on purpose (there is no public getter, same as `getBaseURL()` does internally) -
- * this is a regression guard for D4 (leave/error responses must come back localized in Turkish).
+ * this is the one place the real axios instance's interceptors get exercised. Reaches into the
+ * private `instance` field on purpose (there is no public getter, same as `getBaseURL()` does
+ * internally) - this is a regression guard for D4 (leave/error responses must come back localized)
+ * and FG-001 (in the app's active language, re-read on every request).
  */
-describe("apiClient default headers", () => {
-  it("sends Accept-Language: tr on every request (the app has no i18n and is Turkish-only)", () => {
+describe("apiClient Accept-Language header", () => {
+  type RequestHandler = {
+    fulfilled: (config: { headers: import("axios").AxiosHeaders }) => Promise<{
+      headers: import("axios").AxiosHeaders;
+    }>;
+  };
+
+  async function sendThroughRequestInterceptor() {
+    const { AxiosHeaders } = jest.requireActual<typeof import("axios")>("axios");
+    const instance = (
+      apiClient as unknown as {
+        instance: { interceptors: { request: { handlers: RequestHandler[] } } };
+      }
+    ).instance;
+    const config = await instance.interceptors.request.handlers[0].fulfilled({
+      headers: new AxiosHeaders(),
+    });
+    return config.headers.get("Accept-Language");
+  }
+
+  afterEach(async () => {
+    await i18n.changeLanguage("tr");
+  });
+
+  it("sends Accept-Language: tr while the app language is Turkish", async () => {
+    expect(await sendThroughRequestInterceptor()).toBe("tr");
+  });
+
+  it("follows a language switch without recreating the client", async () => {
+    await i18n.changeLanguage("en");
+
+    expect(await sendThroughRequestInterceptor()).toBe("en");
+  });
+
+  it("does not bake a fixed Accept-Language into the instance defaults", () => {
     const instance = (
       apiClient as unknown as { instance: { defaults: { headers: Record<string, unknown> } } }
     ).instance;
 
-    expect(instance.defaults.headers["Accept-Language"]).toBe("tr");
+    expect(instance.defaults.headers["Accept-Language"]).toBeUndefined();
   });
 });
 

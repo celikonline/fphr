@@ -1,0 +1,18 @@
+{
+  "title": "My goals",
+  "loadError": "Goals could not be loaded. Please try again.",
+  "empty": "You have no goals yet.",
+  "invalidTitle": "Invalid value",
+  "invalidProgress": "Progress must be a whole number between 0 and 100.",
+  "saveError": "Progress could not be updated. Please try again.",
+  "status": {
+    "open": "Open",
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "archived": "Archived"
+  },
+  "targetDate": "Target date: {{date}}",
+  "percent": "{{value}}%",
+  "progressA11y": "{{title}} progress percentage"
+}

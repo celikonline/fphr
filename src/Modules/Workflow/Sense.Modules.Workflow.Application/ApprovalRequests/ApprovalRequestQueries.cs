@@ -3,8 +3,10 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
 
@@ -12,13 +14,19 @@ namespace Sense.Modules.Workflow.Application.ApprovalRequests;
 
 /// <summary>
 /// Status/history of one approval request. No flat [RequiresPermission] - authorization is caller-identity-dependent
-/// (requester, an assignee on any of its tasks, or a caller holding an inbox/override permission) so it is checked
-/// inside the handler; anyone else gets NotFound, not Forbidden, so existence is not leaked.
+/// (a party of the request, see <see cref="ApprovalRequestAccess"/>) so it is checked inside the handler; anyone else
+/// gets NotFound, not Forbidden, so existence is not leaked. FG-009: workflow.inbox.view no longer grants access
+/// (every employee holds it), and the response carries the per-step timeline.
 /// </summary>
 public sealed record GetApprovalStatusQuery(Guid ApprovalRequestId) : IQuery<ApprovalRequestStatusDto>;
 
 public sealed class GetApprovalStatusHandler(
-    ICurrentUser currentUser, IApprovalRequestRepository requests, IPermissionService permissions)
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IRoleAssignmentLookup roleAssignments,
+    IPermissionService permissions,
+    IEmployeeDirectory employeeDirectory)
     : IQueryHandler<GetApprovalStatusQuery, ApprovalRequestStatusDto>
 {
     public async Task<Result<ApprovalRequestStatusDto>> Handle(GetApprovalStatusQuery query, CancellationToken cancellationToken)
@@ -30,26 +38,110 @@ public sealed class GetApprovalStatusHandler(
         }
 
         var request = loaded.Value;
-        var callerEmployeeId = currentUser.EmployeeId;
-        var authorized = (callerEmployeeId is not null && request.RequesterEmployeeId == callerEmployeeId)
-            || (callerEmployeeId is not null && request.Tasks.Any(t => t.ApproverEmployeeId == callerEmployeeId));
-
-        if (!authorized && currentUser.UserId is { } userId)
-        {
-            authorized = await permissions.HasAsync(userId, "workflow.request.override", cancellationToken)
-                || await permissions.HasAsync(userId, "workflow.inbox.view", cancellationToken);
-        }
-
-        if (!authorized)
+        if (!await ApprovalRequestAccess.IsPartyAsync(
+                request, currentUser.EmployeeId, currentUser.UserId, tenant.TenantId, roleAssignments, permissions, cancellationToken))
         {
             return Error.NotFound(WorkflowErrors.RequestNotFound);
         }
 
         Guid? currentApproverEmployeeId = request.ShowCurrentApproverToRequester ? request.CurrentTask?.ApproverEmployeeId : null;
 
+        // The policy's "show the current approver to the requester" switch hides every not-yet-decided step's
+        // assignee from the requester only; approvers/override holders see the whole chain.
+        var hidePendingApprovers = !request.ShowCurrentApproverToRequester && currentUser.EmployeeId == request.RequesterEmployeeId;
+        var steps = request.Tasks
+            .OrderBy(t => t.StepNumber)
+            .Select(t => (Task: t, ApproverId: t.Status == ApprovalTaskStatus.Pending
+                ? (hidePendingApprovers ? null : t.ApproverEmployeeId)
+                : t.DecidedByEmployeeId ?? t.ApproverEmployeeId))
+            .ToList();
+
+        var names = await EmployeeNames.ResolveAsync(
+            employeeDirectory, tenant.TenantId, steps.Select(s => s.ApproverId).OfType<Guid>(), cancellationToken);
+
+        IReadOnlyList<ApprovalStepStatusDto> stepDtos = steps
+            .Select(s => new ApprovalStepStatusDto(
+                s.Task.StepNumber,
+                s.Task.Status,
+                s.ApproverId,
+                s.ApproverId is { } approverId ? names.GetValueOrDefault(approverId) : null,
+                s.Task.ApproverEmployeeId is null && s.Task.FallbackRoleCode is not null,
+                s.Task.DecidedAt,
+                s.Task.Comment))
+            .ToList();
+
         return new ApprovalRequestStatusDto(
             request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId, request.Status.ToString(),
-            request.StepCount, request.CurrentStepNumber, currentApproverEmployeeId);
+            request.StepCount, request.CurrentStepNumber, currentApproverEmployeeId, request.SubmittedAt, request.CompletedAt, stepDtos);
+    }
+}
+
+/// <summary>
+/// FG-009: the comments left on one approval request, oldest first. Same party-only authorization as
+/// <see cref="GetApprovalStatusQuery"/> (NotFound for everyone else).
+/// </summary>
+public sealed record ListApprovalRequestCommentsQuery(Guid ApprovalRequestId) : IQuery<IReadOnlyList<ApprovalRequestCommentDto>>;
+
+public sealed class ListApprovalRequestCommentsHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IRoleAssignmentLookup roleAssignments,
+    IPermissionService permissions,
+    IEmployeeDirectory employeeDirectory)
+    : IQueryHandler<ListApprovalRequestCommentsQuery, IReadOnlyList<ApprovalRequestCommentDto>>
+{
+    public async Task<Result<IReadOnlyList<ApprovalRequestCommentDto>>> Handle(ListApprovalRequestCommentsQuery query, CancellationToken cancellationToken)
+    {
+        var loaded = await requests.GetByIdAsync(query.ApprovalRequestId, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var request = loaded.Value;
+        if (!await ApprovalRequestAccess.IsPartyAsync(
+                request, currentUser.EmployeeId, currentUser.UserId, tenant.TenantId, roleAssignments, permissions, cancellationToken))
+        {
+            return Error.NotFound(WorkflowErrors.RequestNotFound);
+        }
+
+        var comments = request.History
+            .Where(h => h.EventType == ApprovalHistoryEventType.Commented && h.ActorEmployeeId is not null && h.Note is not null)
+            .OrderBy(h => h.OccurredAt)
+            .ThenBy(h => h.Id)
+            .ToList();
+        if (comments.Count == 0)
+        {
+            return Result.Success<IReadOnlyList<ApprovalRequestCommentDto>>([]);
+        }
+
+        var names = await EmployeeNames.ResolveAsync(
+            employeeDirectory, tenant.TenantId, comments.Select(c => c.ActorEmployeeId!.Value), cancellationToken);
+
+        IReadOnlyList<ApprovalRequestCommentDto> dtos = comments
+            .Select(c => new ApprovalRequestCommentDto(
+                c.Id, c.ActorEmployeeId!.Value, names.GetValueOrDefault(c.ActorEmployeeId.Value), c.Note!, c.OccurredAt))
+            .ToList();
+
+        return Result.Success(dtos);
+    }
+}
+
+/// <summary>Employee id → "First Last" display name via the Employee directory; unresolved ids are simply absent.</summary>
+internal static class EmployeeNames
+{
+    public static async Task<IReadOnlyDictionary<Guid, string>> ResolveAsync(
+        IEmployeeDirectory employeeDirectory, Guid tenantId, IEnumerable<Guid> employeeIds, CancellationToken cancellationToken)
+    {
+        var ids = employeeIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var contacts = await employeeDirectory.GetContactsAsync(tenantId, ids, cancellationToken);
+        return contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
     }
 }
 
@@ -129,6 +221,70 @@ public sealed class ListInboxHandler(
             .ToList();
 
         return Result.Success(dtos);
+    }
+}
+
+/// <summary>
+/// FG-008: the tasks the caller decided (DecidedByEmployeeId == caller - direct, fallback-role and override decisions
+/// alike), newest decision first. <see cref="From"/>/<see cref="To"/> are inclusive UTC decision days; <see cref="Type"/>
+/// is an exact RequestType. Page/PageSize follow the list-endpoint defaults (1-based, 20, capped at 200).
+/// </summary>
+[RequiresPermission("workflow.inbox.view")]
+public sealed record ListApprovalHistoryQuery(
+    DateOnly? From, DateOnly? To, string? Type, int Page = PagingDefaults.FirstPage, int PageSize = PagingDefaults.DefaultPageSize)
+    : IQuery<PagedResult<ApprovalHistoryItemDto>>;
+
+public sealed class ListApprovalHistoryHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IEmployeeDirectory employeeDirectory,
+    IEnumerable<IApprovalRequestSummaryProvider> summaryProviders) : IQueryHandler<ListApprovalHistoryQuery, PagedResult<ApprovalHistoryItemDto>>
+{
+    public async Task<Result<PagedResult<ApprovalHistoryItemDto>>> Handle(ListApprovalHistoryQuery query, CancellationToken cancellationToken)
+    {
+        var page = Math.Max(query.Page, PagingDefaults.FirstPage);
+        var pageSize = query.PageSize < 1 ? PagingDefaults.DefaultPageSize : Math.Min(query.PageSize, PagingDefaults.MaxPageSize);
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return new PagedResult<ApprovalHistoryItemDto>([], page, pageSize, 0);
+        }
+
+        DateTime? fromUtc = query.From is { } from ? DateTime.SpecifyKind(from.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc) : null;
+        DateTime? toUtcExclusive = query.To is { } to && to < DateOnly.MaxValue
+            ? DateTime.SpecifyKind(to.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+        var type = string.IsNullOrWhiteSpace(query.Type) ? null : query.Type.Trim();
+
+        var decided = await requests.ListDecidedTasksAsync(
+            employeeId, fromUtc, toUtcExclusive, type, (page - PagingDefaults.FirstPage) * pageSize, pageSize, cancellationToken);
+        if (decided.Items.Count == 0)
+        {
+            return new PagedResult<ApprovalHistoryItemDto>([], page, pageSize, decided.TotalCount);
+        }
+
+        var requesterIds = decided.Items.Select(r => r.RequesterEmployeeId).Distinct().ToList();
+        var contacts = await employeeDirectory.GetContactsAsync(tenant.TenantId, requesterIds, cancellationToken);
+        var requesterNames = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+        var providersByRequestType = summaryProviders.ToDictionary(p => p.RequestType, StringComparer.Ordinal);
+        var summariesByRequestId = new Dictionary<Guid, ApprovalRequestSummary?>();
+        foreach (var row in decided.Items.DistinctBy(r => r.ApprovalRequestId))
+        {
+            summariesByRequestId[row.ApprovalRequestId] = providersByRequestType.TryGetValue(row.RequestType, out var provider)
+                ? await provider.GetSummaryAsync(tenant.TenantId, row.SubjectId, cancellationToken)
+                : null;
+        }
+
+        IReadOnlyList<ApprovalHistoryItemDto> items = decided.Items
+            .Select(r => new ApprovalHistoryItemDto(
+                r.TaskId, r.ApprovalRequestId, r.RequestType, r.SubjectId, r.RequesterEmployeeId,
+                requesterNames.GetValueOrDefault(r.RequesterEmployeeId), r.StepNumber,
+                r.TaskStatus == ApprovalTaskStatus.Approved ? ApprovalOutcome.Approved : ApprovalOutcome.Rejected,
+                r.DecidedAt, r.Comment, r.RequestStatus, summariesByRequestId.GetValueOrDefault(r.ApprovalRequestId)))
+            .ToList();
+
+        return new PagedResult<ApprovalHistoryItemDto>(items, page, pageSize, decided.TotalCount);
     }
 }
 

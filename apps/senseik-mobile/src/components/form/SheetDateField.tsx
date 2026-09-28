@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SelectField } from "@/components/ui";
 import { formatDateWithWeekday } from "@/lib/formatters";
 import { DateRangeSheet } from "./DateRangeSheet";
@@ -14,6 +15,7 @@ type Props = {
 
 /** Glass select field that opens the JS `DateRangeSheet` in single-day mode (overtime/expense/advance). */
 export function SheetDateField({ label, value, onChange, required, minDate }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -22,7 +24,7 @@ export function SheetDateField({ label, value, onChange, required, minDate }: Pr
         label={label}
         required={required}
         value={formatDateWithWeekday(value)}
-        placeholder="Tarih seçin"
+        placeholder={t("dateSheet.placeholder")}
         onPress={() => setOpen(true)}
       />
       <DateRangeSheet

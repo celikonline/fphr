@@ -1,13 +1,11 @@
 import type { GoalStatus } from "@/services/GoalsService";
 import type { Tone } from "@/theme/theme";
+import i18n from "@/lib/i18n";
 
-export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
-  open: "Açık",
-  inProgress: "Devam ediyor",
-  completed: "Tamamlandı",
-  cancelled: "İptal edildi",
-  archived: "Arşivlendi",
-};
+/** Goal status label in the active language. */
+export function goalStatusLabel(status: GoalStatus): string {
+  return i18n.t(`goals:status.${status}`);
+}
 
 /** Maps a `GoalStatus` onto the shared `StatusPill` tone palette (mobil yeniden tasarım Task 6). */
 export function goalStatusTone(status: GoalStatus): Tone {

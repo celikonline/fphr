@@ -63,5 +63,8 @@ public sealed class WorkflowModule : IModule
         // Cross-module read/write ports consumed by other modules (future Leave, Expense, ...)
         services.AddScoped<IApprovalRequestLookup, ApprovalRequestLookup>();
         services.AddScoped<IWorkflowService, WorkflowService>();
+
+        // FG-008 decide-bulk: one child scope (own DbContext + transaction) per task decision
+        services.AddScoped<IIsolatedApprovalDecisionRunner, IsolatedApprovalDecisionRunner>();
     }
 }

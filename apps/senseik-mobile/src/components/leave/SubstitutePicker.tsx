@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { ErrorBanner, IconCircleButton } from "@/components/ui";
 import { fontFor, palette, radius, text } from "@/theme/theme";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
@@ -47,6 +49,7 @@ type Props = {
 
 /** Full-screen searchable modal to pick a "requiresSubstitute" leave type's vekil (D2/B-mobil-005). */
 export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId }: Props) {
+  const { t } = useTranslation("leave");
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [people, setPeople] = useState<PersonListItem[]>([]);
@@ -60,7 +63,7 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
       const result = await peopleService.listPeople({ q, pageSize: 20 });
       setPeople(result.items);
     } catch {
-      setError("Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("leave:substitute.loadError"));
     } finally {
       setLoading(false);
     }
@@ -86,19 +89,23 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Vekil seç</Text>
-          <IconCircleButton icon="close" onPress={onClose} accessibilityLabel="Kapat" />
+          <Text style={styles.title}>{t("substitute.title")}</Text>
+          <IconCircleButton
+            icon="close"
+            onPress={onClose}
+            accessibilityLabel={t("common:actions.close")}
+          />
         </View>
 
         <TextInput
           style={styles.searchInput}
-          placeholder="İsim, unvan veya birim ara"
+          placeholder={t("substitute.searchPlaceholder")}
           placeholderTextColor={palette.textFaint}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
           autoCorrect={false}
-          accessibilityLabel="Çalışan ara"
+          accessibilityLabel={t("substitute.searchA11y")}
         />
 
         {error ? <ErrorBanner message={error} /> : null}
@@ -125,7 +132,7 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
                 )}
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={styles.emptyText}>Kayıt bulunamadı.</Text>}
+            ListEmptyComponent={<Text style={styles.emptyText}>{t("substitute.empty")}</Text>}
           />
         )}
       </View>

@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { formatDayMonth, parseDateOnly } from "@/components/form/dateRange";
 import { fontFor, palette, radius, text } from "@/theme/theme";
 import { weekdayShort } from "./shiftWeek";
@@ -16,6 +17,7 @@ type Props = {
 
 /** Vardiyam's week strip: one glass cell per day; tapping a day narrows the lists to it. */
 export function WeekStrip({ days, today, selected, markedDays, onSelect }: Props) {
+  useTranslation();
   return (
     <View style={styles.row}>
       {days.map((day) => {

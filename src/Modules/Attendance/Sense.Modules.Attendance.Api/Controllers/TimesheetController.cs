@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Equalization;
 using Sense.Modules.Attendance.Application.MonthlyTimesheet;
+using Sense.Modules.Attendance.Application.MyTeam;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Attendance.Api.Controllers;
@@ -51,6 +52,18 @@ public sealed class TimesheetController : ApiControllerBase
     [ProducesResponseType<MyTimesheetSummaryDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> MySummary([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyTimesheetSummaryQuery(from, to), ct));
+
+    /// <summary>"Ekibim" haftalık puantaj (FG-007): yalnız çağıranın doğrudan bağlıları; bağlısı yoksa boş liste.</summary>
+    [HttpGet("me/team")]
+    [ProducesResponseType<IReadOnlyList<TeamWeekRowDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyTeamWeek([FromQuery] DateOnly weekStart, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyTeamWeekQuery(weekStart), ct));
+
+    /// <summary>"Ekibim" aylık puantaj (FG-007): monthStart'ı içeren takvim ayı, yalnız çağıranın doğrudan bağlıları.</summary>
+    [HttpGet("me/team/month")]
+    [ProducesResponseType<IReadOnlyList<TeamWeekRowDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyTeamMonth([FromQuery] DateOnly monthStart, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyTeamMonthQuery(monthStart), ct));
 
     /// <summary>Ekip haftalık puantaj ızgarası (11.3.6): yönetici, veri kapsamındaki çalışanların bir haftasını görür (isteğe bağlı birim filtresi).</summary>
     [HttpGet("team")]

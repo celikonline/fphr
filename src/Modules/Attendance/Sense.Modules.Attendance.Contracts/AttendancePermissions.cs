@@ -125,10 +125,29 @@ public static class AttendancePermissions
     public static readonly Permission BoardView = new(
         BoardViewKey, Module, "Canlı İçeride/Dışarıda Panosunu Görüntüleme", Group, "Şu an kimin içeride kimin dışarıda olduğunu canlı görüntüleme");
 
+    /// <summary>
+    /// Eksik giriş/çıkış düzeltme talebi (FG-004): submit/list/withdraw one's own requests; "*.my.*" reaches every base role.
+    /// The decision itself runs through the Workflow inbox (assignment-based, workflow.inbox.decide) - no separate approve key.
+    /// </summary>
+    public const string MyCorrectionsKey = "attendance.my.corrections";
+
+    public static readonly Permission MyCorrections = new(
+        MyCorrectionsKey, Module, "Kendi Giriş-Çıkış Düzeltme Taleplerim", Group, "Eksik giriş/çıkış için düzeltme talebi oluşturma, görüntüleme ve geri çekme");
+
+    /// <summary>
+    /// "Ekibim" (FG-007): weekly/monthly timesheet and today's status of the caller's own direct reports (ManagerEmployeeId ==
+    /// caller), not the Team data scope. "*.my.*" reaches every base role; a caller who manages nobody gets empty lists.
+    /// </summary>
+    public const string MyTeamKey = "attendance.my.team";
+
+    public static readonly Permission MyTeam = new(
+        MyTeamKey, Module, "Ekibimin Puantajını Görüntüleme", Group, "Size doğrudan bağlı çalışanların puantajını ve bugünkü giriş durumunu görüntüleme");
+
     public static IEnumerable<Permission> All =>
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
             TimesheetApprove, ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
-            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView,
+            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView, MyCorrections,
+            MyTeam,
         ];
 }

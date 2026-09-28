@@ -1,6 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import {
-  ATTACHMENT_OPEN_ERROR_MESSAGE,
+  attachmentOpenErrorMessage,
   openLeaveAttachment,
   shouldIgnoreAttachmentTap,
 } from "@/lib/attachmentDownload";
@@ -73,7 +73,7 @@ describe("openLeaveAttachment (senseik-mobile-011/U1)", () => {
 
 describe("ATTACHMENT_OPEN_ERROR_MESSAGE (error mapping: 403/404/network all show the same generic message)", () => {
   it("is a single generic Turkish message", () => {
-    expect(ATTACHMENT_OPEN_ERROR_MESSAGE).toBe("Belge açılamadı. Lütfen tekrar deneyin.");
+    expect(attachmentOpenErrorMessage()).toBe("Belge açılamadı. Lütfen tekrar deneyin.");
   });
 });
 

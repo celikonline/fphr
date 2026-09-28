@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui";
 import { palette, radius, text } from "@/theme/theme";
 
@@ -23,21 +24,22 @@ export function PayslipHeroCard({
   onOpen,
   onAcknowledge,
 }: Props) {
+  const { t } = useTranslation("payroll");
   return (
     <View style={styles.card}>
-      <Text style={styles.caption}>Geçen ay net maaşın</Text>
+      <Text style={styles.caption}>{t("hero.caption")}</Text>
       <Text style={styles.period}>{period}</Text>
       <Text style={styles.amount}>{netAmount}</Text>
       <View style={styles.actions}>
         <PrimaryButton
-          label="Belgeyi aç"
+          label={t("openDocument")}
           variant="secondary"
           loading={isOpening}
           onPress={onOpen}
         />
         {!isAcknowledged ? (
           <PrimaryButton
-            label="Okudum, onaylıyorum"
+            label={t("acknowledge")}
             variant="secondary"
             loading={isAcknowledging}
             onPress={onAcknowledge}

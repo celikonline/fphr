@@ -4,41 +4,48 @@ import {
   type AttendanceDay,
 } from "@/services/AttendanceService";
 import type { Tone } from "@/theme/theme";
+import i18n from "@/lib/i18n";
 
 /** A Puantaj day card's status pill (spec §5). */
 export type AttendanceDayStatus = "completed" | "missing" | "anomaly" | "onLeave" | "leave";
 
 export type AttendanceFilter = "all" | "missing" | "anomaly";
 
-export const ATTENDANCE_STATUS_PILLS: Record<AttendanceDayStatus, { label: string; tone: Tone }> = {
-  completed: { label: "Tamamlandı", tone: "success" },
-  missing: { label: "Eksik", tone: "danger" },
-  anomaly: { label: "Anomali", tone: "warning" },
+const STATUS_TONES: Record<AttendanceDayStatus, Tone> = {
+  completed: "success",
+  missing: "danger",
+  anomaly: "warning",
   // `workedWhileOnLeave`: the person worked on an approved-leave day, which needs a look.
-  onLeave: { label: "İzinli günde çalışma", tone: "warning" },
+  onLeave: "warning",
   // `day.onLeave` with nothing worked: an ordinary leave day, not an anomaly.
-  leave: { label: "İzinli", tone: "info" },
+  leave: "info",
 };
 
-export const ATTENDANCE_FILTERS: { value: AttendanceFilter; label: string }[] = [
-  { value: "all", label: "Tümü" },
-  { value: "missing", label: "Eksik" },
-  { value: "anomaly", label: "Anomali" },
-];
+/** Status pill label (active language) and tone for a Puantaj day. */
+export function attendanceStatusPill(status: AttendanceDayStatus): { label: string; tone: Tone } {
+  return { label: i18n.t(`attendance:status.${status}`), tone: STATUS_TONES[status] };
+}
+
+const FILTER_VALUES: readonly AttendanceFilter[] = ["all", "missing", "anomaly"];
+
+/** "Filtre" options in the active language. */
+export function attendanceFilters(): { value: AttendanceFilter; label: string }[] {
+  return FILTER_VALUES.map((value) => ({ value, label: i18n.t(`attendance:filters.${value}`) }));
+}
 
 /** Same wording as web (`attendance.json` → `anomaly.*`). */
-const ANOMALY_LABELS: Record<AttendanceAnomalyFlag, string> = {
-  noData: "Kayıt yok",
-  missingCheckIn: "Giriş eksik",
-  missingCheckOut: "Çıkış eksik",
-  lateArrival: "Geç giriş",
-  earlyLeave: "Erken çıkış",
-  lateLeave: "Geç çıkış",
-  overwork: "Fazla çalışma",
-  underwork: "Az çalışma",
-  unplannedWork: "Plansız çalışma",
-  workedWhileOnLeave: "İzinli günde çalışma",
-};
+const ANOMALY_FLAGS: readonly AttendanceAnomalyFlag[] = [
+  "noData",
+  "missingCheckIn",
+  "missingCheckOut",
+  "lateArrival",
+  "earlyLeave",
+  "lateLeave",
+  "overwork",
+  "underwork",
+  "unplannedWork",
+  "workedWhileOnLeave",
+];
 
 const MISSING_FLAGS = new Set<AttendanceAnomalyFlag>([
   "noData",
@@ -80,9 +87,14 @@ export function formatTimeOfDay(value: string | null | undefined): string {
 
 /** "Giriş 09:02 · Çıkış 18:10" */
 export function formatPunchLine(day: Pick<AttendanceDay, "checkIn" | "checkOut">): string {
-  return `Giriş ${formatTimeOfDay(day.checkIn)} · Çıkış ${formatTimeOfDay(day.checkOut)}`;
+  return i18n.t("attendance:punchLine", {
+    checkIn: formatTimeOfDay(day.checkIn),
+    checkOut: formatTimeOfDay(day.checkOut),
+  });
 }
 
 export function anomalyLabels(anomalies: string): string[] {
-  return parseAnomalyFlags(anomalies).map((flag) => ANOMALY_LABELS[flag] ?? flag);
+  return parseAnomalyFlags(anomalies).map((flag) =>
+    ANOMALY_FLAGS.includes(flag) ? i18n.t(`attendance:anomaly.${flag}`) : flag
+  );
 }

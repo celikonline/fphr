@@ -37,6 +37,10 @@ describe("requestTypeLabel", () => {
     expect(requestTypeLabel("AssetAssignment")).toBe("Zimmet");
   });
 
+  it("labels a punch-correction task 'Eksik giriş/çıkış' (FG-004)", () => {
+    expect(requestTypeLabel("PunchCorrection")).toBe("Eksik giriş/çıkış");
+  });
+
   it("falls back to 'Talep' for a truly unknown type, never the raw server key", () => {
     expect(requestTypeLabel("SomeFutureRequestType")).toBe("Talep");
   });

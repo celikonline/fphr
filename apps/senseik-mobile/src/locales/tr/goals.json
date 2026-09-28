@@ -1,0 +1,18 @@
+{
+  "title": "Hedeflerim",
+  "loadError": "Hedefler yüklenemedi. Lütfen tekrar deneyin.",
+  "empty": "Henüz bir hedefiniz yok.",
+  "invalidTitle": "Geçersiz değer",
+  "invalidProgress": "İlerleme 0 ile 100 arasında bir tam sayı olmalı.",
+  "saveError": "İlerleme güncellenemedi. Lütfen tekrar deneyin.",
+  "status": {
+    "open": "Açık",
+    "inProgress": "Devam ediyor",
+    "completed": "Tamamlandı",
+    "cancelled": "İptal edildi",
+    "archived": "Arşivlendi"
+  },
+  "targetDate": "Hedef tarih: {{date}}",
+  "percent": "%{{value}}",
+  "progressA11y": "{{title}} ilerleme yüzdesi"
+}

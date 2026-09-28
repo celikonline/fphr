@@ -1,23 +1,24 @@
 import type { CheckInBreak, MyCheckInStatus } from "@/services/AttendanceService";
-import { formatDurationMinutes } from "@/lib/formatters";
+import { getApiErrorMessage, getApiProblem } from "@/lib/apiError";
+import { formatDate, formatDurationMinutes } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 
 /** Giriş / Çıkış / Mola başı / Mola sonu - same set as the API's `PunchDirection`. */
 export type PunchAction = "in" | "out" | "breakStart" | "breakEnd";
 
 export const PUNCH_ACTIONS: readonly PunchAction[] = ["in", "out", "breakStart", "breakEnd"];
 
-/** Tile title and the imperative button label for each punch. */
-export const PUNCH_LABELS: Record<PunchAction, { tile: string; action: string }> = {
-  in: { tile: "Giriş", action: "Giriş yap" },
-  out: { tile: "Çıkış", action: "Çıkış yap" },
-  breakStart: { tile: "Mola başı", action: "Molaya başla" },
-  breakEnd: { tile: "Mola sonu", action: "Molayı bitir" },
-};
+/** Tile title ("Giriş") and the imperative button label ("Giriş yap") for a punch, in the active language. */
+export function punchLabel(action: PunchAction): { tile: string; action: string } {
+  return {
+    tile: i18n.t(`checkin:punch.${action}.tile`),
+    action: i18n.t(`checkin:punch.${action}.action`),
+  };
+}
 
 /** QR button label: the scan records `next`, so it names that punch ("QR ile çıkış yap"). */
 export function qrButtonLabel(next: PunchAction | "done"): string {
-  if (next === "done") return "QR kodu okut";
-  return `QR ile ${PUNCH_LABELS[next].action.toLocaleLowerCase("tr-TR")}`;
+  return i18n.t(`checkin:qr.${next}`);
 }
 
 /** Spec §6: location accuracy at or below this many meters reads as "Doğru". */
@@ -60,10 +61,16 @@ export function elapsedSinceCheckIn(checkIn: string | null | undefined, now: Dat
   return formatDurationMinutes(Math.floor(elapsed / 60));
 }
 
-/** Location accuracy badge from `expo-location`'s `coords.accuracy` (meters); `null` when unknown. */
-export function accuracyLabel(meters: number | null | undefined): "Doğru" | "Zayıf" | null {
+/** Location accuracy level from `expo-location`'s `coords.accuracy` (meters); `null` when unknown. */
+export function accuracyLevel(meters: number | null | undefined): "good" | "weak" | null {
   if (meters === null || meters === undefined || Number.isNaN(meters)) return null;
-  return meters <= ACCURATE_METERS ? "Doğru" : "Zayıf";
+  return meters <= ACCURATE_METERS ? "good" : "weak";
+}
+
+/** Location accuracy badge text ("Doğru" / "Zayıf") in the active language; `null` when unknown. */
+export function accuracyLabel(meters: number | null | undefined): string | null {
+  const level = accuracyLevel(meters);
+  return level ? i18n.t(`checkin:accuracy.${level}`) : null;
 }
 
 /**
@@ -107,9 +114,35 @@ export function punchTimes(
   };
 }
 
+/** Server code for a GPS/QR punch outside the location's radius (`SelfCheckInOutsideGeofence`). */
+export const OUTSIDE_GEOFENCE_CODE = "attendance.self_checkin.outside_geofence";
+
+/**
+ * Punch error text. Outside the geofence gets the app's own message (the server's text says
+ * "check-in" even for Çıkış/Mola); anything else is the server's localized detail or the fallback.
+ */
+export function punchErrorMessage(error: unknown): string {
+  if (getApiProblem(error)?.code === OUTSIDE_GEOFENCE_CODE) {
+    return i18n.t("checkin:geofence.outsideError");
+  }
+  return getApiErrorMessage(error, i18n.t("checkin:errors.punch"));
+}
+
+/**
+ * FG-005 (Karar 3): runs the biometric `confirm` first and only then `send`s the punch; a declined or
+ * cancelled confirmation sends nothing and resolves `null`.
+ */
+export async function sendConfirmedPunch<T>(
+  confirm: () => Promise<boolean>,
+  send: () => Promise<T>
+): Promise<T | null> {
+  if (!(await confirm())) return null;
+  return send();
+}
+
 /** "27 Eyl 2026". */
 export function formatClockDate(date: Date): string {
-  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date, { day: "numeric", month: "short", year: "numeric" });
 }
 
 /** The device's UTC offset: "GMT+3", "GMT+5:30", "GMT-4", "GMT". */

@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PUNCH_ACTIONS, PUNCH_LABELS, type PunchAction } from "@/lib/punch";
+import { useTranslation } from "react-i18next";
+import { PUNCH_ACTIONS, punchLabel, type PunchAction } from "@/lib/punch";
 import { palette, radius, text } from "@/theme/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -27,13 +28,15 @@ type Props = {
 
 /** 2×2 Giriş · Çıkış · Mola başı · Mola sonu; the next punch gets the brand border. */
 export function PunchTiles({ times, available, next, disabled, onPress }: Props) {
+  const { t } = useTranslation("checkin");
   return (
     <View style={styles.grid}>
       {PUNCH_ACTIONS.map((action) => {
         const isNext = next === action;
         const isAvailable = available[action];
         const time = times[action];
-        const title = PUNCH_LABELS[action].tile;
+        const labels = punchLabel(action);
+        const title = labels.tile;
         return (
           <TouchableOpacity
             key={action}
@@ -45,8 +48,8 @@ export function PunchTiles({ times, available, next, disabled, onPress }: Props)
             onPress={() => onPress(action)}
             disabled={disabled || !isAvailable}
             accessibilityRole="button"
-            accessibilityLabel={`${title}, ${time ?? "kayıt yok"}`}
-            accessibilityHint={isAvailable ? PUNCH_LABELS[action].action : undefined}
+            accessibilityLabel={t("tiles.a11y", { title, time: time ?? t("tiles.noRecord") })}
+            accessibilityHint={isAvailable ? labels.action : undefined}
             accessibilityState={{ disabled: disabled || !isAvailable, selected: isNext }}
             testID={`punch-tile-${action}`}
           >

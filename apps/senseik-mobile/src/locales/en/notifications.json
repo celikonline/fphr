@@ -1,0 +1,65 @@
+{
+  "title": "Notifications",
+  "loadError": "Notifications could not be loaded. Please try again.",
+  "markAllRead": "Mark all as read",
+  "markAllReadError": "Notifications could not be marked as read. Please try again.",
+  "empty": "You have no notifications.",
+  "preferences": {
+    "title": "Notification preferences",
+    "subtitle": "Choose which notifications you get by email and in the app.",
+    "loadError": "Notification preferences could not be loaded. Please try again.",
+    "saveError": "The notification preference could not be saved. Please try again.",
+    "empty": "No configurable notifications.",
+    "mandatory": "Cannot be turned off"
+  },
+  "templates": {
+    "request": {
+      "created": "When my request is created",
+      "approved": "When my request is approved",
+      "rejected": "When my request is rejected"
+    },
+    "approval": {
+      "task_assigned": "When a request is waiting for my approval"
+    },
+    "documents": {
+      "expiry_reminder": "When a document is about to expire"
+    },
+    "ohs": {
+      "sgk_notification_due": "When an occupational accident's SGK reporting deadline is near or past"
+    },
+    "employee": {
+      "hired": "When a new employee starts",
+      "welcome": "Welcome email when I start",
+      "terminated": "When an employee leaves",
+      "work_certificate": "Employment certificate on leaving",
+      "birthday": "On my birthday"
+    },
+    "announcement": {
+      "published": "When a new announcement is published"
+    },
+    "payroll": {
+      "payslip_ready": "When my payslip is ready"
+    },
+    "leave": {
+      "added_on_behalf": "When a leave request is added on my behalf"
+    },
+    "onboarding": {
+      "task_assigned": "When an onboarding task is assigned to me",
+      "task_completed": "When an onboarding task is completed"
+    }
+  },
+  "categories": {
+    "account": "Account",
+    "request": "Requests",
+    "approval": "Approvals",
+    "reminder": "Reminders",
+    "employee": "Employees",
+    "announcement": "Announcements",
+    "payroll": "Payroll",
+    "onboarding": "Onboarding"
+  },
+  "channels": {
+    "email": "Email",
+    "in_app": "In-app"
+  }
+}

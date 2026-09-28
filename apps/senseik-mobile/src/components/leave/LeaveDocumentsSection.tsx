@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { accents, fontFor, palette, radius, text, tones, type AccentKey } from "@/theme/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -28,21 +29,22 @@ export function LeaveDocumentsSection({
   onPickFile,
   onRemove,
 }: Props) {
+  const { t } = useTranslation("leave");
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Belge ekle *</Text>
+      <Text style={styles.label}>{t("documents.add")} *</Text>
       <View style={styles.actionRow}>
         <PickerTile
           icon="camera-outline"
           accent="blue"
-          label="Fotoğraf çek"
+          label={t("documents.takePhoto")}
           onPress={onCapturePhoto}
           disabled={uploading}
         />
         <PickerTile
           icon="document-attach-outline"
           accent="purple"
-          label="Dosya seç"
+          label={t("documents.pickFile")}
           onPress={onPickFile}
           disabled={uploading}
         />
@@ -50,7 +52,7 @@ export function LeaveDocumentsSection({
       {uploading ? (
         <View style={styles.uploadingRow}>
           <ActivityIndicator size="small" color={palette.white} />
-          <Text style={styles.caption}>Belge yükleniyor…</Text>
+          <Text style={styles.caption}>{t("documents.uploading")}</Text>
         </View>
       ) : null}
       {documents.map((doc) => (
@@ -62,16 +64,14 @@ export function LeaveDocumentsSection({
           <TouchableOpacity
             onPress={() => onRemove(doc.id)}
             accessibilityRole="button"
-            accessibilityLabel={`${doc.name} kaldır`}
+            accessibilityLabel={t("documents.removeA11y", { name: doc.name })}
             hitSlop={{ top: 14, bottom: 14, left: 12, right: 12 }}
           >
-            <Text style={styles.remove}>Kaldır</Text>
+            <Text style={styles.remove}>{t("common:actions.remove")}</Text>
           </TouchableOpacity>
         </View>
       ))}
-      {missingRequired ? (
-        <Text style={styles.hint}>Bu izin türü için en az bir belge eklemeniz gerekir.</Text>
-      ) : null}
+      {missingRequired ? <Text style={styles.hint}>{t("blockers.documentRequired")}</Text> : null}
     </View>
   );
 }

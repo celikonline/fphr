@@ -1,6 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette, text } from "@/theme/theme";
+import { toLocaleUpper } from "@/lib/formatters";
 
 type Props = {
   title: string;
@@ -9,16 +11,18 @@ type Props = {
 };
 
 /**
- * Uppercases a section title with Turkish casing rules ("tr-TR" locale, not the device's default
- * one) so "İşlemlerim" becomes "İŞLEMLERİM" (not "İŞLEMLERIM") and "izinde" becomes "İZİNDE" (not
- * "IZINDE") regardless of the device's system locale.
+ * Uppercases a section title with the active app language's casing rules (not the device's
+ * default locale) so in Turkish "İşlemlerim" becomes "İŞLEMLERİM" (not "İŞLEMLERIM") and "izinde"
+ * becomes "İZİNDE" (not "IZINDE") regardless of the device's system locale.
  */
 export function sectionTitleText(title: string): string {
-  return title.toLocaleUpperCase("tr-TR");
+  return toLocaleUpper(title);
 }
 
 /** Section title (rendered uppercase via `sectionTitleText`) with an optional right-aligned text action ("Tümü", "Geçmiş", ...). */
 export function SectionHeader({ title, actionLabel, onAction }: Props) {
+  // Re-renders on a language switch so the upper-cased title follows the new locale.
+  useTranslation();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{sectionTitleText(title)}</Text>

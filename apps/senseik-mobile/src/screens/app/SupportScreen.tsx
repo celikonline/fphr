@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 import { EmptyState, Screen, ScreenHeader, SectionHeader } from "@/components/ui";
 import {
   supportService,
@@ -17,6 +18,7 @@ export { normalizeTicketStatus, supportTicketStatusTone };
 
 /** "Hesabım > Destek": Yardım Merkezi araması + makale görünümü + Desteğe bağlan formu + Taleplerim (11.3.13). */
 export default function SupportScreen() {
+  const { t } = useTranslation("support");
   const [refreshing, setRefreshing] = useState(false);
 
   // Yardım Merkezi
@@ -97,7 +99,7 @@ export default function SupportScreen() {
 
   async function submitTicket() {
     if (subject.trim().length === 0 || body.trim().length === 0) {
-      Alert.alert("Eksik bilgi", "Lütfen konu ve ayrıntı alanlarını doldurun.");
+      Alert.alert(t("common:alerts.missingInfo"), t("newTicket.missingFields"));
       return;
     }
 
@@ -108,9 +110,9 @@ export default function SupportScreen() {
       setBody("");
       setCategory("general");
       await loadTickets();
-      Alert.alert("Gönderildi", "Talebiniz alındı. Destek ekibimiz size dönecek.");
+      Alert.alert(t("common:alerts.sent"), t("newTicket.submitted"));
     } catch {
-      Alert.alert("Hata", "Talep gönderilemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("newTicket.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -118,11 +120,11 @@ export default function SupportScreen() {
 
   return (
     <Screen
-      header={<ScreenHeader title="Destek" />}
+      header={<ScreenHeader title={t("title")} />}
       refreshing={refreshing}
       onRefresh={() => void onRefresh()}
     >
-      <SectionHeader title="Yardım Merkezi" />
+      <SectionHeader title={t("sections.help")} />
       <HelpCenterCard
         term={term}
         onTermChange={setTerm}
@@ -135,7 +137,7 @@ export default function SupportScreen() {
         onCloseArticle={closeArticle}
       />
 
-      <SectionHeader title="Desteğe bağlan" />
+      <SectionHeader title={t("sections.contact")} />
       <NewTicketCard
         category={category}
         onCategoryChange={setCategory}
@@ -147,11 +149,11 @@ export default function SupportScreen() {
         onSubmit={() => void submitTicket()}
       />
 
-      <SectionHeader title="Taleplerim" />
+      <SectionHeader title={t("sections.tickets")} />
       {ticketsLoading ? (
         <ActivityIndicator style={styles.loading} color={palette.white} />
       ) : tickets.length === 0 ? (
-        <EmptyState icon="chatbox-ellipses-outline" title="Henüz bir destek talebiniz yok." />
+        <EmptyState icon="chatbox-ellipses-outline" title={t("tickets.empty")} />
       ) : (
         tickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
       )}

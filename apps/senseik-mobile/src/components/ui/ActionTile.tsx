@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { accents, fontFor, palette, radius, text, type AccentKey } from "@/theme/theme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -15,9 +16,10 @@ type Props = {
 
 /** A single tile in the home screen's "İşlemlerim" grid. */
 export function ActionTile({ label, icon, accent, badge, onPress }: Props) {
+  const { t } = useTranslation();
   const accentStyle = accents[accent];
   const showBadge = typeof badge === "number" && badge > 0;
-  const accessibilityLabel = showBadge ? `${label}, ${badge} bekliyor` : label;
+  const accessibilityLabel = showBadge ? t("a11y.pendingBadge", { label, count: badge }) : label;
 
   return (
     <TouchableOpacity

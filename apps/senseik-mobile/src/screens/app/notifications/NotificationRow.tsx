@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui";
 import { formatRelativeTime } from "@/lib/formatters";
 import type { UserNotification } from "@/services/NotificationsService";
@@ -14,6 +15,7 @@ type Props = {
 
 /** One notification row: category icon, unread dot + 800 title, body, relative time. */
 export function NotificationRow({ notification, onPress }: Props) {
+  useTranslation();
   const isUnread = !notification.readAt;
   const { icon, accent } = notificationCategoryIcon(notification.templateKey);
   const accentStyle = accents[accent];

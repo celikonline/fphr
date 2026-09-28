@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { fontFor, palette, radius, text } from "@/theme/theme";
 
 type Props = {
@@ -30,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
     // Never log the raw error/stack (may carry PII from screen state) - app-wide rule, see
     // AuthService.ts. Only a fixed, generic message, and only in dev.
     if (__DEV__) {
-      console.error("Uygulama beklenmeyen bir render hatasıyla karşılaştı.");
+      console.error("The app hit an unexpected render error.");
     }
   }
 
@@ -51,17 +52,18 @@ type FallbackProps = {
 };
 
 function ErrorFallback({ onRetry }: FallbackProps) {
+  const { t } = useTranslation("errors");
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bir şeyler ters gitti</Text>
-      <Text style={styles.description}>Beklenmeyen bir hata oluştu. Yeniden deneyebilirsiniz.</Text>
+      <Text style={styles.title}>{t("boundary.title")}</Text>
+      <Text style={styles.description}>{t("boundary.description")}</Text>
       <TouchableOpacity
         style={styles.button}
         onPress={onRetry}
         accessibilityRole="button"
-        accessibilityLabel="Yeniden dene"
+        accessibilityLabel={t("boundary.retry")}
       >
-        <Text style={styles.buttonLabel}>Yeniden dene</Text>
+        <Text style={styles.buttonLabel}>{t("boundary.retry")}</Text>
       </TouchableOpacity>
     </View>
   );

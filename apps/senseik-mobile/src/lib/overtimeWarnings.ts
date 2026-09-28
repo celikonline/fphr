@@ -1,24 +1,18 @@
+import i18n from "@/lib/i18n";
+
 /**
- * TK-031: Turkish text for `OvertimeSubmissionResult.warnings` codes (`OvertimeWarnings` in
- * `OvertimeRequestFeatures.cs`) - mirrors `web/public/locales/tr/leave.json`'s `overtime.warnings.*`.
+ * TK-031: text (active language) for `OvertimeSubmissionResult.warnings` codes (`OvertimeWarnings`
+ * in `OvertimeRequestFeatures.cs`) - mirrors `web/public/locales/*\/leave.json`'s
+ * `overtime.warnings.*`; keys under `requests:overtime.warnings`.
  * `overtime_daily_limit_exceeded` and `overtime_past_date_exceeded` (senseik-042) aren't in that web
- * JSON yet either - checked directly - so their text below is this file's own, not copied from a
- * source that doesn't have it.
+ * JSON yet either - checked directly - so their text is this app's own, not copied from a source
+ * that doesn't have it.
  */
-const OVERTIME_WARNING_LABELS: Record<string, string> = {
-  "leave.warnings.overtime_consent_missing": "Yazılı fazla çalışma onayınız kayıtlı değil.",
-  "leave.warnings.overtime_night_consent_missing":
-    "Kayıt gece saatlerine denk geliyor ancak gece fazla çalışma onayınız yok.",
-  "leave.warnings.overtime_overlaps_schedule":
-    "Talebin bir kısmı planlı çalışma saatleri içinde; o kısım ödenecek süreden düşüldü.",
-  "leave.warnings.overtime_annual_limit_exceeded":
-    "Bu kayıtla yıllık fazla mesai toplamı yasal sınırı aşıyor.",
-  "leave.warnings.overtime_daily_limit_exceeded":
-    "Bu kayıtla günlük fazla mesai toplamı 11 saati aşıyor.",
-  "leave.warnings.overtime_past_date_exceeded": "Bu tarih 7 günden daha eski bir geçmiş tarih.",
-};
+const WARNING_CODE_PREFIX = "leave.warnings.";
 
 /** Falls back to the raw warning code when unmapped (a newer backend warning this file hasn't caught up with). */
 export function overtimeWarningLabel(code: string): string {
-  return OVERTIME_WARNING_LABELS[code] ?? code;
+  if (!code.startsWith(WARNING_CODE_PREFIX)) return code;
+  const key = `requests:overtime.warnings.${code.slice(WARNING_CODE_PREFIX.length)}`;
+  return i18n.exists(key) ? i18n.t(key) : code;
 }

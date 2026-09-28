@@ -1,5 +1,6 @@
-import { TICKET_STATUS_LABELS, type SupportTicketStatus } from "@/services/SupportService";
+import { SUPPORT_TICKET_STATUSES, type SupportTicketStatus } from "@/services/SupportService";
 import type { Tone } from "@/theme/theme";
+import i18n from "@/lib/i18n";
 
 /**
  * D3: the backend is mid-migration from PascalCase ("Open") to camelCase ("open") enum
@@ -8,7 +9,14 @@ import type { Tone } from "@/theme/theme";
  */
 export function normalizeTicketStatus(status: string): SupportTicketStatus {
   const camelCase = status.length > 0 ? status.charAt(0).toLowerCase() + status.slice(1) : status;
-  return camelCase in TICKET_STATUS_LABELS ? (camelCase as SupportTicketStatus) : "open";
+  return SUPPORT_TICKET_STATUSES.includes(camelCase as SupportTicketStatus)
+    ? (camelCase as SupportTicketStatus)
+    : "open";
+}
+
+/** Ticket status label in the active language. */
+export function supportTicketStatusLabel(status: SupportTicketStatus): string {
+  return i18n.t(`support:status.${status}`);
 }
 
 /** Maps a normalized ticket status to the shared `StatusPill` tone palette. */

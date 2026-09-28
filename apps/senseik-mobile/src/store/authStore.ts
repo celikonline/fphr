@@ -3,6 +3,7 @@ import { User, AuthTokens, TenantChoice } from "@/types";
 import { authService, isExpectedAuthFailure, LoginOutcome } from "@/services/AuthService";
 import { SecureStorage } from "@/lib/storage";
 import { setUnauthorizedHandler } from "@/lib/apiClient";
+import i18n from "@/lib/i18n";
 
 export interface AuthStore {
   // State
@@ -99,7 +100,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   completeMfa: async (code: string) => {
     const { mfaToken, mfaEmail } = get();
     if (!mfaToken) {
-      const error = new Error("Doğrulama oturumu bulunamadı. Lütfen tekrar giriş yapın.");
+      const error = new Error(i18n.t("auth:errors.mfaSessionMissing"));
       set({ error: error.message });
       throw error;
     }

@@ -18,24 +18,26 @@ export type SupportTicketCategory =
   | "billing"
   | "other";
 
-export const SUPPORT_TICKET_CATEGORIES: { value: SupportTicketCategory; label: string }[] = [
-  { value: "general", label: "Genel" },
-  { value: "dataTransfer", label: "Veri aktarımı" },
-  { value: "leaveAndOvertime", label: "İzin ve fazla mesai" },
-  { value: "approvals", label: "Onay süreçleri" },
-  { value: "accessAndPermissions", label: "Erişim ve yetkiler" },
-  { value: "payroll", label: "Bordro" },
-  { value: "billing", label: "Faturalama" },
-  { value: "other", label: "Diğer" }
+/** Chip order of the "Desteğe bağlan" categories; labels are `support:categories.<value>`. */
+export const SUPPORT_TICKET_CATEGORIES: SupportTicketCategory[] = [
+  "general",
+  "dataTransfer",
+  "leaveAndOvertime",
+  "approvals",
+  "accessAndPermissions",
+  "payroll",
+  "billing",
+  "other",
 ];
 
 export type SupportTicketStatus = "open" | "answered" | "closed";
 
-export const TICKET_STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  open: "Açık",
-  answered: "Yanıtlandı",
-  closed: "Kapandı"
-};
+/** Every known ticket status; labels are `support:status.<value>`. */
+export const SUPPORT_TICKET_STATUSES: readonly SupportTicketStatus[] = [
+  "open",
+  "answered",
+  "closed",
+];
 
 export interface HelpArticleSummary {
   slug: string;
@@ -77,7 +79,7 @@ export interface CreateSupportTicketInput {
 export class SupportService {
   async searchArticles(q?: string): Promise<HelpArticleSummary[]> {
     const response = await apiClient.get<HelpArticleSummary[]>(`${SUPPORT_BASE}/articles`, {
-      params: q ? { q } : undefined
+      params: q ? { q } : undefined,
     });
     return response.data;
   }
@@ -88,7 +90,10 @@ export class SupportService {
   }
 
   async createTicket(input: CreateSupportTicketInput): Promise<string> {
-    const response = await apiClient.post<string>(`${SUPPORT_BASE}/tickets`, { ...input, sourceRoute: input.sourceRoute ?? "mobile" });
+    const response = await apiClient.post<string>(`${SUPPORT_BASE}/tickets`, {
+      ...input,
+      sourceRoute: input.sourceRoute ?? "mobile",
+    });
     return response.data;
   }
 

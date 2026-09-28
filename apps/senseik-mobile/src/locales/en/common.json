@@ -1,0 +1,97 @@
+{
+  "actions": {
+    "close": "Close",
+    "back": "Back",
+    "retry": "Try again",
+    "apply": "Apply",
+    "select": "Select",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "save": "Save"
+  },
+  "a11y": {
+    "pendingBadge": "{{label}}, {{count}} pending"
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}} h {{minutes}} min"
+  },
+  "relativeTime": {
+    "justNow": "just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} h ago",
+    "hoursAgo_other": "{{count}} h ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
+  "calendar": {
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "monthsShort": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
+    "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "dateSheet": {
+    "title": "Pick a date",
+    "singleDay": "Single day",
+    "multipleDays": "Multiple days",
+    "start": "Start",
+    "end": "End",
+    "date": "Date",
+    "applyWithDays_one": "Apply ({{count}} day)",
+    "applyWithDays_other": "Apply ({{count}} days)",
+    "placeholder": "Pick a date"
+  },
+  "tabs": {
+    "home": "Home",
+    "checkIn": "Clock in / out",
+    "newRequest": "Create a new request"
+  },
+  "status": {
+    "loading": "Loading"
+  },
+  "units": {
+    "days_one": "{{value}} day",
+    "days_other": "{{value}} days"
+  },
+  "alerts": {
+    "error": "Error",
+    "saved": "Saved",
+    "missingInfo": "Missing information",
+    "sent": "Sent"
+  },
+  "languageNames": {
+    "tr": "Türkçe",
+    "en": "English"
+  },
+  "biometric": {
+    "authenticatePrompt": "Authenticate to access your account",
+    "enablePrompt": "Enable biometric login"
+  }
+}

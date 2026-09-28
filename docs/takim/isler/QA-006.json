@@ -1,7 +1,7 @@
 {
   "id": "QA-006",
   "baslik": "Duyuru akışında (announcements/feed) type/priority/kind alanları camelCase değil, PascalCase dönüyor",
-  "durum": "backlog",
+  "durum": "incelemede",
   "oncelik": "orta",
   "sahip": "takim-gelistirici-dotnet (+ web tüketicileri kontrolü)",
   "dal": "",
@@ -18,7 +18,7 @@
   },
   "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
   "riskli_alan": false,
-  "kanit": null,
+  "kanit": "29e23bd4239bb7b698c2fc26dba91296eb76c9e6",
   "handoff": "Kontrolcü kararı (2026-09-28): PR #134 kapsamı dışı — Announcements backend sözleşme değişikliği web tüketicilerini (\"Announcement\"/\"Recognition\" karşılaştırmaları) etkileyebilir; mobil zaten büyük/küçük harf duyarsız. Ayrı işte web+mobil birlikte ele alınmalı.",
   "acan": "qa-dongusu",
   "tur": 7,

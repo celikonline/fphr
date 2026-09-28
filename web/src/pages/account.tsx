@@ -271,6 +271,8 @@ export default function AccountPage() {
   const mfaStatusQuery = useQuery({ queryKey: ["mfa-status"], queryFn: getMfaStatus });
   const mfaEnabled = mfaStatusQuery.data?.enabled ?? user?.mfaEnabled ?? false;
   const mfaPending = !mfaEnabled && (mfaStatusQuery.data?.pendingEnrollment ?? false);
+  // FG-022: the server refuses to turn MFA off for a policy-required role - don't offer the button then.
+  const mfaRequiredByPolicy = mfaStatusQuery.data?.requiredByPolicy ?? false;
 
   const [enrollment, setEnrollment] = useState<MfaEnrollment | null>(null);
   const [disableOpen, setDisableOpen] = useState(false);
@@ -410,9 +412,23 @@ export default function AccountPage() {
             </Text>
           </Stack>
           {mfaEnabled ? (
-            <Button color="red" variant="default" leftSection={<ShieldOff size={16} />} onClick={() => setDisableOpen(true)}>
-              {t("account:mfaSection.disableCta")}
-            </Button>
+            <Stack gap={4} align="flex-end" maw={280}>
+              <Button
+                color="red"
+                variant="default"
+                leftSection={<ShieldOff size={16} />}
+                onClick={() => setDisableOpen(true)}
+                disabled={mfaRequiredByPolicy}
+                aria-describedby={mfaRequiredByPolicy ? "mfa-required-by-policy" : undefined}
+              >
+                {t("account:mfaSection.disableCta")}
+              </Button>
+              {mfaRequiredByPolicy && (
+                <Text id="mfa-required-by-policy" size="xs" c="dimmed" ta="right">
+                  {t("account:mfaRequiredByPolicyHint")}
+                </Text>
+              )}
+            </Stack>
           ) : (
             <Button
               leftSection={<ShieldCheck size={16} />}

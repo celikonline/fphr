@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
-  ATTACHMENT_OPEN_ERROR_MESSAGE,
+  attachmentOpenErrorMessage,
   openLeaveAttachment,
   shouldIgnoreAttachmentTap,
 } from "@/lib/attachmentDownload";
@@ -21,6 +22,7 @@ import { attachmentsCountLabel, loadLeaveTaskAttachments } from "./approvalAttac
  * it; `openingDocumentId` blocks a second tap while one download-url request/open is in flight.
  */
 export function ApprovalAttachmentsLine({ task }: { task: InboxTask }) {
+  const { t } = useTranslation();
   const [attachments, setAttachments] = useState<LeaveRequestAttachment[]>([]);
   const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(null);
 
@@ -53,7 +55,7 @@ export function ApprovalAttachmentsLine({ task }: { task: InboxTask }) {
         )
       );
     } catch {
-      Alert.alert("Hata", ATTACHMENT_OPEN_ERROR_MESSAGE);
+      Alert.alert(t("alerts.error"), attachmentOpenErrorMessage());
     } finally {
       setOpeningDocumentId(null);
     }

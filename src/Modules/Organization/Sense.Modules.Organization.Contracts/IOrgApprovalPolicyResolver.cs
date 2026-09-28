@@ -22,10 +22,13 @@ public static class ApprovalRequestTypes
     /// <summary>Assets' zimmet assignment approval (TK-018, roadmap faz4 "As0").</summary>
     public const string AssetAssignment = "AssetAssignment";
 
+    /// <summary>Attendance's employee-initiated missing punch correction ("Eksik giriş/çıkış", FG-004).</summary>
+    public const string PunchCorrection = "PunchCorrection";
+
     public const int MaxLength = 50;
 
     /// <summary>Unit-assignable request types, in display order.</summary>
-    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment];
+    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment, PunchCorrection];
 
     /// <summary>True if <paramref name="requestType"/> follows the identifier rule above.</summary>
     public static bool IsWellFormed(string? requestType) =>

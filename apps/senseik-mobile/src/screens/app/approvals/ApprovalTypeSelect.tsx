@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { palette, text } from "@/theme/theme";
 import { approvalFilterSelectedText, type ApprovalFilter } from "./approvalFilters";
 
@@ -12,16 +13,17 @@ type Props = {
 
 /** Görev 8: "Tür" etiketi + brandText renkli seçili değer, alt sayfayı açar (spec §5). */
 export function ApprovalTypeSelect({ filter, counts, onPress }: Props) {
+  const { t } = useTranslation("approvals");
   const selectedText = approvalFilterSelectedText(filter, counts);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Tür</Text>
+      <Text style={styles.label}>{t("typeLabel")}</Text>
       <TouchableOpacity
         style={styles.row}
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`Tür: ${selectedText}`}
+        accessibilityLabel={t("typeA11y", { value: selectedText })}
       >
         <Text style={styles.value}>{selectedText}</Text>
         <Ionicons name="chevron-down" size={18} color={palette.brandText} />

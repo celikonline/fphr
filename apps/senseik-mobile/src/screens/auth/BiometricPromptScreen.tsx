@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -12,10 +13,8 @@ import { palette } from "@/theme/theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "BiometricPrompt">;
 
-const FAILURE_MESSAGE =
-  "Biyometrik giriş başarısız. Lütfen tekrar deneyin veya şifrenizle giriş yapın.";
-
 export default function BiometricPromptScreen({ navigation, route }: Props) {
+  const { t } = useTranslation("auth");
   const { loginWithBiometric } = useAuthStore();
   const { email } = route.params;
   const [failed, setFailed] = useState(false);
@@ -57,14 +56,14 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
   return (
     <AuthShell>
       <AuthPanel>
-        <Text style={authStyles.panelTitle}>Biyometrik giriş</Text>
+        <Text style={authStyles.panelTitle}>{t("biometric.title")}</Text>
         {failed ? (
           <>
-            <AuthFormError message={FAILURE_MESSAGE} />
+            <AuthFormError message={t("errors.biometricFailed")} />
             <View style={styles.actions}>
-              <PrimaryButton label="Tekrar dene" onPress={handleRetry} />
+              <PrimaryButton label={t("common:actions.retry")} onPress={handleRetry} />
               <PrimaryButton
-                label="Şifreyle giriş yap"
+                label={t("biometric.passwordLogin")}
                 variant="secondary"
                 onPress={() => navigation.goBack()}
               />
@@ -74,11 +73,11 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
           <>
             <View style={styles.status} accessibilityLiveRegion="polite">
               <ActivityIndicator size="large" color={palette.brand} />
-              <Text style={authStyles.panelSubtitle}>Kimlik doğrulanıyor...</Text>
+              <Text style={authStyles.panelSubtitle}>{t("biometric.verifying")}</Text>
             </View>
             <View style={styles.actions}>
               <PrimaryButton
-                label="Vazgeç"
+                label={t("common:actions.cancel")}
                 variant="secondary"
                 onPress={() => navigation.goBack()}
               />

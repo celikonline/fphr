@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import {
   Avatar,
   EmptyState,
@@ -36,6 +38,7 @@ export function openPersonEmail(workEmail: string | null | undefined): void {
 }
 
 function PersonRow({ person }: { person: PersonListItem }) {
+  const { t } = useTranslation("people");
   const subtitle = [person.titleName, person.departmentName].filter(Boolean).join(" · ");
 
   return (
@@ -59,7 +62,7 @@ function PersonRow({ person }: { person: PersonListItem }) {
             style={styles.contactButton}
             onPress={() => openPersonPhone(person.workPhone)}
             accessibilityRole="button"
-            accessibilityLabel={`${person.displayName} - telefon ile ara`}
+            accessibilityLabel={t("callA11y", { name: person.displayName })}
           >
             <Ionicons name="call-outline" size={16} color={palette.brandText} />
             <Text style={styles.contactButtonText}>{person.workPhone}</Text>
@@ -70,7 +73,7 @@ function PersonRow({ person }: { person: PersonListItem }) {
             style={styles.contactButton}
             onPress={() => openPersonEmail(person.workEmail)}
             accessibilityRole="button"
-            accessibilityLabel={`${person.displayName} - e-posta gönder`}
+            accessibilityLabel={t("emailA11y", { name: person.displayName })}
           >
             <Ionicons name="mail-outline" size={16} color={palette.brandText} />
             <Text style={styles.contactButtonText} numberOfLines={1}>
@@ -84,6 +87,7 @@ function PersonRow({ person }: { person: PersonListItem }) {
 }
 
 export default function PeopleScreen() {
+  const { t } = useTranslation("people");
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -96,7 +100,7 @@ export default function PeopleScreen() {
       const result = await peopleService.listPeople({ q, pageSize: 100 });
       setPeople(result.items);
     } catch {
-      setError("Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("people:loadError"));
     }
   }, []);
 
@@ -119,15 +123,15 @@ export default function PeopleScreen() {
     setRefreshing(false);
   }
 
-  const header = <ScreenHeader title="Kişiler" />;
+  const header = <ScreenHeader title={t("title")} />;
 
   return (
     <Screen scroll={false} header={header}>
       <View style={styles.flex}>
         <View style={styles.searchWrap}>
           <TextField
-            label="Ara"
-            placeholder="İsim, unvan veya birim ara"
+            label={t("search")}
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChangeText={setSearch}
             autoCapitalize="none"
@@ -154,7 +158,7 @@ export default function PeopleScreen() {
                 tintColor={palette.white}
               />
             }
-            ListEmptyComponent={<EmptyState icon="people-outline" title="Kayıt bulunamadı." />}
+            ListEmptyComponent={<EmptyState icon="people-outline" title={t("empty")} />}
           />
         )}
       </View>
