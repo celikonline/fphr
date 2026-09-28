@@ -4,7 +4,8 @@
     "Advance": "Vorschuss",
     "Expense": "Spesen",
     "Overtime": "Überstunden",
-    "VisaDocument": "Visumsunterlagen"
+    "VisaDocument": "Visumsunterlagen",
+    "PunchCorrection": "Fehlende Stempelung"
   },
   "policies": {
     "listTitle": "Genehmigungsprozesse",
