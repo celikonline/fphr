@@ -1,8 +1,11 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Auth;
 using Sense.Modules.Identity.Application.Users;
 using Sense.Modules.Identity.Domain.Roles;
+using Sense.Modules.Identity.Domain.Tenants;
+using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -149,13 +152,13 @@ public sealed class MfaTests : IdentityStackTestBase
         var userId = await SeedUserAsync(tenantId, "gulsah@acme.test", SystemRoleCodes.Employee);
         ActAs(tenantId, userId);
 
-        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false, false));
 
         var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
-        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, true));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, true, false));
 
         await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
-        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(true, false));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(true, false, false));
     }
 
     [Fact]
@@ -174,7 +177,7 @@ public sealed class MfaTests : IdentityStackTestBase
         (await ExecuteCommandAsync(new ResetUserMfaCommand(targetId))).IsSuccess.ShouldBeTrue();
 
         ActAs(tenantId, targetId);
-        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false, false));
     }
 
     [Fact]
@@ -211,6 +214,51 @@ public sealed class MfaTests : IdentityStackTestBase
 
         ShouldFailWith(await ExecuteCommandAsync(new DisableMfaCommand("000000")), IdentityErrors.MfaInvalidCode, ErrorType.Validation);
         (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeTrue();
+    }
+
+    /// <summary>FG-022 (olumsuz): politikanın zorunlu kıldığı roldeki kullanıcı MFA'yı doğru kodla bile kapatamaz.</summary>
+    [Fact]
+    public async Task DisableMfa_RoleRequiredByPolicy_ReturnsRequiredByPolicy_AndMfaStaysEnabled()
+    {
+        var tenantId = await SeedTenantAsync("mfa-policy-disable");
+        var userId = await SeedUserAsync(tenantId, "politika@acme.test", SystemRoleCodes.HR);
+        await SetSecurityPolicyAsync(tenantId, SystemRoleCodes.HR);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(true, false, true));
+
+        ShouldFailWith(await ExecuteCommandAsync(new DisableMfaCommand(CodeFor(enroll.Secret))), IdentityErrors.MfaRequiredByPolicy, ErrorType.Validation);
+        (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeTrue();
+    }
+
+    /// <summary>FG-022: politika başka bir rolü zorunlu kılıyorsa kullanıcı MFA'yı kapatabilir.</summary>
+    [Fact]
+    public async Task DisableMfa_PolicyForOtherRole_Disables()
+    {
+        var tenantId = await SeedTenantAsync("mfa-policy-other-role");
+        var userId = await SeedUserAsync(tenantId, "serbest@acme.test", SystemRoleCodes.Employee);
+        await SetSecurityPolicyAsync(tenantId, SystemRoleCodes.HR);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.RequiredByPolicy.ShouldBeFalse();
+
+        (await ExecuteCommandAsync(new DisableMfaCommand(CodeFor(enroll.Secret)))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false, false));
+    }
+
+    private async Task SetSecurityPolicyAsync(Guid tenantId, params string[] roleCodes)
+    {
+        var db = Get<IdentityDbContext>();
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            var tenant = await db.Tenants.SingleAsync(t => t.Id == tenantId);
+            tenant.UpdateSecurityPolicy(new TenantSecurityPolicy { RequireMfaForRoles = roleCodes });
+            await db.SaveChangesAsync();
+        }
     }
 
     /// <summary>

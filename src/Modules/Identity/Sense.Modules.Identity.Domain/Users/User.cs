@@ -177,6 +177,10 @@ public sealed class User : TenantAggregateRoot<Guid>, ISoftDelete, IAuditLogged,
         }
     }
 
+    /// <summary>FG-001: kullanıcının kendi dil tercihi (iki harfli kod, küçük harfe normalize edilir). Desteklenen dil
+    /// denetimi yapılandırmaya bağlı olduğu için Application'dadır (<c>ChangeMyLanguageHandler</c>).</summary>
+    public void ChangePreferredLanguage(string language) => PreferredLanguage = Guard.NotEmpty(language).Trim().ToLowerInvariant();
+
     public Result ChangeEmail(string email)
     {
         if (!EmailAddress.IsValid(email))

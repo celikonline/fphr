@@ -1534,4 +1534,6 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.self_checkin.break_not_checked_in" xml:space="preserve"><value>Check in before starting a break.</value></data>
   <data name="attendance.self_checkin.break_already_open" xml:space="preserve"><value>You already have an open break.</value></data>
   <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>There is no open break to end.</value></data>
+  <data name="identity.mfa.required_by_policy" xml:space="preserve"><value>Your company's security policy requires two-factor authentication for your role; it cannot be disabled.</value></data>
+  <data name="identity.user.language_unsupported" xml:space="preserve"><value>The selected language is not supported.</value></data>
 </root>
