@@ -240,17 +240,39 @@ function ImpersonationBanner() {
   );
 }
 
-/** Wordmark heading the sidebar column, sharing its width and background (Kolay İK reference layout). */
-function Brand() {
+/**
+ * Wordmark heading the sidebar column, sharing its width and background (Kolay İK reference layout). It
+ * follows the desktop collapse preference so the navy column keeps one width from top to bottom.
+ */
+function Brand({ collapsed }: { collapsed: boolean }) {
+  const desktopWidth = collapsed ? "" : "md:w-64 md:justify-start md:px-5";
+  const fullMark = collapsed ? "hidden" : "hidden md:block";
+  const shortMark = collapsed ? "" : "md:hidden";
+
   return (
     <Link
       to="/app"
-      className={`flex w-14 shrink-0 items-center justify-center md:w-64 md:justify-start md:px-5 ${classes.brand}`}
+      className={`flex w-14 shrink-0 items-center justify-center ${desktopWidth} ${classes.rail}`}
     >
-      <Text fz={22} fw={700} lh={1} className="hidden md:block">
+      <Text
+        fz={22}
+        fw={800}
+        lh={1}
+        ff="var(--mantine-font-family-headings)"
+        c="var(--sense-rail-fg-strong)"
+        style={{ letterSpacing: "-0.02em" }}
+        className={fullMark}
+      >
         SenseHR
       </Text>
-      <Text fz={22} fw={700} lh={1} className="md:hidden">
+      <Text
+        fz={22}
+        fw={800}
+        lh={1}
+        ff="var(--mantine-font-family-headings)"
+        c="var(--sense-rail-fg-strong)"
+        className={shortMark}
+      >
         S
       </Text>
     </Link>
@@ -344,17 +366,15 @@ export default function AppLayout() {
   });
 
   return (
-    <Box
-      className="flex h-screen flex-col"
-      bg="var(--mantine-color-body)"
-      c="var(--mantine-color-text)"
-    >
+    <Box className={`flex h-screen flex-col ${classes.page}`} c="var(--mantine-color-text)">
       <ImpersonationBanner />
       <div className="flex min-h-0 flex-1 p-2 md:p-4">
         <div className={`flex min-h-0 flex-1 flex-col ${classes.portal}`}>
-          <header className={`flex h-18 shrink-0 items-stretch ${classes.header}`}>
-            <Brand />
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6">
+          <header className="flex h-18 shrink-0 items-stretch">
+            <Brand collapsed={collapsed} />
+            <div
+              className={`flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6 ${classes.headerContent}`}
+            >
               <BackButton />
               <Greeting />
               <div className="hidden min-w-0 flex-1 sm:block md:max-w-sm">
@@ -372,7 +392,7 @@ export default function AppLayout() {
             <div className="relative hidden shrink-0 md:flex">
               <aside
                 data-testid="sidebar-desktop"
-                className={`${collapsed ? "w-14" : "w-64"} flex shrink-0 flex-col ${classes.sidebar}`}
+                className={`${collapsed ? "w-14" : "w-64"} flex shrink-0 flex-col ${classes.rail}`}
               >
                 <NavList collapsed={collapsed} />
               </aside>
@@ -385,7 +405,7 @@ export default function AppLayout() {
             {/* Mobile icon rail - always icon-only, unaffected by the desktop collapse preference */}
             <aside
               data-testid="sidebar-mobile"
-              className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}
+              className={`flex w-14 shrink-0 flex-col md:hidden ${classes.rail}`}
             >
               <NavList collapsed />
             </aside>

@@ -244,11 +244,21 @@ export const mantineTheme = createTheme({
   colors: { brand, navy, blue, cyan, teal, red, orange, yellow, gold, steel, gray, dark },
   /** Yazı Rengi 1. */
   black: "#0a0028",
-  // Bundled via @fontsource-variable/inter (imported in main.tsx), including the latin-ext subset for Turkish.
-  fontFamily: '"Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif',
-  headings: { fontFamily: '"Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif' },
+  // Body copy: bundled via @fontsource-variable/onest (imported in main.tsx), including the latin-ext subset for Turkish.
+  fontFamily: '"Onest Variable", "Onest", ui-sans-serif, system-ui, sans-serif',
+  // Display face for Title and other headings: bundled via @fontsource-variable/bricolage-grotesque, latin-ext included.
+  headings: {
+    fontFamily:
+      '"Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif',
+    fontWeight: "700",
+    sizes: {
+      h1: { fontWeight: "800" },
+      h2: { fontWeight: "750" },
+    },
+  },
   defaultRadius: "md",
   cursorType: "pointer",
+  respectReducedMotion: true,
   components: {
     // Mantine badges are uppercase by default; the app shows statuses and counts in normal case.
     Badge: Badge.extend({ styles: { root: { textTransform: "none" } } }),

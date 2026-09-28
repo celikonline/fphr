@@ -5,7 +5,8 @@ import App from "./App";
 import { queryClient } from "./lib/query-client";
 import { registerHttpInterceptors, registerSessionRefreshHandlers } from "./lib/http-interceptors";
 import { MantineRoot } from "@/components/mantine-root";
-import "@fontsource-variable/inter";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/onest";
 import "./styles/index.css";
 import "./i18n";
 

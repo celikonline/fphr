@@ -65,7 +65,6 @@ export function WorkflowInboxNavItem({
       aria-label={collapsed ? label : undefined}
       mod={{ collapsed }}
       classNames={NAV_LINK_CLASS_NAMES}
-      styles={{ section: { color: navIconColor(item) } }}
       leftSection={
         <Indicator
           color="red"
@@ -136,7 +135,6 @@ export function NavItemLink({
       aria-label={collapsed ? label : undefined}
       mod={{ collapsed }}
       classNames={NAV_LINK_CLASS_NAMES}
-      styles={{ section: { color: navIconColor(item) } }}
       leftSection={<Icon size={20} />}
       label={collapsed ? undefined : label}
     />
@@ -177,7 +175,6 @@ function ExpandedNavGroup({
       aria-expanded={opened}
       childrenOffset={28}
       classNames={NAV_LINK_CLASS_NAMES}
-      styles={{ section: { color: navIconColor(group) } }}
       leftSection={<Icon size={20} />}
       label={t(group.labelKey)}
     >
@@ -201,10 +198,13 @@ function ExpandedNavGroup({
 function CollapsedNavGroup({
   group,
   items,
+  isCurrent,
   t,
 }: {
   group: NavGroup;
   items: NavItem[];
+  /** The current page is one of the group's items, so the group icon carries the özlük sekmesi. */
+  isCurrent: boolean;
   t: TFunction<"navigation">;
 }) {
   const Icon = group.icon;
@@ -224,9 +224,8 @@ function CollapsedNavGroup({
           type="button"
           variant="light"
           aria-label={label}
-          mod={{ collapsed: true }}
+          mod={{ collapsed: true, current: isCurrent }}
           classNames={NAV_LINK_CLASS_NAMES}
-          styles={{ section: { color: navIconColor(group) } }}
           leftSection={<Icon size={20} />}
           noWrap
         />
@@ -358,6 +357,9 @@ export function NavList({ collapsed }: { collapsed: boolean }) {
             placeholder={t("navigation:nav.sidebarSearchPlaceholder")}
             aria-label={t("navigation:nav.sidebarSearchPlaceholder")}
             leftSection={<Search size={14} />}
+            // Readable on the navy rail (see .railSearch in app-layout.module.css): merges with the
+            // theme's own tonal input classes, only overriding the CSS variables they set.
+            classNames={{ wrapper: classes.railSearch }}
             mb={4}
           />
         )}
@@ -372,6 +374,7 @@ export function NavList({ collapsed }: { collapsed: boolean }) {
                       key={entry.group.key}
                       group={entry.group}
                       items={entry.items}
+                      isCurrent={entry.group.key === activeGroupKey}
                       t={t}
                     />
                   ) : (
