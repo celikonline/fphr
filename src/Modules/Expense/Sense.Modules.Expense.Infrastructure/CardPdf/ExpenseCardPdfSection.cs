@@ -1,0 +1,37 @@
+using Microsoft.Extensions.Localization;
+using Sense.Modules.Employee.Contracts.CardPdf;
+using Sense.Modules.Expense.Application.Payments;
+using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Modules;
+using Sense.Shared.Infrastructure;
+using Sense.Shared.Infrastructure.Export;
+using static Sense.Modules.Employee.Contracts.CardPdf.EmployeeCardPdfFormat;
+
+namespace Sense.Modules.Expense.Infrastructure.CardPdf;
+
+/// <summary>Card PDF "Ödemeler" (after Employee's salary/bank blocks): expense/advance payments within the period.</summary>
+public sealed class ExpenseCardPdfSection(IDispatcher dispatcher, IStringLocalizer<SharedResource> localizer) : IEmployeeCardPdfSection
+{
+    public string Key => EmployeeCardPdfSectionKeys.Payments;
+
+    public int Order => 10;
+
+    public string? ModuleKey => ProductModuleKeys.Expense;
+
+    public async Task<EmployeeCardPdfSectionResult> BuildAsync(EmployeeCardPdfRequest request, CancellationToken cancellationToken)
+    {
+        var result = request.IsOwnCard
+            ? await dispatcher.Query(new GetMyPaymentsOverviewQuery(), cancellationToken)
+            : await dispatcher.Query(new GetEmployeePaymentsOverviewQuery(request.EmployeeId), cancellationToken);
+        return EmployeeCardPdfSectionResult.Combine(EmployeeCardPdfSectionResult.Part(result, rows => Table(
+            "Masraf ve avans ödemeleri",
+            ["Tarih", "Tür", "Tutar", "Durum", "Açıklama"],
+            rows.Where(r => InPeriod(r.Date, null, request.From, request.To))
+                .OrderByDescending(r => r.Date)
+                .Select(r => (IReadOnlyList<string>)
+                [
+                    Date(r.Date), localizer.EnumText<PaymentKind>(r.Kind) ?? Empty, Amount(r.Amount, r.Currency), r.Status, Text(r.Description),
+                ]),
+            [2])));
+    }
+}

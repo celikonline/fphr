@@ -1513,6 +1513,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Assigned</value></data>
   <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Retired</value></data>
   <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Pending assignment</value></data>
+  <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Expense</value></data>
+  <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Advance</value></data>
+  <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Overtime</value></data>
+  <data name="report.enum.PaymentKind.Adjustment" xml:space="preserve"><value>Adjustment</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>

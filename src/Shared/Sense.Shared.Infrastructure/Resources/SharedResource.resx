@@ -1522,6 +1522,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Zimmetli</value></data>
   <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Hizmet dışı</value></data>
   <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Atama bekliyor</value></data>
+  <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Masraf</value></data>
+  <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Avans</value></data>
+  <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Fazla mesai</value></data>
+  <data name="report.enum.PaymentKind.Adjustment" xml:space="preserve"><value>Düzeltme</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
