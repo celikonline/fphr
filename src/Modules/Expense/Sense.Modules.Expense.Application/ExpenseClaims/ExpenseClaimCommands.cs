@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Expense.Contracts.Events;
 using Sense.Modules.Expense.Domain;
 using Sense.Modules.Expense.Domain.ExpenseClaims;
@@ -54,7 +55,9 @@ public sealed class AddExpenseItemValidator : AbstractValidator<AddExpenseItemCo
     }
 }
 
-public sealed class AddExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories, TimeProvider clock)
+public sealed class AddExpenseItemHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories,
+    IDocumentAttachmentLookup documents, TimeProvider clock)
     : ICommandHandler<AddExpenseItemCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(AddExpenseItemCommand command, CancellationToken cancellationToken)
@@ -86,7 +89,13 @@ public sealed class AddExpenseItemHandler(ICurrentUser currentUser, IExpenseClai
             return Error.Validation(ExpenseErrors.CategoryInactive);
         }
 
-        var added = existing.Value.AddItem(command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, command.ReceiptFileId, command.Description);
+        var receipt = await ReceiptDocuments.ResolveAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId, command.ReceiptFileId, cancellationToken);
+        if (receipt.IsFailure)
+        {
+            return receipt.Error;
+        }
+
+        var added = existing.Value.AddItem(command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, receipt.Value, command.Description);
         return added.IsFailure ? added.Error : added.Value.Id;
     }
 }
@@ -109,7 +118,9 @@ public sealed class UpdateExpenseItemValidator : AbstractValidator<UpdateExpense
     }
 }
 
-public sealed class UpdateExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, TimeProvider clock) : ICommandHandler<UpdateExpenseItemCommand>
+public sealed class UpdateExpenseItemHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IExpenseClaimRepository claims, IDocumentAttachmentLookup documents, TimeProvider clock)
+    : ICommandHandler<UpdateExpenseItemCommand>
 {
     public async Task<Result> Handle(UpdateExpenseItemCommand command, CancellationToken cancellationToken)
     {
@@ -129,8 +140,14 @@ public sealed class UpdateExpenseItemHandler(ICurrentUser currentUser, IExpenseC
             return Error.Validation(ExpenseDomainErrors.ItemReceiptDateInFuture);
         }
 
+        var receipt = await ReceiptDocuments.ResolveAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId, command.ReceiptFileId, cancellationToken);
+        if (receipt.IsFailure)
+        {
+            return receipt.Error;
+        }
+
         return existing.Value.UpdateItem(
-            command.ItemId, command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, command.ReceiptFileId, command.Description);
+            command.ItemId, command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, receipt.Value, command.Description);
     }
 }
 
@@ -236,6 +253,42 @@ public sealed class PayExpenseClaimHandler(ICurrentUser currentUser, TimeProvide
         outbox.Enqueue(new ExpenseClaimPaid(claim.TenantId, claim.Id, claim.EmployeeId, claim.TotalAmount));
         return Result.Success();
     }
+}
+
+/// <summary>
+/// Payroll pays an item with a non-null ReceiptFileId as tax-free reimbursement (see IApprovedExpensePayoutReader), so the
+/// id must be a verifiable receipt: an Active document of this tenant that the claim's employee owns - either filed to
+/// them (<see cref="AttachedDocumentInfo.EmployeeId"/>) or their own self-service upload (no employee, uploaded by the
+/// acting user). A document the caller uploaded for a different employee doesn't count. Unknown/deleted/foreign ids
+/// all collapse into the same error so document existence isn't leaked (same rule as Leave's attachment linker).
+/// </summary>
+internal static class ReceiptDocuments
+{
+    /// <summary>Returns the canonical document id to store, or null when no receipt was given.</summary>
+    public static async Task<Result<string?>> ResolveAsync(
+        IDocumentAttachmentLookup documents, Guid tenantId, Guid claimEmployeeId, Guid? actingUserId, string? receiptFileId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(receiptFileId))
+        {
+            return Result.Success<string?>(null);
+        }
+
+        if (!Guid.TryParse(receiptFileId.Trim(), out var documentId))
+        {
+            return Error.Validation(ExpenseErrors.ReceiptNotFound);
+        }
+
+        var active = await documents.GetActiveAsync(tenantId, [documentId], ct);
+        if (!active.TryGetValue(documentId, out var info) || !IsOwnedBy(info, claimEmployeeId, actingUserId))
+        {
+            return Error.Validation(ExpenseErrors.ReceiptNotFound);
+        }
+
+        return Result.Success<string?>(documentId.ToString());
+    }
+
+    private static bool IsOwnedBy(AttachedDocumentInfo info, Guid claimEmployeeId, Guid? actingUserId) =>
+        info.EmployeeId == claimEmployeeId || (info.EmployeeId is null && actingUserId is { } userId && info.UploadedBy == userId);
 }
 
 internal static class ReceiptDates

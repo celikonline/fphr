@@ -1187,6 +1187,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.item.amount_too_large" xml:space="preserve"><value>The amount cannot exceed 10,000,000.</value></data>
   <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Unsupported currency. Enter a valid ISO 4217 code (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
   <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>The receipt date cannot be in the future.</value></data>
+  <data name="expense.item.receipt_not_found" xml:space="preserve"><value>Receipt document not found. Upload the receipt again and retry.</value></data>
   <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>All items of an expense claim must use the same currency.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Advance request not found.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
