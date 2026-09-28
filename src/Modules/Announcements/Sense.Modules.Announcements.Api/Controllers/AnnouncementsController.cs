@@ -11,7 +11,8 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Announcements.Api.Controllers;
 
-public sealed record CreateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience);
+/// <summary><see cref="ScheduledFor"/> (TK-016): verilirse (gelecek tarih/saat) duyuru hemen değil, o zaman yayına girer.</summary>
+public sealed record CreateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience, DateTime? ScheduledFor = null);
 
 public sealed record SendRecognitionRequest(Guid ReceiverEmployeeId, string Message);
 
@@ -59,7 +60,8 @@ public sealed class AnnouncementsController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateAnnouncementRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateAnnouncementCommand(request.Title, request.Content, request.Type, request.Priority, request.TargetAudience), ct));
+        FromResult(await Dispatcher.Send(
+            new CreateAnnouncementCommand(request.Title, request.Content, request.Type, request.Priority, request.TargetAudience, request.ScheduledFor), ct));
 
     /// <summary>Taslak duyuruyu düzenle (tam sayfa editör).</summary>
     [HttpPut(ApiRoutes.IdParam)]

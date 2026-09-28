@@ -5,6 +5,7 @@ using Sense.Modules.Announcements.Application.Support;
 using Sense.Modules.Announcements.Contracts;
 using Sense.Modules.Announcements.Contracts.Events;
 using Sense.Modules.Announcements.Domain;
+using Sense.Modules.Announcements.Infrastructure.Jobs;
 using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Announcements.Infrastructure.Support;
 using Sense.Shared.Contracts.Events;
@@ -40,6 +41,14 @@ public static class AnnouncementsServiceCollectionExtensions
     {
         services.AddScoped<IIntegrationEventHandler<SupportTicketCreated>, SupportTicketCreatedHandler>();
         services.AddScoped<IIntegrationEventHandler<SupportTicketAnswered>, SupportTicketAnsweredHandler>();
+        return services;
+    }
+
+    /// <summary>PublishScheduledAnnouncements job (Sense.Worker, TK-016): <see cref="PublishScheduledAnnouncementsJob"/> + its hosted service.</summary>
+    public static IServiceCollection AddAnnouncementsScheduledPublishJob(this IServiceCollection services)
+    {
+        services.AddSingleton<PublishScheduledAnnouncementsJob>();
+        services.AddHostedService<PublishScheduledAnnouncementsHostedService>();
         return services;
     }
 }

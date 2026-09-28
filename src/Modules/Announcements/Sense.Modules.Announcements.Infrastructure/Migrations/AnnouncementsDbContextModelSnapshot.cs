@@ -70,6 +70,10 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("published_by");
 
+                    b.Property<DateTime?>("ScheduledFor")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scheduled_for");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -108,6 +112,9 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
 
                     b.HasIndex("TenantId", "Status", "PublishedAt")
                         .HasDatabaseName("ix_announcements_tenant_id_status_published_at");
+
+                    b.HasIndex("TenantId", "Status", "ScheduledFor")
+                        .HasDatabaseName("ix_announcements_tenant_id_status_scheduled_for");
 
                     b.ToTable("announcements", "announcements");
                 });

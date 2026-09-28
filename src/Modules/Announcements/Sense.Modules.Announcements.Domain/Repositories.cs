@@ -13,6 +13,9 @@ public interface IAnnouncementRepository
     Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Announcement>> GetPublishedAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>Zamanı gelmiş (ScheduledFor &lt;= now) "Scheduled" duyurular; PublishScheduledAnnouncementsJob (TK-016) için.</summary>
+    Task<IReadOnlyList<Announcement>> GetDueScheduledAsync(Guid tenantId, DateTime now, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Duyuru okunma kaydı repository (analytics).</summary>

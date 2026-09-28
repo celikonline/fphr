@@ -11,4 +11,5 @@ public sealed record AnnouncementDto(
     DateTime? PublishedAt,
     DateTime? ExpiresAt,
     string? TargetAudience,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    DateTime? ScheduledFor);
