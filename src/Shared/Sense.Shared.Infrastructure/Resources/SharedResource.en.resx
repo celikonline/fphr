@@ -167,6 +167,10 @@
 
   <!-- Employee -->
   <data name="employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="employee.card_pdf.sections_required" xml:space="preserve"><value>Select at least one section for the PDF.</value></data>
+  <data name="employee.card_pdf.unknown_section" xml:space="preserve"><value>Unknown card section: {section}.</value></data>
+  <data name="employee.card_pdf.period_invalid" xml:space="preserve"><value>The period start cannot be after its end.</value></data>
+  <data name="employee.card_pdf.no_sections" xml:space="preserve"><value>You are not allowed to view any of the selected sections.</value></data>
   <data name="employee.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
   <data name="employee.manager_not_found" xml:space="preserve"><value>The selected manager was not found or is inactive.</value></data>
   <data name="employee.mentor_not_found" xml:space="preserve"><value>The selected mentor was not found or is inactive.</value></data>

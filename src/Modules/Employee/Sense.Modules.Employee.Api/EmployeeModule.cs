@@ -58,6 +58,7 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeReadStore, EmployeeReadStore>();
         services.AddScoped<EmployeeSelectionResolver>();
         services.AddScoped<EmployeeDetailBuilder>();
+        services.AddScoped<Application.CardPdf.EmployeeCardPdfComposer>();
         services.AddScoped<EmployeeReferenceValidator>();
         services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();

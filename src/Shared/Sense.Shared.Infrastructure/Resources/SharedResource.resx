@@ -176,6 +176,10 @@
 
   <!-- Çalışan -->
   <data name="employee.not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
+  <data name="employee.card_pdf.sections_required" xml:space="preserve"><value>PDF için en az bir bölüm seçin.</value></data>
+  <data name="employee.card_pdf.unknown_section" xml:space="preserve"><value>Bilinmeyen kart bölümü: {section}.</value></data>
+  <data name="employee.card_pdf.period_invalid" xml:space="preserve"><value>Dönem başlangıcı bitişinden sonra olamaz.</value></data>
+  <data name="employee.card_pdf.no_sections" xml:space="preserve"><value>Seçilen bölümlerin hiçbirini görüntüleme yetkiniz yok.</value></data>
   <data name="employee.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
   <data name="employee.manager_not_found" xml:space="preserve"><value>Seçilen yönetici bulunamadı veya pasif.</value></data>
   <data name="employee.mentor_not_found" xml:space="preserve"><value>Seçilen mentör bulunamadı veya pasif.</value></data>
