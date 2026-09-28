@@ -71,6 +71,7 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailInAppAndPush, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskAssigned, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskCompleted, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
+        new(NotificationTemplateKeys.RequestCommentAdded, NotificationCategory.Request, InAppOnly, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>
