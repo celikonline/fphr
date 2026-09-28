@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { sectionTitleText } from "@/components/ui/SectionHeader";
 import { fontFor, palette, radius, text, tones } from "@/theme/theme";
 
@@ -19,7 +20,8 @@ export const authInputColors = {
 
 /** "Algosense güvencesiyle · © <year>" line under the auth panels. */
 export function AuthFooter() {
-  return <Text style={styles.footer}>Algosense güvencesiyle · © {new Date().getFullYear()}</Text>;
+  const { t } = useTranslation("auth");
+  return <Text style={styles.footer}>{t("footer", { year: new Date().getFullYear() })}</Text>;
 }
 
 /** Inline form error of the auth panels (wrong credentials, empty field, failed biometric...). */
@@ -42,8 +44,8 @@ export function AuthFormError({ message }: { message: string }) {
 type AuthFieldProps = { label: string; focused: boolean; children: React.ReactNode };
 
 /**
- * Labelled glass input wrapper with a brand focus ring. The label is uppercased with Turkish casing
- * (`sectionTitleText`, "tr-TR") - never `textTransform`, which Android applies with the device
+ * Labelled glass input wrapper with a brand focus ring. The label is uppercased with the active
+ * locale's casing (`sectionTitleText`) - never `textTransform`, which Android applies with the device
  * locale and mis-cases "i"/"ı".
  */
 export function AuthField({ label, focused, children }: AuthFieldProps) {

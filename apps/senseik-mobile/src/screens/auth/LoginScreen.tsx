@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -18,6 +19,7 @@ import { TenantChoicePanel } from "./login/TenantChoicePanel";
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +59,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleLogin = async (tenantSlug?: string) => {
     if (!email || !password) {
-      setFormError("Lütfen e-posta ve şifrenizi girin");
+      setFormError(t("errors.credentialsRequired"));
       return;
     }
 
@@ -69,7 +71,7 @@ export default function LoginScreen({ navigation }: Props) {
     } catch {
       // Generic message: backend/axios errors can leak status codes, hosts or endpoint details into
       // screenshots, and precise messages enable user enumeration.
-      setFormError("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
+      setFormError(t("errors.invalidCredentials"));
     }
   };
 
@@ -93,10 +95,10 @@ export default function LoginScreen({ navigation }: Props) {
         // The challenge itself expired (not the code): only a fresh login can issue a new one.
         clearMfaChallenge();
         setMfaCode("");
-        setFormError("Doğrulama süresi doldu. Lütfen tekrar giriş yapın.");
+        setFormError(t("errors.mfaExpired"));
       } else {
         setMfaCode("");
-        setMfaError("Doğrulama kodu hatalı. Lütfen tekrar deneyin.");
+        setMfaError(t("errors.mfaInvalidCode"));
       }
     }
   };
@@ -110,7 +112,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleBiometricLogin = () => {
     if (!email) {
-      setFormError("Lütfen önce e-posta adresinizi girin");
+      setFormError(t("errors.emailRequiredForBiometric"));
       return;
     }
     navigation.navigate("BiometricPrompt", { email });

@@ -9,20 +9,15 @@ import ts from "typescript";
  *  - string literals of UI props (`label="Kaydet"`, `accessibilityLabel="Geri"`, ...),
  *  - any string/template literal containing Turkish-specific letters,
  *  - a hard-coded "tr-TR" locale outside `lib/formatters.ts` (the only locale-tag mapping).
- * Dev-only `console.*` messages are not UI copy and are skipped.
+ * Dev-only `console.*` messages are not UI copy and are skipped. So are `new Error(...)` messages:
+ * screens never render `error.message` - they map failures to their own `t()` text (e.g. LoginScreen's
+ * generic credentials message), so a thrown message is a diagnostic, not copy. This keeps the
+ * unchanged `store/authStore.ts` (riskli alan, plan §2 Karar 18) out of the scan without allowlisting it.
  *
- * ALLOWLIST: files still carrying raw text on purpose. The risky auth/payroll files are translated
- * in P03 (FG-001b) - that part empties this list.
+ * ALLOWLIST: files still carrying raw text on purpose. P03 (FG-001b) translated the last risky
+ * auth/payroll files and emptied it - keep it empty.
  */
-const ALLOWLIST: readonly string[] = [
-  "screens/auth/",
-  "components/auth/",
-  "screens/app/PayrollScreen.tsx",
-  "services/AuthService.ts",
-  "hooks/useAuth.ts",
-  "store/authStore.ts",
-  "lib/storage.ts",
-];
+const ALLOWLIST: readonly string[] = [];
 
 /** Product/brand names are not translated. */
 const BRAND_TEXT = new Set(["Sense", "HR", "Sense HR"]);
@@ -67,6 +62,10 @@ function isConsoleCall(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   return ts.isCallExpression(node) && /^console\./.test(node.expression.getText(sourceFile));
 }
 
+function isErrorConstruction(node: ts.Node, sourceFile: ts.SourceFile): boolean {
+  return ts.isNewExpression(node) && node.expression.getText(sourceFile) === "Error";
+}
+
 function isStringLike(node: ts.Node): node is ts.StringLiteralLike | ts.TemplateLiteralLikeNode {
   return (
     ts.isStringLiteral(node) ||
@@ -100,6 +99,7 @@ function rawTextIn(source: string, rel: string): string[] {
   const visit = (node: ts.Node) => {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) return;
     if (isConsoleCall(node, sourceFile)) return;
+    if (isErrorConstruction(node, sourceFile)) return;
 
     if (ts.isJsxText(node)) {
       const text = node.text.trim();
@@ -135,18 +135,24 @@ describe("raw UI text (FG-001)", () => {
     expect(findings).toEqual([]);
   });
 
+  it("keeps the allowlist empty (FG-001b)", () => {
+    expect(ALLOWLIST).toEqual([]);
+  });
+
   it("only allowlists paths that exist", () => {
     const missing = ALLOWLIST.filter((entry) => !files.some(({ rel }) => matchesEntry(rel, entry)));
     expect(missing).toEqual([]);
   });
 
-  it("detects each kind of raw text and skips t() calls and console messages", () => {
+  it("detects each kind of raw text and skips t() calls, console and Error messages", () => {
     const probe = [
       "const a = <Text>Kaydet</Text>;",
       'const b = <X accessibilityLabel="Back" />;',
       'const c = "Geçersiz";',
       'const d = new Intl.NumberFormat("tr-TR");',
       'console.error("Hata oluştu");',
+      'throw new Error("Doğrulama oturumu bulunamadı.");',
+      'const g = new Map([["Geçersiz", 1]]);',
       'const e = <Text>{t("common:actions.save")}</Text>;',
       "const f = <Text>Sense</Text>;",
     ].join("\n");
@@ -156,6 +162,7 @@ describe("raw UI text (FG-001)", () => {
       'probe.tsx:2 "Back"',
       'probe.tsx:3 "Geçersiz"',
       'probe.tsx:4 "tr-TR"',
+      'probe.tsx:7 "Geçersiz"',
     ]);
   });
 });

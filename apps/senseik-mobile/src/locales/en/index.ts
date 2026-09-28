@@ -14,6 +14,7 @@ import goals from "./goals.json";
 import support from "./support.json";
 import payroll from "./payroll.json";
 import errors from "./errors.json";
+import auth from "./auth.json";
 
 export default {
   common,
@@ -31,4 +32,5 @@ export default {
   support,
   payroll,
   errors,
+  auth,
 };

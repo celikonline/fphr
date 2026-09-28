@@ -7,6 +7,7 @@ import { biometricService } from "@/lib/biometric";
 import type { AuthStackParamList } from "@/types/navigation";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { TenantChoice } from "@/types";
+import i18n from "@/lib/i18n";
 
 // react-native-reanimated v4's shipped `/mock` entry pulls in `react-native-worklets`'
 // native module bootstrap and throws outside a real app runtime, so it is unusable under
@@ -346,5 +347,36 @@ describe("LoginScreen", () => {
     });
 
     expect(login).toHaveBeenCalledWith("ayse@ornek.com", "gizli-sifre", "acme");
+  });
+});
+
+describe("LoginScreen in English (FG-001b)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockStore();
+    (biometricService.isBiometricAvailable as jest.Mock).mockResolvedValue({
+      available: false,
+      enrolled: false,
+      supportedTypes: [],
+    });
+  });
+
+  it("renders the form and its validation message in the active language, same flow", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("en");
+    });
+    const renderer = await renderScreen();
+
+    expect(allTexts(renderer)).toEqual(
+      expect.arrayContaining(["Welcome back", "Forgot password", "EMAIL", "PASSWORD"])
+    );
+
+    await act(async () => {
+      findSubmitButton(renderer).props.onPress();
+    });
+
+    expect(login).not.toHaveBeenCalled();
+    expect(allTexts(renderer)).toContain("Please enter your email and password");
+    expect(allTexts(renderer)).not.toContain("Lütfen e-posta ve şifrenizi girin");
   });
 });

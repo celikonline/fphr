@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "@/types/navigation";
 import { authService } from "@/services/AuthService";
@@ -20,14 +21,12 @@ import { palette, tones } from "@/theme/theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "ForgotPassword">;
 
-const EMPTY_EMAIL_ERROR = "Lütfen e-posta adresinizi girin";
-// Generic message without echoing the address, and shown regardless of whether the request
-// succeeds for a registered or unregistered e-mail: the backend always answers 204 either way, so
-// confirming a specific address here would enable account enumeration.
-const SENT_MESSAGE = "E-posta kayıtlıysa sıfırlama bağlantısı gönderildi.";
-const NETWORK_ERROR = "İstek gönderilemedi. Lütfen tekrar deneyin.";
-
 export default function ForgotPasswordScreen({ navigation }: Props) {
+  const { t } = useTranslation("auth");
+  // Generic message without echoing the address, and shown regardless of whether the request
+  // succeeds for a registered or unregistered e-mail: the backend always answers 204 either way, so
+  // confirming a specific address here would enable account enumeration.
+  const sentMessage = t("forgot.sentMessage");
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -40,9 +39,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   // iOS ignores - announce it to VoiceOver explicitly once the panel appears.
   useEffect(() => {
     if (sent && Platform.OS === "ios") {
-      AccessibilityInfo.announceForAccessibility(SENT_MESSAGE);
+      AccessibilityInfo.announceForAccessibility(sentMessage);
     }
-  }, [sent]);
+  }, [sent, sentMessage]);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -52,7 +51,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const handleReset = async () => {
     if (submittingRef.current) return;
     if (!email) {
-      setError(EMPTY_EMAIL_ERROR);
+      setError(t("errors.emailRequired"));
       return;
     }
     submittingRef.current = true;
@@ -61,7 +60,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       await authService.forgotPassword(email);
       setSent(true);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(t("errors.requestFailed"));
     } finally {
       submittingRef.current = false;
       setIsSubmitting(false);
@@ -75,12 +74,12 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           <View style={styles.sentIcon}>
             <Ionicons name="mail-outline" size={26} color={tones.success.fg} />
           </View>
-          <Text style={authStyles.panelTitle}>Talebiniz alındı</Text>
+          <Text style={authStyles.panelTitle}>{t("forgot.sentTitle")}</Text>
           <Text style={authStyles.panelSubtitle} accessibilityLiveRegion="polite">
-            {SENT_MESSAGE}
+            {sentMessage}
           </Text>
           <View style={styles.submit}>
-            <PrimaryButton label="Girişe dön" onPress={() => navigation.goBack()} />
+            <PrimaryButton label={t("forgot.backToLogin")} onPress={() => navigation.goBack()} />
           </View>
         </AuthPanel>
       </AuthShell>
@@ -90,15 +89,13 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   return (
     <AuthShell>
       <AuthPanel>
-        <Text style={authStyles.panelTitle}>Şifreyi sıfırla</Text>
-        <Text style={authStyles.panelSubtitle}>
-          Hesabınızın e-posta adresini girin, sıfırlama bağlantısını gönderelim.
-        </Text>
+        <Text style={authStyles.panelTitle}>{t("forgot.title")}</Text>
+        <Text style={authStyles.panelSubtitle}>{t("forgot.subtitle")}</Text>
         {error ? <AuthFormError message={error} /> : null}
         <View style={styles.field}>
           <TextField
-            label="E-posta"
-            placeholder="ad.soyad@sirket.com"
+            label={t("fields.email")}
+            placeholder={t("fields.emailPlaceholder")}
             selectionColor={palette.brand}
             value={email}
             onChangeText={handleEmailChange}
@@ -111,7 +108,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
         </View>
         <View style={styles.submit}>
           <PrimaryButton
-            label="Sıfırlama bağlantısı gönder"
+            label={t("forgot.submit")}
             onPress={() => void handleReset()}
             loading={isSubmitting}
             disabled={isSubmitting}
@@ -121,9 +118,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           style={authStyles.secondaryLink}
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
-          accessibilityLabel="Girişe dön"
+          accessibilityLabel={t("forgot.backToLogin")}
         >
-          <Text style={authStyles.secondaryLinkText}>Girişe dön</Text>
+          <Text style={authStyles.secondaryLinkText}>{t("forgot.backToLogin")}</Text>
         </TouchableOpacity>
       </AuthPanel>
     </AuthShell>

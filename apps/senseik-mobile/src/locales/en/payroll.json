@@ -7,5 +7,22 @@
   "row": {
     "a11y": "{{month}} {{year}} payslip, open document",
     "saving": "Saving…"
+  },
+  "title": "My payroll",
+  "empty": "You have no payslips to view yet.",
+  "errors": {
+    "load": "Payslips could not be loaded. Please try again.",
+    "open": "The payslip could not be opened. Please try again.",
+    "acknowledge": "The acknowledgement could not be sent. Please try again.",
+    "shareUnavailable": "Opening files is not supported on this device."
+  },
+  "status": {
+    "acknowledged": "Acknowledged",
+    "pending": "Awaiting acknowledgement",
+    "acknowledgedAt": "Acknowledged · {{time}}"
+  },
+  "confirm": {
+    "message": "Do you confirm that you have read this payslip?",
+    "confirm": "I acknowledge"
   }
 }

@@ -8,6 +8,7 @@ import {
   payslipsLoadErrorMessage,
   shouldIgnorePayslipTap,
 } from "@/screens/app/PayrollScreen";
+import i18n from "@/lib/i18n";
 
 describe("formatPayslipPeriod (TK-030)", () => {
   it("formats a period as 'Ay Yıl'", () => {
@@ -116,5 +117,32 @@ describe("payslipAcknowledgementStatus (TK-030, mobil yeniden tasarım)", () => 
       label: "Onay bekliyor",
       tone: "warning",
     });
+  });
+});
+
+describe("PayrollScreen helpers follow the active language (FG-001b)", () => {
+  it("formats the period, statuses and generic errors in English", async () => {
+    await i18n.changeLanguage("en");
+
+    expect(formatPayslipPeriod(2026, 9)).toBe("September 2026");
+    expect(payslipAcknowledgementStatus(null)).toEqual({
+      label: "Awaiting acknowledgement",
+      tone: "warning",
+    });
+    expect(payslipAcknowledgementStatus("2026-09-01T10:00:00Z").label).toBe("Acknowledged");
+    expect(formatAcknowledgedLabel("2020-01-15T10:00:00Z")).toMatch(/^Acknowledged · /);
+    expect(payslipsLoadErrorMessage({ response: { status: 403 } })).toBe(
+      "Payslips could not be loaded. Please try again."
+    );
+    expect(payslipOpenErrorMessage(new Error("boom"))).toBe(
+      "The payslip could not be opened. Please try again."
+    );
+    expect(payslipAcknowledgeErrorMessage(new Error("boom"))).toBe(
+      "The acknowledgement could not be sent. Please try again."
+    );
+  });
+
+  it("falls back to the month number when it is out of range", () => {
+    expect(formatPayslipPeriod(2026, 13)).toBe("13 2026");
   });
 });
