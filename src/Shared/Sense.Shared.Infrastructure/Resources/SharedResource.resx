@@ -1558,4 +1558,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.my.corrections" xml:space="preserve"><value>Kendi eksik giriş/çıkış düzeltme taleplerimi oluşturma ve geri çekme</value></data>
   <data name="workflow.comment.request_closed" xml:space="preserve"><value>İptal edilmiş bir talebe yorum yazılamaz.</value></data>
   <data name="workflow.comment.text_required" xml:space="preserve"><value>Yorum metni boş olamaz.</value></data>
+  <data name="attendance.work_schedule.range_too_long" xml:space="preserve"><value>En fazla {max} günlük bir aralık sorgulanabilir.</value></data>
 </root>

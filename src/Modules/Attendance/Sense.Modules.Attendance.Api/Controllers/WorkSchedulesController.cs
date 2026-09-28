@@ -96,6 +96,12 @@ public sealed class WorkSchedulesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> MyAssignments([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
       FromResult((await Dispatcher.Query(new GetMyWorkScheduleAssignmentsQuery(), ct)).LocalizeAssignments(localizer));
+
+    /// <summary>"Takvimim" (FG-020 self-servis): vardiyası olmayan çalışanın gün başına sabit çalışma programı, en fazla 42 gün.</summary>
+    [HttpGet("me/days")]
+    [ProducesResponseType<IReadOnlyList<MyWorkScheduleDayDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyDays([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
+      FromResult(await Dispatcher.Query(new GetMyWorkScheduleDaysQuery(from, to), ct));
   }
 
 /// <summary>The seeded default schedule stores a resource key as its name ("attendance.work_schedule.default.name"); the API returns it translated.</summary>

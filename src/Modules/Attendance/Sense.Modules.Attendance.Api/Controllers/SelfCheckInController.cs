@@ -37,4 +37,10 @@ public sealed class SelfCheckInController : ApiControllerBase
     [ProducesResponseType<MyCheckInStatusDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Status(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyCheckInStatusQuery(), ct));
+
+    /// <summary>Giriş yapabileceğim lokasyonlar (FG-005 kabul kriteri 1): çalışanın etkin lokasyonu, 0 veya 1 öğe.</summary>
+    [HttpGet("locations")]
+    [ProducesResponseType<IReadOnlyList<CheckInLocationDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Locations(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyCheckInLocationsQuery(), ct));
 }

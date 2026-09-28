@@ -46,4 +46,7 @@ public static class AttendanceErrors
 
     /// <summary>FG-004: the employee already has a pending correction request for this day.</summary>
     public const string CorrectionPendingExists = "attendance.correction.pending_exists";
+
+    /// <summary>FG-020: "Takvimim" self-servis günlük program sorgusu 42 günü aşamaz.</summary>
+    public const string WorkScheduleRangeTooLong = "attendance.work_schedule.range_too_long";
 }
