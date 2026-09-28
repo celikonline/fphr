@@ -56,6 +56,15 @@ public static class NotificationTemplateKeys
 
     /// <summary>The other parties of an approval request (requester, approvers, deciders): someone commented on it (Workflow.ApprovalRequestCommented). In-app only.</summary>
     public const string RequestCommentAdded = "request.comment_added";
+
+    /// <summary>The employee: a piece of equipment ("zimmet") was assigned to them (Assets.AssetAssigned).</summary>
+    public const string AssetAssigned = "assets.assignment_created";
+
+    /// <summary>The employee: confirms their returned equipment was recorded (Assets.AssetReturned).</summary>
+    public const string AssetReturned = "assets.assignment_returned";
+
+    /// <summary>Holders of assets.assets.manage: an employee left with equipment still unreturned (Assets.AssetUnreturnedAtTermination).</summary>
+    public const string AssetUnreturnedAtTermination = "assets.unreturned_at_termination";
 }
 
 /// <summary>Delivery channels. Web Push (browser) is not covered yet - only Expo (mobile) push.</summary>

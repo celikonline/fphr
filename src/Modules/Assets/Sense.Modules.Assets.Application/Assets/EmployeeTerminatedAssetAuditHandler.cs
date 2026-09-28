@@ -30,7 +30,7 @@ public sealed class EmployeeTerminatedAssetAuditHandler(
                 continue;
             }
 
-            outbox.Enqueue(new AssetUnreturnedAtTermination(asset.TenantId, asset.Id, integrationEvent.EmployeeId));
+            outbox.Enqueue(new AssetUnreturnedAtTermination(asset.TenantId, asset.Id, integrationEvent.EmployeeId, asset.Name));
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,0 +1,3 @@
+{{- subject = "Rückgabe erfasst" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Rückgabe erfasst: " + asset_name; end -}}
+Ihre {{ if asset_name != null && asset_name != "" }}Rückgabe von {{ asset_name }}{{ else }}Ausrüstungsrückgabe{{ end }} vom {{ returned_at }} wurde erfasst.

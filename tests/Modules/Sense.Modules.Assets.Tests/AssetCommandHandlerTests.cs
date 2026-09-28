@@ -134,7 +134,7 @@ public sealed class AssetCommandHandlerTests
 
         asset.Status.ShouldBe(AssetStatus.Assigned);
         asset.AssignedEmployeeId.ShouldBe(EmployeeId);
-        outbox.Received(1).Enqueue(Arg.Is<AssetAssigned>(e => e.AssetId == asset.Id && e.EmployeeId == EmployeeId && e.IssuedAt == issuedAt));
+        outbox.Received(1).Enqueue(Arg.Is<AssetAssigned>(e => e.AssetId == asset.Id && e.EmployeeId == EmployeeId && e.IssuedAt == issuedAt && e.AssetName == "MacBook Pro 14"));
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -172,7 +172,7 @@ public sealed class AssetCommandHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         asset.Status.ShouldBe(AssetStatus.Unassigned);
-        outbox.Received(1).Enqueue(Arg.Is<AssetReturned>(e => e.AssetId == asset.Id && e.EmployeeId == EmployeeId && e.ReturnedAt == returnedAt));
+        outbox.Received(1).Enqueue(Arg.Is<AssetReturned>(e => e.AssetId == asset.Id && e.EmployeeId == EmployeeId && e.ReturnedAt == returnedAt && e.AssetName == "MacBook Pro 14"));
     }
 
     [Fact]

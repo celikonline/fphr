@@ -1,0 +1,7 @@
+{{- subject = "Ihnen wurde neue Ausrüstung zugewiesen" -}}
+{{- if asset_name != null && asset_name != ""; subject = "Ihnen wurde Ausrüstung zugewiesen: " + asset_name; end -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihnen wurde am {{ issued_at }} {{ if asset_name != null && asset_name != "" }}<strong>{{ asset_name | html.escape }}</strong>{{ else }}neue Ausrüstung{{ end }} zugewiesen. Die Details finden Sie auf der Seite Meine Ausrüstung.</p>
+{{~ if action_url ~}}
+{{ button "Meine Ausrüstung ansehen" action_url }}
+{{~ end ~}}
