@@ -1427,6 +1427,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Expired</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
+  <data name="report_execution.preview_not_available" xml:space="preserve"><value>This report cannot be shown on screen; you can download it as Excel.</value></data>
+  <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Report sheet not found.</value></data>
+  <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>The sort column is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
   <!-- Announcements + Support (Help Center + Contact support - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>View announcements</value></data>

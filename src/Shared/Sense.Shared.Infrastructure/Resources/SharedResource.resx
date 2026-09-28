@@ -1436,6 +1436,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Süresi doldu</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
+  <data name="report_execution.preview_not_available" xml:space="preserve"><value>Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.</value></data>
+  <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Rapor sayfası bulunamadı.</value></data>
+  <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>Sıralanacak sütun geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
   <!-- Announcements + Support (Yardım Merkezi + Desteğe bağlan - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>Duyuruları görüntüleme</value></data>
