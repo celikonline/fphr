@@ -85,6 +85,7 @@ public sealed class MyTeamIntegrationTests : TestFixture
     {
         var tenantId = Guid.NewGuid();
         var team = await SeedTeamAsync(tenantId);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var lookup = ServiceProvider!.GetRequiredService<IEmployeeLookup>();
 
         (await lookup.GetDirectReportIdsAsync(tenantId, team.ManagerA, TestContext.Current.CancellationToken)).ShouldBe([team.Ayse, team.Cem]);
