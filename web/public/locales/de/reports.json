@@ -118,13 +118,9 @@
   },
   "run": {
     "title": "Bericht erstellen",
-    "generate": "Bericht erstellen",
-    "success": "Bericht erstellt; der Download wurde gestartet.",
-    "successNoDownload": "Bericht erstellt. Sie können ihn aus der Liste der letzten Berichte herunterladen.",
+    "open": "Bericht öffnen",
     "error": "Der Bericht konnte nicht erstellt werden.",
     "requiredHint": "* Pflichtfilter",
-    "emailNote": "Sobald der Bericht bereit ist, erhalten Sie einen Link an Ihre hinterlegte E-Mail-Adresse.",
-    "format": "Excel (.xlsx)",
     "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen."
   },
   "params": {

@@ -118,13 +118,9 @@
   },
   "run": {
     "title": "Rapor oluştur",
-    "generate": "Rapor oluştur",
-    "success": "Rapor oluşturuldu, indirme başladı.",
-    "successNoDownload": "Rapor oluşturuldu. Son oluşturduklarım listesinden indirebilirsiniz.",
+    "open": "Raporu aç",
     "error": "Rapor oluşturulamadı.",
     "requiredHint": "* zorunlu filtre",
-    "emailNote": "Rapor hazır olduğunda kayıtlı e-posta adresinize bağlantı gönderilir.",
-    "format": "Excel (.xlsx)",
     "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz."
   },
   "params": {

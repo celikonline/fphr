@@ -118,13 +118,9 @@
   },
   "run": {
     "title": "Generate report",
-    "generate": "Generate report",
-    "success": "Report generated; the download has started.",
-    "successNoDownload": "Report generated. You can download it from the recent reports list.",
+    "open": "Open report",
     "error": "The report could not be generated.",
     "requiredHint": "* required filter",
-    "emailNote": "A link is sent to your registered e-mail address when the report is ready.",
-    "format": "Excel (.xlsx)",
     "noFilters": "This report takes no filters; you can generate it right away."
   },
   "params": {

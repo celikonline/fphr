@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
@@ -89,6 +89,11 @@ function executionsFor(page: number) {
   };
 }
 
+function ViewerStub() {
+  const location = useLocation();
+  return <div data-testid="viewer-location">{location.pathname + location.search}</div>;
+}
+
 function renderPage() {
   const instance = i18next.createInstance();
   void instance.init({
@@ -106,7 +111,10 @@ function renderPage() {
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
           <MemoryRouter>
-            <ReportsPage />
+            <Routes>
+              <Route path="/" element={<ReportsPage />} />
+              <Route path="/app/reports/:key" element={<ViewerStub />} />
+            </Routes>
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
@@ -172,5 +180,15 @@ describe("ReportsPage", () => {
 
     expect(await screen.findByRole("columnheader", { name: "Kategori" })).toBeInTheDocument();
     expect(window.localStorage.getItem("senseik.reports.catalogView")).toBe("grid");
+  });
+
+  it("opens the selected report on its own page from the run panel", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+    await user.click(screen.getByRole("button", { name: "Raporu aç" }));
+
+    expect(await screen.findByTestId("viewer-location")).toHaveTextContent("/app/reports/employee.list");
   });
 });
