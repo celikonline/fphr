@@ -1492,6 +1492,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.OvertimeConversionStatus.Posted" xml:space="preserve"><value>Kaydedildi</value></data>
   <data name="report.enum.OvertimeConversionStatus.Reversed" xml:space="preserve"><value>İptal edildi</value></data>
   <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Süresi doldu</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Pending" xml:space="preserve"><value>Onay bekliyor</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Approved" xml:space="preserve"><value>Onaylandı</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Withdrawn" xml:space="preserve"><value>Geri çekildi</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Cancelled" xml:space="preserve"><value>İptal edildi</value></data>
+  <data name="report.enum.OvertimeDayKind.Workday" xml:space="preserve"><value>İş günü</value></data>
+  <data name="report.enum.OvertimeDayKind.WeeklyRest" xml:space="preserve"><value>Hafta tatili</value></data>
+  <data name="report.enum.OvertimeDayKind.PublicHoliday" xml:space="preserve"><value>Resmi tatil</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>

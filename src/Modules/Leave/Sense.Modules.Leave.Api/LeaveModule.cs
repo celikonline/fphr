@@ -46,6 +46,10 @@ public sealed class LeaveModule : IModule
             typeof(LeavePermissions).Assembly);
         services.AddLeaveServices(configuration);
 
+        // Employee card PDF sections (API only; Employee collects every IEmployeeCardPdfSection).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.LeaveCardPdfSection>();
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.OvertimeCardPdfSection>();
+
         // "İzin Günleri" Excel import template "leave.days" (collected by the DataTransfer module).
         services.AddScoped<IImportTemplate, Application.Import.LeaveDaysImportTemplate>();
         services.AddScoped<IImportRowHandler, Application.Import.LeaveDaysImportRowHandler>();

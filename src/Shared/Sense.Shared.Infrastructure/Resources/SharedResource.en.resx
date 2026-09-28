@@ -1483,6 +1483,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.OvertimeConversionStatus.Posted" xml:space="preserve"><value>Posted</value></data>
   <data name="report.enum.OvertimeConversionStatus.Reversed" xml:space="preserve"><value>Reversed</value></data>
   <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Withdrawn" xml:space="preserve"><value>Withdrawn</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="report.enum.OvertimeDayKind.Workday" xml:space="preserve"><value>Workday</value></data>
+  <data name="report.enum.OvertimeDayKind.WeeklyRest" xml:space="preserve"><value>Weekly rest day</value></data>
+  <data name="report.enum.OvertimeDayKind.PublicHoliday" xml:space="preserve"><value>Public holiday</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
