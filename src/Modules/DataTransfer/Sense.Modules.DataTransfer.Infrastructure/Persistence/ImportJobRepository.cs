@@ -23,6 +23,25 @@ public sealed class ImportJobRepository(DataTransferDbContext context) : IImport
     public Task<ImportSourceFile?> GetSourceFileAsync(Guid importJobId, CancellationToken cancellationToken = default) =>
         context.ImportSourceFiles.AsNoTracking().FirstOrDefaultAsync(f => f.ImportJobId == importJobId, cancellationToken);
 
+    /// <summary>The file is read untracked; an instance still tracked from the upload in the same context is the one removed.</summary>
+    public void RemoveSourceFile(ImportSourceFile sourceFile) =>
+        context.ImportSourceFiles.Remove(context.ImportSourceFiles.Local.FirstOrDefault(f => f.Id == sourceFile.Id) ?? sourceFile);
+
+    public Task<int> DeleteSourceFilesAsync(IReadOnlyCollection<string> templateCodes, DateTime uploadedBefore, CancellationToken cancellationToken = default)
+    {
+        if (templateCodes.Count == 0)
+        {
+            return Task.FromResult(0);
+        }
+
+        var codes = templateCodes.ToList();
+        return context.ImportSourceFiles
+            .Where(f => f.CreatedAt < uploadedBefore || context.ImportJobs.Any(j => j.Id == f.ImportJobId
+                && (j.Status == ImportJobStatus.Completed || j.Status == ImportJobStatus.CompletedWithErrors || j.Status == ImportJobStatus.Failed)))
+            .Where(f => context.ImportJobs.Any(j => j.Id == f.ImportJobId && codes.Contains(j.TemplateCode)))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     public Task<PagedResult<ImportJob>> ListAsync(PagedQuery paging, CancellationToken ct) =>
         context.ImportJobs.AsNoTracking()
             .OrderByDescending(j => j.CreatedAt).ThenByDescending(j => j.Id)

@@ -37,6 +37,8 @@ public sealed class CreateImportJobHandler(
     private const string CsvExtension = ".csv";
     private const string CsvContentType = "text/csv";
     private const string MaxArg = "max";
+    private const string MaskedHeaderKey = "import.column.masked_header";
+    private const string ColumnArg = "n";
 
     public async Task<Result<ImportJobDto>> Handle(CreateImportJobCommand command, CancellationToken cancellationToken)
     {
@@ -51,6 +53,13 @@ public sealed class CreateImportJobHandler(
         if (authorized.IsFailure)
         {
             return authorized.Error;
+        }
+
+        // Checked before the file is stored: a template that cannot process rows (e.g. missing server secret) never keeps an upload.
+        var ready = ImportTemplateCatalog.CheckReady(template);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
         }
 
         var fileName = Path.GetFileName(command.FileName.Trim());
@@ -99,7 +108,13 @@ public sealed class CreateImportJobHandler(
             return Error.Rule(DataTransferErrors.FileEmpty);
         }
 
-        var sourceColumns = ColumnAutoMapper.BuildSourceColumns(sheet, hasKeyRow, columns);
+        var sensitive = ImportTemplateCatalog.HasSensitiveColumns(columns.Select(c => c.Column));
+        var culture = ImportCultures.Resolve(null);
+        var sourceColumns = ColumnAutoMapper.BuildSourceColumns(
+            sheet, hasKeyRow, columns, includeSamples: !sensitive,
+            maskUnrecognizedHeader: sensitive
+                ? n => catalog.Text(MaskedHeaderKey, culture, new Dictionary<string, string> { [ColumnArg] = n.ToString(CultureInfo.InvariantCulture) })
+                : null);
         var job = ImportJob.Create(
             tenant.TenantId, template.Code, fileName, format, hasKeyRow, dataRowCount, sourceColumns, currentUser.UserId, currentUser.DisplayName);
         var contentType = format == ImportFileFormat.Xlsx ? FileDownload.XlsxContentType : CsvContentType;
@@ -152,6 +167,12 @@ public sealed class SaveImportJobMappingHandler(IImportJobRepository jobs, Impor
         if (authorized.IsFailure)
         {
             return authorized.Error;
+        }
+
+        var ready = ImportTemplateCatalog.CheckReady(template);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
         }
 
         var mode = Enum.Parse<ImportJobMode>(command.Mode, ignoreCase: true);
@@ -259,6 +280,13 @@ public sealed class RunImportJobHandler(
             return authorized.Error;
         }
 
+        // Whole-request failure before any row reaches the module handler (e.g. 503 when the template's server secret is missing).
+        var ready = ImportTemplateCatalog.CheckReady(template.Value);
+        if (ready.IsFailure)
+        {
+            return ready.Error;
+        }
+
         // Org levels may have changed since mapping: drop targets that no longer exist and re-check required columns.
         var columns = await template.Value.GetColumnsAsync(cancellationToken);
         var keys = columns.Select(c => c.Key).ToHashSet(StringComparer.Ordinal);
@@ -278,6 +306,13 @@ public sealed class RunImportJobHandler(
         if (read.IsFailure)
         {
             return read.Error;
+        }
+
+        var sensitive = ImportTemplateCatalog.HasSensitiveColumns(columns);
+        if (sensitive)
+        {
+            // Secret values (e.g. terminal card/PIN) are not kept at rest once the rows have been handed over; saved with the job's outcome.
+            jobs.RemoveSourceFile(file);
         }
 
         var rows = ColumnAutoMapper.DataRows(read.Value, job.HasKeyRow)
@@ -303,8 +338,24 @@ public sealed class RunImportJobHandler(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Nothing was saved by the module handler (single save at the end); record the failed run instead of losing the job.
-            logger.LogError(ex, "Import job {ImportJobId} ({TemplateCode}) failed", job.Id, job.TemplateCode);
+            if (sensitive)
+            {
+                // Sensitive values (e.g. a PIN digest in a unique-violation detail) could be in the message/stack: type only, no exception.
+                logger.LogError("Import job {ImportJobId} ({TemplateCode}) failed: {ExceptionType}", job.Id, job.TemplateCode, ex.GetType().FullName);
+            }
+            else
+            {
+                logger.LogError(ex, "Import job {ImportJobId} ({TemplateCode}) failed", job.Id, job.TemplateCode);
+            }
+
             job.Fail(DataTransferErrors.RunFailed, clock.GetUtcNow().UtcDateTime);
+            return ImportJobDto.From(job);
+        }
+
+        if (result.FailureCode is { } failureCode)
+        {
+            // The module aborted the whole job without row details (nothing was persisted there); no row outcomes are recorded.
+            job.Fail(failureCode, clock.GetUtcNow().UtcDateTime);
             return ImportJobDto.From(job);
         }
 
@@ -318,7 +369,8 @@ public sealed class RunImportJobHandler(
             r.Errors.Select(e => new ImportJobRowError(e.Column, e.Code, e.Args)).ToList())));
 
         var counts = new ImportJobCounts(
-            result.Rows.Count(r => r.Outcome == ImportRowOutcome.Inserted),
+            // Processed rows (insert/update deliberately not disclosed) are counted with the inserted ones: no separate column.
+            result.Rows.Count(r => r.Outcome is ImportRowOutcome.Inserted or ImportRowOutcome.Processed),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Updated),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Skipped),
             result.Rows.Count(r => r.Outcome == ImportRowOutcome.Error));

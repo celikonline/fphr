@@ -43,6 +43,12 @@ public sealed class ImportTemplateCatalog(
         return template is null ? Error.NotFound(DataTransferErrors.TemplateNotFound) : Result.Success(template);
     }
 
+    /// <summary>The template's <see cref="IImportTemplateReadiness"/> check (e.g. 503 when a secret its rows need is missing); success when it has none.</summary>
+    public static Result CheckReady(IImportTemplate template) => template is IImportTemplateReadiness readiness ? readiness.CheckReady() : Result.Success();
+
+    /// <summary>True when any column holds secret values (<see cref="ImportColumn.IsSensitive"/>): no samples, no file kept after the run, outcome-only result file.</summary>
+    public static bool HasSensitiveColumns(IEnumerable<ImportColumn> columns) => columns.Any(c => c.IsSensitive);
+
     public Result<IImportRowHandler> FindHandler(string code)
     {
         var handler = handlers.FirstOrDefault(h => string.Equals(h.TemplateCode, code, StringComparison.OrdinalIgnoreCase));
@@ -150,8 +156,15 @@ public static class ColumnAutoMapper
         return suggestions;
     }
 
-    /// <summary>Source columns with up to three sample values; fully empty columns (no header, key or data) are left out.</summary>
-    public static IReadOnlyList<ImportSourceColumn> BuildSourceColumns(Spreadsheet sheet, bool hasKeyRow, IReadOnlyList<LocalizedImportColumn> columns)
+    /// <summary>
+    /// Source columns with up to three sample values; fully empty columns (no header, key or data) are left out. Templates with sensitive
+    /// columns pass <paramref name="includeSamples"/> = false (no cell value is copied into the job) and <paramref name="maskUnrecognizedHeader"/>:
+    /// a header cell that is not a known template header/key is stored as that placeholder (1-based column number) - a file without a header
+    /// row would otherwise persist its first data row (e.g. a PIN) as column headers.
+    /// </summary>
+    public static IReadOnlyList<ImportSourceColumn> BuildSourceColumns(
+        Spreadsheet sheet, bool hasKeyRow, IReadOnlyList<LocalizedImportColumn> columns, bool includeSamples = true,
+        Func<int, string>? maskUnrecognizedHeader = null)
     {
         var keyRow = hasKeyRow ? sheet.Rows.FirstOrDefault(r => r.RowNumber == KeyRowNumber) : null;
         var dataRows = DataRows(sheet, hasKeyRow);
@@ -162,8 +175,14 @@ public static class ColumnAutoMapper
         for (var i = 0; i < count; i++)
         {
             var header = i < sheet.Headers.Count ? sheet.Headers[i].Trim() : string.Empty;
-            var samples = dataRows.Select(r => r.Cell(i)).Where(c => !c.IsEmpty).Take(Shared.Contracts.Import.ImportLimits.SampleCount).Select(c => c.Text ?? string.Empty).ToList();
-            if (header.Length == 0 && samples.Count == 0 && suggestions[i].TargetKey is null)
+            if (maskUnrecognizedHeader is not null && header.Length > 0 && !IsKnownHeader(header, columns))
+            {
+                header = maskUnrecognizedHeader(i + 1);
+            }
+
+            var values = dataRows.Select(r => r.Cell(i)).Where(c => !c.IsEmpty).Take(Shared.Contracts.Import.ImportLimits.SampleCount).Select(c => c.Text ?? string.Empty).ToList();
+            var samples = includeSamples ? values : [];
+            if (header.Length == 0 && values.Count == 0 && suggestions[i].TargetKey is null)
             {
                 continue;
             }
@@ -173,6 +192,10 @@ public static class ColumnAutoMapper
 
         return result;
     }
+
+    private static bool IsKnownHeader(string header, IReadOnlyList<LocalizedImportColumn> columns) =>
+        columns.Any(c => string.Equals(c.Column.Key, header, StringComparison.OrdinalIgnoreCase)
+            || c.HeaderAliases.Any(h => ImportValueParser.TextEquals(h, header)));
 
     public static IReadOnlyList<SpreadsheetRow> DataRows(Spreadsheet sheet, bool hasKeyRow) =>
         hasKeyRow ? sheet.Rows.Where(r => r.RowNumber != KeyRowNumber).ToList() : sheet.Rows;

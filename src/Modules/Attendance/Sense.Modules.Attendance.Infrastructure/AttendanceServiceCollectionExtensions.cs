@@ -116,16 +116,19 @@ public static class AttendanceServiceCollectionExtensions
         services.AddSingleton<RecalculationJobStore>();
         services.AddSingleton<AttendanceDayRecalculator>();
         services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
+        // Z5.4: EmployeeTerminated → terminal kimliklerini pasifleştirme (Worker'da da çözülür). TryAdd: API'de AddAttendanceServices da kaydeder.
+        services.TryAddScoped<ITerminalRepository, TerminalRepository>();
         return services;
     }
 
-    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted), registered explicitly for Sense.Worker.</summary>
+    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted, EmployeeTerminated, …), registered explicitly for Sense.Worker.</summary>
     public static IServiceCollection AddAttendanceIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
         services.AddScoped<IIntegrationEventHandler<TimesheetWeekCompleted>, TimesheetWeekCompletedHandler>();
         services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalCompleted>, PunchRequestApprovalCompletedHandler>();
         services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalRejected>, PunchRequestApprovalRejectedHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedTerminalCredentialsHandler>();
         return services;
     }
 }
