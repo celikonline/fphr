@@ -252,6 +252,49 @@ public sealed class LeaveReportProviderTests : TestFixture
         file.FileName.ShouldBe("İzin mutabakat formu 2026-06-01 2026-06-30.xlsx");
     }
 
+    /// <summary>Kolay İK "Hazır Şablonlar" kartı "Bu ayın kullanılan izin raporu": yalnız onaylı (kullanılmış) talepler, bekleyen hariç.</summary>
+    [Fact]
+    public async Task MonthlyUsage_ListsOnlyApprovedRequests_InTheResolvedMonth()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+
+        Guid typeId;
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSet = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(tenantId, StatutoryLeaveDurations.Turkey2026);
+            db.RuleSets.Add(ruleSet);
+            typeId = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+
+            var approved = LeaveRequest.Submit(tenantId, employeeId, typeId, LeaveTypeCode.Annual, new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 12), 3m, "Tatil",
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            var approvalId = Guid.NewGuid();
+            approved.AttachApproval(approvalId);
+            approved.Approve(approvalId, DateTime.UtcNow);
+            // Still-pending request in the same month must not count as "used".
+            var pending = LeaveRequest.Submit(tenantId, employeeId, typeId, LeaveTypeCode.Annual, new DateOnly(2026, 6, 20), new DateOnly(2026, 6, 20), 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            db.Requests.AddRange(approved, pending);
+            await db.SaveChangesAsync();
+        }
+
+        _dataScope.GetVisibleEmployeeIdsAsync(LeavePermissions.RequestsRead.Key, Arg.Any<CancellationToken>()).Returns((IReadOnlySet<Guid>?)null);
+        _employees.ListAsync(Arg.Is(tenantId), Arg.Is<IReadOnlyCollection<Guid>?>(ids => ids == null), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Is(false), Arg.Any<CancellationToken>())
+            .Returns([Row(employeeId, "Mehmet", "Kaya", new DateOnly(2020, 1, 1))]);
+
+        var parameters = new Dictionary<string, string> { ["year"] = "2026", ["month"] = "6" };
+        var file = await Provider(LeaveMonthlyUsageReportProvider.ReportKey).GenerateAsync(tenantId, parameters, TestContext.Current.CancellationToken);
+
+        var sheet = FirstSheet(file);
+        sheet.LastRowUsed()!.RowNumber().ShouldBe(2); // header + the one approved request; the pending one is excluded
+        Cell(sheet, 2, "Soyad").ShouldBe("Kaya");
+        Cell(sheet, 2, "Gün").ShouldBe("3");
+        file.FileName.ShouldBe("Kullanılan izin raporu 2026-06-01 2026-06-30.xlsx");
+    }
+
     /// <summary>Kart senseik-030 §2: onaylı fazla mesailerin dönem bazlı dökümü - ücret oranı ve dönüşüm durumu ayrı sütunlarda.</summary>
     [Fact]
     public async Task OvertimeMonthly_ListsApprovedRequests_WithRateAndConversionColumns()

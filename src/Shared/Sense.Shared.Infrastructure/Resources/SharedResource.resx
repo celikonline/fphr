@@ -1573,4 +1573,29 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.sheet.employeeBirthdays" xml:space="preserve"><value>Doğum günü listesi</value></data>
   <data name="report.sheet.turnoverSummary" xml:space="preserve"><value>Turnover özeti</value></data>
   <data name="report.sheet.turnoverDetail" xml:space="preserve"><value>Ayrılan çalışanlar</value></data>
+  <data name="leave.requests.import" xml:space="preserve"><value>İzin günlerini Excel ile toplu yükleme</value></data>
+  <data name="leave.import.error.no_profile" xml:space="preserve"><value>Bu çalışan için henüz bir izin profili/kural seti atanmamış.</value></data>
+  <data name="leave.import.error.unsupported_unit" xml:space="preserve"><value>'{value}' saatlik veya yarım günlük bir izin türü; bu şablon yalnız tam günlük türleri destekler.</value></data>
+  <data name="leave.import.error.invalid_days" xml:space="preserve"><value>Geçersiz gün sayısı: '{value}'. 0'dan büyük bir ondalık sayı yazın (örn. 2,5).</value></data>
+  <data name="import.template.leave.days.name" xml:space="preserve"><value>İzin Günleri</value></data>
+  <data name="import.template.leave.days.description" xml:space="preserve"><value>Eski sistemden veya kağıt kayıtlardan geçmiş/açılış izin kullanımlarını toplu olarak içe aktarın.</value></data>
+  <data name="import.template.leave.days.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; çalışanın özlük kaydı ve izin kural seti önceden tanımlı olmalıdır.</value></data>
+  <data name="import.template.leave.days.instruction.type" xml:space="preserve"><value>İzin türü, çalışanın kural setinde tanımlı türlerden biriyle birebir (harf/boşluk duyarsız) eşleşmelidir; özel türler önce tanımlanmalıdır.</value></data>
+  <data name="import.template.leave.days.instruction.days" xml:space="preserve"><value>Kullanılan gün sayısı, başlangıç/bitiş tarihinden bağımsız olarak olduğu gibi kaydedilir; sistem tarih aralığından yeniden hesaplamaz.</value></data>
+  <data name="import.template.leave.days.instruction.full_day_only" xml:space="preserve"><value>Bu şablon yalnız tam günlük izin türlerini destekler; saatlik veya yarım günlük türler aktarılamaz.</value></data>
+  <data name="import.template.leave.days.sample.valid" xml:space="preserve"><value>Doğru: 5 günlük yıllık izin kullanımı.</value></data>
+  <data name="import.template.leave.days.sample.invalid_type" xml:space="preserve"><value>Hatalı: izin türü çalışanın kural setinde tanımlı değil.</value></data>
+  <data name="import.column.leave.nationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.leave.nationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.leave.leaveTypeName" xml:space="preserve"><value>İzin türü</value></data>
+  <data name="import.column.leave.leaveTypeName.description" xml:space="preserve"><value>Çalışanın kural setinde tanımlı izin türünün adı (yalnız tam günlük türler).</value></data>
+  <data name="import.column.leave.startDate" xml:space="preserve"><value>Başlangıç tarihi</value></data>
+  <data name="import.column.leave.startDate.description" xml:space="preserve"><value>İznin başlangıç tarihi (GG.AA.YYYY).</value></data>
+  <data name="import.column.leave.endDate" xml:space="preserve"><value>Bitiş tarihi</value></data>
+  <data name="import.column.leave.endDate.description" xml:space="preserve"><value>İznin bitiş tarihi (GG.AA.YYYY).</value></data>
+  <data name="import.column.leave.days" xml:space="preserve"><value>Kullanılan gün sayısı</value></data>
+  <data name="import.column.leave.days.description" xml:space="preserve"><value>Kullanılan izin gün sayısı; ondalık yazılabilir (örn. 2,5). Tarih aralığından bağımsız, olduğu gibi kaydedilir.</value></data>
+  <data name="import.column.leave.description" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="import.column.leave.description.description" xml:space="preserve"><value>İsteğe bağlı not; denkleştirme satırlarında açıklama önerilir.</value></data>
+  <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Kullanılan izin raporu</value></data>
 </root>
