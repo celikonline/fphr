@@ -1364,6 +1364,60 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.Gender.Male" xml:space="preserve"><value>Male</value></data>
   <data name="report.enum.Gender.Female" xml:space="preserve"><value>Female</value></data>
   <data name="report.enum.Gender.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.MaritalStatus.Unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="report.enum.MaritalStatus.Single" xml:space="preserve"><value>Single</value></data>
+  <data name="report.enum.MaritalStatus.Married" xml:space="preserve"><value>Married</value></data>
+  <data name="report.enum.MaritalStatus.Divorced" xml:space="preserve"><value>Divorced</value></data>
+  <data name="report.enum.EducationStatus.Student" xml:space="preserve"><value>Student</value></data>
+  <data name="report.enum.EducationStatus.Graduate" xml:space="preserve"><value>Graduate</value></data>
+  <data name="report.enum.HighestEducationLevel.Primary" xml:space="preserve"><value>Primary school</value></data>
+  <data name="report.enum.HighestEducationLevel.MiddleSchool" xml:space="preserve"><value>Middle school</value></data>
+  <data name="report.enum.HighestEducationLevel.HighSchool" xml:space="preserve"><value>High school</value></data>
+  <data name="report.enum.HighestEducationLevel.Associate" xml:space="preserve"><value>Associate degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Bachelor" xml:space="preserve"><value>Bachelor's degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Master" xml:space="preserve"><value>Master's degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Doctorate" xml:space="preserve"><value>Doctorate</value></data>
+  <data name="report.enum.MilitaryStatus.NotCompleted" xml:space="preserve"><value>Not completed</value></data>
+  <data name="report.enum.MilitaryStatus.Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="report.enum.MilitaryStatus.Deferred" xml:space="preserve"><value>Deferred</value></data>
+  <data name="report.enum.MilitaryStatus.Exempt" xml:space="preserve"><value>Exempt</value></data>
+  <data name="report.enum.MilitaryStatus.DraftEvader" xml:space="preserve"><value>Draft evader</value></data>
+  <data name="report.enum.MilitaryStatus.Absentee" xml:space="preserve"><value>Absentee</value></data>
+  <data name="report.enum.DisabilityDegree.None" xml:space="preserve"><value>None</value></data>
+  <data name="report.enum.DisabilityDegree.First" xml:space="preserve"><value>1st degree</value></data>
+  <data name="report.enum.DisabilityDegree.Second" xml:space="preserve"><value>2nd degree</value></data>
+  <data name="report.enum.DisabilityDegree.Third" xml:space="preserve"><value>3rd degree</value></data>
+  <data name="report.enum.BloodType.OPos" xml:space="preserve"><value>O Rh+</value></data>
+  <data name="report.enum.BloodType.ONeg" xml:space="preserve"><value>O Rh-</value></data>
+  <data name="report.enum.BloodType.APos" xml:space="preserve"><value>A Rh+</value></data>
+  <data name="report.enum.BloodType.ANeg" xml:space="preserve"><value>A Rh-</value></data>
+  <data name="report.enum.BloodType.BPos" xml:space="preserve"><value>B Rh+</value></data>
+  <data name="report.enum.BloodType.BNeg" xml:space="preserve"><value>B Rh-</value></data>
+  <data name="report.enum.BloodType.ABPos" xml:space="preserve"><value>AB Rh+</value></data>
+  <data name="report.enum.BloodType.ABNeg" xml:space="preserve"><value>AB Rh-</value></data>
+  <data name="report.enum.CareerChangeType.Hire" xml:space="preserve"><value>Hire</value></data>
+  <data name="report.enum.CareerChangeType.Promotion" xml:space="preserve"><value>Promotion</value></data>
+  <data name="report.enum.CareerChangeType.LateralMove" xml:space="preserve"><value>Lateral move</value></data>
+  <data name="report.enum.CareerChangeType.Demotion" xml:space="preserve"><value>Demotion</value></data>
+  <data name="report.enum.CareerChangeType.TitleChange" xml:space="preserve"><value>Title change</value></data>
+  <data name="report.enum.CareerChangeType.ManagerChange" xml:space="preserve"><value>Manager change</value></data>
+  <data name="report.enum.CareerChangeType.GroupTransfer" xml:space="preserve"><value>Group transfer</value></data>
+  <data name="report.enum.CareerChangeType.BusinessTransfer" xml:space="preserve"><value>Business transfer</value></data>
+  <data name="report.enum.CareerChangeType.Rehire" xml:space="preserve"><value>Rehire</value></data>
+  <data name="report.enum.CareerChangeType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.BankAccountType.Cheque" xml:space="preserve"><value>Cheque</value></data>
+  <data name="report.enum.BankAccountType.TimeDeposit" xml:space="preserve"><value>Time deposit</value></data>
+  <data name="report.enum.BankAccountType.DemandDeposit" xml:space="preserve"><value>Demand deposit</value></data>
+  <data name="report.enum.BankAccountType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.UnionCoverageType.Member" xml:space="preserve"><value>Member</value></data>
+  <data name="report.enum.UnionCoverageType.SolidarityDues" xml:space="preserve"><value>Solidarity dues</value></data>
+  <data name="report.enum.UnionCoverageType.UnionApproved" xml:space="preserve"><value>Union-approved</value></data>
+  <data name="report.enum.UnionCoverageType.OutOfScope" xml:space="preserve"><value>Out of scope</value></data>
+  <data name="report.enum.UserAccountStatus.None" xml:space="preserve"><value>No account</value></data>
+  <data name="report.enum.UserAccountStatus.Invited" xml:space="preserve"><value>Invited</value></data>
+  <data name="report.enum.UserAccountStatus.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="report.enum.UserAccountStatus.Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="report.enum.UserAccountStatus.Disabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="report.enum.EmploymentType.FullTime" xml:space="preserve"><value>Full-time</value></data>
   <data name="report.enum.EmploymentType.PartTime" xml:space="preserve"><value>Part-time</value></data>
   <data name="report.enum.EmploymentType.Temporary" xml:space="preserve"><value>Temporary</value></data>
