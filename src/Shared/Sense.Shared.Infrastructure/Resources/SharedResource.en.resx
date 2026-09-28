@@ -1491,6 +1491,24 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.OvertimeDayKind.Workday" xml:space="preserve"><value>Workday</value></data>
   <data name="report.enum.OvertimeDayKind.WeeklyRest" xml:space="preserve"><value>Weekly rest day</value></data>
   <data name="report.enum.OvertimeDayKind.PublicHoliday" xml:space="preserve"><value>Public holiday</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="report.enum.GarnishmentType.Icra" xml:space="preserve"><value>Enforcement</value></data>
+  <data name="report.enum.GarnishmentType.Nafaka" xml:space="preserve"><value>Alimony</value></data>
+  <data name="report.enum.WageBasis.Monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="report.enum.WageBasis.Daily" xml:space="preserve"><value>Daily</value></data>
+  <data name="report.enum.WageBasis.Weekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="report.enum.WageBasis.Hourly" xml:space="preserve"><value>Hourly</value></data>
+  <data name="report.enum.WageBasis.Yearly" xml:space="preserve"><value>Yearly</value></data>
+  <data name="report.enum.SgkStatus.Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="report.enum.SgkStatus.Retired" xml:space="preserve"><value>Retired</value></data>
+  <data name="report.enum.SgkStatus.Intern" xml:space="preserve"><value>Intern</value></data>
+  <data name="report.enum.SgkStatus.Apprentice" xml:space="preserve"><value>Apprentice</value></data>
+  <data name="report.enum.SgkStatus.Foreign" xml:space="preserve"><value>Foreign</value></data>
+  <data name="report.enum.PayrollPaymentMethod.Bank" xml:space="preserve"><value>Bank</value></data>
+  <data name="report.enum.PayrollPaymentMethod.Cash" xml:space="preserve"><value>Cash</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
