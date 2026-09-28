@@ -1,0 +1,2 @@
+{{- subject = "New equipment assigned to you" -}}
+New equipment was assigned to you on {{ issued_at }}.

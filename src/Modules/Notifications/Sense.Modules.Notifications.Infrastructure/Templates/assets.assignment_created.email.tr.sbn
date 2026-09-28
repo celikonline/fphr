@@ -1,0 +1,6 @@
+{{- subject = "Size yeni bir zimmet verildi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Size {{ issued_at }} tarihinde yeni bir zimmet verildi. Ayrıntıları Zimmetlerim sayfasında görebilirsiniz.</p>
+{{~ if action_url ~}}
+{{ button "Zimmetlerimi görüntüle" action_url }}
+{{~ end ~}}

@@ -1,0 +1,6 @@
+{{- subject = "New equipment assigned to you" -}}
+<p>Hi {{ recipient_name | html.escape }},</p>
+<p>New equipment was assigned to you on {{ issued_at }}. You can see the details on the My equipment page.</p>
+{{~ if action_url ~}}
+{{ button "View my equipment" action_url }}
+{{~ end ~}}

@@ -1,0 +1,2 @@
+{{- subject = "Ihnen wurde neue Ausrüstung zugewiesen" -}}
+Ihnen wurde am {{ issued_at }} neue Ausrüstung zugewiesen.

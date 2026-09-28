@@ -1,0 +1,2 @@
+{{- subject = "Unreturned equipment: " + employee_name -}}
+{{ employee_name }} has left, but has equipment that was not returned.

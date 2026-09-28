@@ -1,0 +1,2 @@
+{{- subject = "Equipment return recorded" -}}
+Your equipment return on {{ returned_at }} was recorded.

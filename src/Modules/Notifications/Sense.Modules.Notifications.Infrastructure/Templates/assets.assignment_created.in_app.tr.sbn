@@ -1,0 +1,2 @@
+{{- subject = "Size yeni bir zimmet verildi" -}}
+Size {{ issued_at }} tarihinde yeni bir zimmet verildi.

@@ -1,0 +1,2 @@
+{{- subject = "İade edilmemiş zimmet: " + employee_name -}}
+{{ employee_name }} işten ayrıldı, ancak iade edilmemiş bir zimmeti var.

@@ -1,0 +1,2 @@
+{{- subject = "Rückgabe erfasst" -}}
+Ihre Ausrüstungsrückgabe vom {{ returned_at }} wurde erfasst.

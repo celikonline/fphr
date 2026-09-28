@@ -1,0 +1,6 @@
+{{- subject = "Equipment return recorded" -}}
+<p>Hi {{ recipient_name | html.escape }},</p>
+<p>Your equipment return on {{ returned_at }} was recorded.</p>
+{{~ if action_url ~}}
+{{ button "View my equipment" action_url }}
+{{~ end ~}}

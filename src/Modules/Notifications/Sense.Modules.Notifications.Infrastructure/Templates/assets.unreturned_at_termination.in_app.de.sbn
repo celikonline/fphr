@@ -1,0 +1,2 @@
+{{- subject = "Nicht zurückgegebene Ausrüstung: " + employee_name -}}
+{{ employee_name }} hat das Unternehmen verlassen, ohne die Ausrüstung zurückzugeben.

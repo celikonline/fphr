@@ -1,0 +1,6 @@
+{{- subject = "Zimmet iadeniz kaydedildi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ returned_at }} tarihli zimmet iadeniz kaydedildi.</p>
+{{~ if action_url ~}}
+{{ button "Zimmetlerimi görüntüle" action_url }}
+{{~ end ~}}

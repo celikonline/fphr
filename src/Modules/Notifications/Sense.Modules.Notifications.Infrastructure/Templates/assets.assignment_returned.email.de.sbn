@@ -1,0 +1,6 @@
+{{- subject = "Rückgabe erfasst" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihre Ausrüstungsrückgabe vom {{ returned_at }} wurde erfasst.</p>
+{{~ if action_url ~}}
+{{ button "Meine Ausrüstung ansehen" action_url }}
+{{~ end ~}}

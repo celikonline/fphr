@@ -1,0 +1,6 @@
+{{- subject = "Unreturned equipment: " + employee_name -}}
+<p>Hi {{ recipient_name | html.escape }},</p>
+<p><strong>{{ employee_name | html.escape }}</strong> has left, but has equipment that was not returned.</p>
+{{~ if action_url ~}}
+{{ button "View equipment" action_url }}
+{{~ end ~}}

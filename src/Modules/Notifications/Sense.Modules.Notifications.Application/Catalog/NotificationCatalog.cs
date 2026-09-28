@@ -22,6 +22,9 @@ public enum NotificationCategory
 
     /// <summary>Onboarding/offboarding checklist tasks assigned to a responsible role (hr/it/manager/payroll).</summary>
     Onboarding,
+
+    /// <summary>Company equipment ("zimmet") assignment/return.</summary>
+    Assets,
 }
 
 /// <summary>
@@ -72,6 +75,9 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.OnboardingTaskAssigned, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
         new(NotificationTemplateKeys.OnboardingTaskCompleted, NotificationCategory.Onboarding, InAppOnly, IsMandatory: false),
         new(NotificationTemplateKeys.RequestCommentAdded, NotificationCategory.Request, InAppOnly, IsMandatory: false),
+        new(NotificationTemplateKeys.AssetAssigned, NotificationCategory.Assets, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.AssetReturned, NotificationCategory.Assets, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.AssetUnreturnedAtTermination, NotificationCategory.Assets, EmailAndInApp, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>
