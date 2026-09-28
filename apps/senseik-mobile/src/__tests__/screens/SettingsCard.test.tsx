@@ -5,6 +5,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import i18n from "@/lib/i18n";
 import { SettingsCard } from "@/screens/app/profile/SettingsCard";
 import { RequestSheet } from "@/navigation/RequestSheet";
+import { preferencesService } from "@/services/PreferencesService";
+import { useAuthStore } from "@/store/authStore";
 
 // Ionicons checks expo-font's isLoaded, which the shared expo-font mock (setup.ts) lacks.
 jest.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
@@ -42,7 +44,9 @@ describe("Profil > Ayarlar > Dil (FG-001)", () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     await act(async () => {
+      useAuthStore.setState({ isAuthenticated: false });
       await i18n.changeLanguage("tr");
     });
   });
@@ -80,5 +84,54 @@ describe("Profil > Ayarlar > Dil (FG-001)", () => {
       expect.arrayContaining(["SETTINGS", "Language", "English", "New request", "Leave"])
     );
     expect(texts(renderer)).not.toContain("Yeni talep");
+  });
+
+  describe("server sync (plan §2 Karar 18)", () => {
+    function pickEnglish(): ReactTestRenderer {
+      let renderer!: ReactTestRenderer;
+      act(() => {
+        renderer = create(<SettingsCard />);
+      });
+      act(() => findButton(renderer, "Dil: Türkçe").props.onPress());
+      act(() => findButton(renderer, "English").props.onPress());
+      return renderer;
+    }
+
+    it("sends the chosen language to the server while signed in", async () => {
+      act(() => useAuthStore.setState({ isAuthenticated: true }));
+      const update = jest.spyOn(preferencesService, "updateMyLanguage").mockResolvedValue();
+
+      pickEnglish();
+      await flush();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith("en");
+    });
+
+    it("swallows a server failure and keeps the local choice", async () => {
+      act(() => useAuthStore.setState({ isAuthenticated: true }));
+      const update = jest
+        .spyOn(preferencesService, "updateMyLanguage")
+        .mockRejectedValue({ response: { status: 400 } });
+
+      const renderer = pickEnglish();
+      await flush();
+
+      expect(update).toHaveBeenCalledWith("en");
+      expect(i18n.language).toBe("en");
+      expect(await AsyncStorage.getItem("language")).toBe("en");
+      expect(texts(renderer)).toEqual(expect.arrayContaining(["Language", "English"]));
+    });
+
+    it("does not call the server when signed out", async () => {
+      act(() => useAuthStore.setState({ isAuthenticated: false }));
+      const update = jest.spyOn(preferencesService, "updateMyLanguage").mockResolvedValue();
+
+      pickEnglish();
+      await flush();
+
+      expect(i18n.language).toBe("en");
+      expect(update).not.toHaveBeenCalled();
+    });
   });
 });
