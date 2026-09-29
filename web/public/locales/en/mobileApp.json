@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "eyebrow": "SENSE HR MOBILE",
+    "title": "Your HR, now in your pocket.",
+    "description": "Clock in, request leave, and approve your team's requests wherever you are.",
+    "note": "Sign in with your company account — no extra setup required.",
+    "phoneAlt": {
+      "home": "Sense HR mobile app preview: Home screen",
+      "clockIn": "Sense HR mobile app preview: Clock in/out screen",
+      "approvals": "Sense HR mobile app preview: My approvals screen"
+    }
+  },
+  "store": {
+    "iosLine1": "On the App Store",
+    "androidLine1": "On Google Play",
+    "download": "Download",
+    "comingSoon": "Coming soon",
+    "iosStoreName": "App Store",
+    "androidStoreName": "Google Play"
+  },
+  "featuresHeading": "What's in the app",
+  "features": {
+    "clockIn": {
+      "title": "Clock in / out",
+      "body": "Clock in to work with one tap, by location or QR code.",
+      "alt": "Sense HR mobile app Clock in/out screen"
+    },
+    "leave": {
+      "title": "Leave",
+      "body": "See your remaining balance and file a leave request in seconds.",
+      "alt": "Sense HR mobile app My leave screen"
+    },
+    "requests": {
+      "title": "Requests",
+      "body": "Open leave, overtime, expense and advance requests from one place.",
+      "alt": "Sense HR mobile app New request screen"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "body": "If you manage a team, approve or reject their requests on the go.",
+      "alt": "Sense HR mobile app My approvals screen"
+    },
+    "shifts": {
+      "title": "My shift",
+      "body": "See your weekly shift and report the days you're unavailable.",
+      "alt": "Sense HR mobile app My shift screen"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Get notified the moment your request is approved or rejected.",
+      "alt": "Sense HR mobile app Notifications screen"
+    }
+  },
+  "howToStart": {
+    "heading": "How to get started",
+    "steps": {
+      "download": {
+        "title": "Download the app",
+        "body": "Install Sense HR from the App Store or Google Play."
+      },
+      "login": {
+        "title": "Sign in with your company account",
+        "body": "Use the same email and password you use on the web."
+      },
+      "notifications": {
+        "title": "Turn on notifications",
+        "body": "Get approvals and request updates on your phone."
+      }
+    }
+  }
+}
