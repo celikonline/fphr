@@ -77,7 +77,9 @@ describe("downloadEmployeeCardPdf (senseik-final-fix F2)", () => {
     };
     vi.mocked(apiClient.get).mockRejectedValueOnce(axiosError);
 
-    const error = await downloadEmployeeCardPdf("e1", { sections: ["general"] }).catch((e: unknown) => e);
+    const error = await downloadEmployeeCardPdf("e1", { sections: ["general"] }).catch(
+      (e: unknown) => e
+    );
 
     expect(getApiErrorMessage(error, "Beklenmeyen bir hata oluştu.")).toBe(problem.detail);
   });

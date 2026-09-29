@@ -15,11 +15,17 @@ const today = new Date(2026, 8, 28); // 28.09.2026 (months are 0-based)
 
 describe("cardPdfPeriod", () => {
   it("last12Months spans one year back to today", () => {
-    expect(cardPdfPeriod("last12Months", today, { from: "", to: "" })).toEqual({ from: "2025-09-28", to: "2026-09-28" });
+    expect(cardPdfPeriod("last12Months", today, { from: "", to: "" })).toEqual({
+      from: "2025-09-28",
+      to: "2026-09-28",
+    });
   });
 
   it("thisYear starts on 1 January", () => {
-    expect(cardPdfPeriod("thisYear", today, { from: "", to: "" })).toEqual({ from: "2026-01-01", to: "2026-09-28" });
+    expect(cardPdfPeriod("thisYear", today, { from: "", to: "" })).toEqual({
+      from: "2026-01-01",
+      to: "2026-09-28",
+    });
   });
 
   it("allTime sends no bounds", () => {
@@ -107,7 +113,9 @@ function renderDialog() {
 describe("EmployeeCardPdfDialog", () => {
   it("does not offer the 'other' tab (shortcuts only, nothing to print)", () => {
     renderDialog();
-    expect(screen.queryByRole("checkbox", { name: trEmployees.card.tabs.other })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: trEmployees.card.tabs.other })
+    ).not.toBeInTheDocument();
   });
 
   it("disables the generate button once every section is cleared", async () => {

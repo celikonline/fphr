@@ -2,8 +2,31 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
-import { ArrowLeft, FileDown, Lock, LogOut, Mail, MoreVertical, PauseCircle, PlayCircle, SearchX, UserPlus } from "lucide-react";
+import {
+  ActionIcon,
+  Button,
+  Card,
+  Group,
+  Menu,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import {
+  ArrowLeft,
+  FileDown,
+  Lock,
+  LogOut,
+  Mail,
+  MoreVertical,
+  PauseCircle,
+  PlayCircle,
+  SearchX,
+  UserPlus,
+} from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -15,7 +38,11 @@ import { AccountStatusBadge, EmployeeStatusBadge } from "@/components/employees/
 import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
-import { EmployeeLifecycleDialogs, lifecycleActionsFor, type LifecycleAction } from "@/components/employees/lifecycle-actions";
+import {
+  EmployeeLifecycleDialogs,
+  lifecycleActionsFor,
+  type LifecycleAction,
+} from "@/components/employees/lifecycle-actions";
 import { EmployeeCardPdfDialog } from "@/components/employees/employee-card-pdf-dialog";
 
 function LifecycleIcon({ action }: { action: LifecycleAction }) {
@@ -38,7 +65,11 @@ export default function EmployeeCardPage() {
   // Employee-role users can't read arbitrary cards, but may open their own via /employees/me.
   const isOwnCard = !canReadEmployees && Boolean(ownEmployeeId) && id === ownEmployeeId;
 
-  const { data: employee, isLoading, error } = useQuery({
+  const {
+    data: employee,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["employees", "detail", id],
     queryFn: () => (isOwnCard ? getMyEmployee() : getEmployee(id)),
     enabled: Boolean(id),
@@ -66,8 +97,18 @@ export default function EmployeeCardPage() {
       <div className="max-w-3xl p-6 md:p-10">
         <Card withBorder padding="xl">
           <Stack align="center" gap="sm" ta="center">
-            {forbidden ? <Lock size={32} color={iconColor} /> : <SearchX size={32} color={iconColor} />}
-            <Text fw={500}>{forbidden ? t("common:noAccessTitle") : notFound ? t("employees:card.notFoundTitle") : t("common:error")}</Text>
+            {forbidden ? (
+              <Lock size={32} color={iconColor} />
+            ) : (
+              <SearchX size={32} color={iconColor} />
+            )}
+            <Text fw={500}>
+              {forbidden
+                ? t("common:noAccessTitle")
+                : notFound
+                  ? t("employees:card.notFoundTitle")
+                  : t("common:error")}
+            </Text>
             <Text size="sm" c="dimmed">
               {forbidden
                 ? t("common:noAccessDescription")
@@ -104,7 +145,10 @@ export default function EmployeeCardPage() {
         {t("employees:card.backToList")}
       </Button>
       <CardHeaderBlock key={`header-${employee.id}`} employee={employee} isOwnCard={isOwnCard} />
-      <Tabs value={active.key} onChange={(value) => value && navigate(`/app/employees/${id}/${value}`)}>
+      <Tabs
+        value={active.key}
+        onChange={(value) => value && navigate(`/app/employees/${id}/${value}`)}
+      >
         <Tabs.List>
           {tabs.map((candidate) => (
             <Tabs.Tab key={candidate.key} value={candidate.key}>
@@ -113,12 +157,21 @@ export default function EmployeeCardPage() {
           ))}
         </Tabs.List>
       </Tabs>
-      <ActiveTab key={`${active.key}-${employee.id}-${employee.accessType ?? ""}`} employee={employee} />
+      <ActiveTab
+        key={`${active.key}-${employee.id}-${employee.accessType ?? ""}`}
+        employee={employee}
+      />
     </div>
   );
 }
 
-function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; isOwnCard: boolean }) {
+function CardHeaderBlock({
+  employee,
+  isOwnCard,
+}: {
+  employee: EmployeeDetail;
+  isOwnCard: boolean;
+}) {
   const { t } = useTranslation(["employees", "common"]);
   const queryClient = useQueryClient();
   const { nameById } = useOrgUnits();
@@ -132,7 +185,10 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
   const targetEmail = employee.workEmail ?? employee.personalEmail;
   const targetSourceKey = employee.workEmail ? "work" : "personal";
   const showInvite = canInvite && employee.accountStatus !== "active";
-  const inviteLabel = employee.accountStatus === "invited" ? t("employees:invite.resend") : t("employees:invite.send");
+  const inviteLabel =
+    employee.accountStatus === "invited"
+      ? t("employees:invite.resend")
+      : t("employees:invite.send");
 
   const mutation = useMutation({
     mutationFn: () => inviteEmployee(employee.id),
@@ -144,12 +200,18 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
       toast({
         variant: outcome === "alreadyactive" ? "default" : "success",
         title: t(`employees:invite.outcome.${outcome}`, { defaultValue: String(result.outcome) }),
-        description: result.sentToEmail ? t("employees:invite.sentTo", { email: result.sentToEmail }) : undefined,
+        description: result.sentToEmail
+          ? t("employees:invite.sentTo", { email: result.sentToEmail })
+          : undefined,
       });
     },
     onError: (error) => {
       setConfirmOpen(false);
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("employees:genericError")) });
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("employees:genericError")),
+      });
     },
   });
 
@@ -158,7 +220,13 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
   return (
     <Card withBorder padding="lg">
       <Group gap="md" wrap="nowrap">
-        <EmployeeAvatar employeeId={employee.id} firstName={employee.firstName} lastName={employee.lastName} size={64} radius="xl" />
+        <EmployeeAvatar
+          employeeId={employee.id}
+          firstName={employee.firstName}
+          lastName={employee.lastName}
+          size={64}
+          radius="xl"
+        />
         <div className="min-w-0 flex-1">
           <Title order={1} size="h2" lineClamp={1}>
             {employee.displayName}
@@ -170,7 +238,10 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
               </Text>
             )}
             <EmployeeStatusBadge status={employee.status} label={t("employees:card.statusLabel")} />
-            <AccountStatusBadge status={employee.accountStatus} label={t("employees:card.accountStatusLabel")} />
+            <AccountStatusBadge
+              status={employee.accountStatus}
+              label={t("employees:card.accountStatusLabel")}
+            />
           </Group>
         </div>
         <Tooltip label={t("employees:card.pdf.button")}>
@@ -189,7 +260,13 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
           <Menu position="bottom-end" width={256}>
             <Tooltip label={t("common:actions")}>
               <Menu.Target>
-                <ActionIcon type="button" variant="subtle" color="gray" size="lg" aria-label={t("common:actions")}>
+                <ActionIcon
+                  type="button"
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label={t("common:actions")}
+                >
                   <MoreVertical size={20} />
                 </ActionIcon>
               </Menu.Target>
@@ -197,7 +274,11 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
             <Menu.Dropdown>
               <Menu.Label>{t("common:actions")}</Menu.Label>
               {showInvite && (
-                <Menu.Item disabled={!targetEmail} onClick={() => setConfirmOpen(true)} leftSection={<Mail size={16} />}>
+                <Menu.Item
+                  disabled={!targetEmail}
+                  onClick={() => setConfirmOpen(true)}
+                  leftSection={<Mail size={16} />}
+                >
                   {inviteLabel}
                 </Menu.Item>
               )}
@@ -221,14 +302,27 @@ function CardHeaderBlock({ employee, isOwnCard }: { employee: EmployeeDetail; is
         )}
       </Group>
 
-      <EmployeeLifecycleDialogs employee={employee} action={lifecycleAction} onClose={() => setLifecycleAction(null)} />
-      {pdfOpen && <EmployeeCardPdfDialog employeeId={employee.id} isOwnCard={isOwnCard} onClose={() => setPdfOpen(false)} />}
+      <EmployeeLifecycleDialogs
+        employee={employee}
+        action={lifecycleAction}
+        onClose={() => setLifecycleAction(null)}
+      />
+      {pdfOpen && (
+        <EmployeeCardPdfDialog
+          employeeId={employee.id}
+          isOwnCard={isOwnCard}
+          onClose={() => setPdfOpen(false)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={inviteLabel}
-        description={t(`employees:invite.confirm.${targetSourceKey}`, { email: targetEmail ?? "", name: employee.displayName })}
+        description={t(`employees:invite.confirm.${targetSourceKey}`, {
+          email: targetEmail ?? "",
+          name: employee.displayName,
+        })}
         confirmLabel={t("common:yes")}
         confirmVariant="default"
         isLoading={mutation.isPending}

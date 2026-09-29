@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Checkbox, Group, Input, Modal, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
+import {
+  Button,
+  Checkbox,
+  Group,
+  Input,
+  Modal,
+  SegmentedControl,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { toast } from "@/hooks/use-toast";
@@ -45,7 +55,11 @@ interface EmployeeCardPdfDialogProps {
   onClose: () => void;
 }
 
-export function EmployeeCardPdfDialog({ employeeId, isOwnCard, onClose }: EmployeeCardPdfDialogProps) {
+export function EmployeeCardPdfDialog({
+  employeeId,
+  isOwnCard,
+  onClose,
+}: EmployeeCardPdfDialogProps) {
   const { t } = useTranslation(["employees", "common"]);
   const tabs = useVisibleEmployeeCardTabs().filter((tab) => !EXCLUDED_TABS.has(tab.key));
   const [selected, setSelected] = useState<string[]>(() => tabs.map((tab) => tab.key));
@@ -81,7 +95,11 @@ export function EmployeeCardPdfDialog({ employeeId, isOwnCard, onClose }: Employ
           <Text size="sm" fw={500}>
             {t("employees:card.pdf.sections")}
           </Text>
-          <Button variant="subtle" size="xs" onClick={() => setSelected(allSelected ? [] : tabs.map((tab) => tab.key))}>
+          <Button
+            variant="subtle"
+            size="xs"
+            onClick={() => setSelected(allSelected ? [] : tabs.map((tab) => tab.key))}
+          >
             {allSelected ? t("employees:card.pdf.clearAll") : t("employees:card.pdf.selectAll")}
           </Button>
         </Group>
@@ -93,13 +111,19 @@ export function EmployeeCardPdfDialog({ employeeId, isOwnCard, onClose }: Employ
           </SimpleGrid>
         </Checkbox.Group>
 
-        <Input.Wrapper label={t("employees:card.pdf.period")} description={t("employees:card.pdf.periodHint")}>
+        <Input.Wrapper
+          label={t("employees:card.pdf.period")}
+          description={t("employees:card.pdf.periodHint")}
+        >
           <SegmentedControl
             fullWidth
             mt={4}
             value={preset}
             onChange={(value) => setPreset(value as CardPdfPeriodPreset)}
-            data={PRESETS.map((value) => ({ value, label: t(`employees:card.pdf.presets.${value}`) }))}
+            data={PRESETS.map((value) => ({
+              value,
+              label: t(`employees:card.pdf.presets.${value}`),
+            }))}
           />
         </Input.Wrapper>
         {preset === "custom" && (
@@ -111,7 +135,10 @@ export function EmployeeCardPdfDialog({ employeeId, isOwnCard, onClose }: Employ
                 onChange={(from) => setCustom((current) => ({ ...current, from }))}
               />
             </Input.Wrapper>
-            <Input.Wrapper label={t("employees:card.pdf.to")} error={customInvalid ? t("employees:card.pdf.invalidPeriod") : undefined}>
+            <Input.Wrapper
+              label={t("employees:card.pdf.to")}
+              error={customInvalid ? t("employees:card.pdf.invalidPeriod") : undefined}
+            >
               <DatePicker
                 value={custom.to}
                 min={custom.from || undefined}
@@ -126,7 +153,11 @@ export function EmployeeCardPdfDialog({ employeeId, isOwnCard, onClose }: Employ
           <Button variant="default" onClick={onClose}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={selected.length === 0 || period === null}>
+          <Button
+            onClick={() => mutation.mutate()}
+            loading={mutation.isPending}
+            disabled={selected.length === 0 || period === null}
+          >
             {t("employees:card.pdf.generate")}
           </Button>
         </Group>

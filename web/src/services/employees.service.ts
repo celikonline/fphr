@@ -772,8 +772,9 @@ export async function downloadEmployeeCardPdf(
     return {
       blob: response.data,
       fileName:
-        parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ??
-        "calisan-karti.pdf",
+        parseContentDispositionFileName(
+          typeof disposition === "string" ? disposition : undefined
+        ) ?? "calisan-karti.pdf",
     };
   } catch (error) {
     throw await unwrapBlobError(error);
