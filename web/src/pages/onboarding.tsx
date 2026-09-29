@@ -43,7 +43,7 @@ function OnboardingScreen() {
   const canTemplates = usePermission("onboarding.templates.manage");
 
   return (
-    <Stack gap="md" className="max-w-7xl p-6 md:p-10">
+    <Stack gap="md" className="w-full p-6 md:p-10">
       <Title order={2}>{t("onboarding:title")}</Title>
       <Tabs defaultValue="pending" keepMounted={false}>
         <Tabs.List>

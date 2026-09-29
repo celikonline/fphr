@@ -48,7 +48,7 @@ function ExpensePaymentsAdmin({ canClaims, canAdvances }: { canClaims: boolean; 
   const { t } = useTranslation(["expense", "common"]);
 
   return (
-    <div className="max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <Banknote size={24} /> {t("expense:admin.title")}
