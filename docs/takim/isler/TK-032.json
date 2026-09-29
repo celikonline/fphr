@@ -1,0 +1,22 @@
+{
+  "id": "TK-032",
+  "baslik": "Testler tek ortak Postgres kullanir; test basina konteyner acilmaz",
+  "durum": "incelemede",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "a/test-ortak-postgres",
+  "kaynak": "Kullanici istegi 2026-09-29 - TestFixture her test yontemi icin yeni postgres:17-alpine konteyneri aciyor; tum testler ayni kaynagi kullansin",
+  "kabul": [
+    "tests/Sense.Tests.Shared/Fixtures altinda SharedPostgres: yonetici baglanti metnini SENSE_TEST_POSTGRES ortam degiskeninden okur; tanimsiz/bossa Docker'a dokunmadan, 'once scripts/test-postgres.sh calistir' diyen acik bir hata firlatir. Testcontainers ile konteyner baslatan kod kalmaz.",
+    "TestFixture her test ornegi icin ortak sunucuda benzersiz sense_test_<guid> veritabani acar, IConfiguration'daki ConnectionStrings:Database bu veritabanini gosterir; DisposeAsync'te havuz temizlenir ve DROP DATABASE ... WITH (FORCE) ile silinir. Respawn/ResetDatabaseAsync davranisi korunur.",
+    "scripts/test-postgres.sh: senseik-test-postgres adli postgres:17-alpine konteynerini 55432 portunda yoksa baslatir, duruyorsa calistirir, varsa aynisini kullanir; hazir olmasini bekler ve SENSE_TEST_POSTGRES degerlerini (host ve SDK konteyneri icin host.docker.internal) yazar.",
+    "scripts/dev/dotnet shim'i SENSE_TEST_POSTGRES tanimliysa SDK konteynerine -e ile gecirir; Host=localhost/127.0.0.1 degerini host.docker.internal'a cevirir (test kapisi bu shim ile kosar).",
+    "GitHub CI (.github/workflows/main.yml, pr.yml) dotnet test adimlarina mevcut postgres servisini gosteren SENSE_TEST_POSTGRES eklenir.",
+    "CLAUDE.md Toolchain: dotnet test komutu -e SENSE_TEST_POSTGRES ile, commit shim notu ve scripts/test-postgres.sh anlatilir.",
+    "SharedPostgres icin birim testleri (ortam degiskeni okuma, tanimsizken hata, veritabani adi uretimi).",
+    "Tum .NET test takimi ortak konteynerle yesil; kosu boyunca yalniz tek Postgres konteyneri var (docker ps kaniti)."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": ".claude/takim/kanit/a0a05051886daec9.json",
+  "handoff": "docs/takim/handoff/TK-032.md"
+}

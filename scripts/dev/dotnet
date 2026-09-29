@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 # Host'ta dotnet yok: SDK container'ı, derleme slotu semaforu üzerinden.
+# SENSE_TEST_POSTGRES tanımlıysa (bkz. scripts/test-postgres.sh) SDK konteynerine -e ile geçirilir; içindeki
+# Host=localhost / Host=127.0.0.1 host.docker.internal'a çevrilir, çünkü konteyner içinden host'taki
+# senseik-test-postgres'e öyle ulaşılır (TESTCONTAINERS_HOST_OVERRIDE artık gerekmiyor: testler kendi
+# konteynerini açmıyor, tek paylaşımlı sunucuya bağlanıyor).
+set -euo pipefail
+
+extra_env=()
+if [ -n "${SENSE_TEST_POSTGRES:-}" ]; then
+  translated="${SENSE_TEST_POSTGRES//Host=localhost/Host=host.docker.internal}"
+  translated="${translated//Host=127.0.0.1/Host=host.docker.internal}"
+  extra_env=(-e "SENSE_TEST_POSTGRES=${translated}")
+fi
+
 exec "$(dirname "$0")/slot.sh" docker run --rm -v "$PWD":"$PWD" -v senseik-nuget:/root/.nuget/packages \
-  -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal -e DOTNET_USE_POLLING_FILE_WATCHER=1 -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+  -e DOTNET_USE_POLLING_FILE_WATCHER=1 -e DOTNET_CLI_TELEMETRY_OPTOUT=1 "${extra_env[@]}" \
   --add-host=host.docker.internal:host-gateway -w "$PWD" mcr.microsoft.com/dotnet/sdk:10.0 dotnet "$@"
