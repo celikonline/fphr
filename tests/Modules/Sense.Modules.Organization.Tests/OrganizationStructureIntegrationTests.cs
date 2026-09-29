@@ -188,7 +188,7 @@ public sealed class OrganizationStructureIntegrationTests : TestFixture
         var trCalendar = await AddCalendarAsync(tenantId, "Türk resmi tatil takvimi", isSystem: true);
         var inTenDays = today.AddDays(10) is { Month: 2, Day: 29 } ? today.AddDays(11) : today.AddDays(10);
         var fiveDaysAgo = today.AddDays(-5) is { Month: 2, Day: 29 } ? today.AddDays(-6) : today.AddDays(-5);
-        await AddEntryAsync(tenantId, trCalendar.Id, new DateOnly(2000, inTenDays.Month, inTenDays.Day), "Yakın bayram", recurring: true);
+        await AddEntryAsync(tenantId, trCalendar.Id, new DateOnly(2000, inTenDays.Month, inTenDays.Day), "Yakın bayram", recurring: true, isHalfDay: true);
         await AddEntryAsync(tenantId, trCalendar.Id, new DateOnly(2000, fiveDaysAgo.Month, fiveDaysAgo.Day), "Geçen bayram", recurring: true);
         await AddEntryAsync(tenantId, trCalendar.Id, today.AddDays(200), "Uzak bayram", recurring: false);
 
@@ -197,7 +197,7 @@ public sealed class OrganizationStructureIntegrationTests : TestFixture
 
         // Before any company has a calendar the tenant's system TR calendar is the default.
         var fallback = (await ExecuteQueryAsync(new GetUpcomingHolidaysQuery())).Value;
-        fallback.ShouldBe([new UpcomingHolidayDto(inTenDays, "Yakın bayram", trCalendar.Id, "Türk resmi tatil takvimi")]);
+        fallback.ShouldBe([new UpcomingHolidayDto(inTenDays, "Yakın bayram", trCalendar.Id, "Türk resmi tatil takvimi", IsHalfDay: true)]);
 
         var holding = (await ExecuteCommandAsync(new CreateCompanyCommand("Holding", trCalendar.Id))).Value;
         var germany = (await ExecuteCommandAsync(new CreateCompanyCommand("GmbH", otherCalendar.Id))).Value;
@@ -208,6 +208,10 @@ public sealed class OrganizationStructureIntegrationTests : TestFixture
         yearAhead.Select(h => h.Name).ShouldBe(["Yakın bayram", "Uzak bayram", "Geçen bayram"]);
         yearAhead[2].Date.ShouldBe(new DateOnly(fiveDaysAgo.Year + 1, fiveDaysAgo.Month, fiveDaysAgo.Day));
         yearAhead.ShouldAllBe(h => h.HolidayCalendarId == trCalendar.Id && h.CalendarName == "Türk resmi tatil takvimi");
+        // "Yakın bayram" is seeded as a half-day (arife) entry; the other two are full-day.
+        yearAhead[0].IsHalfDay.ShouldBeTrue();
+        yearAhead[1].IsHalfDay.ShouldBeFalse();
+        yearAhead[2].IsHalfDay.ShouldBeFalse();
 
         (await ExecuteQueryAsync(new GetUpcomingHolidaysQuery(90, germany.Id))).Value.Select(h => h.Name).ShouldBe(["Tag der Einheit"]);
 
@@ -245,10 +249,10 @@ public sealed class OrganizationStructureIntegrationTests : TestFixture
         return calendar;
     }
 
-    private async Task AddEntryAsync(Guid tenantId, Guid calendarId, DateOnly date, string name, bool recurring)
+    private async Task AddEntryAsync(Guid tenantId, Guid calendarId, DateOnly date, string name, bool recurring, bool isHalfDay = false)
     {
         var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
-        db.HolidayCalendarEntries.Add(HolidayCalendarEntry.Create(tenantId, calendarId, date, name, recurring).Value);
+        db.HolidayCalendarEntries.Add(HolidayCalendarEntry.Create(tenantId, calendarId, date, name, recurring, isHalfDay).Value);
         await db.SaveChangesAsync();
     }
 

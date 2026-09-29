@@ -30,7 +30,6 @@ import {
   Plane,
   RotateCw,
   Umbrella,
-  Users,
   X,
 } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
@@ -766,10 +765,14 @@ interface HolidayGroup {
   key: string;
   name: string;
   start: string;
-  days: number;
+  /** Consecutive calendar days covered (used only to find the next date in the run). */
+  calendarDays: number;
+  /** Displayed day count: a half-day arife (`isHalfDay`) contributes 0.5 instead of 1. */
+  displayDays: number;
 }
 
-/** One row per holiday: consecutive dates with the same name (a multi-day bayram) collapse into a day count. */
+/** One row per holiday: consecutive dates with the same name (a multi-day bayram) collapse into a day count.
+ * An arife (`isHalfDay: true`) still advances the run by a full calendar day but only adds 0.5 to the shown total. */
 function groupHolidays(holidays: UpcomingHoliday[]): HolidayGroup[] {
   const seen = new Set<string>();
   const groups: HolidayGroup[] = [];
@@ -777,16 +780,24 @@ function groupHolidays(holidays: UpcomingHoliday[]): HolidayGroup[] {
     const id = `${holiday.name}|${holiday.date}`;
     if (seen.has(id)) continue;
     seen.add(id);
+    const dayValue = holiday.isHalfDay ? 0.5 : 1;
     const last = groups[groups.length - 1];
     if (last && last.name === holiday.name) {
       const next = parseDateOnly(last.start);
-      next.setDate(next.getDate() + last.days);
+      next.setDate(next.getDate() + last.calendarDays);
       if (toDateOnly(next) === holiday.date) {
-        last.days += 1;
+        last.calendarDays += 1;
+        last.displayDays += dayValue;
         continue;
       }
     }
-    groups.push({ key: id, name: holiday.name, start: holiday.date, days: 1 });
+    groups.push({
+      key: id,
+      name: holiday.name,
+      start: holiday.date,
+      calendarDays: 1,
+      displayDays: dayValue,
+    });
   }
   return groups;
 }
@@ -815,11 +826,11 @@ function HolidaysWidget() {
           rowKey={(group) => group.key}
           render={(group) => (
             <>
-              <Text size="sm" truncate>
+              <Text size="sm" truncate title={group.name}>
                 {group.name}
               </Text>
               <Amount
-                days={`${days(group.days)}${t("home:daysSuffix")}`}
+                days={`${days(group.displayDays)}${t("home:daysSuffix")}`}
                 date={formatDateOnly(group.start, i18n.language, SHORT_DATE)}
               />
             </>
@@ -912,7 +923,7 @@ function BirthdaysWidget() {
   );
 }
 
-/** Active headcount per department; the donut's center and the footer both show the grand total. */
+/** Active headcount per department; the donut's center shows the grand total, the legend below names each slice. */
 function DepartmentDistributionWidget() {
   const { t } = useTranslation(["home", "navigation"]);
   const { data, isLoading, error } = useQuery({
@@ -955,7 +966,8 @@ function DepartmentDistributionWidget() {
                   thickness={48}
                   startAngle={90}
                   endAngle={-270}
-                  withTooltip={false}
+                  withTooltip
+                  tooltipDataSource="segment"
                   strokeWidth={0}
                 />
               </Suspense>
@@ -968,6 +980,7 @@ function DepartmentDistributionWidget() {
                 left={0}
                 right={0}
                 bottom={0}
+                data-testid="department-distribution-center"
               >
                 <Text size="sm" c="dimmed" truncate maw={120} ta="center">
                   {t("home:departmentDistribution.total")}
@@ -979,10 +992,23 @@ function DepartmentDistributionWidget() {
             </Box>
           </Group>
           <Divider mt="md" />
-          <Group gap="xs" pt="md">
-            <Users size={18} color="var(--mantine-color-dimmed)" />
-            <Text size="sm">{total}</Text>
-          </Group>
+          <RowList
+            items={chartData}
+            rowKey={(item) => item.name}
+            render={(item) => (
+              <>
+                <Group gap={8} wrap="nowrap" className="min-w-0">
+                  <ColorSwatch color={item.color} size={10} withShadow={false} />
+                  <Text size="sm" truncate>
+                    {item.name}
+                  </Text>
+                </Group>
+                <Text size="sm" fw={500} className="shrink-0">
+                  {item.value}
+                </Text>
+              </>
+            )}
+          />
         </>
       )}
     </WidgetCard>
@@ -1184,18 +1210,18 @@ export default function HomePage() {
     [
       showOrgInfo && <OrgInfoWidget key="org" />,
       canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
+      canViewHolidays && <HolidaysWidget key="holidays" />,
     ],
     [
       canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
       canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
+      showEvents && <EventsWidget key="events" />,
     ],
     [
       showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,
       canViewInbox && <PendingApprovalsWidget key="pending-approvals" />,
       canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
       showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
-      canViewHolidays && <HolidaysWidget key="holidays" />,
-      showEvents && <EventsWidget key="events" />,
     ],
   ].map((column) => column.filter(Boolean));
   const hasAnyWidget = columns.some((column) => column.length > 0);
