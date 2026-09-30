@@ -1,4 +1,6 @@
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -11,17 +13,21 @@ namespace Sense.Modules.Attendance.Application.Corrections;
 
 /// <summary>
 /// Workflow approved a "PunchCorrection" request (FG-004): re-checks the period lock, then writes the requested time(s) to the
-/// day through the shared <see cref="AttendanceDayUpsert"/> (a time the employee did not ask for keeps the day's current value;
-/// Source = Manual, like an HR correction), which recomputes worked minutes and anomalies, and publishes TimesheetWeekCompleted
-/// when that closes the week. A locked month - or times that no longer fit the day - leave the day untouched and mark the
-/// request ApplyFailed instead.
+/// day as punches through <see cref="PunchDayWriter.ReplaceDayAsync"/> (zaman-devam Z0.1: every channel writes punches first; a time
+/// the employee did not ask for keeps the day's current value; Source = Manual, like an HR correction; self-servis break punches are
+/// kept), which re-derives worked minutes and anomalies, and publishes TimesheetWeekCompleted when that closes the week. A locked
+/// month - or times that no longer fit the day - leave the day untouched and mark the request ApplyFailed instead.
 /// </summary>
 public sealed class PunchCorrectionApprovalCompletedHandler(
     IPunchCorrectionRequestRepository corrections, IAttendanceDayRepository days, IWorkScheduleReadService schedules,
     IShiftSettingsRepository shiftSettings, IShiftPlanLockRepository locks, IMonthlyTimesheetApprovalRepository approvals,
+    IPunchRepository punches, IPlannedDayResolver planner, ITenantLocalClock localClock,
     IIntegrationEventOutbox outbox, IAttendanceUnitOfWork unitOfWork, TimeProvider clock)
     : IIntegrationEventHandler<ApprovalCompleted>
 {
+    /// <summary>Reason written to the punches a correction replaces (Z0.1 soft delete).</summary>
+    public const string ReplacedReason = "Giriş-çıkış düzeltme talebiyle değiştirildi";
+
     public async Task Handle(ApprovalCompleted integrationEvent, CancellationToken cancellationToken)
     {
         if (integrationEvent.RequestType != ApprovalRequestTypes.PunchCorrection
@@ -32,34 +38,49 @@ public sealed class PunchCorrectionApprovalCompletedHandler(
         }
 
         var now = clock.GetUtcNow().UtcDateTime;
-        if (await ApplyAsync(request, cancellationToken))
+        var zone = await localClock.GetTimeZoneAsync(request.TenantId, cancellationToken);
+        var writer = new PunchDayWriter(request.TenantId, days, punches, planner, approvals, zone, now);
+        if (await ApplyAsync(writer, request, cancellationToken))
         {
             _ = request.Approve(integrationEvent.ApprovalRequestId, now);
             await TimesheetWeekEvaluator.PublishIfCompletedAsync(
                 days, schedules, outbox, request.TenantId, request.EmployeeId, request.AttendanceDate, cancellationToken);
-        }
-        else
-        {
-            _ = request.MarkApplyFailed(integrationEvent.ApprovalRequestId, now);
+            // Kaydetme yazıcıda: eşzamanlı yazma çakışması (kayıp güncelleme / aynı gün) yeniden türetilip denenir.
+            var saved = await writer.SaveAsync(unitOfWork, cancellationToken);
+            if (saved.IsFailure)
+            {
+                // Retries exhausted: fail the event delivery instead of silently dropping the approval.
+                throw new InvalidOperationException($"Punch correction {request.Id} could not be saved: {saved.Error.Code}");
+            }
+
+            return;
         }
 
+        writer.DiscardPending();
+        _ = request.MarkApplyFailed(integrationEvent.ApprovalRequestId, now);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<bool> ApplyAsync(PunchCorrectionRequest request, CancellationToken cancellationToken)
+    private async Task<bool> ApplyAsync(PunchDayWriter writer, PunchCorrectionRequest request, CancellationToken cancellationToken)
     {
         if (await PunchCorrectionPeriodLock.IsLockedAsync(locks, approvals, request.EmployeeId, request.AttendanceDate, cancellationToken))
         {
             return false;
         }
 
-        var existing = await days.FindByEmployeeAndDateAsync(request.EmployeeId, request.AttendanceDate, cancellationToken);
+        var existing = await writer.FindDayAsync(request.EmployeeId, request.AttendanceDate, cancellationToken);
+        var checkIn = request.RequestedCheckIn ?? existing?.CheckIn;
+        var checkOut = request.RequestedCheckOut ?? existing?.CheckOut;
+        if (checkIn is { } start && checkOut is { } end && end <= start)
+        {
+            return false;
+        }
+
         var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken));
-        var upserted = await AttendanceDayUpsert.UpsertAsync(
-            days, schedules, request.TenantId, request.EmployeeId, request.AttendanceDate,
-            request.RequestedCheckIn ?? existing?.CheckIn, request.RequestedCheckOut ?? existing?.CheckOut,
-            AttendanceDaySource.Manual, overnight: false, cancellationToken, existing?.ActualBreakMinutes ?? 0, limits);
-        return upserted.IsSuccess;
+        var replaced = await writer.ReplaceDayAsync(
+            request.EmployeeId, request.AttendanceDate, checkIn, checkOut, AttendanceDaySource.Manual, actorUserId: null, ReplacedReason, limits,
+            cancellationToken);
+        return replaced.IsSuccess;
     }
 }
 

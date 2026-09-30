@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
@@ -21,12 +21,15 @@ vi.mock("@/services/reports.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/reports.service")>(
     "@/services/reports.service"
   );
-  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn() };
+  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn(), requestReport: vi.fn() };
 });
 
 // Everything except the KPI tab is allowed: the page then renders just the catalog + history.
+const permissions = vi.hoisted(() => ({ denied: new Set<string>() }));
+
 vi.mock("@/components/permission-guard", () => ({
-  usePermission: (permission: string) => permission !== "analytics.kpi.view",
+  usePermission: (permission: string) =>
+    permission !== "analytics.kpi.view" && !permissions.denied.has(permission),
   useAnyPermission: () => true,
 }));
 
@@ -89,6 +92,11 @@ function executionsFor(page: number) {
   };
 }
 
+function ViewerStub() {
+  const location = useLocation();
+  return <div data-testid="viewer-location">{location.pathname + location.search}</div>;
+}
+
 function renderPage() {
   const instance = i18next.createInstance();
   void instance.init({
@@ -106,7 +114,10 @@ function renderPage() {
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
           <MemoryRouter>
-            <ReportsPage />
+            <Routes>
+              <Route path="/" element={<ReportsPage />} />
+              <Route path="/app/reports/:key" element={<ViewerStub />} />
+            </Routes>
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
@@ -117,6 +128,7 @@ function renderPage() {
 describe("ReportsPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    permissions.denied.clear();
     vi.mocked(getReportCatalog).mockResolvedValue(CATALOG);
     vi.mocked(listReportExecutions).mockImplementation(async (params) =>
       executionsFor(params?.page ?? 1)
@@ -172,5 +184,26 @@ describe("ReportsPage", () => {
 
     expect(await screen.findByRole("columnheader", { name: "Kategori" })).toBeInTheDocument();
     expect(window.localStorage.getItem("senseik.reports.catalogView")).toBe("grid");
+  });
+
+  it("opens the selected report on its own page from the run panel", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+    await user.click(screen.getByRole("button", { name: "Raporu aç" }));
+
+    expect(await screen.findByTestId("viewer-location")).toHaveTextContent("/app/reports/employee.list");
+  });
+
+  it("hides the open button when the viewer page would be off limits (no reports.my.executions)", async () => {
+    const user = userEvent.setup();
+    permissions.denied.add("reports.my.executions");
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+
+    expect(await screen.findByText("Rapor oluştur")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Raporu aç" })).not.toBeInTheDocument();
   });
 });

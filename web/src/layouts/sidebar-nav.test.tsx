@@ -174,6 +174,24 @@ describe("grouped sidebar - collapsed mode", () => {
 
     expect(await screen.findByRole("menuitem", { name: "Çalışanlar" })).toBeDefined();
   });
+
+  it("marks the group of the current page as current, so it carries the rail's özlük sekmesi", () => {
+    setAuthState(["employee.employees.read"]);
+    renderNavList(true, ["/app/employees"]);
+
+    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).toHaveAttribute(
+      "data-current"
+    );
+  });
+
+  it("leaves groups unmarked when the current page is outside them", () => {
+    setAuthState(["employee.employees.read"]);
+    renderNavList(true, ["/app"]);
+
+    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).not.toHaveAttribute(
+      "data-current"
+    );
+  });
 });
 
 describe("NavItemLink - planned (phase) items", () => {

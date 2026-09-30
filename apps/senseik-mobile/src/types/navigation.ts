@@ -33,6 +33,8 @@ export type AppStackParamList = {
   NewRequest: { kind: RequestKind; date?: string };
   ApprovalHistory: undefined;
   RequestDetail: { approvalRequestId: string; summary?: RequestDetailSummary };
+  PunchRequest: undefined;
+  PayslipDetail: { payslip: import("@/services/PayslipService").MyPayslip };
 };
 
 /**

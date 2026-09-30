@@ -665,6 +665,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>You cannot decide on your own request.</value></data>
   <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>A reason (comment) is required when rejecting a request.</value></data>
+  <data name="workflow.delegation.not_found" xml:space="preserve"><value>Delegation not found.</value></data>
+  <data name="workflow.delegation.employee_required" xml:space="preserve"><value>Both the delegator and the delegate employee are required.</value></data>
+  <data name="workflow.delegation.to_self_not_allowed" xml:space="preserve"><value>You cannot delegate approvals to yourself.</value></data>
+  <data name="workflow.delegation.range_invalid" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="workflow.delegation.already_revoked" xml:space="preserve"><value>The delegation is already revoked.</value></data>
+  <data name="workflow.delegation.employee_invalid" xml:space="preserve"><value>The delegator or the delegate employee was not found or is not active.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
@@ -906,7 +912,6 @@ The report you requested has been generated. Click the link to view and download
 
   <!-- Payroll (Faz 3 P5): union / solidarity dues (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Manage unions and memberships</value></data>
-  <data name="payroll.my.payslips" xml:space="preserve"><value>View my own payslips</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Union not found.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>The union name is too long.</value></data>
@@ -1534,6 +1539,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.AccessType.Admin" xml:space="preserve"><value>Admin</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
+  <data name="report_execution.preview_not_available" xml:space="preserve"><value>This report cannot be shown on screen; you can download it as Excel.</value></data>
+  <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Report sheet not found.</value></data>
+  <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>The sort column is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
   <!-- Announcements + Support (Help Center + Contact support - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>View announcements</value></data>
@@ -1640,6 +1648,241 @@ The report you requested has been generated. Click the link to view and download
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>The record has already ended.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>The replacement interval must be between 1 and 3650 days.</value></data>
+  <data name="attendance.daily.view" xml:space="preserve"><value>View daily attendance</value></data>
+  <data name="attendance.punch.manage" xml:space="preserve"><value>Manage punches</value></data>
+  <data name="attendance.shiftdefinition.view" xml:space="preserve"><value>View shift definitions</value></data>
+  <data name="attendance.shiftdefinition.manage" xml:space="preserve"><value>Manage shift definitions</value></data>
+  <data name="attendance.recalculate.run" xml:space="preserve"><value>Recalculate attendance</value></data>
+  <data name="attendance.punchrequest.manage" xml:space="preserve"><value>Manage missing-punch requests</value></data>
+  <data name="attendance.my.punchrequest" xml:space="preserve"><value>Create my missing-punch requests</value></data>
+  <data name="attendance.rotation.view" xml:space="preserve"><value>View shift rotations</value></data>
+  <data name="attendance.rotation.manage" xml:space="preserve"><value>Manage shift rotations</value></data>
+  <data name="attendance.shifttemplate.manage" xml:space="preserve"><value>Manage shift plan templates</value></data>
+  <data name="attendance.terminal.view" xml:space="preserve"><value>View terminals</value></data>
+  <data name="attendance.terminal.manage" xml:space="preserve"><value>Manage terminals</value></data>
+  <data name="attendance.dashboard.view" xml:space="preserve"><value>View the time and attendance dashboard</value></data>
+  <data name="payroll.payslip.import" xml:space="preserve"><value>Bulk-upload payslips</value></data>
+  <data name="payroll.my.payslip" xml:space="preserve"><value>View and acknowledge my payslips</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>View my own payslips</value></data>
+  <data name="workflow.delegation.manage" xml:space="preserve"><value>Manage approval delegations</value></data>
+  <data name="workflow.my.delegation" xml:space="preserve"><value>Manage my approval delegation</value></data>
+  <data name="employee.notes.view" xml:space="preserve"><value>View employee notes</value></data>
+  <data name="employee.notes.manage" xml:space="preserve"><value>Manage employee notes</value></data>
+  <data name="notifications.messages.send" xml:space="preserve"><value>Send HR messages</value></data>
+  <data name="notifications.messages.view" xml:space="preserve"><value>View HR messages</value></data>
+  <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Manage message groups</value></data>
+  <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="employee.note_not_found" xml:space="preserve"><value>Note not found.</value></data>
+  <data name="employee.note_title_required" xml:space="preserve"><value>The note title is required.</value></data>
+  <data name="employee.note_title_too_long" xml:space="preserve"><value>The note title can be at most 255 characters.</value></data>
+  <data name="employee.note_content_too_long" xml:space="preserve"><value>The note content can be at most 512 characters.</value></data>
+  <data name="employee.note_importance_invalid" xml:space="preserve"><value>Invalid note importance.</value></data>
+  <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Invalid attachment information.</value></data>
+  <data name="employee.note_attachment_too_large" xml:space="preserve"><value>The attachment can be at most 10 MB.</value></data>
+  <data name="employee.note_attachment_not_found" xml:space="preserve"><value>The note has no attachment.</value></data>
+  <data name="employee.note_attachment_type_not_allowed" xml:space="preserve"><value>The attachment must be a PDF, PNG, JPEG, TXT, DOCX or XLSX file whose extension matches its content type.</value></data>
+  <data name="attendance.punch.in_future" xml:space="preserve"><value>The punch time cannot be in the future.</value></data>
+  <data name="attendance.punch.employee_required" xml:space="preserve"><value>An employee is required.</value></data>
+  <data name="attendance.punch.work_date_invalid" xml:space="preserve"><value>The work date does not match the punch time.</value></data>
+  <data name="attendance.punch.coordinates_invalid" xml:space="preserve"><value>Invalid location: latitude and longitude must be given together and within range.</value></data>
+  <data name="attendance.punch.reason_too_long" xml:space="preserve"><value>The reason can be at most 1000 characters.</value></data>
+  <data name="attendance.punch.delete_reason_required" xml:space="preserve"><value>A reason is required to delete a punch.</value></data>
+  <data name="attendance.punch.already_deleted" xml:space="preserve"><value>The punch has already been deleted.</value></data>
+  <data name="attendance.shift_definition.not_found" xml:space="preserve"><value>Shift definition not found.</value></data>
+  <data name="attendance.shift_definition.code_required" xml:space="preserve"><value>A shift code is required (at most 50 characters).</value></data>
+  <data name="attendance.shift_definition.name_required" xml:space="preserve"><value>A shift name is required.</value></data>
+  <data name="attendance.shift_definition.color_invalid" xml:space="preserve"><value>The color must be in #RRGGBB format.</value></data>
+  <data name="attendance.shift_definition.time_range_invalid" xml:space="preserve"><value>The shift start and end times are invalid.</value></data>
+  <data name="attendance.shift_definition.flexible_window_invalid" xml:space="preserve"><value>A flexible shift needs a valid duration and start window; other types must leave these fields empty.</value></data>
+  <data name="attendance.shift_definition.tolerance_invalid" xml:space="preserve"><value>Tolerance and bonus minutes must be between 0 and 1440.</value></data>
+  <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>The overtime minimum/maximum minutes are invalid.</value></data>
+  <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>The break definition is invalid.</value></data>
+  <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>The day type is invalid.</value></data>
+  <data name="attendance.shift.definition_required" xml:space="preserve"><value>A shift definition must be selected for a work day.</value></data>
+  <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Missing punch request not found.</value></data>
+  <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>A reason is required for a missing punch request (at most 1000 characters).</value></data>
+  <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>The request direction must be in or out.</value></data>
+  <data name="attendance.punch_request.not_pending" xml:space="preserve"><value>The request is no longer pending.</value></data>
+  <data name="attendance.shift_template.not_found" xml:space="preserve"><value>Shift template not found.</value></data>
+  <data name="attendance.shift_template.name_required" xml:space="preserve"><value>A template name is required.</value></data>
+  <data name="attendance.shift_template.period_invalid" xml:space="preserve"><value>The template period must be between 1 and 62 days.</value></data>
+  <data name="attendance.shift_template.entry_invalid" xml:space="preserve"><value>The template entries are invalid or duplicated.</value></data>
+  <data name="attendance.rotation.not_found" xml:space="preserve"><value>Rotation not found.</value></data>
+  <data name="attendance.rotation.code_required" xml:space="preserve"><value>A rotation code is required (at most 50 characters).</value></data>
+  <data name="attendance.rotation.name_required" xml:space="preserve"><value>A rotation name is required.</value></data>
+  <data name="attendance.rotation.cycle_invalid" xml:space="preserve"><value>The rotation cycle must be between 1 and 56 days.</value></data>
+  <data name="attendance.rotation.step_invalid" xml:space="preserve"><value>The rotation steps are invalid or duplicated.</value></data>
+  <data name="attendance.rotation_assignment.not_found" xml:space="preserve"><value>Rotation assignment not found.</value></data>
+  <data name="attendance.rotation_assignment.range_invalid" xml:space="preserve"><value>The rotation assignment dates or offset are invalid.</value></data>
+  <data name="attendance.terminal.not_found" xml:space="preserve"><value>Terminal not found.</value></data>
+  <data name="attendance.terminal.code_required" xml:space="preserve"><value>A terminal code is required (at most 50 characters).</value></data>
+  <data name="attendance.terminal.name_required" xml:space="preserve"><value>A terminal name and direction mode are required.</value></data>
+  <data name="attendance.terminal.api_key_required" xml:space="preserve"><value>The terminal API key is invalid.</value></data>
+  <data name="attendance.terminal_group.not_found" xml:space="preserve"><value>Terminal group not found.</value></data>
+  <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>A terminal group name is required.</value></data>
+  <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>A terminal credential type and value are required.</value></data>
+  <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal credential not found.</value></data>
+  <data name="attendance.recalculation.range_invalid" xml:space="preserve"><value>Invalid recalculation range: the start date cannot be after the end date.</value></data>
+  <data name="attendance.recalculation.range_too_long" xml:space="preserve"><value>A recalculation range can span at most 366 days.</value></data>
+  <data name="attendance.recalculation.job_not_found" xml:space="preserve"><value>Recalculation job not found.</value></data>
+  <data name="import.template.shiftplan.name" xml:space="preserve"><value>Shift plan</value></data>
+  <data name="import.template.shiftplan.description" xml:space="preserve"><value>Bulk-import employees' daily shift plan (shift code or weekly rest/rest day/public holiday).</value></data>
+  <data name="import.template.shiftplan.instruction.match" xml:space="preserve"><value>Employees are matched by national id; a row for the same employee and day overwrites the previous plan.</value></data>
+  <data name="import.template.shiftplan.instruction.code" xml:space="preserve"><value>The shift code column is a dropdown: pick a shift definition code or one of WEEKLY_REST, REST_DAY, PUBLIC_HOLIDAY.</value></data>
+  <data name="import.template.shiftplan.instruction.locked" xml:space="preserve"><value>Days in a locked month and published shifts are not changed; those rows are reported as errors.</value></data>
+  <data name="import.template.shiftplan.sample.valid" xml:space="preserve"><value>Valid: a defined shift code.</value></data>
+  <data name="import.template.shiftplan.sample.rest" xml:space="preserve"><value>Valid: a weekly rest day.</value></data>
+  <data name="import.template.shiftplan.sample.invalid_code" xml:space="preserve"><value>Invalid: undefined shift code.</value></data>
+  <data name="import.column.shiftplan.employeeNationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="import.column.shiftplan.employeeNationalId.description" xml:space="preserve"><value>11-digit national id; the employee is matched by this number.</value></data>
+  <data name="import.column.shiftplan.date" xml:space="preserve"><value>Date</value></data>
+  <data name="import.column.shiftplan.date.description" xml:space="preserve"><value>Plan day (DD.MM.YYYY).</value></data>
+  <data name="import.column.shiftplan.shiftCode" xml:space="preserve"><value>Shift code</value></data>
+  <data name="import.column.shiftplan.shiftCode.description" xml:space="preserve"><value>Shift definition code or WEEKLY_REST / REST_DAY / PUBLIC_HOLIDAY.</value></data>
+  <data name="documents.sharedfile_types.manage" xml:space="preserve"><value>Manage shared file types</value></data>
+  <data name="shared_file_type.not_found" xml:space="preserve"><value>Shared file type not found.</value></data>
+  <data name="shared_file_type.name_required" xml:space="preserve"><value>The shared file type name is required.</value></data>
+  <data name="shared_file_type.name_too_long" xml:space="preserve"><value>The shared file type name can be at most 100 characters.</value></data>
+  <data name="shared_file_type.name_taken" xml:space="preserve"><value>A shared file type with this name already exists.</value></data>
+  <data name="shared_file_type.inactive" xml:space="preserve"><value>An inactive shared file type cannot be selected.</value></data>
+  <data name="shared_company_file.nothing_to_download" xml:space="preserve"><value>There is no file you are allowed to see to download.</value></data>
+  <data name="shared_company_file.zip_too_many_files" xml:space="preserve"><value>At most {max} files can be downloaded at once.</value></data>
+  <data name="payslip_import.files_required" xml:space="preserve"><value>Upload at least one PDF or zip file.</value></data>
+  <data name="payslip_import.too_many_files" xml:space="preserve"><value>At most {max} files can be uploaded at once.</value></data>
+  <data name="company_event.ends_before_starts" xml:space="preserve"><value>The end cannot be before the start.</value></data>
+  <data name="company_event.online_url_required" xml:space="preserve"><value>An online event requires a valid http(s) link.</value></data>
+  <data name="company_event.location_required" xml:space="preserve"><value>An onsite event requires a location.</value></data>
+  <data name="company_event.location_too_long" xml:space="preserve"><value>Location cannot exceed 300 characters.</value></data>
+  <data name="company_event.category_not_found" xml:space="preserve"><value>The selected event category was not found.</value></data>
+  <data name="company_event.invitee_not_found" xml:space="preserve"><value>One or more invitees were not found.</value></data>
+  <data name="company_event_category.name_required" xml:space="preserve"><value>A category name is required and cannot exceed 60 characters.</value></data>
+  <data name="company_event_category.color_invalid" xml:space="preserve"><value>The colour must be in #RRGGBB format.</value></data>
+  <data name="company_event_category.in_use" xml:space="preserve"><value>This category is used by events and cannot be deleted.</value></data>
+  <data name="company_event_category.duplicate_name" xml:space="preserve"><value>A category with this name already exists.</value></data>
+  <data name="onboarding.category_not_found" xml:space="preserve"><value>Category not found.</value></data>
+  <data name="onboarding_category.name_required" xml:space="preserve"><value>A category name is required.</value></data>
+  <data name="onboarding_category.name_too_long" xml:space="preserve"><value>The category name cannot exceed 100 characters.</value></data>
+  <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Template set not found.</value></data>
+  <data name="onboarding_template_set.name_required" xml:space="preserve"><value>A template set name is required.</value></data>
+  <data name="onboarding_template_set.name_too_long" xml:space="preserve"><value>The template set name cannot exceed 150 characters.</value></data>
+  <data name="onboarding_template_set.empty" xml:space="preserve"><value>A template set must contain at least one task template.</value></data>
+  <data name="onboarding_template_set.inactive" xml:space="preserve"><value>The template set is inactive.</value></data>
+  <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>A set can only contain existing task templates of the same stage.</value></data>
+  <data name="onboarding_template_set.already_started" xml:space="preserve"><value>This template set has already been started for the employee.</value></data>
+  <data name="onboarding.category_in_use" xml:space="preserve"><value>The category is used by one or more task templates and cannot be deleted.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>The month is closed, so a missing punch request cannot be created.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>A pending missing punch request for the same time already exists.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Only the requesting employee can cancel the request.</value></data>
+  <data name="attendance.rotation.code_duplicate" xml:space="preserve"><value>This rotation code is already in use.</value></data>
+  <data name="attendance.rotation.inactive" xml:space="preserve"><value>An inactive rotation cannot be applied to employees.</value></data>
+  <data name="attendance.rotation_assignment.overlap" xml:space="preserve"><value>{employee} already has a rotation assignment in this date range.</value></data>
+  <data name="attendance.shift_definition.code_duplicate" xml:space="preserve"><value>This shift code is already used by another shift definition.</value></data>
+  <data name="attendance.shift_definition.in_use" xml:space="preserve"><value>This shift definition is used by assignments, rotations or plan templates; it cannot be deleted, only deactivated.</value></data>
+  <data name="attendance.punch.reason_required" xml:space="preserve"><value>A reason is required to add or delete a punch.</value></data>
+  <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>This employee's month is approved and locked; punches cannot be added or deleted.</value></data>
+  <data name="attendance.punch.not_found" xml:space="preserve"><value>Punch not found.</value></data>
+  <data name="payroll.errors.payslip_not_published" xml:space="preserve"><value>The payslip is not published yet; it becomes available when the period is paid.</value></data>
+  <data name="payroll.errors.payslip_already_acknowledged" xml:space="preserve"><value>This payslip has already been acknowledged.</value></data>
+  <data name="payroll.errors.payslip_objection_pending" xml:space="preserve"><value>The payslip cannot be acknowledged while an objection is pending.</value></data>
+  <data name="payroll.errors.payslip_objection_already_filed" xml:space="preserve"><value>An objection has already been filed for this payslip.</value></data>
+  <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>An objection reason is required and may be at most 1000 characters.</value></data>
+  <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>There is no pending objection for this payslip.</value></data>
+  <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Your user account is not linked to an employee record.</value></data>
+  <data name="payroll.errors.payslip_concurrent_update" xml:space="preserve"><value>The payslip was changed by another request at the same time; refresh and try again.</value></data>
+  <data name="notifications.message.sms_unavailable" xml:space="preserve"><value>The SMS channel is unavailable; no SMS provider is configured.</value></data>
+  <data name="notifications.message.unknown_channel" xml:space="preserve"><value>Unknown message channel.</value></data>
+  <data name="notifications.message.recipients_required" xml:space="preserve"><value>Select at least one recipient for the message.</value></data>
+  <data name="notifications.messagegroup.not_found" xml:space="preserve"><value>Message group not found.</value></data>
+  <data name="notifications.messagegroup.name_taken" xml:space="preserve"><value>A message group with this name already exists.</value></data>
+  <data name="attendance.punch.direction_invalid" xml:space="preserve"><value>The punch direction is invalid.</value></data>
+  <data name="attendance.punch.source_invalid" xml:space="preserve"><value>The punch source is invalid.</value></data>
+  <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>The punch source reference can be at most 200 characters.</value></data>
+  <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>The punch belongs to a different tenant than the current one.</value></data>
+  <data name="attendance.day.concurrent_update" xml:space="preserve"><value>The attendance day was changed by another operation at the same time; please try again.</value></data>
+  <data name="report.col.employeeName" xml:space="preserve"><value>Employee</value></data>
+  <data name="report.col.checkIn" xml:space="preserve"><value>Check-in</value></data>
+  <data name="report.col.checkOut" xml:space="preserve"><value>Check-out</value></data>
+  <data name="report.col.workedMinutes" xml:space="preserve"><value>Worked minutes</value></data>
+  <data name="report.col.overtimeMinutes" xml:space="preserve"><value>Overtime minutes</value></data>
+  <data name="report.col.anomalies" xml:space="preserve"><value>Anomalies</value></data>
+  <data name="report.col.unassignedDayCount" xml:space="preserve"><value>Unassigned days</value></data>
+  <data name="report.col.firstUnassignedDate" xml:space="preserve"><value>First unassigned day</value></data>
+  <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Incalculable</value></data>
+  <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>No shift assigned</value></data>
+  <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Daily status list</value></data>
+  <data name="report.note.daily_range_truncated" xml:space="preserve"><value>First {0} days shown</value></data>
+  <data name="report.anomaly.noData" xml:space="preserve"><value>No data</value></data>
+  <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Missing check-in</value></data>
+  <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Missing check-out</value></data>
+  <data name="report.anomaly.lateArrival" xml:space="preserve"><value>Late arrival</value></data>
+  <data name="report.anomaly.earlyLeave" xml:space="preserve"><value>Early leave</value></data>
+  <data name="report.anomaly.lateLeave" xml:space="preserve"><value>Late leave</value></data>
+  <data name="report.anomaly.overwork" xml:space="preserve"><value>Overwork</value></data>
+  <data name="report.anomaly.underwork" xml:space="preserve"><value>Underwork</value></data>
+  <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Unplanned work</value></data>
+  <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>Worked while on leave</value></data>
+  <data name="report.anomaly.incalculable" xml:space="preserve"><value>Incalculable</value></data>
+  <data name="report.col.occurredAt" xml:space="preserve"><value>Punch time</value></data>
+  <data name="report.col.direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="report.col.enteredBy" xml:space="preserve"><value>Entered by</value></data>
+  <data name="report.col.reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="report.col.deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="report.col.deletedBy" xml:space="preserve"><value>Deleted by</value></data>
+  <data name="report.col.deleteReason" xml:space="preserve"><value>Delete reason</value></data>
+  <data name="report.col.firstIn" xml:space="preserve"><value>First in</value></data>
+  <data name="report.col.lastPunch" xml:space="preserve"><value>Last punch</value></data>
+  <data name="report.col.terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.col.sequence" xml:space="preserve"><value>Sequence</value></data>
+  <data name="report.col.time" xml:space="preserve"><value>Time</value></data>
+  <data name="report.col.breakCount" xml:space="preserve"><value>Break count</value></data>
+  <data name="report.col.totalBreakMinutes" xml:space="preserve"><value>Total break (min)</value></data>
+  <data name="report.col.longestBreakMinutes" xml:space="preserve"><value>Longest break (min)</value></data>
+  <data name="report.col.plannedBreakMinutes" xml:space="preserve"><value>Planned break (min)</value></data>
+  <data name="report.col.breakDifferenceMinutes" xml:space="preserve"><value>Difference (min)</value></data>
+  <data name="report.sheet.attendanceManualEntries" xml:space="preserve"><value>Manual entries</value></data>
+  <data name="report.sheet.attendanceCurrentlyInside" xml:space="preserve"><value>Currently inside</value></data>
+  <data name="report.sheet.attendanceBreaks" xml:space="preserve"><value>Breaks</value></data>
+  <data name="report.sheet.attendanceIntermediatePunches" xml:space="preserve"><value>Intermediate punches</value></data>
+  <data name="report.enum.PunchSource.Manual" xml:space="preserve"><value>Manual</value></data>
+  <data name="report.enum.PunchSource.Import" xml:space="preserve"><value>Import</value></data>
+  <data name="report.enum.PunchSource.Device" xml:space="preserve"><value>Device</value></data>
+  <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self service</value></data>
+  <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Request</value></data>
+  <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>In</value></data>
+  <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Out</value></data>
+  <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="attendance.terminal.code_duplicate" xml:space="preserve"><value>A terminal with this code already exists.</value></data>
+  <data name="attendance.terminal.location_not_found" xml:space="preserve"><value>The location to bind the terminal to was not found or is inactive.</value></data>
+  <data name="attendance.terminal_group.in_use" xml:space="preserve"><value>Terminals are assigned to this group; move them to another group first.</value></data>
+  <data name="attendance.terminal_ingest.batch_size_invalid" xml:space="preserve"><value>A punch request must contain at least 1 and at most {max} items.</value></data>
+  <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>This terminal credential is in active use; deactivate it before reassigning.</value></data>
+  <data name="problem.title.service_unavailable" xml:space="preserve"><value>Service unavailable</value></data>
+  <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal credential (card/PIN) operations are not configured on this server. Contact your system administrator.</value></data>
+  <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>No employee was found with this registration number.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>The employee was not found or has left the company; a terminal credential cannot be assigned.</value></data>
+  <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>A PIN must consist of digits only and be 6-8 digits long.</value></data>
+  <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>A card number or external ID can be at most 64 characters.</value></data>
+  <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Type must be Kart (card), PIN or Harici (external ID).</value></data>
+  <data name="import.template.terminalcredentials.name" xml:space="preserve"><value>Terminal credentials</value></data>
+  <data name="import.template.terminalcredentials.description" xml:space="preserve"><value>Assign time clock terminal credentials (card, PIN, external ID) to employees in bulk.</value></data>
+  <data name="import.template.terminalcredentials.instruction.match" xml:space="preserve"><value>Employees are matched by registration number; terminated employees cannot receive credentials. Re-uploading the same credential for the same employee skips the row.</value></data>
+  <data name="import.template.terminalcredentials.instruction.format" xml:space="preserve"><value>The type column is a drop-down (Kart, PIN, Harici). A PIN consists of digits only and is 6-8 digits long; card numbers and external IDs are at most 64 characters. Enter the Value column as text so leading zeros are kept.</value></data>
+  <data name="import.template.terminalcredentials.instruction.in_use" xml:space="preserve"><value>A credential that is active for another employee cannot be assigned (row error; a generic rejection for PINs); a deactivated credential is transferred to the new employee.</value></data>
+  <data name="import.template.terminalcredentials.instruction.security" xml:space="preserve"><value>Credential values are stored only as a one-way digest; the uploaded file is deleted after the run and the result file contains no values.</value></data>
+  <data name="import.template.terminalcredentials.sample.card" xml:space="preserve"><value>Valid: card number.</value></data>
+  <data name="import.template.terminalcredentials.sample.pin" xml:space="preserve"><value>Valid: 6-digit PIN.</value></data>
+  <data name="import.template.terminalcredentials.sample.invalid_pin" xml:space="preserve"><value>Invalid: a PIN cannot contain letters and must be at least 6 digits.</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi" xml:space="preserve"><value>Registration no</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi.description" xml:space="preserve"><value>The employee's registration number (sicil no); employees are matched by it.</value></data>
+  <data name="import.column.terminalcredentials.kind" xml:space="preserve"><value>Type</value></data>
+  <data name="import.column.terminalcredentials.kind.description" xml:space="preserve"><value>Kart (card), PIN or Harici (external ID on the device).</value></data>
+  <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Value</value></data>
+  <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Card number, PIN or external ID; stored only as a digest.</value></data>
+  <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>This PIN cannot be assigned; try a different PIN.</value></data>
+  <data name="import.outcome.Processed" xml:space="preserve"><value>Processed</value></data>
+  <data name="import.column.masked_header" xml:space="preserve"><value>Column {n}</value></data>
+  <data name="attendance.terminal_credential.import_aborted" xml:space="preserve"><value>Too many PINs could not be assigned; the import was stopped and no credential was saved. Review the file and try again.</value></data>
   <data name="attendance.self_checkin.break_not_checked_in" xml:space="preserve"><value>Check in before starting a break.</value></data>
   <data name="attendance.self_checkin.break_already_open" xml:space="preserve"><value>You already have an open break.</value></data>
   <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>There is no open break to end.</value></data>

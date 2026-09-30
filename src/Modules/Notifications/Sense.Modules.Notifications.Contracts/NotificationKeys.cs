@@ -54,6 +54,27 @@ public static class NotificationTemplateKeys
     /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
     public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
 
+    /// <summary>The employee (and their manager): a day with a missing or incalculable punch needs attention (Attendance daily job).</summary>
+    public const string AttendanceMissingPunchReminder = "attendance.missing_punch_reminder";
+
+    /// <summary>The employee: the paid payslip is still unacknowledged (Payroll reminder job or manual trigger).</summary>
+    public const string PayslipAcknowledgementReminder = "payroll.payslip_acknowledgement_reminder";
+
+    /// <summary>The employee: a payslip document was bulk-uploaded and matched to them (Payroll bulk upload, E3).</summary>
+    public const string PayslipDocumentUploaded = "payroll.payslip_document_uploaded";
+
+    /// <summary>Recipients of an HR message (e-mail / in-app; free-form subject and body composed by HR, E6).</summary>
+    public const string HrMessage = "hr.message";
+
+    /// <summary>Invitees of a company event with "notify" on (Announcements, E4).</summary>
+    public const string CompanyEventInvitation = "announcement.event_invitation";
+
+    /// <summary>The delegate: an approval delegation to them started (Workflow, Z2.2).</summary>
+    public const string ApprovalDelegationAssigned = "workflow.delegation_assigned";
+
+    /// <summary>Members of the payroll role (Bordro Uzmanı): an employee's payslip objection was accepted and the payslip must be corrected (Payroll.PayslipObjectionAccepted).</summary>
+    public const string PayslipObjectionAccepted = "payroll.payslip_objection_accepted";
+
     /// <summary>The other parties of an approval request (requester, approvers, deciders): someone commented on it (Workflow.ApprovalRequestCommented). In-app only.</summary>
     public const string RequestCommentAdded = "request.comment_added";
 

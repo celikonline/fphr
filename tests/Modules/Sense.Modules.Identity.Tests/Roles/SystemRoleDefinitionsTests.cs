@@ -15,7 +15,7 @@ public sealed class SystemRoleDefinitionsTests
 {
     private static readonly string[] SelfServiceKeys =
         ["employee.self.edit", "employee.my.view", "attendance.my.timesheet", "expense.my.claims", "me.profile.view",
-         "attendance.shift.self", "attendance.availability.self", "payroll.my.payslips"];
+         "attendance.shift.self", "attendance.availability.self", "payroll.my.payslip", "payroll.my.payslips"];
 
     private static readonly IReadOnlyList<Permission> Catalog =
     [
@@ -102,14 +102,15 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldNotContain(PlatformPermissions.TenantsManage);
     }
 
-    /// <summary>TK-030: Çalışan "*.my.*" deseniyle kendi bordro pusulalarını görme iznini otomatik alır, ama bu
+    /// <summary>Çalışan "*.my.*" deseniyle kendi bordro pusulalarını görme iznini otomatik alır, ama bu
     /// KISA YOL DEĞİL - dönemin tüm bordrolarını açan payroll.trace.view'ı almaz (kapsam açığı ayrı konu).</summary>
     [Fact]
     public void Employee_GetsOwnPayslipsPermission_ButNotTheTenantWideTraceViewPermission()
     {
         var keys = Resolve(SystemRoleCodes.Employee);
 
-        keys.ShouldContain("payroll.my.payslips");
+        keys.ShouldContain("payroll.my.payslip");
+        keys.ShouldContain("payroll.my.payslips"); // TK-030 (canlıda)
         keys.ShouldNotContain("payroll.trace.view");
     }
 

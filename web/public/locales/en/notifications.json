@@ -32,17 +32,30 @@
       "birthday": "On my birthday"
     },
     "announcement": {
-      "published": "When a new announcement is published"
+      "published": "When a new announcement is published",
+      "event_invitation": "When I am invited to a company event"
     },
     "payroll": {
-      "payslip_ready": "When my payslip is ready"
+      "payslip_ready": "When my payslip is ready",
+      "payslip_acknowledgement_reminder": "Reminder when I have not yet acknowledged my payslip",
+      "payslip_document_uploaded": "When my payslip document is uploaded",
+      "payslip_objection_accepted": "When a payslip objection is accepted and needs correction"
     },
     "leave": {
       "added_on_behalf": "When a leave request is added on my behalf"
     },
     "onboarding": {
-      "task_assigned": "When an onboarding task is assigned to me",
-      "task_completed": "When an onboarding task is completed"
+      "task_assigned": "When an onboarding/offboarding task is assigned to my role",
+      "task_completed": "When a task of my role is completed"
+    },
+    "attendance": {
+      "missing_punch_reminder": "Reminder for a day with a missing or incalculable punch"
+    },
+    "hr": {
+      "message": "When I receive a message from HR"
+    },
+    "workflow": {
+      "delegation_assigned": "When an approval delegation is assigned to me"
     },
     "assets": {
       "assignment_created": "When equipment is assigned to me",
@@ -70,7 +83,7 @@
     "employee": "Employees",
     "announcement": "Announcements",
     "payroll": "Payroll",
-    "onboarding": "Onboarding",
+    "onboarding": "Onboarding / offboarding",
     "assets": "Equipment"
   },
   "types": {

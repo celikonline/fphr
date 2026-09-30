@@ -104,6 +104,10 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeePhotoRepository, EmployeePhotoRepository>();
         services.AddScoped<EmployeePhotoWriter>();
 
+        // Employee notes (E7): HR/manager notes with a presigned-upload attachment.
+        services.AddScoped<IEmployeeNoteRepository, EmployeeNoteRepository>();
+        services.AddScoped<Application.Notes.EmployeeNoteAccess>();
+
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();
         services.AddScoped<CareerService>();

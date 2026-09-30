@@ -1,0 +1,6 @@
+{{- subject = "Ihre Gehaltsabrechnung wartet auf Ihre Bestätigung" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihre Gehaltsabrechnung für {{ period }} wurde noch nicht bestätigt. Bitte prüfen Sie sie und bestätigen Sie sie oder legen Sie Einspruch ein.</p>
+{{~ if action_url ~}}
+{{ button "Abrechnung öffnen" action_url }}
+{{~ end ~}}

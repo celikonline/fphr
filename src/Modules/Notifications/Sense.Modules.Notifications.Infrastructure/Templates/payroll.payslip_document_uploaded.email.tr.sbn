@@ -1,0 +1,6 @@
+{{- subject = "Yeni ücret pusulanız yüklendi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Ücret pusulanız belgelerinize eklendi.</p>
+{{~ if action_url ~}}
+{{ button "Belgelerimi aç" action_url }}
+{{~ end ~}}

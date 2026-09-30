@@ -109,6 +109,27 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     }
 
     /// <summary>
+    /// Hesaplanamayan gün (zaman-devam Z0.4, spec §5.1): okutmalardan güvenilir bir giriş/çıkış çifti kurulamadı. Çalışma süreleri,
+    /// gece/limit/fazla mesai değerleri sıfırlanır ve tek bayrak <see cref="AttendanceAnomaly.Incalculable"/> kalır - bordro/FM okuyucuları
+    /// bu günden süre almaz. <see cref="Record"/>/<see cref="UpdateRecord"/> (türetilmiş giriş/çıkışla) hemen ardından çağrılır; gösterim için
+    /// CheckIn/CheckOut korunur. Elle düzeltme (Çalışılan saat) ya da yok sayma ile çözülür.
+    /// </summary>
+    public void MarkIncalculable()
+    {
+        WorkedMinutes = 0;
+        NetWorkedMinutes = 0;
+        BreakMinutesApplied = 0;
+        NightMinutes = 0;
+        OvertimeMinutes = 0;
+        DailyLimitExceeded = false;
+        NightLimitExceeded = false;
+        OverrideWorkedMinutes = null;
+        OverrideReason = null;
+        Anomalies = AttendanceAnomaly.Incalculable;
+        ResolutionState = AttendanceResolutionState.Unresolved;
+    }
+
+    /// <summary>
     /// "Çalışılan saat" resolution (11.3.6 Az çalışma → Çalışılan saat): overrides <see cref="WorkedMinutes"/> for
     /// reporting and resolves the day without touching CheckIn/CheckOut. Also used as the manual-correction action
     /// for missing/unplanned-data anomalies that have no Overwork/Underwork flag.
@@ -170,6 +191,12 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     /// </summary>
     public void ApplyLeaveOverlap(bool overlapsApprovedLeave)
     {
+        // Hesaplanamayan günde başka bayrak konmaz (spec §5.1).
+        if ((Anomalies & AttendanceAnomaly.Incalculable) != 0)
+        {
+            return;
+        }
+
         var shouldFlag = overlapsApprovedLeave && (CheckIn is not null || CheckOut is not null);
         var currentlyFlagged = (Anomalies & AttendanceAnomaly.WorkedWhileOnLeave) != 0;
         if (shouldFlag == currentlyFlagged)
@@ -186,6 +213,23 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         {
             ResolutionState = AttendanceResolutionState.Resolved;
         }
+    }
+
+    /// <summary>
+    /// Yeniden hesaplama sonrası (zaman-devam Z0.3, K6) daha önce verilmiş çözümü geri yükler: <see cref="Recompute"/> her
+    /// hesapta override'ı siler ve durumu sıfırlar, oysa insan kararı (Resolved/Ignored + override) yeniden hesapla ezilmemeli.
+    /// Yalnız gün hâlâ anomali taşıyorsa ve önceki durum çözülmüş/yok sayılmışsa geçerlidir; anomali kalmadıysa gün zaten Resolved.
+    /// </summary>
+    public void RestoreResolution(AttendanceResolutionState state, int? overrideWorkedMinutes, string? overrideReason)
+    {
+        if (Anomalies == AttendanceAnomaly.None || state == AttendanceResolutionState.Unresolved)
+        {
+            return;
+        }
+
+        ResolutionState = state;
+        OverrideWorkedMinutes = overrideWorkedMinutes;
+        OverrideReason = overrideReason;
     }
 
     private Result EnsureResolvable()
@@ -226,7 +270,9 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
         // G-02 puantaj hesaplama motoru (kart senseik-014): mola/gece/limit/fazla mesai vekili DailyWorkCalculator'a
         // delege edilir - legacy WorkedMinutes (üstte) hâlâ Overwork/Underwork anomali kıyaslaması için korunur.
-        var dailyWork = DailyWorkCalculator.Calculate(new DailyWorkInput(checkIn, checkOut, overnight, actualBreakMinutes, plannedMinutes, shiftLimits ?? ShiftLimits.None));
+        var limits = shiftLimits ?? ShiftLimits.None;
+        var dailyWork = DailyWorkCalculator.Calculate(
+            new DailyWorkInput(checkIn, checkOut, overnight, actualBreakMinutes, plannedMinutes, limits, plannedStart, plannedEnd));
         NetWorkedMinutes = dailyWork.NetWorkedMinutes;
         BreakMinutesApplied = dailyWork.BreakMinutesApplied;
         NightMinutes = dailyWork.NightMinutes;
@@ -254,12 +300,13 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
                 anomalies |= AttendanceAnomaly.MissingCheckOut;
             }
 
-            if (checkIn > plannedStart)
+            // Z0.2: vardiya tanımı toleransları (kural yoksa tolerans 0 = önceki kesin karşılaştırma).
+            if (DailyWorkCalculator.IsLateArrival(checkIn, plannedStart, limits.Rules))
             {
                 anomalies |= AttendanceAnomaly.LateArrival;
             }
 
-            if (checkOut is not null && checkOut < plannedEnd)
+            if (DailyWorkCalculator.IsEarlyLeave(checkOut, plannedEnd, limits.Rules))
             {
                 anomalies |= AttendanceAnomaly.EarlyLeave;
             }

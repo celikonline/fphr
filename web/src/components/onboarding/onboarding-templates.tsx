@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Sparkles } from "lucide-react";
@@ -19,17 +19,22 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { ImportanceChip } from "@/components/onboarding/importance-chip";
 import { useRoleLabel } from "@/components/onboarding/onboarding-task-table";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
+  ONBOARDING_IMPORTANCES,
   ONBOARDING_STAGES,
   RESPONSIBLE_ROLES,
   createOnboardingTemplate,
+  listOnboardingCategories,
   listOnboardingTemplates,
   seedDefaultOnboardingTemplates,
   setOnboardingTemplateActive,
   updateOnboardingTemplate,
+  type OnboardingCategory,
+  type OnboardingImportance,
   type OnboardingStage,
   type OnboardingTaskTemplate,
 } from "@/services/onboarding.service";
@@ -58,6 +63,11 @@ export default function OnboardingTemplates() {
     OnboardingTaskTemplate | { stage: OnboardingStage } | null
   >(null);
   const query = useQuery({ queryKey: TEMPLATES_KEY, queryFn: listOnboardingTemplates });
+  const categoriesQuery = useQuery({
+    queryKey: ["onboarding", "categories"],
+    queryFn: listOnboardingCategories,
+  });
+  const categories = categoriesQuery.data ?? [];
   const refresh = () => void queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY });
 
   const seedMutation = useMutation({
@@ -133,42 +143,59 @@ export default function OnboardingTemplates() {
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
-                    {rows.map((template) => (
-                      <Table.Tr key={template.id} opacity={template.isActive ? 1 : 0.55}>
-                        <Table.Td>
-                          <Group gap={6} wrap="nowrap">
-                            <Text size="sm">{template.title}</Text>
-                            {template.isMandatory && (
-                              <Badge size="xs" color="red" variant="outline">
-                                {t("onboarding:fields.mandatory")}
-                              </Badge>
-                            )}
-                          </Group>
-                        </Table.Td>
-                        <Table.Td>{roleLabel(template.responsibleRoleCode)}</Table.Td>
-                        <Table.Td>{offsetLabel(template.dueDateOffsetDays, t)}</Table.Td>
-                        <Table.Td>
-                          <Switch
-                            aria-label={t("onboarding:fields.active")}
-                            checked={template.isActive}
-                            onChange={(e) =>
-                              activeMutation.mutate({
-                                id: template.id,
-                                active: e.currentTarget.checked,
-                              })
-                            }
-                          />
-                        </Table.Td>
-                        <Table.Td>
-                          <Button
-                            size="compact-sm"
-                            variant="subtle"
-                            onClick={() => setEditing(template)}
-                          >
-                            {t("onboarding:templates.edit")}
-                          </Button>
-                        </Table.Td>
-                      </Table.Tr>
+                    {groupByCategory(rows, categories).map((group) => (
+                      <Fragment key={group.key}>
+                        <Table.Tr>
+                          <Table.Td colSpan={5} bg="var(--mantine-color-gray-light)">
+                            <Text size="xs" fw={700}>
+                              {group.name ?? t("onboarding:categories.uncategorized")}
+                            </Text>
+                          </Table.Td>
+                        </Table.Tr>
+                        {group.items.map((template) => (
+                          <Table.Tr key={template.id} opacity={template.isActive ? 1 : 0.55}>
+                            <Table.Td>
+                              <Group gap={6} wrap="nowrap">
+                                <Text size="sm">{template.title}</Text>
+                                <ImportanceChip importance={template.importance} />
+                                {template.requiresEDocument && (
+                                  <Badge size="xs" variant="outline">
+                                    {t("onboarding:fields.eDocument")}
+                                  </Badge>
+                                )}
+                                {template.isMandatory && (
+                                  <Badge size="xs" color="red" variant="outline">
+                                    {t("onboarding:fields.mandatory")}
+                                  </Badge>
+                                )}
+                              </Group>
+                            </Table.Td>
+                            <Table.Td>{roleLabel(template.responsibleRoleCode)}</Table.Td>
+                            <Table.Td>{offsetLabel(template.dueDateOffsetDays, t)}</Table.Td>
+                            <Table.Td>
+                              <Switch
+                                aria-label={t("onboarding:fields.active")}
+                                checked={template.isActive}
+                                onChange={(e) =>
+                                  activeMutation.mutate({
+                                    id: template.id,
+                                    active: e.currentTarget.checked,
+                                  })
+                                }
+                              />
+                            </Table.Td>
+                            <Table.Td>
+                              <Button
+                                size="compact-sm"
+                                variant="subtle"
+                                onClick={() => setEditing(template)}
+                              >
+                                {t("onboarding:templates.edit")}
+                              </Button>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Fragment>
                     ))}
                   </Table.Tbody>
                 </Table>
@@ -182,12 +209,39 @@ export default function OnboardingTemplates() {
         <TemplateDialog
           template={"id" in editing ? editing : null}
           stage={editing.stage}
+          categories={categories}
           onClose={() => setEditing(null)}
           onSaved={refresh}
         />
       )}
     </Stack>
   );
+}
+
+interface TemplateGroup {
+  key: string;
+  name: string | null;
+  items: OnboardingTaskTemplate[];
+}
+
+/** Groups templates by category in category sort order; uncategorized (or unknown category) last. */
+export function groupByCategory(
+  templates: OnboardingTaskTemplate[],
+  categories: OnboardingCategory[]
+): TemplateGroup[] {
+  const known = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
+  const groups: TemplateGroup[] = known
+    .map((category) => ({
+      key: category.id,
+      name: category.name,
+      items: templates.filter((template) => template.categoryId === category.id),
+    }))
+    .filter((group) => group.items.length > 0);
+  const knownIds = new Set(known.map((category) => category.id));
+  const rest = templates.filter(
+    (template) => !template.categoryId || !knownIds.has(template.categoryId)
+  );
+  return rest.length > 0 ? [...groups, { key: "none", name: null, items: rest }] : groups;
 }
 
 function offsetLabel(
@@ -203,11 +257,12 @@ function offsetLabel(
 interface TemplateDialogProps {
   template: OnboardingTaskTemplate | null;
   stage: OnboardingStage;
+  categories: OnboardingCategory[];
   onClose: () => void;
   onSaved: () => void;
 }
 
-function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogProps) {
+function TemplateDialog({ template, stage, categories, onClose, onSaved }: TemplateDialogProps) {
   const { t } = useTranslation(["onboarding", "common"]);
   const notifyError = useNotifyError();
   const roleLabel = useRoleLabel();
@@ -215,6 +270,14 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
   const [role, setRole] = useState<string>(template?.responsibleRoleCode ?? "hr");
   const [offset, setOffset] = useState<number>(template?.dueDateOffsetDays ?? 0);
   const [mandatory, setMandatory] = useState(template?.isMandatory ?? false);
+  const [importance, setImportance] = useState<OnboardingImportance>(
+    template?.importance ?? "normal"
+  );
+  const [requiresEDocument, setRequiresEDocument] = useState(template?.requiresEDocument ?? false);
+  const [categoryId, setCategoryId] = useState<string | null>(template?.categoryId ?? null);
+  const categoryOptions = categories
+    .filter((category) => category.isActive || category.id === categoryId)
+    .map((category) => ({ value: category.id, label: category.name }));
 
   const roleOptions = [...new Set<string>([...RESPONSIBLE_ROLES, role])].map((code) => ({
     value: code,
@@ -232,6 +295,9 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
         responsibleRoleCode: role,
         dueDateOffsetDays: offset,
         isMandatory: mandatory,
+        importance,
+        requiresEDocument,
+        categoryId,
       };
       return template
         ? updateOnboardingTemplate(template.id, input)
@@ -280,10 +346,35 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
           allowDecimal={false}
           onChange={(value) => setOffset(typeof value === "number" ? value : 0)}
         />
+        <Select
+          id="onboarding-template-importance"
+          label={t("onboarding:fields.importance")}
+          data={ONBOARDING_IMPORTANCES.map((value) => ({
+            value,
+            label: t(`onboarding:importance.${value}`),
+          }))}
+          value={importance}
+          allowDeselect={false}
+          onChange={(value) => value && setImportance(value as OnboardingImportance)}
+        />
+        <Select
+          id="onboarding-template-category"
+          label={t("onboarding:fields.category")}
+          data={categoryOptions}
+          value={categoryId}
+          clearable
+          placeholder={t("onboarding:categories.uncategorized")}
+          onChange={setCategoryId}
+        />
         <Checkbox
           label={t("onboarding:fields.mandatory")}
           checked={mandatory}
           onChange={(e) => setMandatory(e.currentTarget.checked)}
+        />
+        <Checkbox
+          label={t("onboarding:fields.eDocument")}
+          checked={requiresEDocument}
+          onChange={(e) => setRequiresEDocument(e.currentTarget.checked)}
         />
         <Group justify="flex-end" gap="sm">
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>

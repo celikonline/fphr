@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, FolderOpen, Trash2, Upload } from "lucide-react";
-import { Badge, Button, Card, Group, Modal, MultiSelect, Progress, Radio, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Card, Checkbox, Group, Modal, MultiSelect, NativeSelect, Progress, Radio, Skeleton, Stack, Switch, Text, Title } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import ConfirmDialog from "@/components/confirm-dialog";
@@ -11,9 +11,14 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
+import SharedFileTypesDialog, { SHARED_FILE_TYPES_QUERY_KEY } from "@/components/shared-file-types-dialog";
+import { saveDownloadedFile } from "@/services/data-transfer.service";
+import { listSharedFileTypes, type SharedFileType } from "@/services/shared-file-types.service";
 import { listRoles, visibleRoles } from "@/services/users.service";
 import {
+  classifySharedFile,
   deleteSharedFile,
+  downloadSharedFilesZip,
   getSharedFile,
   getSharedFileQuota,
   listSharedFiles,
@@ -54,9 +59,21 @@ function SharedFilesScreen() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const canManageTypes = usePermission("documents.sharedfile_types.manage");
   const [deleteTarget, setDeleteTarget] = useState<SharedFile | null>(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [mobileOnly, setMobileOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [typesDialogOpen, setTypesDialogOpen] = useState(false);
 
-  const filesQuery = useQuery({ queryKey: FILES_QUERY_KEY, queryFn: () => listSharedFiles({ pageSize: 100 }) });
+  const typeId = typeFilter || undefined;
+  const typesQuery = useQuery({ queryKey: SHARED_FILE_TYPES_QUERY_KEY, queryFn: () => listSharedFileTypes() });
+  const types = useMemo(() => typesQuery.data ?? [], [typesQuery.data]);
+  const activeTypes = useMemo(() => types.filter((type) => type.isActive), [types]);
+  const filesQuery = useQuery({
+    queryKey: [...FILES_QUERY_KEY, { typeId, mobileOnly }],
+    queryFn: () => listSharedFiles({ pageSize: 100, typeId, mobileOnly: mobileOnly || undefined }),
+  });
   const quotaQuery = useQuery({ queryKey: QUOTA_QUERY_KEY, queryFn: getSharedFileQuota });
   const files = useMemo(() => filesQuery.data?.items ?? [], [filesQuery.data]);
 
@@ -71,6 +88,23 @@ function SharedFilesScreen() {
     onSettled: () => setDeleteTarget(null),
   });
 
+  const classifyMutation = useMutation({
+    mutationFn: (input: { file: SharedFile; typeId?: string; visibleOnMobile: boolean }) =>
+      classifySharedFile(input.file.id, { typeId: input.typeId, visibleOnMobile: input.visibleOnMobile }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: FILES_QUERY_KEY }),
+    onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("documents:sharedFiles.classifyFailed")) }),
+  });
+
+  const zipMutation = useMutation({
+    mutationFn: () => downloadSharedFilesZip(selectedIds.length > 0 ? { fileIds: selectedIds } : { typeId, mobileOnly: mobileOnly || undefined }),
+    onSuccess: ({ blob, fileName }) => saveDownloadedFile({ blob, fileName: fileName ?? t("documents:sharedFiles.zipFileName") }),
+    onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("documents:sharedFiles.zipFailed")) }),
+  });
+
+  function toggleSelected(id: string, checked: boolean) {
+    setSelectedIds((current) => (checked ? [...current, id] : current.filter((x) => x !== id)));
+  }
+
   function fileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -78,6 +112,19 @@ function SharedFilesScreen() {
   }
 
   const columns: ColumnDef<SharedFile>[] = [
+    {
+      id: "select",
+      header: "",
+      meta: { label: t("documents:sharedFiles.selectAll"), headerClassName: "w-10" },
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Checkbox
+          aria-label={t("documents:sharedFiles.selectRow", { name: row.original.fileName })}
+          checked={selectedIds.includes(row.original.id)}
+          onChange={(e) => toggleSelected(row.original.id, e.currentTarget.checked)}
+        />
+      ),
+    },
     {
       id: "fileName",
       accessorKey: "fileName",
@@ -121,6 +168,41 @@ function SharedFilesScreen() {
         ),
     },
     {
+      id: "fileType",
+      header: t("documents:sharedFiles.typeColumn"),
+      meta: { label: t("documents:sharedFiles.typeColumn"), headerClassName: "w-44" },
+      enableSorting: false,
+      cell: ({ row }) => {
+        const file = row.original;
+        const name = types.find((type) => type.id === file.typeId)?.name;
+        if (!canManage) return name ?? "—";
+        return (
+          <NativeSelect
+            size="xs"
+            aria-label={t("documents:sharedFiles.typeField")}
+            value={file.typeId ?? ""}
+            data={typeOptions(activeTypes, file.typeId, name, t("documents:sharedFiles.noType"))}
+            onChange={(e) => classifyMutation.mutate({ file, typeId: e.currentTarget.value || undefined, visibleOnMobile: file.visibleOnMobile })}
+          />
+        );
+      },
+    },
+    {
+      id: "visibleOnMobile",
+      header: t("documents:sharedFiles.mobileColumn"),
+      meta: { label: t("documents:sharedFiles.mobileColumn"), headerClassName: "w-28" },
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Switch
+          size="sm"
+          aria-label={t("documents:sharedFiles.mobileToggle", { name: row.original.fileName })}
+          checked={row.original.visibleOnMobile}
+          disabled={!canManage || classifyMutation.isPending}
+          onChange={(e) => classifyMutation.mutate({ file: row.original, typeId: row.original.typeId, visibleOnMobile: e.currentTarget.checked })}
+        />
+      ),
+    },
+    {
       id: "actions",
       header: "",
       meta: { label: t("common:actions"), headerClassName: "w-28" },
@@ -150,11 +232,18 @@ function SharedFilesScreen() {
           </Title>
           <Text c="dimmed">{t("documents:sharedFiles.subtitle")}</Text>
         </div>
-        {canManage && (
-          <Button type="button" leftSection={<Upload size={16} />} onClick={() => fileInputRef.current?.click()}>
-            {t("documents:sharedFiles.upload")}
-          </Button>
-        )}
+        <Group gap="sm">
+          {canManageTypes && (
+            <Button type="button" variant="default" onClick={() => setTypesDialogOpen(true)}>
+              {t("documents:sharedFiles.manageTypes")}
+            </Button>
+          )}
+          {canManage && (
+            <Button type="button" leftSection={<Upload size={16} />} onClick={() => fileInputRef.current?.click()}>
+              {t("documents:sharedFiles.upload")}
+            </Button>
+          )}
+        </Group>
       </Group>
 
       <Card withBorder padding="lg">
@@ -177,6 +266,30 @@ function SharedFilesScreen() {
       </Card>
 
       <Card withBorder padding="lg">
+        <Group justify="space-between" align="flex-end" mb="md" gap="sm">
+          <Group align="flex-end" gap="md">
+            <NativeSelect
+              aria-label={t("documents:sharedFiles.typeFilter")}
+              value={typeFilter}
+              data={[{ value: "", label: t("documents:sharedFiles.allTypes") }, ...types.map((type) => ({ value: type.id, label: type.name }))]}
+              onChange={(e) => {
+                setTypeFilter(e.currentTarget.value);
+                setSelectedIds([]);
+              }}
+            />
+            <Switch
+              label={t("documents:sharedFiles.mobileOnlyFilter")}
+              checked={mobileOnly}
+              onChange={(e) => {
+                setMobileOnly(e.currentTarget.checked);
+                setSelectedIds([]);
+              }}
+            />
+          </Group>
+          <Button type="button" variant="default" leftSection={<Download size={14} />} loading={zipMutation.isPending} disabled={files.length === 0} onClick={() => zipMutation.mutate()}>
+            {selectedIds.length > 0 ? t("documents:sharedFiles.zipDownloadCount", { count: selectedIds.length }) : t("documents:sharedFiles.zipDownload")}
+          </Button>
+        </Group>
         {filesQuery.isError ? (
           <Text size="sm" c="red" ta="center" p="lg">
             {t("documents:sharedFiles.errors.loadFailed")}
@@ -187,7 +300,8 @@ function SharedFilesScreen() {
       </Card>
 
       {canManage && <input ref={fileInputRef} type="file" accept={SHARED_FILE_ACCEPT} className="hidden" onChange={fileSelected} />}
-      {pendingFile && <UploadDialog file={pendingFile} onClose={() => setPendingFile(null)} />}
+      {typesDialogOpen && <SharedFileTypesDialog onClose={() => setTypesDialogOpen(false)} />}
+      {pendingFile && <UploadDialog file={pendingFile} activeTypes={activeTypes} onClose={() => setPendingFile(null)} />}
       {deleteTarget && (
         <ConfirmDialog
           open
@@ -218,12 +332,21 @@ function SharedFileDownloadButton({ fileId }: { fileId: string }) {
   );
 }
 
-function UploadDialog({ file, onClose }: { file: File; onClose: () => void }) {
+/** Active catalog types, plus the file's current type when it has since been deactivated (so the select still shows it). */
+function typeOptions(activeTypes: SharedFileType[], currentId: string | undefined, currentName: string | undefined, emptyLabel: string) {
+  const options = [{ value: "", label: emptyLabel }, ...activeTypes.map((type) => ({ value: type.id, label: type.name }))];
+  if (currentId && !activeTypes.some((type) => type.id === currentId)) options.push({ value: currentId, label: currentName ?? currentId });
+  return options;
+}
+
+function UploadDialog({ file, activeTypes, onClose }: { file: File; activeTypes: SharedFileType[]; onClose: () => void }) {
   const { t } = useTranslation(["documents", "common"]);
   const queryClient = useQueryClient();
   const [visibility, setVisibility] = useState<SharedFileVisibility>("everyone");
   const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [typeId, setTypeId] = useState("");
+  const [visibleOnMobile, setVisibleOnMobile] = useState(false);
 
   const rolesQuery = useQuery({ queryKey: ["identity", "roles"], queryFn: listRoles, enabled: visibility === "restrictedToRoles" });
   const roleOptions = useMemo(
@@ -232,7 +355,12 @@ function UploadDialog({ file, onClose }: { file: File; onClose: () => void }) {
   );
 
   const mutation = useMutation({
-    mutationFn: () => uploadSharedFile(file, { visibility, allowedRoles: visibility === "restrictedToRoles" ? allowedRoles : undefined }),
+    mutationFn: () => uploadSharedFile(file, {
+        visibility,
+        allowedRoles: visibility === "restrictedToRoles" ? allowedRoles : undefined,
+        typeId: typeId || undefined,
+        visibleOnMobile,
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: FILES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: QUOTA_QUERY_KEY });
@@ -277,6 +405,18 @@ function UploadDialog({ file, onClose }: { file: File; onClose: () => void }) {
             searchable
           />
         )}
+        <NativeSelect
+          label={t("documents:sharedFiles.typeField")}
+          value={typeId}
+          data={typeOptions(activeTypes, undefined, undefined, t("documents:sharedFiles.noType"))}
+          onChange={(e) => {
+            const id = e.currentTarget.value;
+            setTypeId(id);
+            const chosen = activeTypes.find((type) => type.id === id);
+            if (chosen) setVisibleOnMobile(chosen.visibleOnMobile);
+          }}
+        />
+        <Switch label={t("documents:sharedFiles.mobileField")} checked={visibleOnMobile} onChange={(e) => setVisibleOnMobile(e.currentTarget.checked)} />
         {error && (
           <Text size="sm" c="red">
             {error}

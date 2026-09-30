@@ -48,11 +48,22 @@ public sealed class ShiftAssignment : TenantAggregateRoot<Guid>
 
     public DateTime? PublishedAt { get; private set; }
 
+    /// <summary>Kural setli vardiya tanımı (Z0.2); null = yalnız bu satırın saatleri (geriye uyumlu eski atamalar).</summary>
+    public Guid? ShiftDefinitionId { get; private set; }
+
+    /// <summary>Günün türü; <see cref="ShiftDayType.Work"/> dışında saat alanları hesaplamada yok sayılır. Eski satırlar Work.</summary>
+    public ShiftDayType DayType { get; private set; }
+
     /// <summary>Total planned minutes, break excluded; handles an overnight shift (End &lt;= Start means it crosses midnight).</summary>
     public int ShiftMinutes
     {
         get
         {
+            if (DayType != ShiftDayType.Work)
+            {
+                return 0;
+            }
+
             var span = End.ToTimeSpan() - Start.ToTimeSpan();
             if (span <= TimeSpan.Zero)
             {
@@ -101,6 +112,49 @@ public sealed class ShiftAssignment : TenantAggregateRoot<Guid>
 
         Status = ShiftAssignmentStatus.Published;
         PublishedAt = publishedAt;
+        return Result.Success();
+    }
+
+    /// <summary>Günü bir <see cref="ShiftDefinition"/>'a bağlar ve gün türünü belirler (kilit kontrolü uygulama katmanında).</summary>
+    public Result SetPlan(Guid? shiftDefinitionId, ShiftDayType dayType)
+    {
+        if (!Enum.IsDefined(dayType))
+        {
+            return Error.Validation(AttendanceDomainErrors.ShiftDayTypeInvalid);
+        }
+
+        ShiftDefinitionId = shiftDefinitionId;
+        DayType = dayType;
+        return Result.Success();
+    }
+
+    /// <summary>Çalışma günü olmayan (hafta tatili/dinlenme/resmi tatil) gün: saat alanı tutulmaz (00:00, mola yok, süre 0).</summary>
+    public static Result<ShiftAssignment> CreateDayOff(Guid tenantId, Guid employeeId, DateOnly date, ShiftDayType dayType)
+    {
+        var assignment = new ShiftAssignment(Guid.CreateVersion7(), tenantId, employeeId, date, TimeOnly.MinValue, TimeOnly.MinValue.AddMinutes(1), 0, false, null);
+        var applied = assignment.ApplyDayOff(dayType);
+        return applied.IsFailure ? applied.Error : assignment;
+    }
+
+    /// <summary>Mevcut günü çalışma günü olmayan bir türe çevirir; saatler sıfırlanır, vardiya tanımı bağı kalkar.</summary>
+    public Result ApplyDayOff(ShiftDayType dayType)
+    {
+        if (dayType == ShiftDayType.Work)
+        {
+            return Error.Validation(AttendanceDomainErrors.ShiftDayTypeInvalid);
+        }
+
+        var planned = SetPlan(null, dayType);
+        if (planned.IsFailure)
+        {
+            return planned;
+        }
+
+        Start = TimeOnly.MinValue;
+        End = TimeOnly.MinValue;
+        BreakMinutes = 0;
+        IsNight = false;
+        Note = null;
         return Result.Success();
     }
 

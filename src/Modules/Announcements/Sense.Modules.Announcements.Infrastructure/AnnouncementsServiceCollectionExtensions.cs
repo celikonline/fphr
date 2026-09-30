@@ -29,6 +29,7 @@ public static class AnnouncementsServiceCollectionExtensions
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
         services.AddScoped<IHelpSearchLogRepository, HelpSearchLogRepository>();
         services.AddScoped<ICompanyEventRepository, CompanyEventRepository>();
+        services.AddScoped<ICompanyEventCategoryRepository, CompanyEventCategoryRepository>();
         services.AddScoped<IRecognitionRepository, RecognitionRepository>();
         services.AddScoped<IAnnouncementsUnitOfWork>(sp => sp.GetRequiredService<AnnouncementsDbContext>());
         services.AddScoped<ISupportChannel, EmailSupportChannel>();

@@ -50,6 +50,12 @@ i18n
       "ohs",
       "platform",
       "setup",
+      "attendance-daily",
+      "shifts",
+      "rotations",
+      "terminals",
+      "delegations",
+      "messages",
       "mobileApp",
     ],
     interpolation: {

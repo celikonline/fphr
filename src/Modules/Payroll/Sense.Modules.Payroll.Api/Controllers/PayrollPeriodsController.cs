@@ -192,4 +192,10 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RemoveAdjustment(Guid adjustmentId, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new RemovePayrollAdjustmentCommand(adjustmentId), ct));
+
+    /// <summary>E2 "Hatırlat": reminds employees of the paid period who have not acknowledged their payslip; returns how many.</summary>
+    [HttpPost("{id:guid}/payslip-reminders")]
+    [ProducesResponseType<int>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RemindUnacknowledged(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new Sense.Modules.Payroll.Application.Payslips.SendPayslipAcknowledgementRemindersCommand(id), ct));
 }

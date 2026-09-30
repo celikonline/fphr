@@ -674,6 +674,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>Bu onay görevine karar verme yetkiniz yok.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>Kendi talebiniz için onay kararı veremezsiniz.</value></data>
   <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>Bir talebi reddederken gerekçe (yorum) yazmanız zorunludur.</value></data>
+  <data name="workflow.delegation.not_found" xml:space="preserve"><value>Vekalet bulunamadı.</value></data>
+  <data name="workflow.delegation.employee_required" xml:space="preserve"><value>Vekalet veren ve vekil çalışan zorunludur.</value></data>
+  <data name="workflow.delegation.to_self_not_allowed" xml:space="preserve"><value>Onay yetkisini kendinize devredemezsiniz.</value></data>
+  <data name="workflow.delegation.range_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="workflow.delegation.already_revoked" xml:space="preserve"><value>Vekalet zaten iptal edilmiş.</value></data>
+  <data name="workflow.delegation.employee_invalid" xml:space="preserve"><value>Vekalet veren veya vekil çalışan bulunamadı ya da aktif değil.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>Onay bağlantısı geçersiz.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>Onay bağlantısının süresi dolmuş.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>Onay bağlantısı daha önce kullanılmış.</value></data>
@@ -915,7 +921,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (Faz 3 P5): sendika / dayanışma aidatı (EmployeeUnionMembership) -->
   <data name="payroll.union.manage" xml:space="preserve"><value>Sendikaları ve üyelikleri yönetme</value></data>
-  <data name="payroll.my.payslips" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme</value></data>
   <data name="payroll.union.not_found" xml:space="preserve"><value>Sendika bulunamadı.</value></data>
   <data name="payroll.errors.union_name_required" xml:space="preserve"><value>Sendika adı zorunludur.</value></data>
   <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>Sendika adı çok uzun.</value></data>
@@ -1543,6 +1548,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.AccessType.Admin" xml:space="preserve"><value>Yönetici</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
+  <data name="report_execution.preview_not_available" xml:space="preserve"><value>Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.</value></data>
+  <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Rapor sayfası bulunamadı.</value></data>
+  <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>Sıralanacak sütun geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
   <!-- Announcements + Support (Yardım Merkezi + Desteğe bağlan - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>Duyuruları görüntüleme</value></data>
@@ -1649,6 +1657,241 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>Kayıt zaten sonlandırılmış.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıçtan önce olamaz.</value></data>
   <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>Yenileme aralığı 1 ile 3650 gün arasında olmalıdır.</value></data>
+  <data name="attendance.daily.view" xml:space="preserve"><value>Günlük Puantajı Görüntüleme</value></data>
+  <data name="attendance.punch.manage" xml:space="preserve"><value>Okutma Yönetimi</value></data>
+  <data name="attendance.shiftdefinition.view" xml:space="preserve"><value>Vardiya Tanımlarını Görüntüleme</value></data>
+  <data name="attendance.shiftdefinition.manage" xml:space="preserve"><value>Vardiya Tanımı Yönetimi</value></data>
+  <data name="attendance.recalculate.run" xml:space="preserve"><value>Puantaj Yeniden Hesaplama</value></data>
+  <data name="attendance.punchrequest.manage" xml:space="preserve"><value>Eksik Kayıt Taleplerini Yönetme</value></data>
+  <data name="attendance.my.punchrequest" xml:space="preserve"><value>Eksik Kayıt Talebi Oluşturma</value></data>
+  <data name="attendance.rotation.view" xml:space="preserve"><value>Vardiya Rotasyonlarını Görüntüleme</value></data>
+  <data name="attendance.rotation.manage" xml:space="preserve"><value>Vardiya Rotasyonu Yönetimi</value></data>
+  <data name="attendance.shifttemplate.manage" xml:space="preserve"><value>Vardiya Şablonu Yönetimi</value></data>
+  <data name="attendance.terminal.view" xml:space="preserve"><value>Terminalleri Görüntüleme</value></data>
+  <data name="attendance.terminal.manage" xml:space="preserve"><value>Terminal Yönetimi</value></data>
+  <data name="attendance.dashboard.view" xml:space="preserve"><value>Zaman ve Devam Panosunu Görüntüleme</value></data>
+  <data name="payroll.payslip.import" xml:space="preserve"><value>Ücret pusulalarını toplu yükleme</value></data>
+  <data name="payroll.my.payslip" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme ve onaylama</value></data>
+  <data name="payroll.my.payslips" xml:space="preserve"><value>Kendi ücret pusulalarımı görüntüleme</value></data>
+  <data name="workflow.delegation.manage" xml:space="preserve"><value>Onay Vekaletlerini Yönetme</value></data>
+  <data name="workflow.my.delegation" xml:space="preserve"><value>Kendi Onay Vekaletimi Yönetme</value></data>
+  <data name="employee.notes.view" xml:space="preserve"><value>Çalışan Notlarını Görüntüleme</value></data>
+  <data name="employee.notes.manage" xml:space="preserve"><value>Çalışan Notu Yönetimi</value></data>
+  <data name="notifications.messages.send" xml:space="preserve"><value>İK Mesajı Gönderme</value></data>
+  <data name="notifications.messages.view" xml:space="preserve"><value>İK Mesajlarını Görüntüleme</value></data>
+  <data name="notifications.messagegroups.manage" xml:space="preserve"><value>Mesaj Gruplarını Yönetme</value></data>
+  <data name="documents.sharedfiles.types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="employee.note_not_found" xml:space="preserve"><value>Not bulunamadı.</value></data>
+  <data name="employee.note_title_required" xml:space="preserve"><value>Not başlığı zorunludur.</value></data>
+  <data name="employee.note_title_too_long" xml:space="preserve"><value>Not başlığı en fazla 255 karakter olabilir.</value></data>
+  <data name="employee.note_content_too_long" xml:space="preserve"><value>Not içeriği en fazla 512 karakter olabilir.</value></data>
+  <data name="employee.note_importance_invalid" xml:space="preserve"><value>Geçersiz not önem düzeyi.</value></data>
+  <data name="employee.note_attachment_invalid" xml:space="preserve"><value>Geçersiz ek dosya bilgisi.</value></data>
+  <data name="employee.note_attachment_too_large" xml:space="preserve"><value>Ek dosya en fazla 10 MB olabilir.</value></data>
+  <data name="employee.note_attachment_not_found" xml:space="preserve"><value>Notun ek dosyası yok.</value></data>
+  <data name="employee.note_attachment_type_not_allowed" xml:space="preserve"><value>Ek dosya PDF, PNG, JPEG, TXT, DOCX veya XLSX olmalı ve uzantısı içerik türüyle uyuşmalıdır.</value></data>
+  <data name="attendance.punch.in_future" xml:space="preserve"><value>Okutma zamanı ileri bir tarih olamaz.</value></data>
+  <data name="attendance.punch.employee_required" xml:space="preserve"><value>Çalışan seçilmelidir.</value></data>
+  <data name="attendance.punch.work_date_invalid" xml:space="preserve"><value>Puantaj günü okutma zamanıyla uyumlu değil.</value></data>
+  <data name="attendance.punch.coordinates_invalid" xml:space="preserve"><value>Konum bilgisi geçersiz: enlem ve boylam birlikte ve geçerli aralıkta olmalıdır.</value></data>
+  <data name="attendance.punch.reason_too_long" xml:space="preserve"><value>Gerekçe en fazla 1000 karakter olabilir.</value></data>
+  <data name="attendance.punch.delete_reason_required" xml:space="preserve"><value>Okutmayı silmek için gerekçe zorunludur.</value></data>
+  <data name="attendance.punch.already_deleted" xml:space="preserve"><value>Okutma zaten silinmiş.</value></data>
+  <data name="attendance.shift_definition.not_found" xml:space="preserve"><value>Vardiya tanımı bulunamadı.</value></data>
+  <data name="attendance.shift_definition.code_required" xml:space="preserve"><value>Vardiya kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.shift_definition.name_required" xml:space="preserve"><value>Vardiya adı zorunludur.</value></data>
+  <data name="attendance.shift_definition.color_invalid" xml:space="preserve"><value>Renk #RRGGBB biçiminde olmalıdır.</value></data>
+  <data name="attendance.shift_definition.time_range_invalid" xml:space="preserve"><value>Vardiya başlangıç ve bitiş saatleri geçersiz.</value></data>
+  <data name="attendance.shift_definition.flexible_window_invalid" xml:space="preserve"><value>Esnek vardiya için süre ve giriş penceresi geçerli olmalıdır; diğer tiplerde bu alanlar boş bırakılır.</value></data>
+  <data name="attendance.shift_definition.tolerance_invalid" xml:space="preserve"><value>Tolerans ve bonus süreleri 0 ile 1440 dakika arasında olmalıdır.</value></data>
+  <data name="attendance.shift_definition.overtime_range_invalid" xml:space="preserve"><value>Fazla mesai en az/en çok süreleri geçersiz.</value></data>
+  <data name="attendance.shift_definition.break_invalid" xml:space="preserve"><value>Mola tanımı geçersiz.</value></data>
+  <data name="attendance.shift.day_type_invalid" xml:space="preserve"><value>Gün türü geçersiz.</value></data>
+  <data name="attendance.shift.definition_required" xml:space="preserve"><value>Çalışma günü için vardiya tanımı seçilmelidir.</value></data>
+  <data name="attendance.punch_request.not_found" xml:space="preserve"><value>Eksik kayıt talebi bulunamadı.</value></data>
+  <data name="attendance.punch_request.reason_required" xml:space="preserve"><value>Eksik kayıt talebi için gerekçe zorunludur (en fazla 1000 karakter).</value></data>
+  <data name="attendance.punch_request.direction_invalid" xml:space="preserve"><value>Talep yönü giriş ya da çıkış olmalıdır.</value></data>
+  <data name="attendance.punch_request.not_pending" xml:space="preserve"><value>Talep artık beklemede değil.</value></data>
+  <data name="attendance.shift_template.not_found" xml:space="preserve"><value>Vardiya şablonu bulunamadı.</value></data>
+  <data name="attendance.shift_template.name_required" xml:space="preserve"><value>Şablon adı zorunludur.</value></data>
+  <data name="attendance.shift_template.period_invalid" xml:space="preserve"><value>Şablon dönemi 1 ile 62 gün arasında olmalıdır.</value></data>
+  <data name="attendance.shift_template.entry_invalid" xml:space="preserve"><value>Şablon satırları geçersiz ya da tekrarlı.</value></data>
+  <data name="attendance.rotation.not_found" xml:space="preserve"><value>Rotasyon bulunamadı.</value></data>
+  <data name="attendance.rotation.code_required" xml:space="preserve"><value>Rotasyon kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.rotation.name_required" xml:space="preserve"><value>Rotasyon adı zorunludur.</value></data>
+  <data name="attendance.rotation.cycle_invalid" xml:space="preserve"><value>Rotasyon döngüsü 1 ile 56 gün arasında olmalıdır.</value></data>
+  <data name="attendance.rotation.step_invalid" xml:space="preserve"><value>Rotasyon adımları geçersiz ya da tekrarlı.</value></data>
+  <data name="attendance.rotation_assignment.not_found" xml:space="preserve"><value>Rotasyon ataması bulunamadı.</value></data>
+  <data name="attendance.rotation_assignment.range_invalid" xml:space="preserve"><value>Rotasyon ataması tarihleri ya da kaydırma günü geçersiz.</value></data>
+  <data name="attendance.terminal.not_found" xml:space="preserve"><value>Terminal bulunamadı.</value></data>
+  <data name="attendance.terminal.code_required" xml:space="preserve"><value>Terminal kodu zorunludur (en fazla 50 karakter).</value></data>
+  <data name="attendance.terminal.name_required" xml:space="preserve"><value>Terminal adı ve yön modu zorunludur.</value></data>
+  <data name="attendance.terminal.api_key_required" xml:space="preserve"><value>Terminal API anahtarı geçersiz.</value></data>
+  <data name="attendance.terminal_group.not_found" xml:space="preserve"><value>Terminal grubu bulunamadı.</value></data>
+  <data name="attendance.terminal_group.name_required" xml:space="preserve"><value>Terminal grubu adı zorunludur.</value></data>
+  <data name="attendance.terminal_credential.value_required" xml:space="preserve"><value>Terminal kimliği türü ve değeri zorunludur.</value></data>
+  <data name="attendance.terminal_credential.not_found" xml:space="preserve"><value>Terminal kimliği bulunamadı.</value></data>
+  <data name="attendance.recalculation.range_invalid" xml:space="preserve"><value>Yeniden hesaplama aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
+  <data name="attendance.recalculation.range_too_long" xml:space="preserve"><value>Yeniden hesaplama aralığı en fazla 366 gün olabilir.</value></data>
+  <data name="attendance.recalculation.job_not_found" xml:space="preserve"><value>Yeniden hesaplama işi bulunamadı.</value></data>
+  <data name="import.template.shiftplan.name" xml:space="preserve"><value>Vardiya planı</value></data>
+  <data name="import.template.shiftplan.description" xml:space="preserve"><value>Çalışanların günlük vardiya planını (vardiya kodu ya da hafta tatili/dinlenme/resmi tatil) toplu yükleyin.</value></data>
+  <data name="import.template.shiftplan.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; aynı çalışan ve gün için tekrar yüklenen satır önceki planın üzerine yazar.</value></data>
+  <data name="import.template.shiftplan.instruction.code" xml:space="preserve"><value>Vardiya kodu sütunu açılır listedir: vardiya tanımı kodlarından ya da WEEKLY_REST, REST_DAY, PUBLIC_HOLIDAY değerlerinden birini seçin.</value></data>
+  <data name="import.template.shiftplan.instruction.locked" xml:space="preserve"><value>Kilitli aydaki günler ve yayınlanmış vardiyalar değiştirilmez; bu satırlar hatalı sayılır.</value></data>
+  <data name="import.template.shiftplan.sample.valid" xml:space="preserve"><value>Doğru: tanımlı bir vardiya kodu.</value></data>
+  <data name="import.template.shiftplan.sample.rest" xml:space="preserve"><value>Doğru: hafta tatili günü.</value></data>
+  <data name="import.template.shiftplan.sample.invalid_code" xml:space="preserve"><value>Hatalı: tanımlı olmayan vardiya kodu.</value></data>
+  <data name="import.column.shiftplan.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.shiftplan.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.shiftplan.date" xml:space="preserve"><value>Tarih</value></data>
+  <data name="import.column.shiftplan.date.description" xml:space="preserve"><value>Plan günü (GG.AA.YYYY).</value></data>
+  <data name="import.column.shiftplan.shiftCode" xml:space="preserve"><value>Vardiya kodu</value></data>
+  <data name="import.column.shiftplan.shiftCode.description" xml:space="preserve"><value>Vardiya tanımı kodu ya da WEEKLY_REST / REST_DAY / PUBLIC_HOLIDAY.</value></data>
+  <data name="documents.sharedfile_types.manage" xml:space="preserve"><value>Paylaşılan Dosya Tiplerini Yönetme</value></data>
+  <data name="shared_file_type.not_found" xml:space="preserve"><value>Paylaşılan dosya tipi bulunamadı.</value></data>
+  <data name="shared_file_type.name_required" xml:space="preserve"><value>Paylaşılan dosya tipi adı zorunludur.</value></data>
+  <data name="shared_file_type.name_too_long" xml:space="preserve"><value>Paylaşılan dosya tipi adı en fazla 100 karakter olabilir.</value></data>
+  <data name="shared_file_type.name_taken" xml:space="preserve"><value>Bu adla bir paylaşılan dosya tipi zaten var.</value></data>
+  <data name="shared_file_type.inactive" xml:space="preserve"><value>Pasif bir paylaşılan dosya tipi seçilemez.</value></data>
+  <data name="shared_company_file.nothing_to_download" xml:space="preserve"><value>İndirilecek, görüntüleme yetkiniz olan bir dosya bulunamadı.</value></data>
+  <data name="shared_company_file.zip_too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya indirilebilir.</value></data>
+  <data name="payslip_import.files_required" xml:space="preserve"><value>En az bir PDF veya zip dosyası yükleyin.</value></data>
+  <data name="payslip_import.too_many_files" xml:space="preserve"><value>Tek seferde en fazla {max} dosya yüklenebilir.</value></data>
+  <data name="company_event.ends_before_starts" xml:space="preserve"><value>Bitiş, başlangıçtan önce olamaz.</value></data>
+  <data name="company_event.online_url_required" xml:space="preserve"><value>Online etkinlik için geçerli bir http(s) bağlantısı gereklidir.</value></data>
+  <data name="company_event.location_required" xml:space="preserve"><value>Yüz yüze etkinlik için konum gereklidir.</value></data>
+  <data name="company_event.location_too_long" xml:space="preserve"><value>Konum 300 karakteri aşamaz.</value></data>
+  <data name="company_event.category_not_found" xml:space="preserve"><value>Seçilen etkinlik kategorisi bulunamadı.</value></data>
+  <data name="company_event.invitee_not_found" xml:space="preserve"><value>Davetlilerden biri veya birkaçı bulunamadı.</value></data>
+  <data name="company_event_category.name_required" xml:space="preserve"><value>Kategori adı gereklidir ve 60 karakteri aşamaz.</value></data>
+  <data name="company_event_category.color_invalid" xml:space="preserve"><value>Renk #RRGGBB biçiminde olmalıdır.</value></data>
+  <data name="company_event_category.in_use" xml:space="preserve"><value>Bu kategori etkinliklerde kullanıldığı için silinemez.</value></data>
+  <data name="company_event_category.duplicate_name" xml:space="preserve"><value>Bu adla bir kategori zaten var.</value></data>
+  <data name="onboarding.category_not_found" xml:space="preserve"><value>Kategori bulunamadı.</value></data>
+  <data name="onboarding_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
+  <data name="onboarding_category.name_too_long" xml:space="preserve"><value>Kategori adı 100 karakteri aşamaz.</value></data>
+  <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Şablon seti bulunamadı.</value></data>
+  <data name="onboarding_template_set.name_required" xml:space="preserve"><value>Şablon seti adı zorunludur.</value></data>
+  <data name="onboarding_template_set.name_too_long" xml:space="preserve"><value>Şablon seti adı 150 karakteri aşamaz.</value></data>
+  <data name="onboarding_template_set.empty" xml:space="preserve"><value>Şablon seti en az bir görev şablonu içermelidir.</value></data>
+  <data name="onboarding_template_set.inactive" xml:space="preserve"><value>Şablon seti pasif.</value></data>
+  <data name="onboarding_template_set.unknown_template" xml:space="preserve"><value>Set yalnızca aynı aşamadaki mevcut görev şablonlarını içerebilir.</value></data>
+  <data name="onboarding_template_set.already_started" xml:space="preserve"><value>Bu şablon seti çalışan için zaten başlatılmış.</value></data>
+  <data name="onboarding.category_in_use" xml:space="preserve"><value>Kategori bir veya daha fazla görev şablonunda kullanıldığı için silinemez.</value></data>
+  <data name="attendance.punch_request.period_locked" xml:space="preserve"><value>Bu ay kapatıldığı için eksik kayıt talebi oluşturulamaz.</value></data>
+  <data name="attendance.punch_request.duplicate" xml:space="preserve"><value>Aynı zamana ait bekleyen bir eksik kayıt talebi zaten var.</value></data>
+  <data name="attendance.punch_request.not_owner" xml:space="preserve"><value>Yalnız talebi oluşturan çalışan iptal edebilir.</value></data>
+  <data name="attendance.rotation.code_duplicate" xml:space="preserve"><value>Bu rotasyon kodu zaten kullanılıyor.</value></data>
+  <data name="attendance.rotation.inactive" xml:space="preserve"><value>Pasif rotasyon çalışanlara uygulanamaz.</value></data>
+  <data name="attendance.rotation_assignment.overlap" xml:space="preserve"><value>{employee} için bu tarih aralığında zaten bir rotasyon ataması var.</value></data>
+  <data name="attendance.shift_definition.code_duplicate" xml:space="preserve"><value>Bu vardiya kodu başka bir vardiya tanımında kullanılıyor.</value></data>
+  <data name="attendance.shift_definition.in_use" xml:space="preserve"><value>Bu vardiya tanımı atamalarda, rotasyonlarda ya da plan şablonlarında kullanılıyor; silinemez, yalnız pasife alınabilir.</value></data>
+  <data name="attendance.punch.reason_required" xml:space="preserve"><value>Okutma eklemek ve silmek için gerekçe zorunludur.</value></data>
+  <data name="attendance.timesheet.period_locked" xml:space="preserve"><value>Bu çalışanın ayı onaylanıp kilitlenmiş; okutma eklenemez veya silinemez.</value></data>
+  <data name="attendance.punch.not_found" xml:space="preserve"><value>Okutma bulunamadı.</value></data>
+  <data name="payroll.errors.payslip_not_published" xml:space="preserve"><value>Bordro henüz yayınlanmadı; dönem ödendiğinde görüntülenebilir.</value></data>
+  <data name="payroll.errors.payslip_already_acknowledged" xml:space="preserve"><value>Bu bordro zaten onaylandı.</value></data>
+  <data name="payroll.errors.payslip_objection_pending" xml:space="preserve"><value>Bordroya yapılan itiraz sonuçlanmadan onay verilemez.</value></data>
+  <data name="payroll.errors.payslip_objection_already_filed" xml:space="preserve"><value>Bu bordro için zaten itiraz yapıldı.</value></data>
+  <data name="payroll.errors.payslip_objection_reason_invalid" xml:space="preserve"><value>İtiraz gerekçesi zorunludur ve en fazla 1000 karakter olabilir.</value></data>
+  <data name="payroll.errors.payslip_objection_not_pending" xml:space="preserve"><value>Bordro için bekleyen bir itiraz yok.</value></data>
+  <data name="payroll.errors.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınız bir çalışan kaydına bağlı değil.</value></data>
+  <data name="payroll.errors.payslip_concurrent_update" xml:space="preserve"><value>Bordro aynı anda başka bir işlemle değiştirildi; sayfayı yenileyip tekrar deneyin.</value></data>
+  <data name="notifications.message.sms_unavailable" xml:space="preserve"><value>SMS kanalı şu an kullanılamıyor; SMS sağlayıcısı yapılandırılmamış.</value></data>
+  <data name="notifications.message.unknown_channel" xml:space="preserve"><value>Bilinmeyen mesaj kanalı.</value></data>
+  <data name="notifications.message.recipients_required" xml:space="preserve"><value>Mesaj için en az bir alıcı seçmelisiniz.</value></data>
+  <data name="notifications.messagegroup.not_found" xml:space="preserve"><value>Mesaj grubu bulunamadı.</value></data>
+  <data name="notifications.messagegroup.name_taken" xml:space="preserve"><value>Bu adla bir mesaj grubu zaten var.</value></data>
+  <data name="attendance.punch.direction_invalid" xml:space="preserve"><value>Okutma yönü geçersiz.</value></data>
+  <data name="attendance.punch.source_invalid" xml:space="preserve"><value>Okutma kaynağı geçersiz.</value></data>
+  <data name="attendance.punch.source_ref_too_long" xml:space="preserve"><value>Okutma kaynak referansı en fazla 200 karakter olabilir.</value></data>
+  <data name="attendance.punch.tenant_mismatch" xml:space="preserve"><value>Okutmanın kiracısı işlem yapılan kiracıyla uyuşmuyor.</value></data>
+  <data name="attendance.day.concurrent_update" xml:space="preserve"><value>Puantaj günü aynı anda başka bir işlemle değiştirildi; lütfen tekrar deneyin.</value></data>
+  <data name="report.col.employeeName" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="report.col.checkIn" xml:space="preserve"><value>Giriş</value></data>
+  <data name="report.col.checkOut" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="report.col.workedMinutes" xml:space="preserve"><value>Çalışılan dakika</value></data>
+  <data name="report.col.overtimeMinutes" xml:space="preserve"><value>Fazla mesai dakikası</value></data>
+  <data name="report.col.anomalies" xml:space="preserve"><value>Uyuşmazlıklar</value></data>
+  <data name="report.col.unassignedDayCount" xml:space="preserve"><value>Atanmamış gün sayısı</value></data>
+  <data name="report.col.firstUnassignedDate" xml:space="preserve"><value>İlk atanmamış gün</value></data>
+  <data name="report.sheet.attendanceIncalculable" xml:space="preserve"><value>Hesaplanamayanlar</value></data>
+  <data name="report.sheet.attendanceNoShiftAssigned" xml:space="preserve"><value>Vardiya atanmayanlar</value></data>
+  <data name="report.sheet.attendanceDailyStatus" xml:space="preserve"><value>Günlük durum listesi</value></data>
+  <data name="report.note.daily_range_truncated" xml:space="preserve"><value>İlk {0} gün gösterildi</value></data>
+  <data name="report.anomaly.noData" xml:space="preserve"><value>Veri yok</value></data>
+  <data name="report.anomaly.missingCheckIn" xml:space="preserve"><value>Giriş eksik</value></data>
+  <data name="report.anomaly.missingCheckOut" xml:space="preserve"><value>Çıkış eksik</value></data>
+  <data name="report.anomaly.lateArrival" xml:space="preserve"><value>Geç giriş</value></data>
+  <data name="report.anomaly.earlyLeave" xml:space="preserve"><value>Erken çıkış</value></data>
+  <data name="report.anomaly.lateLeave" xml:space="preserve"><value>Geç çıkış</value></data>
+  <data name="report.anomaly.overwork" xml:space="preserve"><value>Fazla çalışma</value></data>
+  <data name="report.anomaly.underwork" xml:space="preserve"><value>Eksik çalışma</value></data>
+  <data name="report.anomaly.unplannedWork" xml:space="preserve"><value>Plansız çalışma</value></data>
+  <data name="report.anomaly.workedWhileOnLeave" xml:space="preserve"><value>İzinli günde çalışma</value></data>
+  <data name="report.anomaly.incalculable" xml:space="preserve"><value>Hesaplanamadı</value></data>
+  <data name="report.col.occurredAt" xml:space="preserve"><value>Okutma zamanı</value></data>
+  <data name="report.col.direction" xml:space="preserve"><value>Yön</value></data>
+  <data name="report.col.enteredBy" xml:space="preserve"><value>Giriş yapan</value></data>
+  <data name="report.col.reason" xml:space="preserve"><value>Gerekçe</value></data>
+  <data name="report.col.deleted" xml:space="preserve"><value>Silindi</value></data>
+  <data name="report.col.deletedBy" xml:space="preserve"><value>Silen</value></data>
+  <data name="report.col.deleteReason" xml:space="preserve"><value>Silme gerekçesi</value></data>
+  <data name="report.col.firstIn" xml:space="preserve"><value>İlk giriş</value></data>
+  <data name="report.col.lastPunch" xml:space="preserve"><value>Son okutma</value></data>
+  <data name="report.col.terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.col.sequence" xml:space="preserve"><value>Sıra</value></data>
+  <data name="report.col.time" xml:space="preserve"><value>Zaman</value></data>
+  <data name="report.col.breakCount" xml:space="preserve"><value>Mola sayısı</value></data>
+  <data name="report.col.totalBreakMinutes" xml:space="preserve"><value>Toplam mola (dk)</value></data>
+  <data name="report.col.longestBreakMinutes" xml:space="preserve"><value>En uzun mola (dk)</value></data>
+  <data name="report.col.plannedBreakMinutes" xml:space="preserve"><value>Planlı mola (dk)</value></data>
+  <data name="report.col.breakDifferenceMinutes" xml:space="preserve"><value>Fark (dk)</value></data>
+  <data name="report.sheet.attendanceManualEntries" xml:space="preserve"><value>Elle girilen kayıtlar</value></data>
+  <data name="report.sheet.attendanceCurrentlyInside" xml:space="preserve"><value>İçerdekiler</value></data>
+  <data name="report.sheet.attendanceBreaks" xml:space="preserve"><value>Mola</value></data>
+  <data name="report.sheet.attendanceIntermediatePunches" xml:space="preserve"><value>Ara kayıtlar</value></data>
+  <data name="report.enum.PunchSource.Manual" xml:space="preserve"><value>Elle</value></data>
+  <data name="report.enum.PunchSource.Import" xml:space="preserve"><value>İçe aktarma</value></data>
+  <data name="report.enum.PunchSource.Device" xml:space="preserve"><value>Cihaz</value></data>
+  <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self servis</value></data>
+  <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Talep</value></data>
+  <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>Giriş</value></data>
+  <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Yönsüz</value></data>
+  <data name="attendance.terminal.code_duplicate" xml:space="preserve"><value>Bu kodla bir terminal zaten var.</value></data>
+  <data name="attendance.terminal.location_not_found" xml:space="preserve"><value>Terminale bağlanacak lokasyon bulunamadı ya da pasif.</value></data>
+  <data name="attendance.terminal_group.in_use" xml:space="preserve"><value>Bu gruba bağlı terminaller var; önce terminalleri başka gruba taşıyın.</value></data>
+  <data name="attendance.terminal_ingest.batch_size_invalid" xml:space="preserve"><value>Okutma isteği en az 1, en fazla {max} kalem içermelidir.</value></data>
+  <data name="attendance.terminal_credential.in_use" xml:space="preserve"><value>Bu terminal kimliği aktif olarak kullanılıyor; yeniden atamadan önce pasife alın.</value></data>
+  <data name="problem.title.service_unavailable" xml:space="preserve"><value>Hizmet şu an kullanılamıyor</value></data>
+  <data name="attendance.terminal_credential.pepper_missing" xml:space="preserve"><value>Terminal kimlik (kart/PIN) işlemleri bu sunucuda yapılandırılmamış. Sistem yöneticinize başvurun.</value></data>
+  <data name="attendance.terminal_credential.employee_not_found" xml:space="preserve"><value>Bu sicil numarasıyla bir çalışan bulunamadı.</value></data>
+  <data name="attendance.terminal_credential.employee_not_active" xml:space="preserve"><value>Çalışan bulunamadı ya da işten ayrılmış; terminal kimliği tanımlanamaz.</value></data>
+  <data name="attendance.terminal_credential.pin_invalid" xml:space="preserve"><value>PIN yalnız rakamlardan oluşmalı ve 6-8 haneli olmalıdır.</value></data>
+  <data name="attendance.terminal_credential.value_too_long" xml:space="preserve"><value>Kart numarası ya da harici kimlik en fazla 64 karakter olabilir.</value></data>
+  <data name="attendance.terminal_credential.kind_invalid" xml:space="preserve"><value>Tür Kart, PIN ya da Harici olmalıdır.</value></data>
+  <data name="import.template.terminalcredentials.name" xml:space="preserve"><value>Terminal kimlikleri</value></data>
+  <data name="import.template.terminalcredentials.description" xml:space="preserve"><value>Çalışanlara giriş-çıkış terminali kimliklerini (kart, PIN, harici kimlik) toplu tanımlayın.</value></data>
+  <data name="import.template.terminalcredentials.instruction.match" xml:space="preserve"><value>Çalışanlar sicil numarasıyla eşleştirilir; işten ayrılmış çalışana kimlik tanımlanamaz. Aynı çalışana aynı kimlik tekrar yüklenirse satır atlanır.</value></data>
+  <data name="import.template.terminalcredentials.instruction.format" xml:space="preserve"><value>Tür sütunu açılır listedir (Kart, PIN, Harici). PIN yalnız rakamlardan oluşur ve 6-8 hanelidir; kart numarası ve harici kimlik en fazla 64 karakterdir. Baştaki sıfırlar kaybolmasın diye Değer sütununu metin biçiminde girin.</value></data>
+  <data name="import.template.terminalcredentials.instruction.in_use" xml:space="preserve"><value>Başka bir çalışanda aktif olan kimlik atanamaz (satır hatası; PIN için genel ret); pasife alınmış kimlik yeni çalışana devredilir.</value></data>
+  <data name="import.template.terminalcredentials.instruction.security" xml:space="preserve"><value>Kimlik değerleri yalnız tek yönlü özet olarak saklanır; yüklenen dosya işlemden sonra silinir, sonuç dosyasında değerler yer almaz.</value></data>
+  <data name="import.template.terminalcredentials.sample.card" xml:space="preserve"><value>Doğru: kart numarası.</value></data>
+  <data name="import.template.terminalcredentials.sample.pin" xml:space="preserve"><value>Doğru: 6 haneli PIN.</value></data>
+  <data name="import.template.terminalcredentials.sample.invalid_pin" xml:space="preserve"><value>Hatalı: PIN harf içeremez ve en az 6 haneli olmalıdır.</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi" xml:space="preserve"><value>Sicil no</value></data>
+  <data name="import.column.terminalcredentials.sicilNumarasi.description" xml:space="preserve"><value>Çalışanın sicil numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.terminalcredentials.kind" xml:space="preserve"><value>Tür</value></data>
+  <data name="import.column.terminalcredentials.kind.description" xml:space="preserve"><value>Kart, PIN ya da Harici (cihazdaki dış kimlik).</value></data>
+  <data name="import.column.terminalcredentials.value" xml:space="preserve"><value>Değer</value></data>
+  <data name="import.column.terminalcredentials.value.description" xml:space="preserve"><value>Kart numarası, PIN ya da harici kimlik; yalnız özet olarak saklanır.</value></data>
+  <data name="attendance.terminal_credential.rejected" xml:space="preserve"><value>Bu PIN tanımlanamadı; farklı bir PIN deneyin.</value></data>
+  <data name="import.outcome.Processed" xml:space="preserve"><value>İşlendi</value></data>
+  <data name="import.column.masked_header" xml:space="preserve"><value>Sütun {n}</value></data>
+  <data name="attendance.terminal_credential.import_aborted" xml:space="preserve"><value>Çok sayıda PIN tanımlanamadı; içe aktarma durduruldu ve hiçbir kimlik kaydedilmedi. Dosyayı gözden geçirip tekrar deneyin.</value></data>
   <data name="attendance.self_checkin.break_not_checked_in" xml:space="preserve"><value>Molaya başlamak için önce giriş yapmalısınız.</value></data>
   <data name="attendance.self_checkin.break_already_open" xml:space="preserve"><value>Zaten açık bir molanız var.</value></data>
   <data name="attendance.self_checkin.break_not_open" xml:space="preserve"><value>Bitirilecek açık bir mola yok.</value></data>

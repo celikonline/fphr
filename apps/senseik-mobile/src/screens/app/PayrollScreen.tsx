@@ -1,15 +1,54 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import * as Sharing from "expo-sharing";
 import { useTranslation } from "react-i18next";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
-import { payrollService, type MyPayslip } from "@/services/PayrollService";
-import { formatCurrencyTRY, formatRelativeTime } from "@/lib/formatters";
+import { canAcknowledge, payslipService, type MyPayslip } from "@/services/PayslipService";
+import { formatRelativeTime } from "@/lib/formatters";
 import i18n from "@/lib/i18n";
 import { monthName } from "@/components/form/dateRange";
 import { palette, type Tone } from "@/theme/theme";
+import type { AppStackParamList } from "@/types/navigation";
 import { PayslipHeroCard } from "./payroll/PayslipHeroCard";
 import { PayslipRow } from "./payroll/PayslipRow";
+
+export function payslipPeriodLabel(payslip: Pick<MyPayslip, "year" | "month">): string {
+  return `${String(payslip.month).padStart(2, "0")}/${payslip.year}`;
+}
+
+/** Liste satırındaki onay durumu metni (list_shows_ack_status). */
+export function payslipStatusLabel(payslip: MyPayslip): string {
+  if (payslip.objectionStatus === "pending") return i18n.t("payroll:status.objectionPending");
+  if (payslip.objectionStatus === "accepted") return i18n.t("payroll:status.objectionAccepted");
+  if (payslip.objectionStatus === "rejected") return i18n.t("payroll:status.objectionRejected");
+  if (payslip.acknowledgedAt) return i18n.t("payroll:status.acknowledged");
+  return i18n.t("payroll:status.pending");
+}
+
+/** Status pill tone matching `payslipStatusLabel`. */
+function payslipStatusTone(payslip: MyPayslip): Tone {
+  if (payslip.objectionStatus === "pending") return "info";
+  if (payslip.objectionStatus === "rejected") return "danger";
+  if (payslip.objectionStatus === "accepted") return "neutral";
+  return payslip.acknowledgedAt ? "success" : "warning";
+}
+
+/** Bordro para birimiyle (yoksa TRY) cihaz locale'ine göre biçimler. */
+export function formatMoney(amount: number, currency?: string | null): string {
+  const code = currency ?? "TRY";
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${code}`;
+  }
+}
 
 /**
  * TK-030 riskli alan: always the same generic (localized) message, regardless of the underlying failure
@@ -66,9 +105,38 @@ export function shouldIgnorePayslipTap(openingPayslipId: string | null): boolean
   return openingPayslipId !== null;
 }
 
+/**
+ * Downloads one payslip's PDF and hands it to the share sheet; failures surface as a generic alert.
+ * Shared by PayrollScreen (hero card) and PayslipDetailScreen.
+ */
+export async function sharePayslipDocument(payslip: MyPayslip): Promise<void> {
+  let fileUri: string | null = null;
+  try {
+    fileUri = await payslipService.downloadDocument(
+      payslip.payslipId,
+      buildPayslipFileName(payslip)
+    );
+    if (!(await Sharing.isAvailableAsync())) {
+      Alert.alert(i18n.t("common:alerts.error"), i18n.t("payroll:errors.shareUnavailable"));
+      return;
+    }
+    await Sharing.shareAsync(fileUri, { mimeType: "application/pdf" });
+  } catch (openError) {
+    Alert.alert(i18n.t("common:alerts.error"), payslipOpenErrorMessage(openError));
+  } finally {
+    // Best-effort PII cleanup (TK-030): the share sheet's promise resolves once the chosen viewer
+    // has been launched, not once the user is done looking at it, so this can't be a hard
+    // guarantee - but leaving the PDF in cache indefinitely is worse for a payroll document.
+    if (fileUri) {
+      payslipService.deleteCachedDocument(fileUri);
+    }
+  }
+}
+
 export default function PayrollScreen() {
   // Re-renders on a language switch; the module-level helpers above read `i18n` at call time.
   const { t } = useTranslation("payroll");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [payslips, setPayslips] = useState<MyPayslip[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -79,7 +147,7 @@ export default function PayrollScreen() {
   const loadAll = useCallback(async () => {
     setError(null);
     try {
-      setPayslips(await payrollService.getMyPayslips());
+      setPayslips(await payslipService.getMyPayslips());
     } catch (loadError) {
       // 403/404/network: never show stale or partial payslip data alongside the error (TK-030 riskli
       // alan) - a failed load always clears the list, even on a pull-to-refresh of a previously
@@ -89,10 +157,13 @@ export default function PayrollScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    void loadAll().finally(() => setLoading(false));
-  }, [loadAll]);
+  // Reload on focus so an acknowledgement/objection made on PayslipDetail shows up on return.
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      void loadAll().finally(() => setLoading(false));
+    }, [loadAll])
+  );
 
   async function onRefresh() {
     setRefreshing(true);
@@ -100,32 +171,18 @@ export default function PayrollScreen() {
     setRefreshing(false);
   }
 
+  function openDetail(payslip: MyPayslip) {
+    navigation.navigate("PayslipDetail", { payslip });
+  }
+
   async function openPayslip(payslip: MyPayslip) {
     if (shouldIgnorePayslipTap(openingPayslipId)) {
       return;
     }
     setOpeningPayslipId(payslip.payslipId);
-    let fileUri: string | null = null;
     try {
-      fileUri = await payrollService.downloadMyPayslipDocument(
-        payslip.payslipId,
-        buildPayslipFileName(payslip)
-      );
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
-        Alert.alert(t("common:alerts.error"), t("errors.shareUnavailable"));
-        return;
-      }
-      await Sharing.shareAsync(fileUri, { mimeType: "application/pdf" });
-    } catch (openError) {
-      Alert.alert(t("common:alerts.error"), payslipOpenErrorMessage(openError));
+      await sharePayslipDocument(payslip);
     } finally {
-      // Best-effort PII cleanup (TK-030): the share sheet's promise resolves once the chosen viewer
-      // has been launched, not once the user is done looking at it, so this can't be a hard
-      // guarantee - but leaving the PDF in cache indefinitely is worse for a payroll document.
-      if (fileUri) {
-        payrollService.deleteCachedPayslipDocument(fileUri);
-      }
       setOpeningPayslipId(null);
     }
   }
@@ -133,7 +190,7 @@ export default function PayrollScreen() {
   async function acknowledgePayslip(payslipId: string) {
     setAcknowledgingPayslipId(payslipId);
     try {
-      await payrollService.acknowledgePayslip(payslipId);
+      await payslipService.acknowledge(payslipId);
       // Re-fetch instead of patching local state in place - the server is the source of truth for
       // `acknowledgedAt` (and picks up any other change since the last load).
       await loadAll();
@@ -178,34 +235,33 @@ export default function PayrollScreen() {
       {latest ? (
         <PayslipHeroCard
           period={formatPayslipPeriod(latest.year, latest.month)}
-          netAmount={formatCurrencyTRY(latest.netAmount)}
-          isAcknowledged={Boolean(latest.acknowledgedAt)}
+          netAmount={formatMoney(latest.netPay, latest.currency)}
+          isAcknowledged={!canAcknowledge(latest)}
           isOpening={openingPayslipId === latest.payslipId}
           isAcknowledging={acknowledgingPayslipId === latest.payslipId}
           onOpen={() => void openPayslip(latest)}
           onAcknowledge={() => confirmAcknowledge(latest.payslipId)}
+          onDetails={() => openDetail(latest)}
         />
       ) : null}
 
-      {rest.map((payslip) => {
-        const status = payslipAcknowledgementStatus(payslip.acknowledgedAt);
-        return (
-          <PayslipRow
-            key={payslip.payslipId}
-            monthLabel={payslipMonthName(payslip.month)}
-            year={payslip.year}
-            netAmount={formatCurrencyTRY(payslip.netAmount)}
-            isAcknowledged={Boolean(payslip.acknowledgedAt)}
-            statusLabel={status.label}
-            statusTone={status.tone}
-            isOpening={openingPayslipId === payslip.payslipId}
-            isAcknowledging={acknowledgingPayslipId === payslip.payslipId}
-            disabled={anyActionInFlight}
-            onOpen={() => void openPayslip(payslip)}
-            onAcknowledge={() => confirmAcknowledge(payslip.payslipId)}
-          />
-        );
-      })}
+      {rest.map((payslip) => (
+        <PayslipRow
+          key={payslip.payslipId}
+          monthLabel={payslipMonthName(payslip.month)}
+          year={payslip.year}
+          netAmount={formatMoney(payslip.netPay, payslip.currency)}
+          // Inline "Onayla" only while the payslip can still be acknowledged (not during a pending objection).
+          isAcknowledged={!canAcknowledge(payslip)}
+          statusLabel={payslipStatusLabel(payslip)}
+          statusTone={payslipStatusTone(payslip)}
+          isOpening={false}
+          isAcknowledging={acknowledgingPayslipId === payslip.payslipId}
+          disabled={anyActionInFlight}
+          onOpen={() => openDetail(payslip)}
+          onAcknowledge={() => confirmAcknowledge(payslip.payslipId)}
+        />
+      ))}
     </Screen>
   );
 }

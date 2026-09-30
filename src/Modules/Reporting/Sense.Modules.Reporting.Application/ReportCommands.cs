@@ -14,9 +14,10 @@ namespace Sense.Modules.Reporting.Application;
 /// ReportExecution's remark); the state machine it drives (Queued -&gt; Running -&gt; Succeeded/Failed) is the same
 /// one a future async path would use, so moving generation onto Hangfire later only changes who calls
 /// Start/Complete/Fail, not the aggregate or this DTO shape.
+/// <c>Notify=false</c> (the on-screen report page) skips the 'report ready' e-mail — the caller is already looking at the result.
 /// </summary>
 [RequiresPermission("reports.executions.generate")]
-public sealed record RequestReportCommand(string ReportKey, Dictionary<string, string>? Parameters) : ICommand<ReportExecutionDto>;
+public sealed record RequestReportCommand(string ReportKey, Dictionary<string, string>? Parameters, bool Notify = true) : ICommand<ReportExecutionDto>;
 
 public sealed class RequestReportValidator : AbstractValidator<RequestReportCommand>
 {
@@ -77,7 +78,7 @@ public sealed class RequestReportHandler(
             var file = await provider.GenerateAsync(tenant.TenantId, parameters, cancellationToken);
             execution.Complete(file.FileName, file.ContentType, file.Content, clock.GetUtcNow().UtcDateTime);
 
-            if (currentUser.Email is { Length: > 0 } email)
+            if (command.Notify && currentUser.Email is { Length: > 0 } email)
             {
                 await mailer.SendReportReadyAsync(email, currentUser.DisplayName, execution.Id, execution.ReportKey, cancellationToken);
             }

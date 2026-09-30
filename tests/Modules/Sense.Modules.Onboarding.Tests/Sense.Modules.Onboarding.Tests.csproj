@@ -9,6 +9,7 @@
     <ProjectReference Include="../../../src/Modules/Onboarding/Sense.Modules.Onboarding.Application/Sense.Modules.Onboarding.Application.csproj" />
     <ProjectReference Include="../../../src/Modules/Onboarding/Sense.Modules.Onboarding.Domain/Sense.Modules.Onboarding.Domain.csproj" />
     <ProjectReference Include="../../../src/Modules/Onboarding/Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Onboarding/Sense.Modules.Onboarding.Infrastructure/Sense.Modules.Onboarding.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

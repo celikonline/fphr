@@ -99,7 +99,7 @@ public sealed record GetMyTeamTodayQuery : IQuery<IReadOnlyList<MyTeamTodayDto>>
 /// </summary>
 public sealed class GetMyTeamTodayHandler(
     ITenantContext tenant, ICurrentUser currentUser, IEmployeeLookup employeeLookup, IEmployeeDirectory employees, IAttendanceDayRepository days,
-    ITenantLocalClock clock, IApprovedLeaveDateLookup? leaveDates = null)
+    IPunchRepository punches, ITerminalRepository terminals, ITenantLocalClock clock, IApprovedLeaveDateLookup? leaveDates = null)
     : IQueryHandler<GetMyTeamTodayQuery, IReadOnlyList<MyTeamTodayDto>>
 {
     public async Task<Result<IReadOnlyList<MyTeamTodayDto>>> Handle(GetMyTeamTodayQuery query, CancellationToken cancellationToken)
@@ -111,7 +111,7 @@ public sealed class GetMyTeamTodayHandler(
         }
 
         var today = DateOnly.FromDateTime((await clock.NowAsync(tenant.TenantId, cancellationToken)).Local);
-        var board = await LiveAttendanceBoard.BuildAsync(employeeIds, today, tenant.TenantId, employees, days, cancellationToken);
+        var board = await LiveAttendanceBoard.BuildAsync(employeeIds, today, tenant.TenantId, employees, days, punches, terminals, cancellationToken);
         HashSet<Guid> onLeave = leaveDates is null
             ? []
             : (await leaveDates.GetApprovedLeaveDatesAsync(tenant.TenantId, today, today, employeeIds, cancellationToken))

@@ -1,0 +1,6 @@
+{{- subject = "You have a missing punch" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>One of your attendance days is missing a punch or cannot be calculated. Please review it and, if needed, submit a missing-punch request.</p>
+{{~ if action_url ~}}
+{{ button "Open attendance" action_url }}
+{{~ end ~}}

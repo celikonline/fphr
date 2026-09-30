@@ -7,7 +7,7 @@ import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
  */
 export type StackTargetScreen = Exclude<
   keyof AppStackParamList,
-  "MainTabs" | "NewRequest" | "RequestDetail"
+  "MainTabs" | "NewRequest" | "RequestDetail" | "PayslipDetail"
 >;
 export type NavigationTarget = { stack: StackTargetScreen } | { tab: keyof MainTabsParamList };
 

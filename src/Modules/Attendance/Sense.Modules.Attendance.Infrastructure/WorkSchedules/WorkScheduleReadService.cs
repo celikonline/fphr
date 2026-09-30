@@ -17,7 +17,7 @@ public sealed class WorkScheduleReadService(IEmployeeWorkScheduleAssignmentRepos
 
         if (schedule is null)
         {
-            return new EmployeeScheduleDay(false, null, null, null, null, false);
+            return new EmployeeScheduleDay(false, null, null, null, null, false, HasSchedule: false);
         }
 
         var day = schedule.GetDay(date.DayOfWeek);

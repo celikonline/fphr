@@ -11,6 +11,7 @@
     <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Application/Sense.Modules.Reporting.Application.csproj" />
     <!-- İzinli günde çalışma detektörü + ay sonu kapatma raporu (senseik-029) testleri gerçek Postgres üzerinde Leave ile birlikte çalışır. -->
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Application/Sense.Modules.Leave.Application.csproj" />
@@ -25,6 +26,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 </Project>

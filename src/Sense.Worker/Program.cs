@@ -11,6 +11,7 @@ using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Infrastructure;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Organization.Infrastructure;
@@ -91,6 +92,8 @@ builder.Services.AddModuleHandlers(
     typeof(EmployeeDbContext).Assembly,
     typeof(IEmployeeRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<EmployeeDbContext>>();
+// Employee's note attachment cleanup (EmployeeNoteFileOrphaned): its handler lives in the Application assembly this host does not scan.
+builder.Services.AddEmployeeIntegrationEventHandlers();
 
 // Workflow writes ApprovalCompleted/ApprovalRejected to its own outbox (see IIntegrationEventOutbox usages in
 // Sense.Modules.Workflow.Application's decision handlers) - see the EventTypeRegistry note at the top.

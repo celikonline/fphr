@@ -1,4 +1,6 @@
 import {
+  formatMoney,
+  payslipStatusLabel,
   buildPayslipFileName,
   formatAcknowledgedLabel,
   formatPayslipPeriod,
@@ -10,17 +12,22 @@ import {
 } from "@/screens/app/PayrollScreen";
 import i18n from "@/lib/i18n";
 
-describe("formatPayslipPeriod (TK-030)", () => {
-  it("formats a period as 'Ay Yıl'", () => {
-    expect(formatPayslipPeriod(2026, 9)).toBe("Eylül 2026");
-  });
+const base = { payslipId: "p", year: 2026, month: 8, grossPay: 1, netPay: 1, publishedAt: "2026-09-01" };
 
-  it("formats January correctly (1-based month)", () => {
-    expect(formatPayslipPeriod(2026, 1)).toBe("Ocak 2026");
+describe("PayrollScreen list_shows_ack_status", () => {
+  it("shows the acknowledgement / objection state", () => {
+    expect(payslipStatusLabel(base)).toBe("Onay bekliyor");
+    expect(payslipStatusLabel({ ...base, acknowledgedAt: "2026-09-02" })).toBe("Onaylandı");
+    expect(payslipStatusLabel({ ...base, objectionStatus: "pending" })).toBe("İtiraz inceleniyor");
+    expect(payslipStatusLabel({ ...base, objectionStatus: "accepted" })).toBe("İtiraz kabul edildi");
   });
+});
 
-  it("formats December correctly", () => {
-    expect(formatPayslipPeriod(2026, 12)).toBe("Aralık 2026");
+describe("formatMoney", () => {
+  it("uses the payslip currency, defaulting to TRY", () => {
+    expect(formatMoney(1234.5, "EUR")).toMatch(/€/);
+    expect(formatMoney(1234.5, undefined)).toMatch(/₺|TRY/);
+    expect(formatMoney(1234.5, null)).toMatch(/₺|TRY/);
   });
 });
 

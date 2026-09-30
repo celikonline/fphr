@@ -1,0 +1,6 @@
+{{- subject = "Kabul edilen pusula itirazı: " + employee_name -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ employee_name | html.escape }} çalışanının {{ period }} dönemi ücret pusulasına yaptığı itiraz kabul edildi. Pusulanın düzeltilmesi gerekiyor.</p>
+{{~ if action_url ~}}
+{{ button "Bordroyu aç" action_url }}
+{{~ end ~}}

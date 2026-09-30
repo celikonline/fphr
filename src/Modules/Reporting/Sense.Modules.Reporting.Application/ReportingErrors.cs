@@ -14,4 +14,13 @@ public static class ReportingErrors
 
     /// <summary>A parameter is present but malformed for its kind (non-GUID unit id, month outside 1–12, bad date, from &gt; to…).</summary>
     public const string ParameterInvalid = "report_execution.parameter_invalid";
+
+    /// <summary>The execution's file cannot be shown as a grid (not an .xlsx, or unreadable); the web offers the download only.</summary>
+    public const string PreviewNotAvailable = "report_execution.preview_not_available";
+
+    /// <summary>The requested sheet index does not exist in the workbook.</summary>
+    public const string SheetInvalid = "report_execution.sheet_invalid";
+
+    /// <summary>The requested sort column index is not a column of the sheet.</summary>
+    public const string SortColumnInvalid = "report_execution.sort_column_invalid";
 }

@@ -14,9 +14,12 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { EmployeeOnboardingCard } from "@/components/employees/employee-onboarding-card";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import NoAccess from "@/components/no-access";
 import OnboardingTaskTable from "@/components/onboarding/onboarding-task-table";
+import OnboardingCategories from "@/components/onboarding/onboarding-categories";
+import OnboardingTemplateSets from "@/components/onboarding/onboarding-template-sets";
 import OnboardingTemplates from "@/components/onboarding/onboarding-templates";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -50,6 +53,10 @@ function OnboardingScreen() {
           <Tabs.Tab value="pending">{t("onboarding:tabs.pending")}</Tabs.Tab>
           <Tabs.Tab value="employee">{t("onboarding:tabs.employee")}</Tabs.Tab>
           {canTemplates && <Tabs.Tab value="templates">{t("onboarding:tabs.templates")}</Tabs.Tab>}
+          {canTemplates && (
+            <Tabs.Tab value="categories">{t("onboarding:tabs.categories")}</Tabs.Tab>
+          )}
+          {canTemplates && <Tabs.Tab value="sets">{t("onboarding:tabs.sets")}</Tabs.Tab>}
         </Tabs.List>
         <Tabs.Panel value="pending" pt="md">
           <PendingTasks />
@@ -60,6 +67,16 @@ function OnboardingScreen() {
         {canTemplates && (
           <Tabs.Panel value="templates" pt="md">
             <OnboardingTemplates />
+          </Tabs.Panel>
+        )}
+        {canTemplates && (
+          <Tabs.Panel value="categories" pt="md">
+            <OnboardingCategories />
+          </Tabs.Panel>
+        )}
+        {canTemplates && (
+          <Tabs.Panel value="sets" pt="md">
+            <OnboardingTemplateSets />
           </Tabs.Panel>
         )}
       </Tabs>
@@ -191,6 +208,7 @@ function EmployeeChecklist() {
           </Stack>
         </Card>
       )}
+      {employee && <EmployeeOnboardingCard employeeId={employee.id} />}
       {employee && query.isLoading && <Skeleton height={120} />}
       {employee && query.isError && <Text c="red">{t("onboarding:loadError")}</Text>}
       {employee && query.isSuccess && items.length === 0 && (

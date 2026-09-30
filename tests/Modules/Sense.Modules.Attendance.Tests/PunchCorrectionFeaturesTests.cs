@@ -61,7 +61,8 @@ public sealed class PunchCorrectionFeaturesTests
         new(_tenant, _currentUser, _corrections, _days, _locks, _approvals, _workflow, _localClock, _clock);
 
     private PunchCorrectionApprovalCompletedHandler Applier() =>
-        new(_corrections, _days, _schedules, _shiftSettings, _locks, _approvals, _outbox, _unitOfWork, _clock);
+        new(_corrections, _days, _schedules, _shiftSettings, _locks, _approvals, new InMemoryPunchRepository(), TestPlanner.From(_schedules), _localClock,
+            _outbox, _unitOfWork, _clock);
 
     private AttendanceDay MissingCheckOutDay() =>
         AttendanceDay.Record(_tenantId, _employeeId, Day, PlannedStart, null, PlannedStart, PlannedEnd, 540, 0, AttendanceDaySource.SelfService);

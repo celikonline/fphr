@@ -87,3 +87,18 @@ public interface IRecognitionRepository
     /// <summary>En yeni <paramref name="take"/> mesaj, en yeni önce (Announcements akışına dahil edilir).</summary>
     Task<IReadOnlyList<Recognition>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Tenant-defined company event categories (E4: name + colour).</summary>
+public interface ICompanyEventCategoryRepository
+{
+    void Add(CompanyEventCategory category);
+
+    void Remove(CompanyEventCategory category);
+
+    Task<CompanyEventCategory?> GetByIdAsync(Guid tenantId, Guid categoryId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CompanyEventCategory>> ListAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>True when at least one company event references the category.</summary>
+    Task<bool> IsInUseAsync(Guid tenantId, Guid categoryId, CancellationToken cancellationToken = default);
+}

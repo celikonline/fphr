@@ -2,9 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
+using Sense.Modules.Documents.Application.PayslipImports;
+using Sense.Modules.Documents.Application.SharedFiles;
 using Sense.Modules.Documents.Application.VisaDocuments;
 using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
+using Sense.Modules.Documents.Infrastructure.Lookups;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
 using Sense.Modules.Employee.Contracts.Events;
@@ -42,6 +45,12 @@ public static class DocumentsServiceCollectionExtensions
         // Generic cross-module document delivery (Assets' zimmet tutanağı and any future module-generated file);
         // also needs IFileStorage, same as the visa delivery service above.
         services.AddScoped<ISystemDocumentDeliveryService, SystemDocumentDeliveryService>();
+        // E3/E8 (B13): shared file type catalog, external payslip bulk import, shared-file zip download.
+        services.AddScoped<ISharedFileTypeRepository, SharedFileTypeRepository>();
+        services.AddScoped<IPayslipEmployeeResolver, PayslipEmployeeResolver>();
+        services.AddScoped<PayslipFileMatcher>();
+        services.AddHttpClient(SharedFileContentReader.HttpClientName);
+        services.AddScoped<ISharedFileContentReader, SharedFileContentReader>();
         // IReportProvider (MissingDocumentReportProvider) is registered in DocumentsModule.AddModule, not here: it
         // needs IStringLocalizer<SharedResource>, which only the API host (AddSenseWeb -> AddLocalization) provides.
         return services;

@@ -4,7 +4,7 @@ using Sense.Shared.Contracts.Export;
 namespace Sense.Modules.Attendance.Infrastructure.Reporting;
 
 /// <summary>
-/// TK-004: attendance.monthly.summary/closing raporlarının Excel'e ek PDF çıktı seçeneği. Sağlayıcının
+/// TK-004: Attendance zaman raporlarının (aylık özet/kapanış ve günlük/durum raporları) Excel'e ek PDF çıktı seçeneği. Sağlayıcının
 /// <c>IReportProvider.Parameters</c>'ta duyurmadığı, isteğe bağlı "format" parametresini okur (bkz.
 /// ReportParameterValidation: "Unknown extra keys are ignored" - sağlayıcı duyurduğundan fazlasını kabul edebilir);
 /// "pdf" verilirse PDF, aksi halde (parametre yok/başka değer) varsayılan mevcut Excel davranışı değişmeden çalışır.
@@ -26,7 +26,15 @@ public static class AttendanceReportPdfExport
         IReadOnlyList<ExportColumn> columns,
         IReadOnlyList<IReadOnlyList<object?>> rows,
         DateOnly periodFrom,
-        DateOnly periodTo)
+        DateOnly periodTo) =>
+        BuildDocument(title, columns, rows, FormatPeriod(periodFrom, periodTo));
+
+    /// <summary>Genel biçim: dönem alt yazısı çağıran tarafından verilir (tek gün, aralık ya da dönemsiz raporlar için).</summary>
+    public static SimplePdfDocument BuildDocument(
+        string title,
+        IReadOnlyList<ExportColumn> columns,
+        IReadOnlyList<IReadOnlyList<object?>> rows,
+        string periodText)
     {
         var tableColumns = columns.Select(c => c.Header).ToList();
         var tableRows = rows.Select(row => (IReadOnlyList<string>)row.Select(FormatCell).ToList()).ToList();
@@ -40,7 +48,34 @@ public static class AttendanceReportPdfExport
             title,
             null,
             [new SimplePdfTable(null, tableColumns, tableRows, rightAlignedColumns)],
-            $"{periodFrom:dd.MM.yyyy} - {periodTo:dd.MM.yyyy}");
+            periodText);
+    }
+
+    public static string FormatPeriod(DateOnly from, DateOnly to) =>
+        from == to ? $"{from:dd.MM.yyyy}" : $"{from:dd.MM.yyyy} - {to:dd.MM.yyyy}";
+
+    /// <summary>
+    /// Tüm zaman raporlarının ortak çıkış yolu: "format=pdf" ise PDF, aksi halde Excel. Aynı ExportColumn/satır verisi iki biçime de gider;
+    /// boş satır kümesi yalnız başlık satırlı dosya üretir.
+    /// </summary>
+    public static ReportFileResult Produce(
+        IReadOnlyDictionary<string, string> parameters,
+        IReportExporter exporter,
+        ISimplePdfWriter pdfWriter,
+        string sheetName,
+        string fileNameStem,
+        IReadOnlyList<ExportColumn> columns,
+        IReadOnlyList<IReadOnlyList<object?>> rows,
+        string periodText,
+        CancellationToken cancellationToken)
+    {
+        if (IsPdfRequested(parameters))
+        {
+            return Write(pdfWriter, BuildDocument(sheetName, columns, rows, periodText), fileNameStem);
+        }
+
+        var file = exporter.ExportToExcel($"{fileNameStem}.xlsx", [new ExportTable(sheetName, columns, rows)], cancellationToken);
+        return new ReportFileResult(file.FileName, file.ContentType, file.Content);
     }
 
     public static ReportFileResult Write(ISimplePdfWriter writer, SimplePdfDocument document, string fileNameStem) =>

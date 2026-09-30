@@ -59,9 +59,19 @@ public interface IEmployeeLookup
     Task<EmployeeGender?> GetGenderAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The employee of any status whose sicil numarası matches exactly (sicil is tenant-unique across statuses), or null. Unlike
+    /// <see cref="FindActiveBySicilNumarasiAsync"/> it tells an unknown sicil apart from a terminated employee - e.g. Attendance's
+    /// terminal credential import reports "employee not active" rather than "not found" for someone who has left.
+    /// </summary>
+    Task<EmployeeSicilMatch?> FindBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// FG-007 "Ekibim": the manager's direct reports (<c>ManagerEmployeeId == managerEmployeeId</c>, not terminated), ordered by
     /// display name. Direct reports only - unlike the Team data scope (Shared.Contracts.Security.IEmployeeScopeLookup), no
     /// indirect chain. Empty when the employee manages nobody (or does not exist for the tenant).
     /// </summary>
     Task<IReadOnlyList<Guid>> GetDirectReportIdsAsync(Guid tenantId, Guid managerEmployeeId, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Result of <see cref="IEmployeeLookup.FindBySicilNumarasiAsync"/>: the employee and whether they are terminated (işten ayrılmış).</summary>
+public sealed record EmployeeSicilMatch(Guid EmployeeId, bool IsTerminated);

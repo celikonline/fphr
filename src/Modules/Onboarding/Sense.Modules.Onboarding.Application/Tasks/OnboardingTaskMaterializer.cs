@@ -22,10 +22,25 @@ public static class OnboardingTaskMaterializer
         Guid employeeId,
         OnboardingStage stage,
         DateOnly referenceDate,
+        CancellationToken cancellationToken) =>
+        await MaterializeFromAsync(
+            tenantId, await templates.ListActiveByStageAsync(stage, cancellationToken), tasks, outbox, employeeId, stage,
+            referenceDate, templateSetId: null, cancellationToken);
+
+    /// <summary>Materializes the given templates (already filtered by the caller); category/importance are snapshotted onto the task.</summary>
+    public static async Task<IReadOnlyList<EmployeeOnboardingTask>> MaterializeFromAsync(
+        Guid tenantId,
+        IEnumerable<OnboardingTaskTemplate> templateList,
+        IEmployeeOnboardingTaskRepository tasks,
+        IIntegrationEventOutbox outbox,
+        Guid employeeId,
+        OnboardingStage stage,
+        DateOnly referenceDate,
+        Guid? templateSetId,
         CancellationToken cancellationToken)
     {
         var created = new List<EmployeeOnboardingTask>();
-        foreach (var template in await templates.ListActiveByStageAsync(stage, cancellationToken))
+        foreach (var template in templateList)
         {
             if (await tasks.FindAsync(employeeId, template.Id, cancellationToken) is not null)
             {
@@ -33,7 +48,8 @@ public static class OnboardingTaskMaterializer
             }
 
             var task = EmployeeOnboardingTask.Materialize(
-                tenantId, employeeId, template.Id, stage, referenceDate.AddDays(template.DueDateOffsetDays));
+                tenantId, employeeId, template.Id, stage, referenceDate.AddDays(template.DueDateOffsetDays),
+                template.CategoryId, template.Importance, template.RequiresEDocument, templateSetId);
             tasks.Add(task);
             created.Add(task);
             outbox.Enqueue(new OnboardingTaskAssigned(tenantId, task.Id, employeeId, template.ResponsibleRoleCode, template.Title));

@@ -32,17 +32,30 @@
       "birthday": "Doğum günümde"
     },
     "announcement": {
-      "published": "Yeni bir duyuru yayınlandığında"
+      "published": "Yeni bir duyuru yayınlandığında",
+      "event_invitation": "Bir şirket etkinliğine davet edildiğimde"
     },
     "payroll": {
-      "payslip_ready": "Ücret pusulam hazır olduğunda"
+      "payslip_ready": "Ücret pusulam hazır olduğunda",
+      "payslip_acknowledgement_reminder": "Ücret pusulamı henüz onaylamadıysam hatırlatma",
+      "payslip_document_uploaded": "Ücret pusulası belgem yüklendiğinde",
+      "payslip_objection_accepted": "Bir ücret pusulası itirazı kabul edilip düzeltme gerektiğinde"
     },
     "leave": {
       "added_on_behalf": "Adıma bir izin talebi eklendiğinde"
     },
     "onboarding": {
-      "task_assigned": "Bana bir oryantasyon görevi atandığında",
-      "task_completed": "Bir oryantasyon görevi tamamlandığında"
+      "task_assigned": "Sorumlu olduğum bir işe alım/çıkış görevi atandığında",
+      "task_completed": "Sorumlu olduğum rolde bir görev tamamlandığında"
+    },
+    "attendance": {
+      "missing_punch_reminder": "Eksik veya hesaplanamayan puantaj günü için hatırlatma"
+    },
+    "hr": {
+      "message": "İK'dan bir mesaj aldığımda"
+    },
+    "workflow": {
+      "delegation_assigned": "Bana onay yetkisi devredildiğinde"
     },
     "assets": {
       "assignment_created": "Bana bir zimmet verildiğinde",
@@ -70,7 +83,7 @@
     "employee": "Çalışanlar",
     "announcement": "Duyurular",
     "payroll": "Bordro",
-    "onboarding": "Oryantasyon",
+    "onboarding": "İşe alım / çıkış",
     "assets": "Zimmet"
   },
   "types": {

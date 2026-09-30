@@ -11,17 +11,24 @@ public sealed record OvertimeApprovalSummary(DateOnly WorkDate, TimeOnly StartTi
 public sealed record LeaveApprovalSummary(
     DateOnly StartDate, DateOnly EndDate, string LeaveTypeCode, string? LeaveTypeName, decimal Days, string? Description = null);
 
+/// <summary>Missing-punch ("AttendancePunch") request's projection: the punch being asked for. Direction is the camelCase PunchDirection name ("in"/"out"/"unknown").</summary>
+public sealed record AttendancePunchApprovalSummary(DateTime OccurredAtUtc, string Direction, string? Reason);
+
+/// <summary>Payslip objection ("PayslipObjection") projection: the payroll period label (e.g. "2026-08") and the employee's stated reason.</summary>
+public sealed record PayslipObjectionApprovalSummary(string Period, string? Reason);
+
 /// <summary>
 /// Request-type-specific projection of an <c>ApprovalRequest</c>'s subject entity (a future LeaveRequest/OvertimeRequest/...),
 /// so the Workflow inbox/decision screens show more than the opaque SubjectId - the requester picked a date, a duration
 /// or a range, and the approver needs that to decide, not a GUID. RequestDate is the request's own date (the overtime
 /// work date, or the leave start date), shown next to the ApprovalRequest's SubmittedAt. Exactly one of
-/// <see cref="Overtime"/>/<see cref="Leave"/>/<see cref="PunchCorrection"/> is set today, matching RequestType; both null is not constructible -
+/// <see cref="Overtime"/>/<see cref="Leave"/>/<see cref="AttendancePunch"/>/<see cref="PayslipObjection"/>/<see cref="PunchCorrection"/> is set today, matching RequestType; both null is not constructible -
 /// a provider that finds nothing returns a null <see cref="ApprovalRequestSummary"/> instead (see
 /// <see cref="IApprovalRequestSummaryProvider.GetSummaryAsync"/>).
 /// </summary>
 public sealed record ApprovalRequestSummary(
     DateOnly RequestDate, OvertimeApprovalSummary? Overtime = null, LeaveApprovalSummary? Leave = null,
+    AttendancePunchApprovalSummary? AttendancePunch = null, PayslipObjectionApprovalSummary? PayslipObjection = null,
     PunchCorrectionApprovalSummary? PunchCorrection = null);
 
 /// <summary>

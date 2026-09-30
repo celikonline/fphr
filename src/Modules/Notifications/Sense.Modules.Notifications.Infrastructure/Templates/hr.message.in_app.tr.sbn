@@ -1,0 +1,8 @@
+{{-
+if message_subject
+  subject = message_subject
+else
+  subject = "Yeni İK mesajı"
+end
+-}}
+{{ if message_body }}{{ message_body }}{{ else }}İK mesajını okumak için tıklayın.{{ end }}

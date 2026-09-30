@@ -1,0 +1,2 @@
+{{- subject = "Einspruch gegen Gehaltsabrechnung angenommen: " + employee_name -}}
+Die Gehaltsabrechnung {{ period }} muss korrigiert werden.

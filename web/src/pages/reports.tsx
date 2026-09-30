@@ -1,51 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router";
-import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router";
+import { useMutation, useQuery, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, Check, Download, FileSpreadsheet } from "lucide-react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Input,
-  MultiSelect,
-  Select,
-  Skeleton,
-  Stack,
-  Switch,
-  Tabs,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
+import { ArrowRight, BarChart3, Download, FileSpreadsheet } from "lucide-react";
+import { Badge, Button, Card, Group, Skeleton, Stack, Tabs, Text, ThemeIcon, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
-import { DatePicker } from "@/components/ui/date-picker";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
-import { useOrgUnits } from "@/components/employees/use-org-units";
 import { ReportCatalog, reportLabelKey } from "@/components/reports/report-catalog";
+import { ReportParameterForm } from "@/components/reports/report-parameter-form";
+import { allSatisfied, defaultValuesFor, valuesToSearchParams, type ParameterValues } from "@/components/reports/report-parameters";
 import { WorkforceKpiPanel } from "@/components/reports/workforce-kpi-panel";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { formatDateTime, toDateOnly } from "@/lib/dates";
+import { formatDateTime } from "@/lib/dates";
 import {
   downloadReportExecution,
   getReportCatalog,
   getReportExecution,
   listReportExecutions,
-  REPORT_PARAMETER_KEYS,
-  requestReport,
   saveDownloadedReportFile,
   type DownloadedReportFile,
   type ReportCatalogItem,
   type ReportExecution,
   type ReportExecutionStatus,
-  type ReportParameter,
 } from "@/services/reports.service";
 
 const DEFAULT_EXECUTIONS_PAGE_SIZE = 10;
@@ -116,7 +97,6 @@ function ReportCatalogAndHistory() {
   const canViewCatalog = usePermission("reports.catalog.view");
   const canGenerate = usePermission("reports.executions.generate");
   const canViewHistory = usePermission("reports.my.executions");
-  const queryClient = useQueryClient();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_EXECUTIONS_PAGE_SIZE);
@@ -246,12 +226,8 @@ function ReportCatalogAndHistory() {
 
           <div className="lg:col-span-5">
             {selected ? (
-              <ReportRunPanel
-                key={selected.key}
-                report={selected}
-                canGenerate={canGenerate}
-                onGenerated={() => queryClient.invalidateQueries({ queryKey: ["reports", "executions"] })}
-              />
+              // The full-page viewer needs reports.my.executions as well, so the open button requires both.
+              <ReportRunPanel key={selected.key} report={selected} canGenerate={canGenerate && canViewHistory} />
             ) : (
               <Card withBorder padding="lg" radius="md" className="h-full">
                 <Stack align="center" justify="center" gap="xs" className="min-h-40">
@@ -297,88 +273,16 @@ function ReportCatalogAndHistory() {
   );
 }
 
-type ParameterValues = Record<string, string>;
-
-function defaultValuesFor(parameters: ReportParameter[], today: Date): ParameterValues {
-  const values: ParameterValues = {};
-  for (const parameter of parameters) {
-    if (!parameter.isRequired) continue;
-    if (parameter.kind === "year") values[REPORT_PARAMETER_KEYS.year] = String(today.getFullYear());
-    if (parameter.kind === "dateRange") {
-      values[REPORT_PARAMETER_KEYS.from] = toDateOnly(new Date(today.getFullYear(), today.getMonth(), 1));
-      values[REPORT_PARAMETER_KEYS.to] = toDateOnly(new Date(today.getFullYear(), today.getMonth() + 1, 0));
-    }
-  }
-  return values;
-}
-
-function isSatisfied(parameter: ReportParameter, values: ParameterValues): boolean {
-  if (!parameter.isRequired) return true;
-  if (parameter.kind === "dateRange") return Boolean(values[REPORT_PARAMETER_KEYS.from] && values[REPORT_PARAMETER_KEYS.to]);
-  return Boolean(values[parameter.key]);
-}
-
-/** Kolay İK's "rapor türü → Birimler / Ay / Yıl → oluştur" step, drawn from the report's parameter descriptors. */
-function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCatalogItem; canGenerate: boolean; onGenerated: () => void }) {
-  const { t, i18n } = useTranslation(["reports", "common"]);
+/** Kolay İK's "rapor türü → filtreler" step; the report itself opens on its own full page (`/app/reports/:key`). */
+function ReportRunPanel({ report, canGenerate }: { report: ReportCatalogItem; canGenerate: boolean }) {
+  const { t } = useTranslation(["reports"]);
+  const navigate = useNavigate();
   const today = useMemo(() => new Date(), []);
   const [values, setValues] = useState<ParameterValues>(() => defaultValuesFor(report.parameters, today));
-  const { options: orgUnitOptions } = useOrgUnits();
-  const hasRequired = report.parameters.some((p) => p.isRequired);
-  const allSatisfied = report.parameters.every((p) => isSatisfied(p, values));
 
-  const set = (key: string, value: string | null | undefined) =>
-    setValues((prev) => {
-      const next = { ...prev };
-      if (value === null || value === undefined || value === "") delete next[key];
-      else next[key] = value;
-      return next;
-    });
-
-  const generateMutation = useMutation({
-    mutationFn: () => requestReport(report.key, values),
-    onSuccess: async (execution) => {
-      onGenerated();
-      if (execution.status === "failed") {
-        toast({ variant: "destructive", title: t("common:error"), description: execution.errorMessage ?? t("reports:run.error") });
-        return;
-      }
-      if (execution.status === "succeeded") {
-        try {
-          saveDownloadedReportFile(await downloadReportExecution(execution.id, execution.resultFileName ?? `${report.key}.xlsx`));
-          toast({ variant: "success", title: t("reports:run.success") });
-        } catch {
-          toast({ variant: "success", title: t("reports:run.successNoDownload") });
-        }
-      } else {
-        toast({ variant: "success", title: t("reports:run.successNoDownload") });
-      }
-    },
-    onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:run.error")) }),
-  });
-
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, i) => ({
-        value: String(i + 1),
-        label: new Intl.DateTimeFormat(i18n.language, { month: "long" }).format(new Date(2000, i, 1)),
-      })),
-    [i18n.language],
-  );
-  const yearOptions = useMemo(() => Array.from({ length: 7 }, (_, i) => String(today.getFullYear() + 1 - i)), [today]);
-  const depthById = useMemo(() => new Map(orgUnitOptions.map((u) => [u.id, u.depth])), [orgUnitOptions]);
-
-  const applyPreset = (preset: "thisMonth" | "lastMonth" | "thisYear") => {
-    const y = today.getFullYear();
-    const m = today.getMonth();
-    const [from, to] =
-      preset === "thisMonth"
-        ? [new Date(y, m, 1), new Date(y, m + 1, 0)]
-        : preset === "lastMonth"
-          ? [new Date(y, m - 1, 1), new Date(y, m, 0)]
-          : [new Date(y, 0, 1), new Date(y, 11, 31)];
-    setValues((prev) => ({ ...prev, [REPORT_PARAMETER_KEYS.from]: toDateOnly(from), [REPORT_PARAMETER_KEYS.to]: toDateOnly(to) }));
+  const openReport = () => {
+    const query = valuesToSearchParams(values).toString();
+    void navigate(`/app/reports/${report.key}${query ? `?${query}` : ""}`);
   };
 
   return (
@@ -396,137 +300,15 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
           </Text>
         </div>
 
-        {report.parameters.length === 0 ? (
-          <Text size="sm" c="dimmed">
-            {t("reports:run.noFilters")}
-          </Text>
-        ) : (
-          <Stack gap="sm">
-            {report.parameters.map((parameter) => {
-              const required = parameter.isRequired ? " *" : "";
-              switch (parameter.kind) {
-                case "orgUnits":
-                  return (
-                    <MultiSelect
-                      key={parameter.key}
-                      label={t("reports:params.orgUnitIds") + required}
-                      description={t("reports:params.orgUnitIdsHint")}
-                      placeholder={t("reports:params.orgUnitIdsPlaceholder")}
-                      data={orgUnitOptions.map((u) => ({ value: u.id, label: u.name }))}
-                      value={values[parameter.key] ? values[parameter.key].split(",") : []}
-                      onChange={(ids) => set(parameter.key, ids.join(","))}
-                      searchable
-                      clearable
-                      renderOption={({ option, checked }) => (
-                        <Group gap="xs" wrap="nowrap">
-                          <Check size={14} style={{ opacity: checked ? 1 : 0, flexShrink: 0 }} />
-                          <span style={{ paddingLeft: `${(depthById.get(option.value) ?? 0) * 12}px` }}>{option.label}</span>
-                        </Group>
-                      )}
-                    />
-                  );
-                case "year":
-                  return (
-                    <Select
-                      key={parameter.key}
-                      label={t("reports:params.year") + required}
-                      data={yearOptions}
-                      value={values[parameter.key] ?? null}
-                      onChange={(v) => set(parameter.key, v)}
-                      clearable={!parameter.isRequired}
-                    />
-                  );
-                case "month":
-                  return (
-                    <Select
-                      key={parameter.key}
-                      label={t("reports:params.month") + required}
-                      placeholder={t("reports:params.monthPlaceholder")}
-                      data={monthOptions}
-                      value={values[parameter.key] ?? null}
-                      onChange={(v) => set(parameter.key, v)}
-                      clearable={!parameter.isRequired}
-                    />
-                  );
-                case "dateRange":
-                  return (
-                    <Stack key={parameter.key} gap={6}>
-                      <Text size="sm" fw={500}>
-                        {t("reports:params.dateRange") + required}
-                      </Text>
-                      <Group grow align="flex-end" gap="sm">
-                        <Input.Wrapper id={`${report.key}-from`} label={t("reports:params.from")}>
-                          <DatePicker
-                            id={`${report.key}-from`}
-                            value={values[REPORT_PARAMETER_KEYS.from] ?? ""}
-                            max={values[REPORT_PARAMETER_KEYS.to] || undefined}
-                            clearable={!parameter.isRequired}
-                            onChange={(v) => set(REPORT_PARAMETER_KEYS.from, v)}
-                          />
-                        </Input.Wrapper>
-                        <Input.Wrapper id={`${report.key}-to`} label={t("reports:params.to")}>
-                          <DatePicker
-                            id={`${report.key}-to`}
-                            value={values[REPORT_PARAMETER_KEYS.to] ?? ""}
-                            min={values[REPORT_PARAMETER_KEYS.from] || undefined}
-                            clearable={!parameter.isRequired}
-                            onChange={(v) => set(REPORT_PARAMETER_KEYS.to, v)}
-                          />
-                        </Input.Wrapper>
-                      </Group>
-                      <Group gap={6}>
-                        {(["thisMonth", "lastMonth", "thisYear"] as const).map((preset) => (
-                          <Button key={preset} type="button" size="compact-xs" variant="light" color="gray" onClick={() => applyPreset(preset)}>
-                            {t(`reports:params.presets.${preset}`)}
-                          </Button>
-                        ))}
-                      </Group>
-                    </Stack>
-                  );
-                case "boolean":
-                  return (
-                    <Switch
-                      key={parameter.key}
-                      label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key })}
-                      checked={values[parameter.key] === "true"}
-                      onChange={(e) => set(parameter.key, e.currentTarget.checked ? "true" : null)}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            })}
-            {hasRequired && (
-              <Text size="xs" c="dimmed">
-                {t("reports:run.requiredHint")}
-              </Text>
-            )}
-          </Stack>
-        )}
+        <ReportParameterForm report={report} values={values} onChange={setValues} />
 
-        <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-          <Group gap={6}>
-            <Badge variant="light" color="teal" size="sm" leftSection={<FileSpreadsheet size={12} />}>
-              {t("reports:run.format")}
-            </Badge>
-          </Group>
-          {canGenerate && (
-            <Button
-              type="button"
-              leftSection={<Download size={16} />}
-              disabled={!allSatisfied}
-              loading={generateMutation.isPending}
-              onClick={() => generateMutation.mutate()}
-            >
-              {t("reports:run.generate")}
+        {canGenerate && (
+          <Group justify="flex-end">
+            <Button type="button" rightSection={<ArrowRight size={16} />} disabled={!allSatisfied(report.parameters, values)} onClick={openReport}>
+              {t("reports:run.open")}
             </Button>
-          )}
-        </Group>
-        <Alert variant="light" color="gray" p="xs">
-          <Text size="xs" c="dimmed">
-            {t("reports:run.emailNote")}
-          </Text>
-        </Alert>
+          </Group>
+        )}
       </Stack>
     </Card>
   );

@@ -1,0 +1,6 @@
+{{- subject = "Payslip objection accepted: " + employee_name -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>The objection of {{ employee_name | html.escape }} to the {{ period }} payslip was accepted. The payslip needs to be corrected.</p>
+{{~ if action_url ~}}
+{{ button "Open payroll" action_url }}
+{{~ end ~}}

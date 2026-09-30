@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { AUTH_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY, apiClient } from "@senseik/api-client";
 import { getMe, type MeResponse } from "@/services/me.service";
 import { getImpersonatorId } from "@/lib/jwt";
+import { queryClient } from "@/lib/query-client";
 import type { AccessSettingKey, AccessSettings, MeFeatures } from "@/types";
 
 export interface User {
@@ -220,6 +221,8 @@ async function establishSession(
   safeStorageSet(AUTH_TOKEN_STORAGE_KEY, tokens.accessToken);
   writeStoredRefreshToken(tokens.refreshToken);
   const me = await getMe();
+  // Query keys carry no tenant id: a new session (possibly another company) must not see the previous one's cache.
+  queryClient.clear();
 
   set({
     token: tokens.accessToken,
@@ -368,6 +371,7 @@ export const useAuthStore = create<AuthStore>()(
           const { token, refreshToken } = get();
           clearStoredCredentials();
           void revokeRefreshToken(token, refreshToken);
+          queryClient.clear();
           set({ user: null, token: null, refreshToken: null, features: null, error: null });
         },
 

@@ -10,6 +10,7 @@
     "employee": "Employee",
     "leave": "Leave",
     "finance": "Finance",
+    "time": "Time & attendance",
     "other": "Other"
   },
   "catalogView": {
@@ -99,6 +100,36 @@
           "label": "Month-end closing (accountant) report",
           "description": "The monthly timesheet summary plus paid, unpaid and sick leave days, whether the month is approved and the approval date."
         }
+      },
+      "time": {
+        "incalculable": {
+          "label": "Incalculable",
+          "description": "Employees whose timesheet could not be calculated on the selected day(s)."
+        },
+        "no_shift_assigned": {
+          "label": "No shift assigned",
+          "description": "Employees with planned working days in the date range but no shift assignment, with the count of unassigned days."
+        },
+        "daily_status": {
+          "label": "Daily status lists",
+          "description": "Arrived, late, early leave, absent, overtime, undertime, on leave and incalculable lists for the selected status and day."
+        },
+        "manual_entries": {
+          "label": "Manual entries",
+          "description": "Punches entered manually or through requests in the date range; deleted entries are shown with who deleted them and why."
+        },
+        "currently_inside": {
+          "label": "Currently inside",
+          "description": "Employees whose latest punch today is an entry, i.e. currently inside (live snapshot)."
+        },
+        "breaks": {
+          "label": "Breaks",
+          "description": "Break count, total and longest break from out-in gaps during the day, with the difference to the planned break."
+        },
+        "intermediate_punches": {
+          "label": "Intermediate punches",
+          "description": "Punches other than the first entry and the last exit of the day."
+        }
       }
     },
     "recruitment": {
@@ -118,14 +149,24 @@
   },
   "run": {
     "title": "Generate report",
-    "generate": "Generate report",
-    "success": "Report generated; the download has started.",
-    "successNoDownload": "Report generated. You can download it from the recent reports list.",
+    "open": "Open report",
     "error": "The report could not be generated.",
     "requiredHint": "* required filter",
-    "emailNote": "A link is sent to your registered e-mail address when the report is ready.",
-    "format": "Excel (.xlsx)",
-    "noFilters": "This report takes no filters; you can generate it right away."
+    "noFilters": "This report takes no filters; you can generate it right away.",
+    "successNoDownload": "The report is being prepared; download it from My reports when it is ready."
+  },
+  "viewer": {
+    "search": "Search results",
+    "noRows": "No records match these filters.",
+    "back": "Back to reports",
+    "apply": "Apply",
+    "downloadExcel": "Download Excel",
+    "notFound": "This report was not found or you do not have access.",
+    "previewUnavailable": "This report cannot be shown on screen; you can download it as Excel.",
+    "runError": "The report could not be generated.",
+    "dataError": "The report data could not be loaded.",
+    "idle": "Choose the required filters and press Apply.",
+    "downloadPdf": "Download PDF"
   },
   "params": {
     "orgUnitIds": "Units",
@@ -138,6 +179,17 @@
     "from": "From",
     "to": "To",
     "includeTerminated": "Include terminated employees",
+    "status": "Status",
+    "statusOptions": {
+      "incalculable": "Incalculable",
+      "arrived": "Arrived",
+      "late": "Late arrivals",
+      "earlyLeave": "Early leavers",
+      "absent": "Absent",
+      "overtime": "Overtime",
+      "undertime": "Undertime",
+      "onLeave": "On leave"
+    },
     "presets": {
       "thisMonth": "This month",
       "lastMonth": "Last month",

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { getRouteAccess, ROUTE_ACCESS } from "./route-permissions";
-import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, SETTINGS_PERMISSIONS, SETTINGS_SECTIONS } from "./navigation";
+import {
+  APP_LAUNCHER_ITEMS,
+  NAV_FOOTER_ITEMS,
+  NAV_ITEMS,
+  SETTINGS_PERMISSIONS,
+  SETTINGS_SECTIONS,
+} from "./navigation";
 import type { Gated } from "@/hooks/use-nav-visibility";
 
 type GatedPath = Gated & { path: string };
@@ -9,7 +15,9 @@ type GatedPath = Gated & { path: string };
 // a nav entry that loses its gate, or a URL spelling that slips past the lookup, must fail here.
 describe("route-permissions", () => {
   it("gates the users & roles page with the same permissions as its settings card", () => {
-    expect(getRouteAccess("/app/settings/system/users-roles")?.permissions).toEqual(SETTINGS_PERMISSIONS.usersRoles);
+    expect(getRouteAccess("/app/settings/system/users-roles")?.permissions).toEqual(
+      SETTINGS_PERMISSIONS.usersRoles
+    );
   });
 
   it("normalizes case and trailing slashes the way React Router matches routes", () => {
@@ -33,9 +41,9 @@ describe("route-permissions", () => {
   });
 
   it("registers every gated settings link", () => {
-    const gatedLinks = SETTINGS_SECTIONS.flatMap((section): readonly GatedPath[] => section.links).filter(
-      (link) => (link.permissions?.length ?? 0) > 0 || link.accessSetting !== undefined,
-    );
+    const gatedLinks = SETTINGS_SECTIONS.flatMap(
+      (section): readonly GatedPath[] => section.links
+    ).filter((link) => (link.permissions?.length ?? 0) > 0 || link.accessSetting !== undefined);
 
     for (const link of gatedLinks) {
       expect(ROUTE_ACCESS.has(link.path), link.path).toBe(true);
@@ -52,12 +60,19 @@ describe("route-permissions", () => {
     ];
 
     for (const entry of entries) {
-      const gate = JSON.stringify({ permissions: entry.permissions ?? [], accessSetting: entry.accessSetting ?? null });
+      const gate = JSON.stringify({
+        permissions: entry.permissions ?? [],
+        accessSetting: entry.accessSetting ?? null,
+      });
       const previous = seen.get(entry.path);
       if (previous !== undefined) {
         expect(gate, entry.path).toBe(previous);
       }
       seen.set(entry.path, gate);
     }
+  });
+
+  it("gates the HR messages page with notifications.messages.view", () => {
+    expect(getRouteAccess("/app/messages")?.permissions).toEqual(["notifications.messages.view"]);
   });
 });

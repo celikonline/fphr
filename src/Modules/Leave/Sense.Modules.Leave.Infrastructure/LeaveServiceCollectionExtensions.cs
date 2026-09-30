@@ -78,6 +78,8 @@ public static class LeaveServiceCollectionExtensions
         // Cross-module contract consumed by Payroll (severance/notice estimate, senseik-011 F-06); API-only (no
         // Worker consumer), same pattern as ILeaveUsageReader/ILeaveDayReader above.
         services.AddScoped<ILeaveBalanceLookup, Lookups.LeaveBalanceLookup>();
+        // Zaman-devam Z1.1: Attendance'ın günlük "İzinde" listesi ve devamsızlık kuralı (tarih bazlı onaylı izin).
+        services.AddScoped<ILeaveOnDateReader, Lookups.LeaveOnDateReader>();
         return services;
     }
 

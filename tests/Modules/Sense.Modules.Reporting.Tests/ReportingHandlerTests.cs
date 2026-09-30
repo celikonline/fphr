@@ -54,6 +54,20 @@ public sealed class ReportingHandlerTests
     }
 
     [Fact]
+    public async Task RequestReportHandler_WhenNotifyIsFalse_CompletesWithoutSendingTheReadyEmail()
+    {
+        var provider = FakeProvider("documents.missingDocuments");
+        var mailer = Substitute.For<IReportMailer>();
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), mailer, TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(new RequestReportCommand("documents.missingDocuments", null, Notify: false), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(ReportExecutionStatus.Succeeded);
+        await mailer.DidNotReceive().SendReportReadyAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task RequestReportHandler_WithUnknownReportKey_FailsWithoutTouchingRepository()
     {
         var executions = Substitute.For<IReportExecutionRepository>();
@@ -203,6 +217,31 @@ public sealed class ReportingHandlerTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.TotalCount.ShouldBe(1);
         result.Value.Items[0].Id.ShouldBe(execution.Id);
+    }
+
+    [Theory]
+    [InlineData("late", true, null)]
+    [InlineData("nonsense", false, ReportingErrors.ParameterInvalid)]
+    [InlineData(" ", false, ReportingErrors.ParameterRequired)]
+    public void ReportParameterValidation_SelectParameter_MustBeOneOfOptions(string value, bool ok, string? code)
+    {
+        var descriptors = new[] { new ReportParameterDescriptor("status", ReportParameterKind.Select, IsRequired: true, Options: ["late", "absent"]) };
+
+        var result = ReportParameterValidation.Validate(descriptors, new Dictionary<string, string> { ["status"] = value });
+
+        result.IsSuccess.ShouldBe(ok);
+        if (!ok)
+        {
+            result.Error.Code.ShouldBe(code);
+        }
+    }
+
+    [Fact]
+    public void ReportParameterValidation_OptionalSelectParameter_MayBeOmitted()
+    {
+        var descriptors = new[] { new ReportParameterDescriptor("format", ReportParameterKind.Select, Options: ["xlsx", "pdf"]) };
+
+        ReportParameterValidation.Validate(descriptors, new Dictionary<string, string>()).IsSuccess.ShouldBeTrue();
     }
 
     [Fact]

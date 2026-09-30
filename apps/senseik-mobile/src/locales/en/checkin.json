@@ -77,5 +77,34 @@
   "biometric": {
     "punchPrompt": "Verify your identity to record the clock entry",
     "cancelled": "Identity not verified; nothing was recorded."
+  },
+  "punchRequest": {
+    "title": "Punch request",
+    "date": "Date (yyyy-mm-dd)",
+    "time": "Time (hh:mm)",
+    "direction": "Direction",
+    "in": "Check-in",
+    "out": "Check-out",
+    "reason": "Reason",
+    "reasonPlaceholder": "Explain why the punch is missing",
+    "submit": "Send request",
+    "mine": "My requests",
+    "empty": "You have no requests yet.",
+    "decidedAt": "Decision: {{time}}",
+    "cancel": "Cancel",
+    "loadError": "Requests could not be loaded. Please try again.",
+    "invalidDateTime": "Please enter a valid date (yyyy-mm-dd) and time (hh:mm).",
+    "invalidTimeTitle": "Invalid time",
+    "futureTime": "A request cannot be created for a future time.",
+    "reasonRequired": "A reason is required.",
+    "sentMessage": "Your request was sent for approval.",
+    "submitError": "The request could not be sent. Please try again.",
+    "cancelError": "The request could not be cancelled. Please try again.",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    }
   }
 }

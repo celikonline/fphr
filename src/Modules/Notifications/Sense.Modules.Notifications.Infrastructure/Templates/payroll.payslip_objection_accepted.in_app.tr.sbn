@@ -1,0 +1,2 @@
+{{- subject = "Kabul edilen pusula itirazı: " + employee_name -}}
+{{ period }} dönemi ücret pusulası düzeltilmelidir.

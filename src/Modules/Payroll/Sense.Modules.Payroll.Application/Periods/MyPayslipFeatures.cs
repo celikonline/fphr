@@ -12,10 +12,13 @@ namespace Sense.Modules.Payroll.Application.Periods;
 /// employee's business, unlike the HR-facing <see cref="EmployeePayslipDto"/>. <see cref="HasDocument"/> is always
 /// true for a listed row: <c>GET payroll/payslips/my/{id}/document</c> can always render a persisted payslip's PDF.
 /// <see cref="ViewedAt"/>/<see cref="AcknowledgedAt"/> come from <see cref="PayslipDelivery"/> (null until the
-/// employee downloads / acknowledges this payslip - kabul kriteri 2).</summary>
+/// employee downloads / acknowledges this payslip - kabul kriteri 2). The objection fields (B12 itiraz) are additive and
+/// null (omitted in JSON) while no objection was filed.</summary>
 public sealed record MyPayslipDto(
     Guid PayslipId, int Year, int Month, decimal GrossAmount, decimal NetAmount, bool HasDocument, DateTime CreatedAt,
-    DateTimeOffset? ViewedAt, DateTimeOffset? AcknowledgedAt);
+    DateTimeOffset? ViewedAt, DateTimeOffset? AcknowledgedAt,
+    PayslipObjectionStatus? ObjectionStatus = null, string? ObjectionReason = null, DateTimeOffset? ObjectedAt = null,
+    DateTimeOffset? ObjectionDecidedAt = null);
 
 /// <summary>The caller's own payslips, newest period first (<see cref="PayslipVisibility"/>): an Open/Approved period may
 /// still change before payment.</summary>
@@ -53,7 +56,9 @@ public sealed class GetMyPayslipsHandler(
                 deliveriesByPayslipId.TryGetValue(x.Payslip.Id, out var delivery);
                 return new MyPayslipDto(
                     x.Payslip.Id, x.Period.Year, x.Period.Month, x.Payslip.GrossAmount, x.Payslip.NetAmount, HasDocument: true, x.Payslip.CreatedAt,
-                    delivery?.ViewedAt, delivery?.AcknowledgedAt);
+                    delivery?.ViewedAt, delivery?.AcknowledgedAt,
+                    x.Payslip.ObjectionStatus == PayslipObjectionStatus.None ? null : x.Payslip.ObjectionStatus,
+                    x.Payslip.ObjectionReason, x.Payslip.ObjectedAt, x.Payslip.ObjectionDecidedAt);
             })
             .ToList();
         return Result.Success(list);
@@ -86,6 +91,12 @@ public sealed class AcknowledgeMyPayslipHandler(
         }
 
         var delivery = await deliveries.FindByPayslipIdAsync(payslip.Id, cancellationToken);
+        if (delivery?.AcknowledgedAt is null && payslip.ObjectionStatus == PayslipObjectionStatus.Pending)
+        {
+            // B12: an objection still being decided in Workflow blocks "Okudum, onaylıyorum".
+            return Error.Conflict(PayrollDomainErrors.PayslipObjectionPending);
+        }
+
         if (delivery is null)
         {
             delivery = PayslipDelivery.Create(payslip.TenantId, payslip.Id, employeeId, command.Channel);

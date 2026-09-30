@@ -19,16 +19,18 @@ const REPORTS_BASE = "/v1/reports";
 export type ReportExecutionStatus = "queued" | "running" | "succeeded" | "failed";
 
 /** `ReportCategories` (Reporting.Contracts); menu order is this array's order. */
-export const REPORT_CATEGORY_KEYS = ["administrative", "employee", "leave", "finance"] as const;
+export const REPORT_CATEGORY_KEYS = ["administrative", "employee", "leave", "finance", "time"] as const;
 export type ReportCategoryKey = (typeof REPORT_CATEGORY_KEYS)[number];
 
 /** `ReportParameterKind` (camelCase enum JSON). */
-export type ReportParameterKind = "orgUnits" | "year" | "month" | "dateRange" | "boolean";
+export type ReportParameterKind = "orgUnits" | "year" | "month" | "dateRange" | "boolean" | "select";
 
 export interface ReportParameter {
   key: string;
   kind: ReportParameterKind;
   isRequired: boolean;
+  /** Allowed values of a `select` parameter (omitted by the API for other kinds); labels: `reports:params.{key}Options.{value}`. */
+  options?: string[] | null;
 }
 
 /** Wire keys shared with `ReportParameterKeys`; a `dateRange` parameter is sent as `from` + `to`. */
@@ -39,6 +41,8 @@ export const REPORT_PARAMETER_KEYS = {
   from: "from",
   to: "to",
   includeTerminated: "includeTerminated",
+  status: "status",
+  format: "format",
 } as const;
 
 export interface ReportCatalogItem {
@@ -58,6 +62,42 @@ export interface ReportExecution {
   errorMessage?: string | null;
 }
 
+/** `ExportColumnType` (Shared.Contracts.Export), camelCase enum JSON. */
+export type ReportColumnType = "text" | "number" | "date" | "dateTime" | "boolean";
+
+export interface ReportColumn {
+  header: string;
+  type: ReportColumnType;
+}
+
+export interface ReportSheet {
+  index: number;
+  name: string;
+}
+
+/** Grid cell: text, number, boolean, ISO date ("yyyy-MM-dd") / date-time string, or null for a blank cell. */
+export type ReportCell = string | number | boolean | null;
+
+/** `ReportDataDto`: every sheet, the requested sheet's columns and one searched/sorted/paged slice of its rows. */
+export interface ReportData {
+  sheets: ReportSheet[];
+  sheetIndex: number;
+  columns: ReportColumn[];
+  rows: PagedResult<ReportCell[]>;
+}
+
+export interface ReportDataParams {
+  sheet?: number;
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  /** Column index, `-` prefix for descending ("-2"). */
+  sort?: string;
+}
+
+/** Problem `code` of `GET …/data` when the file cannot be shown as a grid (only downloaded). */
+export const REPORT_PREVIEW_UNAVAILABLE_CODE = "report_execution.preview_not_available";
+
 export interface DownloadedReportFile {
   blob: Blob;
   fileName: string;
@@ -69,9 +109,16 @@ export async function getReportCatalog(): Promise<ReportCatalogItem[]> {
   return data;
 }
 
-/** Requests a report; the response's status already reflects the (synchronous, R0) outcome. */
-export async function requestReport(reportKey: string, parameters?: Record<string, string>): Promise<ReportExecution> {
-  const { data } = await apiClient.post<ReportExecution>(`${REPORTS_BASE}/executions`, { reportKey, parameters });
+/**
+ * Requests a report; the response's status already reflects the (synchronous, R0) outcome.
+ * `notify: false` (the on-screen report page) skips the "report ready" e-mail.
+ */
+export async function requestReport(
+  reportKey: string,
+  parameters?: Record<string, string>,
+  options?: { notify?: boolean },
+): Promise<ReportExecution> {
+  const { data } = await apiClient.post<ReportExecution>(`${REPORTS_BASE}/executions`, { reportKey, parameters, notify: options?.notify });
   return data;
 }
 
@@ -84,6 +131,12 @@ export async function listReportExecutions(params: PagedQueryParams = {}): Promi
 /** One of the caller's own executions (used when arriving from the "report ready" e-mail link). */
 export async function getReportExecution(id: string): Promise<ReportExecution> {
   const { data } = await apiClient.get<ReportExecution>(`${REPORTS_BASE}/executions/${id}`);
+  return data;
+}
+
+/** One page of a succeeded execution's workbook as grid data. */
+export async function getReportExecutionData(id: string, params: ReportDataParams = {}): Promise<ReportData> {
+  const { data } = await apiClient.get<ReportData>(`${REPORTS_BASE}/executions/${id}/data`, { params });
   return data;
 }
 

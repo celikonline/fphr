@@ -16,4 +16,10 @@ public sealed class LiveBoardController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<LiveAttendanceStatusDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Live([FromQuery] Guid? orgUnitId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetLiveAttendanceBoardQuery(orgUnitId), ct));
+
+    /// <summary>Canlı monitör terminal durumu (Z5.3): çevrimiçi/çevrimdışı, son okutma, bugünkü okutma sayısı (attendance.terminal.view).</summary>
+    [HttpGet("terminals")]
+    [ProducesResponseType<IReadOnlyList<LiveTerminalStatusDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Terminals(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetLiveTerminalStatusQuery(), ct));
 }

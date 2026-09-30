@@ -3,7 +3,9 @@
   "tabs": {
     "pending": "Offene Aufgaben",
     "employee": "Checkliste pro Person",
-    "templates": "Vorlagen"
+    "templates": "Vorlagen",
+    "categories": "Kategorien",
+    "sets": "Vorlagensets"
   },
   "loadError": "Aufgaben konnten nicht geladen werden.",
   "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
@@ -34,7 +36,10 @@
     "status": "Status",
     "mandatory": "Pflicht",
     "offset": "Fällig (Tage)",
-    "active": "Aktiv"
+    "active": "Aktiv",
+    "importance": "Wichtigkeit",
+    "category": "Kategorie",
+    "eDocument": "E-Dokument erforderlich"
   },
   "offset": {
     "sameDay": "Am selben Tag",
@@ -72,5 +77,36 @@
     "stageEmpty": "Keine Aufgaben in dieser Phase.",
     "offsetHintHire": "Bezogen auf das Eintrittsdatum; negativ bedeutet davor (z. B. SGK-Meldung -1).",
     "offsetHintExit": "Tage nach dem Austrittsdatum (z. B. SGK-Abmeldung 10)."
+  },
+  "importance": {
+    "normal": "Normal",
+    "high": "Hoch",
+    "critical": "Kritisch"
+  },
+  "categories": {
+    "hint": "Kategorien zur Gruppierung von Aufgabenvorlagen.",
+    "add": "Kategorie hinzufügen",
+    "addTitle": "Kategorie hinzufügen",
+    "editTitle": "Kategorie bearbeiten",
+    "empty": "Noch keine Kategorien.",
+    "name": "Name",
+    "sortOrder": "Reihenfolge",
+    "delete": "Löschen",
+    "confirmDelete": "Kategorie \"{{name}}\" löschen?",
+    "uncategorized": "Ohne Kategorie"
+  },
+  "sets": {
+    "hint": "Benannte Aufgabensets, die für einen Mitarbeiter auf einmal gestartet werden können.",
+    "add": "Set hinzufügen",
+    "addTitle": "Vorlagenset hinzufügen",
+    "editTitle": "Vorlagenset bearbeiten",
+    "empty": "Noch keine Vorlagensets.",
+    "name": "Setname",
+    "taskCount": "Aufgaben",
+    "pick": "Aufgaben (nur gleiche Phase)",
+    "noTemplates": "Keine Aufgabenvorlagen für diese Phase.",
+    "order": "Reihenfolge",
+    "moveUp": "{{title}} nach oben",
+    "moveDown": "{{title}} nach unten"
   }
 }

@@ -9,13 +9,14 @@ using Sense.Modules.Notifications.Domain.UserNotifications;
 
 namespace Sense.Modules.Notifications.Application.Publishing;
 
-/// <summary>What to notify: one template, its variables (snake_case, string values), and who receives it.</summary>
+/// <summary>What to notify: one template, its variables (snake_case, string values), and who receives it. <paramref name="Channels"/> (optional) narrows delivery to the listed channels.</summary>
 public sealed record NotificationRequest(
     Guid SourceEventId,
     string TemplateKey,
     IReadOnlyList<NotificationRecipient> Recipients,
     IReadOnlyDictionary<string, string?> Model,
-    string? ActionPath);
+    string? ActionPath,
+    IReadOnlyCollection<string>? Channels = null);
 
 /// <summary>
 /// Turns a notification request into rows: an in-app <see cref="UserNotification"/> (rendered now, pushed over
@@ -50,6 +51,11 @@ public sealed partial class NotificationPublisher(
 
         bool Enabled(Guid? userId, string channel)
         {
+            if (request.Channels is not null && !request.Channels.Contains(channel, StringComparer.Ordinal))
+            {
+                return false;
+            }
+
             var explicitChoice = userId is { } uid
                 ? userPreferences.FirstOrDefault(p => p.UserId == uid && p.Channel == channel)?.Enabled
                 : null;
