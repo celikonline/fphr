@@ -149,14 +149,24 @@
   },
   "run": {
     "title": "Bericht erstellen",
-    "generate": "Bericht erstellen",
-    "success": "Bericht erstellt; der Download wurde gestartet.",
-    "successNoDownload": "Bericht erstellt. Sie können ihn aus der Liste der letzten Berichte herunterladen.",
+    "open": "Bericht öffnen",
     "error": "Der Bericht konnte nicht erstellt werden.",
     "requiredHint": "* Pflichtfilter",
-    "emailNote": "Sobald der Bericht bereit ist, erhalten Sie einen Link an Ihre hinterlegte E-Mail-Adresse.",
-    "format": "Excel (.xlsx)",
-    "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen."
+    "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen.",
+    "successNoDownload": "Der Bericht wird erstellt; laden Sie ihn unter Meine Berichte herunter, sobald er fertig ist."
+  },
+  "viewer": {
+    "search": "In den Ergebnissen suchen",
+    "noRows": "Keine Datensätze für diese Filter.",
+    "back": "Zurück zu den Berichten",
+    "apply": "Anwenden",
+    "downloadExcel": "Excel herunterladen",
+    "notFound": "Dieser Bericht wurde nicht gefunden oder Sie haben keinen Zugriff.",
+    "previewUnavailable": "Dieser Bericht kann nicht am Bildschirm angezeigt werden; Sie können ihn als Excel herunterladen.",
+    "runError": "Der Bericht konnte nicht erstellt werden.",
+    "dataError": "Die Berichtsdaten konnten nicht geladen werden.",
+    "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden.",
+    "downloadPdf": "PDF herunterladen"
   },
   "params": {
     "orgUnitIds": "Einheiten",

@@ -54,6 +54,20 @@ public sealed class ReportingHandlerTests
     }
 
     [Fact]
+    public async Task RequestReportHandler_WhenNotifyIsFalse_CompletesWithoutSendingTheReadyEmail()
+    {
+        var provider = FakeProvider("documents.missingDocuments");
+        var mailer = Substitute.For<IReportMailer>();
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), mailer, TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(new RequestReportCommand("documents.missingDocuments", null, Notify: false), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(ReportExecutionStatus.Succeeded);
+        await mailer.DidNotReceive().SendReportReadyAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task RequestReportHandler_WithUnknownReportKey_FailsWithoutTouchingRepository()
     {
         var executions = Substitute.For<IReportExecutionRepository>();

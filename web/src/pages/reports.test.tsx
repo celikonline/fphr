@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
@@ -13,7 +13,6 @@ import ReportsPage from "./reports";
 import {
   getReportCatalog,
   listReportExecutions,
-  requestReport,
   type ReportCatalogItem,
   type ReportExecution,
 } from "@/services/reports.service";
@@ -26,8 +25,11 @@ vi.mock("@/services/reports.service", async () => {
 });
 
 // Everything except the KPI tab is allowed: the page then renders just the catalog + history.
+const permissions = vi.hoisted(() => ({ denied: new Set<string>() }));
+
 vi.mock("@/components/permission-guard", () => ({
-  usePermission: (permission: string) => permission !== "analytics.kpi.view",
+  usePermission: (permission: string) =>
+    permission !== "analytics.kpi.view" && !permissions.denied.has(permission),
   useAnyPermission: () => true,
 }));
 
@@ -90,6 +92,11 @@ function executionsFor(page: number) {
   };
 }
 
+function ViewerStub() {
+  const location = useLocation();
+  return <div data-testid="viewer-location">{location.pathname + location.search}</div>;
+}
+
 function renderPage() {
   const instance = i18next.createInstance();
   void instance.init({
@@ -107,7 +114,10 @@ function renderPage() {
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
           <MemoryRouter>
-            <ReportsPage />
+            <Routes>
+              <Route path="/" element={<ReportsPage />} />
+              <Route path="/app/reports/:key" element={<ViewerStub />} />
+            </Routes>
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
@@ -118,6 +128,7 @@ function renderPage() {
 describe("ReportsPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    permissions.denied.clear();
     vi.mocked(getReportCatalog).mockResolvedValue(CATALOG);
     vi.mocked(listReportExecutions).mockImplementation(async (params) =>
       executionsFor(params?.page ?? 1)
@@ -175,54 +186,24 @@ describe("ReportsPage", () => {
     expect(window.localStorage.getItem("senseik.reports.catalogView")).toBe("grid");
   });
 
-  it("PDF ve Excel biçim seçicisi format parametresini gönderir", async () => {
+  it("opens the selected report on its own page from the run panel", async () => {
     const user = userEvent.setup();
-    vi.mocked(requestReport).mockResolvedValue({
-      id: "exec-new",
-      reportKey: "employee.list",
-      status: "queued",
-      requestedAt: "2026-09-25T10:00:00Z",
-    });
     renderPage();
+
     await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
+    await user.click(screen.getByRole("button", { name: "Raporu aç" }));
 
-    expect(screen.getByRole("radio", { name: "Excel" })).toBeChecked();
-    await user.click(screen.getByRole("radio", { name: "PDF" }));
-    await user.click(screen.getByRole("button", { name: "Rapor oluştur" }));
-
-    await waitFor(() => expect(requestReport).toHaveBeenCalled());
-    expect(vi.mocked(requestReport).mock.calls[0][1]).toMatchObject({ format: "pdf" });
+    expect(await screen.findByTestId("viewer-location")).toHaveTextContent("/app/reports/employee.list");
   });
 
-  it("Select parametresini çizer ve seçimi rapor isteğine yansıtır (format ayrıca çizilmez)", async () => {
+  it("hides the open button when the viewer page would be off limits (no reports.my.executions)", async () => {
     const user = userEvent.setup();
-    vi.mocked(getReportCatalog).mockResolvedValue([
-      {
-        key: "attendance.time.daily_status",
-        categoryKey: "time",
-        parameters: [
-          { key: "status", kind: "select", isRequired: true, options: ["late", "absent"] },
-          { key: "format", kind: "select", isRequired: false, options: ["xlsx", "pdf"] },
-        ],
-      },
-    ]);
-    vi.mocked(requestReport).mockResolvedValue({
-      id: "exec-new",
-      reportKey: "attendance.time.daily_status",
-      status: "queued",
-      requestedAt: "2026-09-25T10:00:00Z",
-    });
+    permissions.denied.add("reports.my.executions");
     renderPage();
-    await user.click(await screen.findByRole("button", { name: /Günlük durum listeleri/ }));
 
-    expect(screen.getByRole("button", { name: "Rapor oluştur" })).toBeDisabled();
-    await user.click(screen.getAllByLabelText("Durum *")[0]);
-    await user.click(await screen.findByText("Devamsızlar"));
-    await user.click(screen.getByRole("radio", { name: "PDF" }));
-    await user.click(screen.getByRole("button", { name: "Rapor oluştur" }));
+    await user.click(await screen.findByRole("button", { name: /Çalışan listesi raporu/ }));
 
-    await waitFor(() => expect(requestReport).toHaveBeenCalled());
-    expect(vi.mocked(requestReport).mock.calls[0][1]).toEqual({ status: "absent", format: "pdf" });
-    expect(screen.queryByLabelText(/^Biçim|^format/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Rapor oluştur")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Raporu aç" })).not.toBeInTheDocument();
   });
 });

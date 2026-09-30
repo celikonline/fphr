@@ -149,14 +149,24 @@
   },
   "run": {
     "title": "Rapor oluştur",
-    "generate": "Rapor oluştur",
-    "success": "Rapor oluşturuldu, indirme başladı.",
-    "successNoDownload": "Rapor oluşturuldu. Son oluşturduklarım listesinden indirebilirsiniz.",
+    "open": "Raporu aç",
     "error": "Rapor oluşturulamadı.",
     "requiredHint": "* zorunlu filtre",
-    "emailNote": "Rapor hazır olduğunda kayıtlı e-posta adresinize bağlantı gönderilir.",
-    "format": "Excel (.xlsx)",
-    "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz."
+    "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz.",
+    "successNoDownload": "Rapor hazırlanıyor; hazır olunca Raporlarım listesinden indirebilirsiniz."
+  },
+  "viewer": {
+    "search": "Sonuçlarda ara",
+    "noRows": "Bu filtrelerle gösterilecek kayıt yok.",
+    "back": "Raporlara dön",
+    "apply": "Uygula",
+    "downloadExcel": "Excel indir",
+    "notFound": "Bu rapor bulunamadı ya da erişiminiz yok.",
+    "previewUnavailable": "Bu rapor ekranda gösterilemiyor; Excel olarak indirebilirsiniz.",
+    "runError": "Rapor oluşturulamadı.",
+    "dataError": "Rapor verisi yüklenemedi.",
+    "idle": "Zorunlu filtreleri seçip Uygula'ya basın.",
+    "downloadPdf": "PDF indir"
   },
   "params": {
     "orgUnitIds": "Birimler",

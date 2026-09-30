@@ -149,14 +149,24 @@
   },
   "run": {
     "title": "Generate report",
-    "generate": "Generate report",
-    "success": "Report generated; the download has started.",
-    "successNoDownload": "Report generated. You can download it from the recent reports list.",
+    "open": "Open report",
     "error": "The report could not be generated.",
     "requiredHint": "* required filter",
-    "emailNote": "A link is sent to your registered e-mail address when the report is ready.",
-    "format": "Excel (.xlsx)",
-    "noFilters": "This report takes no filters; you can generate it right away."
+    "noFilters": "This report takes no filters; you can generate it right away.",
+    "successNoDownload": "The report is being prepared; download it from My reports when it is ready."
+  },
+  "viewer": {
+    "search": "Search results",
+    "noRows": "No records match these filters.",
+    "back": "Back to reports",
+    "apply": "Apply",
+    "downloadExcel": "Download Excel",
+    "notFound": "This report was not found or you do not have access.",
+    "previewUnavailable": "This report cannot be shown on screen; you can download it as Excel.",
+    "runError": "The report could not be generated.",
+    "dataError": "The report data could not be loaded.",
+    "idle": "Choose the required filters and press Apply.",
+    "downloadPdf": "Download PDF"
   },
   "params": {
     "orgUnitIds": "Units",
