@@ -52,6 +52,7 @@ import {
   MonitorCheck,
   Megaphone,
   GraduationCap,
+  Smartphone,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -237,7 +238,13 @@ export const NAV_FOOTER_ITEMS: NavItem[] = [
     icon: LifeBuoy,
     iconColor: "orange",
   },
-  { key: "trust", labelKey: "nav.trust", path: "/app/trust", icon: ShieldCheck, iconColor: "teal" },
+  {
+    key: "mobileApp",
+    labelKey: "nav.mobileApp",
+    path: "/app/mobile-app",
+    icon: Smartphone,
+    iconColor: "teal",
+  },
   {
     key: "account",
     labelKey: "nav.account",

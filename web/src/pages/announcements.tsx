@@ -52,7 +52,7 @@ function AnnouncementsScreen() {
   const canManage = usePermission("announcements.announcements.manage");
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="p-6 md:p-10">
       <Title order={2}>{t("announcements:title")}</Title>
       {canFeed && canManage ? (
         <Tabs defaultValue="feed" keepMounted={false}>

@@ -167,6 +167,10 @@
 
   <!-- Employee -->
   <data name="employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="employee.card_pdf.sections_required" xml:space="preserve"><value>Select at least one section for the PDF.</value></data>
+  <data name="employee.card_pdf.unknown_section" xml:space="preserve"><value>Unknown card section: {section}.</value></data>
+  <data name="employee.card_pdf.period_invalid" xml:space="preserve"><value>The period start cannot be after its end.</value></data>
+  <data name="employee.card_pdf.no_sections" xml:space="preserve"><value>You are not allowed to view any of the selected sections.</value></data>
   <data name="employee.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
   <data name="employee.manager_not_found" xml:space="preserve"><value>The selected manager was not found or is inactive.</value></data>
   <data name="employee.mentor_not_found" xml:space="preserve"><value>The selected mentor was not found or is inactive.</value></data>
@@ -1360,6 +1364,60 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.Gender.Male" xml:space="preserve"><value>Male</value></data>
   <data name="report.enum.Gender.Female" xml:space="preserve"><value>Female</value></data>
   <data name="report.enum.Gender.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.MaritalStatus.Unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="report.enum.MaritalStatus.Single" xml:space="preserve"><value>Single</value></data>
+  <data name="report.enum.MaritalStatus.Married" xml:space="preserve"><value>Married</value></data>
+  <data name="report.enum.MaritalStatus.Divorced" xml:space="preserve"><value>Divorced</value></data>
+  <data name="report.enum.EducationStatus.Student" xml:space="preserve"><value>Student</value></data>
+  <data name="report.enum.EducationStatus.Graduate" xml:space="preserve"><value>Graduate</value></data>
+  <data name="report.enum.HighestEducationLevel.Primary" xml:space="preserve"><value>Primary school</value></data>
+  <data name="report.enum.HighestEducationLevel.MiddleSchool" xml:space="preserve"><value>Middle school</value></data>
+  <data name="report.enum.HighestEducationLevel.HighSchool" xml:space="preserve"><value>High school</value></data>
+  <data name="report.enum.HighestEducationLevel.Associate" xml:space="preserve"><value>Associate degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Bachelor" xml:space="preserve"><value>Bachelor's degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Master" xml:space="preserve"><value>Master's degree</value></data>
+  <data name="report.enum.HighestEducationLevel.Doctorate" xml:space="preserve"><value>Doctorate</value></data>
+  <data name="report.enum.MilitaryStatus.NotCompleted" xml:space="preserve"><value>Not completed</value></data>
+  <data name="report.enum.MilitaryStatus.Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="report.enum.MilitaryStatus.Deferred" xml:space="preserve"><value>Deferred</value></data>
+  <data name="report.enum.MilitaryStatus.Exempt" xml:space="preserve"><value>Exempt</value></data>
+  <data name="report.enum.MilitaryStatus.DraftEvader" xml:space="preserve"><value>Draft evader</value></data>
+  <data name="report.enum.MilitaryStatus.Absentee" xml:space="preserve"><value>Absentee</value></data>
+  <data name="report.enum.DisabilityDegree.None" xml:space="preserve"><value>None</value></data>
+  <data name="report.enum.DisabilityDegree.First" xml:space="preserve"><value>1st degree</value></data>
+  <data name="report.enum.DisabilityDegree.Second" xml:space="preserve"><value>2nd degree</value></data>
+  <data name="report.enum.DisabilityDegree.Third" xml:space="preserve"><value>3rd degree</value></data>
+  <data name="report.enum.BloodType.OPos" xml:space="preserve"><value>O Rh+</value></data>
+  <data name="report.enum.BloodType.ONeg" xml:space="preserve"><value>O Rh-</value></data>
+  <data name="report.enum.BloodType.APos" xml:space="preserve"><value>A Rh+</value></data>
+  <data name="report.enum.BloodType.ANeg" xml:space="preserve"><value>A Rh-</value></data>
+  <data name="report.enum.BloodType.BPos" xml:space="preserve"><value>B Rh+</value></data>
+  <data name="report.enum.BloodType.BNeg" xml:space="preserve"><value>B Rh-</value></data>
+  <data name="report.enum.BloodType.ABPos" xml:space="preserve"><value>AB Rh+</value></data>
+  <data name="report.enum.BloodType.ABNeg" xml:space="preserve"><value>AB Rh-</value></data>
+  <data name="report.enum.CareerChangeType.Hire" xml:space="preserve"><value>Hire</value></data>
+  <data name="report.enum.CareerChangeType.Promotion" xml:space="preserve"><value>Promotion</value></data>
+  <data name="report.enum.CareerChangeType.LateralMove" xml:space="preserve"><value>Lateral move</value></data>
+  <data name="report.enum.CareerChangeType.Demotion" xml:space="preserve"><value>Demotion</value></data>
+  <data name="report.enum.CareerChangeType.TitleChange" xml:space="preserve"><value>Title change</value></data>
+  <data name="report.enum.CareerChangeType.ManagerChange" xml:space="preserve"><value>Manager change</value></data>
+  <data name="report.enum.CareerChangeType.GroupTransfer" xml:space="preserve"><value>Group transfer</value></data>
+  <data name="report.enum.CareerChangeType.BusinessTransfer" xml:space="preserve"><value>Business transfer</value></data>
+  <data name="report.enum.CareerChangeType.Rehire" xml:space="preserve"><value>Rehire</value></data>
+  <data name="report.enum.CareerChangeType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.BankAccountType.Cheque" xml:space="preserve"><value>Cheque</value></data>
+  <data name="report.enum.BankAccountType.TimeDeposit" xml:space="preserve"><value>Time deposit</value></data>
+  <data name="report.enum.BankAccountType.DemandDeposit" xml:space="preserve"><value>Demand deposit</value></data>
+  <data name="report.enum.BankAccountType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.UnionCoverageType.Member" xml:space="preserve"><value>Member</value></data>
+  <data name="report.enum.UnionCoverageType.SolidarityDues" xml:space="preserve"><value>Solidarity dues</value></data>
+  <data name="report.enum.UnionCoverageType.UnionApproved" xml:space="preserve"><value>Union-approved</value></data>
+  <data name="report.enum.UnionCoverageType.OutOfScope" xml:space="preserve"><value>Out of scope</value></data>
+  <data name="report.enum.UserAccountStatus.None" xml:space="preserve"><value>No account</value></data>
+  <data name="report.enum.UserAccountStatus.Invited" xml:space="preserve"><value>Invited</value></data>
+  <data name="report.enum.UserAccountStatus.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="report.enum.UserAccountStatus.Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="report.enum.UserAccountStatus.Disabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="report.enum.EmploymentType.FullTime" xml:space="preserve"><value>Full-time</value></data>
   <data name="report.enum.EmploymentType.PartTime" xml:space="preserve"><value>Part-time</value></data>
   <data name="report.enum.EmploymentType.Temporary" xml:space="preserve"><value>Temporary</value></data>
@@ -1425,6 +1483,55 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.OvertimeConversionStatus.Posted" xml:space="preserve"><value>Posted</value></data>
   <data name="report.enum.OvertimeConversionStatus.Reversed" xml:space="preserve"><value>Reversed</value></data>
   <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Withdrawn" xml:space="preserve"><value>Withdrawn</value></data>
+  <data name="report.enum.OvertimeRequestStatus.Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="report.enum.OvertimeDayKind.Workday" xml:space="preserve"><value>Workday</value></data>
+  <data name="report.enum.OvertimeDayKind.WeeklyRest" xml:space="preserve"><value>Weekly rest day</value></data>
+  <data name="report.enum.OvertimeDayKind.PublicHoliday" xml:space="preserve"><value>Public holiday</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.PayrollPeriodStatus.Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="report.enum.GarnishmentType.Icra" xml:space="preserve"><value>Enforcement</value></data>
+  <data name="report.enum.GarnishmentType.Nafaka" xml:space="preserve"><value>Alimony</value></data>
+  <data name="report.enum.WageBasis.Monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="report.enum.WageBasis.Daily" xml:space="preserve"><value>Daily</value></data>
+  <data name="report.enum.WageBasis.Weekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="report.enum.WageBasis.Hourly" xml:space="preserve"><value>Hourly</value></data>
+  <data name="report.enum.WageBasis.Yearly" xml:space="preserve"><value>Yearly</value></data>
+  <data name="report.enum.SgkStatus.Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="report.enum.SgkStatus.Retired" xml:space="preserve"><value>Retired</value></data>
+  <data name="report.enum.SgkStatus.Intern" xml:space="preserve"><value>Intern</value></data>
+  <data name="report.enum.SgkStatus.Apprentice" xml:space="preserve"><value>Apprentice</value></data>
+  <data name="report.enum.SgkStatus.Foreign" xml:space="preserve"><value>Foreign</value></data>
+  <data name="report.enum.PayrollPaymentMethod.Bank" xml:space="preserve"><value>Bank</value></data>
+  <data name="report.enum.PayrollPaymentMethod.Cash" xml:space="preserve"><value>Cash</value></data>
+  <data name="report.enum.AssetStatus.Unassigned" xml:space="preserve"><value>Unassigned</value></data>
+  <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Assigned</value></data>
+  <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Retired</value></data>
+  <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Pending assignment</value></data>
+  <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Expense</value></data>
+  <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Advance</value></data>
+  <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Overtime</value></data>
+  <data name="report.enum.PaymentKind.Adjustment" xml:space="preserve"><value>Adjustment</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Submitted" xml:space="preserve"><value>Pending approval</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.ExpenseClaimStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Submitted" xml:space="preserve"><value>Pending approval</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.AdvanceRequestStatus.Paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="report.enum.AccessType.Employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="report.enum.AccessType.Manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="report.enum.AccessType.HR" xml:space="preserve"><value>HR Manager</value></data>
+  <data name="report.enum.AccessType.PayrollSpecialist" xml:space="preserve"><value>Accounting</value></data>
+  <data name="report.enum.AccessType.Owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="report.enum.AccessType.Admin" xml:space="preserve"><value>Admin</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>

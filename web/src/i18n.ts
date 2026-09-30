@@ -37,7 +37,6 @@ i18n
       "recruitment",
       "documents",
       "assets",
-      "trust",
       "requests",
       "expense",
       "reports",
@@ -51,6 +50,7 @@ i18n
       "ohs",
       "platform",
       "setup",
+      "mobileApp",
     ],
     interpolation: {
       escapeValue: false,

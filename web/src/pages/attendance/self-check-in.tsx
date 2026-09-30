@@ -89,7 +89,7 @@ function SelfCheckIn() {
   const isBusy = qrMutation.isPending || gpsMutation.isPending;
 
   return (
-    <div className="max-w-lg space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <LogIn size={24} /> {t("attendance:selfCheckIn.title")}

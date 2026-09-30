@@ -103,7 +103,7 @@ function CompanyCalendar() {
   const typeLabel = (type: CompanyEventType) => t(`companyCalendar:type.${type}`);
 
   return (
-    <div className={`${classes.root} flex max-w-[80rem] flex-col gap-6 p-6 md:p-10`}>
+    <div className={`${classes.root} flex w-full flex-col gap-6 p-6 md:p-10`}>
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
