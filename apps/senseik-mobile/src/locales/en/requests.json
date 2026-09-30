@@ -1,0 +1,169 @@
+{
+  "sheet": {
+    "title": "New request",
+    "close": "Close the request menu",
+    "subtitle": "What would you like to request?"
+  },
+  "options": {
+    "leave": {
+      "label": "Leave",
+      "description": "Annual, excuse, sick…"
+    },
+    "overtime": {
+      "label": "Overtime",
+      "description": "Planned or worked overtime"
+    },
+    "expense": {
+      "label": "Expense",
+      "description": "With a receipt or invoice"
+    },
+    "advance": {
+      "label": "Advance",
+      "description": "Deducted from your salary"
+    },
+    "punchCorrection": {
+      "label": "Missing punch",
+      "description": "Correct a timesheet day"
+    }
+  },
+  "titles": {
+    "leave": "Leave request",
+    "overtime": "Overtime request",
+    "expense": "Expense request",
+    "advance": "Advance request",
+    "punchCorrection": "Missing punch request"
+  },
+  "leaveTypesLoadError": "Leave types could not be loaded. Please try again.",
+  "filters": {
+    "all": "All"
+  },
+  "list": {
+    "title": "My requests",
+    "partialLoadError": "Some requests could not be loaded. Please try again.",
+    "emptyTitle": "No requests found",
+    "emptyMessage": "You have no requests of this type."
+  },
+  "withdrawOvertime": {
+    "confirmTitle": "Withdraw overtime request",
+    "confirmMessage": "Are you sure you want to withdraw this request? This cannot be undone.",
+    "error": "The overtime request could not be withdrawn. Please try again."
+  },
+  "expenseStatus": {
+    "draft": "Draft",
+    "submitted": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "paid": "Paid"
+  },
+  "advanceStatus": {
+    "submitted": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "paid": "Paid"
+  },
+  "expenseCategories": {
+    "travel": "Travel and Transport",
+    "food": "Food and Beverage"
+  },
+  "form": {
+    "date": "Date",
+    "descriptionOptional": "Description (optional)",
+    "submit": "Send request"
+  },
+  "amountPlaceholder": "0.00",
+  "overtime": {
+    "payRates": {
+      "rate50": "50% premium (overtime)",
+      "rate25": "25% premium (extended hours)"
+    },
+    "invalidDuration": "Please enter a valid duration between 1 minute and 24 hours.",
+    "sentWithWarnings": "Request sent",
+    "submitted": "Your overtime request has been sent for approval.",
+    "submitError": "The overtime request could not be sent. Please try again.",
+    "startTime": "Start time",
+    "durationMinutes": "Duration (minutes)",
+    "durationPlaceholder": "e.g. 120",
+    "duration": "Duration",
+    "payRate": "Pay rate",
+    "payRatePlaceholder": "Select a rate",
+    "descriptionPlaceholder": "e.g. month-end closing work",
+    "warnings": {
+      "overtime_consent_missing": "Your written overtime consent is not on file.",
+      "overtime_night_consent_missing": "The entry falls within night hours but you have no night overtime consent.",
+      "overtime_overlaps_schedule": "Part of the request falls within planned working hours; that part was deducted from the payable time.",
+      "overtime_annual_limit_exceeded": "With this entry your annual overtime total exceeds the legal limit.",
+      "overtime_daily_limit_exceeded": "With this entry your daily overtime total exceeds 11 hours.",
+      "overtime_past_date_exceeded": "This date is more than 7 days in the past."
+    }
+  },
+  "advance": {
+    "invalidAmount": "Please enter a valid amount greater than zero.",
+    "invalidDate": "The requested date is outside the allowed range.",
+    "submitted": "Your advance request has been sent for approval.",
+    "submitError": "The advance request could not be sent. Please try again.",
+    "amount": "Amount (TRY)",
+    "requestedDate": "Requested date",
+    "descriptionPlaceholder": "e.g. advance for travel costs"
+  },
+  "expense": {
+    "loadError": "Expense details could not be loaded. Please try again.",
+    "selectCategory": "Please select a category.",
+    "receiptDateFuture": "The receipt date cannot be in the future.",
+    "maxItems": "A request can have at most {{max}} items.",
+    "submitted": "Your expense request has been sent for approval.",
+    "draftTitle": "Draft created",
+    "draftMessage": "Your expense draft was created but could not be completed. Please continue in the web app.",
+    "submitError": "The expense request could not be sent. Please try again.",
+    "noCategories": "No active expense categories found.",
+    "category": "Category",
+    "categoryPlaceholder": "Select a category",
+    "receiptDate": "Receipt date",
+    "descriptionPlaceholder": "e.g. customer visit",
+    "addItem": "Add item",
+    "addItemHint": "Add at least one item to send the request.",
+    "itemsTitle": "Added items",
+    "removeItemA11y": "Remove item: {{item}}",
+    "total": "Total"
+  },
+  "punchCorrectionStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "applyFailed": "Could not be applied",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn"
+  },
+  "withdrawPunchCorrection": {
+    "confirmTitle": "Withdraw correction request",
+    "confirmMessage": "Are you sure you want to withdraw this request? This cannot be undone.",
+    "error": "The correction request could not be withdrawn. Please try again."
+  },
+  "punchCorrection": {
+    "includeCheckIn": "Correct check-in time",
+    "includeCheckOut": "Correct check-out time",
+    "reason": "Reason",
+    "reasonPlaceholder": "Briefly explain why",
+    "invalidTimeRange": "The check-out time must be after the check-in time.",
+    "futureDateNotAllowed": "A future date cannot be selected.",
+    "submitted": "Your correction request has been sent for approval.",
+    "submitError": "The correction request could not be sent. Please try again."
+  },
+  "detail": {
+    "title": "Request detail",
+    "loadError": "The request detail could not be loaded.",
+    "timelineTitle": "Approval chain",
+    "step": "Step {{step}}",
+    "stepStatus": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending"
+    },
+    "hiddenApprover": "Approver",
+    "unknownAuthor": "Unknown",
+    "commentsTitle": "Comments",
+    "commentsEmpty": "No comments yet.",
+    "commentsClosed": "This request was cancelled, so it can no longer take comments.",
+    "commentPlaceholder": "Write a comment…",
+    "commentSend": "Send",
+    "commentSendError": "The comment could not be sent. Please try again."
+  }
+}

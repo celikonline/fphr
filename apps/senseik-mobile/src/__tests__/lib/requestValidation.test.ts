@@ -2,9 +2,12 @@ import {
   isAdvanceRequestedDateAllowed,
   isOvertimeDurationValid,
   isPositiveAmount,
+  isPunchCorrectionDateAllowed,
+  isPunchCorrectionTimeRangeValid,
   isReceiptDateAllowed,
   parseAmountInput,
 } from "@/lib/requestValidation";
+import i18n from "@/lib/i18n";
 
 describe("isPositiveAmount", () => {
   it("allows a positive amount", () => {
@@ -86,6 +89,76 @@ describe("isOvertimeDurationValid (OvertimeLimits.MaxDurationMinutes = 1440)", (
   });
 });
 
+describe("isPunchCorrectionDateAllowed (FG-004: future_date)", () => {
+  const today = new Date("2026-09-27T12:00:00");
+
+  it("allows today", () => {
+    expect(isPunchCorrectionDateAllowed("2026-09-27", today)).toBe(true);
+  });
+
+  it("allows a past date", () => {
+    expect(isPunchCorrectionDateAllowed("2020-01-01", today)).toBe(true);
+  });
+
+  it("rejects tomorrow", () => {
+    expect(isPunchCorrectionDateAllowed("2026-09-28", today)).toBe(false);
+  });
+});
+
+describe("isPunchCorrectionTimeRangeValid (FG-004: invalid_range)", () => {
+  it("passes when only a check-in is being corrected", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: false,
+        checkOutTime: "18:00",
+      })
+    ).toBe(true);
+  });
+
+  it("passes when only a check-out is being corrected", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: false,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "01:00",
+      })
+    ).toBe(true);
+  });
+
+  it("passes when both are given and the check-out is after the check-in", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "18:00",
+      })
+    ).toBe(true);
+  });
+
+  it("rejects a check-out at or before the check-in once both are given", () => {
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "09:00",
+        includeCheckOut: true,
+        checkOutTime: "09:00",
+      })
+    ).toBe(false);
+    expect(
+      isPunchCorrectionTimeRangeValid({
+        includeCheckIn: true,
+        checkInTime: "18:00",
+        includeCheckOut: true,
+        checkOutTime: "09:00",
+      })
+    ).toBe(false);
+  });
+});
+
 describe("parseAmountInput", () => {
   it("parses a dot-decimal value", () => {
     expect(parseAmountInput("125.50")).toBe(125.5);
@@ -109,5 +182,47 @@ describe("parseAmountInput", () => {
 
   it("returns null for non-numeric input", () => {
     expect(parseAmountInput("abc")).toBeNull();
+  });
+});
+
+describe("parseAmountInput in English (FG-001b)", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
+  it("reads the dot as the decimal separator and ignores comma thousands separators", () => {
+    expect(parseAmountInput("1,234.56")).toBe(1234.56);
+  });
+
+  it("ignores several thousands separators", () => {
+    expect(parseAmountInput("1,234,567.89")).toBe(1234567.89);
+  });
+
+  it("parses a plain dot-decimal value", () => {
+    expect(parseAmountInput("125.50")).toBe(125.5);
+  });
+
+  it("parses a whole number with a thousands separator", () => {
+    expect(parseAmountInput("1,000")).toBe(1000);
+  });
+
+  it("returns null for empty, separator-only and non-numeric input", () => {
+    expect(parseAmountInput("")).toBeNull();
+    expect(parseAmountInput(",")).toBeNull();
+    expect(parseAmountInput("abc")).toBeNull();
+  });
+
+  it("uses an explicitly passed language over the active one", () => {
+    expect(parseAmountInput("125,50", "tr")).toBe(125.5);
+  });
+});
+
+describe("parseAmountInput in Turkish stays unchanged (FG-001b)", () => {
+  it("still reads the first comma as the decimal separator", () => {
+    expect(parseAmountInput("1234,56")).toBe(1234.56);
+  });
+
+  it("does not treat an English-formatted amount as valid", () => {
+    expect(parseAmountInput("1,234.56")).toBeNull();
   });
 });

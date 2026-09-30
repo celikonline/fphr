@@ -1,0 +1,26 @@
+{
+  "id": "QA-006",
+  "baslik": "Duyuru akışında (announcements/feed) type/priority/kind alanları camelCase değil, PascalCase dönüyor",
+  "durum": "incelemede",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-dotnet (+ web tüketicileri kontrolü)",
+  "dal": "",
+  "kabul": [
+    "GET /api/v1/announcements/feed yanıtında `type`, `priority` ve `kind` alanları diğer uçlarla tutarlı biçimde camelCase değer döner (örn. \"general\"/\"normal\"/\"announcement\"), PascalCase değil",
+    "AnnouncementFeedItemDto.Type/Priority ya gerçek enum tipiyle (JsonStringEnumConverter(CamelCase) global ayarından yararlanacak şekilde) dönülür ya da manuel olarak camelCase'e çevrilir",
+    "Attendance/Leave test kapısı ve mobil kapı (tsc/eslint/jest) yeşil kalır"
+  ],
+  "bulgu": {
+    "dosya": "src/Modules/Announcements/Sense.Modules.Announcements.Application/Announcements/AnnouncementFeed.cs:22-33,61-63,86-99",
+    "neden": "AnnouncementFeedItemDto kaydında Type/Priority/Kind alanları C# `string` olarak tanımlı; handler bunları `a.Type.ToString()` / `a.Priority.ToString()` ile (satır 63) ve `AnnouncementFeedItemKind.Announcement = \"Announcement\"` gibi PascalCase sabit dizgilerle (satır 13-14, 31, 91, 96) dolduruyor. Alanlar enum tipinde OLMADIĞI için System.Text.Json'ın global `JsonStringEnumConverter(CamelCase)` kuralı (bkz. proje CLAUDE.md \"API JSON\" maddesi) bu alanlara hiç uygulanmıyor; sonuç PascalCase enum üye adı olarak düz metin gidiyor. Aynı oturumda çağrılan diğer uçlar (örn. GET /leave/calendar -> \"status\":\"approved\", \"type\":\"leaveStart\"; GET /announcements/events/calendar -> \"type\":\"birthday\") doğru şekilde camelCase dönüyor - bu uç istisna. Mobil taraf `AnnouncementFeedItem.type`/`.priority` alanlarını (apps/senseik-mobile/src/services/HomeFeedService.ts:49-50) da düz `string` olarak tanımladığı için derleme zamanında bu tutarsızlığı yakalayamıyor; şu an UI bu alanları render etmiyor (AnnouncementCard.tsx yalnız title/content/isRead kullanıyor) ama sözleşme ihlali kalıcı ve gelecekte type/priority'ye göre rozet/renk eklenirse (ör. \"Recognition\" vs \"Announcement\" ayrımı) sessizce PascalCase karşılaştırma hatasına yol açar.",
+    "yeniden_uretim": "Yerel API ayaktayken (http://localhost:18080) calisan@demo.local ile giriş yap, ardından `GET /api/v1/announcements/feed` çağır; yanıttaki öğelerde `\"type\":\"General\"`, `\"priority\":\"Normal\"`, `\"kind\":\"Announcement\"` (PascalCase) görülür - aynı yanıtta beklenen camelCase (\"general\"/\"normal\"/\"announcement\") değil. Karşılaştırma için aynı oturumda `GET /api/v1/leave/calendar?from=<bugün>&to=<bugün>` çağrılırsa `\"status\":\"approved\"`, `\"type\":\"leaveStart\"` camelCase döndüğü görülür.",
+    "oneri": "AnnouncementFeedItemDto.Type/Priority alanlarını `string` yerine gerçek `AnnouncementType`/`AnnouncementPriority` enum tipine çevirip global JsonStringEnumConverter(CamelCase)'in işlemesine izin ver; Kind için de bir enum tanımlanıp aynı yola alınabilir ya da AnnouncementFeedItemKind sabitleri camelCase'e çevrilebilir (\"announcement\"/\"recognition\"). Handler'daki `.ToString()` çağrıları kaldırılır."
+  },
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "riskli_alan": false,
+  "kanit": "29e23bd4239bb7b698c2fc26dba91296eb76c9e6",
+  "handoff": "Kontrolcü kararı (2026-09-28): PR #134 kapsamı dışı — Announcements backend sözleşme değişikliği web tüketicilerini (\"Announcement\"/\"Recognition\" karşılaştırmaları) etkileyebilir; mobil zaten büyük/küçük harf duyarsız. Ayrı işte web+mobil birlikte ele alınmalı.",
+  "acan": "qa-dongusu",
+  "tur": 7,
+  "test_edilen_sha": "862615adcef1b01cdd9c74848d769a46e2769bb5"
+}

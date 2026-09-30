@@ -72,4 +72,24 @@ public static class AttendanceErrors
 
     /// <summary>I0: aynı puantaj günü eşzamanlı yazma çakışması yeniden denemelere rağmen çözülemedi - istemci tekrar denemeli.</summary>
     public const string DayConcurrentUpdate = "attendance.day.concurrent_update";
+    /// <summary>Mola başı: the caller has no open (checked in, not yet checked out) attendance day.</summary>
+    public const string SelfCheckInBreakNotCheckedIn = "attendance.self_checkin.break_not_checked_in";
+
+    /// <summary>Mola başı: a break was already started and not ended yet.</summary>
+    public const string SelfCheckInBreakAlreadyOpen = "attendance.self_checkin.break_already_open";
+
+    /// <summary>Mola sonu: there is no open break to end.</summary>
+    public const string SelfCheckInBreakNotOpen = "attendance.self_checkin.break_not_open";
+
+    /// <summary>FG-004: a punch correction cannot be requested for a day that has not started yet (tenant-local date).</summary>
+    public const string CorrectionFutureDate = "attendance.correction.future_date";
+
+    /// <summary>FG-004: the month is locked (ShiftPlanLock) or the employee's monthly timesheet is already approved.</summary>
+    public const string CorrectionPeriodLocked = "attendance.correction.period_locked";
+
+    /// <summary>FG-004: the employee already has a pending correction request for this day.</summary>
+    public const string CorrectionPendingExists = "attendance.correction.pending_exists";
+
+    /// <summary>FG-020: "Takvimim" self-servis günlük program sorgusu 42 günü aşamaz.</summary>
+    public const string WorkScheduleRangeTooLong = "attendance.work_schedule.range_too_long";
 }

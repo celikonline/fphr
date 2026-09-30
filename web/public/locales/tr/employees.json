@@ -325,6 +325,21 @@
   },
   "card": {
     "backToList": "Çalışanlara dön",
+    "pdf": {
+      "button": "PDF olarak indir",
+      "title": "Çalışan kartını PDF olarak indir",
+      "sections": "Bölümler",
+      "selectAll": "Tümünü seç",
+      "clearAll": "Temizle",
+      "period": "Dönem",
+      "periodHint": "İzin, fazla mesai, pusula, zimmet ve ödeme listeleri bu döneme göre süzülür; diğer bilgiler güncel haliyle gelir.",
+      "presets": { "last12Months": "Son 12 ay", "thisYear": "Bu yıl", "allTime": "Tüm zamanlar", "custom": "Özel" },
+      "from": "Başlangıç",
+      "to": "Bitiş",
+      "invalidPeriod": "Bitiş başlangıçtan önce olamaz.",
+      "generate": "PDF oluştur",
+      "failed": "PDF oluşturulamadı."
+    },
     "notFoundTitle": "Çalışan bulunamadı",
     "notFoundDescription": "Kayıt silinmiş veya erişim kapsamınız dışında olabilir.",
     "saved": "Çalışan bilgileri kaydedildi.",

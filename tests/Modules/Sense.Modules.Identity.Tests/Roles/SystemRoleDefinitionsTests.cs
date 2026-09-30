@@ -15,7 +15,7 @@ public sealed class SystemRoleDefinitionsTests
 {
     private static readonly string[] SelfServiceKeys =
         ["employee.self.edit", "employee.my.view", "attendance.my.timesheet", "expense.my.claims", "me.profile.view",
-         "attendance.shift.self", "attendance.availability.self", "payroll.my.payslip"];
+         "attendance.shift.self", "attendance.availability.self", "payroll.my.payslip", "payroll.my.payslips"];
 
     private static readonly IReadOnlyList<Permission> Catalog =
     [
@@ -110,6 +110,7 @@ public sealed class SystemRoleDefinitionsTests
         var keys = Resolve(SystemRoleCodes.Employee);
 
         keys.ShouldContain("payroll.my.payslip");
+        keys.ShouldContain("payroll.my.payslips"); // TK-030 (canlıda)
         keys.ShouldNotContain("payroll.trace.view");
     }
 

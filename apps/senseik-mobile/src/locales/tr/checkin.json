@@ -1,0 +1,110 @@
+{
+  "punch": {
+    "in": {
+      "tile": "Giriş",
+      "action": "Giriş yap"
+    },
+    "out": {
+      "tile": "Çıkış",
+      "action": "Çıkış yap"
+    },
+    "breakStart": {
+      "tile": "Mola başı",
+      "action": "Molaya başla"
+    },
+    "breakEnd": {
+      "tile": "Mola sonu",
+      "action": "Molayı bitir"
+    }
+  },
+  "qr": {
+    "in": "QR ile giriş yap",
+    "out": "QR ile çıkış yap",
+    "breakStart": "QR ile molaya başla",
+    "breakEnd": "QR ile molayı bitir",
+    "done": "QR kodu okut"
+  },
+  "accuracy": {
+    "good": "Doğru",
+    "weak": "Zayıf"
+  },
+  "clock": {
+    "a11y": "Saat {{time}}",
+    "accuracy": "Konum doğruluğu: {{value}}",
+    "accuracyUnknown": "bilinmiyor",
+    "meters": "{{value}} m",
+    "sinceCheckIn": "Girişten beri {{elapsed}}"
+  },
+  "map": {
+    "a11yMap": "Harita, konumun: {{place}}",
+    "a11yCard": "Konumun: {{place}}",
+    "yourLocation": "Konumun"
+  },
+  "tiles": {
+    "a11y": "{{title}}, {{time}}",
+    "noRecord": "kayıt yok"
+  },
+  "place": {
+    "denied": "Konum izni verilmedi",
+    "servicesOff": "Cihazınızda konum kapalı",
+    "unavailable": "Konum alınamadı",
+    "locating": "Konum alınıyor…"
+  },
+  "success": {
+    "fallbackTile": "Kayıt",
+    "saved": "{{tile}} kaydedildi: {{time}}{{place}}"
+  },
+  "errors": {
+    "statusLoad": "Giriş/çıkış durumu yüklenemedi.",
+    "punch": "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin.",
+    "cameraDenied": "Kamera izni verilmedi. QR kodu okutmak için ayarlardan kamera iznini açın."
+  },
+  "banners": {
+    "denied": "Konum izni verilmedi. Konumla giriş/çıkış için ayarlardan konum iznini açın.",
+    "servicesOff": "Cihazınızda konum kapalı. Konumla giriş/çıkış için cihaz ayarlarından konumu açın.",
+    "unavailable": "Konum alınamadı.",
+    "openSettings": "Ayarları aç"
+  },
+  "breakTotal": "Bugünkü mola: {{minutes}} dk",
+  "doneToday": "Bugün tamamlandı",
+  "geofence": {
+    "inside": "Ofis alanında",
+    "outside": "Alan dışında",
+    "distance": "{{name}} · {{distance}}",
+    "kilometers": "{{value}} km",
+    "outsideError": "Ofis alanının dışındasınız; kayıt oluşturulmadı. Ofis alanına girip tekrar deneyin."
+  },
+  "biometric": {
+    "punchPrompt": "Giriş/çıkış kaydı için kimliğinizi doğrulayın",
+    "cancelled": "Kimlik doğrulanmadı; kayıt oluşturulmadı."
+  },
+  "punchRequest": {
+    "title": "Kayıt talebi",
+    "date": "Tarih (yyyy-aa-gg)",
+    "time": "Saat (ss:dd)",
+    "direction": "Yön",
+    "in": "Giriş",
+    "out": "Çıkış",
+    "reason": "Gerekçe",
+    "reasonPlaceholder": "Kaydın neden eksik olduğunu açıklayın",
+    "submit": "Talebi gönder",
+    "mine": "Taleplerim",
+    "empty": "Henüz talebiniz yok.",
+    "decidedAt": "Karar: {{time}}",
+    "cancel": "İptal et",
+    "loadError": "Talepler yüklenemedi. Lütfen tekrar deneyin.",
+    "invalidDateTime": "Lütfen geçerli bir tarih (yyyy-aa-gg) ve saat (ss:dd) girin.",
+    "invalidTimeTitle": "Geçersiz zaman",
+    "futureTime": "Gelecek bir zaman için talep oluşturulamaz.",
+    "reasonRequired": "Gerekçe zorunludur.",
+    "sentMessage": "Talebiniz onaya gönderildi.",
+    "submitError": "Talep gönderilemedi. Lütfen tekrar deneyin.",
+    "cancelError": "Talep iptal edilemedi. Lütfen tekrar deneyin.",
+    "status": {
+      "pending": "Bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    }
+  }
+}

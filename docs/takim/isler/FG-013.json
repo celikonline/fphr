@@ -1,0 +1,47 @@
+{
+  "id": "FG-013",
+  "baslik": "Belgelerim ve şirket belgeleri",
+  "durum": "backlog",
+  "oncelik": "yuksek",
+  "sahip": "ikisi (önce sözleşme)",
+  "dal": "",
+  "zenhr_karsiligi": "My Actions 'Documents' + profil 'Documents' sekmesi: 'upload, edit, view personal and shared documents' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); 'Personal Documents: access permitted documents and upload authorized files' - zenhr.com/en/mobile; App Store 'Access salary slips and company documents' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "mobilde kısmi: yalnız izin talebine ek yükleme var (useLeaveDocuments → documents/me/initiate-upload). Belge listesi, eksik belge gereksinimleri, şirket paylaşılan dosyaları mobilde yok; web'de shared-files ve eksik belge sayfaları var. Çalışanın kendi belgelerini listeleyen self uç YOK.",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/documents/me/initiate-upload, POST /api/v1/documents/me/{id}/confirm-upload (documents.my.files)",
+      "GET /api/v1/documents/me/requirements, POST /api/v1/documents/me/requirements/{id}/link (documents.my.requirements)",
+      "GET /api/v1/documents/shared-files, GET /api/v1/documents/shared-files/{id} (documents.company.view - Employee'de var)"
+    ],
+    "gereken_yeni": [
+      "GET /api/v1/documents/me (çalışanın kendi belgeleri: tür, ad, yükleme tarihi, geçerlilik sonu; sayfalı)",
+      "GET /api/v1/documents/me/{id}/download-url (imzalı kısa ömürlü URL)"
+    ],
+    "izin": "documents.my.files / documents.my.requirements / documents.company.view - hepsi Employee rolünde."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/documents/DocumentsScreen.tsx (yeni: segment 'Belgelerim' / 'Eksik belgeler' / 'Şirket belgeleri')",
+      "apps/senseik-mobile/src/services/DocumentService.ts (list, requirements, sharedFiles)",
+      "apps/senseik-mobile/src/screens/app/home/ActionGrid.tsx ('Belgelerim' kutucuğu)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Belgeler' sekmesi buraya bağlanır)"
+    ],
+    "navigasyon": "İşlemlerim ızgarası 'Belgelerim' + Profil 'Belgeler' sekmesi"
+  },
+  "kabul": [
+    "Belgelerim ekranı çalışanın kendi belgelerini tür ve tarih ile listeler; dokununca indirilir/paylaşılır (imzalı URL loglanmaz)",
+    "'Eksik belgeler' segmenti zorunlu belgeleri durumuyla gösterir; kameradan veya dosyadan yükleyip gereksinime bağlanabilir",
+    "'Şirket belgeleri' segmenti kiracının paylaşılan dosyalarını listeler ve açar",
+    "Süresi yaklaşan belge 'Süresi doluyor' etiketi taşır",
+    "Yükleme boyut/tür sınırı mevcut isDocumentFileSizeAllowed ile istemci tarafında kontrol edilir",
+    "Başkasının belgesine erişim 404 (backend testi); mobil saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "SegmentedControl üç segment; belge satırı: tür ikonu (accent gri/mavi) + ad + tarih textMuted + StatusPill (Eksik amber / Süresi doluyor mercan). Yükleme için FAB değil, ekranın sağ üstünde IconCircleButton '+'.",
+  "buyukluk": "M - iki küçük self uç + bir ekran",
+  "riskli_alan": true,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

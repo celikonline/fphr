@@ -53,6 +53,12 @@ public static class EmployeePermissions
     /// </summary>
     public const string ProfileSelfEditKey = "employee.self.edit";
 
+    /// <summary>
+    /// FG-007 "Ekibim": the caller's own direct reports (ManagerEmployeeId == caller), not the Team data scope. "*.my.*" so every
+    /// base role gets it through PermissionPatterns.SelfService - a caller who manages nobody simply gets an empty list.
+    /// </summary>
+    public const string MyTeamKey = "employee.my.team";
+
     /// <summary>Read employee records (list/detail), filtered by data scope.</summary>
     public static readonly Permission EmployeesRead = new(
         EmployeesReadKey, Module, "Çalışanları Görüntüleme", Group, "Çalışan kayıtlarını görüntüleme");
@@ -135,11 +141,16 @@ public static class EmployeePermissions
     public static readonly Permission NotesManage = new(
         "employee.notes.manage", Module, "Çalışan Notu Yönetimi", Group, "Çalışan notu ekleme, düzenleme ve silme");
 
+    /// <summary>"Ekibim": own direct reports (FG-007).</summary>
+    public static readonly Permission MyTeam = new(
+        MyTeamKey, Module, "Ekibimi Görüntüleme", Group, "Size doğrudan bağlı çalışanların listesini görüntüleme");
+
     /// <summary>All Employee module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
             BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, UnionView, UnionManage, SubcontractorManage, ProfileSelfEdit,
             NotesView, NotesManage,
+            MyTeam,
         ];
 }

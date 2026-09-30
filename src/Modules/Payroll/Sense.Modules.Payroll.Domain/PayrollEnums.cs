@@ -76,3 +76,11 @@ public enum PayslipObjectionStatus
     Accepted = 2,
     Rejected = 3,
 }
+
+/// <summary>E-pusula tebliğ kanalı (TK-030, 11.3.07-bordro.md "E-pusula tebliğ kanıtı" `PayslipDelivery.Channel`).
+/// Email/Kep tebliğ kanalları henüz yok (bu dilim yalnız çalışanın kendi görüntüleme/onay akışını kapsar).</summary>
+public enum PayslipDeliveryChannel
+{
+    Web = 0,
+    Mobile = 1,
+}

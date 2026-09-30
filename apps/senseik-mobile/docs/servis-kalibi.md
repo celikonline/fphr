@@ -64,7 +64,7 @@ yeni bir store dosyası bu şablonla açılır, yeni bir state kütüphanesi get
 - Tarih biçimi: `toLocaleDateString("tr-TR", {...})` (bkz. `formatDateOnly` yardımcı fonksiyonu);
   API'ye giden tarihler `DateOnly` (`yyyy-MM-dd`) string olarak kalır, biçimlendirme yalnızca
   ekranda gösterirken yapılır.
-- Stiller: `styles/colors.ts` + `styles/spacing.ts` + `styles/typography.ts` üzerinden
+- Stiller: `theme/theme.ts` token'ları (`palette`, `tones`, `text`, `fontFor`) üzerinden
   `StyleSheet.create` — yeni bir tema/tasarım sistemi eklenmez.
 - Boş liste: sade bir `Text` + `emptyText` stili (yeni bir "empty state" bileşeni açılmaz).
 

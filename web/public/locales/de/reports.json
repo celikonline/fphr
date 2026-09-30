@@ -38,6 +38,18 @@
       "list": {
         "label": "Mitarbeiterliste",
         "description": "Personalliste: Karrierezuordnung, Eintrittsdatum, Beschäftigungsstatus, Kontaktdaten und Beschäftigungsart."
+      },
+      "departed": {
+        "label": "Informationen zu ausgeschiedenen Mitarbeitern",
+        "description": "Im gewählten Jahr (Standard: laufendes Jahr) ausgeschiedene Mitarbeiter: Karrierezuordnung, Eintritts-/Austrittsdatum, Betriebszugehörigkeit und Vorgesetzter."
+      },
+      "birthdays": {
+        "label": "Geburtstagsliste",
+        "description": "Mitarbeiter mit Geburtstag im gewählten Monat (Standard: laufender Monat), nach Tag sortiert."
+      },
+      "turnover": {
+        "label": "Fluktuationsbericht",
+        "description": "Fluktuationsraten-Zusammenfassung für das gewählte Jahr (Standard: laufendes Jahr) sowie eine Aufstellung der ausgeschiedenen Mitarbeiter."
       }
     },
     "leave": {
@@ -66,6 +78,10 @@
       "company_ledger": {
         "label": "Unternehmensweites Urlaubs-/Überstundenregister",
         "description": "Excel-Export der unternehmensweiten Ansicht neben \"Mein Urlaub\"/\"Meine Überstunden\": wer im gewählten Monat im Urlaub ist, Jahresurlaubssaldo und Jahresüberstunden (270-Stunden-Grenze)."
+      },
+      "monthly_usage": {
+        "label": "Bericht genommene Urlaube",
+        "description": "Im gewählten Monat (Standard: laufender Monat) genommene (genehmigte) Urlaube: Art, Beginn, Ende und Tageanzahl."
       }
     },
     "finance": {

@@ -92,4 +92,12 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
 
         return row is null ? null : new EmployeeSicilMatch(row.Id, row.Status == EmployeeStatus.Terminated);
     }
+
+    public async Task<IReadOnlyList<Guid>> GetDirectReportIdsAsync(Guid tenantId, Guid managerEmployeeId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.ManagerEmployeeId == managerEmployeeId && e.Status != EmployeeStatus.Terminated)
+            .OrderBy(e => e.DisplayName)
+            .ThenBy(e => e.Id)
+            .Select(e => e.Id)
+            .ToListAsync(cancellationToken);
 }

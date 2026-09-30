@@ -11,6 +11,7 @@ using Sense.Modules.Employee.Application.Subcontractors;
 using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Employee.Contracts.CardPdf;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
@@ -58,6 +59,15 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeReadStore, EmployeeReadStore>();
         services.AddScoped<EmployeeSelectionResolver>();
         services.AddScoped<EmployeeDetailBuilder>();
+        services.AddScoped<Application.CardPdf.EmployeeCardPdfComposer>();
+
+        // Employee card PDF sections owned by this module (other modules register theirs in their own AddModule).
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.GeneralCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.PersonalCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.CustomFieldsCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.CareerCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.EmployeePaymentsCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.AccountCardPdfSection>();
         services.AddScoped<EmployeeReferenceValidator>();
         services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();
@@ -132,6 +142,9 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeReportReader, EmployeeReportReader>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeListReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.SalaryListReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.DepartedEmployeesReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeBirthdayReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeTurnoverReportProvider>();
 
         // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
         services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();

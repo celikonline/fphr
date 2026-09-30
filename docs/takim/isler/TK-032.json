@@ -1,0 +1,21 @@
+{
+  "id": "TK-032",
+  "baslik": "Harcama kalemi ReceiptFileId sunucu tarafi dogrulamasi (RISKLI - bordro vergisiz odeme)",
+  "durum": "incelemede",
+  "sahip": "ana-oturum",
+  "dal": "a/expense-receipt-dogrulama",
+  "kaynak": "Guvenlik bulgusu 2026-09-27 - POST/PUT api/v1/expense/claims/{id}/items ReceiptFileId'yi serbest metin kabul ediyor; bordro (IApprovedExpensePayoutReader) ReceiptFileId dolu kalemi vergisiz geri odeme olarak NET'e ekliyor. API'yi dogrudan cagiran calisan fissiz kalemi fisli gosterebilir.",
+  "kabul": [
+    "AddExpenseItem/UpdateExpenseItem: dolu ReceiptFileId, ayni kiracida Active bir belgeye (IDocumentAttachmentLookup) isaret etmeli ve belge talep sahibine ait olmali (EmployeeId = talep calisani ya da calisansiz + yukleyen = cagiran kullanici); aksi halde expense.item.receipt_not_found (Validation).",
+    "GUID olmayan, var olmayan, silinmis, baska kiracinin ya da baska calisanin belge kimligi ayni hata ile reddedilir (varlik sizdirilmaz); kalem eklenmez/degismez.",
+    "null/bos ReceiptFileId eskisi gibi kabul edilir ve belge sorgusu yapilmaz.",
+    "Gecerli kimlik kanonik GUID bicimine normalize edilerek saklanir.",
+    "Hata kodu SharedResource{,.en}.resx'te yerellestirilmis.",
+    "Demo DB'de ReceiptFileId dolu mevcut kalem yok (2 kalem, 0 dolu) - veri gocu gerekmez.",
+    "Birim testleri: yabanci/var olmayan belge -> hata, kendi belgesi -> ok, null -> ok (ekle + guncelle)."
+  ],
+  "birlestirme_kapisi": "test kapisi YESIL + kanit GECERLI + gozden gecirici ONAY + INSAN ONAYI (bordro/odeme alani, birlestirmeden once zorunlu)",
+  "riskli_alan": true,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-032.md"
+}

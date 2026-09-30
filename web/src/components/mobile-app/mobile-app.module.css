@@ -1,0 +1,197 @@
+/*
+ * The mobile app's own brand world (Gece/Kurumsal Lacivert/Kurumsal Mavi/Buz), not the web's corporate
+ * palette - the page should feel like a preview of the app itself. Single token block per TK-033
+ * instructions, shared by the hero band and the feature showcase panel (the same gradient signature);
+ * everything else on the page uses the Mantine theme instead.
+ */
+:root {
+  --mobile-night: #0e0033;
+  --mobile-navy: #280087;
+  --mobile-blue: #008cf0;
+  --mobile-ice: #d3ecfd;
+  --mobile-glass-bg: rgb(255 255 255 / 7%);
+  --mobile-glass-border: rgb(255 255 255 / 14%);
+  --mobile-gradient: linear-gradient(135deg, var(--mobile-night) 0%, var(--mobile-navy) 60%, var(--mobile-night) 100%);
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 28px;
+  color: var(--mantine-color-white);
+  background-image: var(--mobile-gradient);
+}
+
+/* Large, semi-transparent rotated square echoing the app's own glass-tile background art. */
+.heroGhostShape {
+  position: absolute;
+  top: -10%;
+  right: -8%;
+  z-index: -1;
+  width: 420px;
+  height: 420px;
+  border-radius: 22%;
+  rotate: -14deg;
+  border: 1px solid var(--mobile-glass-border);
+  background-color: var(--mobile-glass-bg);
+  pointer-events: none;
+}
+
+/* Feature showcase panel: same gece-gradient signature as the hero, sized around a single phone. */
+.showcasePanel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: clamp(16px, 5vw, 32px);
+  border-radius: 28px;
+  background-image: var(--mobile-gradient);
+}
+
+.showcaseGhostShape {
+  position: absolute;
+  top: -12%;
+  right: -14%;
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  border-radius: 22%;
+  rotate: -14deg;
+  border: 1px solid var(--mobile-glass-border);
+  background-color: var(--mobile-glass-bg);
+  pointer-events: none;
+}
+
+.heroEyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mobile-ice);
+}
+
+.heroTitle {
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+}
+
+.heroDescription {
+  color: var(--mobile-ice);
+}
+
+.heroNote {
+  color: color-mix(in srgb, var(--mobile-ice) 75%, transparent);
+}
+
+/* Phone chrome shared by the hero fan and the feature showcase. */
+.phoneFrame {
+  display: inline-block;
+  padding: 9px;
+  border-radius: 36px;
+  background-color: #05001a;
+  box-shadow: 0 30px 60px -20px rgb(0 0 0 / 60%);
+}
+
+.phoneScreen {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 28px;
+}
+
+/* Hero fan: only these three animate in on page load, staggered via --phone-delay. */
+.phoneHeroCenter,
+.phoneHeroSide {
+  opacity: 0;
+  animation: phone-enter 500ms ease-out both;
+  animation-delay: var(--phone-delay, 0ms);
+}
+
+.phoneHeroCenter {
+  width: 220px;
+  max-width: 100%;
+}
+
+.phoneHeroSide {
+  --mobile-phone-y: 18px;
+
+  width: 194px; /* ~88% of the center phone */
+  translate: 0 var(--mobile-phone-y);
+}
+
+.phoneHeroLeft {
+  rotate: -8deg;
+}
+
+.phoneHeroRight {
+  rotate: 8deg;
+}
+
+/* Feature showcase: short fade every time the selected feature (and so the image) changes. */
+.phoneShowcase {
+  width: 240px;
+  max-width: 100%;
+  animation: showcase-fade 150ms ease both;
+}
+
+@keyframes phone-enter {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--mobile-phone-y, 0px) + 24px);
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 var(--mobile-phone-y, 0px);
+  }
+}
+
+@keyframes showcase-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Feature list buttons: left accent bar on the selected item, Kurumsal Mavi (brand-6) like the rest of the page. */
+.featureButton {
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: var(--mantine-radius-md);
+  background-color: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.featureButton:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.featureButtonSelected,
+.featureButtonSelected:hover {
+  border-left-color: var(--mantine-color-brand-6);
+  background-color: var(--mantine-color-brand-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phoneHeroCenter,
+  .phoneHeroSide,
+  .phoneShowcase {
+    animation: none;
+    opacity: 1;
+  }
+
+  .phoneHeroSide {
+    translate: 0 var(--mobile-phone-y);
+  }
+}

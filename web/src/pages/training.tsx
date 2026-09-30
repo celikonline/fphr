@@ -21,7 +21,7 @@ function TrainingScreen({ canMine, canPrograms }: { canMine: boolean; canProgram
   const { t } = useTranslation(["training"]);
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="p-6 md:p-10">
       <Title order={2}>{t("training:title")}</Title>
       {canMine && canPrograms ? (
         <Tabs defaultValue="programs" keepMounted={false}>

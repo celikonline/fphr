@@ -1,0 +1,41 @@
+{
+  "id": "FG-027",
+  "baslik": "Açık tema ve tema seçici",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "'UI Options: Dark mode support' - resmi kaynak: App Store listesi (apps.apple.com/us/app/zenhr/id1376637090); tanıtım videosu + mağaza ekran görüntüleri (spec 2026-09-27 referansı) dark & light mode. NOT: spec §9 'açık tema / tema seçici' kapsam dışı ve kullanıcı kararı 'tek tema koyu'; ZenHR varsayılanı açık tema + koyu seçeneği olduğundan eşlik için düşük öncelikli kart açıldı.",
+  "senseik_durumu": "mobilde yok (app.json userInterfaceStyle 'dark', tek koyu tema - bilinçli karar).",
+  "backend": {
+    "mevcut_uclar": [],
+    "gereken_yeni": [],
+    "izin": "Backend etkisi yok."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/theme/theme.ts (light token seti)",
+      "components/ui/* (renklerin token'dan okunması)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Görünüm: Sistem / Koyu / Açık')",
+      "apps/senseik-mobile/src/navigation/statusBarStyle.ts (açık temada 'dark' durum çubuğu)"
+    ],
+    "navigasyon": "Profil > Görünüm"
+  },
+  "kabul": [
+    "Görünüm seçimi Sistem/Koyu/Açık; seçim kalıcı",
+    "Açık temada tüm metinler WCAG AA kontrastını sağlar (otomatik token kontrast testi)",
+    "Durum çubuğu temaya göre açık/koyu",
+    "Varsayılan koyu kalır (mevcut kullanıcı kararı)",
+    "Ekran görüntüsü denetimi: ana sayfa, giriş/çıkış, onaylar"
+  ],
+  "tasarim_notu": "Açık tema: zemin açık buz (#F4F8FF) + beyaz cam kartlar, brand #008CF0 korunur, lacivert metin #0E0033.",
+  "buyukluk": "M - token ikilemesi + bileşen taraması",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "Kullanıcı kararının güncellenmesi (spec §9)"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

@@ -18,27 +18,51 @@ const base: MyPayslip = {
   publishedAt: "2026-09-01T08:00:00Z"
 };
 
+/** TK-030 `GET payroll/payslips/my` row for `base` (null fields omitted by the API). */
+const apiRow = {
+  payslipId: "p1",
+  year: 2026,
+  month: 8,
+  grossAmount: 50000,
+  netAmount: 38000,
+  hasDocument: true,
+  createdAt: "2026-09-01T08:00:00Z"
+};
+const mapped: MyPayslip = {
+  ...base,
+  currency: "TRY",
+  acknowledgedAt: null,
+  objectionStatus: null,
+  objectionReason: null
+};
+
 describe("PayslipService", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("lists the caller's own payslips", async () => {
-    (apiClient.get as jest.Mock).mockResolvedValue({ data: [base] });
-    expect(await payslipService.getMyPayslips()).toEqual([base]);
-    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/payroll/me/payslips");
+  it("lists the caller's own payslips from the TK-030 endpoint", async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({ data: [apiRow] });
+    expect(await payslipService.getMyPayslips()).toEqual([mapped]);
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/payroll/payslips/my");
   });
 
-  it("acknowledges a payslip and returns the server row (server acknowledgedAt)", async () => {
-    const row = { ...base, acknowledgedAt: "2026-09-25T10:00:00Z" };
-    (apiClient.post as jest.Mock).mockResolvedValue({ data: row });
-    expect(await payslipService.acknowledge("p1")).toEqual(row);
-    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/payroll/me/payslips/p1/acknowledge");
+  it("maps the objection state of the TK-030 row", async () => {
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: [{ ...apiRow, objectionStatus: "pending", objectionReason: "Prim eksik" }]
+    });
+    const [row] = await payslipService.getMyPayslips();
+    expect(row.objectionStatus).toBe("pending");
+    expect(row.objectionReason).toBe("Prim eksik");
   });
 
-  it("re-fetches the list when the acknowledge response has no row", async () => {
-    const row = { ...base, acknowledgedAt: "2026-09-25T10:00:00Z" };
+  it("acknowledges via TK-030 (mobile channel) and returns the re-fetched server row", async () => {
     (apiClient.post as jest.Mock).mockResolvedValue({ data: "" });
-    (apiClient.get as jest.Mock).mockResolvedValue({ data: [row] });
-    expect(await payslipService.acknowledge("p1")).toEqual(row);
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: [{ ...apiRow, acknowledgedAt: "2026-09-25T10:00:00Z" }]
+    });
+    expect(await payslipService.acknowledge("p1")).toEqual({ ...mapped, acknowledgedAt: "2026-09-25T10:00:00Z" });
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/payroll/payslips/my/p1/acknowledge", {
+      channel: "mobile"
+    });
   });
 
   it("object_requires_reason: rejects a blank reason without calling the API", async () => {
@@ -49,7 +73,7 @@ describe("PayslipService", () => {
   it("sends the trimmed reason on objection", async () => {
     (apiClient.post as jest.Mock).mockResolvedValue({});
     await payslipService.object("p1", "  Fazla mesai eksik ");
-    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/payroll/me/payslips/p1/object", {
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/payroll/payslips/my/p1/object", {
       reason: "Fazla mesai eksik"
     });
   });

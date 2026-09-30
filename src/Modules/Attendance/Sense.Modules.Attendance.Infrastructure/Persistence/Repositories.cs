@@ -4,6 +4,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.Corrections;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Punches;
@@ -240,6 +241,20 @@ public sealed class EmployeeAvailabilityRepository(AttendanceDbContext context) 
 public sealed class SelfCheckInRepository(AttendanceDbContext context) : ISelfCheckInRepository
 {
     public void Add(SelfCheckIn checkIn) => context.SelfCheckIns.Add(checkIn);
+
+    public async Task<SelfCheckIn?> FindLatestBreakPunchAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
+        await context.SelfCheckIns
+            .Where(c => c.EmployeeId == employeeId && c.TimestampUtc >= sinceUtc
+                && (c.Direction == PunchDirection.BreakStart || c.Direction == PunchDirection.BreakEnd))
+            .OrderByDescending(c => c.TimestampUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<SelfCheckIn>> ListBreakAndOutPunchesAsync(Guid employeeId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
+        await context.SelfCheckIns
+            .Where(c => c.EmployeeId == employeeId && c.TimestampUtc >= sinceUtc
+                && (c.Direction == PunchDirection.BreakStart || c.Direction == PunchDirection.BreakEnd || c.Direction == PunchDirection.Out))
+            .OrderBy(c => c.TimestampUtc)
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository
@@ -615,5 +630,34 @@ public sealed class TerminalRepository(AttendanceDbContext context) : ITerminalR
         }
 
         return await context.EmployeeTerminalCredentials.Where(c => values.Contains(c.Value)).ToListAsync(cancellationToken);
+    }
+}
+
+public sealed class PunchCorrectionRequestRepository(AttendanceDbContext context) : IPunchCorrectionRequestRepository
+{
+    public void Add(PunchCorrectionRequest request) => context.PunchCorrectionRequests.Add(request);
+
+    public async Task<PunchCorrectionRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.PunchCorrectionRequests.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+    public Task<bool> HasPendingAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default) =>
+        context.PunchCorrectionRequests.AnyAsync(
+            r => r.EmployeeId == employeeId && r.AttendanceDate == date && r.Status == PunchCorrectionStatus.Pending, cancellationToken);
+
+    public async Task<IReadOnlyList<PunchCorrectionRequest>> ListForEmployeeAsync(
+        Guid employeeId, DateOnly? from, DateOnly? to, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.PunchCorrectionRequests.AsNoTracking().Where(r => r.EmployeeId == employeeId);
+        if (from is { } fromDate)
+        {
+            query = query.Where(r => r.AttendanceDate >= fromDate);
+        }
+
+        if (to is { } toDate)
+        {
+            query = query.Where(r => r.AttendanceDate <= toDate);
+        }
+
+        return await query.OrderByDescending(r => r.SubmittedAt).Take(take).ToListAsync(cancellationToken);
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
+using Sense.Modules.Attendance.Application.Corrections;
 using Sense.Modules.Attendance.Application.Employees;
 using Sense.Modules.Attendance.Application.PunchRequests;
 using Sense.Modules.Attendance.Application.Recalculation;
@@ -20,6 +21,7 @@ using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.Terminals;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Attendance.Infrastructure;
@@ -118,17 +120,25 @@ public static class AttendanceServiceCollectionExtensions
         services.AddSingleton<IAttendanceDayRecalculator>(sp => sp.GetRequiredService<AttendanceDayRecalculator>());
         // Z5.4: EmployeeTerminated → terminal kimliklerini pasifleştirme (Worker'da da çözülür). TryAdd: API'de AddAttendanceServices da kaydeder.
         services.TryAddScoped<ITerminalRepository, TerminalRepository>();
+        // Eksik giriş/çıkış düzeltme talebi (FG-004): repository (Api + Worker decision handlers) and the inbox summary for "PunchCorrection".
+        services.AddScoped<IPunchCorrectionRequestRepository, PunchCorrectionRequestRepository>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, PunchCorrectionApprovalRequestSummaryProvider>();
         return services;
     }
 
-    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted, EmployeeTerminated, …), registered explicitly for Sense.Worker.</summary>
+    /// <summary>
+    /// Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted, EmployeeTerminated, and Workflow's
+    /// ApprovalCompleted/ApprovalRejected for "PunchRequest" and "PunchCorrection"), registered explicitly for Sense.Worker.
+    /// </summary>
     public static IServiceCollection AddAttendanceIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
         services.AddScoped<IIntegrationEventHandler<TimesheetWeekCompleted>, TimesheetWeekCompletedHandler>();
-        services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalCompleted>, PunchRequestApprovalCompletedHandler>();
-        services.AddScoped<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalRejected>, PunchRequestApprovalRejectedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, PunchRequestApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, PunchRequestApprovalRejectedHandler>();
         services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedTerminalCredentialsHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, PunchCorrectionApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, PunchCorrectionApprovalRejectedHandler>();
         return services;
     }
 }

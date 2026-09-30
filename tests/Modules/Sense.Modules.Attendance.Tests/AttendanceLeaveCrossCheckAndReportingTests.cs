@@ -190,6 +190,59 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         loaded.Anomalies.ShouldBe(AttendanceAnomaly.None);
     }
 
+    /// <summary>
+    /// Leave.Contracts.IApprovedLeaveDateLookup.GetApprovedLeaveDaysWithTypeAsync on real PostgreSQL (mobil Puantaj): one row
+    /// per approved date clipped to the range, the type's name for a visible type, null for a sensitive (KVKK) one; pending
+    /// requests and other employees are left out.
+    /// </summary>
+    [Fact]
+    public async Task ApprovedLeaveDaysWithType_NamesVisibleTypes_MasksSensitiveOnes()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSet = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(tenantId, StatutoryLeaveDurations.Turkey2026);
+            db.RuleSets.Add(ruleSet);
+            var annual = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual);
+            var sick = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Sick);
+
+            LeaveRequest Approved(Guid employee, LeaveType type, DateOnly start, DateOnly end)
+            {
+                var request = LeaveRequest.Submit(
+                    tenantId, employee, type.Id, type.Code, start, end, end.DayNumber - start.DayNumber + 1, null,
+                    LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+                var approvalId = Guid.NewGuid();
+                request.AttachApproval(approvalId);
+                request.Approve(approvalId, DateTime.UtcNow);
+                return request;
+            }
+
+            db.Requests.Add(Approved(employeeId, annual, new DateOnly(2026, 8, 31), new DateOnly(2026, 9, 1)));
+            db.Requests.Add(Approved(employeeId, sick, new DateOnly(2026, 9, 3), new DateOnly(2026, 9, 3)));
+            db.Requests.Add(Approved(Guid.NewGuid(), annual, new DateOnly(2026, 9, 2), new DateOnly(2026, 9, 2)));
+            db.Requests.Add(LeaveRequest.Submit(
+                tenantId, employeeId, annual.Id, annual.Code, new DateOnly(2026, 9, 4), new DateOnly(2026, 9, 4), 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider!.CreateScope();
+        var lookup = read.ServiceProvider.GetRequiredService<IApprovedLeaveDateLookup>();
+
+        var days = await lookup.GetApprovedLeaveDaysWithTypeAsync(
+            tenantId, employeeId, new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 30), TestContext.Current.CancellationToken);
+
+        days.ShouldBe(
+        [
+            new ApprovedLeaveDayDetail(new DateOnly(2026, 9, 1), "leave.type.annual"),
+            new ApprovedLeaveDayDetail(new DateOnly(2026, 9, 3), null),
+        ]);
+    }
+
     private static IDataScopeService AllowAllScope()
     {
         var scope = Substitute.For<IDataScopeService>();

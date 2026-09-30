@@ -1,6 +1,6 @@
-# SenseİK Mobile
+# Sense HR Mobile
 
-React Native mobile app for SenseİK HR platform with Expo, TypeScript, JWT auth, biometric login, and push notifications.
+React Native mobile app for the Sense HR platform with Expo, TypeScript, JWT auth, biometric login, and push notifications.
 
 ## Features
 
@@ -9,8 +9,49 @@ React Native mobile app for SenseİK HR platform with Expo, TypeScript, JWT auth
 - Push notifications via Expo
 - Secure token storage (keychain/keystore)
 - Zustand state management
-- Tab-based navigation
+- Dark glass design system (`src/theme/theme.ts` + `src/components/ui`), Manrope font
+- 3-item notched tab bar (Home · brand-mark "+" FAB · Check-in) with stack screens
 - Full TypeScript strict mode
+
+## Ekran görüntüleri
+
+Android emülatörü (Pixel 7 Pro, dev build), yerel demo verisiyle — 2026-09-28. Tasarım: [spec](../../docs/superpowers/specs/2026-09-27-mobil-yeniden-tasarim-design.md).
+
+### Giriş
+
+| Açılış | Giriş | Şifremi unuttum | Sıfırlama gönderildi |
+|---|---|---|---|
+| <img src="docs/screenshots/01-acilis.jpg" width="200" alt="Açılış ekranı"> | <img src="docs/screenshots/02-giris.jpg" width="200" alt="Giriş"> | <img src="docs/screenshots/03-sifremi-unuttum.jpg" width="200" alt="Şifremi unuttum"> | <img src="docs/screenshots/04-sifirlama-gonderildi.jpg" width="200" alt="Sıfırlama bağlantısı gönderildi"> |
+
+### Ana sayfa ve gezinme
+
+| Ana sayfa | Ana sayfa akışı | Onay rozeti (yönetici) | ⋮ menü | Çıkış onayı |
+|---|---|---|---|---|
+| <img src="docs/screenshots/05-ana-sayfa.jpg" width="170" alt="Ana sayfa"> | <img src="docs/screenshots/06-ana-sayfa-akis.jpg" width="170" alt="İzindekiler ve doğum günleri"> | <img src="docs/screenshots/07-ana-sayfa-onay-rozeti.jpg" width="170" alt="Onay rozeti"> | <img src="docs/screenshots/08-menu.jpg" width="170" alt="Menü"> | <img src="docs/screenshots/09-cikis-onayi.jpg" width="170" alt="Çıkış onayı"> |
+
+### Talepler
+
+| Yeni talep (+) | İzin talebi | Tarih seç | Taleplerim |
+|---|---|---|---|
+| <img src="docs/screenshots/10-yeni-talep.jpg" width="200" alt="Yeni talep alt sayfası"> | <img src="docs/screenshots/11-izin-talebi.jpg" width="200" alt="İzin talebi formu"> | <img src="docs/screenshots/12-tarih-sec.jpg" width="200" alt="Tarih aralığı seçimi"> | <img src="docs/screenshots/16-taleplerim.jpg" width="200" alt="Taleplerim"> |
+
+### Puantaj, izin, bordro
+
+| Giriş / Çıkış | Puantaj | İzinlerim | Bordro |
+|---|---|---|---|
+| <img src="docs/screenshots/13-giris-cikis.jpg" width="200" alt="Giriş / Çıkış ve mola"> | <img src="docs/screenshots/14-puantaj.jpg" width="200" alt="Puantaj"> | <img src="docs/screenshots/15-izinlerim.jpg" width="200" alt="İzinlerim"> | <img src="docs/screenshots/17-bordro.jpg" width="200" alt="Bordro"> |
+
+### Onaylar ve diğer ekranlar
+
+| Onaylarım | Tür filtresi | Profil | Bildirimler |
+|---|---|---|---|
+| <img src="docs/screenshots/18-onaylarim.jpg" width="200" alt="Onaylarım"> | <img src="docs/screenshots/19-onay-turu-filtresi.jpg" width="200" alt="Onay türü filtresi"> | <img src="docs/screenshots/20-profil.jpg" width="200" alt="Profil"> | <img src="docs/screenshots/21-bildirimler.jpg" width="200" alt="Bildirimler"> |
+
+| Kişiler | Vardiyam | Destek |
+|---|---|---|
+| <img src="docs/screenshots/22-kisiler.jpg" width="200" alt="Kişiler"> | <img src="docs/screenshots/23-vardiyam.jpg" width="200" alt="Vardiyam"> | <img src="docs/screenshots/24-destek.jpg" width="200" alt="Destek"> |
+
+> Giriş / Çıkış ekranında harita, yalnız `GOOGLE_MAPS_ANDROID_API_KEY` ile derlenen yapılarda görünür (aşağıdaki "Google Maps key" bölümü); görüntüdeki yapıda anahtar yok ve emülatörde konum sinyali alınamadığından konum kartı "Konum alınamadı" durumunda.
 
 ## Prerequisites
 
@@ -238,6 +279,24 @@ eas build --platform android --auto-submit
 - **EXPO_PUBLIC_APP_NAME**: App display name (optional)
 
 Variables starting with EXPO_PUBLIC_ are embedded in build.
+
+### Google Maps key (Android)
+
+`GOOGLE_MAPS_ANDROID_API_KEY` is read by `app.config.js` at prebuild/build time and written into the
+Android manifest (`android.config.googleMaps.apiKey`). It is not an `EXPO_PUBLIC_` variable and is
+never read by JS; JS only sees `extra.hasMapsKey`.
+
+- **Without the key** the Android Giriş/Çıkış tab shows the location card (address/coordinates)
+  instead of the map, because the Google Maps SDK crashes without a key. iOS uses Apple Maps and
+  needs no key.
+- **Local builds**: put `GOOGLE_MAPS_ANDROID_API_KEY=...` in `.env.local` (gitignored) or export it
+  in the shell, then rebuild the native app (`pnpm exec expo run:android`). A Metro reload is not
+  enough; the key lives in the native manifest.
+- **EAS builds**: store it as a secret EAS environment variable, e.g.
+  `eas env:create --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> --visibility secret --environment production`
+  (repeat for `preview`/`development` as needed).
+- **Never commit the key** (not in `app.json`, `eas.json`, `.env.example` or docs). Restrict it in
+  Google Cloud to "Maps SDK for Android" and the app's package name + signing SHA-1.
 
 ## Best Practices
 

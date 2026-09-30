@@ -89,6 +89,45 @@ public sealed class ApprovalRequestRepository(WorkflowDbContext context) : IAppr
         var request = await context.ApprovalRequests.FirstOrDefaultAsync(r => r.Id == requestId, cancellationToken);
         return request is null ? Error.NotFound(WorkflowDomainErrors.RequestNotFound) : request;
     }
+
+    public async Task<DecidedTaskPage> ListDecidedTasksAsync(
+        Guid employeeId, DateTime? decidedFromUtc, DateTime? decidedToUtcExclusive, string? requestType, int skip, int take,
+        CancellationToken cancellationToken = default)
+    {
+        var query =
+            from t in context.ApprovalTasks.AsNoTracking()
+            join r in context.ApprovalRequests.AsNoTracking() on t.ApprovalRequestId equals r.Id
+            where t.DecidedByEmployeeId == employeeId && t.Status != ApprovalTaskStatus.Pending && t.DecidedAt != null
+            select new { Task = t, Request = r };
+
+        if (decidedFromUtc is { } from)
+        {
+            query = query.Where(x => x.Task.DecidedAt >= from);
+        }
+
+        if (decidedToUtcExclusive is { } to)
+        {
+            query = query.Where(x => x.Task.DecidedAt < to);
+        }
+
+        if (!string.IsNullOrWhiteSpace(requestType))
+        {
+            query = query.Where(x => x.Request.RequestType == requestType);
+        }
+
+        var total = await query.LongCountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(x => x.Task.DecidedAt)
+            .ThenByDescending(x => x.Task.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(x => new DecidedTaskRow(
+                x.Task.Id, x.Request.Id, x.Request.RequestType, x.Request.SubjectId, x.Request.RequesterEmployeeId,
+                x.Task.StepNumber, x.Task.Status, x.Task.DecidedAt!.Value, x.Task.Comment, x.Request.Status))
+            .ToListAsync(cancellationToken);
+
+        return new DecidedTaskPage(items, total);
+    }
 }
 
 /// <summary>EF Core-backed EmailDecisionToken repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

@@ -1,42 +1,43 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { GlassCard, StatusPill } from "@/components/ui";
+import { formatShortRange } from "@/components/form/dateRange";
+import { REQUEST_OPTIONS } from "@/lib/requestOptions";
+import { accents, fontFor, palette, text, tones, type Tone } from "@/theme/theme";
 import {
   leaveService,
   type LeaveRequest,
   type LeaveRequestAttachment,
   type LeaveRequestStatus,
 } from "@/services/LeaveService";
-import { formatDays } from "@/lib/formatters";
+import { formatDate, formatDays } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
 import {
-  ATTACHMENT_OPEN_ERROR_MESSAGE,
+  attachmentOpenErrorMessage,
   openLeaveAttachment,
   shouldIgnoreAttachmentTap,
 } from "@/lib/attachmentDownload";
 
-/** Shared with `LeaveScreen`'s own request list so both screens render identical status badges. */
-export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
-  pending: "Onay bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-  withdrawn: "Geri çekildi",
-  cancelled: "İptal edildi",
-};
+/** Shared with Taleplerim's leave/overtime cards so both screens render identical status badges. */
+export function leaveStatusLabel(status: LeaveRequestStatus): string {
+  return i18n.t(`leave:status.${status}`);
+}
 
-export const LEAVE_STATUS_COLORS: Record<LeaveRequestStatus, string> = {
-  pending: colors.warning,
-  approved: colors.success,
-  rejected: colors.error,
-  withdrawn: colors.textTertiary,
-  cancelled: colors.textTertiary,
+/** Status pill tones, shared with Taleplerim's leave/overtime cards (same status set). */
+export const LEAVE_STATUS_TONES: Record<LeaveRequestStatus, Tone> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "danger",
+  withdrawn: "neutral",
+  cancelled: "neutral",
 };
 
 export function formatLeaveDateOnly(value: string): string {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDate(date, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 /**
@@ -47,6 +48,7 @@ export function formatLeaveDateOnly(value: string): string {
  * in flight (senseik-mobile-011's double-tap guard).
  */
 function LeaveRequestAttachmentsSection({ requestId }: { requestId: string }) {
+  const { t } = useTranslation("leave");
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -81,7 +83,7 @@ function LeaveRequestAttachmentsSection({ requestId }: { requestId: string }) {
         leaveService.getMyAttachmentDownloadUrl(requestId, documentId)
       );
     } catch {
-      Alert.alert("Hata", ATTACHMENT_OPEN_ERROR_MESSAGE);
+      Alert.alert(t("common:alerts.error"), attachmentOpenErrorMessage());
     } finally {
       setOpeningDocumentId(null);
     }
@@ -89,14 +91,22 @@ function LeaveRequestAttachmentsSection({ requestId }: { requestId: string }) {
 
   return (
     <View>
-      <TouchableOpacity style={styles.attachmentsToggle} onPress={toggle}>
-        <Text style={styles.attachmentsToggleText}>{expanded ? "Ekleri gizle" : "Ekler"}</Text>
+      <TouchableOpacity
+        style={styles.action}
+        onPress={toggle}
+        accessibilityRole="button"
+        accessibilityLabel={expanded ? t("attachments.hide") : t("attachments.show")}
+        hitSlop={ACTION_HIT_SLOP}
+      >
+        <Text style={styles.attachmentsToggleText}>
+          {expanded ? t("attachments.hide") : t("attachments.show")}
+        </Text>
       </TouchableOpacity>
       {expanded &&
         (loading ? (
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={palette.white} />
         ) : loadError ? (
-          <Text style={styles.attachmentsError}>Ekler yüklenemedi.</Text>
+          <Text style={styles.attachmentsError}>{t("attachments.loadError")}</Text>
         ) : attachments && attachments.length > 0 ? (
           attachments.map((attachment) => {
             const isOpening = openingDocumentId === attachment.documentId;
@@ -106,9 +116,11 @@ function LeaveRequestAttachmentsSection({ requestId }: { requestId: string }) {
                 style={styles.attachmentRow}
                 onPress={() => void openAttachment(attachment.documentId)}
                 disabled={openingDocumentId !== null}
+                accessibilityRole="button"
+                accessibilityLabel={attachment.fileName}
               >
                 {isOpening ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ActivityIndicator size="small" color={palette.white} />
                 ) : (
                   <Text style={styles.attachmentText}>{attachment.fileName}</Text>
                 )}
@@ -116,7 +128,7 @@ function LeaveRequestAttachmentsSection({ requestId }: { requestId: string }) {
             );
           })
         ) : (
-          <Text style={styles.attachmentsEmpty}>Ek yok.</Text>
+          <Text style={styles.attachmentsEmpty}>{t("attachments.empty")}</Text>
         ))}
     </View>
   );
@@ -128,11 +140,14 @@ type Props = {
   /** H1: renders a "Geri çek" action, shown only when the request is still `pending`. */
   onWithdraw?: () => void;
   isWithdrawing?: boolean;
-  /** senseik-mobile-011: renders the lazy "Ekler" expand/collapse section - off by default so the
-   * lightweight `ProfileScreen` "recent requests" summary usage is unaffected. */
+  /** senseik-mobile-011: renders the lazy "Ekler" expand/collapse section - off by default so a
+   * lightweight summary usage stays unaffected. */
   showAttachments?: boolean;
 };
 
+const LEAVE_ICON = REQUEST_OPTIONS.find((option) => option.kind === "leave");
+
+/** İzinlerim card: type icon, type name, "29 Eyl → 3 Eki · 5 gün", status pill, actions. */
 export function LeaveRequestListItem({
   request,
   onPress,
@@ -140,32 +155,47 @@ export function LeaveRequestListItem({
   isWithdrawing = false,
   showAttachments = false,
 }: Props) {
+  const { t } = useTranslation("leave");
   const canWithdraw = Boolean(onWithdraw) && request.status === "pending";
+  const typeName = request.leaveTypeName ?? request.leaveTypeCode;
+  const accent = accents[LEAVE_ICON?.accent ?? "green"];
 
   const content = (
     <>
       <View style={styles.header}>
-        <Text style={styles.label}>{request.leaveTypeName ?? request.leaveTypeCode}</Text>
-        <View
-          style={[styles.statusBadge, { backgroundColor: LEAVE_STATUS_COLORS[request.status] }]}
-        >
-          <Text style={styles.statusBadgeText}>{LEAVE_STATUS_LABELS[request.status]}</Text>
+        <View style={[styles.icon, { backgroundColor: accent.bg }]}>
+          <Ionicons name={LEAVE_ICON?.icon ?? "sunny-outline"} size={20} color={accent.fg} />
         </View>
+        <View style={styles.texts}>
+          <Text style={styles.title} numberOfLines={1}>
+            {typeName}
+          </Text>
+          <Text style={styles.subtext}>
+            {formatShortRange(request.startDate, request.endDate)} ·{" "}
+            {t("common:units.days", {
+              count: request.calculatedDays,
+              value: formatDays(request.calculatedDays),
+            })}
+          </Text>
+        </View>
+        <StatusPill
+          label={leaveStatusLabel(request.status)}
+          tone={LEAVE_STATUS_TONES[request.status]}
+        />
       </View>
-      <Text style={styles.subtext}>
-        {formatLeaveDateOnly(request.startDate)} – {formatLeaveDateOnly(request.endDate)} ·{" "}
-        {formatDays(request.calculatedDays)} gün
-      </Text>
       {canWithdraw && (
         <TouchableOpacity
-          style={styles.withdrawButton}
+          style={styles.action}
           onPress={onWithdraw}
           disabled={isWithdrawing}
+          accessibilityRole="button"
+          accessibilityLabel={t("withdraw.action")}
+          hitSlop={ACTION_HIT_SLOP}
         >
           {isWithdrawing ? (
-            <ActivityIndicator size="small" color={colors.error} />
+            <ActivityIndicator size="small" color={palette.coral} />
           ) : (
-            <Text style={styles.withdrawButtonText}>Geri çek</Text>
+            <Text style={styles.withdrawText}>{t("withdraw.action")}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -174,82 +204,77 @@ export function LeaveRequestListItem({
   );
 
   if (!onPress) {
-    return <View style={styles.card}>{content}</View>;
+    return <GlassCard style={styles.card}>{content}</GlassCard>;
   }
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <GlassCard style={styles.card} onPress={onPress} accessibilityLabel={`${typeName} talebi`}>
       {content}
-    </TouchableOpacity>
+    </GlassCard>
   );
 }
 
+/** The text actions' visual height is ~16-20px; hitSlop brings the tappable area to >=44. */
+const ACTION_HIT_SLOP = { top: 12, bottom: 12, left: 8, right: 8 };
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+    marginHorizontal: 20,
+    marginBottom: 10,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
-  label: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  texts: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    ...text.heading,
   },
   subtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
+    ...text.caption,
+    marginTop: 2,
+    fontVariant: ["tabular-nums"],
   },
-  statusBadge: {
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  statusBadgeText: {
-    ...typography.caption,
-    color: colors.white,
-  },
-  withdrawButton: {
+  action: {
     alignSelf: "flex-start",
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
+    marginTop: 12,
+    paddingVertical: 4,
   },
-  withdrawButtonText: {
-    ...typography.bodyXs,
-    color: colors.error,
-    fontWeight: "600",
-  },
-  attachmentsToggle: {
-    alignSelf: "flex-start",
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
+  withdrawText: {
+    ...text.caption,
+    color: palette.coral,
+    ...fontFor(700),
   },
   attachmentsToggleText: {
-    ...typography.bodyXs,
-    color: colors.primary,
-    fontWeight: "600",
+    ...text.caption,
+    color: palette.brandText,
+    ...fontFor(700),
   },
   attachmentsError: {
-    ...typography.bodyXs,
-    color: colors.error,
+    ...text.caption,
+    color: tones.danger.fg,
   },
   attachmentsEmpty: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
+    ...text.caption,
   },
   attachmentRow: {
-    paddingVertical: spacing.xs,
+    minHeight: 44,
+    justifyContent: "center",
   },
   attachmentText: {
-    ...typography.bodyXs,
-    color: colors.primary,
+    ...text.caption,
+    color: palette.brandText,
     textDecorationLine: "underline",
   },
 });

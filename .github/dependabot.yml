@@ -1,3 +1,5 @@
+# PAUSED: insan onayı olmadan otomatik iş başlamasın diye sürüm güncelleme PR'ları
+# kapalı (open-pull-requests-limit: 0). Geri açmak için limitleri yükseltin.
 version: 2
 
 updates:
@@ -6,7 +8,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels: ["dependencies", "backend"]
     commit-message:
       prefix: "chore(deps)"
@@ -16,7 +18,7 @@ updates:
     directory: "/web"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels: ["dependencies", "web"]
     commit-message:
       prefix: "chore(deps)"
@@ -26,7 +28,7 @@ updates:
     directory: "/apps/senseik-mobile"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels: ["dependencies", "mobile"]
     commit-message:
       prefix: "chore(deps)"
@@ -36,7 +38,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels: ["dependencies"]
     commit-message:
       prefix: "chore(deps)"
@@ -46,7 +48,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels: ["dependencies", "ci"]
     commit-message:
       prefix: "chore(ci)"
@@ -56,6 +58,7 @@ updates:
     directory: "/src/Sense.Api"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
     labels: ["dependencies", "docker"]
     commit-message:
       prefix: "chore(deps)"
@@ -64,6 +67,7 @@ updates:
     directory: "/web"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
     labels: ["dependencies", "docker"]
     commit-message:
       prefix: "chore(deps)"

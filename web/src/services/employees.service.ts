@@ -2,6 +2,7 @@
  * Employees (Faz 0 items 2, 9, 10): mirrors `EmployeesController` (`api/v1/employees`).
  * Grid standard `?page&pageSize&sort&q` plus employee filters; sort fields: displayName, firstName, lastName, hireDate, status ("-field" = desc).
  */
+import axios from "axios";
 import { apiClient } from "@senseik/api-client";
 import type {
   BulkOperationResult,
@@ -751,6 +752,49 @@ export async function downloadWorkCertificate(
       parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ??
       "calisma-belgesi.pdf",
   };
+}
+
+export interface EmployeeCardPdfOptions {
+  sections: string[];
+  from?: string;
+  to?: string;
+}
+
+/** Employee card PDF (selected tabs + optional period); `target` is an employee id or "me" for the own card. */
+export async function downloadEmployeeCardPdf(
+  target: string,
+  options: EmployeeCardPdfOptions
+): Promise<{ blob: Blob; fileName: string }> {
+  try {
+    const response = await apiClient.get<Blob>(`${EMPLOYEES_BASE}/${target}/card-pdf`, {
+      params: { sections: options.sections.join(","), from: options.from, to: options.to },
+      responseType: "blob",
+    });
+    const disposition = response.headers["content-disposition"];
+    return {
+      blob: response.data,
+      fileName:
+        parseContentDispositionFileName(
+          typeof disposition === "string" ? disposition : undefined
+        ) ?? "calisan-karti.pdf",
+    };
+  } catch (error) {
+    throw await unwrapBlobError(error);
+  }
+}
+
+/** A blob request's ProblemDetails body arrives as a Blob; parse it back to JSON so `getApiErrorMessage` keeps
+ * working (mirrors data-transfer.service.ts/payroll.service.ts/reports.service.ts; not exported there to import). */
+async function unwrapBlobError(error: unknown): Promise<unknown> {
+  if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+    try {
+      const text = await error.response.data.text();
+      error.response.data = text ? JSON.parse(text) : undefined;
+    } catch {
+      error.response.data = undefined;
+    }
+  }
+  return error;
 }
 
 export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {

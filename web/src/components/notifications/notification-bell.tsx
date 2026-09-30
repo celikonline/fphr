@@ -48,6 +48,20 @@ export function isSafeAppPath(url: string): boolean {
   }
 }
 
+/**
+ * P06/FG-009: `request.comment_added`'ın actionUrl'i mobil-only bir detay ekranına gider
+ * (`/app/requests/{approvalRequestId}`); web'de bu segmentle bir rota yok (yalnız `/app/requests`
+ * ve `/app/requests/visa`, `App.tsx`), o yüzden `navigate` bu URL'i kabuğun DIŞINDAki genel
+ * `path="*"` rotasına (`NotFoundPage`) düşürürdü. Diğer her `/app/requests/*` segmentini olduğu
+ * gibi bırakıp yalnız bu durumu en yakın web karşılığı olan Onay Kutusu'na yönlendirir.
+ */
+export function resolveNotificationActionUrl(actionUrl: string): string {
+  if (actionUrl === "/app/requests" || actionUrl.startsWith("/app/requests/visa")) {
+    return actionUrl;
+  }
+  return actionUrl.startsWith("/app/requests/") ? "/app/inbox" : actionUrl;
+}
+
 /** Icon shown next to the title for template keys that need one (i18n label: `notifications:types.*`). */
 const TEMPLATE_ICONS: Partial<Record<string, { icon: LucideIcon; labelKey: string }>> = {
   "documents.expiry_reminder": {
@@ -111,7 +125,8 @@ function NotificationsDropdown({
     if (!item.readAt && canManage) markRead.mutate(item.id);
     // actionUrl comes from the server - only follow same-origin app paths so a malicious or
     // compromised payload can't turn the bell into an open redirect (//evil, http:, javascript: ...).
-    if (item.actionUrl && isSafeAppPath(item.actionUrl)) navigate(item.actionUrl);
+    if (item.actionUrl && isSafeAppPath(item.actionUrl))
+      navigate(resolveNotificationActionUrl(item.actionUrl));
   }
 
   const target = <Menu.Target>{renderTarget(unread)}</Menu.Target>;

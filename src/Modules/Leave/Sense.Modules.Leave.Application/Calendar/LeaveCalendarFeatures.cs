@@ -102,24 +102,8 @@ public sealed class GetLeaveCalendarHandler(
     }
 
     /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>
-    private async Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken)
-    {
-        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
-        if (orgUnitId is null)
-        {
-            return 0;
-        }
-
-        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
-            .Where(id => id != employeeId).ToList();
-        if (peers.Count == 0)
-        {
-            return 0;
-        }
-
-        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
-        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
-    }
+    private Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken) =>
+        LeaveCalendar.ApprovedOverlapCountAsync(tenant.TenantId, employeeId, date, employeeLookup, employees, requests, cancellationToken);
 }
 
 /// <summary>İzin Talepleri: pending leave requests of the employees in the caller's leave.requests.read data scope (Team for a Manager).</summary>
@@ -174,24 +158,8 @@ public sealed class ListTeamLeaveRequestsHandler(
     }
 
     /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>
-    private async Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken)
-    {
-        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
-        if (orgUnitId is null)
-        {
-            return 0;
-        }
-
-        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
-            .Where(id => id != employeeId).ToList();
-        if (peers.Count == 0)
-        {
-            return 0;
-        }
-
-        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
-        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
-    }
+    private Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken) =>
+        LeaveCalendar.ApprovedOverlapCountAsync(tenant.TenantId, employeeId, date, employeeLookup, employees, requests, cancellationToken);
 }
 
 public static class LeaveCalendar
@@ -206,6 +174,31 @@ public static class LeaveCalendar
         return to.DayNumber - from.DayNumber + 1 > LeaveLimits.CalendarMaxRangeDays
             ? Error.Validation(LeaveErrors.CalendarRangeTooLarge, ("max", LeaveLimits.CalendarMaxRangeDays))
             : Result.Success();
+    }
+
+    /// <summary>
+    /// <see cref="LeaveCalendarEntryDto.OverlappingApprovedCount"/>: approved leave requests starting on the same date from the
+    /// employee's org unit, excluding the employee (0 when the employee has no unit). Shared by the calendar, team and "Ekibim" lists.
+    /// </summary>
+    public static async Task<int> ApprovedOverlapCountAsync(
+        Guid tenantId, Guid employeeId, DateOnly date, IEmployeeLookup employeeLookup, IEmployeeDirectory employees, ILeaveRequestRepository requests,
+        CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenantId, employeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return 0;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != employeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return 0;
+        }
+
+        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
+        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
     }
 
     /// <summary>A type is masked when sensitive, hidden from the calendar, or no longer known (deleted rule set).</summary>

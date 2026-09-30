@@ -48,6 +48,18 @@ public interface IPayslipRepository
         Guid? payrollPeriodId, DateTimeOffset? publishedSince, CancellationToken cancellationToken = default);
 }
 
+/// <summary>TK-030 kabul kriteri 2: e-pusula tebliğ kanıtı (görüntüleme/onay) - bkz. <see cref="PayslipDelivery"/>.</summary>
+public interface IPayslipDeliveryRepository
+{
+    void Add(PayslipDelivery delivery);
+
+    Task<PayslipDelivery?> FindByPayslipIdAsync(Guid payslipId, CancellationToken cancellationToken = default);
+
+    /// <summary>Every delivery record of one employee's own payslips - "Bordro Pusulam" listesi tek sorguda
+    /// Viewed/Acknowledged bilgisini eklesin diye (N+1 yok).</summary>
+    Task<IReadOnlyList<PayslipDelivery>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
 public interface IPayslipCalculationTraceRepository
 {
     void Add(PayslipCalculationTrace trace);

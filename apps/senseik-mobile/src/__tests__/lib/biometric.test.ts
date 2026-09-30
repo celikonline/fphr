@@ -35,3 +35,38 @@ describe("biometricService error logging", () => {
     consoleError.mockRestore();
   });
 });
+
+describe("biometricService.confirmAction (FG-005 punch confirmation)", () => {
+  const LA = LocalAuthentication as unknown as Record<string, jest.Mock>;
+
+  beforeEach(() => {
+    LA.hasHardwareAsync.mockClear().mockResolvedValue(true);
+    LA.isEnrolledAsync.mockClear().mockResolvedValue(true);
+    LA.authenticateAsync.mockClear().mockResolvedValue({ success: true });
+  });
+
+  it("asks for biometrics on an enrolled device, without the device PIN fallback", async () => {
+    await expect(biometricService.confirmAction("Doğrula")).resolves.toBe(true);
+    expect(LA.authenticateAsync).toHaveBeenCalledWith({
+      promptMessage: "Doğrula",
+      disableDeviceFallback: true,
+    });
+  });
+
+  it("resolves false when the prompt is cancelled", async () => {
+    LA.authenticateAsync.mockResolvedValueOnce({ success: false, error: "user_cancel" });
+    await expect(biometricService.confirmAction("Doğrula")).resolves.toBe(false);
+  });
+
+  it("does not ask on a device without enrolled biometrics", async () => {
+    LA.isEnrolledAsync.mockResolvedValueOnce(false);
+    await expect(biometricService.confirmAction("Doğrula")).resolves.toBe(true);
+    expect(LA.authenticateAsync).not.toHaveBeenCalled();
+  });
+
+  it("does not ask on a device without biometric hardware", async () => {
+    LA.hasHardwareAsync.mockResolvedValueOnce(false);
+    await expect(biometricService.confirmAction("Doğrula")).resolves.toBe(true);
+    expect(LA.authenticateAsync).not.toHaveBeenCalled();
+  });
+});

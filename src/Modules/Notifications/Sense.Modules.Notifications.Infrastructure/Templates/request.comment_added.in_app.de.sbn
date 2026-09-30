@@ -1,0 +1,2 @@
+{{- subject = "Neuer Kommentar zum Antrag (" + request_type_name + ")" -}}
+{{ if author_name }}{{ author_name }} hat einen Kommentar geschrieben.{{ else }}Zum Antrag wurde ein neuer Kommentar geschrieben.{{ end }}

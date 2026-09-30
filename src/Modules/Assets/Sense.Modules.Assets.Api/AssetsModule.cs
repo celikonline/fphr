@@ -49,6 +49,9 @@ public sealed class AssetsModule : IModule
 
         services.AddAssetsCoreServices();
 
+        // Employee card PDF section (API only).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.AssetsCardPdfSection>();
+
         services.AddScoped<IImportTemplate, AssetImportTemplate>();
         services.AddScoped<IImportRowHandler, AssetImportRowHandler>();
     }

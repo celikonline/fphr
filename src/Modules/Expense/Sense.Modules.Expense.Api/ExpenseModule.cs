@@ -46,5 +46,8 @@ public sealed class ExpenseModule : IModule
             typeof(ExpensePermissions).Assembly);
 
         services.AddExpenseCoreServices();
+
+        // Employee card PDF section (API only).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.ExpenseCardPdfSection>();
     }
 }

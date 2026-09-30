@@ -3,8 +3,8 @@
  * `POST /v1/identity/me/mfa/enroll` (auth) -> { secret, otpAuthUri }; `MfaEnabled` stays false until verified.
  * `POST /v1/identity/me/mfa/verify` { code } -> 204, enables MFA.
  * `POST /v1/identity/me/mfa/disable` { code } -> 204.
- * `GET /v1/identity/me/mfa` -> { enabled, pendingEnrollment } (S-12, gün açılışı tur 1): security screen's
- * source of truth on load, in particular `pendingEnrollment` (secret written but never verified) which
+ * `GET /v1/identity/me/mfa` -> { enabled, pendingEnrollment, requiredByPolicy } (S-12, gün açılışı tur 1): security
+ * screen's source of truth on load, in particular `pendingEnrollment` (secret written but never verified) which
  * `/identity/me` doesn't expose.
  * Login-time completion (`auth/mfa/complete`) lives in `auth.store.ts` next to `login()` since it shares the
  * same "establish session" logic.
@@ -22,6 +22,12 @@ export interface MfaStatus {
   enabled: boolean;
   /** Secret was generated (`enroll` called) but never verified — the enroll dialog can be reopened to resume. */
   pendingEnrollment: boolean;
+  /**
+   * FG-022: the tenant's security policy requires MFA for one of the caller's roles - `disable` then answers 400
+   * `identity.mfa.required_by_policy`, so the security screen disables its "turn off" button. Optional: an older API
+   * omits it, which reads as "not required".
+   */
+  requiredByPolicy?: boolean;
 }
 
 export async function getMfaStatus(): Promise<MfaStatus> {

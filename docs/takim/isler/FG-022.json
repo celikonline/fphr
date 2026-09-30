@@ -1,0 +1,44 @@
+{
+  "id": "FG-022",
+  "baslik": "Güvenlik ayarları: iki adımlı doğrulama yönetimi ve biyometrik giriş",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "Privacy & Security: 'Two-Factor Authentication … via authenticator apps', 'Biometric Login' - resmi kaynak: ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); App Store 'Face and Touch ID' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "mobilde kısmi: girişte MFA kodu tamamlama (MfaCodePanel) ve biyometrik giriş istemi var; 2FA'yı açma/kapama ve biyometriği ayarlardan açıp kapatma yok (web'de mfa.service ile var).",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/identity/me/mfa",
+      "POST /api/v1/identity/me/mfa/enroll",
+      "POST /api/v1/identity/me/mfa/verify",
+      "POST /api/v1/identity/me/mfa/disable"
+    ],
+    "gereken_yeni": [],
+    "izin": "me.* self-servis uçları; Employee çağırabilir; mobil-only. Kiracı güvenlik politikası 2FA'yı zorunlu kıldıysa kapatma engellenir (sunucu kuralı)."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/settings/SecuritySettingsScreen.tsx (yeni)",
+      "apps/senseik-mobile/src/services/AuthService.ts (mfa uçları)",
+      "apps/senseik-mobile/src/lib/biometric.ts (aç/kapa + anahtar temizliği)",
+      "apps/senseik-mobile/src/screens/app/ProfileScreen.tsx ('Gizlilik ve güvenlik' satırı)"
+    ],
+    "navigasyon": "Profil > Gizlilik ve güvenlik"
+  },
+  "kabul": [
+    "Ekran 2FA durumunu gösterir; 'Etkinleştir' authenticator için QR/secret gösterir, 6 haneli kodla doğrulanınca açılır",
+    "2FA kapatma mevcut kodu ister; politika zorunluysa buton devre dışı ve açıklama görünür",
+    "Biyometrik giriş anahtarı cihazda biyometri varsa görünür; kapatınca saklanan biyometrik kimlik bilgisi silinir",
+    "Secret/QR değeri loglanmaz, ekran görüntüsü engellenir",
+    "Hatalı kod yerelleştirilmiş hata verir; saf fonksiyon testleri"
+  ],
+  "tasarim_notu": "GlassCard içinde iki satır anahtar (2FA, Biyometrik giriş); QR BottomSheet'te beyaz zemin üzerinde (okunabilirlik için tek açık yüzey).",
+  "buyukluk": "M - mevcut uçlar, auth akışı",
+  "riskli_alan": true,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

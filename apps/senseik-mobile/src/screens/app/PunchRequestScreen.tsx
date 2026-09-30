@@ -9,25 +9,25 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { useTranslation } from "react-i18next";
+import { formatDateTime } from "@/lib/formatters";
+import { palette, radius, text, tones } from "@/theme/theme";
 import {
-  PUNCH_STATUS_LABEL,
   canCancelPunchRequest,
   isFutureTime,
   parseLocalDateTime,
   punchRequestService,
+  punchStatusLabel,
   type PunchRequest,
   type PunchRequestDirection,
   type PunchRequestStatus,
 } from "@/services/PunchRequestService";
 
 const STATUS_COLOR: Record<PunchRequestStatus, string> = {
-  pending: colors.warning,
-  approved: colors.success,
-  rejected: colors.error,
-  cancelled: colors.textTertiary,
+  pending: tones.warning.fg,
+  approved: tones.success.fg,
+  rejected: tones.danger.fg,
+  cancelled: palette.textFaint,
 };
 
 function todayDateOnly(): string {
@@ -42,11 +42,14 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function formatOccurred(value: string): string {
-  return new Date(value).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" });
+  return formatDateTime(new Date(value), { dateStyle: "medium", timeStyle: "short" });
 }
+
+const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxxl: 32 } as const;
 
 /** Eksik kayıt talebi (Z2.1): form + kendi talepleri; yalnız bekleyen talep iptal edilir. */
 export default function PunchRequestScreen() {
+  const { t } = useTranslation("checkin");
   const [requests, setRequests] = useState<PunchRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +64,9 @@ export default function PunchRequestScreen() {
     try {
       setRequests(await punchRequestService.listMine());
     } catch {
-      setError("Talepler yüklenemedi. Lütfen tekrar deneyin.");
+      setError(t("punchRequest.loadError"));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load().finally(() => setLoading(false));
@@ -72,15 +75,15 @@ export default function PunchRequestScreen() {
   async function submit() {
     const occurredAt = parseLocalDateTime(date, time);
     if (!occurredAt) {
-      Alert.alert("Eksik bilgi", "Lütfen geçerli bir tarih (yyyy-aa-gg) ve saat (ss:dd) girin.");
+      Alert.alert(t("common:alerts.missingInfo"), t("punchRequest.invalidDateTime"));
       return;
     }
     if (isFutureTime(occurredAt)) {
-      Alert.alert("Geçersiz zaman", "Gelecek bir zaman için talep oluşturulamaz.");
+      Alert.alert(t("punchRequest.invalidTimeTitle"), t("punchRequest.futureTime"));
       return;
     }
     if (reason.trim().length === 0) {
-      Alert.alert("Eksik bilgi", "Gerekçe zorunludur.");
+      Alert.alert(t("common:alerts.missingInfo"), t("punchRequest.reasonRequired"));
       return;
     }
     setSubmitting(true);
@@ -93,9 +96,9 @@ export default function PunchRequestScreen() {
       setReason("");
       setTime("");
       await load();
-      Alert.alert("Gönderildi", "Talebiniz onaya gönderildi.");
+      Alert.alert(t("common:alerts.sent"), t("punchRequest.sentMessage"));
     } catch (err) {
-      Alert.alert("Hata", errorMessage(err, "Talep gönderilemedi. Lütfen tekrar deneyin."));
+      Alert.alert(t("common:alerts.error"), errorMessage(err, t("punchRequest.submitError")));
     } finally {
       setSubmitting(false);
     }
@@ -107,21 +110,21 @@ export default function PunchRequestScreen() {
       await punchRequestService.cancel(request.id);
       await load();
     } catch (err) {
-      Alert.alert("Hata", errorMessage(err, "Talep iptal edilemedi. Lütfen tekrar deneyin."));
+      Alert.alert(t("common:alerts.error"), errorMessage(err, t("punchRequest.cancelError")));
     }
   }
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={palette.brand} />
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Kayıt talebi</Text>
+      <Text style={styles.title}>{t("punchRequest.title")}</Text>
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
@@ -129,25 +132,27 @@ export default function PunchRequestScreen() {
       )}
 
       <View style={styles.card}>
-        <Text style={styles.fieldLabel}>Tarih (yyyy-aa-gg)</Text>
+        <Text style={styles.fieldLabel}>{t("punchRequest.date")}</Text>
         <TextInput
           testID="punch-date"
           style={styles.input}
           value={date}
           onChangeText={setDate}
           autoCapitalize="none"
+          placeholderTextColor={palette.textFaint}
           placeholder="2026-09-20"
         />
-        <Text style={styles.fieldLabel}>Saat (ss:dd)</Text>
+        <Text style={styles.fieldLabel}>{t("punchRequest.time")}</Text>
         <TextInput
           testID="punch-time"
           style={styles.input}
           value={time}
           onChangeText={setTime}
           autoCapitalize="none"
+          placeholderTextColor={palette.textFaint}
           placeholder="08:30"
         />
-        <Text style={styles.fieldLabel}>Yön</Text>
+        <Text style={styles.fieldLabel}>{t("punchRequest.direction")}</Text>
         <View style={styles.row}>
           {(["in", "out"] as const).map((value) => (
             <TouchableOpacity
@@ -157,18 +162,19 @@ export default function PunchRequestScreen() {
               onPress={() => setDirection(value)}
             >
               <Text style={[styles.chipText, direction === value && styles.chipTextSelected]}>
-                {value === "in" ? "Giriş" : "Çıkış"}
+                {t(value === "in" ? "punchRequest.in" : "punchRequest.out")}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={styles.fieldLabel}>Gerekçe</Text>
+        <Text style={styles.fieldLabel}>{t("punchRequest.reason")}</Text>
         <TextInput
           testID="punch-reason"
           style={[styles.input, styles.textArea]}
           value={reason}
           onChangeText={setReason}
-          placeholder="Kaydın neden eksik olduğunu açıklayın"
+          placeholderTextColor={palette.textFaint}
+          placeholder={t("punchRequest.reasonPlaceholder")}
           multiline
           numberOfLines={3}
         />
@@ -179,33 +185,34 @@ export default function PunchRequestScreen() {
           disabled={submitting}
         >
           {submitting ? (
-            <ActivityIndicator color={colors.white} />
+            <ActivityIndicator color={palette.white} />
           ) : (
-            <Text style={styles.submitButtonText}>Talebi gönder</Text>
+            <Text style={styles.submitButtonText}>{t("punchRequest.submit")}</Text>
           )}
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Taleplerim</Text>
+      <Text style={styles.sectionTitle}>{t("punchRequest.mine")}</Text>
       {error ? null : requests.length === 0 ? (
-        <Text style={styles.emptyText}>Henüz talebiniz yok.</Text>
+        <Text style={styles.emptyText}>{t("punchRequest.empty")}</Text>
       ) : (
         requests.map((request) => (
           <View key={request.id} style={styles.card}>
             <View style={styles.rowBetween}>
               <Text style={styles.cardValue}>
-                {formatOccurred(request.occurredAtUtc)} · {request.direction === "in" ? "Giriş" : "Çıkış"}
+                {formatOccurred(request.occurredAtUtc)} ·{" "}
+                {t(request.direction === "in" ? "punchRequest.in" : "punchRequest.out")}
               </Text>
               <Text
                 testID={`punch-status-${request.id}`}
                 style={[styles.statusChip, { color: STATUS_COLOR[request.status] }]}
               >
-                {PUNCH_STATUS_LABEL[request.status]}
+                {punchStatusLabel(request.status)}
               </Text>
             </View>
             {request.decidedAtUtc ? (
               <Text testID={`punch-decided-${request.id}`} style={styles.cardSubtext}>
-                Karar: {formatOccurred(request.decidedAtUtc)}
+                {t("punchRequest.decidedAt", { time: formatOccurred(request.decidedAtUtc) })}
               </Text>
             ) : null}
             <Text style={styles.cardSubtext}>{request.reason}</Text>
@@ -215,7 +222,7 @@ export default function PunchRequestScreen() {
                 style={styles.cancelButton}
                 onPress={() => void cancel(request)}
               >
-                <Text style={styles.cancelText}>İptal et</Text>
+                <Text style={styles.cancelText}>{t("punchRequest.cancel")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -226,25 +233,25 @@ export default function PunchRequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: palette.night },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
-  title: { ...typography.h3, color: colors.text, marginBottom: spacing.lg },
-  sectionTitle: { ...typography.h4, color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: palette.night },
+  title: { ...text.title, color: palette.white, marginBottom: spacing.lg },
+  sectionTitle: { ...text.heading, color: palette.white, marginTop: spacing.xl, marginBottom: spacing.sm },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: palette.glass,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderColor: palette.glassBorder,
+    borderRadius: radius.button,
     padding: spacing.lg,
     marginBottom: spacing.sm,
   },
-  cardValue: { ...typography.bodySm, color: colors.text, flexShrink: 1 },
-  cardSubtext: { ...typography.bodyXs, color: colors.textTertiary, marginTop: spacing.xs },
-  emptyText: { ...typography.bodySm, color: colors.textTertiary },
-  errorBanner: { backgroundColor: "#fdecea", borderRadius: 8, padding: spacing.md, marginBottom: spacing.md },
-  errorText: { ...typography.bodySm, color: colors.error },
-  fieldLabel: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.md, marginBottom: spacing.xs },
+  cardValue: { ...text.bodyMuted, color: palette.white, flexShrink: 1 },
+  cardSubtext: { ...text.caption, color: palette.textFaint, marginTop: spacing.xs },
+  emptyText: { ...text.bodyMuted, color: palette.textFaint },
+  errorBanner: { backgroundColor: tones.danger.bg, borderRadius: radius.button, padding: spacing.md, marginBottom: spacing.md },
+  errorText: { ...text.bodyMuted, color: tones.danger.fg },
+  fieldLabel: { ...text.caption, color: palette.textMuted, marginTop: spacing.md, marginBottom: spacing.xs },
   row: { flexDirection: "row" },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   chip: {
@@ -252,34 +259,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: palette.glassBorder,
     marginRight: spacing.sm,
-    backgroundColor: colors.gray50,
+    backgroundColor: palette.glassInner,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { ...typography.bodySm, color: colors.text },
-  chipTextSelected: { color: colors.white },
-  statusChip: { ...typography.caption, marginLeft: spacing.sm },
+  chipSelected: { backgroundColor: palette.brand, borderColor: palette.brand },
+  chipText: { ...text.bodyMuted, color: palette.white },
+  chipTextSelected: { color: palette.white },
+  statusChip: { ...text.caption, marginLeft: spacing.sm },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: palette.glassBorder,
+    borderRadius: radius.button,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    ...typography.body,
-    color: colors.text,
-    backgroundColor: colors.white,
+    ...text.body,
+    color: palette.white,
+    backgroundColor: palette.glass,
   },
   textArea: { minHeight: 72, textAlignVertical: "top" },
   submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
+    backgroundColor: palette.brand,
+    borderRadius: radius.button,
     paddingVertical: spacing.md,
     alignItems: "center",
     marginTop: spacing.lg,
   },
   submitButtonDisabled: { opacity: 0.6 },
-  submitButtonText: { ...typography.body, color: colors.white },
+  submitButtonText: { ...text.body, color: palette.white },
   cancelButton: { marginTop: spacing.sm, alignSelf: "flex-start" },
-  cancelText: { ...typography.bodySm, color: colors.error },
+  cancelText: { ...text.bodyMuted, color: tones.danger.fg },
 });

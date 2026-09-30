@@ -64,6 +64,8 @@ public sealed class BreaksReportProvider(
         {
             var ordered = BackfillBreakFilter.WithoutSuperseded(group.OrderBy(p => p.OccurredAtUtc).ToList());
             var gaps = Gaps(ordered);
+            // Self-servis mola başı/sonu okutmaları (mola başı → mola sonu ya da çıkış) da günün molasıdır.
+            gaps.AddRange(DayFromPunches.SelfServiceBreaks(ordered).Select(b => (int)Math.Round(b.TotalMinutes)));
             if (gaps.Count == 0)
             {
                 continue;

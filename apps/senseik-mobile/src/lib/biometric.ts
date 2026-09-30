@@ -1,6 +1,7 @@
 import * as LocalAuthentication from "expo-local-authentication";
 import { BiometricAvailable, BiometricType } from "@/types";
 import { SecureStorage } from "./storage";
+import i18n from "./i18n";
 
 export class BiometricService {
   async isBiometricAvailable(): Promise<BiometricAvailable> {
@@ -52,7 +53,9 @@ export class BiometricService {
     }
   }
 
-  async authenticate(reason: string = "Authenticate to access your account"): Promise<boolean> {
+  async authenticate(
+    reason: string = i18n.t("common:biometric.authenticatePrompt")
+  ): Promise<boolean> {
     try {
       // disableDeviceFallback: a stolen device with a known PIN must not bypass
       // biometrics for payroll/HR data. Users without biometrics log in with password.
@@ -71,6 +74,18 @@ export class BiometricService {
     }
   }
 
+  /**
+   * FG-005 (Karar 3): confirms an action (a punch) with biometrics when the device has them enrolled;
+   * a device without enrolled biometrics is not asked (resolves `true`). With biometrics, a cancelled
+   * or failed prompt resolves `false`. Goes through `authenticate`, so `disableDeviceFallback` holds -
+   * never falls back to the device PIN. Independent of the login's "biometric enabled" setting.
+   */
+  async confirmAction(reason: string): Promise<boolean> {
+    const { available } = await this.isBiometricAvailable();
+    if (!available) return true;
+    return this.authenticate(reason);
+  }
+
   async enableBiometric(): Promise<void> {
     const available = await this.isBiometricAvailable();
     if (!available.available) {
@@ -78,7 +93,7 @@ export class BiometricService {
     }
 
     // Authenticate first to enable
-    const authenticated = await this.authenticate("Enable biometric login");
+    const authenticated = await this.authenticate(i18n.t("common:biometric.enablePrompt"));
     if (authenticated) {
       await SecureStorage.setBiometricEnabled(true);
     } else {

@@ -1,0 +1,42 @@
+{
+  "id": "FG-020",
+  "baslik": "Çalışma takvimi: vardiya + çalışma programı + izin günleri",
+  "durum": "backlog",
+  "oncelik": "orta",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "'Schedule View: see your shift schedule with time-off highlights' - resmi kaynak: zenhr.com/en/mobile; profil 'Schedules Tab' - ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); App Store 'View work schedules and shifts' (App Store listesi (apps.apple.com/us/app/zenhr/id1376637090)).",
+  "senseik_durumu": "mobilde kısmi: Vardiyam haftalık vardiya + müsaitlik bildirimi var; sabit çalışma programı (vardiyasız çalışanlar) ve izin günleri takvimde görünmüyor.",
+  "backend": {
+    "mevcut_uclar": [
+      "GET /api/v1/attendance/shifts/me (attendance.shift.self)",
+      "GET /api/v1/attendance/work-schedules/me/assignments (attendance.my.workschedule)",
+      "GET /api/v1/leave/me/requests (onaylı izinler)",
+      "GET /api/v1/organization/holiday-calendars/upcoming?days= (organization.holidays.view - Employee'de var)"
+    ],
+    "gereken_yeni": [],
+    "izin": "Hepsi Employee rolünde; mobil-only."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/screens/app/ShiftScreen.tsx + shift/WeekStrip.tsx + shift/ShiftCard.tsx (izin/tatil günü işaretleri)",
+      "apps/senseik-mobile/src/services/ShiftService.ts (getMyWorkScheduleAssignments)"
+    ],
+    "navigasyon": "İşlemlerim 'Vardiyam' (başlık 'Takvimim' olabilir)"
+  },
+  "kabul": [
+    "Vardiyası olmayan çalışan sabit çalışma programını (gün başına başlangıç-bitiş) haftalık görünümde görür",
+    "Onaylı izin günleri hafta şeridinde ve gün kartında 'İzinli (tür)' ile vurgulanır",
+    "Resmi tatiller 'Resmi tatil' etiketiyle görünür",
+    "Vardiya + izin çakışması varsa izin önceliklidir (gösterim kuralı belgelenir)",
+    "Saf birleştirme fonksiyonu (vardiya/program/izin/tatil → gün modeli) birim testli"
+  ],
+  "tasarim_notu": "WeekStrip gün noktası renkleri: vardiya brand, izin yeşil, tatil amber; gün kartında StatusPill.",
+  "buyukluk": "M - üç kaynağın birleştirilmesi, mevcut ekran",
+  "riskli_alan": false,
+  "bagimliliklar": [],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

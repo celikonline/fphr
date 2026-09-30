@@ -9,6 +9,8 @@ using Sense.Shared.Contracts.Export;
 using Shouldly;
 using Xunit;
 using static Sense.Modules.Payroll.Tests.Payslips.PayslipTestKit;
+using AcknowledgeMyPayslipCommand = Sense.Modules.Payroll.Application.Payslips.AcknowledgeMyPayslipCommand;
+using AcknowledgeMyPayslipHandler = Sense.Modules.Payroll.Application.Payslips.AcknowledgeMyPayslipHandler;
 
 namespace Sense.Modules.Payroll.Tests.Payslips;
 

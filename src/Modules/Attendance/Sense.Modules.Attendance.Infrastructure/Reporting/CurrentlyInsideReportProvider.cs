@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
 using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.SelfCheckIns;
@@ -72,7 +73,13 @@ public sealed class CurrentlyInsideReportProvider(
         var data = new List<(string Name, IReadOnlyList<object?> Cells)>();
         foreach (var group in todays.Where(p => !p.IsDeleted).GroupBy(p => p.EmployeeId))
         {
-            var ordered = group.OrderBy(p => p.OccurredAtUtc).ToList();
+            // Mola başı/sonu giriş/çıkış değildir: içeride olma son giriş/çıkış okutmasına göre (molada olan içeride sayılır).
+            var ordered = group.Where(p => !DayFromPunches.IsBreak(p.Direction)).OrderBy(p => p.OccurredAtUtc).ToList();
+            if (ordered.Count == 0)
+            {
+                continue;
+            }
+
             var last = ordered[^1];
             if (last.Direction != PunchDirection.In || !people.TryGetValue(group.Key, out var person)
                 || !await IsStillInsideAsync(group.Key, last, today, now, zone, cancellationToken))

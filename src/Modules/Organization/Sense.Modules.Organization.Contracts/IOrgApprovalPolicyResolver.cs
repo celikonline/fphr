@@ -27,10 +27,13 @@ public static class ApprovalRequestTypes
     /// <summary>Employee's objection to a payslip (E2): approval = objection accepted.</summary>
     public const string PayslipObjection = "PayslipObjection";
 
+    /// <summary>Attendance's employee-initiated missing punch correction ("Eksik giriş/çıkış", FG-004).</summary>
+    public const string PunchCorrection = "PunchCorrection";
+
     public const int MaxLength = 50;
 
     /// <summary>Unit-assignable request types, in display order.</summary>
-    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment, AttendancePunch, PayslipObjection];
+    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment, AttendancePunch, PayslipObjection, PunchCorrection];
 
     /// <summary>True if <paramref name="requestType"/> follows the identifier rule above.</summary>
     public static bool IsWellFormed(string? requestType) =>

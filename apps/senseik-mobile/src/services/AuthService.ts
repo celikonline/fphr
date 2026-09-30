@@ -2,6 +2,7 @@ import axios from "axios";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
+import i18n from "@/lib/i18n";
 import { pushNotificationService } from "@/services/PushNotificationService";
 import { User, AuthTokens, TenantChoice } from "@/types";
 
@@ -109,13 +110,13 @@ export class AuthService {
 
       if (result.status === "mfa_required") {
         if (!result.mfaToken) {
-          throw new Error("Beklenmeyen giriş yanıtı.");
+          throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
         }
         return { status: "mfaRequired", mfaToken: result.mfaToken };
       }
 
       if (result.status !== "ok" || !result.tokens) {
-        throw new Error("Beklenmeyen giriş yanıtı.");
+        throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
       }
 
       const tokens = toAuthTokens(result.tokens);
@@ -124,7 +125,7 @@ export class AuthService {
 
       const user = await this.fetchAndStoreCurrentUser();
       if (!user) {
-        throw new Error("Kullanıcı bilgileri alınamadı.");
+        throw new Error(i18n.t("auth:errors.userInfoUnavailable"));
       }
 
       await PreferenceStorage.setLastLoginEmail(email);
@@ -161,7 +162,7 @@ export class AuthService {
       const result = response.data;
 
       if (result.status !== "ok" || !result.tokens) {
-        throw new Error("Beklenmeyen giriş yanıtı.");
+        throw new Error(i18n.t("auth:errors.unexpectedLoginResponse"));
       }
 
       const tokens = toAuthTokens(result.tokens);
@@ -170,7 +171,7 @@ export class AuthService {
 
       const user = await this.fetchAndStoreCurrentUser();
       if (!user) {
-        throw new Error("Kullanıcı bilgileri alınamadı.");
+        throw new Error(i18n.t("auth:errors.userInfoUnavailable"));
       }
 
       if (email) {
@@ -183,6 +184,23 @@ export class AuthService {
       // code, expired challenge) is expected - see `isExpectedAuthFailure`.
       if (__DEV__ && !isExpectedAuthFailure(error)) {
         console.error("MFA completion failed.");
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Mirrors `web/src/services/password-reset.service.ts`: the backend's `POST forgot-password` is
+   * `[AllowAnonymous]` and always answers 204, whether or not the address is registered - so a
+   * caught error here is a genuine network/server failure, never "email not found".
+   */
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await apiClient.post(`${AUTH_BASE}/forgot-password`, { email });
+    } catch (error) {
+      // Never log the error object: axios errors embed the request body/headers.
+      if (__DEV__) {
+        console.error("Forgot password request failed.");
       }
       throw error;
     }

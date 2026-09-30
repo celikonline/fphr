@@ -41,6 +41,8 @@ public sealed record MfaCompleteRequest(string MfaToken, string Code);
 
 public sealed record MfaCodeRequest(string Code);
 
+public sealed record ChangeMyLanguageRequest(string Language);
+
 /// <summary>Giriş, token yenileme, çıkış.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route(IdentityRoutes.Auth)]
@@ -121,7 +123,14 @@ public sealed class MeController : ApiControllerBase
             .ToList(),
     };
 
-    /// <summary>Güvenlik ekranı: MFA açık mı, yarım kalmış kayıt var mı.</summary>
+    /// <summary>FG-001: kendi dil tercihini değiştirir (iki harfli kod, ör. "tr", "en"); desteklenmeyen dil 400
+    /// <c>identity.user.language_unsupported</c>. Push/e-posta dili bu tercihi izler.</summary>
+    [HttpPut("language")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ChangeLanguage([FromBody] ChangeMyLanguageRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ChangeMyLanguageCommand(request.Language), ct));
+
+    /// <summary>Güvenlik ekranı: MFA açık mı, yarım kalmış kayıt var mı, kiracı politikası zorunlu kılıyor mu (requiredByPolicy).</summary>
     [HttpGet("mfa")]
     [ProducesResponseType<MfaStatusDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMfaStatus(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetMfaStatusQuery(), ct));
@@ -137,7 +146,8 @@ public sealed class MeController : ApiControllerBase
     public async Task<IActionResult> VerifyMfa([FromBody] MfaCodeRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new VerifyMfaEnrollmentCommand(request.Code), ct));
 
-    /// <summary>Self-servis MFA kapatma (kod ile onay). Yönetici sıfırlaması için ayrı bir uç var (Users → mfa/reset).</summary>
+    /// <summary>Self-servis MFA kapatma (kod ile onay). Yönetici sıfırlaması için ayrı bir uç var (Users → mfa/reset).
+    /// Kiracı politikası kullanıcının rolü için 2FA'yı zorunlu kılıyorsa 400 <c>identity.mfa.required_by_policy</c>.</summary>
     [HttpPost("mfa/disable")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DisableMfa([FromBody] MfaCodeRequest request, CancellationToken ct) =>

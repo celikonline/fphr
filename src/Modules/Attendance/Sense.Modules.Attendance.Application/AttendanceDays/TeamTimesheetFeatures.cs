@@ -67,6 +67,14 @@ internal static class TeamRangeBuilder
     {
         var employeeIds = await VisibleEmployeeResolver.ResolveAsync(
             AttendancePermissions.TimesheetView.Key, orgUnitId, tenant.TenantId, dataScope, employees, cancellationToken);
+        return await BuildForEmployeesAsync(start, end, employeeIds, tenant, employees, days, schedules, nonWorkingDays, cancellationToken);
+    }
+
+    /// <summary>The rows for an already resolved employee set (the data-scope grid above, or FG-007's direct reports).</summary>
+    public static async Task<Result<IReadOnlyList<TeamWeekRowDto>>> BuildForEmployeesAsync(
+        DateOnly start, DateOnly end, IReadOnlyList<Guid> employeeIds, ITenantContext tenant, IEmployeeDirectory employees,
+        IAttendanceDayRepository days, IWorkScheduleReadService schedules, NonWorkingDayResolver nonWorkingDays, CancellationToken cancellationToken)
+    {
         if (employeeIds.Count == 0)
         {
             return Result.Success<IReadOnlyList<TeamWeekRowDto>>([]);

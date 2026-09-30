@@ -6,14 +6,23 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
+import {
+  Avatar,
+  EmptyState,
+  ErrorBanner,
+  GlassCard,
+  Screen,
+  ScreenHeader,
+  TextField,
+} from "@/components/ui";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
+import { palette, text } from "@/theme/theme";
 
 /** Debounce delay (ms) before a search keystroke triggers a directory reload. */
 const SEARCH_DEBOUNCE_MS = 350;
@@ -29,20 +38,33 @@ export function openPersonEmail(workEmail: string | null | undefined): void {
 }
 
 function PersonRow({ person }: { person: PersonListItem }) {
+  const { t } = useTranslation("people");
   const subtitle = [person.titleName, person.departmentName].filter(Boolean).join(" · ");
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.name}>{person.displayName}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <GlassCard style={styles.card}>
+      <View style={styles.header}>
+        <Avatar name={person.displayName} employeeId={person.id} size={48} radius={16} />
+        <View style={styles.headerText}>
+          <Text style={styles.name} numberOfLines={1}>
+            {person.displayName}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+      </View>
       <View style={styles.contactRow}>
         {person.workPhone ? (
           <TouchableOpacity
             style={styles.contactButton}
             onPress={() => openPersonPhone(person.workPhone)}
             accessibilityRole="button"
-            accessibilityLabel={`${person.displayName} - telefon ile ara`}
+            accessibilityLabel={t("callA11y", { name: person.displayName })}
           >
+            <Ionicons name="call-outline" size={16} color={palette.brandText} />
             <Text style={styles.contactButtonText}>{person.workPhone}</Text>
           </TouchableOpacity>
         ) : null}
@@ -51,17 +73,21 @@ function PersonRow({ person }: { person: PersonListItem }) {
             style={styles.contactButton}
             onPress={() => openPersonEmail(person.workEmail)}
             accessibilityRole="button"
-            accessibilityLabel={`${person.displayName} - e-posta gönder`}
+            accessibilityLabel={t("emailA11y", { name: person.displayName })}
           >
-            <Text style={styles.contactButtonText}>{person.workEmail}</Text>
+            <Ionicons name="mail-outline" size={16} color={palette.brandText} />
+            <Text style={styles.contactButtonText} numberOfLines={1}>
+              {person.workEmail}
+            </Text>
           </TouchableOpacity>
         ) : null}
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 export default function PeopleScreen() {
+  const { t } = useTranslation("people");
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -74,7 +100,7 @@ export default function PeopleScreen() {
       const result = await peopleService.listPeople({ q, pageSize: 100 });
       setPeople(result.items);
     } catch {
-      setError("Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("people:loadError"));
     }
   }, []);
 
@@ -97,117 +123,95 @@ export default function PeopleScreen() {
     setRefreshing(false);
   }
 
+  const header = <ScreenHeader title={t("title")} />;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Kişiler</Text>
-
-      <TextInput
-        style={styles.searchInput}
-        placeholder="İsim, unvan veya birim ara"
-        placeholderTextColor={colors.textTertiary}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
+    <Screen scroll={false} header={header}>
+      <View style={styles.flex}>
+        <View style={styles.searchWrap}>
+          <TextField
+            label={t("search")}
+            placeholder={t("searchPlaceholder")}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
         </View>
-      )}
 
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={people}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <PersonRow person={item} />}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
-          }
-          ListEmptyComponent={<Text style={styles.emptyText}>Kayıt bulunamadı.</Text>}
-        />
-      )}
-    </View>
+        {error ? <ErrorBanner message={error} onRetry={() => void load(search)} /> : null}
+
+        {loading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={palette.white} />
+          </View>
+        ) : (
+          <FlatList
+            data={people}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <PersonRow person={item} />}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => void onRefresh()}
+                tintColor={palette.white}
+              />
+            }
+            ListEmptyComponent={<EmptyState icon="people-outline" title={t("empty")} />}
+          />
+        )}
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.xl,
-  },
+  flex: { flex: 1 },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    ...typography.body,
-    color: colors.text,
-    marginBottom: spacing.md,
+  searchWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
   listContent: {
-    paddingBottom: spacing.xxxl,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
   card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
   },
   name: {
-    ...typography.h4,
-    color: colors.text,
+    ...text.heading,
   },
   subtitle: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    ...text.bodyMuted,
     marginTop: 2,
   },
   contactRow: {
-    marginTop: spacing.sm,
-    gap: spacing.xs,
+    marginTop: 12,
+    gap: 8,
   },
   contactButton: {
-    paddingVertical: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   contactButtonText: {
-    ...typography.bodySm,
-    color: colors.primary,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary,
-    textAlign: "center",
-    marginTop: spacing.xxl,
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error,
+    ...text.bodyMuted,
+    color: palette.brandText,
+    flexShrink: 1,
   },
 });

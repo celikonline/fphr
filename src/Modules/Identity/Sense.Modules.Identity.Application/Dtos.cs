@@ -68,8 +68,10 @@ public sealed record LoginResultDto(string Status, AuthTokensDto? Tokens, IReadO
 public sealed record MfaEnrollmentDto(string Secret, string OtpAuthUri);
 
 /// <summary>Güvenlik ekranı MFA durumu (S-12). <paramref name="PendingEnrollment"/>: secret yazılmış ama kod henüz doğrulanmamış
-/// (<see cref="Sense.Modules.Identity.Domain.Users.User.TotpSecretEncrypted"/> dolu, <see cref="Sense.Modules.Identity.Domain.Users.User.MfaEnabled"/> false).</summary>
-public sealed record MfaStatusDto(bool Enabled, bool PendingEnrollment);
+/// (<see cref="Sense.Modules.Identity.Domain.Users.User.TotpSecretEncrypted"/> dolu, <see cref="Sense.Modules.Identity.Domain.Users.User.MfaEnabled"/> false).
+/// <paramref name="RequiredByPolicy"/> (FG-022): kiracı güvenlik politikası kullanıcının rollerinden biri için 2FA'yı zorunlu kılıyor —
+/// self-servis kapatma (<c>POST me/mfa/disable</c>) <c>identity.mfa.required_by_policy</c> ile reddedilir.</summary>
+public sealed record MfaStatusDto(bool Enabled, bool PendingEnrollment, bool RequiredByPolicy);
 
 /// <summary>Destek erişimi (impersonation) grant satırı. Status: Pending|Approved|Active|Expired|Revoked (süresi dolan grant Expired görünür).</summary>
 public sealed record ImpersonationGrantDto(

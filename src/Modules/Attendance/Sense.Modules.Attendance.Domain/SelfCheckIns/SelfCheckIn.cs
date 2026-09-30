@@ -2,19 +2,22 @@ using Sense.Shared.Kernel.Domain;
 
 namespace Sense.Modules.Attendance.Domain.SelfCheckIns;
 
-/// <summary>"in" (giriş) or "out" (çıkış) - same two-value shape as the PDKS device log's own direction, kept as a
+/// <summary>"in" (giriş) or "out" (çıkış) - same shape as the PDKS device log's own direction, kept as a
 /// separate Domain-layer enum since <c>DeviceLogDirection</c> lives in the Application layer's DeviceLogs feature
-/// and Domain types must not depend on Application.</summary>
+/// and Domain types must not depend on Application. "breakStart"/"breakEnd" (mola başı/sonu) are self-servis only:
+/// they never change the day's check-in/out, only its actual break minutes.</summary>
 public enum PunchDirection
 {
     In = 0,
     Out = 1,
+    BreakStart = 2,
+    BreakEnd = 3,
 
     /// <summary>
     /// Yön bilgisi olmayan ham okutma (zaman-devam Z0.1: yönsüz terminal/cihaz kaydı) - gün hesabında sıraya göre
     /// yorumlanır; tek sayıda yönsüz okutma günü <c>Incalculable</c> yapar. Self-servis check-in bu değeri kabul etmez.
     /// </summary>
-    Unknown = 2,
+    Unknown = 4,
 }
 
 /// <summary>How the self-servis check-in was verified (S-31 kabul kriteri 1/2).</summary>

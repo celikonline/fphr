@@ -203,6 +203,36 @@ public sealed class DayFromPunchesTests
         DayFromPunches.Build(Punches("In,Out", "09:00,18:00"), Plan("09:00", "18:00", 60)).Reason.ShouldBe(IncalculableReason.None);
     }
 
+    [Fact]
+    public void Self_service_break_punches_add_break_without_changing_check_in_out()
+    {
+        // In 09:00, mola 12:00-12:40, Out 18:00 → mola 40, sıra In/Out olarak geçerli.
+        var r = DayFromPunches.Build(
+            Punches("In,BreakStart,BreakEnd,Out", "09:00,12:00,12:40,18:00", source: PunchSource.SelfService), Plan("09:00", "18:00", 60));
+
+        r.ShouldBe(new DayResult(new TimeOnly(9, 0), new TimeOnly(18, 0), 40, Incalculable: false, Overnight: false));
+    }
+
+    [Fact]
+    public void Closed_break_on_an_open_day_counts_and_open_break_does_not()
+    {
+        var r = DayFromPunches.Build(
+            Punches("In,BreakStart,BreakEnd,BreakStart", "09:00,10:00,10:15,12:00", source: PunchSource.SelfService), Plan("09:00", "18:00", 60));
+
+        r.ShouldBe(new DayResult(new TimeOnly(9, 0), null, 15, Incalculable: false, Overnight: false));
+    }
+
+    [Fact]
+    public void Check_out_closes_an_open_break()
+    {
+        var r = DayFromPunches.Build(
+            Punches("In,Out,In,BreakStart,Out", "09:00,11:00,11:30,12:00,12:30", source: PunchSource.SelfService), Plan("09:00", "18:00", 60));
+
+        r.Incalculable.ShouldBeFalse();
+        r.CheckOut.ShouldBe(new TimeOnly(12, 30));
+        r.ActualBreakMinutes.ShouldBe(60); // Out→In 30 + mola başı→çıkış 30
+    }
+
     private static IReadOnlyList<Punch> WithRefs(IReadOnlyList<Punch> punches, params string?[] refs) =>
         punches.Zip(refs, (p, r) => Sense.Modules.Attendance.Domain.Punches.Punch.Create(
                 p.TenantId, p.EmployeeId, p.OccurredAtUtc, p.WorkDate, p.Direction, p.Source, r, null, null, null, null, p.IsManual, null, null,

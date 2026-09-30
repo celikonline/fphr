@@ -38,6 +38,18 @@
       "list": {
         "label": "Employee list report",
         "description": "Headcount list: career placement, hire date, employment status, contact details and employment type."
+      },
+      "departed": {
+        "label": "Departed employee information",
+        "description": "Employees who left in the selected year (default: current year): career placement, hire/termination date, tenure and manager."
+      },
+      "birthdays": {
+        "label": "Birthday list",
+        "description": "Employees with a birthday in the selected month (default: current month), ordered by day."
+      },
+      "turnover": {
+        "label": "Employee turnover report",
+        "description": "Turnover rate summary for the selected year (default: current year) plus a breakdown of departed employees."
       }
     },
     "leave": {
@@ -66,6 +78,10 @@
       "company_ledger": {
         "label": "Company-wide leave/overtime ledger",
         "description": "Excel export of the company-wide view next to \"My Leave\"/\"My Overtime\": who is on leave in the selected month, annual leave balance and annual overtime (270-hour limit)."
+      },
+      "monthly_usage": {
+        "label": "Leave usage report",
+        "description": "Leave used (approved) in the selected month (default: current month): type, start, end and day count."
       }
     },
     "finance": {

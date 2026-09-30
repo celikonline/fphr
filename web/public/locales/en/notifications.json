@@ -12,7 +12,8 @@
     "request": {
       "created": "My request was created",
       "approved": "My request was approved",
-      "rejected": "My request was rejected"
+      "rejected": "My request was rejected",
+      "comment_added": "A comment is added to my request or one I approved"
     },
     "approval": {
       "task_assigned": "A request is waiting for my approval"
@@ -55,6 +56,11 @@
     },
     "workflow": {
       "delegation_assigned": "When an approval delegation is assigned to me"
+    },
+    "assets": {
+      "assignment_created": "When equipment is assigned to me",
+      "assignment_returned": "When my equipment return is recorded",
+      "unreturned_at_termination": "When an employee leaves with unreturned equipment"
     }
   },
   "preferences": {
@@ -77,7 +83,8 @@
     "employee": "Employees",
     "announcement": "Announcements",
     "payroll": "Payroll",
-    "onboarding": "Onboarding / offboarding"
+    "onboarding": "Onboarding / offboarding",
+    "assets": "Equipment"
   },
   "types": {
     "documentExpiryReminder": "Document expiring soon"

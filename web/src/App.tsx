@@ -65,7 +65,7 @@ const CompanyLeaveLedgerPage = lazy(() => import("@/pages/leave/company-leave-le
 const JobPostingsPage = lazy(() => import("@/pages/recruitment/job-postings"));
 const JobPostingDetailPage = lazy(() => import("@/pages/recruitment/job-posting-detail"));
 const CandidatesPage = lazy(() => import("@/pages/recruitment/candidates"));
-const TrustPage = lazy(() => import("@/pages/trust"));
+const MobileAppPage = lazy(() => import("@/pages/mobile-app"));
 const JobRequisitionsPage = lazy(() => import("@/pages/recruitment/job-requisitions"));
 const RecruitmentFormTemplatesPage = lazy(
   () => import("@/pages/settings/recruitment-form-templates")
@@ -162,7 +162,8 @@ export default function App() {
             <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />
             <Route path="account" element={<AccountPage />} />
-            <Route path="trust" element={<TrustPage />} />
+            <Route path="mobile-app" element={<MobileAppPage />} />
+            <Route path="trust" element={<Navigate to="/app/mobile-app" replace />} />
             <Route path="inbox" element={<WorkflowInboxPage />} />
             <Route path="notifications/settings" element={<NotificationPreferencesPage />} />
             <Route path="leave" element={<MyLeavePage />} />

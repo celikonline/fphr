@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import i18n from "@/lib/i18n";
 
 /**
  * Eksik kayıt (punch) talebi, self-servis: mirrors `/attendance/punch-requests/me` (web
@@ -28,12 +29,10 @@ export interface CreatePunchRequestInput {
   reason: string;
 }
 
-export const PUNCH_STATUS_LABEL: Record<PunchRequestStatus, string> = {
-  pending: "Bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-  cancelled: "İptal edildi",
-};
+/** Localized status chip text (checkin:punchRequest.status.*). */
+export function punchStatusLabel(status: PunchRequestStatus): string {
+  return i18n.t(`checkin:punchRequest.status.${status}`);
+}
 
 /** Yalnız bekleyen talep iptal edilebilir. */
 export function canCancelPunchRequest(status: PunchRequestStatus): boolean {

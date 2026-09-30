@@ -1,53 +1,31 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
+import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
 import { notificationsService, type UserNotification } from "@/services/NotificationsService";
-import { formatRelativeTime } from "@/lib/formatters";
-import { resolveNotificationNavigationTarget } from "@/lib/notificationNavigation";
+import {
+  navigateToTarget,
+  resolveNotificationNavigationTarget,
+  resolveRequestDetailTarget,
+} from "@/lib/notificationNavigation";
 import { unreadCountAfterMarkingAllRead, unreadCountAfterMarkingRead } from "./notificationsUnread";
+import { palette } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
+import { MarkAllReadPill } from "./notifications/MarkAllReadPill";
+import { NotificationRow } from "./notifications/NotificationRow";
+
+/** Re-exported so existing tests/imports keep working from this screen's path. */
+export { notificationCategoryIcon } from "./notifications/notificationCategoryIcon";
 
 const PAGE_SIZE = 20;
 
-type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList>;
-
-function NotificationRow({
-  notification,
-  onPress,
-}: {
-  notification: UserNotification;
-  onPress: () => void;
-}) {
-  const isUnread = !notification.readAt;
-  return (
-    <TouchableOpacity
-      style={[styles.card, isUnread && styles.cardUnread]}
-      onPress={onPress}
-      accessibilityRole="button"
-    >
-      <Text style={[styles.cardTitle, isUnread && styles.cardTitleUnread]}>
-        {notification.title}
-      </Text>
-      <Text style={styles.body}>{notification.body}</Text>
-      <Text style={styles.time}>{formatRelativeTime(notification.createdAt)}</Text>
-    </TouchableOpacity>
-  );
-}
+type NotificationsNavigationProp = NativeStackNavigationProp<AppStackParamList, "Notifications">;
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation("notifications");
   const navigation = useNavigation<NotificationsNavigationProp>();
   const [items, setItems] = useState<UserNotification[]>([]);
   const [page, setPage] = useState(1);
@@ -70,7 +48,7 @@ export default function NotificationsScreen() {
       setTotalCount(result.totalCount);
       setUnreadCount(result.unreadCount);
     } catch {
-      setError("Bildirimler yüklenemedi. Lütfen tekrar deneyin.");
+      setError(i18n.t("notifications:loadError"));
     }
   }, []);
 
@@ -124,9 +102,17 @@ export default function NotificationsScreen() {
       }
     }
 
+    // FG-009: `request.comment_added` has no static target (its screen needs an id) - resolved from
+    // `actionUrl` instead, see `resolveRequestDetailTarget`'s doc comment.
+    const requestDetail = resolveRequestDetailTarget(notification.actionUrl);
+    if (requestDetail) {
+      navigation.navigate("RequestDetail", requestDetail);
+      return;
+    }
+
     const target = resolveNotificationNavigationTarget(notification.templateKey);
     if (target) {
-      navigation.navigate("MainTabs", { screen: target });
+      navigateToTarget(navigation, target);
     }
   }
 
@@ -142,132 +128,70 @@ export default function NotificationsScreen() {
     } catch {
       setItems(previousItems);
       setUnreadCount(previousUnread);
-      Alert.alert("Hata", "Bildirimler okundu olarak işaretlenemedi. Lütfen tekrar deneyin.");
+      Alert.alert(t("common:alerts.error"), t("markAllReadError"));
     }
   }
 
+  const header = (
+    <ScreenHeader
+      title={t("title")}
+      right={<MarkAllReadPill disabled={unreadCount === 0} onPress={() => void markAllRead()} />}
+    />
+  );
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <Screen scroll={false} header={header}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={palette.white} />
+        </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bildirimler</Text>
-        <TouchableOpacity onPress={() => void markAllRead()} disabled={unreadCount === 0}>
-          <Text style={[styles.markAllText, unreadCount === 0 && styles.markAllTextDisabled]}>
-            Tümünü okundu işaretle
-          </Text>
-        </TouchableOpacity>
+    <Screen scroll={false} header={header}>
+      <View style={styles.flex}>
+        {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
+
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <NotificationRow notification={item} onPress={() => void openNotification(item)} />
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void onRefresh()}
+              tintColor={palette.white}
+            />
+          }
+          onEndReachedThreshold={0.4}
+          onEndReached={() => void loadMore()}
+          ListEmptyComponent={<EmptyState icon="notifications-outline" title={t("empty")} />}
+          ListFooterComponent={
+            loadingMore ? <ActivityIndicator style={styles.footer} color={palette.white} /> : null
+          }
+        />
       </View>
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <NotificationRow notification={item} onPress={() => void openNotification(item)} />
-        )}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
-        }
-        onEndReachedThreshold={0.4}
-        onEndReached={() => void loadMore()}
-        ListEmptyComponent={<Text style={styles.emptyText}>Bildiriminiz yok.</Text>}
-        ListFooterComponent={
-          loadingMore ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null
-        }
-      />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.xl,
-  },
+  flex: { flex: 1 },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-  },
-  markAllText: {
-    ...typography.bodySm,
-    color: colors.primary,
-  },
-  markAllTextDisabled: {
-    color: colors.textTertiary,
-  },
-  errorBanner: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.error,
   },
   listContent: {
-    paddingBottom: spacing.xxxl,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  cardUnread: {
-    backgroundColor: "#eaf2ff",
-    borderColor: colors.primaryLight,
-  },
-  cardTitle: {
-    ...typography.body,
-    color: colors.text,
-  },
-  cardTitleUnread: {
-    fontWeight: "700",
-  },
-  body: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  time: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.textTertiary,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
   footer: {
-    marginVertical: spacing.md,
+    marginVertical: 12,
   },
 });

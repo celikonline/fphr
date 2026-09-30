@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "eyebrow": "SENSE HR MOBİL",
+    "title": "İK işlerin artık cebinde.",
+    "description": "Mesaiye giriş yap, izin talep et, ekibinin taleplerini nerede olursan ol onayla.",
+    "note": "Şirket hesabınla giriş yaparsın; ek kurulum gerekmez.",
+    "phoneAlt": {
+      "home": "Sense HR mobil uygulaması tanıtımında Ana sayfa ekranı",
+      "clockIn": "Sense HR mobil uygulaması tanıtımında Giriş/Çıkış ekranı",
+      "approvals": "Sense HR mobil uygulaması tanıtımında Onaylarım ekranı"
+    }
+  },
+  "store": {
+    "iosLine1": "App Store'dan",
+    "androidLine1": "Google Play'den",
+    "download": "İndir",
+    "comingSoon": "Yakında",
+    "iosStoreName": "App Store",
+    "androidStoreName": "Google Play"
+  },
+  "featuresHeading": "Uygulamada neler var",
+  "features": {
+    "clockIn": {
+      "title": "Giriş / Çıkış",
+      "body": "Konum veya QR kod ile mesaiye tek dokunuşla giriş yap.",
+      "alt": "Sense HR mobil uygulamasında Giriş/Çıkış ekranı"
+    },
+    "leave": {
+      "title": "İzinler",
+      "body": "Kalan bakiyeni gör, izin talebini saniyeler içinde oluştur.",
+      "alt": "Sense HR mobil uygulamasında İzinlerim ekranı"
+    },
+    "requests": {
+      "title": "Talepler",
+      "body": "İzin, fazla mesai, masraf ve avans taleplerini tek yerden aç.",
+      "alt": "Sense HR mobil uygulamasında Yeni talep ekranı"
+    },
+    "approvals": {
+      "title": "Onaylar",
+      "body": "Yöneticiysen ekibinin taleplerini yolda onayla ya da reddet.",
+      "alt": "Sense HR mobil uygulamasında Onaylarım ekranı"
+    },
+    "shifts": {
+      "title": "Vardiyam",
+      "body": "Haftalık vardiyanı gör, müsait olmadığın günleri bildir.",
+      "alt": "Sense HR mobil uygulamasında Vardiyam ekranı"
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "body": "Talebin onaylandığında ya da reddedildiğinde anında haberin olsun.",
+      "alt": "Sense HR mobil uygulamasında Bildirimler ekranı"
+    }
+  },
+  "howToStart": {
+    "heading": "Nasıl başlarım",
+    "steps": {
+      "download": {
+        "title": "Uygulamayı indir",
+        "body": "App Store veya Google Play'den Sense HR'ı yükle."
+      },
+      "login": {
+        "title": "Şirket hesabınla giriş yap",
+        "body": "Web'de kullandığın e-posta ve şifreyle oturum aç."
+      },
+      "notifications": {
+        "title": "Bildirimleri aç",
+        "body": "Onaylar ve talep güncellemeleri telefonuna gelsin."
+      }
+    }
+  }
+}

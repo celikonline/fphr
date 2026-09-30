@@ -26,4 +26,17 @@ public sealed class QuestPdfSimpleWriterTests
         Assert.True(bytes.Length > 1000);
         Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes, 0, 4));
     }
+
+    [Fact]
+    public void Write_WithSectionHeading_ProducesPdf()
+    {
+        var document = new SimplePdfDocument(
+            "Çalışan Kartı",
+            null,
+            [new SimplePdfSectionHeading("Genel bilgiler"), new SimplePdfParagraph("İçerik")]);
+
+        var bytes = new QuestPdfSimpleWriter().Write(document);
+
+        Assert.Equal("%PDF", Encoding.ASCII.GetString(bytes, 0, 4));
+    }
 }

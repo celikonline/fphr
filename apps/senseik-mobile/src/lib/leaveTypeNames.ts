@@ -1,33 +1,19 @@
-/**
- * Turkish names of the seeded leave-type resource keys (mirror of `leave.type.*` in
- * SharedResource.resx; the mobile app has no i18n and is Turkish-only). Several backend endpoints
- * return these keys raw (`/leave/me/balances`, `/leave/me/leave-types`, the workflow inbox's
- * leave summary) - shared here so every screen that renders a leave type name resolves it the same
- * way (B5: previously only `LeaveService` did this, so `ApprovalsScreen`'s inbox summary showed the
- * raw key).
- */
-const LEAVE_TYPE_NAMES: Readonly<Record<string, string>> = {
-  "leave.type.annual": "Yıllık izin",
-  "leave.type.excuse": "Mazeret izni",
-  "leave.type.sick": "Hastalık izni",
-  "leave.type.job_search": "Yeni iş arama izni",
-  "leave.type.marriage": "Evlilik izni",
-  "leave.type.bereavement": "Ölüm izni",
-  "leave.type.paternity": "Babalık izni",
-  "leave.type.maternity": "Doğum izni",
-  "leave.type.postnatal_unpaid": "Doğum sonrası ücretsiz izin",
-  "leave.type.paid_military_service": "Bedelli askerlik izni",
-  "leave.type.unpaid": "Ücretsiz izin",
-  "leave.type.foster_care": "Koruyucu aile izni",
-  "leave.type.breastfeeding": "Süt izni",
-  "leave.type.disabled_child": "Engelli/süreğen hastalıklı çocuk izni",
-  "leave.type.template.remote_work": "Uzaktan Çalışma",
-  "leave.type.template.birthday": "Doğum günü izni",
-};
+import i18n from "@/lib/i18n";
 
-/** Resolves a seeded leave-type resource key to its Turkish name; free-form (user-entered) names pass through. */
+/**
+ * Names of the seeded leave-type resource keys (mirror of `leave.type.*` in SharedResource.resx),
+ * in the active language - `leave:types.*` in `src/locales`. Several backend endpoints return these
+ * keys raw (`/leave/me/balances`, `/leave/me/leave-types`, the workflow inbox's leave summary) -
+ * shared here so every screen that renders a leave type name resolves it the same way (B5:
+ * previously only `LeaveService` did this, so `ApprovalsScreen`'s inbox summary showed the raw key).
+ */
+const RESOURCE_KEY_PREFIX = "leave.type.";
+
+/** Resolves a seeded leave-type resource key to its name in the active language; free-form (user-entered) names pass through. */
 export function leaveTypeDisplayName(name: string): string {
-  return LEAVE_TYPE_NAMES[name] ?? name;
+  if (!name.startsWith(RESOURCE_KEY_PREFIX)) return name;
+  const key = `leave:types.${name.slice(RESOURCE_KEY_PREFIX.length)}`;
+  return i18n.exists(key) ? i18n.t(key) : name;
 }
 
 /**

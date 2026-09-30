@@ -33,6 +33,8 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<PayslipCalculationTrace> CalculationTraces => Set<PayslipCalculationTrace>();
 
+    public DbSet<PayslipDelivery> PayslipDeliveries => Set<PayslipDelivery>();
+
     public DbSet<EmployeePayrollProfile> EmployeePayrollProfiles => Set<EmployeePayrollProfile>();
 
     public DbSet<PayslipDirtyFlag> DirtyFlags => Set<PayslipDirtyFlag>();
@@ -66,6 +68,7 @@ internal static class PayrollTables
 {
     public const string Periods = "payroll_periods";
     public const string Payslips = "payslips";
+    public const string PayslipDeliveries = "payslip_deliveries";
     public const string CalculationTraces = "payslip_calculation_traces";
     public const string EmployeePayrollProfiles = "employee_payroll_profiles";
     public const string DirtyFlags = "payslip_dirty_flags";
@@ -140,6 +143,20 @@ public sealed class PayslipConfiguration : IEntityTypeConfiguration<Payslip>
             .IsRequired().HasDefaultValueSql("'[]'::jsonb");
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PayrollPeriodId }).IsUnique();
         b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class PayslipDeliveryConfiguration : IEntityTypeConfiguration<PayslipDelivery>
+{
+    public void Configure(EntityTypeBuilder<PayslipDelivery> b)
+    {
+        b.ToTable(PayrollTables.PayslipDeliveries);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Channel).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.EvidenceHash).HasMaxLength(PayrollTables.HashLength);
+        b.HasIndex(x => x.PayslipId).IsUnique();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId });
     }
 }
 

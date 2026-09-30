@@ -21,7 +21,7 @@ function AssetsScreen({ canMine, canInventory }: { canMine: boolean; canInventor
   const { t } = useTranslation(["assets"]);
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="p-6 md:p-10">
       <Title order={2}>{t("assets:page.title")}</Title>
       {canMine && canInventory ? (
         <Tabs defaultValue="inventory" keepMounted={false}>

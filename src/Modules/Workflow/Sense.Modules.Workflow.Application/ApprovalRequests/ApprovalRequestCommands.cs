@@ -286,6 +286,67 @@ public sealed class DecideApprovalTaskHandler(
     }
 }
 
+/// <summary>
+/// FG-008: approves/rejects up to <see cref="WorkflowLimits.BulkDecisionMaxTasks"/> of the caller's pending tasks at once.
+/// Every task goes through its own <see cref="DecideApprovalTaskCommand"/> (same assignee/fallback-role and process
+/// rules) in its own transaction via <see cref="IIsolatedApprovalDecisionRunner"/>, so the answer is per task: a task
+/// that fails (someone else's task → AssigneeMismatch, already decided, ...) neither stops nor rolls back the others.
+/// Call-level problems - an empty or oversized list, a rejection without a comment - fail the whole call up front.
+/// Duplicate ids are decided once (first occurrence keeps its position in the result).
+/// </summary>
+[RequiresPermission("workflow.inbox.decide")]
+public sealed record DecideApprovalTasksBulkCommand(
+    IReadOnlyList<Guid>? TaskIds, Guid DecidingEmployeeId, ApprovalOutcome? Outcome, string? Comment, ApprovalChannel Channel,
+    string? IpAddress, string? UserAgent) : ICommand<IReadOnlyList<BulkDecisionTaskResult>>;
+
+public sealed class DecideApprovalTasksBulkValidator : AbstractValidator<DecideApprovalTasksBulkCommand>
+{
+    public DecideApprovalTasksBulkValidator()
+    {
+        RuleForEach(x => x.TaskIds).NotEmpty();
+        RuleFor(x => x.DecidingEmployeeId).NotEmpty();
+        RuleFor(x => x.Outcome).NotNull().IsInEnum();
+        RuleFor(x => x.Comment).MaximumLength(WorkflowLimits.CommentMaxLength);
+    }
+}
+
+public sealed class DecideApprovalTasksBulkHandler(IIsolatedApprovalDecisionRunner runner)
+    : ICommandHandler<DecideApprovalTasksBulkCommand, IReadOnlyList<BulkDecisionTaskResult>>
+{
+    public async Task<Result<IReadOnlyList<BulkDecisionTaskResult>>> Handle(DecideApprovalTasksBulkCommand command, CancellationToken cancellationToken)
+    {
+        var taskIds = (command.TaskIds ?? []).Distinct().ToList();
+        if (taskIds.Count == 0)
+        {
+            return Error.Validation(WorkflowErrors.BulkEmpty);
+        }
+
+        if (taskIds.Count > WorkflowLimits.BulkDecisionMaxTasks)
+        {
+            return Error.Validation(WorkflowErrors.BulkTooManyTasks, ("max", WorkflowLimits.BulkDecisionMaxTasks));
+        }
+
+        // Same rule every task would hit - answer it once for the call instead of N identical per-task failures.
+        var commentCheck = ApprovalRequest.ValidateDecisionComment(command.Outcome!.Value, command.Comment);
+        if (commentCheck.IsFailure)
+        {
+            return commentCheck.Error;
+        }
+
+        var results = new List<BulkDecisionTaskResult>(taskIds.Count);
+        foreach (var taskId in taskIds)
+        {
+            var decided = await runner.DecideAsync(
+                new DecideApprovalTaskCommand(
+                    taskId, command.DecidingEmployeeId, command.Outcome, command.Comment, command.Channel, command.IpAddress, command.UserAgent),
+                cancellationToken);
+            results.Add(new BulkDecisionTaskResult(taskId, decided.IsFailure ? decided.Error : null));
+        }
+
+        return Result.Success<IReadOnlyList<BulkDecisionTaskResult>>(results);
+    }
+}
+
 /// <summary>Decides a pending task on someone else's behalf (Admin override) - skips the assignee/fallback-role check DecideApprovalTaskCommand enforces.</summary>
 [RequiresPermission("workflow.request.override")]
 public sealed record OverrideDecideApprovalTaskCommand(
@@ -416,6 +477,94 @@ public sealed class DecideByEmailTokenHandler(
         ApprovalDecisionEffects.ApplyPostDecideEffects(request, request.TenantId, task.StepNumber, outbox);
 
         return Result.Success();
+    }
+}
+
+/// <summary>
+/// FG-009: a party of the request (see <see cref="ApprovalRequestAccess"/>) leaves a comment - recorded as a
+/// <see cref="ApprovalHistoryEventType.Commented"/> history entry, no separate table. Non-parties get NotFound, like the
+/// status read. Raises <see cref="ApprovalRequestCommented"/> for the other parties' in-app notification.
+/// </summary>
+public sealed record AddApprovalRequestCommentCommand(Guid ApprovalRequestId, Guid AuthorEmployeeId, string? Text) : ICommand<Guid>;
+
+public sealed class AddApprovalRequestCommentValidator : AbstractValidator<AddApprovalRequestCommentCommand>
+{
+    public AddApprovalRequestCommentValidator()
+    {
+        RuleFor(x => x.ApprovalRequestId).NotEmpty();
+        RuleFor(x => x.AuthorEmployeeId).NotEmpty();
+        RuleFor(x => x.Text).MaximumLength(WorkflowLimits.CommentMaxLength);
+    }
+}
+
+public sealed class AddApprovalRequestCommentHandler(
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IApprovalRequestRepository requests,
+    IRoleAssignmentLookup roleAssignments,
+    IPermissionService permissions,
+    IIntegrationEventOutbox outbox,
+    TimeProvider clock) : ICommandHandler<AddApprovalRequestCommentCommand, Guid>
+{
+    public async Task<Result<Guid>> Handle(AddApprovalRequestCommentCommand command, CancellationToken cancellationToken)
+    {
+        var loaded = await requests.GetByIdAsync(command.ApprovalRequestId, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var request = loaded.Value;
+        if (!await ApprovalRequestAccess.IsPartyAsync(
+                request, command.AuthorEmployeeId, currentUser.UserId, tenant.TenantId, roleAssignments, permissions, cancellationToken))
+        {
+            return Error.NotFound(WorkflowErrors.RequestNotFound);
+        }
+
+        var added = request.AddComment(command.AuthorEmployeeId, command.Text, clock.GetUtcNow().UtcDateTime);
+        if (added.IsFailure)
+        {
+            return added.Error;
+        }
+
+        var recipients = await ResolveRecipientsAsync(request, command.AuthorEmployeeId, cancellationToken);
+        if (recipients.Count > 0)
+        {
+            outbox.Enqueue(new ApprovalRequestCommented(
+                tenant.TenantId, request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId,
+                command.AuthorEmployeeId, recipients));
+        }
+
+        return added.Value.Id;
+    }
+
+    /// <summary>
+    /// The requester, every concrete approver/decider of the request's tasks and - while the current step waits on a
+    /// role queue - that role's members; never the author.
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> ResolveRecipientsAsync(ApprovalRequest request, Guid authorEmployeeId, CancellationToken cancellationToken)
+    {
+        var recipients = new HashSet<Guid> { request.RequesterEmployeeId };
+        foreach (var task in request.Tasks)
+        {
+            if (task.ApproverEmployeeId is { } approverId)
+            {
+                recipients.Add(approverId);
+            }
+
+            if (task.DecidedByEmployeeId is { } deciderId)
+            {
+                recipients.Add(deciderId);
+            }
+        }
+
+        if (request.CurrentTask is { ApproverEmployeeId: null, FallbackRoleCode: { } roleCode })
+        {
+            recipients.UnionWith(await roleAssignments.ListEmployeeIdsInRoleAsync(tenant.TenantId, roleCode, cancellationToken));
+        }
+
+        recipients.Remove(authorEmployeeId);
+        return recipients.ToList();
     }
 }
 

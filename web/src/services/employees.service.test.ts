@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { toEmployeeInput, type EmployeeDetail } from "./employees.service";
+import { downloadEmployeeCardPdf, toEmployeeInput, type EmployeeDetail } from "./employees.service";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { apiClient } from "@senseik/api-client";
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
@@ -62,5 +64,23 @@ describe("toEmployeeInput (senseik-058)", () => {
     expect(body.nationality).toBe("foreign");
     expect(body.passportNumber).toBe("");
     expect(body).not.toHaveProperty("foreignIdNumber");
+  });
+});
+
+describe("downloadEmployeeCardPdf (senseik-final-fix F2)", () => {
+  it("surfaces the server's ProblemDetails detail even though the response is a blob", async () => {
+    const problem = { title: "Bad request", detail: "Seçilen dönem için bordro verisi yok." };
+    const blob = new Blob([JSON.stringify(problem)], { type: "application/problem+json" });
+    const axiosError = {
+      isAxiosError: true,
+      response: { status: 400, data: blob },
+    };
+    vi.mocked(apiClient.get).mockRejectedValueOnce(axiosError);
+
+    const error = await downloadEmployeeCardPdf("e1", { sections: ["general"] }).catch(
+      (e: unknown) => e
+    );
+
+    expect(getApiErrorMessage(error, "Beklenmeyen bir hata oluştu.")).toBe(problem.detail);
   });
 });

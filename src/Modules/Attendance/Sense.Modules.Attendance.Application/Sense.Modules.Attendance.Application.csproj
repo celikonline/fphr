@@ -13,9 +13,10 @@
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <!-- Self-servis check-in (S-31) stamps punches in the tenant's local time via Identity.Contracts.ITenantTimeZoneLookup. -->
     <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
-        <!-- Eksik kayıt talebi (Z2.1): Workflow onayı IWorkflowService + ApprovalCompleted/Rejected olayları + özet sağlayıcı. -->
+    <!-- Eksik giriş/çıkış düzeltme talebi (FG-004) starts/cancels a "PunchCorrection" approval via Workflow.Contracts.IWorkflowService
+         and consumes its ApprovalCompleted/ApprovalRejected events. -->
     <ProjectReference Include="../../Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
-<ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

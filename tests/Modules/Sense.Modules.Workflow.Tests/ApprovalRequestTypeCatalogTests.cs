@@ -7,21 +7,22 @@ namespace Sense.Modules.Workflow.Tests;
 /// <summary>
 /// TALIMAT madde 2: Sözleşme kilidi.
 ///
-/// İddia: Organization.Contracts/ApprovalRequestTypes.All bugün [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment, AttendancePunch, PayslipObjection].
+/// İddia: Organization.Contracts/ApprovalRequestTypes.All bugün [Leave, Advance, Expense, Overtime, Requisition, AssetAssignment, AttendancePunch, PayslipObjection, PunchCorrection].
 /// Küme tam olarak bu — yeni talep türü eklenirse test kırılır (contract-first, PO onayı gerekir).
 /// TK-018: AssetAssignment eklendi (Assets zimmet atama onay akışı) - bu bilinçli bir sözleşme değişikliği, PO onayı bekliyor.
+/// FG-004: PunchCorrection eklendi (Attendance eksik giriş/çıkış düzeltme talebi, plan Karar 10) - bilinçli sözleşme değişikliği.
 ///
 /// Ek iddia: Workflow'un her tür için bir varsayılan politika çözümlemesi var.
 /// </summary>
 public sealed class ApprovalRequestTypeCatalogTests
 {
-    /// <summary>ApprovalRequestTypes sözleşmesi tam olarak 8 talep türü içerir. Yeni tür eklenirse test kırılır.</summary>
+    /// <summary>ApprovalRequestTypes sözleşmesi tam olarak 9 talep türü içerir. Yeni tür eklenirse test kırılır.</summary>
     [Fact]
-    public void ApprovalRequestTypes_CatalogIsExactly_LeaveAdvanceExpenseOvertimeRequisitionAssetAssignmentAttendancePunchPayslipObjection()
+    public void ApprovalRequestTypes_CatalogIsExactly_LeaveAdvanceExpenseOvertimeRequisitionAssetAssignmentAttendancePunchPayslipObjectionPunchCorrection()
     {
         var catalog = ApprovalRequestTypes.All;
 
-        catalog.Count.ShouldBe(8);
+        catalog.Count.ShouldBe(9);
         catalog.ShouldContain(ApprovalRequestTypes.Leave);
         catalog.ShouldContain(ApprovalRequestTypes.Advance);
         catalog.ShouldContain(ApprovalRequestTypes.Expense);
@@ -30,6 +31,7 @@ public sealed class ApprovalRequestTypeCatalogTests
         catalog.ShouldContain(ApprovalRequestTypes.AssetAssignment);
         catalog.ShouldContain(ApprovalRequestTypes.AttendancePunch);
         catalog.ShouldContain(ApprovalRequestTypes.PayslipObjection);
+        catalog.ShouldContain(ApprovalRequestTypes.PunchCorrection);
 
         // Sıra da sabit
         catalog[0].ShouldBe(ApprovalRequestTypes.Leave);
@@ -40,6 +42,7 @@ public sealed class ApprovalRequestTypeCatalogTests
         catalog[5].ShouldBe(ApprovalRequestTypes.AssetAssignment);
         catalog[6].ShouldBe(ApprovalRequestTypes.AttendancePunch);
         catalog[7].ShouldBe(ApprovalRequestTypes.PayslipObjection);
+        catalog[8].ShouldBe(ApprovalRequestTypes.PunchCorrection);
     }
 
     /// <summary>Her talep türü iyi biçimlenmiş (PascalCase, ASCII, ≤50 karakter).</summary>
@@ -52,6 +55,7 @@ public sealed class ApprovalRequestTypeCatalogTests
     [InlineData(ApprovalRequestTypes.AssetAssignment)]
     [InlineData(ApprovalRequestTypes.AttendancePunch)]
     [InlineData(ApprovalRequestTypes.PayslipObjection)]
+    [InlineData(ApprovalRequestTypes.PunchCorrection)]
     public void EachRequestType_IsWellFormed(string requestType)
     {
         ApprovalRequestTypes.IsWellFormed(requestType).ShouldBeTrue();

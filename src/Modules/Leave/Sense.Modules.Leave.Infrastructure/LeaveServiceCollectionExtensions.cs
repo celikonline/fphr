@@ -40,6 +40,8 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.OvertimeMonthlyReportProvider>();
         // senseik-048: şirket geneli izin/fazla mesai defterinin Excel çıktısı (ekranın "Dışa aktar" butonu ve Raporlar → İzinler kataloğu paylaşır).
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.CompanyLeaveLedgerReportProvider>();
+        // Kolay İK "Hazır Şablonlar" → "Bu ayın kullanılan izin raporu" (yalnız onaylı talepler, Ay/Yıl).
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveMonthlyUsageReportProvider>();
         return services;
     }
 

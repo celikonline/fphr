@@ -1,0 +1,51 @@
+{
+  "hero": {
+    "caption": "Geçen ay net maaşın"
+  },
+  "openDocument": "Belgeyi aç",
+  "acknowledge": "Okudum, onaylıyorum",
+  "details": "Ayrıntılar",
+  "row": {
+    "a11y": "{{month}} {{year}} bordrosu, ayrıntıları aç",
+    "saving": "Kaydediliyor…"
+  },
+  "title": "Bordrom",
+  "empty": "Henüz görüntülenebilir bordro pusulanız yok.",
+  "errors": {
+    "load": "Bordro pusulaları yüklenemedi. Lütfen tekrar deneyin.",
+    "open": "Bordro pusulası açılamadı. Lütfen tekrar deneyin.",
+    "acknowledge": "Onay gönderilemedi. Lütfen tekrar deneyin.",
+    "shareUnavailable": "Bu cihazda dosya açma desteklenmiyor."
+  },
+  "status": {
+    "acknowledged": "Onaylandı",
+    "pending": "Onay bekliyor",
+    "acknowledgedAt": "Onaylandı · {{time}}",
+    "objectionPending": "İtiraz inceleniyor",
+    "objectionAccepted": "İtiraz kabul edildi",
+    "objectionRejected": "İtiraz reddedildi"
+  },
+  "confirm": {
+    "message": "Bu bordro pusulasını okuduğunuzu onaylıyor musunuz?",
+    "confirm": "Onaylıyorum"
+  },
+  "detail": {
+    "title": "Bordro pusulası",
+    "heading": "{{period}} bordrosu",
+    "gross": "Brüt ücret",
+    "net": "Net ücret",
+    "acknowledge": "Onayla",
+    "acknowledgedTitle": "Onaylandı",
+    "acknowledgedMessage": "Bordronuzu onayladınız.",
+    "acknowledgeError": "Bordro onaylanamadı. Lütfen tekrar deneyin.",
+    "objectionReason": "İtiraz gerekçeniz: {{reason}}",
+    "objectionPendingNote": "İtirazınız inceleniyor; sonuçlanana kadar onaylayamazsınız.",
+    "objectionResult": "İtiraz sonucu: {{note}}",
+    "objectionLabel": "İtiraz gerekçesi",
+    "objectionPlaceholder": "İtiraz nedeninizi yazın",
+    "object": "İtiraz et",
+    "objectionRequired": "İtiraz için gerekçe yazmanız zorunludur.",
+    "objectionSent": "İtirazınız iletildi.",
+    "objectionError": "İtiraz gönderilemedi. Lütfen tekrar deneyin."
+  }
+}

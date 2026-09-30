@@ -110,7 +110,7 @@ public static class HelpArticleCatalog
                     "that expires. From Settings > System settings > Support access you can approve or revoke " +
                     "pending requests; while a grant is active a warning banner shows at the top and every action " +
                     "is written to the audit log.",
-            RelatedRoutes: ["/admin/settings/system/support-access", "/app/trust"],
+            RelatedRoutes: ["/admin/settings/system/support-access"],
             Media: []),
     ];
 

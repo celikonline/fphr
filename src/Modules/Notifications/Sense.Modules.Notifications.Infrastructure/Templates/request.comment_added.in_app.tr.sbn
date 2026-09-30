@@ -1,0 +1,2 @@
+{{- subject = request_type_name + " talebine yeni yorum" -}}
+{{ if author_name }}{{ author_name }} bir yorum yazdı.{{ else }}Talebe yeni bir yorum yazıldı.{{ end }}

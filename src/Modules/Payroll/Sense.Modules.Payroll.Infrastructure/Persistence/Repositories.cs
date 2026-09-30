@@ -54,9 +54,22 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
         Guid? payrollPeriodId, DateTimeOffset? publishedSince, CancellationToken cancellationToken = default) =>
         await context.Payslips
             .Where(p => p.PublishedAt != null && p.AcknowledgedAt == null
+                // TK-030: the acknowledgement of record is PayslipDelivery.AcknowledgedAt ("Okudum, onaylıyorum").
+                && !context.PayslipDeliveries.Any(d => d.PayslipId == p.Id && d.AcknowledgedAt != null)
                 && (payrollPeriodId == null || p.PayrollPeriodId == payrollPeriodId)
                 && (publishedSince == null || p.PublishedAt >= publishedSince))
             .ToListAsync(cancellationToken);
+}
+
+public sealed class PayslipDeliveryRepository(PayrollDbContext context) : IPayslipDeliveryRepository
+{
+    public void Add(PayslipDelivery delivery) => context.PayslipDeliveries.Add(delivery);
+
+    public async Task<PayslipDelivery?> FindByPayslipIdAsync(Guid payslipId, CancellationToken cancellationToken = default) =>
+        await context.PayslipDeliveries.FirstOrDefaultAsync(d => d.PayslipId == payslipId, cancellationToken);
+
+    public async Task<IReadOnlyList<PayslipDelivery>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.PayslipDeliveries.Where(d => d.EmployeeId == employeeId).ToListAsync(cancellationToken);
 }
 
 public sealed class PayslipDirtyFlagRepository(PayrollDbContext context) : IPayslipDirtyFlagRepository

@@ -1,10 +1,10 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "@/styles/colors";
-import { spacing } from "@/styles/spacing";
-import { typography } from "@/styles/typography";
+import { useTranslation } from "react-i18next";
 import type { LeaveBalanceItem } from "@/services/LeaveService";
 import { formatDays } from "@/lib/formatters";
+import i18n from "@/lib/i18n";
+import { palette, radius, text } from "@/theme/theme";
 
 /**
  * B8 (2. bulgu): the first breakdown used `totalAccrued`/`totalUsed`, which are LIFETIME sums - they
@@ -26,23 +26,25 @@ export function balanceBreakdown(item: Pick<LeaveBalanceItem, "balance" | "pendi
     currentPeriodUsed,
     futureApprovedInPeriod,
   } = item.balance;
+  const part = (key: string, value: string) => i18n.t(`leave:breakdown.${key}`, { value });
   const parts: string[] = [];
-  if (carriedOverIntoPeriod !== 0) parts.push(`${formatDays(carriedOverIntoPeriod)} devreden`);
-  if (lastPeriodAccrued !== 0) parts.push(`${formatDays(lastPeriodAccrued)} hak ediş`);
-  if (extraGrants !== 0) parts.push(`${formatDays(extraGrants)} ek hak`);
+  if (carriedOverIntoPeriod !== 0)
+    parts.push(part("carriedOver", formatDays(carriedOverIntoPeriod)));
+  if (lastPeriodAccrued !== 0) parts.push(part("accrued", formatDays(lastPeriodAccrued)));
+  if (extraGrants !== 0) parts.push(part("extraGrants", formatDays(extraGrants)));
   if (adjustments !== 0) {
     const sign = adjustments > 0 ? "+" : "-";
-    parts.push(`${sign}${formatDays(Math.abs(adjustments))} düzeltme`);
+    parts.push(part("adjustments", `${sign}${formatDays(Math.abs(adjustments))}`));
   }
-  if (currentPeriodUsed !== 0) parts.push(`${formatDays(currentPeriodUsed)} kullanılan`);
-  if (futureApprovedInPeriod !== 0) parts.push(`${formatDays(futureApprovedInPeriod)} planlanan`);
+  if (currentPeriodUsed !== 0) parts.push(part("used", formatDays(currentPeriodUsed)));
+  if (futureApprovedInPeriod !== 0) parts.push(part("planned", formatDays(futureApprovedInPeriod)));
 
   const summary = parts.join(" · ");
   const pendingDays = item.pendingDays ?? 0;
   if (pendingDays <= 0) {
     return summary;
   }
-  const pendingSuffix = `(${formatDays(pendingDays)} onay bekliyor)`;
+  const pendingSuffix = part("pending", formatDays(pendingDays));
   return summary.length > 0 ? `${summary} ${pendingSuffix}` : pendingSuffix;
 }
 
@@ -50,40 +52,38 @@ type Props = {
   item: LeaveBalanceItem;
 };
 
-/** One "Bakiyelerim" card: kullanılabilir gün + dönem bazlı döküm (B8). */
+/** One balance's detail (İzinlerim's balance sheet): kullanılabilir gün + dönem bazlı döküm (B8). */
 export function LeaveBalanceCard({ item }: Props) {
+  const { t } = useTranslation("home");
+  const breakdown = balanceBreakdown(item);
+  const available = item.balance.availableBalance;
   return (
     <View style={styles.card}>
       <Text style={styles.cardLabel}>{item.leaveTypeName}</Text>
       <Text style={styles.cardValue}>
-        {formatDays(item.balance.availableBalance)} gün kullanılabilir
+        {t("balances.available", { count: available, value: formatDays(available) })}
       </Text>
-      <Text style={styles.cardSubtext}>{balanceBreakdown(item)}</Text>
+      {breakdown ? <Text style={styles.cardSubtext}>{breakdown}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    gap: 6,
+    padding: 16,
+    borderRadius: radius.card,
+    backgroundColor: palette.glass,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+    borderColor: palette.glassBorder,
   },
   cardLabel: {
-    ...typography.bodySm,
-    color: colors.textSecondary,
+    ...text.bodyMuted,
   },
   cardValue: {
-    ...typography.h4,
-    color: colors.text,
-    marginTop: spacing.xs,
+    ...text.number,
   },
   cardSubtext: {
-    ...typography.bodyXs,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
+    ...text.caption,
   },
 });

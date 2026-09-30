@@ -11,17 +11,28 @@ import trCommon from "../../public/locales/tr/common.json";
 import { useAuthStore } from "@/store/auth.store";
 import HomePage from "./home";
 import { getLeaveCalendar, type LeaveCalendarEntry } from "@/services/leave.service";
+import { getUpcomingHolidays } from "@/services/home.service";
 import { addDaysToDateOnly, toDateOnly } from "@/lib/dates";
 
 // senseik-042 (halka grafik merkezi): the donut's center must show the grand total headcount,
 // never a department name - the previous behavior showed the largest department's name/count.
 vi.mock("@/services/leave.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/leave.service")>("@/services/leave.service");
+  const actual = await vi.importActual<typeof import("@/services/leave.service")>(
+    "@/services/leave.service"
+  );
   return { ...actual, getLeaveCalendar: vi.fn() };
 });
 
+vi.mock("@/services/home.service", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/services/home.service")>("@/services/home.service");
+  return { ...actual, getUpcomingHolidays: vi.fn() };
+});
+
 vi.mock("@/services/employees.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
+  const actual = await vi.importActual<typeof import("@/services/employees.service")>(
+    "@/services/employees.service"
+  );
   return {
     ...actual,
     getDepartmentDistribution: vi.fn().mockResolvedValue([
@@ -82,12 +93,19 @@ function signInWithDirectoryPermissionOnly() {
       roleLabels: [],
       permissions: ["employee.directory.view"],
     },
-    features: { access: {} as never, accessSettingsBypass: false, mfaSetupRequired: false, disabledModules: [] },
+    features: {
+      access: {} as never,
+      accessSettingsBypass: false,
+      mfaSetupRequired: false,
+      disabledModules: [],
+    },
   });
 }
 
 function renderHome() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <I18nextProvider i18n={createTestI18n()}>
       <QueryClientProvider client={queryClient}>
@@ -97,7 +115,7 @@ function renderHome() {
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
 
@@ -113,17 +131,40 @@ describe("HomePage department distribution donut (senseik-042)", () => {
     // Total (7 + 3 = 10) must appear in the chart's center label, labeled "Toplam".
     const centerTotal = await screen.findByTestId("department-distribution-center-total");
     await waitFor(() => expect(centerTotal).toHaveTextContent("10"));
-    expect(within(card).getByText("Toplam")).toBeInTheDocument();
+    const center = screen.getByTestId("department-distribution-center");
+    expect(within(center).getByText("Toplam")).toBeInTheDocument();
 
-    // Neither department name is shown as the center label (the pre-fix behavior).
-    expect(within(card).queryByText("Mühendislik")).toBeNull();
-    expect(within(card).queryByText("Satış")).toBeNull();
+    // Neither department name is shown as the center label (the pre-fix behavior) - they only
+    // appear in the legend below the donut, outside the center block.
+    expect(within(center).queryByText("Mühendislik")).toBeNull();
+    expect(within(center).queryByText("Satış")).toBeNull();
+  });
+
+  it("lists each department's name and headcount in the legend below the donut", async () => {
+    signInWithDirectoryPermissionOnly();
+    renderHome();
+
+    const widget = await screen.findByText("Çalışan Dağılımı");
+    const card = widget.closest(".mantine-Card-root") as HTMLElement;
+
+    await waitFor(() =>
+      expect(screen.getByTestId("department-distribution-center-total")).toHaveTextContent("10")
+    );
+
+    expect(within(card).getByText("Mühendislik")).toBeInTheDocument();
+    expect(within(card).getByText("7")).toBeInTheDocument();
+    expect(within(card).getByText("Satış")).toBeInTheDocument();
+    expect(within(card).getByText("3")).toBeInTheDocument();
   });
 });
 
 // D-14: "Bugün" must mean "starts today"; a leave that began earlier is under way, a later one shows its start date.
 describe("HomePage upcoming leaves widget (D-14)", () => {
-  function leaveEntry(requestId: string, employeeName: string, startDate: string): LeaveCalendarEntry {
+  function leaveEntry(
+    requestId: string,
+    employeeName: string,
+    startDate: string
+  ): LeaveCalendarEntry {
     return {
       requestId,
       employeeId: requestId,
@@ -154,7 +195,12 @@ describe("HomePage upcoming leaves widget (D-14)", () => {
         roleLabels: [],
         permissions: ["leave.my.calendar"],
       },
-      features: { access: {} as never, accessSettingsBypass: true, mfaSetupRequired: false, disabledModules: [] },
+      features: {
+        access: {} as never,
+        accessSettingsBypass: true,
+        mfaSetupRequired: false,
+        disabledModules: [],
+      },
     });
     renderHome();
 
@@ -165,5 +211,75 @@ describe("HomePage upcoming leaves widget (D-14)", () => {
     expect(within(card).getByText("Devam ediyor")).toBeInTheDocument();
     expect(within(card).queryAllByText("Bugün")).toHaveLength(1);
     expect(within(card).getByText("Zeynep Sonra")).toBeInTheDocument();
+  });
+});
+
+// Arife (half day) holidays show a "0,5g" count instead of the full-day "1g" the calendar-day run would imply.
+describe("HomePage holidays widget (arife half-day)", () => {
+  it("shows 0,5g for a half-day arife, the run length for a multi-day bayram, and 1g for a plain single day", async () => {
+    const today = toDateOnly(new Date());
+    vi.mocked(getUpcomingHolidays).mockResolvedValue([
+      {
+        date: addDaysToDateOnly(today, 10),
+        name: "Bayram Arifesi",
+        holidayCalendarId: "c1",
+        calendarName: "Genel",
+        isHalfDay: true,
+      },
+      {
+        date: addDaysToDateOnly(today, 11),
+        name: "Bayram",
+        holidayCalendarId: "c1",
+        calendarName: "Genel",
+        isHalfDay: false,
+      },
+      {
+        date: addDaysToDateOnly(today, 12),
+        name: "Bayram",
+        holidayCalendarId: "c1",
+        calendarName: "Genel",
+        isHalfDay: false,
+      },
+      {
+        date: addDaysToDateOnly(today, 13),
+        name: "Bayram",
+        holidayCalendarId: "c1",
+        calendarName: "Genel",
+        isHalfDay: false,
+      },
+      // No `isHalfDay` at all (older API response shape) - must be treated as a full day.
+      {
+        date: addDaysToDateOnly(today, 20),
+        name: "Yılbaşı",
+        holidayCalendarId: "c1",
+        calendarName: "Genel",
+      },
+    ]);
+    useAuthStore.setState({
+      hasHydrated: true,
+      token: "test-token",
+      user: {
+        id: "u1",
+        email: "user@example.com",
+        name: "Test User",
+        roles: [],
+        roleLabels: [],
+        permissions: ["organization.holidays.view"],
+      },
+      features: {
+        access: {} as never,
+        accessSettingsBypass: true,
+        mfaSetupRequired: false,
+        disabledModules: [],
+      },
+    });
+    renderHome();
+
+    const widget = await screen.findByText("Resmi Tatiller");
+    const card = widget.closest(".mantine-Card-root") as HTMLElement;
+
+    expect(await within(card).findByText("0,5g")).toBeInTheDocument();
+    expect(within(card).getByText("3g")).toBeInTheDocument();
+    expect(within(card).getByText("1g")).toBeInTheDocument();
   });
 });

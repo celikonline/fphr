@@ -8,6 +8,7 @@
     "Requisition": "Job requisition",
     "VisaDocument": "Visa document",
     "AttendancePunch": "Missing punch",
-    "PayslipObjection": "Payslip objection"
+    "PayslipObjection": "Payslip objection",
+    "PunchCorrection": "Missing punch"
   }
 }

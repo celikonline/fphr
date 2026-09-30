@@ -96,7 +96,7 @@ public sealed class GetUpcomingHolidaysHandler(
         var holidays = await calendarLookup.GetHolidaysAsync(tenant.TenantId, calendar.Id, today, today.AddDays(query.Days), cancellationToken);
 
         IReadOnlyList<UpcomingHolidayDto> dtos = holidays
-            .Select(h => new UpcomingHolidayDto(h.Date, h.Name, calendar.Id, calendar.Name))
+            .Select(h => new UpcomingHolidayDto(h.Date, h.Name, calendar.Id, calendar.Name, h.IsHalfDay))
             .ToList();
         return Result.Success(dtos);
     }

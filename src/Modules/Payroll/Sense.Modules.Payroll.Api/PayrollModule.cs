@@ -50,6 +50,9 @@ public sealed class PayrollModule : IModule
             typeof(PayrollPermissions).Assembly);
         services.AddPayrollServices(configuration);
 
+        // Employee card PDF section (API only).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.PayrollCardPdfSection>();
+
         // The closing checklist reads the employee directory, which only the API host provides (Sense.Worker has no consumer for it).
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>();
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.IClosingChecklistGate>(

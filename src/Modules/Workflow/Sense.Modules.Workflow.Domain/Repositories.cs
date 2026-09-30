@@ -38,7 +38,32 @@ public interface IApprovalRequestRepository
 
     /// <summary>Loads the owning ApprovalRequest (tracked) for a task id - decisions are made through the aggregate root.</summary>
     Task<Result<ApprovalRequest>> GetByTaskIdAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// FG-008: one page of the tasks the employee decided (DecidedByEmployeeId), newest decision first. Optional
+    /// filters: decided in [<paramref name="decidedFromUtc"/>, <paramref name="decidedToUtcExclusive"/>) and the
+    /// parent request's type.
+    /// </summary>
+    Task<DecidedTaskPage> ListDecidedTasksAsync(
+        Guid employeeId, DateTime? decidedFromUtc, DateTime? decidedToUtcExclusive, string? requestType, int skip, int take,
+        CancellationToken cancellationToken = default);
 }
+
+/// <summary>A decided task joined with the parent request fields the history list shows (read model, not tracked).</summary>
+public sealed record DecidedTaskRow(
+    Guid TaskId,
+    Guid ApprovalRequestId,
+    string RequestType,
+    Guid SubjectId,
+    Guid RequesterEmployeeId,
+    int StepNumber,
+    ApprovalTaskStatus TaskStatus,
+    DateTime DecidedAt,
+    string? Comment,
+    ApprovalRequestStatus RequestStatus);
+
+/// <summary>One page of <see cref="DecidedTaskRow"/> plus the unpaged total.</summary>
+public sealed record DecidedTaskPage(IReadOnlyList<DecidedTaskRow> Items, long TotalCount);
 
 /// <summary>EmailDecisionToken repository.</summary>
 public interface IEmailDecisionTokenRepository

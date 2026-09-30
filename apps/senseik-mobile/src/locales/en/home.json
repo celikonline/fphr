@@ -1,0 +1,68 @@
+{
+  "topBar": {
+    "notifications": "Notifications",
+    "notificationsUnread_one": "Notifications, {{count}} unread",
+    "notificationsUnread_other": "Notifications, {{count}} unread",
+    "myLeaves": "My leave",
+    "moreOptions": "More options"
+  },
+  "hello": {
+    "myProfile": "My profile",
+    "greeting": "Welcome, {{name}}",
+    "viewProfile": "View profile"
+  },
+  "sections": {
+    "balances": "My remaining balance",
+    "actions": "My actions",
+    "peopleOff": "On leave today",
+    "birthdays": "Upcoming birthdays",
+    "events": "Upcoming events",
+    "announcements": "Announcements"
+  },
+  "balances": {
+    "loadError": "Leave balances could not be loaded. Please try again.",
+    "empty": "No balance records",
+    "a11y": "Leave balances",
+    "available_one": "{{value}} day available",
+    "available_other": "{{value}} days available",
+    "fraction_one": "{{value}} / {{total}} day",
+    "fraction_other": "{{value}} / {{total}} days",
+    "availableSuffix_one": " day available",
+    "availableSuffix_other": " days available",
+    "fractionSuffix_one": " / {{total}} day",
+    "fractionSuffix_other": " / {{total}} days"
+  },
+  "actions": {
+    "attendance": "Timesheet",
+    "leave": "My leave",
+    "payroll": "Payroll",
+    "approvals": "My approvals",
+    "requests": "My requests",
+    "people": "People",
+    "shift": "My shift",
+    "goals": "My goals",
+    "support": "Support"
+  },
+  "announcements": {
+    "new": "New",
+    "showLess": "Show less",
+    "readMore": "Read more"
+  },
+  "birthdays": {
+    "today": "Today",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left"
+  },
+  "menu": {
+    "profile": "My profile",
+    "notificationPreferences": "Notification preferences",
+    "support": "Support",
+    "logout": "Log out",
+    "close": "Close the menu"
+  },
+  "peopleOff": {
+    "today": "Today",
+    "onLeave": "On leave",
+    "remote": "Working remotely"
+  }
+}

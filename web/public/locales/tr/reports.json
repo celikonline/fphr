@@ -38,6 +38,18 @@
       "list": {
         "label": "Çalışan listesi raporu",
         "description": "Kadro listesi: kariyer bilgileri, işe giriş tarihi, çalışma durumu, iletişim ve çalışma şekli."
+      },
+      "departed": {
+        "label": "İşten ayrılan çalışan bilgileri",
+        "description": "Seçilen yılda (varsayılan cari yıl) işten ayrılan çalışanlar: kariyer bilgileri, işe giriş/ayrılış tarihi, kıdem ve yönetici."
+      },
+      "birthdays": {
+        "label": "Doğum günü listesi",
+        "description": "Seçilen ayda (varsayılan cari ay) doğum günü olan çalışanlar, gün sırasına göre."
+      },
+      "turnover": {
+        "label": "Çalışan dönüşüm (turnover) raporu",
+        "description": "Seçilen yılın (varsayılan cari yıl) işten ayrılma oranı özeti ve ayrılan çalışanların dökümü."
       }
     },
     "leave": {
@@ -66,6 +78,10 @@
       "company_ledger": {
         "label": "Şirket geneli izin/fazla mesai defteri",
         "description": "\"İzinlerim\"/\"Fazla mesailerim\" ekranındaki şirket geneli görünümün Excel çıktısı: seçilen ayda kimler izinde, yıllık izin bakiyesi ve yıllık fazla mesai (270 saat sınırı)."
+      },
+      "monthly_usage": {
+        "label": "Kullanılan izin raporu",
+        "description": "Seçilen ayda (varsayılan cari ay) kullanılan (onaylı) izinler: tür, başlangıç, bitiş ve gün sayısı."
       }
     },
     "finance": {

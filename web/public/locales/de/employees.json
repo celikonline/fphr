@@ -325,6 +325,21 @@
   },
   "card": {
     "backToList": "Zurück zu Mitarbeitende",
+    "pdf": {
+      "button": "Als PDF herunterladen",
+      "title": "Mitarbeiterakte als PDF herunterladen",
+      "sections": "Bereiche",
+      "selectAll": "Alle auswählen",
+      "clearAll": "Leeren",
+      "period": "Zeitraum",
+      "periodHint": "Urlaubs-, Überstunden-, Lohnabrechnungs-, Inventar- und Zahlungslisten werden nach diesem Zeitraum gefiltert; andere Daten zeigen den aktuellen Stand.",
+      "presets": { "last12Months": "Letzte 12 Monate", "thisYear": "Dieses Jahr", "allTime": "Gesamter Zeitraum", "custom": "Benutzerdefiniert" },
+      "from": "Von",
+      "to": "Bis",
+      "invalidPeriod": "Das Ende darf nicht vor dem Beginn liegen.",
+      "generate": "PDF erstellen",
+      "failed": "Das PDF konnte nicht erstellt werden."
+    },
     "notFoundTitle": "Mitarbeitende:r nicht gefunden",
     "notFoundDescription": "Der Datensatz wurde möglicherweise entfernt oder liegt außerhalb Ihres Zugriffsbereichs.",
     "saved": "Mitarbeiterdaten gespeichert.",

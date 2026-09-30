@@ -18,8 +18,17 @@ namespace Sense.Modules.Attendance.Application.SelfCheckIns;
 public sealed record SelfCheckInResultDto(
     Guid AttendanceDayId, DateOnly Date, PunchDirection Direction, TimeOnly Time, Guid? LocationId, string? LocationName, bool? WithinGeofence);
 
-/// <summary>"Şu an içeride miyim" (S-31): drives which button (Giriş/Çıkış) the self check-in page shows.</summary>
-public sealed record MyCheckInStatusDto(bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut);
+/// <summary>
+/// "Şu an içeride miyim" (S-31): drives which button (Giriş/Çıkış/Mola başı/Mola sonu) the self check-in page shows.
+/// <c>BreakStartedAt</c> is the open break's tenant-local start; <c>BreakMinutesToday</c> is the day's closed break minutes;
+/// <c>Breaks</c> lists the day's breaks oldest first (empty when not checked in or no break yet).
+/// </summary>
+public sealed record MyCheckInStatusDto(
+    bool IsCheckedIn, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, bool OnBreak = false, TimeOnly? BreakStartedAt = null, int BreakMinutesToday = 0,
+    IReadOnlyList<MyBreakDto>? Breaks = null);
+
+/// <summary>One break of the day in tenant-local wall-clock time (same "HH:mm:ss" convention as check-in/out); <c>End</c> is null while the break is open.</summary>
+public sealed record MyBreakDto(TimeOnly Start, TimeOnly? End);
 
 /// <summary>
 /// QR self-servis check-in (S-31 kabul kriteri 1): <paramref name="Code"/> is the Location.SelfCheckInCode scanned from its
@@ -147,7 +156,7 @@ public sealed class GpsCheckInHandler(
 public sealed record GetMyCheckInStatusQuery : IQuery<MyCheckInStatusDto>;
 
 public sealed class GetMyCheckInStatusHandler(
-    ITenantContext tenant, ICurrentUser currentUser, IAttendanceDayRepository days, ITenantLocalClock clock)
+    ITenantContext tenant, ICurrentUser currentUser, IAttendanceDayRepository days, ISelfCheckInRepository selfCheckIns, ITenantLocalClock clock)
     : IQueryHandler<GetMyCheckInStatusQuery, MyCheckInStatusDto>
 {
     public async Task<Result<MyCheckInStatusDto>> Handle(GetMyCheckInStatusQuery query, CancellationToken cancellationToken)
@@ -159,19 +168,17 @@ public sealed class GetMyCheckInStatusHandler(
 
         var now = await clock.NowAsync(tenant.TenantId, cancellationToken);
         var today = DateOnly.FromDateTime(now.Local);
-        var record = await days.FindByEmployeeAndDateAsync(employeeId, today, cancellationToken);
-        if (record?.CheckIn is null)
-        {
-            // Night shift: an evening "in" yesterday with no "out" yet is still open this morning.
-            var open = await SelfCheckInPunch.FindOpenOvernightDayAsync(days, employeeId, today, cancellationToken);
-            if (open is not null)
-            {
-                return new MyCheckInStatusDto(IsCheckedIn: true, open.Date, open.CheckIn, open.CheckOut);
-            }
-        }
 
+        // Night shift: with no "in" today, an evening "in" yesterday with no "out" yet is still open this morning.
+        var record = await SelfCheckInBreaks.FindCurrentDayAsync(days, employeeId, today, cancellationToken);
         var isCheckedIn = record is { CheckIn: not null, CheckOut: null };
-        return new MyCheckInStatusDto(isCheckedIn, today, record?.CheckIn, record?.CheckOut);
+        var openBreakUtc = record is null ? null : await SelfCheckInBreaks.FindOpenBreakStartUtcAsync(selfCheckIns, employeeId, record, now, cancellationToken);
+        return new MyCheckInStatusDto(
+            isCheckedIn, record?.Date ?? today, record?.CheckIn, record?.CheckOut,
+            OnBreak: openBreakUtc is not null,
+            BreakStartedAt: openBreakUtc is { } startedUtc ? SelfCheckInBreaks.ToLocalTime(startedUtc, now) : null,
+            BreakMinutesToday: record?.ActualBreakMinutes ?? 0,
+            Breaks: record is null ? [] : await SelfCheckInBreaks.ListDayBreaksAsync(selfCheckIns, employeeId, record, now, cancellationToken));
     }
 }
 
@@ -226,8 +233,12 @@ internal static class SelfCheckInPunch
 
     public static async Task<Result<Applied>> ApplyAsync(SelfCheckIn audit, TenantLocalNow now, Ports ports, CancellationToken cancellationToken)
     {
+        if (DayFromPunches.IsBreak(audit.Direction))
+        {
+            return await SelfCheckInBreaks.ApplyAsync(audit, now, ports, cancellationToken);
+        }
+
         var date = DateOnly.FromDateTime(now.Local);
-        var time = TimeOnly.FromDateTime(now.Local);
         if (audit.Direction == PunchDirection.Out)
         {
             var today = await ports.Days.FindByEmployeeAndDateAsync(audit.EmployeeId, date, cancellationToken);
@@ -237,6 +248,18 @@ internal static class SelfCheckInPunch
             }
         }
 
+        return await WriteAsync(audit, date, now, ports, cancellationToken);
+    }
+
+    /// <summary>
+    /// Records the audit row's punch on <paramref name="workDate"/> (mola başı/sonu too, as a BreakStart/BreakEnd punch that never changes
+    /// check-in/out), re-derives the day from its punches and saves both in one unit of work.
+    /// </summary>
+    public static async Task<Result<Applied>> WriteAsync(
+        SelfCheckIn audit, DateOnly workDate, TenantLocalNow now, Ports ports, CancellationToken cancellationToken)
+    {
+        var date = workDate;
+        var time = TimeOnly.FromDateTime(now.Local);
         var zone = await ports.Clock.GetTimeZoneAsync(audit.TenantId, cancellationToken);
         var writer = new PunchDayWriter(audit.TenantId, ports.Days, ports.Punches, ports.Planner, ports.Approvals, zone, now.Utc);
         if (await writer.IsLockedAsync(audit.EmployeeId, date, cancellationToken))
@@ -245,7 +268,8 @@ internal static class SelfCheckInPunch
         }
 
         var dayPunches = await writer.LoadDayAsync(audit.EmployeeId, date, seedLegacy: true, cancellationToken);
-        var recorded = RecordPunch(writer, audit, date, dayPunches.Count > 0 ? dayPunches[^1] : null);
+        // Mola okutmaları giriş/çıkış kuralına (ikinci In yok sayılır, sonraki Out öncekini geçersiz kılar) katılmaz.
+        var recorded = RecordPunch(writer, audit, date, dayPunches.LastOrDefault(p => !DayFromPunches.IsBreak(p.Direction)));
         if (recorded.IsFailure)
         {
             return recorded.Error;

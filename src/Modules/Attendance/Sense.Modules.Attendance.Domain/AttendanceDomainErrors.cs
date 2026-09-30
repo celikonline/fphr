@@ -93,6 +93,11 @@ public static class AttendanceDomainErrors
     public const string TerminalCredentialValueRequired = "attendance.terminal_credential.value_required";
     public const string TerminalCredentialNotFound = "attendance.terminal_credential.not_found";
     public const string TerminalCredentialInUse = "attendance.terminal_credential.in_use";
+    public const string CorrectionTimesRequired = "attendance.correction.times_required";
+    public const string CorrectionInvalidRange = "attendance.correction.invalid_range";
+    public const string CorrectionReasonRequired = "attendance.correction.reason_required";
+    public const string CorrectionNotFound = "attendance.correction.not_found";
+    public const string CorrectionNotPending = "attendance.correction.not_pending";
 }
 
 /// <summary>Domain limits.</summary>

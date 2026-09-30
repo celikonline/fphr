@@ -39,9 +39,26 @@ public sealed class GetLiveAttendanceBoardHandler(
             return Result.Success<IReadOnlyList<LiveAttendanceStatusDto>>([]);
         }
 
-        // Tenant-local "today" (not UTC). Yesterday is read too: a night-shift employee whose evening "in" is still open
-        // (no "out" yet) is inside this morning, and only has a record dated yesterday.
+        // Tenant-local "today" (not UTC).
         var today = DateOnly.FromDateTime((await clock.NowAsync(tenant.TenantId, cancellationToken)).Local);
+        return Result.Success(await LiveAttendanceBoard.BuildAsync(employeeIds, today, tenant.TenantId, employees, days, punches, terminals, cancellationToken));
+    }
+}
+
+/// <summary>Today's board rows for an already resolved employee set (the data-scope board above, or FG-007's direct reports).</summary>
+internal static class LiveAttendanceBoard
+{
+    public static async Task<IReadOnlyList<LiveAttendanceStatusDto>> BuildAsync(
+        IReadOnlyList<Guid> employeeIds, DateOnly today, Guid tenantId, IEmployeeDirectory employees, IAttendanceDayRepository days,
+        IPunchRepository punches, ITerminalRepository terminals, CancellationToken cancellationToken)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return [];
+        }
+
+        // Yesterday is read too: a night-shift employee whose evening "in" is still open (no "out" yet) is inside this
+        // morning, and only has a record dated yesterday.
         var yesterday = today.AddDays(-1);
         var recent = await days.ListForEmployeesAsync(employeeIds, yesterday, today, cancellationToken);
         var records = recent.Where(d => d.Date == today).ToDictionary(d => d.EmployeeId);
@@ -50,11 +67,11 @@ public sealed class GetLiveAttendanceBoardHandler(
             records.TryAdd(open.EmployeeId, open);
         }
 
-        var names = (await employees.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken))
+        var names = (await employees.GetContactsAsync(tenantId, employeeIds, cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
         // Son okutma (silinmemiş): yön içeride/dışarıda durumunu, kaynak/terminal satırdaki "son okutma"yı belirler.
-        var lastPunches = (await punches.ListForRangeAsync(tenant.TenantId, yesterday, today, employeeIds.ToList(), cancellationToken))
+        var lastPunches = (await punches.ListForRangeAsync(tenantId, yesterday, today, employeeIds.ToList(), cancellationToken))
             .Where(p => !p.IsDeleted && employeeIds.Contains(p.EmployeeId))
             .GroupBy(p => p.EmployeeId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.OccurredAtUtc).First());

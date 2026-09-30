@@ -39,5 +39,6 @@
   "preferences": "Preferences",
   "preferencesHint": "Language, theme and color palette preferences are stored in this browser.",
   "supportHint": "Help Center and contact support.",
-  "logoutHint": "End your session."
+  "logoutHint": "End your session.",
+  "mfaRequiredByPolicyHint": "Your company's security policy requires two-factor authentication for your role; it cannot be turned off."
 }

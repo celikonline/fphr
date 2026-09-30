@@ -1,0 +1,46 @@
+{
+  "id": "FG-011",
+  "baslik": "Vize belge talebi (mobil)",
+  "durum": "backlog",
+  "oncelik": "dusuk",
+  "sahip": "takim-gelistirici-node",
+  "dal": "",
+  "zenhr_karsiligi": "ZenHR'da HR letters/Business trip altında vize amaçlı yazı talepleri (ZenHR destek makalesi 'ZenHR Mobile ESS' (zenhrsolutions.freshdesk.com/…/43000745169); doğrudan 'visa' ifadesi resmi kaynakta yok - bizim vize süreci ZenHR 'HR Letters' karşılığının parçası).",
+  "senseik_durumu": "web'de var mobilde yok (web/src/pages/visa-requests.tsx).",
+  "backend": {
+    "mevcut_uclar": [
+      "POST /api/v1/visa-requests (documents.my.visa_requests)",
+      "GET /api/v1/visa-requests (kendi talepleri)",
+      "GET /api/v1/visa-requests/{id}",
+      "GET /api/v1/visa-requests/{id}/documents",
+      "GET /api/v1/visa-processes (aktif süreç listesi)"
+    ],
+    "gereken_yeni": [],
+    "izin": "documents.my.visa_requests - *.my.* kalıbıyla Employee rolünde; mobil-only yapılabilir."
+  },
+  "mobil": {
+    "ekranlar": [
+      "apps/senseik-mobile/src/services/VisaService.ts (yeni)",
+      "apps/senseik-mobile/src/screens/app/NewRequestScreen.tsx (kind 'visa' bölümü: süreç seçimi, seyahat tarihleri)",
+      "apps/senseik-mobile/src/screens/app/requests/requestCards.ts (Taleplerim kartı)"
+    ],
+    "navigasyon": "FAB 'Yeni talep' sheet'i ('Vize belgesi') - kiracıda aktif vize süreci yoksa gizli"
+  },
+  "kabul": [
+    "Kiracıda aktif vize süreci varsa FAB sheet'inde 'Vize belgesi' seçeneği görünür, yoksa görünmez",
+    "Çalışan süreç + seyahat tarihleri + açıklama ile talep gönderir; onaylayıcı ayarı eksikse backend'in yerelleştirilmiş hatası gösterilir",
+    "Talep Taleplerim'de durumuyla görünür",
+    "Tamamlanan talebin belgeleri indirilebilir/paylaşılabilir",
+    "Web ile aynı uçlar; saf eşleme fonksiyonlarına birim test"
+  ],
+  "tasarim_notu": "Tarih aralığı için mevcut 'Tarih seç' alt sayfası (Tek gün / Birden çok gün).",
+  "buyukluk": "M - mevcut uçlarla yeni form + liste",
+  "riskli_alan": false,
+  "bagimliliklar": [
+    "FG-010 ile aynı 'Yazılarım' listesini paylaşabilir"
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "acan": "analist-zenhr",
+  "kanit": null,
+  "handoff": ""
+}

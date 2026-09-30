@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, AppState, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator, AppState, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
+import { BrandMark } from "@/components/auth/BrandMark";
+import { palette } from "@/theme/theme";
+import { NotchedTabBar } from "@/navigation/NotchedTabBar";
+import { resolveStatusBarStyle } from "@/navigation/statusBarStyle";
+import { navigationRef } from "@/navigation/navigationRef";
+import { usePushTapNavigation } from "@/navigation/usePushTapNavigation";
 import {
   RootStackParamList,
   AuthStackParamList,
@@ -32,32 +37,19 @@ import GoalsScreen from "@/screens/app/GoalsScreen";
 import NotificationsScreen from "@/screens/app/NotificationsScreen";
 import NotificationPreferencesScreen from "@/screens/app/NotificationPreferencesScreen";
 import RequestsScreen from "@/screens/app/RequestsScreen";
+import NewRequestScreen from "@/screens/app/NewRequestScreen";
+import ApprovalHistoryScreen from "@/screens/app/approvals/ApprovalHistoryScreen";
+import RequestDetailScreen from "@/screens/app/requests/RequestDetailScreen";
 import PunchRequestScreen from "@/screens/app/PunchRequestScreen";
 import PayslipDetailScreen from "@/screens/app/PayslipDetailScreen";
+
+// expo-splash-screen's default `imageWidth` (dp); splash-icon.png is the BrandMark's full 40-unit box.
+const SPLASH_MARK_SIZE = 100;
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
-
-/**
- * B9: with `headerShown:false` on the tab navigator (B3), a tab screen's own top-level
- * ScrollView/View has nothing pushing it below the Android status bar - it used to get the
- * navigator header's height for free. Wrap each tab screen once here (instead of editing all six
- * screens' containers) with a top-edge-only SafeAreaView so scrolled content never renders under
- * the status bar. Defined at module scope (not inside `MainTabsNavigator`) so the wrapped
- * component keeps a stable identity across renders - react-navigation would otherwise remount the
- * screen every time.
- */
-function withTopSafeArea<P extends object>(ScreenComponent: React.ComponentType<P>) {
-  return function TopSafeAreaScreen(props: P) {
-    return (
-      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-        <ScreenComponent {...props} />
-      </SafeAreaView>
-    );
-  };
-}
 
 /**
  * Whether the root spinner (full-screen, replaces the whole navigator) should render instead of the
@@ -74,19 +66,11 @@ export function shouldShowRootSplash(appReady: boolean): boolean {
   return !appReady;
 }
 
-/**
- * B9: the auth stack has a dark backdrop (needs light/white status bar content); the app's tab
- * screens are white-background, so the same light content would be invisible on them. Exported as a
- * pure function (B18) so `RootNavigator`'s own effects and tests can compute it without duplicating
- * the ternary.
- */
-export function resolveStatusBarStyle(isAuthenticated: boolean): "light" | "dark" {
-  return isAuthenticated ? "dark" : "light";
-}
+export { resolveStatusBarStyle };
 
 /**
- * B18: the app was observed reverting to an unreadable light/white status bar on the (white
- * background) tab screens after returning from the background. `expo-status-bar`'s declarative
+ * B18: the app was observed reverting to the wrong status bar style after returning from the
+ * background. `expo-status-bar`'s declarative
  * `<StatusBar style={...}>` only re-applies the native style when its own prop changes - it never
  * changes here across a background/foreground cycle, so nothing re-asserts it if anything else
  * (the OS, or a native dialog window opened earlier) altered the status bar appearance while
@@ -95,13 +79,6 @@ export function resolveStatusBarStyle(isAuthenticated: boolean): "light" | "dark
 export function shouldReapplyStatusBarOnAppStateChange(nextAppState: string): boolean {
   return nextAppState === "active";
 }
-
-const DashboardScreenWithTopSafeArea = withTopSafeArea(DashboardScreen);
-const AttendanceScreenWithTopSafeArea = withTopSafeArea(AttendanceScreen);
-const LeaveScreenWithTopSafeArea = withTopSafeArea(LeaveScreen);
-const PayrollScreenWithTopSafeArea = withTopSafeArea(PayrollScreen);
-const ApprovalsScreenWithTopSafeArea = withTopSafeArea(ApprovalsScreen);
-const ProfileScreenWithTopSafeArea = withTopSafeArea(ProfileScreen);
 
 function AuthNavigator() {
   return (
@@ -118,141 +95,71 @@ function AuthNavigator() {
 }
 
 function MainTabsNavigator() {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
+      tabBar={(props) => <NotchedTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: "#0066cc",
-        tabBarInactiveTintColor: "#999999",
-        // B3: each tab screen already renders its own in-page title (e.g. "Ana Sayfa") - a
-        // navigator header on top of that showed the title twice ("Anasayfa" + "Ana Sayfa").
         headerShown: false,
+        // The custom tab bar overlays the scene (its notch corners are transparent), so the scene
+        // behind it must be the dark backdrop, not the default light theme background.
+        sceneStyle: { backgroundColor: palette.night },
       }}
     >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreenWithTopSafeArea}
-        options={{
-          title: "Anasayfa",
-          tabBarLabel: "Anasayfa",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Attendance"
-        component={AttendanceScreenWithTopSafeArea}
-        options={{
-          title: "Puantaj",
-          tabBarLabel: "Puantaj",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Leave"
-        component={LeaveScreenWithTopSafeArea}
-        options={{
-          title: "İzin",
-          tabBarLabel: "İzin",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Payroll"
-        component={PayrollScreenWithTopSafeArea}
-        options={{
-          title: "Bordro",
-          tabBarLabel: "Bordro",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cash-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Approvals"
-        component={ApprovalsScreenWithTopSafeArea}
-        options={{
-          title: "Onaylarım",
-          tabBarLabel: "Onaylarım",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-done-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreenWithTopSafeArea}
-        options={{
-          title: "Profil",
-          tabBarLabel: "Profil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{ title: t("tabs.home") }} />
+      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: t("tabs.checkIn") }} />
     </Tab.Navigator>
   );
 }
 
+/** Native stack header for the screens that do not draw a `ScreenHeader` yet, styled for the dark shell. */
+const legacyHeaderOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: palette.night },
+  headerTintColor: palette.white,
+} as const;
+
 function AppNavigator() {
+  const { t } = useTranslation();
   return (
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: true,
-      }}
-    >
-      <AppStack.Screen
-        name="MainTabs"
-        component={MainTabsNavigator}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
-      <AppStack.Screen
-        name="CheckIn"
-        component={CheckInScreen}
-        options={{ title: "Giriş / Çıkış" }}
-      />
-      <AppStack.Screen name="People" component={PeopleScreen} options={{ title: "Kişiler" }} />
-      <AppStack.Screen name="Shift" component={ShiftScreen} options={{ title: "Vardiyalarım" }} />
-      <AppStack.Screen name="Goals" component={GoalsScreen} options={{ title: "Hedeflerim" }} />
-      <AppStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ title: "Bildirimler" }}
-      />
-      <AppStack.Screen
-        name="NotificationPreferences"
-        component={NotificationPreferencesScreen}
-        options={{ title: "Bildirim tercihleri" }}
-      />
-      <AppStack.Screen
-        name="Requests"
-        component={RequestsScreen}
-        options={{ title: "Taleplerim" }}
-      />
+    // Every stack screen draws its own header (`ScreenHeader`) - see spec §3.
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      <AppStack.Screen name="MainTabs" component={MainTabsNavigator} />
+      <AppStack.Screen name="Attendance" component={AttendanceScreen} />
+      <AppStack.Screen name="Leave" component={LeaveScreen} />
+      <AppStack.Screen name="Payroll" component={PayrollScreen} />
+      <AppStack.Screen name="Approvals" component={ApprovalsScreen} />
+      <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="Requests" component={RequestsScreen} />
+      <AppStack.Screen name="People" component={PeopleScreen} />
+      <AppStack.Screen name="Shift" component={ShiftScreen} />
+      <AppStack.Screen name="Goals" component={GoalsScreen} />
+      <AppStack.Screen name="Support" component={SupportScreen} />
+      <AppStack.Screen name="Notifications" component={NotificationsScreen} />
+      <AppStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
+      <AppStack.Screen name="NewRequest" component={NewRequestScreen} />
+      <AppStack.Screen name="ApprovalHistory" component={ApprovalHistoryScreen} />
+      <AppStack.Screen name="RequestDetail" component={RequestDetailScreen} />
+      {/* No `ScreenHeader` in these two yet - they keep the native stack header. */}
       <AppStack.Screen
         name="PunchRequest"
         component={PunchRequestScreen}
-        options={{ title: "Kayıt talebi" }}
+        options={{ ...legacyHeaderOptions, title: t("checkin:punchRequest.title") }}
       />
       <AppStack.Screen
         name="PayslipDetail"
         component={PayslipDetailScreen}
-        options={{ title: "Bordro pusulası" }}
+        options={{ ...legacyHeaderOptions, title: t("payroll:detail.title") }}
       />
     </AppStack.Navigator>
   );
 }
 
 export function RootNavigator() {
+  const { t } = useTranslation();
   const { isAuthenticated, checkAuth } = useAuthStore();
   const [appReady, setAppReady] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -271,7 +178,7 @@ export function RootNavigator() {
     initializeApp();
   }, [checkAuth]);
 
-  const statusBarStyle = resolveStatusBarStyle(isAuthenticated);
+  const statusBarStyle = resolveStatusBarStyle();
 
   // B18: see `shouldReapplyStatusBarOnAppStateChange` - re-assert the current style whenever the app
   // returns to the foreground, since nothing else in this component's own props changes across a
@@ -285,12 +192,21 @@ export function RootNavigator() {
     return () => subscription.remove();
   }, [statusBarStyle]);
 
+  usePushTapNavigation(navigationRef, isAuthenticated && navigationReady);
+
   if (shouldShowRootSplash(appReady)) {
     return (
       <>
         <StatusBar style={statusBarStyle} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#0066cc" />
+        <View style={styles.splash}>
+          {/* Native splash's mark at the same size/centre, settled (no entrance animation). */}
+          <BrandMark size={SPLASH_MARK_SIZE} animated={false} />
+          <ActivityIndicator
+            size="large"
+            color={palette.brand}
+            accessibilityLabel={t("status.loading")}
+            style={styles.splashSpinner}
+          />
         </View>
       </>
     );
@@ -299,7 +215,7 @@ export function RootNavigator() {
   return (
     <>
       <StatusBar style={statusBarStyle} />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
         <RootStack.Navigator
           screenOptions={{
             headerShown: false,
@@ -327,3 +243,18 @@ export function RootNavigator() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: palette.night,
+  },
+  // Below the centred mark without pushing it off-centre (the native splash has no spinner).
+  splashSpinner: {
+    position: "absolute",
+    top: "50%",
+    marginTop: SPLASH_MARK_SIZE / 2 + 32,
+  },
+});

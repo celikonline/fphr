@@ -8,6 +8,7 @@
     "Requisition": "Stellenanforderung",
     "VisaDocument": "Visadokument",
     "AttendancePunch": "Fehlende Stempelung",
-    "PayslipObjection": "Gehaltsabrechnungs-Einspruch"
+    "PayslipObjection": "Gehaltsabrechnungs-Einspruch",
+    "PunchCorrection": "Fehlende Stempelung"
   }
 }

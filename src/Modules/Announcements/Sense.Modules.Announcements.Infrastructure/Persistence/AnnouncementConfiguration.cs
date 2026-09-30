@@ -40,6 +40,8 @@ public sealed class AnnouncementConfiguration : IEntityTypeConfiguration<Announc
 
         b.HasIndex(x => new { x.TenantId, x.CreatedAt });
         b.HasIndex(x => new { x.TenantId, x.Status, x.PublishedAt });
+        // PublishScheduledAnnouncementsJob (TK-016) scans for Status=Scheduled rows whose ScheduledFor is due.
+        b.HasIndex(x => new { x.TenantId, x.Status, x.ScheduledFor });
 
         b.Ignore(x => x.DomainEvents);
     }

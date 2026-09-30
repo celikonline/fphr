@@ -26,4 +26,9 @@ public static class EmployeeErrors
 
     /// <summary>Self-servis profil güncellemesi tam-değiştirme semantiğindedir; hiçbir alan gönderilmemiş (boş gövde) istek mevcut iletişim verisini silmesin diye reddedilir.</summary>
     public const string ProfileUpdateEmpty = "employee.profile.update_empty";
+
+    public const string CardPdfSectionsRequired = "employee.card_pdf.sections_required";
+    public const string CardPdfUnknownSection = "employee.card_pdf.unknown_section";
+    public const string CardPdfPeriodInvalid = "employee.card_pdf.period_invalid";
+    public const string CardPdfNoSections = "employee.card_pdf.no_sections";
 }

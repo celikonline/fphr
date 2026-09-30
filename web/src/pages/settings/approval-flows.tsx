@@ -37,7 +37,7 @@ import {
 } from "@/services/workflow.service";
 
 const POLICIES_QUERY_KEY = ["workflow", "policies"] as const;
-const REQUEST_TYPES = ["Leave", "Advance", "Expense", "Overtime"] as const;
+const REQUEST_TYPES = ["Leave", "Advance", "Expense", "Overtime", "PunchCorrection"] as const;
 const MAX_STEPS = 6;
 
 interface StepState {

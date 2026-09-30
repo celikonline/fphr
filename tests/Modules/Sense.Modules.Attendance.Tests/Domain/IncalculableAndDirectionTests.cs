@@ -24,7 +24,7 @@ public sealed class IncalculableAndDirectionTests
         ((int)AttendanceAnomaly.Incalculable).ShouldBe(1 << 10);
         ((int)AttendanceDaySource.Request).ShouldBe(4);
         ((int)AttendanceDaySource.Terminal).ShouldBe(5);
-        ((int)PunchDirection.Unknown).ShouldBe(2);
+        ((int)PunchDirection.Unknown).ShouldBe(4); // BreakStart = 2, BreakEnd = 3 (dev); stored as string, so numbers never reach the DB
     }
 
     [Fact]

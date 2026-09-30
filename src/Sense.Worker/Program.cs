@@ -294,6 +294,10 @@ builder.Services.AddModuleHandlers(
     typeof(AnnouncementsDbContext).Assembly,
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
+// PublishScheduledAnnouncements job (TK-016): a Create with a future ScheduledFor lands as Status=Scheduled;
+// this polls (every minute) for announcements whose schedule is due and publishes them, tenant by tenant - the
+// same BackgroundService pattern as Leave's AddLeaveBalanceRecalculationJob above (no Hangfire in this codebase).
+builder.Services.AddAnnouncementsScheduledPublishJob();
 
 // Occupational Safety (İSG, senseik-015): hazard classification + risk assessments, and (senseik-015 devamı)
 // RecordIncidentHandler, which needs Employee's IEmployeeLookup to validate the reporting employee - registered

@@ -37,7 +37,6 @@ i18n
       "recruitment",
       "documents",
       "assets",
-      "trust",
       "requests",
       "expense",
       "reports",
@@ -57,6 +56,7 @@ i18n
       "terminals",
       "delegations",
       "messages",
+      "mobileApp",
     ],
     interpolation: {
       escapeValue: false,

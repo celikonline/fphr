@@ -1,12 +1,16 @@
+import i18n from "@/lib/i18n";
 import {
+  activeLocale,
   dateOnlyToDate,
   dateToTimeOnly,
   formatDateWithWeekday,
+  formatCurrencyTRY,
   formatDays,
   formatDurationMinutes,
   formatRelativeTime,
   parseTimeOnly,
   timeOnlyToDate,
+  toLocaleUpper,
   toLocalDateOnly,
 } from "@/lib/formatters";
 
@@ -163,5 +167,64 @@ describe("formatRelativeTime (N1)", () => {
   it("defaults `now` to the current time when omitted", () => {
     const justNow = new Date().toISOString();
     expect(formatRelativeTime(justNow)).toBe("az önce");
+  });
+});
+
+describe("active locale (FG-001)", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("tr");
+  });
+
+  it("maps the app language to its Intl locale tag", async () => {
+    expect(activeLocale()).toBe("tr-TR");
+    await i18n.changeLanguage("en");
+    expect(activeLocale()).toBe("en-GB");
+  });
+
+  it("formats Turkish by default", () => {
+    expect(formatCurrencyTRY(1234.56)).toBe("₺1.234,56");
+    expect(toLocaleUpper("izinde")).toBe("İZİNDE");
+  });
+
+  describe("in English", () => {
+    beforeEach(async () => {
+      await i18n.changeLanguage("en");
+    });
+
+    it("uses the English decimal point for day counts", () => {
+      expect(formatDays(41.333333333333336)).toBe("41.3");
+      expect(formatDays(5)).toBe("5");
+    });
+
+    it("formats a picked date with an English month and weekday", () => {
+      expect(formatDateWithWeekday("2026-11-16")).toBe("16 Nov 2026 Mon");
+    });
+
+    it("formats durations with English units", () => {
+      expect(formatDurationMinutes(150)).toBe("2 h 30 min");
+    });
+
+    it("formats relative times in English, pluralized", () => {
+      const now = new Date("2026-09-27T12:00:00Z");
+      expect(formatRelativeTime("2026-09-27T11:59:30Z", now)).toBe("just now");
+      expect(formatRelativeTime("2026-09-27T11:55:00Z", now)).toBe("5 min ago");
+      expect(formatRelativeTime("2026-09-27T10:00:00Z", now)).toBe("2 h ago");
+      expect(formatRelativeTime("2026-09-26T12:00:00Z", now)).toBe("1 day ago");
+      expect(formatRelativeTime("2026-09-25T12:00:00Z", now)).toBe("2 days ago");
+    });
+
+    it("formats TRY amounts with English separators", () => {
+      // Intl separates the code with a no-break space.
+      expect(formatCurrencyTRY(1234.56)).toMatch(/^TRY\s1,234\.56$/);
+    });
+
+    it("upper-cases with English rules", () => {
+      expect(toLocaleUpper("izinde")).toBe("IZINDE");
+    });
+  });
+
+  it("accepts an explicit locale regardless of the app language", () => {
+    expect(formatDays(41.3, "en-GB")).toBe("41.3");
+    expect(formatDays(41.3, "tr-TR")).toBe("41,3");
   });
 });

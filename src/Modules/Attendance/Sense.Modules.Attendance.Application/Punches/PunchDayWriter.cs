@@ -140,7 +140,8 @@ public sealed partial class PunchDayWriter(
     /// <summary>
     /// Gün düzeyinde kayıt (elle puantaj / Excel satırı: "aynı çalışan+gün tekrar yüklenirse üzerine yazar"): günün okutmaları istenen
     /// giriş/çıkışa eşitlenir - aynı olanlar korunur, diğerleri gerekçeyle yumuşak silinir, eksikler eklenir; sonra gün yeniden türetilir.
-    /// Giriş/çıkış aynı takvim günündedir (bu kanallar gece vardiyası taşımaz).
+    /// Giriş/çıkış aynı takvim günündedir (bu kanallar gece vardiyası taşımaz). Self-servis mola okutmaları (BreakStart/BreakEnd) giriş/çıkış
+    /// değildir, korunur: gün düzeyi kanallar mola taşımaz, günün ölçülmüş molası silinmez.
     /// </summary>
     public async Task<Result<AttendanceDay>> ReplaceDayAsync(
         Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut, AttendanceDaySource source, Guid? actorUserId, string replaceReason,
@@ -165,6 +166,11 @@ public sealed partial class PunchDayWriter(
 
         foreach (var punch in await LiveAsync(employeeId, date, cancellationToken).ConfigureAwait(false))
         {
+            if (DayFromPunches.IsBreak(punch.Direction))
+            {
+                continue;
+            }
+
             var same = wanted.FindIndex(w => w.Utc == punch.OccurredAtUtc && w.Direction == punch.Direction && punch.Source == punchSource);
             if (same >= 0)
             {

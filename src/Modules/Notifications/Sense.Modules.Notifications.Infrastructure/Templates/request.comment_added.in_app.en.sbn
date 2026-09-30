@@ -1,0 +1,2 @@
+{{- subject = "New comment: " + request_type_name + " request" -}}
+{{ if author_name }}{{ author_name }} left a comment.{{ else }}A new comment was added to the request.{{ end }}

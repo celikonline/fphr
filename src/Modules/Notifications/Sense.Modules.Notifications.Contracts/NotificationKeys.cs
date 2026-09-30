@@ -53,6 +53,7 @@ public static class NotificationTemplateKeys
 
     /// <summary>The employee: a manager/HR added a leave request on their behalf (Leave.LeaveAddedOnBehalf).</summary>
     public const string LeaveAddedOnBehalf = "leave.added_on_behalf";
+
     /// <summary>The employee (and their manager): a day with a missing or incalculable punch needs attention (Attendance daily job).</summary>
     public const string AttendanceMissingPunchReminder = "attendance.missing_punch_reminder";
 
@@ -73,6 +74,18 @@ public static class NotificationTemplateKeys
 
     /// <summary>Members of the payroll role (Bordro Uzmanı): an employee's payslip objection was accepted and the payslip must be corrected (Payroll.PayslipObjectionAccepted).</summary>
     public const string PayslipObjectionAccepted = "payroll.payslip_objection_accepted";
+
+    /// <summary>The other parties of an approval request (requester, approvers, deciders): someone commented on it (Workflow.ApprovalRequestCommented). In-app only.</summary>
+    public const string RequestCommentAdded = "request.comment_added";
+
+    /// <summary>The employee: a piece of equipment ("zimmet") was assigned to them (Assets.AssetAssigned).</summary>
+    public const string AssetAssigned = "assets.assignment_created";
+
+    /// <summary>The employee: confirms their returned equipment was recorded (Assets.AssetReturned).</summary>
+    public const string AssetReturned = "assets.assignment_returned";
+
+    /// <summary>Holders of assets.assets.manage: an employee left with equipment still unreturned (Assets.AssetUnreturnedAtTermination).</summary>
+    public const string AssetUnreturnedAtTermination = "assets.unreturned_at_termination";
 }
 
 /// <summary>Delivery channels. Web Push (browser) is not covered yet - only Expo (mobile) push.</summary>
