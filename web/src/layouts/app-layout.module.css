@@ -1,5 +1,12 @@
+/* Page atmosphere outside the rounded shell (--sense-page-bg in styles/index.css): a faint navy wash from
+   the top-left corner in light mode, flat dark-8 in dark mode. */
+.page {
+  background: var(--sense-page-bg);
+}
+
 /* The whole shell sits in a rounded, bordered frame on the page (Kolay İK reference layout). */
 .portal {
+  --sense-subnav-bg: light-dark(var(--mantine-color-steel-0), var(--mantine-color-dark-6));
   background-color: var(--mantine-color-body);
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-lg);
@@ -7,24 +14,107 @@
   overflow: hidden;
 }
 
-.brand,
+/* Ayarlar alt sayfalarındaki ikinci menü (SettingsSubNav) - açık yüzey, rayla karıştırılmaz. */
 .sidebar {
-  background-color: light-dark(var(--mantine-color-steel-0), var(--mantine-color-dark-6));
+  background-color: var(--sense-subnav-bg);
   border-inline-end: 1px solid var(--mantine-color-default-border);
 }
+/* On settings pages the desktop rail meets this second menu instead of the page, so the özlük sekmesi takes
+   the menu's surface color to stay joined (the menu is hidden below md, where the tab meets the page again). */
+@media (min-width: 48em) {
+  .portal:has(.sidebar) .rail {
+    --sense-rail-tab: var(--sense-subnav-bg);
+  }
+}
 
-.header {
+/*
+ * Navigation rail (--sense-rail-* in styles/index.css): the dominant Gece Laciverti surface shared by the
+ * wordmark, the desktop sidebar and the mobile icon rail. It has no border of its own - .headerContent
+ * carries the header's border-bottom instead, so the wordmark and the rail below it read as one
+ * unbroken navy column instead of two boxes stacked on top of each other.
+ */
+.rail {
+  background-color: var(--sense-rail-bg);
+  color: var(--sense-rail-fg);
+}
+
+.rail :focus-visible {
+  outline: 2px solid var(--sense-rail-fg-strong);
+  outline-offset: -2px;
+}
+
+.headerContent {
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
 .footerNav {
-  border-top: 1px solid var(--mantine-color-default-border);
+  border-top: 1px solid var(--sense-rail-divider);
 }
 
 .navLink {
   border-radius: var(--mantine-radius-md);
   font-weight: 500;
   transition: background-color 150ms ease;
+}
+
+.rail .navLink {
+  color: var(--sense-rail-fg);
+  font-weight: 500;
+}
+
+.rail .navLink:hover:not([data-disabled]):not([aria-current="page"], [data-current]) {
+  background-color: var(--sense-rail-hover);
+  color: var(--sense-rail-fg-strong);
+}
+
+/*
+ * "Özlük sekmesi": the active rail item becomes a tab in the content surface's own color (--sense-rail-tab),
+ * its right edge flush with the rail's edge (the 0.5rem addition matches the nav Stack's own px-2 padding)
+ * and its top/bottom right corners curving inward to meet the rail - as if a personnel file had been pulled
+ * part-way out of the rail onto the page. Works the same collapsed (icon-only) or expanded; collapsed, a
+ * group whose sub-page is open carries the tab (data-current, set by CollapsedNavGroup in sidebar-nav.tsx).
+ */
+.rail .navLink:is([aria-current="page"], [data-current]) {
+  position: relative;
+  overflow: visible;
+  width: calc(100% + 0.5rem);
+  background-color: var(--sense-rail-tab);
+  color: var(--mantine-primary-color-filled);
+  font-weight: 600;
+  border-radius: var(--mantine-radius-md) 0 0 var(--mantine-radius-md);
+}
+
+.rail .navLink:is([aria-current="page"], [data-current])::before,
+.rail .navLink:is([aria-current="page"], [data-current])::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: var(--mantine-radius-md);
+  height: var(--mantine-radius-md);
+  background: transparent;
+  pointer-events: none;
+}
+
+.rail .navLink:is([aria-current="page"], [data-current])::before {
+  top: calc(var(--mantine-radius-md) * -1);
+  border-bottom-right-radius: var(--mantine-radius-md);
+  box-shadow: 4px 4px 0 4px var(--sense-rail-tab);
+}
+
+.rail .navLink:is([aria-current="page"], [data-current])::after {
+  bottom: calc(var(--mantine-radius-md) * -1);
+  border-top-right-radius: var(--mantine-radius-md);
+  box-shadow: 4px -4px 0 4px var(--sense-rail-tab);
+}
+
+/* Rail search box (TextInput classNames={{ wrapper: classes.railSearch }} in sidebar-nav.tsx): readable on
+   navy without a hard border, overriding only the CSS variables the theme's tonal input styling sets. */
+.rail .railSearch[data-variant="default"] {
+  --input-bg: rgba(255, 255, 255, 0.08);
+  --input-bd: transparent;
+  --input-color: var(--sense-rail-fg-strong);
+  --input-placeholder-color: color-mix(in srgb, var(--sense-rail-fg) 70%, transparent);
+  --input-section-color: var(--sense-rail-fg);
 }
 
 /* Icon-only rail: centre the icon and drop the (empty) label body. */
@@ -41,9 +131,11 @@
   display: none;
 }
 
-/* The active item's icon takes the primary color instead of its assigned corporate accent. */
-.navLink[aria-current="page"] .navSection {
-  color: var(--mantine-primary-color-light-color) !important;
+/* Safety net: rail nav items no longer set an inline icon color at all (see sidebar-nav.tsx), so the icon
+   already inherits the active tab's --mantine-primary-color-filled from .navLink[aria-current="page"]
+   above; this only guards against a future inline override reappearing on .navSection. */
+.rail .navLink:is([aria-current="page"], [data-current]) .navSection {
+  color: var(--mantine-primary-color-filled);
 }
 
 /* Planned ("Yakında") items: faded and inert, no cursor affordance. */
@@ -77,4 +169,17 @@
 .navScroll::-webkit-scrollbar-thumb {
   background-color: var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-xl);
+}
+
+/* On the rail a visible scrollbar would sit between the özlük sekmesi and the page and break the tab's join,
+   so the rail scrolls (wheel, touch, keyboard focus) without drawing or reserving a scrollbar. The bottom
+   edge fades out instead, hinting that more items sit below on short screens. */
+.rail .navScroll {
+  scrollbar-width: none;
+  scrollbar-gutter: auto;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 2rem), transparent);
+}
+
+.rail .navScroll::-webkit-scrollbar {
+  display: none;
 }

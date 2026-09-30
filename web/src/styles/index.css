@@ -19,10 +19,48 @@
   --sense-tonal-bg: var(--mantine-color-gray-1);
   --sense-tonal-hover: var(--mantine-color-gray-2);
   --sense-tonal-color: var(--mantine-color-gray-8);
+
+  /* Navigation rail (app-layout.module.css .rail): Gece Laciverti dominant surface. */
+  --sense-rail-bg: var(--mantine-color-navy-8);
+  --sense-rail-fg: var(--mantine-color-navy-1);
+  --sense-rail-fg-strong: #ffffff;
+  --sense-rail-hover: rgba(255, 255, 255, 0.08);
+  --sense-rail-divider: rgba(255, 255, 255, 0.1);
+  /* "Özlük sekmesi": the active rail item's fill matches the content surface it hands off to. */
+  --sense-rail-tab: var(--mantine-color-body);
+
+  /* Atmosphere behind the rounded shell (app-layout.tsx .page): a faint navy wash from the top-left corner. */
+  --sense-page-bg: var(--mantine-color-gray-0) radial-gradient(
+      1200px 600px at 0% 0%,
+      color-mix(in srgb, var(--mantine-color-navy-7) 7%, transparent),
+      transparent
+    );
 }
 
 :root[data-mantine-color-scheme="dark"] {
   --sense-tonal-bg: var(--mantine-color-dark-5);
   --sense-tonal-hover: var(--mantine-color-dark-4);
   --sense-tonal-color: var(--mantine-color-dark-0);
+
+  --sense-rail-bg: var(--mantine-color-navy-9);
+  --sense-rail-fg: var(--mantine-color-navy-1);
+  --sense-rail-fg-strong: #ffffff;
+  --sense-rail-hover: rgba(255, 255, 255, 0.08);
+  --sense-rail-divider: rgba(255, 255, 255, 0.1);
+  --sense-rail-tab: var(--mantine-color-body);
+
+  --sense-page-bg: var(--mantine-color-dark-8);
+}
+
+@layer components {
+  /* Tables read as ledgers: digits line up column to column instead of jittering by glyph width. */
+  .mantine-Table-table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Display face (Bricolage Grotesque) reads loose at large sizes; tighten the largest two headings. */
+  .mantine-Title-root[data-order="1"],
+  .mantine-Title-root[data-order="2"] {
+    letter-spacing: -0.02em;
+  }
 }
