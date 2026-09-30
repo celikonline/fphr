@@ -13,6 +13,8 @@ public static class OnboardingServiceCollectionExtensions
         services.AddScoped<IOnboardingUnitOfWork>(sp => sp.GetRequiredService<OnboardingDbContext>());
         services.AddScoped<IOnboardingTaskTemplateRepository, OnboardingTaskTemplateRepository>();
         services.AddScoped<IEmployeeOnboardingTaskRepository, EmployeeOnboardingTaskRepository>();
+        services.AddScoped<IOnboardingCategoryRepository, OnboardingCategoryRepository>();
+        services.AddScoped<IOnboardingTemplateSetRepository, OnboardingTemplateSetRepository>();
         return services;
     }
 }

@@ -48,6 +48,7 @@ public sealed class ApprovalBulkDecisionIntegrationTests : TestFixture
         services.AddSingleton(Substitute.For<IAccessSettingsService>());
         services.AddSingleton(Substitute.For<IRoleAssignmentLookup>());
         services.AddSingleton(Substitute.For<IEmployeeLookup>());
+        services.AddSingleton(Substitute.For<ITenantTimeZoneLookup>());
     }
 
     protected override async Task OnDatabaseReadyAsync() =>

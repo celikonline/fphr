@@ -95,6 +95,30 @@ public static class BackgroundJobSeeding
             Description = "Send birthday greetings to employees whose birthday is today",
             Payload = "{}"
         };
+
+        // Payslip acknowledgement reminders (E2): per-tenant daily pass that publishes the published-but-unacknowledged
+        // payslips (Payroll PayslipAcknowledgementReminderJobHandler) for Notifications' reminder. 10:00
+        // Europe/Istanbul intent; same TimeZoneInfo caveat as the seeds above.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "PayslipAcknowledgementReminder",
+            JobType = JobType.PayslipAcknowledgementReminder,
+            CronExpression = "0 10 * * *", // 10:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Remind employees to acknowledge or object to their published payslips",
+            Payload = "{}"
+        };
+
+        // Z5.4 (T2): per-tenant hourly sweep deleting uploaded import files of templates with sensitive columns (terminal card/PIN)
+        // once their job finished or DataTransfer:Import:SensitiveSourceFileTtlHours (default 24) after upload
+        // (DataTransfer SensitiveImportSourceCleanupJobHandler). Hourly, so a file lives at most TTL + 1 hour.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "ImportSensitiveSourceCleanup",
+            JobType = JobType.ImportSensitiveSourceCleanup,
+            CronExpression = "20 * * * *", // every hour at :20
+            Description = "Delete uploaded import files with sensitive values (card/PIN) past their retention",
+            Payload = "{}"
+        };
     }
 }
 

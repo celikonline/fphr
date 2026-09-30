@@ -17,4 +17,9 @@ public static class NotificationsLimits
     public const int PushTokenMaxLength = 255;
     public const int PushPlatformMaxLength = 20;
     public const int DeviceNameMaxLength = 100;
+
+    public const int HrMessageSubjectMaxLength = 300;
+    public const int HrMessageBodyMaxLength = 4096;
+    public const int HrMessageChannelsMaxLength = 60;
+    public const int MessageGroupNameMaxLength = 200;
 }

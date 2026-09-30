@@ -12,6 +12,7 @@ import {
   Group,
   Input,
   MultiSelect,
+  SegmentedControl,
   Select,
   Skeleton,
   Stack,
@@ -299,6 +300,11 @@ function ReportCatalogAndHistory() {
 
 type ParameterValues = Record<string, string>;
 
+/** Çıktı biçimi: `format` rapor parametresi olarak gönderilir (varsayılan Excel). */
+const REPORT_FORMATS = ["xlsx", "pdf"] as const;
+type ReportFormat = (typeof REPORT_FORMATS)[number];
+const REPORT_FORMAT_LABELS: Record<ReportFormat, string> = { xlsx: "Excel", pdf: "PDF" };
+
 function defaultValuesFor(parameters: ReportParameter[], today: Date): ParameterValues {
   const values: ParameterValues = {};
   for (const parameter of parameters) {
@@ -323,6 +329,7 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
   const { t, i18n } = useTranslation(["reports", "common"]);
   const today = useMemo(() => new Date(), []);
   const [values, setValues] = useState<ParameterValues>(() => defaultValuesFor(report.parameters, today));
+  const [format, setFormat] = useState<ReportFormat>("xlsx");
   const { options: orgUnitOptions } = useOrgUnits();
   const hasRequired = report.parameters.some((p) => p.isRequired);
   const allSatisfied = report.parameters.every((p) => isSatisfied(p, values));
@@ -336,7 +343,7 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
     });
 
   const generateMutation = useMutation({
-    mutationFn: () => requestReport(report.key, values),
+    mutationFn: () => requestReport(report.key, { ...values, format }),
     onSuccess: async (execution) => {
       onGenerated();
       if (execution.status === "failed") {
@@ -345,7 +352,7 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
       }
       if (execution.status === "succeeded") {
         try {
-          saveDownloadedReportFile(await downloadReportExecution(execution.id, execution.resultFileName ?? `${report.key}.xlsx`));
+          saveDownloadedReportFile(await downloadReportExecution(execution.id, execution.resultFileName ?? `${report.key}.${format}`));
           toast({ variant: "success", title: t("reports:run.success") });
         } catch {
           toast({ variant: "success", title: t("reports:run.successNoDownload") });
@@ -403,6 +410,8 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
         ) : (
           <Stack gap="sm">
             {report.parameters.map((parameter) => {
+              // Çıktı biçimi tek yerde (aşağıdaki SegmentedControl) çizilir.
+              if (parameter.key === REPORT_PARAMETER_KEYS.format) return null;
               const required = parameter.isRequired ? " *" : "";
               switch (parameter.kind) {
                 case "orgUnits":
@@ -492,6 +501,20 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
                       onChange={(e) => set(parameter.key, e.currentTarget.checked ? "true" : null)}
                     />
                   );
+                case "select":
+                  return (
+                    <Select
+                      key={parameter.key}
+                      label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key }) + required}
+                      data={(parameter.options ?? []).map((option) => ({
+                        value: option,
+                        label: t(`reports:params.${parameter.key}Options.${option}`, { defaultValue: option }),
+                      }))}
+                      value={values[parameter.key] ?? null}
+                      onChange={(v) => set(parameter.key, v)}
+                      clearable={!parameter.isRequired}
+                    />
+                  );
                 default:
                   return null;
               }
@@ -505,11 +528,13 @@ function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCa
         )}
 
         <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-          <Group gap={6}>
-            <Badge variant="light" color="teal" size="sm" leftSection={<FileSpreadsheet size={12} />}>
-              {t("reports:run.format")}
-            </Badge>
-          </Group>
+          <SegmentedControl
+            size="xs"
+            aria-label={t("reports:run.format")}
+            value={format}
+            onChange={(value) => setFormat(value as ReportFormat)}
+            data={REPORT_FORMATS.map((f) => ({ value: f, label: REPORT_FORMAT_LABELS[f] }))}
+          />
           {canGenerate && (
             <Button
               type="button"

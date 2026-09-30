@@ -2,7 +2,9 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
+using Sense.Modules.Workflow.Application.Delegations;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
+using Sense.Modules.Workflow.Domain.Delegations;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -155,7 +157,10 @@ public sealed class ListInboxHandler(
     IApprovalRequestRepository requests,
     IRoleAssignmentLookup roleAssignments,
     IEmployeeDirectory employeeDirectory,
-    IEnumerable<IApprovalRequestSummaryProvider> summaryProviders) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
+    IEnumerable<IApprovalRequestSummaryProvider> summaryProviders,
+    DelegationResolver delegationResolver,
+    TimeProvider clock,
+    ITenantTimeZoneLookup timeZones) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
 {
     /// <summary>
     /// The only fallback role queue IApproverResolver falls back to today is "HR" (TenantSettings.Workflow.FallbackApproverRoleCode
@@ -175,7 +180,12 @@ public sealed class ListInboxHandler(
             ? new[] { FallbackRoleCode }
             : [];
 
-        var tasks = await requests.ListInboxTasksAsync(employeeId, fallbackRoleCodes, cancellationToken);
+        // Z2.2 vekalet: also pull tasks assigned to anyone who has an active delegation to the caller; request-type scope is applied below.
+        var today = await DelegationResolver.TodayAsync(clock, timeZones, tenant.TenantId, cancellationToken);
+        var delegations = await delegationResolver.ActiveDelegationsFor(employeeId, today, cancellationToken);
+        var delegatorIds = delegations.Select(d => d.DelegatorEmployeeId).Distinct().ToList();
+
+        var tasks = await requests.ListInboxTasksAsync(employeeId, fallbackRoleCodes, delegatorIds, cancellationToken);
         if (tasks.Count == 0)
         {
             return Result.Success<IReadOnlyList<InboxTaskDto>>([]);
@@ -210,6 +220,7 @@ public sealed class ListInboxHandler(
 
         IReadOnlyList<InboxTaskDto> dtos = tasks
             .Where(t => requestsById.ContainsKey(t.ApprovalRequestId))
+            .Where(t => IsVisibleToCaller(t, requestsById[t.ApprovalRequestId], employeeId, fallbackRoleCodes, delegations, today))
             .Select(t =>
             {
                 var parent = requestsById[t.ApprovalRequestId];
@@ -221,6 +232,20 @@ public sealed class ListInboxHandler(
             .ToList();
 
         return Result.Success(dtos);
+    }
+
+    /// <summary>A task fetched only through a delegator is kept only if a delegation covers this request type and the caller is not the requester.</summary>
+    private static bool IsVisibleToCaller(
+        ApprovalTask task, ApprovalRequest parent, Guid employeeId, IReadOnlyCollection<string> roleCodes,
+        IReadOnlyList<ApprovalDelegation> delegations, DateOnly today)
+    {
+        if (task.ApproverEmployeeId == employeeId || (task.FallbackRoleCode is { } role && roleCodes.Contains(role)))
+        {
+            return true;
+        }
+
+        return parent.RequesterEmployeeId != employeeId
+            && delegations.Any(d => d.DelegatorEmployeeId == task.ApproverEmployeeId && d.IsActiveOn(today, parent.RequestType));
     }
 }
 

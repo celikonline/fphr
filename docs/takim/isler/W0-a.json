@@ -1,0 +1,12 @@
+{
+  "id": "W0-a",
+  "baslik": "Attendance sema temeli + karakterizasyon testleri",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/W0-a",
+  "kabul": ["docs/superpowers/plans/2026-09-25-zaman-devam-birlesik.md icindeki Task W0-a adimlari ve testleri"],
+  "birlestirme_kapisi": "test kapisi YESIL + kanit GECERLI + gozden gecirici ONAY (+ riskli alanda insan onayi)",
+  "riskli_alan": true,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/W0-a.md"
+}

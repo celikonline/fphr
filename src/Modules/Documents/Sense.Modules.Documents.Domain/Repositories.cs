@@ -110,3 +110,16 @@ public interface ISharedCompanyFileRepository
     /// the quota usage figure for <c>GET /shared-files/quota</c>.</summary>
     Task<long> SumActiveSizeByTenantAsync(CancellationToken cancellationToken = default);
 }
+
+/// <summary>Shared file type catalog repository (E8).</summary>
+public interface ISharedFileTypeRepository
+{
+    void Add(SharedFileType type);
+
+    Task<Result<SharedFileType>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SharedFileType>> ListAsync(bool? isActive, CancellationToken cancellationToken = default);
+
+    /// <summary>Case-insensitive name uniqueness check within the tenant; <paramref name="excludeId"/> skips the row being edited.</summary>
+    Task<bool> NameExistsAsync(string name, Guid? excludeId, CancellationToken cancellationToken = default);
+}

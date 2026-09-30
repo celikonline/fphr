@@ -11,6 +11,8 @@
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <!-- P3 "Değişti" mechanism: consumes Leave.Contracts.Events.LeaveCancelled (the only Leave.Leave* event that exists today). -->
     <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
+    <!-- E2 bordro itirazı: starts the "PayslipObjection" approval (IWorkflowService) and consumes ApprovalCompleted/Rejected. -->
+    <ProjectReference Include="../../Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

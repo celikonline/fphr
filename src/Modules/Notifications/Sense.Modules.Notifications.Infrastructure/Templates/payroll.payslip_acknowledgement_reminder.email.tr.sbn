@@ -1,0 +1,6 @@
+{{- subject = "Ücret pusulanız onayınızı bekliyor" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ period }} dönemi ücret pusulanız henüz onaylanmadı. Lütfen pusulanızı inceleyip onaylayın veya itiraz edin.</p>
+{{~ if action_url ~}}
+{{ button "Pusulayı aç" action_url }}
+{{~ end ~}}

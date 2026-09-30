@@ -205,6 +205,31 @@ public sealed class ReportingHandlerTests
         result.Value.Items[0].Id.ShouldBe(execution.Id);
     }
 
+    [Theory]
+    [InlineData("late", true, null)]
+    [InlineData("nonsense", false, ReportingErrors.ParameterInvalid)]
+    [InlineData(" ", false, ReportingErrors.ParameterRequired)]
+    public void ReportParameterValidation_SelectParameter_MustBeOneOfOptions(string value, bool ok, string? code)
+    {
+        var descriptors = new[] { new ReportParameterDescriptor("status", ReportParameterKind.Select, IsRequired: true, Options: ["late", "absent"]) };
+
+        var result = ReportParameterValidation.Validate(descriptors, new Dictionary<string, string> { ["status"] = value });
+
+        result.IsSuccess.ShouldBe(ok);
+        if (!ok)
+        {
+            result.Error.Code.ShouldBe(code);
+        }
+    }
+
+    [Fact]
+    public void ReportParameterValidation_OptionalSelectParameter_MayBeOmitted()
+    {
+        var descriptors = new[] { new ReportParameterDescriptor("format", ReportParameterKind.Select, Options: ["xlsx", "pdf"]) };
+
+        ReportParameterValidation.Validate(descriptors, new Dictionary<string, string>()).IsSuccess.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task RequestReportHandler_WhenRequiredParameterMissing_FailsBeforeCreatingExecution()
     {

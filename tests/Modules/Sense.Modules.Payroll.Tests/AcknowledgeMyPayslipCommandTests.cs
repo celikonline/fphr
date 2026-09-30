@@ -54,6 +54,29 @@ public sealed class AcknowledgeMyPayslipCommandTests
     }
 
     [Fact]
+    public async Task Handle_WhileObjectionPending_IsRejected_AndRecordsNothing()
+    {
+        var employeeId = Guid.NewGuid();
+        var (payslips, periods, deliveries) = Mocks();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(employeeId);
+        var (payslip, period) = PaidPayslip(employeeId);
+        payslip.Publish(DateTimeOffset.UtcNow);
+        payslip.FileObjection("Prim eksik", DateTimeOffset.UtcNow).IsSuccess.ShouldBeTrue();
+
+        payslips.FindByIdAsync(payslip.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<Payslip?>(payslip));
+        periods.FindByIdAsync(period.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(period));
+        deliveries.FindByPayslipIdAsync(payslip.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayslipDelivery?>(null));
+
+        var handler = new AcknowledgeMyPayslipHandler(payslips, periods, deliveries, currentUser, TimeProvider.System);
+        var result = await handler.Handle(new AcknowledgeMyPayslipCommand(payslip.Id, PayslipDeliveryChannel.Web), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PayslipObjectionPending);
+        deliveries.DidNotReceive().Add(Arg.Any<PayslipDelivery>());
+    }
+
+    [Fact]
     public async Task Handle_SecondCall_IsIdempotent_KeepsTheFirstAcknowledgement()
     {
         var employeeId = Guid.NewGuid();

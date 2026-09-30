@@ -11,6 +11,8 @@
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <!-- Company calendar (senseik-027): reflects approved leave starts via Leave's read port. -->
     <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
+    <!-- Tenant time zone port: timed events derive their calendar day in the tenant's local time. -->
+    <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

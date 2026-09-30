@@ -27,6 +27,7 @@ public sealed class SelfCheckInFeaturesTests
     private readonly IShiftSettingsRepository _shiftSettings = Substitute.For<IShiftSettingsRepository>();
     private readonly ISelfCheckInRepository _selfCheckIns = Substitute.For<ISelfCheckInRepository>();
     private readonly List<SelfCheckIn> _punches = [];
+    private readonly InMemoryPunchRepository _punchStore = new();
     private AttendanceDay? _todayRecord;
     private static readonly DateOnly Today = new(2026, 9, 21);
     private static readonly FixedLocalClock Clock = new(new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
@@ -39,9 +40,9 @@ public sealed class SelfCheckInFeaturesTests
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(9, 0), new TimeOnly(18, 0), null, null, true));
     }
 
-    private QrCheckInHandler CreateQrHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock);
+    private QrCheckInHandler CreateQrHandler() => new(_tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, Clock, new InMemoryPunchRepository(), Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
-    private GpsCheckInHandler CreateGpsHandler() => new(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, Clock);
+    private GpsCheckInHandler CreateGpsHandler() => new(_tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, Clock, new InMemoryPunchRepository(), Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
     [Fact]
     public async Task QrCheckIn_ValidCode_RecordsCheckInAndReturnsLocation()
@@ -162,7 +163,7 @@ public sealed class SelfCheckInFeaturesTests
         _locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34EF56", Arg.Any<CancellationToken>())
             .Returns(new LocationGeofence(_locationId, "İstanbul HQ", null, null, null));
         _days.FindByEmployeeAndDateAsync(_employeeId, Today, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
-        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock);
+        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, localClock, new InMemoryPunchRepository(), Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34EF56", PunchDirection.In), TestContext.Current.CancellationToken);
 
@@ -184,7 +185,7 @@ public sealed class SelfCheckInFeaturesTests
         _days.FindByEmployeeAndDateAsync(_employeeId, yesterday, Arg.Any<CancellationToken>()).Returns(night);
         _schedules.GetForDateAsync(_employeeId, yesterday, Arg.Any<CancellationToken>())
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(22, 0), new TimeOnly(6, 0), null, null, true));
-        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, localClock);
+        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, localClock, new InMemoryPunchRepository(), Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34EF56", PunchDirection.Out), TestContext.Current.CancellationToken);
 
@@ -322,7 +323,9 @@ public sealed class SelfCheckInFeaturesTests
     private static FixedLocalClock At(int hour, int minute) => new(new DateTime(2026, 9, 21, hour, minute, 0, DateTimeKind.Utc));
 
     private Task<Result<SelfCheckInResultDto>> GpsAt(PunchDirection direction, int hour, int minute) =>
-        new GpsCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, At(hour, minute))
+        new GpsCheckInHandler(
+                _tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, At(hour, minute), _punchStore,
+                Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>())
             .Handle(new GpsCheckInCommand(39.9, 32.8, null, direction), TestContext.Current.CancellationToken);
 
     private Task<Result<MyCheckInStatusDto>> StatusAt(int hour, int minute) =>
@@ -448,7 +451,9 @@ public sealed class SelfCheckInFeaturesTests
         _locations.FindBySelfCheckInCodeAsync(_tenantId, "AB12CD34", Arg.Any<CancellationToken>())
             .Returns(new LocationGeofence(_locationId, "İstanbul HQ", null, null, null));
         (await GpsAt(PunchDirection.In, 10, 0)).IsSuccess.ShouldBeTrue();
-        var handler = new QrCheckInHandler(_tenant, _currentUser, _locations, _days, _schedules, _shiftSettings, _selfCheckIns, At(12, 0));
+        var handler = new QrCheckInHandler(
+            _tenant, _currentUser, _locations, _days, TestPlanner.From(_schedules), _shiftSettings, _selfCheckIns, At(12, 0), _punchStore,
+            Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>());
 
         var result = await handler.Handle(new QrCheckInCommand("AB12CD34", PunchDirection.BreakStart), TestContext.Current.CancellationToken);
 

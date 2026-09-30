@@ -1,0 +1,6 @@
+{{- subject = "Your payslip is waiting for your acknowledgement" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Your payslip for {{ period }} has not been acknowledged yet. Please review it and acknowledge it or file an objection.</p>
+{{~ if action_url ~}}
+{{ button "Open payslip" action_url }}
+{{~ end ~}}

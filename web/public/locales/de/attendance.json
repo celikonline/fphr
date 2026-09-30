@@ -32,7 +32,27 @@
     "status": "Status",
     "inside": "Anwesend",
     "outside": "Abwesend",
-    "empty": "Keine Mitarbeitenden anzuzeigen."
+    "empty": "Keine Mitarbeitenden anzuzeigen.",
+    "terminals": {
+      "title": "Terminals",
+      "online": "Online",
+      "offline": "Offline",
+      "inactive": "Inaktiv",
+      "todayCount": "Heute: {{count}} Stempelungen",
+      "lastPunch": "Letzte Stempelung",
+      "lastSeen": "Zuletzt gesehen",
+      "never": "Nie gesehen",
+      "empty": "Keine registrierten Terminals."
+    },
+    "lastPunch": "Letzte Stempelung",
+    "sources": {
+      "manual": "Manuell",
+      "import": "Import",
+      "device": "Gerät",
+      "selfService": "Selbstbedienung",
+      "request": "Antrag",
+      "terminal": "Terminal"
+    }
   },
   "empty": "Für diesen Zeitraum gibt es keine Einträge.",
   "genericError": "Etwas ist schiefgelaufen.",
@@ -249,7 +269,32 @@
     "unlockTitle": "Periode entsperren",
     "unlockReasonLabel": "Grund",
     "unlockReasonRequired": "Zum Entsperren der Periode ist ein Grund erforderlich.",
-    "unlocked": "Periode entsperrt."
+    "unlocked": "Periode entsperrt.",
+    "paletteTitle": "Schichtpalette",
+    "paletteHint": "Ziehen Sie eine Schicht oder einen Tagestyp auf eine Zelle oder wählen Sie Zellen aus und klicken Sie.",
+    "paletteEmpty": "Keine Schichten definiert.",
+    "dayTypeTitle": "Tagestypen",
+    "dayType": {
+      "work": "Arbeit",
+      "weeklyRest": "Wöchentliche Ruhezeit",
+      "restDay": "Ruhetag",
+      "publicHoliday": "Feiertag"
+    },
+    "selectedCells": "{{count}} Zellen ausgewählt",
+    "clearSelection": "Auswahl aufheben",
+    "clearShifts": "Ausgewählte Schichten löschen",
+    "clearShiftsTitle": "Schichten löschen",
+    "clearShiftsDescription": "Die Schichten in {{count}} Zellen werden gelöscht. Bestätigen Sie?",
+    "unassignedOnly": "Mitarbeitende ohne Schicht",
+    "unassignedEmpty": "Diese Woche gibt es keine Mitarbeitenden ohne Schicht.",
+    "totalsLabel": "Summe",
+    "totalHours": "{{hours}} Std.",
+    "totalHoursMinutes": "{{hours}} Std. {{minutes}} Min.",
+    "totalMinutes": "{{minutes}} Min.",
+    "totalPeople": "{{count}} Personen",
+    "bulkDone": "{{count}} Zellen aktualisiert.",
+    "bulkSkipped": "{{count}} Zellen übersprungen (gesperrte Periode oder veröffentlichte Schicht).",
+    "lockedEditHint": "Die Periode ist gesperrt; Schichten können nicht bearbeitet werden."
   },
   "myAvailability": {
     "title": "Meine Verfügbarkeit",
@@ -311,5 +356,57 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Planvorlagen",
+    "tabSave": "Vorlage speichern",
+    "tabApply": "Vorlage anwenden",
+    "tabImport": "Excel importieren",
+    "selectionEmpty": "Wählen Sie zugewiesene Zellen im Kalender aus.",
+    "selectionSummary": "{{entries}} Zuweisungen über {{days}} Tage werden gespeichert.",
+    "name": "Vorlagenname",
+    "save": "Vorlage speichern",
+    "saved": "Vorlage gespeichert.",
+    "noTemplates": "Keine gespeicherten Vorlagen.",
+    "pick": "Vorlage",
+    "days": "{{count}} Tage",
+    "startDate": "Startdatum",
+    "keepPublished": "Veröffentlichte behalten",
+    "overwritePublished": "Veröffentlichte überschreiben",
+    "apply": "Anwenden",
+    "applied": "{{count}} Zellen geplant.",
+    "importHint": "Vorlagendatei herunterladen, ausfüllen und hochladen; fehlerhafte Zeilen werden unten aufgelistet.",
+    "downloadTemplate": "Excel-Vorlage herunterladen",
+    "dropzoneTitle": "Excel/CSV-Datei ablegen oder auswählen",
+    "importing": "Import läuft…",
+    "invalidFile": "Ungültige Datei (nur .xlsx/.csv, max. 10 MB).",
+    "importSummary": "{{inserted}} Zeilen verarbeitet, {{errors}} fehlerhaft.",
+    "errorsHint": "Fehlerhafte Zeilen wurden übersprungen; korrigieren und erneut hochladen.",
+    "colRow": "Zeile",
+    "colKey": "Schlüssel",
+    "colError": "Fehler",
+    "deleted": "Vorlage gelöscht.",
+    "delete": "Vorlage {{name}} löschen",
+    "deleteConfirm": "Vorlage \"{{name}}\" löschen?",
+    "skippedHint": "{{count}} Zellen übersprungen:",
+    "colDate": "Datum",
+    "colReason": "Grund",
+    "skipReason": {
+      "locked": "Gesperrter Zeitraum",
+      "published": "Veröffentlichte Schicht"
+    }
+  },
+  "errors": {
+    "periodLocked": "Die Zeiterfassung dieses Monats ist genehmigt und gesperrt; Stempelungen können nicht hinzugefügt, gelöscht oder geändert werden."
+  },
+  "incalculableReason": {
+    "label": "Nicht berechenbar",
+    "unknown": "Grund der Nichtberechenbarkeit",
+    "unknownDirection": "Stempelrichtung unbekannt",
+    "brokenSequence": "Fehlerhafte Stempelfolge (inkonsistente Kommen/Gehen-Reihenfolge oder ungerade Anzahl)",
+    "channelConflict": "Kanalkonflikt (manuelle + Gerätestempelung)",
+    "noPlan": "Ungeplante Stempelung (kein Schichtplan für diesen Tag)",
+    "nightShiftOverlap": "Nachtschicht-Überschneidung (Stempelung liegt nahe an beiden Tagen)",
+    "ambiguousShift": "Mehrdeutige Schicht (Stempelung passt zu mehreren Schichten)"
   }
 }

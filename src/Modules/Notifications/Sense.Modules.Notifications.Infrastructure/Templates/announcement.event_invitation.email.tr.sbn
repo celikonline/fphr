@@ -1,0 +1,6 @@
+{{- subject = "Etkinlik daveti: " + event_title -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ event_title | html.escape }}</strong> etkinliğine davetlisiniz.</p>
+{{~ if action_url ~}}
+{{ button "Etkinliği aç" action_url }}
+{{~ end ~}}

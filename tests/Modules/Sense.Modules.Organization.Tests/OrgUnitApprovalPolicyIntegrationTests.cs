@@ -74,6 +74,8 @@ public sealed class OrgUnitApprovalPolicyIntegrationTests : TestFixture
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Overtime, null, null, null),
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Requisition, null, null, null),
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.AssetAssignment, null, null, null),
+            new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.AttendancePunch, null, null, null),
+            new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.PayslipObjection, null, null, null),
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.PunchCorrection, null, null, null),
         ]);
 

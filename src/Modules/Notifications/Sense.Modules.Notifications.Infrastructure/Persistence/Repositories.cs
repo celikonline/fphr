@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Notifications.Domain;
 using Sense.Modules.Notifications.Domain.Deliveries;
+using Sense.Modules.Notifications.Domain.HrMessages;
 using Sense.Modules.Notifications.Domain.Preferences;
 using Sense.Modules.Notifications.Domain.PushDevices;
 using Sense.Modules.Notifications.Domain.UserNotifications;
@@ -90,4 +91,78 @@ public sealed class PushDeviceTokenRepository(NotificationsDbContext context) : 
         await context.PushDeviceTokens.AsNoTracking()
             .Where(t => t.UserId == userId && t.RevokedAt == null)
             .ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed HrMessage repository with tenant isolation.</summary>
+public sealed class HrMessageRepository(NotificationsDbContext context) : IHrMessageRepository
+{
+    public void Add(HrMessage message) => context.HrMessages.Add(message);
+
+    public async Task<(IReadOnlyList<HrMessage> Items, long TotalCount)> ListInboxAsync(
+        Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = context.HrMessages.AsNoTracking()
+            .Where(m => context.HrMessageRecipients.Any(r => r.MessageId == m.Id && r.UserId == userId));
+        return await PageAsync(query, page, pageSize, cancellationToken);
+    }
+
+    public async Task<(IReadOnlyList<HrMessage> Items, long TotalCount)> ListSentAsync(
+        Guid userId, int page, int pageSize, CancellationToken cancellationToken = default) =>
+        await PageAsync(context.HrMessages.AsNoTracking().Where(m => m.SenderUserId == userId), page, pageSize, cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, int>> CountRecipientsAsync(IReadOnlyCollection<Guid> messageIds, CancellationToken cancellationToken = default)
+    {
+        var ids = messageIds.ToList();
+        return await context.HrMessageRecipients.AsNoTracking()
+            .Where(r => ids.Contains(r.MessageId))
+            .GroupBy(r => r.MessageId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetRecipientPreviewsAsync(
+        IReadOnlyCollection<Guid> messageIds, int take, CancellationToken cancellationToken = default)
+    {
+        var ids = messageIds.ToList();
+        var rows = await context.HrMessageRecipients.AsNoTracking()
+            .Where(r => ids.Contains(r.MessageId))
+            .GroupBy(r => r.MessageId)
+            .Select(g => new { g.Key, EmployeeIds = g.OrderBy(r => r.Id).Select(r => r.EmployeeId).Take(take).ToList() })
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(x => x.Key, x => (IReadOnlyList<Guid>)x.EmployeeIds);
+    }
+
+    private static async Task<(IReadOnlyList<HrMessage> Items, long TotalCount)> PageAsync(
+        IQueryable<HrMessage> query, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var total = await query.LongCountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .ToListAsync(cancellationToken);
+        return (items, total);
+    }
+}
+
+/// <summary>EF Core-backed MessageGroup repository with tenant isolation.</summary>
+public sealed class MessageGroupRepository(NotificationsDbContext context) : IMessageGroupRepository
+{
+    public void Add(MessageGroup group) => context.MessageGroups.Add(group);
+
+    public void Remove(MessageGroup group) => context.MessageGroups.Remove(group);
+
+    public Task<MessageGroup?> FindAsync(Guid id, CancellationToken cancellationToken = default) =>
+        context.MessageGroups.FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<MessageGroup>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var list = ids.ToList();
+        return await context.MessageGroups.AsNoTracking().Where(g => list.Contains(g.Id)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<MessageGroup>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.MessageGroups.AsNoTracking().OrderBy(g => g.Name).ToListAsync(cancellationToken);
+
+    public Task<bool> NameExistsAsync(string name, Guid? exceptId, CancellationToken cancellationToken = default) =>
+        context.MessageGroups.AnyAsync(g => g.Name == name && (exceptId == null || g.Id != exceptId), cancellationToken);
 }

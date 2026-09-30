@@ -66,7 +66,8 @@ public sealed class EmployeesController : ApiControllerBase
         FromResult(await Dispatcher.Query(
             new ListEmployeesQuery(paging, new EmployeeFilter(
                 paging.Q, filter.OrgUnitId, filter.IncludeSubUnits, filter.Status, filter.HasUserAccount, filter.ManagerEmployeeId,
-                filter.EmploymentType, filter.ContractType, filter.MissingInfo)),
+                filter.EmploymentType, filter.ContractType, filter.MissingInfo,
+                filter.OrgUnitIds, filter.IncludeTerminated)),
             ct));
 
     /// <summary>The caller's own employee card (404 when the caller has no employee record).</summary>

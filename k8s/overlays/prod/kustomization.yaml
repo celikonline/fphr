@@ -3,8 +3,11 @@ kind: Kustomization
 
 namespace: senseik-prod
 
-bases:
+resources:
   - ../../base
+  - ingress.yaml
+  - hpa.yaml
+  - network-policies.yaml
 
 namePrefix: prod-
 
@@ -15,11 +18,6 @@ images:
     newTag: latest
   - name: senseik-web
     newTag: latest
-
-resources:
-  - ingress.yaml
-  - hpa.yaml
-  - network-policies.yaml
 
 replicas:
   - name: postgres
@@ -43,9 +41,6 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: IfNotPresent
-      - op: replace
-        path: /spec/template/spec/containers/0/env/3/value
-        value: Production
       - op: replace
         path: /spec/template/spec/containers/0/resources/requests/cpu
         value: 500m
@@ -110,6 +105,79 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/resources/limits/memory
         value: 512Mi
+
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: api
+      spec:
+            template:
+              spec:
+                containers:
+                  - name: api
+                    env:
+                      - name: Frontend__BaseUrl
+                        value: http://10.34.184.134:13000
+                      - name: Email__Smtp__Host
+                        value: smtp.gmail.com
+                      - name: Email__Smtp__Port
+                        value: "587"
+                      - name: Email__Smtp__UseSsl
+                        value: "true"
+                      - name: Email__FromName
+                        value: SenseİK
+                      - name: Email__FromAddress
+                        value: system@algosense.com.tr
+                      - name: Email__Smtp__Username
+                        valueFrom:
+                          secretKeyRef:
+                            name: smtp-secret
+                            key: username
+                      - name: Email__Smtp__Password
+                        valueFrom:
+                          secretKeyRef:
+                            name: smtp-secret
+                            key: password
+  - target:
+      kind: Deployment
+      name: worker
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: worker
+      spec:
+            template:
+              spec:
+                containers:
+                  - name: worker
+                    env:
+                      - name: Frontend__BaseUrl
+                        value: http://10.34.184.134:13000
+                      - name: Email__Smtp__Host
+                        value: smtp.gmail.com
+                      - name: Email__Smtp__Port
+                        value: "587"
+                      - name: Email__Smtp__UseSsl
+                        value: "true"
+                      - name: Email__FromName
+                        value: SenseİK
+                      - name: Email__FromAddress
+                        value: system@algosense.com.tr
+                      - name: Email__Smtp__Username
+                        valueFrom:
+                          secretKeyRef:
+                            name: smtp-secret
+                            key: username
+                      - name: Email__Smtp__Password
+                        valueFrom:
+                          secretKeyRef:
+                            name: smtp-secret
+                            key: password
 
 secretGenerator:
   - name: postgres-secret

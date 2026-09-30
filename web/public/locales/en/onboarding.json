@@ -3,7 +3,9 @@
   "tabs": {
     "pending": "Open tasks",
     "employee": "Employee checklist",
-    "templates": "Templates"
+    "templates": "Templates",
+    "categories": "Categories",
+    "sets": "Template sets"
   },
   "loadError": "Tasks could not be loaded.",
   "actionFailed": "The action could not be completed.",
@@ -34,7 +36,10 @@
     "status": "Status",
     "mandatory": "Mandatory",
     "offset": "Due (days offset)",
-    "active": "Active"
+    "active": "Active",
+    "importance": "Importance",
+    "category": "Category",
+    "eDocument": "E-document required"
   },
   "offset": {
     "sameDay": "Same day",
@@ -72,5 +77,36 @@
     "stageEmpty": "No tasks for this stage.",
     "offsetHintHire": "Relative to the hire date; negative means before it (e.g. SGK notification -1).",
     "offsetHintExit": "Days after the exit date (e.g. SGK exit notification 10)."
+  },
+  "importance": {
+    "normal": "Normal",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "categories": {
+    "hint": "Categories used to group task templates.",
+    "add": "Add category",
+    "addTitle": "Add category",
+    "editTitle": "Edit category",
+    "empty": "No categories yet.",
+    "name": "Name",
+    "sortOrder": "Order",
+    "delete": "Delete",
+    "confirmDelete": "Delete the category \"{{name}}\"?",
+    "uncategorized": "Uncategorized"
+  },
+  "sets": {
+    "hint": "Named task sets that can be started for an employee in one go.",
+    "add": "Add set",
+    "addTitle": "Add template set",
+    "editTitle": "Edit template set",
+    "empty": "No template sets yet.",
+    "name": "Set name",
+    "taskCount": "Tasks",
+    "pick": "Tasks (same stage only)",
+    "noTemplates": "No task templates for this stage.",
+    "order": "Order",
+    "moveUp": "Move {{title}} up",
+    "moveDown": "Move {{title}} down"
   }
 }

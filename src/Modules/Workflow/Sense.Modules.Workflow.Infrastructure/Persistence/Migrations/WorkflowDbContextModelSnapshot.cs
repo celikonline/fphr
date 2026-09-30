@@ -314,6 +314,10 @@ namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("decided_by_employee_id");
 
+                    b.Property<Guid?>("DecidedOnBehalfOfEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_on_behalf_of_employee_id");
+
                     b.Property<string>("DecisionChannel")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
@@ -440,6 +444,76 @@ namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_email_decision_tokens_tenant_id_approval_task_id");
 
                     b.ToTable("email_decision_tokens", "workflow");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Workflow.Domain.Delegations.ApprovalDelegation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_employee_id");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("DelegateEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("delegate_employee_id");
+
+                    b.Property<Guid>("DelegatorEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("delegator_employee_id");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("RequestTypes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("request_types");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_approval_delegations");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_approval_delegations_tenant_id");
+
+                    b.HasIndex("TenantId", "DelegateEmployeeId")
+                        .HasDatabaseName("ix_approval_delegations_tenant_id_delegate_employee_id");
+
+                    b.HasIndex("TenantId", "DelegatorEmployeeId")
+                        .HasDatabaseName("ix_approval_delegations_tenant_id_delegator_employee_id");
+
+                    b.ToTable("approval_delegations", "workflow");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>

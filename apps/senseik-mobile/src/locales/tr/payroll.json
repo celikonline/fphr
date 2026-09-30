@@ -4,8 +4,9 @@
   },
   "openDocument": "Belgeyi aç",
   "acknowledge": "Okudum, onaylıyorum",
+  "details": "Ayrıntılar",
   "row": {
-    "a11y": "{{month}} {{year}} bordrosu, belgeyi aç",
+    "a11y": "{{month}} {{year}} bordrosu, ayrıntıları aç",
     "saving": "Kaydediliyor…"
   },
   "title": "Bordrom",
@@ -19,10 +20,32 @@
   "status": {
     "acknowledged": "Onaylandı",
     "pending": "Onay bekliyor",
-    "acknowledgedAt": "Onaylandı · {{time}}"
+    "acknowledgedAt": "Onaylandı · {{time}}",
+    "objectionPending": "İtiraz inceleniyor",
+    "objectionAccepted": "İtiraz kabul edildi",
+    "objectionRejected": "İtiraz reddedildi"
   },
   "confirm": {
     "message": "Bu bordro pusulasını okuduğunuzu onaylıyor musunuz?",
     "confirm": "Onaylıyorum"
+  },
+  "detail": {
+    "title": "Bordro pusulası",
+    "heading": "{{period}} bordrosu",
+    "gross": "Brüt ücret",
+    "net": "Net ücret",
+    "acknowledge": "Onayla",
+    "acknowledgedTitle": "Onaylandı",
+    "acknowledgedMessage": "Bordronuzu onayladınız.",
+    "acknowledgeError": "Bordro onaylanamadı. Lütfen tekrar deneyin.",
+    "objectionReason": "İtiraz gerekçeniz: {{reason}}",
+    "objectionPendingNote": "İtirazınız inceleniyor; sonuçlanana kadar onaylayamazsınız.",
+    "objectionResult": "İtiraz sonucu: {{note}}",
+    "objectionLabel": "İtiraz gerekçesi",
+    "objectionPlaceholder": "İtiraz nedeninizi yazın",
+    "object": "İtiraz et",
+    "objectionRequired": "İtiraz için gerekçe yazmanız zorunludur.",
+    "objectionSent": "İtirazınız iletildi.",
+    "objectionError": "İtiraz gönderilemedi. Lütfen tekrar deneyin."
   }
 }

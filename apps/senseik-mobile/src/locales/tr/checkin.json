@@ -77,5 +77,34 @@
   "biometric": {
     "punchPrompt": "Giriş/çıkış kaydı için kimliğinizi doğrulayın",
     "cancelled": "Kimlik doğrulanmadı; kayıt oluşturulmadı."
+  },
+  "punchRequest": {
+    "title": "Kayıt talebi",
+    "date": "Tarih (yyyy-aa-gg)",
+    "time": "Saat (ss:dd)",
+    "direction": "Yön",
+    "in": "Giriş",
+    "out": "Çıkış",
+    "reason": "Gerekçe",
+    "reasonPlaceholder": "Kaydın neden eksik olduğunu açıklayın",
+    "submit": "Talebi gönder",
+    "mine": "Taleplerim",
+    "empty": "Henüz talebiniz yok.",
+    "decidedAt": "Karar: {{time}}",
+    "cancel": "İptal et",
+    "loadError": "Talepler yüklenemedi. Lütfen tekrar deneyin.",
+    "invalidDateTime": "Lütfen geçerli bir tarih (yyyy-aa-gg) ve saat (ss:dd) girin.",
+    "invalidTimeTitle": "Geçersiz zaman",
+    "futureTime": "Gelecek bir zaman için talep oluşturulamaz.",
+    "reasonRequired": "Gerekçe zorunludur.",
+    "sentMessage": "Talebiniz onaya gönderildi.",
+    "submitError": "Talep gönderilemedi. Lütfen tekrar deneyin.",
+    "cancelError": "Talep iptal edilemedi. Lütfen tekrar deneyin.",
+    "status": {
+      "pending": "Bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    }
   }
 }

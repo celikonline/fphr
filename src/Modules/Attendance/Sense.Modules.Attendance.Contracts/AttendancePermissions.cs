@@ -125,6 +125,50 @@ public static class AttendancePermissions
     public static readonly Permission BoardView = new(
         BoardViewKey, Module, "Canlı İçeride/Dışarıda Panosunu Görüntüleme", Group, "Şu an kimin içeride kimin dışarıda olduğunu canlı görüntüleme");
 
+    // Zaman & Devam birleşik programı (W0-b). "attendance.*" Owner/HR/PayrollSpecialist/Timekeeper'a, "*.my.*" her tabana gider.
+
+    public const string DailyViewKey = "attendance.daily.view";
+
+    public const string PunchManageKey = "attendance.punch.manage";
+
+    public static readonly Permission DailyView = new(
+        DailyViewKey, Module, "Günlük Puantajı Görüntüleme", Group, "Günlük geldi/geç/erken/devamsız/izinli listelerini görüntüleme");
+
+    public static readonly Permission PunchManage = new(
+        PunchManageKey, Module, "Okutma Yönetimi", Group, "Elle okutma ekleme ve silme (gerekçeli)");
+
+    public static readonly Permission ShiftDefinitionView = new(
+        "attendance.shiftdefinition.view", Module, "Vardiya Tanımlarını Görüntüleme", Group, "Vardiya tanımlarını (saat, tolerans, mola) görüntüleme");
+
+    public static readonly Permission ShiftDefinitionManage = new(
+        "attendance.shiftdefinition.manage", Module, "Vardiya Tanımı Yönetimi", Group, "Vardiya tanımlarını oluşturma, düzenleme ve geçmişe uygulama");
+
+    public static readonly Permission RecalculateRun = new(
+        "attendance.recalculate.run", Module, "Puantaj Yeniden Hesaplama", Group, "Bir tarih aralığı için puantaj günlerini yeniden hesaplatma");
+
+    public static readonly Permission PunchRequestManage = new(
+        "attendance.punchrequest.manage", Module, "Eksik Kayıt Taleplerini Yönetme", Group, "Eksik giriş/çıkış taleplerini görüntüleme ve yönetme");
+
+    public static readonly Permission MyPunchRequest = new(
+        "attendance.my.punchrequest", Module, "Eksik Kayıt Talebi Oluşturma", Group, "Kendi eksik giriş/çıkış talebinizi oluşturma ve izleme");
+
+    public static readonly Permission RotationView = new(
+        "attendance.rotation.view", Module, "Vardiya Rotasyonlarını Görüntüleme", Group, "Vardiya rotasyon (döngü) tanımlarını görüntüleme");
+
+    public static readonly Permission RotationManage = new(
+        "attendance.rotation.manage", Module, "Vardiya Rotasyonu Yönetimi", Group, "Vardiya rotasyonlarını oluşturma, düzenleme ve çalışanlara uygulama");
+
+    public static readonly Permission ShiftTemplateManage = new(
+        "attendance.shifttemplate.manage", Module, "Vardiya Şablonu Yönetimi", Group, "Vardiya planı şablonlarını kaydetme, uygulama ve silme");
+
+    public static readonly Permission TerminalView = new(
+        "attendance.terminal.view", Module, "Terminalleri Görüntüleme", Group, "Giriş-çıkış terminallerini ve okutmalarını görüntüleme");
+
+    public static readonly Permission TerminalManage = new(
+        "attendance.terminal.manage", Module, "Terminal Yönetimi", Group, "Terminal oluşturma, anahtar yenileme ve devre dışı bırakma");
+
+    public static readonly Permission DashboardView = new(
+        "attendance.dashboard.view", Module, "Zaman ve Devam Panosunu Görüntüleme", Group, "Zaman ve devam KPI panosunu görüntüleme");
     /// <summary>
     /// Eksik giriş/çıkış düzeltme talebi (FG-004): submit/list/withdraw one's own requests; "*.my.*" reaches every base role.
     /// The decision itself runs through the Workflow inbox (assignment-based, workflow.inbox.decide) - no separate approve key.
@@ -147,7 +191,8 @@ public static class AttendancePermissions
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
             TimesheetApprove, ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
-            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView, MyCorrections,
-            MyTeam,
+            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView,
+            DailyView, PunchManage, ShiftDefinitionView, ShiftDefinitionManage, RecalculateRun, PunchRequestManage, MyPunchRequest, RotationView, RotationManage, ShiftTemplateManage, TerminalView, TerminalManage, DashboardView,
+            MyCorrections, MyTeam,
         ];
 }

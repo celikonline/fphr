@@ -153,7 +153,11 @@ public sealed class ListImportJobRowsHandler(IImportJobRepository jobs, IImportJ
     }
 }
 
-/// <summary>Result workbook: the uploaded rows plus localized "Sonuç" and "Hata açıklaması" columns.</summary>
+/// <summary>
+/// Result workbook: the uploaded rows plus localized "Sonuç" and "Hata açıklaması" columns. Templates with sensitive columns
+/// (<see cref="ImportColumn.IsSensitive"/>) get an outcome-only workbook instead - row position, match key, outcome, errors - built
+/// from the recorded row outcomes, because their uploaded file is deleted after the run and cell values are never echoed.
+/// </summary>
 [RequiresPermission(DataTransferPermissions.ResultDownloadKey)]
 public sealed record DownloadImportResultQuery(Guid Id, string? Lang) : IQuery<FileDownload>;
 
@@ -181,6 +185,17 @@ public sealed class DownloadImportResultHandler(
             return Error.Conflict(DataTransferErrors.JobNotFinished);
         }
 
+        var culture = ImportCultures.Resolve(query.Lang);
+        var headerByKey = job.Mapping
+            .Where(m => m.TargetKey is not null)
+            .ToDictionary(m => m.TargetKey!, m => job.SourceColumns.FirstOrDefault(c => c.Index == m.SourceIndex)?.Header ?? m.TargetKey!, StringComparer.Ordinal);
+        var template = catalog.Find(job.TemplateCode);
+        if (template.IsSuccess && await template.Value.GetColumnsAsync(cancellationToken) is var templateColumns
+            && ImportTemplateCatalog.HasSensitiveColumns(templateColumns))
+        {
+            return await OutcomeOnlyResultAsync(job, templateColumns, headerByKey, culture, cancellationToken);
+        }
+
         var file = await jobs.GetSourceFileAsync(job.Id, cancellationToken);
         if (file is null)
         {
@@ -194,34 +209,48 @@ public sealed class DownloadImportResultHandler(
         }
 
         var sheet = read.Value;
-        var culture = ImportCultures.Resolve(query.Lang);
         var outcomes = (await store.ListAllRowsAsync(job.Id, cancellationToken)).ToDictionary(r => r.RowNumber);
-        var headerByKey = job.Mapping
-            .Where(m => m.TargetKey is not null)
-            .ToDictionary(m => m.TargetKey!, m => job.SourceColumns.FirstOrDefault(c => c.Index == m.SourceIndex)?.Header ?? m.TargetKey!, StringComparer.Ordinal);
 
         var rows = ColumnAutoMapper.DataRows(sheet, job.HasKeyRow).Select(r =>
-        {
-            if (!outcomes.TryGetValue(r.RowNumber, out var outcome))
-            {
-                return new ResultWorkbookRow(r.RowNumber, r.Cells, null, null, IsError: false);
-            }
-
-            var errors = outcome.Errors.Count == 0
-                ? null
-                : string.Join(ErrorSeparator, outcome.Errors.Select(e =>
-                {
-                    var message = catalog.RowErrorMessage(e, culture);
-                    return e.Column is { } column ? $"{headerByKey.GetValueOrDefault(column, column)}: {message}" : message;
-                }));
-            return new ResultWorkbookRow(
-                r.RowNumber, r.Cells, catalog.Text(OutcomePrefix + outcome.Outcome, culture), errors, outcome.Outcome == ImportJobRowOutcome.Error);
-        }).ToList();
+            outcomes.TryGetValue(r.RowNumber, out var outcome)
+                ? ResultRow(r.RowNumber, r.Cells, outcome, headerByKey, culture)
+                : new ResultWorkbookRow(r.RowNumber, r.Cells, null, null, IsError: false)).ToList();
 
         var keyRow = job.HasKeyRow ? sheet.Rows.FirstOrDefault(r => r.RowNumber == ColumnAutoMapper.KeyRowNumber)?.Cells : null;
+        return Workbook(job, sheet.Headers, keyRow, rows, culture);
+    }
+
+    /// <summary>Sensitive templates: one column with the row's match key (e.g. sicil no), rows at their original sheet position.</summary>
+    private async Task<Result<FileDownload>> OutcomeOnlyResultAsync(
+        ImportJob job, IReadOnlyList<ImportColumn> templateColumns, IReadOnlyDictionary<string, string> headerByKey, CultureInfo culture, CancellationToken cancellationToken)
+    {
+        var matchKey = templateColumns.FirstOrDefault(c => c.IsMatchKey);
+        var header = matchKey is null ? string.Empty : headerByKey.GetValueOrDefault(matchKey.Key) ?? catalog.HeaderOf(matchKey, culture);
+        var rows = (await store.ListAllRowsAsync(job.Id, cancellationToken))
+            .Select(r => ResultRow(r.RowNumber, [new ImportCell(r.MatchKey)], r, headerByKey, culture))
+            .ToList();
+        return Workbook(job, [header], null, rows, culture);
+    }
+
+    private ResultWorkbookRow ResultRow(
+        int rowNumber, IReadOnlyList<ImportCell> cells, ImportJobRow outcome, IReadOnlyDictionary<string, string> headerByKey, CultureInfo culture)
+    {
+        var errors = outcome.Errors.Count == 0
+            ? null
+            : string.Join(ErrorSeparator, outcome.Errors.Select(e =>
+            {
+                var message = catalog.RowErrorMessage(e, culture);
+                return e.Column is { } column ? $"{headerByKey.GetValueOrDefault(column, column)}: {message}" : message;
+            }));
+        return new ResultWorkbookRow(rowNumber, cells, catalog.Text(OutcomePrefix + outcome.Outcome, culture), errors, outcome.Outcome == ImportJobRowOutcome.Error);
+    }
+
+    private FileDownload Workbook(
+        ImportJob job, IReadOnlyList<string> headers, IReadOnlyList<ImportCell>? keyRow, IReadOnlyList<ResultWorkbookRow> rows, CultureInfo culture)
+    {
         var model = new ResultWorkbookModel(
             catalog.Text(ResultPrefix + "sheet", culture),
-            sheet.Headers,
+            headers,
             keyRow,
             rows,
             catalog.Text(ResultPrefix + "outcome_header", culture),

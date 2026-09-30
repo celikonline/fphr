@@ -41,6 +41,13 @@ public enum AttendanceAnomaly
     /// day's own plan/record can detect on its own, so it is applied as a separate pass rather than inside Recompute.
     /// </summary>
     WorkedWhileOnLeave = 1 << 9,
+
+    /// <summary>
+    /// Hesaplanamayan gün (zaman-devam Z0.4, spec §5.1): okutmalardan güvenilir bir giriş/çıkış çifti kurulamadı - tek
+    /// sayıda yönsüz okutma, bozuk yön sırası (In,In / ilk kayıt Out), okutma var ama hiç plan yok ya da gece vardiyası
+    /// çakışması. Bu günde WorkedMinutes 0 kalır ve başka bayrak konmaz; yalnız elle düzeltme ya da yok sayma çözer.
+    /// </summary>
+    Incalculable = 1 << 10,
 }
 
 /// <summary>How an anomaly was handled (11.3.6 "Çözüm etkisi"); resolution actions land in package A3.</summary>
@@ -60,6 +67,12 @@ public enum AttendanceDaySource
 
     /// <summary>Self-servis QR/GPS check-in (S-31) - the employee's own device, not a manual HR entry or a batch PDKS import/device feed.</summary>
     SelfService = 3,
+
+    /// <summary>Onaylanmış eksik kayıt talebinden (Z2.1) üretilen okutma.</summary>
+    Request = 4,
+
+    /// <summary>Kayıtlı terminalden (Z5.1) gelen okutma.</summary>
+    Terminal = 5,
 }
 
 /// <summary>
@@ -89,6 +102,13 @@ public static class AnomalyResolutionAdvisor
         }
 
         var actions = new HashSet<AnomalyResolutionAction> { AnomalyResolutionAction.Ignore };
+
+        // Hesaplanamayan gün (Z0.4): sayı yok, fazla mesai/izin önerilemez - yalnız elle düzelt (Çalışılan saat) ya da yok say.
+        if ((anomalies & AttendanceAnomaly.Incalculable) != 0)
+        {
+            actions.Add(AnomalyResolutionAction.SetWorkedHours);
+            return actions;
+        }
 
         if ((anomalies & (AttendanceAnomaly.Overwork | AttendanceAnomaly.LateLeave)) != 0)
         {

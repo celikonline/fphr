@@ -21,7 +21,9 @@
     "button": "Yeni çalışan ekle",
     "title": "Yeni çalışan ekle",
     "description": "Ad ve soyad yeterlidir; diğer bilgileri daha sonra çalışan kartından tamamlayabilirsiniz.",
-    "success": "Çalışan oluşturuldu."
+    "success": "Çalışan oluşturuldu.",
+    "sendCredentials": "Giriş bilgileri e-posta ile gönderilsin",
+    "inviteFailed": "Davet gönderilemedi: {{message}}"
   },
   "filters": {
     "orgUnit": "Birim",
@@ -362,7 +364,9 @@
       "leave": "İzinler",
       "overtime": "Fazla mesailer",
       "other": "Diğer",
-      "account": "Hesap"
+      "account": "Hesap",
+      "onboarding": "İşe alış",
+      "notes": "Notlar"
     },
     "tabNotes": {
       "leave": "İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
@@ -425,7 +429,8 @@
     "outcome": {
       "sent": "Davetiye gönderildi",
       "resent": "Davetiye yeniden gönderildi",
-      "alreadyactive": "Hesap zaten aktif"
+      "alreadyactive": "Hesap zaten aktif",
+      "notrequested": "Giriş bilgisi gönderilmedi."
     },
     "sentTo": "Gönderilen adres: {{email}}"
   },
@@ -846,5 +851,67 @@
   "workCertificate": {
     "download": "Çalışma belgesi (PDF)",
     "failed": "Çalışma belgesi indirilemedi."
+  },
+  "multiPicker": {
+    "title": "Çalışan seç",
+    "search": "Çalışan ara",
+    "orgUnits": "Birimler",
+    "status": "Durum",
+    "allStatuses": "Tüm durumlar",
+    "includeTerminated": "İşten ayrılanları dahil et",
+    "keepSelected": "Seçilenleri listede tut",
+    "selectAll": "Filtreye uyan tümünü seç ({{count}})",
+    "selectedCount": "{{count}} çalışan seçili",
+    "allSelectedExcluding": "Filtreye uyan tümü seçili, {{count}} hariç",
+    "clear": "Seçimi temizle",
+    "empty": "Filtreye uyan çalışan bulunamadı.",
+    "loadMore": "Daha fazla göster",
+    "confirm": "Seçimi onayla",
+    "overLimit": "En fazla {{max}} kişi seçilebilir; şu an {{count}}."
+  },
+  "onboardingCard": {
+    "title": "İşe alış / çıkış süreci",
+    "progress": "Kategori ilerlemesi",
+    "uncategorized": "Kategorisiz",
+    "none": "Bu çalışan için başlatılmış görev yok.",
+    "startTitle": "Süreç başlat",
+    "set": "Şablon seti",
+    "setPlaceholder": "Set seçin",
+    "referenceDate": "Referans tarihi",
+    "start": "Süreci başlat",
+    "started": "Süreç başlatıldı.",
+    "noSets": "Aktif şablon seti yok."
+  },
+  "employeeNotes": {
+    "title": "Çalışan notları",
+    "empty": "Henüz not yok.",
+    "add": "Not ekle",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "noteTitle": "Başlık",
+    "content": "İçerik",
+    "importance": "Önem",
+    "importances": {
+      "low": "Düşük",
+      "normal": "Normal",
+      "high": "Yüksek"
+    },
+    "attachment": "Ek dosya",
+    "attach": "Dosya ekle",
+    "removeAttachment": "Eki kaldır",
+    "author": "Ekleyen",
+    "saved": "Not kaydedildi.",
+    "deleted": "Not silindi.",
+    "loadError": "Notlar yüklenemedi.",
+    "actionFailed": "İşlem tamamlanamadı.",
+    "confirmDelete": "Bu not silinsin mi?",
+    "attachmentFailed": "Not kaydedildi, ek yüklenemedi — tekrar deneyin.",
+    "fileInvalid": {
+      "size": "Dosya 10 MB'tan büyük olamaz.",
+      "type": "Yalnız PDF, PNG, JPG, TXT, DOCX ve XLSX dosyaları eklenebilir."
+    },
+    "truncated": "İlk {{count}} not gösteriliyor."
   }
 }

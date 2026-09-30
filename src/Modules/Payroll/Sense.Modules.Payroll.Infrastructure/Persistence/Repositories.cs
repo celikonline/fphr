@@ -49,6 +49,16 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
 
     public async Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Payslip>> ListPublishedUnacknowledgedAsync(
+        Guid? payrollPeriodId, DateTimeOffset? publishedSince, CancellationToken cancellationToken = default) =>
+        await context.Payslips
+            .Where(p => p.PublishedAt != null && p.AcknowledgedAt == null
+                // TK-030: the acknowledgement of record is PayslipDelivery.AcknowledgedAt ("Okudum, onaylıyorum").
+                && !context.PayslipDeliveries.Any(d => d.PayslipId == p.Id && d.AcknowledgedAt != null)
+                && (payrollPeriodId == null || p.PayrollPeriodId == payrollPeriodId)
+                && (publishedSince == null || p.PublishedAt >= publishedSince))
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class PayslipDeliveryRepository(PayrollDbContext context) : IPayslipDeliveryRepository

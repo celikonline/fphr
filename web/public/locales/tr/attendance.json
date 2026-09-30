@@ -32,7 +32,27 @@
     "status": "Durum",
     "inside": "İçeride",
     "outside": "Dışarıda",
-    "empty": "Görüntülenecek çalışan yok."
+    "empty": "Görüntülenecek çalışan yok.",
+    "terminals": {
+      "title": "Terminaller",
+      "online": "Çevrimiçi",
+      "offline": "Çevrimdışı",
+      "inactive": "Pasif",
+      "todayCount": "Bugün: {{count}} okutma",
+      "lastPunch": "Son okutma",
+      "lastSeen": "Son görülme",
+      "never": "Hiç görülmedi",
+      "empty": "Kayıtlı terminal yok."
+    },
+    "lastPunch": "Son okutma",
+    "sources": {
+      "manual": "Manuel",
+      "import": "İçe aktarma",
+      "device": "Cihaz",
+      "selfService": "Kendi okutması",
+      "request": "Talep",
+      "terminal": "Terminal"
+    }
   },
   "empty": "Bu dönemde kayıt yok.",
   "genericError": "İşlem sırasında bir hata oluştu.",
@@ -249,7 +269,32 @@
     "unlockTitle": "Dönem kilidini aç",
     "unlockReasonLabel": "Gerekçe",
     "unlockReasonRequired": "Kilidi açma gerekçesi zorunludur.",
-    "unlocked": "Dönem kilidi açıldı."
+    "unlocked": "Dönem kilidi açıldı.",
+    "paletteTitle": "Vardiya paleti",
+    "paletteHint": "Bir vardiyayı ya da gün tipini hücreye sürükleyin; ya da hücreleri seçip tıklayın.",
+    "paletteEmpty": "Tanımlı vardiya yok.",
+    "dayTypeTitle": "Gün tipleri",
+    "dayType": {
+      "work": "Çalışma",
+      "weeklyRest": "Haftalık izin",
+      "restDay": "Dinlenme günü",
+      "publicHoliday": "Resmi tatil"
+    },
+    "selectedCells": "{{count}} hücre seçili",
+    "clearSelection": "Seçimi temizle",
+    "clearShifts": "Seçili vardiyaları sil",
+    "clearShiftsTitle": "Vardiyaları sil",
+    "clearShiftsDescription": "{{count}} hücredeki vardiyalar silinecek. Onaylıyor musunuz?",
+    "unassignedOnly": "Vardiyasız çalışanlar",
+    "unassignedEmpty": "Bu haftada vardiyasız çalışan yok.",
+    "totalsLabel": "Toplam",
+    "totalHours": "{{hours}} sa",
+    "totalHoursMinutes": "{{hours}} sa {{minutes}} dk",
+    "totalMinutes": "{{minutes}} dk",
+    "totalPeople": "{{count}} kişi",
+    "bulkDone": "{{count}} hücre güncellendi.",
+    "bulkSkipped": "{{count}} hücre atlandı (kilitli dönem veya yayınlanmış vardiya).",
+    "lockedEditHint": "Dönem kilitli; vardiya düzenlenemez."
   },
   "myAvailability": {
     "title": "Müsaitliğim",
@@ -311,5 +356,57 @@
         }
       }
     }
+  },
+  "shiftTemplates": {
+    "title": "Plan şablonları",
+    "tabSave": "Şablon kaydet",
+    "tabApply": "Şablon uygula",
+    "tabImport": "Excel içe aktar",
+    "selectionEmpty": "Kaydetmek için takvimde atanmış hücreleri seçin.",
+    "selectionSummary": "{{entries}} atama, {{days}} günlük dönem şablona girecek.",
+    "name": "Şablon adı",
+    "save": "Şablonu kaydet",
+    "saved": "Şablon kaydedildi.",
+    "noTemplates": "Kayıtlı şablon yok.",
+    "pick": "Şablon",
+    "days": "{{count}} gün",
+    "startDate": "Başlangıç tarihi",
+    "keepPublished": "Yayınlanmışı koru",
+    "overwritePublished": "Yayınlanmışın üzerine yaz",
+    "apply": "Uygula",
+    "applied": "{{count}} hücre planlandı.",
+    "importHint": "Şablon dosyasını indirip doldurun ve yükleyin; hatalı satırlar aşağıda listelenir.",
+    "downloadTemplate": "Excel şablonunu indir",
+    "dropzoneTitle": "Excel/CSV dosyasını sürükleyin veya seçin",
+    "importing": "İçe aktarılıyor…",
+    "invalidFile": "Geçersiz dosya (yalnız .xlsx/.csv, en çok 10 MB).",
+    "importSummary": "{{inserted}} satır işlendi, {{errors}} satır hatalı.",
+    "errorsHint": "Hatalı satırlar atlandı; düzeltip yeniden yükleyebilirsiniz.",
+    "colRow": "Satır",
+    "colKey": "Anahtar",
+    "colError": "Hata",
+    "deleted": "Şablon silindi.",
+    "delete": "{{name}} şablonunu sil",
+    "deleteConfirm": "\"{{name}}\" şablonu silinsin mi?",
+    "skippedHint": "{{count}} hücre atlandı:",
+    "colDate": "Tarih",
+    "colReason": "Neden",
+    "skipReason": {
+      "locked": "Kilitli dönem",
+      "published": "Yayınlanmış vardiya"
+    }
+  },
+  "errors": {
+    "periodLocked": "Bu ayın puantajı onaylanıp kilitlendi; okutma eklenemez, silinemez veya değiştirilemez."
+  },
+  "incalculableReason": {
+    "label": "Hesaplanamaz",
+    "unknown": "Hesaplanamama nedeni",
+    "unknownDirection": "Okutma yönü bilinmiyor",
+    "brokenSequence": "Okutma sırası bozuk (giriş/çıkış dizilimi tutarsız veya tek sayıda okutma)",
+    "channelConflict": "Kanal çakışması (elle + cihaz okutması)",
+    "noPlan": "Plansız okutma (o gün için vardiya planı yok)",
+    "nightShiftOverlap": "Gece vardiyası çakışması (okutma iki güne de yakın)",
+    "ambiguousShift": "Belirsiz vardiya (okutma birden fazla vardiyaya uyuyor)"
   }
 }

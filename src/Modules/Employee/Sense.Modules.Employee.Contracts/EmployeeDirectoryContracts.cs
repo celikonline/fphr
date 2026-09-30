@@ -4,6 +4,9 @@ namespace Sense.Modules.Employee.Contracts;
 /// <summary>
 /// Employee grid filters. <paramref name="EmploymentType"/>/<paramref name="ContractType"/> are the camelCase enum
 /// names the API serializes; <paramref name="MissingInfo"/> is the "Eksik bilgi" switch (see EmployeeCriteria).
+/// <paramref name="OrgUnitIds"/> is a multi-unit filter, unioned with <paramref name="OrgUnitId"/> (both expand to
+/// descendants when <paramref name="IncludeSubUnits"/>); null/empty = no unit restriction. Terminated employees are left
+/// out unless <paramref name="IncludeTerminated"/> is set or <paramref name="Status"/> is given explicitly.
 /// </summary>
 public sealed record EmployeeFilter(
     string? Q,
@@ -14,7 +17,9 @@ public sealed record EmployeeFilter(
     Guid? ManagerEmployeeId,
     string? EmploymentType = null,
     string? ContractType = null,
-    bool? MissingInfo = null);
+    bool? MissingInfo = null,
+    IReadOnlyList<Guid>? OrgUnitIds = null,
+    bool IncludeTerminated = false);
 
 /// <summary>
 /// Grid selection. "Tümünü seç": Filter set + EmployeeIds null => every employee matching the filter (within the caller's

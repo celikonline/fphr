@@ -36,6 +36,11 @@ public sealed record ApprovalTaskAssigned(
     string? FallbackRoleCode)
     : IntegrationEvent(TenantId);
 
+/// <summary>Published (via Workflow's outbox) when an approval delegation is created - the delegate is notified (Z2.2).</summary>
+public sealed record ApprovalDelegationAssigned(
+    Guid TenantId, Guid DelegationId, Guid DelegatorEmployeeId, Guid DelegateEmployeeId, DateOnly StartDate, DateOnly EndDate)
+    : IntegrationEvent(TenantId);
+
 /// <summary>
 /// FG-009: published (via Workflow's outbox) when a party of an approval request leaves a comment on it.
 /// <paramref name="RecipientEmployeeIds"/> is already resolved by Workflow - the requester plus every concrete approver
