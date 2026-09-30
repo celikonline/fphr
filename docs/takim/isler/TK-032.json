@@ -1,7 +1,7 @@
 {
   "id": "TK-032",
   "baslik": "Testler tek ortak Postgres kullanir; test basina konteyner acilmaz",
-  "durum": "hazir",
+  "durum": "incelemede",
   "sahip": "takim-gelistirici-dotnet",
   "dal": "a/test-ortak-postgres",
   "kaynak": "Kullanici istegi 2026-09-29 - TestFixture her test yontemi icin yeni postgres:17-alpine konteyneri aciyor; tum testler ayni kaynagi kullansin",
