@@ -32,12 +32,20 @@ export function ReportParameterForm({ report, values, onChange }: ReportParamete
     () =>
       Array.from({ length: 12 }, (_, i) => ({
         value: String(i + 1),
-        label: new Intl.DateTimeFormat(i18n.language, { month: "long" }).format(new Date(2000, i, 1)),
+        label: new Intl.DateTimeFormat(i18n.language, { month: "long" }).format(
+          new Date(2000, i, 1)
+        ),
       })),
-    [i18n.language],
+    [i18n.language]
   );
-  const yearOptions = useMemo(() => Array.from({ length: 7 }, (_, i) => String(today.getFullYear() + 1 - i)), [today]);
-  const depthById = useMemo(() => new Map(orgUnitOptions.map((u) => [u.id, u.depth])), [orgUnitOptions]);
+  const yearOptions = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => String(today.getFullYear() + 1 - i)),
+    [today]
+  );
+  const depthById = useMemo(
+    () => new Map(orgUnitOptions.map((u) => [u.id, u.depth])),
+    [orgUnitOptions]
+  );
 
   const applyPreset = (preset: "thisMonth" | "lastMonth" | "thisYear") => {
     const y = today.getFullYear();
@@ -48,7 +56,11 @@ export function ReportParameterForm({ report, values, onChange }: ReportParamete
         : preset === "lastMonth"
           ? [new Date(y, m - 1, 1), new Date(y, m, 0)]
           : [new Date(y, 0, 1), new Date(y, 11, 31)];
-    onChange({ ...values, [REPORT_PARAMETER_KEYS.from]: toDateOnly(from), [REPORT_PARAMETER_KEYS.to]: toDateOnly(to) });
+    onChange({
+      ...values,
+      [REPORT_PARAMETER_KEYS.from]: toDateOnly(from),
+      [REPORT_PARAMETER_KEYS.to]: toDateOnly(to),
+    });
   };
 
   if (report.parameters.length === 0) {
@@ -81,7 +93,9 @@ export function ReportParameterForm({ report, values, onChange }: ReportParamete
                 renderOption={({ option, checked }) => (
                   <Group gap="xs" wrap="nowrap">
                     <Check size={14} style={{ opacity: checked ? 1 : 0, flexShrink: 0 }} />
-                    <span style={{ paddingLeft: `${(depthById.get(option.value) ?? 0) * 12}px` }}>{option.label}</span>
+                    <span style={{ paddingLeft: `${(depthById.get(option.value) ?? 0) * 12}px` }}>
+                      {option.label}
+                    </span>
                   </Group>
                 )}
               />
@@ -137,7 +151,14 @@ export function ReportParameterForm({ report, values, onChange }: ReportParamete
                 </Group>
                 <Group gap={6}>
                   {(["thisMonth", "lastMonth", "thisYear"] as const).map((preset) => (
-                    <Button key={preset} type="button" size="compact-xs" variant="light" color="gray" onClick={() => applyPreset(preset)}>
+                    <Button
+                      key={preset}
+                      type="button"
+                      size="compact-xs"
+                      variant="light"
+                      color="gray"
+                      onClick={() => applyPreset(preset)}
+                    >
                       {t(`reports:params.presets.${preset}`)}
                     </Button>
                   ))}
@@ -157,10 +178,14 @@ export function ReportParameterForm({ report, values, onChange }: ReportParamete
             return (
               <Select
                 key={parameter.key}
-                label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key }) + required}
+                label={
+                  t(`reports:params.${parameter.key}`, { defaultValue: parameter.key }) + required
+                }
                 data={(parameter.options ?? []).map((option) => ({
                   value: option,
-                  label: t(`reports:params.${parameter.key}Options.${option}`, { defaultValue: option }),
+                  label: t(`reports:params.${parameter.key}Options.${option}`, {
+                    defaultValue: option,
+                  }),
                 }))}
                 value={values[parameter.key] ?? null}
                 onChange={(v) => set(parameter.key, v)}

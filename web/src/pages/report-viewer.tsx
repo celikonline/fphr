@@ -11,7 +11,12 @@ import { usePermission } from "@/components/permission-guard";
 import { reportLabelKey } from "@/components/reports/report-catalog";
 import { ReportDataGrid } from "@/components/reports/report-data-grid";
 import { ReportParameterForm } from "@/components/reports/report-parameter-form";
-import { allSatisfied, valuesFromSearchParams, valuesToSearchParams, type ParameterValues } from "@/components/reports/report-parameters";
+import {
+  allSatisfied,
+  valuesFromSearchParams,
+  valuesToSearchParams,
+  type ParameterValues,
+} from "@/components/reports/report-parameters";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import {
@@ -40,7 +45,11 @@ export default function ReportViewerPage() {
   const { key = "" } = useParams();
   const canViewCatalog = usePermission("reports.catalog.view");
   const canViewHistory = usePermission("reports.my.executions");
-  const { data: catalog, isLoading } = useQuery({ queryKey: ["reports", "catalog"], queryFn: getReportCatalog, enabled: canViewCatalog });
+  const { data: catalog, isLoading } = useQuery({
+    queryKey: ["reports", "catalog"],
+    queryFn: getReportCatalog,
+    enabled: canViewCatalog,
+  });
 
   if (!canViewCatalog || !canViewHistory) return <NoAccess />;
 
@@ -48,7 +57,13 @@ export default function ReportViewerPage() {
 
   return (
     <div className="space-y-4 p-4 md:p-6">
-      <Button component={Link} to="/app/reports" variant="subtle" size="compact-sm" leftSection={<ArrowLeft size={16} />}>
+      <Button
+        component={Link}
+        to="/app/reports"
+        variant="subtle"
+        size="compact-sm"
+        leftSection={<ArrowLeft size={16} />}
+      >
         {t("reports:viewer.back")}
       </Button>
       {isLoading ? (
@@ -70,7 +85,9 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const today = useMemo(() => new Date(), []);
-  const [values, setValues] = useState<ParameterValues>(() => valuesFromSearchParams(searchParams, report.parameters, today));
+  const [values, setValues] = useState<ParameterValues>(() =>
+    valuesFromSearchParams(searchParams, report.parameters, today)
+  );
   const executionId = searchParams.get(EXECUTION_PARAM);
   const autoRunStarted = useRef(false);
   const [runError, setRunError] = useState<string | null>(null);
@@ -118,12 +135,17 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
     enabled: executionId !== null,
     retry: false,
   });
-  const execution = executionQuery.data && executionQuery.data.reportKey === report.key ? executionQuery.data : null;
+  const execution =
+    executionQuery.data && executionQuery.data.reportKey === report.key
+      ? executionQuery.data
+      : null;
 
   // A pinned execution that is gone (retention), foreign or of another report is dropped so the open-effect can run again.
   // A failed background refetch of an execution we already hold (e.g. the one we just generated) does not unpin it.
   const executionUnusable =
-    executionId !== null && ((executionQuery.isError && executionQuery.data === undefined) || (executionQuery.isSuccess && execution === null));
+    executionId !== null &&
+    ((executionQuery.isError && executionQuery.data === undefined) ||
+      (executionQuery.isSuccess && execution === null));
   useEffect(() => {
     if (!executionUnusable) return;
     const next = new URLSearchParams(searchParams);
@@ -134,38 +156,72 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
   const succeeded = execution?.status === "succeeded";
   const dataQuery = useQuery({
     queryKey: ["reports", "execution-data", execution?.id, sheet, page, pageSize, search, sort],
-    queryFn: () => getReportExecutionData(execution?.id ?? "", { sheet, page, pageSize, q: search || undefined, sort }),
+    queryFn: () =>
+      getReportExecutionData(execution?.id ?? "", {
+        sheet,
+        page,
+        pageSize,
+        q: search || undefined,
+        sort,
+      }),
     enabled: succeeded,
     placeholderData: (previous) => previous,
     retry: false,
   });
-  const previewUnavailable = getApiProblem(dataQuery.error)?.code === REPORT_PREVIEW_UNAVAILABLE_CODE;
+  const previewUnavailable =
+    getApiProblem(dataQuery.error)?.code === REPORT_PREVIEW_UNAVAILABLE_CODE;
   const dataFailed = dataQuery.isError && !previewUnavailable;
 
   const downloadMutation = useMutation({
-    mutationFn: () => downloadReportExecution(execution?.id ?? "", execution?.resultFileName ?? `${report.key}.xlsx`),
+    mutationFn: () =>
+      downloadReportExecution(
+        execution?.id ?? "",
+        execution?.resultFileName ?? `${report.key}.xlsx`
+      ),
     onSuccess: saveDownloadedReportFile,
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:history.downloadError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("reports:history.downloadError")),
+      }),
   });
 
   // PDF: the grid shows the Excel run; PDF is a separate run of the same filters with `format=pdf`, downloaded directly.
   const pdfMutation = useMutation({
-    mutationFn: () => requestReport(report.key, { ...values, [REPORT_PARAMETER_KEYS.format]: "pdf" }, { notify: false }),
+    mutationFn: () =>
+      requestReport(
+        report.key,
+        { ...values, [REPORT_PARAMETER_KEYS.format]: "pdf" },
+        { notify: false }
+      ),
     onSuccess: async (pdfExecution) => {
       void queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
       if (pdfExecution.status === "failed") {
-        toast({ variant: "destructive", title: t("common:error"), description: pdfExecution.errorMessage ?? t("reports:viewer.runError") });
+        toast({
+          variant: "destructive",
+          title: t("common:error"),
+          description: pdfExecution.errorMessage ?? t("reports:viewer.runError"),
+        });
         return;
       }
       if (pdfExecution.status !== "succeeded") {
         toast({ variant: "success", title: t("reports:run.successNoDownload") });
         return;
       }
-      saveDownloadedReportFile(await downloadReportExecution(pdfExecution.id, pdfExecution.resultFileName ?? `${report.key}.pdf`));
+      saveDownloadedReportFile(
+        await downloadReportExecution(
+          pdfExecution.id,
+          pdfExecution.resultFileName ?? `${report.key}.pdf`
+        )
+      );
     },
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:history.downloadError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("reports:history.downloadError")),
+      }),
   });
 
   const apply = () => {
@@ -173,7 +229,11 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
     runMutation.mutate();
   };
 
-  const failedMessage = runError ?? (execution?.status === "failed" ? (execution.errorMessage ?? t("reports:viewer.runError")) : null);
+  const failedMessage =
+    runError ??
+    (execution?.status === "failed"
+      ? (execution.errorMessage ?? t("reports:viewer.runError"))
+      : null);
   const showIdleHint = !executionId && !runMutation.isPending && !failedMessage && !canRun;
 
   return (
@@ -214,7 +274,13 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
               </Button>
             )}
             {canGenerate && (
-              <Button type="button" leftSection={<Play size={16} />} disabled={!canRun} loading={runMutation.isPending} onClick={apply}>
+              <Button
+                type="button"
+                leftSection={<Play size={16} />}
+                disabled={!canRun}
+                loading={runMutation.isPending}
+                onClick={apply}
+              >
                 {t("reports:viewer.apply")}
               </Button>
             )}
