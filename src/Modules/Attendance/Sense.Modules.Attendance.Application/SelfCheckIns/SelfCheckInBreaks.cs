@@ -11,42 +11,36 @@ namespace Sense.Modules.Attendance.Application.SelfCheckIns;
 /// Self-servis mola başı/sonu (mobil yeniden tasarım §6). A break belongs to the caller's open day - today's record
 /// checked in and not yet checked out, or (night shift) yesterday's unmatched evening check-in, the same day the status
 /// endpoint reports as "inside". The open break is derived from the <see cref="SelfCheckIn"/> audit rows since that
-/// day's check-in (latest break row is a <see cref="PunchDirection.BreakStart"/>); no extra column is stored. Ending a
-/// break (or checking out during one) adds its whole minutes to <see cref="AttendanceDay.ActualBreakMinutes"/> through
-/// <see cref="AttendanceDayUpsert"/>, which re-runs <see cref="DailyWorkCalculator"/>; check-in/out are never changed.
+/// day's check-in (latest break row is a <see cref="PunchDirection.BreakStart"/>); no extra column is stored. Each break
+/// start/end is also recorded as a <see cref="PunchDirection.BreakStart"/>/<see cref="PunchDirection.BreakEnd"/> punch on that
+/// day (zaman-devam Z0.1), and the day is re-derived from its punches: <see cref="Punches.DayFromPunches"/> adds each closed
+/// break (ended by a break end or a check-out) to <see cref="AttendanceDay.ActualBreakMinutes"/> - so a recalculation keeps it -
+/// and never changes check-in/out.
 /// </summary>
 internal static class SelfCheckInBreaks
 {
     public static async Task<Result<SelfCheckInPunch.Applied>> ApplyAsync(
-        Guid tenantId, Guid employeeId, PunchDirection direction, TenantLocalNow now, IAttendanceDayRepository days,
-        IWorkScheduleReadService schedules, IShiftSettingsRepository shiftSettings, ISelfCheckInRepository selfCheckIns, CancellationToken cancellationToken)
+        SelfCheckIn audit, TenantLocalNow now, SelfCheckInPunch.Ports ports, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(now.Local);
-        var time = TimeOnly.FromDateTime(now.Local);
-        var day = await FindOpenDayAsync(days, employeeId, today, cancellationToken);
+        var day = await FindOpenDayAsync(ports.Days, audit.EmployeeId, today, cancellationToken);
         if (day is null)
         {
             return Error.Validation(AttendanceErrors.SelfCheckInBreakNotCheckedIn);
         }
 
-        var openBreakUtc = await FindOpenBreakStartUtcAsync(selfCheckIns, employeeId, day, now, cancellationToken);
-        if (direction == PunchDirection.BreakStart)
+        var openBreakUtc = await FindOpenBreakStartUtcAsync(ports.SelfCheckIns, audit.EmployeeId, day, now, cancellationToken);
+        if (audit.Direction == PunchDirection.BreakStart && openBreakUtc is not null)
         {
-            return openBreakUtc is null
-                ? new SelfCheckInPunch.Applied(day.Id, day.Date, time)
-                : Error.Validation(AttendanceErrors.SelfCheckInBreakAlreadyOpen);
+            return Error.Validation(AttendanceErrors.SelfCheckInBreakAlreadyOpen);
         }
 
-        if (openBreakUtc is not { } startedUtc)
+        if (audit.Direction == PunchDirection.BreakEnd && openBreakUtc is null)
         {
             return Error.Validation(AttendanceErrors.SelfCheckInBreakNotOpen);
         }
 
-        var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken));
-        var upserted = await AttendanceDayUpsert.UpsertAsync(
-            days, schedules, tenantId, employeeId, day.Date, day.CheckIn, day.CheckOut, AttendanceDaySource.SelfService, overnight: false,
-            cancellationToken, day.ActualBreakMinutes + ElapsedMinutes(startedUtc, now.Utc), limits);
-        return upserted.IsFailure ? upserted.Error : new SelfCheckInPunch.Applied(upserted.Value.Id, day.Date, time);
+        return await SelfCheckInPunch.WriteAsync(audit, day.Date, now, ports, cancellationToken);
     }
 
     /// <summary>Today's record when checked in (open or closed); otherwise yesterday's still-open night shift; null when neither.</summary>
@@ -112,9 +106,6 @@ internal static class SelfCheckInBreaks
 
         return breaks;
     }
-
-    /// <summary>Whole minutes between two instants (partial minute dropped, never negative).</summary>
-    public static int ElapsedMinutes(DateTime fromUtc, DateTime toUtc) => Math.Max((int)(toUtc - fromUtc).TotalMinutes, 0);
 
     /// <summary>Tenant wall-clock time of a UTC instant, to the second (the status contract is "HH:mm:ss").</summary>
     public static TimeOnly ToLocalTime(DateTime utc, TenantLocalNow now)

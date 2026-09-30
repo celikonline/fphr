@@ -47,5 +47,9 @@ public sealed class DataTransferModule : IModule
         services.AddSingleton<ISpreadsheetReader, SpreadsheetReader>();
         services.AddSingleton<IImportWorkbookWriter, ImportWorkbookWriter>();
         services.AddSingleton<IImportLocalizer, ResourceImportLocalizer>();
+
+        // Z5.4 (T2): gizli sütunlu şablonların (kart/PIN) yüklenen dosyası TTL'den sonra / iş bitince silinir (saatlik, kiracı başına seed).
+        services.AddOptions<ImportRetentionOptions>().Bind(configuration.GetSection(ImportRetentionOptions.Section));
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler, SensitiveImportSourceCleanupJobHandler>();
     }
 }

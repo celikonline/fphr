@@ -62,6 +62,10 @@ export interface EmployeeFilter {
   contractType?: string | null;
   /** "Eksik bilgi": true lists only incomplete records, false only complete ones. */
   missingInfo?: boolean | null;
+  /** Any of these org units (type-independent: branch, unit, title, team, project). Sent as repeated query keys. */
+  orgUnitIds?: string[] | null;
+  /** true also lists terminated employees (default: excluded). */
+  includeTerminated?: boolean | null;
 }
 
 /**

@@ -10,6 +10,7 @@
     "employee": "Mitarbeiter",
     "leave": "Urlaub",
     "finance": "Finanzen",
+    "time": "Zeit & Anwesenheit",
     "other": "Sonstige"
   },
   "catalogView": {
@@ -99,6 +100,36 @@
           "label": "Monatsabschlussbericht (Steuerberater)",
           "description": "Die monatliche Zeiterfassungsübersicht plus bezahlte, unbezahlte und Krankheitstage sowie ob und wann der Monat genehmigt wurde."
         }
+      },
+      "time": {
+        "incalculable": {
+          "label": "Nicht berechenbar",
+          "description": "Mitarbeiter, deren Zeiterfassung an den gewählten Tagen nicht berechnet werden konnte."
+        },
+        "no_shift_assigned": {
+          "label": "Ohne Schichtzuweisung",
+          "description": "Mitarbeiter mit geplanten Arbeitstagen im Zeitraum, aber ohne Schichtzuweisung, mit Anzahl der nicht zugewiesenen Tage."
+        },
+        "daily_status": {
+          "label": "Tägliche Statuslisten",
+          "description": "Listen für gekommen, verspätet, früh gegangen, abwesend, Überstunden, Minusstunden, im Urlaub und nicht berechenbar für den gewählten Status und Tag."
+        },
+        "manual_entries": {
+          "label": "Manuelle Einträge",
+          "description": "Manuell oder per Antrag erfasste Stempelungen im Zeitraum; gelöschte Einträge mit löschender Person und Begründung."
+        },
+        "currently_inside": {
+          "label": "Aktuell anwesend",
+          "description": "Mitarbeitende, deren letzte Stempelung heute ein Eintritt ist, also aktuell anwesend (Momentaufnahme)."
+        },
+        "breaks": {
+          "label": "Pausen",
+          "description": "Anzahl sowie Gesamt- und Längstdauer der Pausen aus den Aus-Ein-Lücken des Tages, mit Abweichung zur geplanten Pause."
+        },
+        "intermediate_punches": {
+          "label": "Zwischenstempelungen",
+          "description": "Stempelungen außer dem ersten Eintritt und dem letzten Austritt des Tages."
+        }
       }
     },
     "recruitment": {
@@ -121,7 +152,8 @@
     "open": "Bericht öffnen",
     "error": "Der Bericht konnte nicht erstellt werden.",
     "requiredHint": "* Pflichtfilter",
-    "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen."
+    "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen.",
+    "successNoDownload": "Der Bericht wird erstellt; laden Sie ihn unter Meine Berichte herunter, sobald er fertig ist."
   },
   "viewer": {
     "search": "In den Ergebnissen suchen",
@@ -133,7 +165,8 @@
     "previewUnavailable": "Dieser Bericht kann nicht am Bildschirm angezeigt werden; Sie können ihn als Excel herunterladen.",
     "runError": "Der Bericht konnte nicht erstellt werden.",
     "dataError": "Die Berichtsdaten konnten nicht geladen werden.",
-    "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden."
+    "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden.",
+    "downloadPdf": "PDF herunterladen"
   },
   "params": {
     "orgUnitIds": "Einheiten",
@@ -146,6 +179,17 @@
     "from": "Von",
     "to": "Bis",
     "includeTerminated": "Ausgeschiedene Mitarbeiter einbeziehen",
+    "status": "Status",
+    "statusOptions": {
+      "incalculable": "Nicht berechenbar",
+      "arrived": "Gekommen",
+      "late": "Verspätet",
+      "earlyLeave": "Früh gegangen",
+      "absent": "Abwesend",
+      "overtime": "Überstunden",
+      "undertime": "Minusstunden",
+      "onLeave": "Im Urlaub"
+    },
     "presets": {
       "thisMonth": "Dieser Monat",
       "lastMonth": "Letzter Monat",

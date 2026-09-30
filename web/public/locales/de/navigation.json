@@ -19,7 +19,7 @@
     "settings": "Einstellungen",
     "account": "Mein Profil",
     "support": "Support",
-    "trust": "Vertrauen & Sicherheit",
+    "mobileApp": "Mobile App",
     "collapseSidebar": "Menü einklappen",
     "expandSidebar": "Menü ausklappen",
     "back": "Zurück",
@@ -43,6 +43,7 @@
     "description": "Diese Funktion ist für Phase {{phase}} der Roadmap geplant."
   },
   "apps": {
+    "messages": "HR-Nachrichten",
     "searchPlaceholder": "Apps suchen…",
     "noResults": "Keine Apps entsprechen Ihrer Suche.",
     "viewAll": "Alle Apps",
@@ -74,7 +75,15 @@
     "recruitmentRequisitions": "Personalanforderungen",
     "analytics": "Analysen",
     "workflowInbox": "Genehmigungs-Posteingang",
-    "companyCalendar": "Veranstaltungskalender"
+    "companyCalendar": "Veranstaltungskalender",
+    "dailyList": "Tägliche Anwesenheitsliste",
+    "timeDashboard": "Zeit-Dashboard",
+    "shiftDefinitions": "Schichtdefinitionen",
+    "rotations": "Schichtrotationen",
+    "monthlyMatrix": "Monatliche Anwesenheitsmatrix",
+    "punchRequests": "Stempelanträge",
+    "terminals": "Zeiterfassungsterminals",
+    "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen"
   },
   "settings": {
     "company": "Unternehmen und Organisation",
@@ -146,7 +155,9 @@
     "allSettings": "Alle Einstellungen",
     "subnavLabel": "Einstellungsmenü",
     "orgChart": "Organigramm",
-    "orgChartDesc": "Einheiten- und Mitarbeiterhierarchie als Diagramm anzeigen"
+    "orgChartDesc": "Einheiten- und Mitarbeiterhierarchie als Diagramm anzeigen",
+    "delegations": "Genehmigungsvertretungen",
+    "delegationsDesc": "Genehmigungsbefugnis befristet delegieren"
   },
   "search": {
     "label": "Bildschirme suchen",

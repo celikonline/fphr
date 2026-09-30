@@ -12,6 +12,8 @@ type Props = {
   isAcknowledging: boolean;
   onOpen: () => void;
   onAcknowledge: () => void;
+  /** Opens PayslipDetail (acknowledge / objection). */
+  onDetails: () => void;
 };
 
 /** TK-030: the newest payslip's highlighted card (spec §5 - brand-blue surface, white text). */
@@ -23,6 +25,7 @@ export function PayslipHeroCard({
   isAcknowledging,
   onOpen,
   onAcknowledge,
+  onDetails,
 }: Props) {
   const { t } = useTranslation("payroll");
   return (
@@ -45,6 +48,7 @@ export function PayslipHeroCard({
             onPress={onAcknowledge}
           />
         ) : null}
+        <PrimaryButton label={t("details")} variant="secondary" onPress={onDetails} />
       </View>
     </View>
   );

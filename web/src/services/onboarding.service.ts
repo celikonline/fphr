@@ -23,6 +23,9 @@ export interface OnboardingTaskTemplate {
   dueDateOffsetDays: number;
   isMandatory: boolean;
   isActive: boolean;
+  categoryId?: string | null;
+  importance?: OnboardingImportance;
+  requiresEDocument?: boolean;
 }
 
 /** `OnboardingChecklistItemDto`; DateOnly fields are "yyyy-MM-dd". */
@@ -48,6 +51,9 @@ export interface SaveTemplateInput {
   responsibleRoleCode: string;
   dueDateOffsetDays: number;
   isMandatory: boolean;
+  categoryId?: string | null;
+  importance?: OnboardingImportance;
+  requiresEDocument?: boolean;
 }
 
 export async function listOnboardingTemplates(): Promise<OnboardingTaskTemplate[]> {
@@ -108,4 +114,110 @@ export async function completeOnboardingTask(id: string): Promise<void> {
 
 export async function waiveOnboardingTask(id: string, reason: string): Promise<void> {
   await apiClient.post(`${BASE}/tasks/${id}/waive`, { reason });
+}
+
+/** E5 (B15): task importance, category, named template sets. */
+export type OnboardingImportance = "normal" | "high" | "critical";
+
+/** `OnboardingCategoryDto`. */
+export interface OnboardingCategory {
+  id: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/** `OnboardingCategoryProgressDto`; categoryId is missing for uncategorized tasks (nulls omitted). */
+export interface OnboardingCategoryProgress {
+  categoryId?: string | null;
+  name: string;
+  done: number;
+  total: number;
+  percent: number;
+}
+
+/** `OnboardingTemplateSetDto`. */
+export interface OnboardingTemplateSet {
+  id: string;
+  stage: OnboardingStage;
+  name: string;
+  templateIds: string[];
+  isActive: boolean;
+}
+
+export async function listOnboardingTemplateSets(): Promise<OnboardingTemplateSet[]> {
+  const { data } = await apiClient.get<OnboardingTemplateSet[]>(`${BASE}/template-sets`);
+  return data;
+}
+
+export async function listOnboardingCategories(): Promise<OnboardingCategory[]> {
+  const { data } = await apiClient.get<OnboardingCategory[]>(`${BASE}/categories`);
+  return data;
+}
+
+export async function getEmployeeCategoryProgress(
+  employeeId: string
+): Promise<OnboardingCategoryProgress[]> {
+  const { data } = await apiClient.get<OnboardingCategoryProgress[]>(
+    `${BASE}/employees/${employeeId}/category-progress`
+  );
+  return data;
+}
+
+/** Starts a named template set for the employee (once per set). */
+export async function startOnboardingProcess(
+  employeeId: string,
+  templateSetId: string,
+  referenceDate: string
+): Promise<void> {
+  await apiClient.post(`${BASE}/employees/${employeeId}/start-process`, {
+    templateSetId,
+    referenceDate,
+  });
+}
+
+export const ONBOARDING_IMPORTANCES: OnboardingImportance[] = ["normal", "high", "critical"];
+
+export interface SaveCategoryInput {
+  name: string;
+  sortOrder: number;
+  isActive?: boolean;
+}
+
+export async function createOnboardingCategory(
+  input: SaveCategoryInput
+): Promise<OnboardingCategory> {
+  const { data } = await apiClient.post<OnboardingCategory>(`${BASE}/categories`, input);
+  return data;
+}
+
+export async function updateOnboardingCategory(
+  id: string,
+  input: SaveCategoryInput
+): Promise<OnboardingCategory> {
+  const { data } = await apiClient.put<OnboardingCategory>(`${BASE}/categories/${id}`, input);
+  return data;
+}
+
+/** 409 `onboarding.category_in_use` when a template still references the category. */
+export async function deleteOnboardingCategory(id: string): Promise<void> {
+  await apiClient.delete(`${BASE}/categories/${id}`);
+}
+
+/** `templateIds` order is the set's order (uuid[] as saved). */
+export async function createOnboardingTemplateSet(input: {
+  stage: OnboardingStage;
+  name: string;
+  templateIds: string[];
+}): Promise<OnboardingTemplateSet> {
+  const { data } = await apiClient.post<OnboardingTemplateSet>(`${BASE}/template-sets`, input);
+  return data;
+}
+
+export async function updateOnboardingTemplateSet(
+  id: string,
+  input: { name: string; templateIds: string[]; isActive: boolean }
+): Promise<OnboardingTemplateSet> {
+  const { data } = await apiClient.put<OnboardingTemplateSet>(`${BASE}/template-sets/${id}`, input);
+  return data;
 }

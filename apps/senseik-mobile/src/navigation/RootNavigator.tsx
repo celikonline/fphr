@@ -40,6 +40,8 @@ import RequestsScreen from "@/screens/app/RequestsScreen";
 import NewRequestScreen from "@/screens/app/NewRequestScreen";
 import ApprovalHistoryScreen from "@/screens/app/approvals/ApprovalHistoryScreen";
 import RequestDetailScreen from "@/screens/app/requests/RequestDetailScreen";
+import PunchRequestScreen from "@/screens/app/PunchRequestScreen";
+import PayslipDetailScreen from "@/screens/app/PayslipDetailScreen";
 
 // expo-splash-screen's default `imageWidth` (dp); splash-icon.png is the BrandMark's full 40-unit box.
 const SPLASH_MARK_SIZE = 100;
@@ -110,7 +112,15 @@ function MainTabsNavigator() {
   );
 }
 
+/** Native stack header for the screens that do not draw a `ScreenHeader` yet, styled for the dark shell. */
+const legacyHeaderOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: palette.night },
+  headerTintColor: palette.white,
+} as const;
+
 function AppNavigator() {
+  const { t } = useTranslation();
   return (
     // Every stack screen draws its own header (`ScreenHeader`) - see spec §3.
     <AppStack.Navigator screenOptions={{ headerShown: false }}>
@@ -130,6 +140,17 @@ function AppNavigator() {
       <AppStack.Screen name="NewRequest" component={NewRequestScreen} />
       <AppStack.Screen name="ApprovalHistory" component={ApprovalHistoryScreen} />
       <AppStack.Screen name="RequestDetail" component={RequestDetailScreen} />
+      {/* No `ScreenHeader` in these two yet - they keep the native stack header. */}
+      <AppStack.Screen
+        name="PunchRequest"
+        component={PunchRequestScreen}
+        options={{ ...legacyHeaderOptions, title: t("checkin:punchRequest.title") }}
+      />
+      <AppStack.Screen
+        name="PayslipDetail"
+        component={PayslipDetailScreen}
+        options={{ ...legacyHeaderOptions, title: t("payroll:detail.title") }}
+      />
     </AppStack.Navigator>
   );
 }

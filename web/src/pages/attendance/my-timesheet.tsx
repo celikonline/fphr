@@ -7,6 +7,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, toDateOnly } from "@/lib/dates";
+import { IncalculableHint } from "@/components/attendance/incalculable-hint";
 import { getMyAttendanceDays, getMyTimesheetSummary, parseAnomalyFlags, type AttendanceDay } from "@/services/attendance.service";
 
 function startOfMonth(date: Date): Date {
@@ -75,7 +76,7 @@ function MyTimesheet() {
   );
 
   return (
-    <div className="max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -162,6 +163,7 @@ function TimesheetDayRow({ day, formatDate }: { day: AttendanceDay; formatDate: 
           {t("attendance:day.worked")}: {formatWorkedMinutes(day.workedMinutes)}
         </Text>
       </div>
+      <IncalculableHint reason={day.incalculableReason} />
       {flags.length > 0 && (
         <Group gap={4} wrap="wrap">
           {flags.map((flag) => (

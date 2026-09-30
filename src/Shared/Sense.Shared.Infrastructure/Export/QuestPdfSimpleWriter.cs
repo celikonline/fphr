@@ -12,6 +12,7 @@ public sealed class QuestPdfSimpleWriter : ISimplePdfWriter
     private const float BaseFontSize = 10;
     private const float TitleFontSize = 16;
     private const float HeadingFontSize = 11;
+    private const float SectionFontSize = 12;
     private const float BlockSpacing = 14;
     private const float SignatureBoxHeight = 64;
     private const string MutedColor = "#555555";
@@ -87,6 +88,10 @@ public sealed class QuestPdfSimpleWriter : ISimplePdfWriter
                 break;
             case SimplePdfSignatures signatures:
                 RenderSignatures(container, signatures);
+                break;
+            case SimplePdfSectionHeading section:
+                container.PaddingTop(4).Background(HeaderFill).PaddingVertical(5).PaddingHorizontal(6)
+                    .Text(section.Text).FontSize(SectionFontSize).Bold();
                 break;
             default:
                 throw new NotSupportedException($"PDF block '{block.GetType().Name}' is not supported.");

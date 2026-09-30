@@ -22,6 +22,9 @@ public sealed record SimplePdfTable(
 /// <summary>Signature boxes side by side at the end of a document (e.g. "İşveren / Kaşe - İmza").</summary>
 public sealed record SimplePdfSignatures(IReadOnlyList<string> Labels) : SimplePdfBlock;
 
+/// <summary>A full-width shaded band that opens a section of a multi-section document (e.g. employee card PDF).</summary>
+public sealed record SimplePdfSectionHeading(string Text) : SimplePdfBlock;
+
 /// <summary>
 /// A plain A4 business document: header (issuer + title), blocks, and a footer line. Texts are already localized by
 /// the caller; the writer only lays them out.

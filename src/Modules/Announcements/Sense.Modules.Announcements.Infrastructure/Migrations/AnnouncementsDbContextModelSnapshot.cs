@@ -264,6 +264,10 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -281,9 +285,27 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("description");
 
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
                     b.Property<DateOnly>("EventDate")
                         .HasColumnType("date")
                         .HasColumnName("event_date");
+
+                    b.Property<bool>("IsAllDay")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_all_day");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("location");
+
+                    b.Property<string>("Mode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("mode");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
@@ -292,6 +314,19 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                     b.Property<Guid?>("ModifiedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
+
+                    b.Property<bool>("NotifyInvitees")
+                        .HasColumnType("boolean")
+                        .HasColumnName("notify_invitees");
+
+                    b.Property<string>("OnlineUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("online_url");
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
@@ -319,13 +354,125 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_company_events_tenant_id");
 
+                    b.HasIndex("TenantId", "CategoryId")
+                        .HasDatabaseName("ix_company_events_tenant_id_category_id");
+
                     b.HasIndex("TenantId", "EventDate")
                         .HasDatabaseName("ix_company_events_tenant_id_event_date");
+
+                    b.HasIndex("TenantId", "StartsAt")
+                        .HasDatabaseName("ix_company_events_tenant_id_starts_at");
 
                     b.HasIndex("TenantId", "VisibilityOrgUnitId", "EventDate")
                         .HasDatabaseName("ix_company_events_tenant_id_visibility_org_unit_id_event_date");
 
                     b.ToTable("company_events", "announcements");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEventCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_company_event_categories");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_company_event_categories_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_company_event_categories_tenant_id_name");
+
+                    b.ToTable("company_event_categories", "announcements");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEventInvitee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyEventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_event_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_company_event_invitees");
+
+                    b.HasIndex("CompanyEventId")
+                        .HasDatabaseName("ix_company_event_invitees_company_event_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_company_event_invitees_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_company_event_invitees_tenant_id_employee_id");
+
+                    b.HasIndex("TenantId", "CompanyEventId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_company_event_invitees_tenant_id_company_event_id_employee_");
+
+                    b.ToTable("company_event_invitees", "announcements");
                 });
 
             modelBuilder.Entity("Sense.Modules.Announcements.Domain.Recognition", b =>
@@ -736,6 +883,21 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "announcements");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEventInvitee", b =>
+                {
+                    b.HasOne("Sense.Modules.Announcements.Domain.CompanyEvent", null)
+                        .WithMany("Invitees")
+                        .HasForeignKey("CompanyEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_company_event_invitees_company_events_company_event_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEvent", b =>
+                {
+                    b.Navigation("Invitees");
                 });
 #pragma warning restore 612, 618
         }

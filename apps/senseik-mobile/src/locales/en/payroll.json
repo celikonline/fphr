@@ -4,8 +4,9 @@
   },
   "openDocument": "Open document",
   "acknowledge": "I have read and acknowledge",
+  "details": "Details",
   "row": {
-    "a11y": "{{month}} {{year}} payslip, open document",
+    "a11y": "{{month}} {{year}} payslip, open details",
     "saving": "Saving…"
   },
   "title": "My payroll",
@@ -19,10 +20,32 @@
   "status": {
     "acknowledged": "Acknowledged",
     "pending": "Awaiting acknowledgement",
-    "acknowledgedAt": "Acknowledged · {{time}}"
+    "acknowledgedAt": "Acknowledged · {{time}}",
+    "objectionPending": "Objection under review",
+    "objectionAccepted": "Objection accepted",
+    "objectionRejected": "Objection rejected"
   },
   "confirm": {
     "message": "Do you confirm that you have read this payslip?",
     "confirm": "I acknowledge"
+  },
+  "detail": {
+    "title": "Payslip",
+    "heading": "{{period}} payslip",
+    "gross": "Gross pay",
+    "net": "Net pay",
+    "acknowledge": "Acknowledge",
+    "acknowledgedTitle": "Acknowledged",
+    "acknowledgedMessage": "You acknowledged your payslip.",
+    "acknowledgeError": "The payslip could not be acknowledged. Please try again.",
+    "objectionReason": "Your objection: {{reason}}",
+    "objectionPendingNote": "Your objection is under review; you cannot acknowledge until it is resolved.",
+    "objectionResult": "Objection outcome: {{note}}",
+    "objectionLabel": "Objection reason",
+    "objectionPlaceholder": "Explain why you object",
+    "object": "Object",
+    "objectionRequired": "A reason is required to object.",
+    "objectionSent": "Your objection was sent.",
+    "objectionError": "The objection could not be sent. Please try again."
   }
 }

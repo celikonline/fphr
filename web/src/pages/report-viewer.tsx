@@ -19,6 +19,7 @@ import {
   getReportCatalog,
   getReportExecution,
   getReportExecutionData,
+  REPORT_PARAMETER_KEYS,
   REPORT_PREVIEW_UNAVAILABLE_CODE,
   requestReport,
   saveDownloadedReportFile,
@@ -148,6 +149,25 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
       toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:history.downloadError")) }),
   });
 
+  // PDF: the grid shows the Excel run; PDF is a separate run of the same filters with `format=pdf`, downloaded directly.
+  const pdfMutation = useMutation({
+    mutationFn: () => requestReport(report.key, { ...values, [REPORT_PARAMETER_KEYS.format]: "pdf" }, { notify: false }),
+    onSuccess: async (pdfExecution) => {
+      void queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
+      if (pdfExecution.status === "failed") {
+        toast({ variant: "destructive", title: t("common:error"), description: pdfExecution.errorMessage ?? t("reports:viewer.runError") });
+        return;
+      }
+      if (pdfExecution.status !== "succeeded") {
+        toast({ variant: "success", title: t("reports:run.successNoDownload") });
+        return;
+      }
+      saveDownloadedReportFile(await downloadReportExecution(pdfExecution.id, pdfExecution.resultFileName ?? `${report.key}.pdf`));
+    },
+    onError: (error) =>
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:history.downloadError")) }),
+  });
+
   const apply = () => {
     setRunError(null);
     runMutation.mutate();
@@ -181,6 +201,18 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
             >
               {t("reports:viewer.downloadExcel")}
             </Button>
+            {canGenerate && (
+              <Button
+                type="button"
+                variant="default"
+                leftSection={<Download size={16} />}
+                disabled={!canRun}
+                loading={pdfMutation.isPending}
+                onClick={() => pdfMutation.mutate()}
+              >
+                {t("reports:viewer.downloadPdf")}
+              </Button>
+            )}
             {canGenerate && (
               <Button type="button" leftSection={<Play size={16} />} disabled={!canRun} loading={runMutation.isPending} onClick={apply}>
                 {t("reports:viewer.apply")}

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Workflow.Application.Delegations;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
@@ -229,7 +230,9 @@ public sealed class DecideApprovalTaskHandler(
     IApprovalRequestRepository requests,
     IRoleAssignmentLookup roleAssignments,
     IIntegrationEventOutbox outbox,
-    TimeProvider clock) : ICommandHandler<DecideApprovalTaskCommand>
+    TimeProvider clock,
+    DelegationResolver delegationResolver,
+    ITenantTimeZoneLookup timeZones) : ICommandHandler<DecideApprovalTaskCommand>
 {
     public async Task<Result> Handle(DecideApprovalTaskCommand command, CancellationToken cancellationToken)
     {
@@ -245,14 +248,33 @@ public sealed class DecideApprovalTaskHandler(
         var isAssignee = task.ApproverEmployeeId == command.DecidingEmployeeId;
         var isFallbackRoleMember = !isAssignee && task.FallbackRoleCode is { } roleCode &&
             await roleAssignments.EmployeeHasRoleAsync(tenant.TenantId, command.DecidingEmployeeId, roleCode, cancellationToken);
-        if (!isAssignee && !isFallbackRoleMember)
+
+        // Z2.2 vekalet: an active (non-revoked, in-range, request-type-scoped) delegation from the assignee lets the delegate decide.
+        Guid? onBehalfOf = null;
+        if (!isAssignee && !isFallbackRoleMember && task.ApproverEmployeeId is { } assigneeId)
+        {
+            var delegators = await delegationResolver.ActiveDelegatorsFor(
+                tenant.TenantId, command.DecidingEmployeeId, await DelegationResolver.TodayAsync(clock, timeZones, tenant.TenantId, cancellationToken),
+                request.RequestType, cancellationToken);
+            if (delegators.Contains(assigneeId))
+            {
+                if (request.RequesterEmployeeId == command.DecidingEmployeeId)
+                {
+                    return Error.Rule(WorkflowErrors.SelfApprovalNotAllowed);
+                }
+
+                onBehalfOf = assigneeId;
+            }
+        }
+
+        if (!isAssignee && !isFallbackRoleMember && onBehalfOf is null)
         {
             return Error.Rule(WorkflowErrors.AssigneeMismatch);
         }
 
         var decided = request.Decide(
             task.StepNumber, command.DecidingEmployeeId, command.Outcome!.Value, command.Comment, wasOverride: false,
-            command.Channel, command.IpAddress, command.UserAgent, clock.GetUtcNow().UtcDateTime);
+            command.Channel, command.IpAddress, command.UserAgent, clock.GetUtcNow().UtcDateTime, onBehalfOf);
         if (decided.IsFailure)
         {
             return decided.Error;

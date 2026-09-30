@@ -44,6 +44,12 @@ public static class WorkflowPermissions
     public static readonly Permission MyRequests = new(
         "workflow.my.requests", Module, "Kendi Onay Taleplerimi Görüntüleme", Group, "Kendi gönderdiğiniz onay taleplerinin durumunu ve geçmişini görüntüleme");
 
+    public static readonly Permission DelegationManage = new(
+        "workflow.delegation.manage", Module, "Onay Vekaletlerini Yönetme", Group, "Herhangi bir çalışan adına onay vekaleti oluşturma ve iptal etme");
+
+    public static readonly Permission MyDelegation = new(
+        "workflow.my.delegation", Module, "Kendi Onay Vekaletimi Yönetme", Group, "Kendi onay yetkinizi belirli bir tarih aralığında başka bir çalışana devretme");
+
     public static IEnumerable<Permission> All =>
-        [PoliciesRead, PoliciesCreate, PoliciesUpdate, PoliciesDelete, InboxView, InboxDecide, RequestOverride, MyRequests];
+        [PoliciesRead, PoliciesCreate, PoliciesUpdate, PoliciesDelete, InboxView, InboxDecide, RequestOverride, MyRequests, DelegationManage, MyDelegation];
 }

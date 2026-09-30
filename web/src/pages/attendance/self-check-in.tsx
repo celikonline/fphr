@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAttendanceErrorMessage } from "@/lib/attendance-error";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Badge, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import { LogIn, LogOut, MapPin, QrCode } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
 import { getMyCheckInStatus, gpsCheckIn, qrCheckIn, type PunchDirection, type SelfCheckInResult } from "@/services/attendance.service";
 
 const STATUS_QUERY_KEY = ["attendance", "my-checkin-status"];
@@ -44,7 +44,7 @@ function SelfCheckIn() {
   }
 
   function onError(error: unknown) {
-    toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("attendance:genericError")) });
+    toast({ variant: "destructive", title: t("common:error"), description: getAttendanceErrorMessage(error, t("attendance:genericError"), t) });
   }
 
   const qrMutation = useMutation({ mutationFn: qrCheckIn, onSuccess, onError });
@@ -89,7 +89,7 @@ function SelfCheckIn() {
   const isBusy = qrMutation.isPending || gpsMutation.isPending;
 
   return (
-    <div className="max-w-lg space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <LogIn size={24} /> {t("attendance:selfCheckIn.title")}

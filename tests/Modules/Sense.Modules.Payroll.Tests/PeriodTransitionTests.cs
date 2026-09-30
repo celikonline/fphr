@@ -122,7 +122,7 @@ public sealed class PeriodTransitionTests
         var period = PeriodIn(PayrollPeriodStatus.Approved);
         var repository = Repository(period);
 
-        (await new MarkPayrollPeriodPaidHandler(repository, Substitute.For<IPayslipRepository>(), Substitute.For<IIntegrationEventOutbox>())
+        (await new MarkPayrollPeriodPaidHandler(repository, Substitute.For<IPayslipRepository>(), Substitute.For<IIntegrationEventOutbox>(), TimeProvider.System)
             .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
         (await new LockPayrollPeriodHandler(repository).Handle(new LockPayrollPeriodCommand(period.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
 
@@ -139,7 +139,7 @@ public sealed class PeriodTransitionTests
         payslips.ListByPeriodAsync(period.Id, Arg.Any<CancellationToken>()).Returns([first, second]);
         var outbox = Substitute.For<IIntegrationEventOutbox>();
 
-        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), payslips, outbox)
+        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), payslips, outbox, TimeProvider.System)
             .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
@@ -154,7 +154,7 @@ public sealed class PeriodTransitionTests
         var period = PeriodIn(PayrollPeriodStatus.Open);
         var outbox = Substitute.For<IIntegrationEventOutbox>();
 
-        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), Substitute.For<IPayslipRepository>(), outbox)
+        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), Substitute.For<IPayslipRepository>(), outbox, TimeProvider.System)
             .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeFalse();

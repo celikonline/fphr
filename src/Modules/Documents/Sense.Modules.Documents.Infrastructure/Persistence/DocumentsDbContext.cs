@@ -34,6 +34,8 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
     /// employee-scoped <see cref="Documents"/> table.</summary>
     public DbSet<SharedCompanyFile> SharedCompanyFiles => Set<SharedCompanyFile>();
 
+    public DbSet<SharedFileType> SharedFileTypes => Set<SharedFileType>();
+
     public DbSet<VisaSettings> VisaSettings => Set<VisaSettings>();
 
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
@@ -48,6 +50,7 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
         modelBuilder.ApplyConfiguration(new VisaDocumentProcessConfiguration());
         modelBuilder.ApplyConfiguration(new VisaDocumentRequestConfiguration());
         modelBuilder.ApplyConfiguration(new SharedCompanyFileConfiguration());
+        modelBuilder.ApplyConfiguration(new SharedFileTypeConfiguration());
     }
 }
 

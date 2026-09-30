@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Workflow.Application;
+using Sense.Modules.Workflow.Application.Delegations;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Lookups;
@@ -54,6 +55,8 @@ public sealed class WorkflowModule : IModule
         services.AddScoped<IApprovalPolicyRepository, ApprovalPolicyRepository>();
         services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
         services.AddScoped<IEmailDecisionTokenRepository, EmailDecisionTokenRepository>();
+        services.AddScoped<IApprovalDelegationRepository, ApprovalDelegationRepository>();
+        services.AddScoped<DelegationResolver>();
 
         services.AddScoped<IApproverResolver, DefaultApproverResolver>();
 

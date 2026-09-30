@@ -1,0 +1,23 @@
+{
+  "id": "TK-033",
+  "baslik": "Web: 'Guven ve guvenlik' sayfasi yerine mobil uygulama tanitim + iOS/Android indirme sayfasi",
+  "durum": "incelemede",
+  "sahip": "takim-gelistirici-node",
+  "dal": "dev (calisma agaci paylasimli; commit kullanici istediginde a/mobil-uygulama-sayfasi dalinda)",
+  "kaynak": "Kullanici istegi 2026-09-28: 'Guven ve guvenlik kismini Android ve iOS indirme bolumu yap, mobil appi tanitan ekranlari koy ve mobil uygulamayi tanit.'",
+  "kabul": [
+    "Sol menu altbilgisindeki 'Guven ve guvenlik' ogesi 'Mobil uygulama' (Smartphone ikonu) olur; yol /app/mobile-app. Eski /app/trust yolu /app/mobile-app'e yonlendirir.",
+    "Sayfa: gece lacivert (#0E0033 -> #280087) hero bandi; baslik + aciklama + App Store ve Google Play dugmeleri + uc telefon cercevesinde gercek ekran goruntusu (Giris/Cikis, Ana sayfa, Onaylarim).",
+    "Magaza baglantilari VITE_IOS_APP_URL / VITE_ANDROID_APP_URL ortam degiskenlerinden gelir; bos ise dugme devre disi ve 'Yakinda' der. web/.env.example'a eklenir.",
+    "Ozellik bolumu: ozellik listesinden secilen ogeye gore telefon cercevesindeki ekran goruntusu degisir (klavye ile erisilebilir, aria-pressed/aria-selected).",
+    "'Nasil baslarim' 3 adim: indir, sirket hesabinla giris yap, bildirimleri ac.",
+    "Ekran goruntuleri apps/senseik-mobile/docs/screenshots'tan web/public/images/mobile-app/ altina kopyalanir; her gorselin anlamli alt metni var.",
+    "trust sayfasi, trust.json (tr/en/de) ve i18n 'trust' ad alani kaldirilir; yeni 'mobileApp' ad alani tr/en/de.",
+    "Vitest: magaza URL'si yokken dugmeler devre disi; ozellik secimi gorseli degistirir.",
+    "tsc --noEmit, eslint src, vite build ve test kapisi yesil."
+  ],
+  "birlestirme_kapisi": "test kapisi YESIL + kanit GECERLI + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": "Web: tsc/eslint/vite build/vitest yesil (mobile-app 6/6). Tam test kapisi KIRMIZI: dotnet build/test paylasimli agacta baska oturumun Employee/CardPdf degisiklikleri yuzunden basarisiz/zaman asimi (kanit .claude/takim/kanit/406670d9f2f0181c.json); gozden gecirici tum is kriterlerini (1-8) karsilandi buldu, kapiyi yeniden kostur.",
+  "handoff": ""
+}

@@ -1,4 +1,6 @@
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Punches;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -14,13 +16,21 @@ namespace Sense.Modules.Attendance.Application.Import;
 /// Source=Import, same as a manual <see cref="RecordAttendanceCommand"/>. AllOrNothing applies nothing when any row fails.
 /// </summary>
 public sealed class AttendanceImportRowHandler(
-    ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules, IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork)
+    ITenantContext tenant, IEmployeeLookup employeeLookup, IPlannedDayResolver planner, IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork,
+    IPunchRepository punches, ITenantLocalClock clock, IMonthlyTimesheetApprovalRepository approvals)
     : IImportRowHandler
 {
+    /// <summary>İçe aktarılan satır günün önceki okutmalarının yerini aldığında silinen okutmalara yazılan gerekçe.</summary>
+    public const string ReplacedReason = "PDKS Excel içe aktarımıyla değiştirildi";
+
     public string TemplateCode => AttendanceImportColumns.TemplateCode;
 
     public async Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
     {
+        // Z0.1: her satır Source=Import okutmalara dönüşür ve günü (üzerine yazarak) yeniden türetir; K6 kilitli ay satır hatasıdır.
+        var now = await clock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var zone = await clock.GetTimeZoneAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+        var writer = new PunchDayWriter(tenant.TenantId, days, punches, planner, approvals, zone, now.Utc);
         var employeeCache = new Dictionary<string, Guid?>(StringComparer.Ordinal);
         var results = new Dictionary<int, ImportRowResult>();
         var plans = new List<AttendanceImportPlan>();
@@ -58,6 +68,11 @@ public sealed class AttendanceImportRowHandler(
                 }
             }
 
+            if (errors.Count == 0 && employeeId is { } matched && date is { } day && await writer.IsLockedAsync(matched, day, cancellationToken).ConfigureAwait(false))
+            {
+                errors.Add(new ImportRowError(AttendanceImportColumns.Date, AttendanceErrors.PeriodLocked));
+            }
+
             if (errors.Count > 0 || employeeId is null || date is null)
             {
                 results[row.RowNumber] = new ImportRowResult(row.RowNumber, ImportRowOutcome.Error, nationalId, employeeId, errors);
@@ -81,9 +96,9 @@ public sealed class AttendanceImportRowHandler(
         foreach (var plan in plans)
         {
             var wasExisting = await days.FindByEmployeeAndDateAsync(plan.EmployeeId, plan.Date, cancellationToken).ConfigureAwait(false) is not null;
-            var upserted = await AttendanceDayUpsert.UpsertAsync(
-                days, schedules, tenant.TenantId, plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut,
-                AttendanceDaySource.Import, overnight: false, cancellationToken).ConfigureAwait(false);
+            var upserted = await writer.ReplaceDayAsync(
+                plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut, AttendanceDaySource.Import, actorUserId: null, ReplacedReason, limits: null,
+                cancellationToken).ConfigureAwait(false);
             if (upserted.IsFailure)
             {
                 results[plan.RowNumber] = new ImportRowResult(
@@ -97,9 +112,17 @@ public sealed class AttendanceImportRowHandler(
             anyChange = true;
         }
 
-        if (anyChange)
+        if (anyChange && (await writer.SaveAsync(unitOfWork, cancellationToken).ConfigureAwait(false)).IsFailure)
         {
-            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Eşzamanlı yazma çakışması yeniden denemelere rağmen çözülemedi: hiçbir satır uygulanmadı.
+            foreach (var plan in plans.Where(p => results[p.RowNumber].Outcome != ImportRowOutcome.Error))
+            {
+                results[plan.RowNumber] = new ImportRowResult(
+                    plan.RowNumber, ImportRowOutcome.Error, plan.NationalId, null,
+                    [new ImportRowError(AttendanceImportColumns.Date, AttendanceErrors.DayConcurrentUpdate)]);
+            }
+
+            return new ImportBatchResult(Ordered(batch, results), Applied: false);
         }
 
         return new ImportBatchResult(Ordered(batch, results), Applied: true);

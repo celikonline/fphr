@@ -18,9 +18,10 @@ namespace Sense.Modules.Identity.Application.Invitations;
 /// <summary>
 /// Çalışan kartı "Davetiye gönder" (11.3.01 madde 10): hedef iş e-postası, yoksa kişisel e-posta. Hesabı olmayan çalışana
 /// Employee rolüyle kullanıcı açılır ve iki taraf bağlanır; davetli kullanıcıya davet yenilenip tekrar gönderilir; aktif hesap atlanır.
+/// <c>SendCredentials=false</c> (çalışan oluşturma formundaki "giriş bilgisi gönder" anahtarı kapalı): hiçbir şey yapılmaz, e-posta gitmez.
 /// </summary>
 [RequiresPermission(IdentityPermissions.UsersInvite)]
-public sealed record InviteEmployeeCommand(Guid EmployeeId) : ICommand<EmployeeInvitationResultDto>, IScopedRequest
+public sealed record InviteEmployeeCommand(Guid EmployeeId, bool SendCredentials = true) : ICommand<EmployeeInvitationResultDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => EmployeeId;
 }
@@ -39,6 +40,11 @@ public sealed class InviteEmployeeHandler(ITenantContext tenant, IEmployeeDirect
         if (contacts.Count == 0)
         {
             return Error.NotFound(IdentityErrors.InvitationEmployeeNotFound);
+        }
+
+        if (!command.SendCredentials)
+        {
+            return new EmployeeInvitationResultDto(command.EmployeeId, EmployeeInvitationOutcomes.NotRequested, null, null);
         }
 
         return await invitations.InviteAsync(contacts[0], batch: null, cancellationToken).ConfigureAwait(false);

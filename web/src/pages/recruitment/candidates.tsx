@@ -4,8 +4,32 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, ClipboardList, Pencil, Plus, Search, ShieldOff, Tags as TagsIcon, UserRound } from "lucide-react";
-import { ActionIcon, Badge, Button, Card, Drawer, Group, Modal, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import {
+  Archive,
+  ClipboardList,
+  Pencil,
+  Plus,
+  Search,
+  ShieldOff,
+  Tags as TagsIcon,
+  UserRound,
+} from "lucide-react";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Drawer,
+  Group,
+  Modal,
+  MultiSelect,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -69,7 +93,12 @@ function Candidates() {
   const tagNameById = new Map((tagsQuery.data ?? []).map((tag) => [tag.id, tag.name]));
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { firstName: "", lastName: "", email: "", phone: "" },
   });
@@ -80,20 +109,38 @@ function Candidates() {
     mutationFn: createCandidate,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:candidates.createSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:candidates.createSuccess"),
+      });
       setDialog({ open: false });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, ...input }: { id: string } & FormValues) => updateCandidate(id, input),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:candidates.updateSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:candidates.updateSuccess"),
+      });
       setDialog({ open: false });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const [anonymizeTarget, setAnonymizeTarget] = useState<Candidate | null>(null);
@@ -101,10 +148,19 @@ function Candidates() {
     mutationFn: anonymizeCandidate,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:candidates.anonymizeSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:candidates.anonymizeSuccess"),
+      });
       setAnonymizeTarget(null);
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const [anonymizeExpiredOpen, setAnonymizeExpiredOpen] = useState(false);
@@ -122,7 +178,12 @@ function Candidates() {
       });
       setAnonymizeExpiredOpen(false);
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const [applicationsCandidate, setApplicationsCandidate] = useState<Candidate | null>(null);
@@ -131,7 +192,10 @@ function Candidates() {
     queryFn: () => listApplicationsByCandidate(applicationsCandidate!.id),
     enabled: applicationsCandidate !== null,
   });
-  const postingsQuery = useQuery({ queryKey: ["recruitment", "postings"], queryFn: () => listJobPostings() });
+  const postingsQuery = useQuery({
+    queryKey: ["recruitment", "postings"],
+    queryFn: () => listJobPostings(),
+  });
   const postingTitleById = new Map((postingsQuery.data ?? []).map((p) => [p.id, p.title]));
 
   const [tagCandidate, setTagCandidate] = useState<Candidate | null>(null);
@@ -144,7 +208,12 @@ function Candidates() {
       invalidate();
       setTagCandidate(null);
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const createTagMutation = useMutation({
@@ -154,7 +223,12 @@ function Candidates() {
       setSelectedTagIds((prev) => [...prev, id]);
       setNewTagName("");
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   function openTagEditor(candidate: Candidate) {
@@ -168,7 +242,12 @@ function Candidates() {
   }
 
   function openEdit(candidate: Candidate) {
-    reset({ firstName: candidate.firstName, lastName: candidate.lastName, email: candidate.email, phone: candidate.phone ?? "" });
+    reset({
+      firstName: candidate.firstName,
+      lastName: candidate.lastName,
+      email: candidate.email,
+      phone: candidate.phone ?? "",
+    });
     setDialog({ open: true, candidate });
   }
 
@@ -176,7 +255,11 @@ function Candidates() {
     return (
       <>
         <Tooltip label={t("recruitment:candidates.applications.actionLabel")}>
-          <ActionIcon variant="subtle" color="gray" onClick={() => setApplicationsCandidate(candidate)}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={() => setApplicationsCandidate(candidate)}
+          >
             <ClipboardList size={16} />
           </ActionIcon>
         </Tooltip>
@@ -193,7 +276,11 @@ function Candidates() {
               </ActionIcon>
             </Tooltip>
             <Tooltip label={t("recruitment:candidates.anonymize")}>
-              <ActionIcon variant="subtle" color="red" onClick={() => setAnonymizeTarget(candidate)}>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                onClick={() => setAnonymizeTarget(candidate)}
+              >
                 <ShieldOff size={16} />
               </ActionIcon>
             </Tooltip>
@@ -214,7 +301,7 @@ function Candidates() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -294,7 +381,9 @@ function Candidates() {
                       </Table.Td>
                       <Table.Td>{candidate.email}</Table.Td>
                       <Table.Td>{candidate.phone ?? "—"}</Table.Td>
-                      <Table.Td>{enumLabel(t, "recruitment:candidates.sources", candidate.source)}</Table.Td>
+                      <Table.Td>
+                        {enumLabel(t, "recruitment:candidates.sources", candidate.source)}
+                      </Table.Td>
                       <Table.Td>
                         <Group gap={4}>
                           {candidate.tagIds.length === 0 ? (
@@ -327,7 +416,13 @@ function Candidates() {
             <div className="md:hidden p-3">
               <Stack gap="sm">
                 {data.map((candidate) => (
-                  <Card key={candidate.id} withBorder padding="sm" radius="md" opacity={candidate.isAnonymized ? 0.6 : 1}>
+                  <Card
+                    key={candidate.id}
+                    withBorder
+                    padding="sm"
+                    radius="md"
+                    opacity={candidate.isAnonymized ? 0.6 : 1}
+                  >
                     <Stack gap={6}>
                       <Group justify="space-between" align="flex-start" wrap="nowrap">
                         <Text fw={500} size="sm">
@@ -371,7 +466,11 @@ function Candidates() {
       <Modal
         opened={dialog.open}
         onClose={() => setDialog((prev) => ({ ...prev, open: false }))}
-        title={dialog.candidate ? t("recruitment:candidates.dialogEditTitle") : t("recruitment:candidates.dialogCreateTitle")}
+        title={
+          dialog.candidate
+            ? t("recruitment:candidates.dialogEditTitle")
+            : t("recruitment:candidates.dialogCreateTitle")
+        }
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack gap="md">
@@ -393,7 +492,12 @@ function Candidates() {
             />
             <TextInput label={t("recruitment:candidates.phone")} {...register("phone")} />
             <Group justify="flex-end" gap="sm">
-              <Button type="button" variant="default" onClick={() => setDialog((prev) => ({ ...prev, open: false }))} disabled={isSaving}>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setDialog((prev) => ({ ...prev, open: false }))}
+                disabled={isSaving}
+              >
                 {t("common:cancel")}
               </Button>
               <Button type="submit" disabled={isSaving}>
@@ -404,11 +508,17 @@ function Candidates() {
         </form>
       </Modal>
 
-      <Modal opened={tagCandidate !== null} onClose={() => setTagCandidate(null)} title={t("recruitment:candidates.editTags")}>
+      <Modal
+        opened={tagCandidate !== null}
+        onClose={() => setTagCandidate(null)}
+        title={t("recruitment:candidates.editTags")}
+      >
         <Stack gap="md">
           <MultiSelect
             label={t("recruitment:candidates.tags")}
-            data={(tagsQuery.data ?? []).filter((tag) => tag.isActive).map((tag) => ({ value: tag.id, label: tag.name }))}
+            data={(tagsQuery.data ?? [])
+              .filter((tag) => tag.isActive)
+              .map((tag) => ({ value: tag.id, label: tag.name }))}
             value={selectedTagIds}
             onChange={setSelectedTagIds}
             searchable
@@ -430,13 +540,21 @@ function Candidates() {
             </Button>
           </Group>
           <Group justify="flex-end" gap="sm">
-            <Button type="button" variant="default" onClick={() => setTagCandidate(null)} disabled={setTagsMutation.isPending}>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setTagCandidate(null)}
+              disabled={setTagsMutation.isPending}
+            >
               {t("common:cancel")}
             </Button>
             <Button
               type="button"
               disabled={setTagsMutation.isPending}
-              onClick={() => tagCandidate && setTagsMutation.mutate({ id: tagCandidate.id, tagIds: selectedTagIds })}
+              onClick={() =>
+                tagCandidate &&
+                setTagsMutation.mutate({ id: tagCandidate.id, tagIds: selectedTagIds })
+              }
             >
               {setTagsMutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
@@ -444,13 +562,22 @@ function Candidates() {
         </Stack>
       </Modal>
 
-      <Modal opened={anonymizeTarget !== null} onClose={() => setAnonymizeTarget(null)} title={t("recruitment:candidates.anonymize")}>
+      <Modal
+        opened={anonymizeTarget !== null}
+        onClose={() => setAnonymizeTarget(null)}
+        title={t("recruitment:candidates.anonymize")}
+      >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
             {t("recruitment:candidates.anonymizeDescription")}
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button type="button" variant="default" onClick={() => setAnonymizeTarget(null)} disabled={anonymizeMutation.isPending}>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setAnonymizeTarget(null)}
+              disabled={anonymizeMutation.isPending}
+            >
               {t("common:cancel")}
             </Button>
             <Button
@@ -526,14 +653,16 @@ function Candidates() {
                 <Stack gap={4}>
                   <Group justify="space-between" wrap="nowrap">
                     <Text size="sm" fw={500}>
-                      {postingTitleById.get(application.jobPostingId) ?? application.jobPostingId.slice(0, 8)}
+                      {postingTitleById.get(application.jobPostingId) ??
+                        application.jobPostingId.slice(0, 8)}
                     </Text>
                     <Badge size="sm" variant="light">
                       {t(`recruitment:applications.stages.${application.stage}`)}
                     </Badge>
                   </Group>
                   <Text size="xs" c="dimmed">
-                    {t("recruitment:applications.appliedAt")}: {formatDateTime(application.appliedAt, i18n.language)}
+                    {t("recruitment:applications.appliedAt")}:{" "}
+                    {formatDateTime(application.appliedAt, i18n.language)}
                   </Text>
                 </Stack>
               </Card>

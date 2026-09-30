@@ -42,7 +42,8 @@ public sealed class TimesheetBoundaryTests
     }
 
     private Task<Sense.Shared.Kernel.Results.Result<Guid>> Record(DateOnly date) =>
-        new RecordAttendanceHandler(_days, _schedules, _tenant, _dataScope, _localClock)
+        new RecordAttendanceHandler(_days, TestPlanner.From(_schedules), _tenant, _dataScope, _localClock, new InMemoryPunchRepository(), Substitute.For<ICurrentUser>(),
+            Substitute.For<IMonthlyTimesheetApprovalRepository>(), Substitute.For<IAttendanceUnitOfWork>())
             .Handle(new RecordAttendanceCommand(_employeeId, date, new TimeOnly(9, 0), new TimeOnly(17, 0)), TestContext.Current.CancellationToken);
 
     [Fact]

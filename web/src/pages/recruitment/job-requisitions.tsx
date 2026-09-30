@@ -5,7 +5,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Plus, Send, X } from "lucide-react";
-import { ActionIcon, Badge, Button, Card, Group, Modal, NumberInput, Select, Stack, Table, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  Table,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -29,7 +45,9 @@ const REQUISITIONS_KEY = ["recruitment", "requisitions"] as const;
 const schema = z.object({
   title: z.string().min(1),
   orgUnitId: z.string().min(1),
-  employmentType: z.enum(RECRUITMENT_EMPLOYMENT_TYPES as [RecruitmentEmploymentType, ...RecruitmentEmploymentType[]]),
+  employmentType: z.enum(
+    RECRUITMENT_EMPLOYMENT_TYPES as [RecruitmentEmploymentType, ...RecruitmentEmploymentType[]]
+  ),
   headcountRequested: z.number().min(1),
   reason: z.enum(REQUISITION_REASONS as [RequisitionReason, ...RequisitionReason[]]),
   justification: z.string().optional(),
@@ -57,12 +75,28 @@ function JobRequisitions() {
   const canManage = usePermission("recruitment.requisitions.manage");
   const { options: orgUnitOptions, nameById: orgUnitNameById } = useOrgUnits();
 
-  const { data, isLoading, isError, error } = useQuery({ queryKey: REQUISITIONS_KEY, queryFn: () => listJobRequisitions() });
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: REQUISITIONS_KEY,
+    queryFn: () => listJobRequisitions(),
+  });
 
   const [createOpen, setCreateOpen] = useState(false);
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", orgUnitId: "", employmentType: "fullTime", headcountRequested: 1, reason: "newPosition", justification: "" },
+    defaultValues: {
+      title: "",
+      orgUnitId: "",
+      employmentType: "fullTime",
+      headcountRequested: 1,
+      reason: "newPosition",
+      justification: "",
+    },
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: REQUISITIONS_KEY });
@@ -71,38 +105,72 @@ function JobRequisitions() {
     mutationFn: createJobRequisition,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:requisitions.createSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:requisitions.createSuccess"),
+      });
       setCreateOpen(false);
       reset();
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const submitMutation = useMutation({
     mutationFn: submitJobRequisition,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:requisitions.submitSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:requisitions.submitSuccess"),
+      });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelJobRequisition,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:requisitions.cancelSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:requisitions.cancelSuccess"),
+      });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const orgUnitSelectOptions = useMemo(
     () => orgUnitOptions.map((u) => ({ value: u.id, label: `${"— ".repeat(u.depth)}${u.name}` })),
-    [orgUnitOptions],
+    [orgUnitOptions]
   );
 
   function openCreate() {
-    reset({ title: "", orgUnitId: "", employmentType: "fullTime", headcountRequested: 1, reason: "newPosition", justification: "" });
+    reset({
+      title: "",
+      orgUnitId: "",
+      employmentType: "fullTime",
+      headcountRequested: 1,
+      reason: "newPosition",
+      justification: "",
+    });
     setCreateOpen(true);
   }
 
@@ -111,24 +179,33 @@ function JobRequisitions() {
       <>
         {canManage && requisition.status === "draft" && (
           <Tooltip label={t("recruitment:requisitions.submit")}>
-            <ActionIcon variant="subtle" color="green" onClick={() => submitMutation.mutate(requisition.id)}>
+            <ActionIcon
+              variant="subtle"
+              color="green"
+              onClick={() => submitMutation.mutate(requisition.id)}
+            >
               <Send size={16} />
             </ActionIcon>
           </Tooltip>
         )}
-        {canManage && (requisition.status === "draft" || requisition.status === "pendingApproval") && (
-          <Tooltip label={t("recruitment:requisitions.cancel")}>
-            <ActionIcon variant="subtle" color="red" onClick={() => cancelMutation.mutate(requisition.id)}>
-              <X size={16} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+        {canManage &&
+          (requisition.status === "draft" || requisition.status === "pendingApproval") && (
+            <Tooltip label={t("recruitment:requisitions.cancel")}>
+              <ActionIcon
+                variant="subtle"
+                color="red"
+                onClick={() => cancelMutation.mutate(requisition.id)}
+              >
+                <X size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
       </>
     );
   }
 
   return (
-    <div className="max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -209,7 +286,8 @@ function JobRequisitions() {
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {orgUnitNameById.get(requisition.orgUnitId) ?? "—"} · {t("recruitment:requisitions.headcount")}: {requisition.headcountRequested}
+                        {orgUnitNameById.get(requisition.orgUnitId) ?? "—"} ·{" "}
+                        {t("recruitment:requisitions.headcount")}: {requisition.headcountRequested}
                       </Text>
                       <Group gap={4} justify="flex-end" wrap="nowrap">
                         {requisitionActions(requisition)}
@@ -223,7 +301,11 @@ function JobRequisitions() {
         )}
       </Card>
 
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title={t("recruitment:requisitions.dialogCreateTitle")}>
+      <Modal
+        opened={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t("recruitment:requisitions.dialogCreateTitle")}
+      >
         <form onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
           <Stack gap="md">
             <TextInput
@@ -253,7 +335,10 @@ function JobRequisitions() {
               render={({ field }) => (
                 <Select
                   label={t("recruitment:postings.employmentType")}
-                  data={RECRUITMENT_EMPLOYMENT_TYPES.map((v) => ({ value: v, label: t(`recruitment:employmentTypes.${v}`) }))}
+                  data={RECRUITMENT_EMPLOYMENT_TYPES.map((v) => ({
+                    value: v,
+                    label: t(`recruitment:employmentTypes.${v}`),
+                  }))}
                   value={field.value}
                   onChange={(value) => value && field.onChange(value as RecruitmentEmploymentType)}
                   onBlur={field.onBlur}
@@ -281,7 +366,10 @@ function JobRequisitions() {
               render={({ field }) => (
                 <Select
                   label={t("recruitment:requisitions.reason")}
-                  data={REQUISITION_REASONS.map((v) => ({ value: v, label: t(`recruitment:requisitions.reasons.${v}`) }))}
+                  data={REQUISITION_REASONS.map((v) => ({
+                    value: v,
+                    label: t(`recruitment:requisitions.reasons.${v}`),
+                  }))}
                   value={field.value}
                   onChange={(value) => value && field.onChange(value as RequisitionReason)}
                   onBlur={field.onBlur}
@@ -289,9 +377,18 @@ function JobRequisitions() {
                 />
               )}
             />
-            <Textarea label={t("recruitment:requisitions.justification")} minRows={3} {...register("justification")} />
+            <Textarea
+              label={t("recruitment:requisitions.justification")}
+              minRows={3}
+              {...register("justification")}
+            />
             <Group justify="flex-end" gap="sm">
-              <Button type="button" variant="default" onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setCreateOpen(false)}
+                disabled={createMutation.isPending}
+              >
                 {t("common:cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>

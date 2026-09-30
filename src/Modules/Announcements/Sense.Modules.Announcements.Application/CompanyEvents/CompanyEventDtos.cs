@@ -17,4 +17,12 @@ public sealed record CompanyCalendarEntryDto(
     CompanyEventType Type,
     Guid? VisibilityOrgUnitId,
     Guid? EmployeeId,
-    Guid? CreatedByUserId);
+    Guid? CreatedByUserId,
+    DateTime? StartsAt = null,
+    DateTime? EndsAt = null,
+    bool IsAllDay = true,
+    CompanyEventMode? Mode = null,
+    string? Location = null,
+    string? OnlineUrl = null,
+    Guid? CategoryId = null,
+    IReadOnlyList<Guid>? InviteeEmployeeIds = null);

@@ -135,6 +135,12 @@ public static class EmployeePermissions
     public static readonly Permission ProfileSelfEdit = new(
         ProfileSelfEditKey, Module, "Kendi Profilimi Düzenleme", Group, "Kendi iletişim alanlarınızı ve çalışan tarafından düzenlenebilir özel alanlarınızı düzenleme");
 
+    public static readonly Permission NotesView = new(
+        "employee.notes.view", Module, "Çalışan Notlarını Görüntüleme", Group, "Çalışan kartındaki İK/yönetici notlarını görüntüleme");
+
+    public static readonly Permission NotesManage = new(
+        "employee.notes.manage", Module, "Çalışan Notu Yönetimi", Group, "Çalışan notu ekleme, düzenleme ve silme");
+
     /// <summary>"Ekibim": own direct reports (FG-007).</summary>
     public static readonly Permission MyTeam = new(
         MyTeamKey, Module, "Ekibimi Görüntüleme", Group, "Size doğrudan bağlı çalışanların listesini görüntüleme");
@@ -144,6 +150,7 @@ public static class EmployeePermissions
         [
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
             BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, UnionView, UnionManage, SubcontractorManage, ProfileSelfEdit,
+            NotesView, NotesManage,
             MyTeam,
         ];
 }

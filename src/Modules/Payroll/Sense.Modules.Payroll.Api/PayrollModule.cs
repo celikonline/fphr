@@ -50,9 +50,16 @@ public sealed class PayrollModule : IModule
             typeof(PayrollPermissions).Assembly);
         services.AddPayrollServices(configuration);
 
+        // Employee card PDF section (API only).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.PayrollCardPdfSection>();
+
         // The closing checklist reads the employee directory, which only the API host provides (Sense.Worker has no consumer for it).
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>();
         services.AddScoped<Sense.Modules.Payroll.Application.Closing.IClosingChecklistGate>(
             sp => sp.GetRequiredService<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>());
+
+        // E2: daily "imzalamayanlara hatırlatma" (Hangfire runs in Sense.Api, like EmployeeModule's birthday job).
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Sense.Modules.Payroll.Application.Payslips.PayslipAcknowledgementReminderJobHandler>();
     }
 }

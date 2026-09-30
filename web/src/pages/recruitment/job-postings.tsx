@@ -6,7 +6,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, Briefcase, Play, Plus, Square } from "lucide-react";
-import { Badge, Button, Card, Group, Modal, Select, Stack, Table, Text, Textarea, TextInput, Title, Tooltip, ActionIcon } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -37,7 +52,9 @@ const schema = z.object({
   orgUnitId: z.string().min(1),
   hiringManagerUserId: z.string().optional(),
   requisitionId: z.string().optional(),
-  employmentType: z.enum(RECRUITMENT_EMPLOYMENT_TYPES as [RecruitmentEmploymentType, ...RecruitmentEmploymentType[]]),
+  employmentType: z.enum(
+    RECRUITMENT_EMPLOYMENT_TYPES as [RecruitmentEmploymentType, ...RecruitmentEmploymentType[]]
+  ),
   description: z.string().optional(),
 });
 
@@ -65,9 +82,15 @@ function JobPostings() {
   const canUpdate = usePermission("recruitment.postings.update");
   const canArchive = usePermission("recruitment.postings.archive");
 
-  const { data, isLoading, isError, error } = useQuery({ queryKey: POSTINGS_KEY, queryFn: () => listJobPostings() });
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: POSTINGS_KEY,
+    queryFn: () => listJobPostings(),
+  });
   const { options: orgUnitOptions, nameById: orgUnitNameById } = useOrgUnits();
-  const { data: users } = useQuery({ queryKey: ["users", "options"], queryFn: () => listUsers({ pageSize: 200 }) });
+  const { data: users } = useQuery({
+    queryKey: ["users", "options"],
+    queryFn: () => listUsers({ pageSize: 200 }),
+  });
   const { data: approvedRequisitions } = useQuery({
     queryKey: ["recruitment", "requisitions", "approved"],
     queryFn: () => listJobRequisitions("approved"),
@@ -77,9 +100,22 @@ function JobPostings() {
   const [archiveTarget, setArchiveTarget] = useState<JobPosting | null>(null);
   const [archiveReason, setArchiveReason] = useState<JobPostingArchiveReason>("positionFilled");
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", orgUnitId: "", hiringManagerUserId: "", requisitionId: "", employmentType: "fullTime", description: "" },
+    defaultValues: {
+      title: "",
+      orgUnitId: "",
+      hiringManagerUserId: "",
+      requisitionId: "",
+      employmentType: "fullTime",
+      description: "",
+    },
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: POSTINGS_KEY });
@@ -97,76 +133,140 @@ function JobPostings() {
       }),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:postings.createSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:postings.createSuccess"),
+      });
       setCreateOpen(false);
       reset();
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const publishMutation = useMutation({
     mutationFn: publishJobPosting,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:postings.publishSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:postings.publishSuccess"),
+      });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const closeMutation = useMutation({
     mutationFn: closeJobPosting,
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:postings.closeSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:postings.closeSuccess"),
+      });
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+    onError: (err) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      }),
   });
 
   const archiveMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: JobPostingArchiveReason }) => archiveJobPosting(id, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: JobPostingArchiveReason }) =>
+      archiveJobPosting(id, reason),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("recruitment:postings.archiveSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("recruitment:postings.archiveSuccess"),
+      });
       setArchiveTarget(null);
     },
     onError: (err) => {
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) });
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(err, t("recruitment:genericError")),
+      });
       setArchiveTarget(null);
     },
   });
 
   const orgUnitSelectOptions = useMemo(
     () => orgUnitOptions.map((u) => ({ value: u.id, label: `${"— ".repeat(u.depth)}${u.name}` })),
-    [orgUnitOptions],
+    [orgUnitOptions]
   );
   const userSelectOptions = useMemo(
     () => (users?.items ?? []).map((u) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` })),
-    [users],
+    [users]
   );
 
   const requisitionSelectOptions = useMemo(
-    () => (approvedRequisitions ?? []).map((r) => ({ value: r.id, label: `${r.title} (${r.headcountRequested})` })),
-    [approvedRequisitions],
+    () =>
+      (approvedRequisitions ?? []).map((r) => ({
+        value: r.id,
+        label: `${r.title} (${r.headcountRequested})`,
+      })),
+    [approvedRequisitions]
   );
 
   function openCreate() {
-    reset({ title: "", orgUnitId: "", hiringManagerUserId: "", requisitionId: "", employmentType: "fullTime", description: "" });
+    reset({
+      title: "",
+      orgUnitId: "",
+      hiringManagerUserId: "",
+      requisitionId: "",
+      employmentType: "fullTime",
+      description: "",
+    });
     setCreateOpen(true);
   }
 
   function postingActions(posting: JobPosting) {
     return (
       <>
-        {canUpdate && (posting.status === "draft" || posting.status === "onHold" || posting.status === "closed") && (
-          <Tooltip label={t(posting.status === "closed" ? "recruitment:postings.reopen" : "recruitment:postings.publish")}>
-            <ActionIcon variant="subtle" color="green" onClick={() => publishMutation.mutate(posting.id)}>
-              <Play size={16} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+        {canUpdate &&
+          (posting.status === "draft" ||
+            posting.status === "onHold" ||
+            posting.status === "closed") && (
+            <Tooltip
+              label={t(
+                posting.status === "closed"
+                  ? "recruitment:postings.reopen"
+                  : "recruitment:postings.publish"
+              )}
+            >
+              <ActionIcon
+                variant="subtle"
+                color="green"
+                onClick={() => publishMutation.mutate(posting.id)}
+              >
+                <Play size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
         {canUpdate && posting.status === "open" && (
           <Tooltip label={t("recruitment:postings.close")}>
-            <ActionIcon variant="subtle" color="orange" onClick={() => closeMutation.mutate(posting.id)}>
+            <ActionIcon
+              variant="subtle"
+              color="orange"
+              onClick={() => closeMutation.mutate(posting.id)}
+            >
               <Square size={16} />
             </ActionIcon>
           </Tooltip>
@@ -183,7 +283,7 @@ function JobPostings() {
   }
 
   return (
-    <div className="max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -229,12 +329,17 @@ function JobPostings() {
                   {data.map((posting) => (
                     <Table.Tr key={posting.id}>
                       <Table.Td>
-                        <Link to={`/app/recruitment/postings/${posting.id}`} className="font-medium hover:underline">
+                        <Link
+                          to={`/app/recruitment/postings/${posting.id}`}
+                          className="font-medium hover:underline"
+                        >
                           {posting.title}
                         </Link>
                       </Table.Td>
                       <Table.Td>{orgUnitNameById.get(posting.orgUnitId) ?? "—"}</Table.Td>
-                      <Table.Td>{enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}</Table.Td>
+                      <Table.Td>
+                        {enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}
+                      </Table.Td>
                       <Table.Td>
                         <Badge color={STATUS_COLOR[posting.status]} variant="light">
                           {enumLabel(t, "recruitment:postings.statuses", posting.status)}
@@ -258,7 +363,10 @@ function JobPostings() {
                   <Card key={posting.id} withBorder padding="sm" radius="md">
                     <Stack gap={6}>
                       <Group justify="space-between" align="flex-start" wrap="nowrap">
-                        <Link to={`/app/recruitment/postings/${posting.id}`} className="font-medium hover:underline">
+                        <Link
+                          to={`/app/recruitment/postings/${posting.id}`}
+                          className="font-medium hover:underline"
+                        >
                           {posting.title}
                         </Link>
                         <Badge color={STATUS_COLOR[posting.status]} variant="light">
@@ -266,11 +374,13 @@ function JobPostings() {
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}
+                        {orgUnitNameById.get(posting.orgUnitId) ?? "—"} ·{" "}
+                        {enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}
                       </Text>
                       {posting.closingDate && (
                         <Text size="xs" c="dimmed">
-                          {t("recruitment:postings.closingDate")}: {formatDateOnly(posting.closingDate, i18n.language)}
+                          {t("recruitment:postings.closingDate")}:{" "}
+                          {formatDateOnly(posting.closingDate, i18n.language)}
                         </Text>
                       )}
                       <Group gap={4} justify="flex-end" wrap="nowrap">
@@ -285,7 +395,11 @@ function JobPostings() {
         )}
       </Card>
 
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title={t("recruitment:postings.dialogCreateTitle")}>
+      <Modal
+        opened={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t("recruitment:postings.dialogCreateTitle")}
+      >
         <form onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
           <Stack gap="md">
             <TextInput
@@ -315,7 +429,10 @@ function JobPostings() {
               render={({ field }) => (
                 <Select
                   label={t("recruitment:postings.employmentType")}
-                  data={RECRUITMENT_EMPLOYMENT_TYPES.map((v) => ({ value: v, label: t(`recruitment:employmentTypes.${v}`) }))}
+                  data={RECRUITMENT_EMPLOYMENT_TYPES.map((v) => ({
+                    value: v,
+                    label: t(`recruitment:employmentTypes.${v}`),
+                  }))}
                   value={field.value}
                   onChange={(value) => value && field.onChange(value as RecruitmentEmploymentType)}
                   onBlur={field.onBlur}
@@ -355,9 +472,18 @@ function JobPostings() {
                 />
               )}
             />
-            <Textarea label={t("recruitment:postings.description")} minRows={3} {...register("description")} />
+            <Textarea
+              label={t("recruitment:postings.description")}
+              minRows={3}
+              {...register("description")}
+            />
             <Group justify="flex-end" gap="sm">
-              <Button type="button" variant="default" onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setCreateOpen(false)}
+                disabled={createMutation.isPending}
+              >
                 {t("common:cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
@@ -368,27 +494,42 @@ function JobPostings() {
         </form>
       </Modal>
 
-      <Modal opened={archiveTarget !== null} onClose={() => setArchiveTarget(null)} title={t("recruitment:postings.archiveDialogTitle")}>
+      <Modal
+        opened={archiveTarget !== null}
+        onClose={() => setArchiveTarget(null)}
+        title={t("recruitment:postings.archiveDialogTitle")}
+      >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
             {t("recruitment:postings.archiveDescription")}
           </Text>
           <Select
             label={t("recruitment:postings.archiveReason")}
-            data={JOB_POSTING_ARCHIVE_REASONS.map((v) => ({ value: v, label: t(`recruitment:postings.archiveReasons.${v}`) }))}
+            data={JOB_POSTING_ARCHIVE_REASONS.map((v) => ({
+              value: v,
+              label: t(`recruitment:postings.archiveReasons.${v}`),
+            }))}
             value={archiveReason}
             onChange={(value) => value && setArchiveReason(value as JobPostingArchiveReason)}
             allowDeselect={false}
           />
           <Group justify="flex-end" gap="sm">
-            <Button type="button" variant="default" onClick={() => setArchiveTarget(null)} disabled={archiveMutation.isPending}>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setArchiveTarget(null)}
+              disabled={archiveMutation.isPending}
+            >
               {t("common:cancel")}
             </Button>
             <Button
               type="button"
               color="red"
               loading={archiveMutation.isPending}
-              onClick={() => archiveTarget && archiveMutation.mutate({ id: archiveTarget.id, reason: archiveReason })}
+              onClick={() =>
+                archiveTarget &&
+                archiveMutation.mutate({ id: archiveTarget.id, reason: archiveReason })
+              }
             >
               {t("recruitment:postings.archive")}
             </Button>

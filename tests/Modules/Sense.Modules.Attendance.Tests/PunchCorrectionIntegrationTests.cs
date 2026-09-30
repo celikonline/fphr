@@ -50,6 +50,8 @@ public sealed class PunchCorrectionIntegrationTests : TestFixture
         var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceServices(configuration);
+        // The approval handler writes punches in the tenant's zone (Z0.1); Identity's ITenantTimeZoneLookup is not in this fixture.
+        services.AddSingleton<ITenantLocalClock>(_localClock);
         services.AddModuleHandlers(
             AttendanceDbContext.SchemaName,
             typeof(AttendanceErrors).Assembly,
@@ -72,13 +74,15 @@ public sealed class PunchCorrectionIntegrationTests : TestFixture
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceCoreServices(configuration);
         services.AddAttendanceIntegrationEventHandlers();
+        services.AddSingleton<ITenantLocalClock>(_localClock);
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();
+        // Zaman-devam Z2.1's "AttendancePunch" decision handlers are registered next to FG-004's; each filters by RequestType.
         scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalCompleted>>()
-            .ShouldHaveSingleItem().ShouldBeOfType<PunchCorrectionApprovalCompletedHandler>();
+            .OfType<PunchCorrectionApprovalCompletedHandler>().ShouldHaveSingleItem();
         scope.ServiceProvider.GetServices<IIntegrationEventHandler<ApprovalRejected>>()
-            .ShouldHaveSingleItem().ShouldBeOfType<PunchCorrectionApprovalRejectedHandler>();
+            .OfType<PunchCorrectionApprovalRejectedHandler>().ShouldHaveSingleItem();
     }
 
     [Fact]

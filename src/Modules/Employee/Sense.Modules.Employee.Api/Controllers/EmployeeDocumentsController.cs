@@ -1,7 +1,10 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sense.Modules.Employee.Application.CardPdf;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Shared.Contracts.Export;
+using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Employee.Api.Controllers;
@@ -19,4 +22,22 @@ public sealed class EmployeeDocumentsController : ApiControllerBase
         var result = await Dispatcher.Query(new GetWorkCertificateQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>Employee card as PDF: comma-separated tab keys, optional period (yyyy-MM-dd) for event lists.</summary>
+    [HttpGet(ApiRoutes.IdParam + "/card-pdf")]
+    public async Task<IActionResult> CardPdf(
+        Guid id, [FromQuery] string? sections, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken ct) =>
+        ToFile(await Dispatcher.Query(new GetEmployeeCardPdfQuery(id, SplitSections(sections), from, to), ct));
+
+    /// <summary>The caller's own card as PDF (self-service).</summary>
+    [HttpGet("me/card-pdf")]
+    public async Task<IActionResult> MyCardPdf(
+        [FromQuery] string? sections, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken ct) =>
+        ToFile(await Dispatcher.Query(new GetMyEmployeeCardPdfQuery(SplitSections(sections), from, to), ct));
+
+    private static IReadOnlyList<string> SplitSections(string? sections) =>
+        (sections ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private IActionResult ToFile(Result<ExportFileResult> result) =>
+        result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
 }

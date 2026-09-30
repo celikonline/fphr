@@ -172,6 +172,41 @@ describe("ReportViewerPage", () => {
     expect(screen.queryByText("Ayşe")).not.toBeInTheDocument();
   });
 
+  it("downloads a PDF from a separate run of the same filters with format=pdf", async () => {
+    const user = userEvent.setup();
+    renderPage("/app/reports/employee.list?execution=exec-1");
+    await screen.findByText("Ayşe");
+    vi.mocked(requestReport).mockResolvedValue({ ...EXECUTION, id: "exec-pdf", resultFileName: "Çalışan listesi.pdf" });
+
+    await user.click(screen.getByRole("button", { name: "PDF indir" }));
+
+    await waitFor(() => expect(requestReport).toHaveBeenCalledWith("employee.list", { format: "pdf" }, { notify: false }));
+    await waitFor(() => expect(downloadReportExecution).toHaveBeenCalledWith("exec-pdf", "Çalışan listesi.pdf"));
+    expect(saveDownloadedReportFile).toHaveBeenCalled();
+  });
+
+  it("draws a select parameter, carries its value, and does not draw the format parameter", async () => {
+    vi.mocked(getReportCatalog).mockResolvedValue([
+      {
+        key: "attendance.time.daily_status",
+        categoryKey: "time",
+        parameters: [
+          { key: "status", kind: "select", isRequired: true, options: ["late", "absent"] },
+          { key: "format", kind: "select", isRequired: false, options: ["xlsx", "pdf"] },
+        ],
+      },
+    ]);
+    vi.mocked(requestReport).mockResolvedValue({ ...EXECUTION, reportKey: "attendance.time.daily_status" });
+
+    renderPage("/app/reports/attendance.time.daily_status?status=absent");
+
+    expect((await screen.findAllByLabelText("Durum *")).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText(/^Biçim|^format/i)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(requestReport).toHaveBeenCalledWith("attendance.time.daily_status", { status: "absent" }, { notify: false }),
+    );
+  });
+
   it("downloads the same execution's Excel file from the button", async () => {
     const user = userEvent.setup();
     renderPage("/app/reports/employee.list?execution=exec-1");

@@ -7,6 +7,8 @@
     "Overtime": "Fazla mesai",
     "Requisition": "Kadro",
     "VisaDocument": "Vize belgesi",
+    "AttendancePunch": "Eksik giriş/çıkış",
+    "PayslipObjection": "Bordro itirazı",
     "PunchCorrection": "Eksik giriş/çıkış"
   }
 }

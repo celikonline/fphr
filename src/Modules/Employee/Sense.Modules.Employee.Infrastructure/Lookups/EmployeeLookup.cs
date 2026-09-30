@@ -83,6 +83,16 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
         return row is null ? null : Enum.Parse<EmployeeGender>(row.Gender.ToString());
     }
 
+    public async Task<EmployeeSicilMatch?> FindBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default)
+    {
+        var row = await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.SicilNumarasi == sicilNumarasi)
+            .Select(e => new { e.Id, e.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return row is null ? null : new EmployeeSicilMatch(row.Id, row.Status == EmployeeStatus.Terminated);
+    }
+
     public async Task<IReadOnlyList<Guid>> GetDirectReportIdsAsync(Guid tenantId, Guid managerEmployeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AsNoTracking()
             .Where(e => e.TenantId == tenantId && e.ManagerEmployeeId == managerEmployeeId && e.Status != EmployeeStatus.Terminated)

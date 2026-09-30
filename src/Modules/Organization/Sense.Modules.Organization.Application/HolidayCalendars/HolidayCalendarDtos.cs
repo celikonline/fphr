@@ -7,4 +7,4 @@ public sealed record HolidayCalendarDto(Guid Id, string Name, string CountryCode
 public sealed record HolidayCalendarEntryDto(Guid Id, Guid HolidayCalendarId, DateOnly Date, string Name, bool IsRecurringAnnually, bool IsHalfDay = false);
 
 /// <summary>One holiday occurrence of the caller's effective calendar (recurring entries projected to the actual year).</summary>
-public sealed record UpcomingHolidayDto(DateOnly Date, string Name, Guid HolidayCalendarId, string CalendarName);
+public sealed record UpcomingHolidayDto(DateOnly Date, string Name, Guid HolidayCalendarId, string CalendarName, bool IsHalfDay = false);

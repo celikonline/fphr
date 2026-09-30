@@ -133,6 +133,47 @@ public sealed class ApprovalRejectedNotificationHandler(NotificationRecipientRes
     }
 }
 
+/// <summary>Template variable names of workflow.delegation_assigned.</summary>
+public static class DelegationTemplateModel
+{
+    public const string DelegatorName = "delegator_name";
+    public const string Period = "period";
+}
+
+/// <summary>workflow.delegation_assigned → the delegate (E-mail + in-app): who delegated to them and for which dates.</summary>
+public sealed class ApprovalDelegationAssignedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
+    : IIntegrationEventHandler<ApprovalDelegationAssigned>
+{
+    private const string DateFormat = "dd.MM.yyyy";
+
+    public async Task Handle(ApprovalDelegationAssigned integrationEvent, CancellationToken cancellationToken)
+    {
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.DelegateEmployeeId], cancellationToken);
+        if (to.Count == 0)
+        {
+            return;
+        }
+
+        var delegator = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.DelegatorEmployeeId], cancellationToken);
+        var period = string.Create(
+            CultureInfo.InvariantCulture, $"{integrationEvent.StartDate.ToString(DateFormat, CultureInfo.InvariantCulture)} - {integrationEvent.EndDate.ToString(DateFormat, CultureInfo.InvariantCulture)}");
+
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.ApprovalDelegationAssigned,
+                to,
+                new Dictionary<string, string?>
+                {
+                    [DelegationTemplateModel.DelegatorName] = delegator.FirstOrDefault()?.DisplayName,
+                    [DelegationTemplateModel.Period] = period,
+                },
+                WorkflowTemplateModel.InboxPath),
+            cancellationToken);
+    }
+}
+
 /// <summary>request.comment_added → the request's other parties (recipients resolved by Workflow; the author is never notified).</summary>
 public sealed class ApprovalRequestCommentedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
     : IIntegrationEventHandler<ApprovalRequestCommented>

@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "eyebrow": "SENSE HR MOBIL",
+    "title": "Ihre Personalabteilung, jetzt in der Tasche.",
+    "description": "Kommen und gehen erfassen, Urlaub beantragen und die Anträge Ihres Teams von unterwegs genehmigen.",
+    "note": "Sie melden sich mit Ihrem Firmenkonto an — keine zusätzliche Einrichtung nötig.",
+    "phoneAlt": {
+      "home": "Sense HR Mobile App Vorschau: Startbildschirm",
+      "clockIn": "Sense HR Mobile App Vorschau: Kommen/Gehen-Bildschirm",
+      "approvals": "Sense HR Mobile App Vorschau: Meine Genehmigungen Bildschirm"
+    }
+  },
+  "store": {
+    "iosLine1": "Im App Store",
+    "androidLine1": "Bei Google Play",
+    "download": "Herunterladen",
+    "comingSoon": "Demnächst",
+    "iosStoreName": "App Store",
+    "androidStoreName": "Google Play"
+  },
+  "featuresHeading": "Was die App bietet",
+  "features": {
+    "clockIn": {
+      "title": "Kommen / Gehen",
+      "body": "Mit einem Fingertipp per Standort oder QR-Code einstempeln.",
+      "alt": "Sense HR Mobile App Kommen/Gehen-Bildschirm"
+    },
+    "leave": {
+      "title": "Urlaub",
+      "body": "Restguthaben einsehen und in Sekunden einen Urlaubsantrag stellen.",
+      "alt": "Sense HR Mobile App Mein Urlaub Bildschirm"
+    },
+    "requests": {
+      "title": "Anträge",
+      "body": "Urlaubs-, Überstunden-, Spesen- und Vorschussanträge an einem Ort stellen.",
+      "alt": "Sense HR Mobile App Neuer Antrag Bildschirm"
+    },
+    "approvals": {
+      "title": "Genehmigungen",
+      "body": "Als Führungskraft Anträge Ihres Teams unterwegs genehmigen oder ablehnen.",
+      "alt": "Sense HR Mobile App Meine Genehmigungen Bildschirm"
+    },
+    "shifts": {
+      "title": "Meine Schicht",
+      "body": "Wöchentliche Schicht einsehen und nicht verfügbare Tage melden.",
+      "alt": "Sense HR Mobile App Meine Schicht Bildschirm"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "body": "Sofort benachrichtigt werden, sobald ein Antrag genehmigt oder abgelehnt wird.",
+      "alt": "Sense HR Mobile App Benachrichtigungen Bildschirm"
+    }
+  },
+  "howToStart": {
+    "heading": "So starten Sie",
+    "steps": {
+      "download": {
+        "title": "App herunterladen",
+        "body": "Sense HR aus dem App Store oder bei Google Play installieren."
+      },
+      "login": {
+        "title": "Mit Firmenkonto anmelden",
+        "body": "Dieselbe E-Mail-Adresse und dasselbe Passwort wie im Web verwenden."
+      },
+      "notifications": {
+        "title": "Benachrichtigungen aktivieren",
+        "body": "Genehmigungen und Antragsaktualisierungen aufs Telefon erhalten."
+      }
+    }
+  }
+}

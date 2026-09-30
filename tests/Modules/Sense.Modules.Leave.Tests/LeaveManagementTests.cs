@@ -226,6 +226,9 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         // roadmap #23 (A1): EmployeeHired -> default schedule assignment must run here too, otherwise the
         // real IWorkScheduleReadService reports every day closed and all submits fail with zero_days.
         services.AddAttendanceIntegrationEventHandlers();
+        // Zaman-devam: Attendance'ın ApprovalCompleted işleyicisi (eksik kayıt talebi) IPunchRecorder -> ITenantLocalClock üzerinden kiracı
+        // saat dilimini ister; Api/Worker'da Identity kaydeder. Dilimsiz kiracı = UTC.
+        services.AddSingleton(Substitute.For<Sense.Modules.Identity.Contracts.ITenantTimeZoneLookup>());
         services.AddLeaveServices(configuration);
         // Denetim A5-belge: LeaveRequestRules'un Documents bağı (bu dosyadaki senaryolar belge kuralı dışı).
         services.AddSingleton(DocumentLookupDoubles.Permissive());

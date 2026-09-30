@@ -44,7 +44,7 @@ public sealed class MyTeamFeaturesTests
             .Returns(new List<ApprovedLeaveDay>());
     }
 
-    private GetMyTeamTodayHandler TodayHandler() => new(_tenant, _currentUser, _lookup, _employees, _days, Clock, _leaveDates);
+    private GetMyTeamTodayHandler TodayHandler() => new(_tenant, _currentUser, _lookup, _employees, _days, new InMemoryPunchRepository(), Substitute.For<ITerminalRepository>(), Clock, _leaveDates);
 
     private GetMyTeamWeekHandler WeekHandler() =>
         new(_tenant, _currentUser, _lookup, _employees, _days, _schedules, new NonWorkingDayResolver(_leaveDates));
@@ -109,7 +109,7 @@ public sealed class MyTeamFeaturesTests
         _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceDay>());
 
-        var result = await new GetMyTeamTodayHandler(_tenant, _currentUser, _lookup, _employees, _days, Clock)
+        var result = await new GetMyTeamTodayHandler(_tenant, _currentUser, _lookup, _employees, _days, new InMemoryPunchRepository(), Substitute.For<ITerminalRepository>(), Clock)
             .Handle(new GetMyTeamTodayQuery(), TestContext.Current.CancellationToken);
 
         result.Value.ShouldHaveSingleItem().Status.ShouldBe(MyTeamTodayStatus.NotCheckedIn);

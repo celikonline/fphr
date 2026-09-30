@@ -32,7 +32,9 @@ public sealed class AttendanceImportRowHandlerTests
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(9, 0), new TimeOnly(18, 0), null, null, true));
     }
 
-    private AttendanceImportRowHandler CreateHandler() => new(_tenant, _employeeLookup, _schedules, _days, _unitOfWork);
+    private AttendanceImportRowHandler CreateHandler() =>
+        new(_tenant, _employeeLookup, TestPlanner.From(_schedules), _days, _unitOfWork, new InMemoryPunchRepository(), new FixedLocalClock(DateTime.UtcNow),
+            Substitute.For<IMonthlyTimesheetApprovalRepository>());
 
     private static ImportRow Row(int rowNumber, string? nationalId, string? date, string? checkIn, string? checkOut)
     {

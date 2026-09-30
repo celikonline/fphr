@@ -9,7 +9,7 @@ import { usePermission } from "@/components/permission-guard";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { FileDropzone, type FileRejectReason } from "@/components/ui/file-dropzone";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getAttendanceErrorMessage } from "@/lib/attendance-error";
 import { saveDownloadedFile } from "@/services/data-transfer.service";
 import { importDeviceLogs, type DeviceLogImportError, type DeviceLogImportResult } from "@/services/attendance.service";
 
@@ -44,7 +44,7 @@ function DeviceLogImport() {
     },
     onError: (error) => {
       setResult(null);
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("attendance:genericError")) });
+      toast({ variant: "destructive", title: t("common:error"), description: getAttendanceErrorMessage(error, t("attendance:genericError"), t) });
     },
   });
 
@@ -86,7 +86,7 @@ function DeviceLogImport() {
   const table = useDataTable({ columns, data: result?.errors ?? [], getRowId: (row) => String(row.line) });
 
   return (
-    <div className="max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <Upload size={24} /> {t("attendance:deviceLogImport.title")}

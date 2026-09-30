@@ -49,6 +49,9 @@ public sealed class DocumentsModule : IModule
         // Document/visa/document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();
 
+        // Employee card PDF section (API only).
+        services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.DocumentsCardPdfSection>();
+
         // Reporting catalog provider (API host only, mirrors EmployeeModule): it takes IStringLocalizer<SharedResource>,
         // which Sense.Worker never registers, so it must stay out of AddDocumentsCoreServices.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.MissingDocumentReportProvider>();

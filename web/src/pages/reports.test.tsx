@@ -21,7 +21,7 @@ vi.mock("@/services/reports.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/reports.service")>(
     "@/services/reports.service"
   );
-  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn() };
+  return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn(), requestReport: vi.fn() };
 });
 
 // Everything except the KPI tab is allowed: the page then renders just the catalog + history.
