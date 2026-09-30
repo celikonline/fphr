@@ -136,6 +136,13 @@ builder.Services.AddScoped<IEmployeeAudienceLookup, EmployeeAudienceLookup>();
 builder.Services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
+// AddNotificationsCore scans the Notifications Application assembly, which also holds the API-only HR message send
+// handler. It needs IEmployeeDirectory (and, behind it, IDataScopeService), which only the API host registers and the
+// Worker never serves commands, so drop it here or the host fails DI validation at startup.
+Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll<
+    Sense.Shared.Contracts.Messaging.ICommandHandler<
+        Sense.Modules.Notifications.Application.HrMessages.SendHrMessageCommand,
+        Sense.Modules.Notifications.Application.HrMessages.SendHrMessageResult>>(builder.Services);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
 builder.Services.AddHostedService<PushDeliveryPollingService>();
 // Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
