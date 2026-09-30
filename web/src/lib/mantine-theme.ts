@@ -267,7 +267,10 @@ export const mantineTheme = createTheme({
     Input: Input.extend({ classNames: { wrapper: classes.inputWrapper, input: classes.input } }),
     InputWrapper: InputWrapper.extend({ classNames: { label: classes.label } }),
     Fieldset: Fieldset.extend({ classNames: { root: classes.fieldset, legend: classes.legend } }),
-    Modal: Modal.extend({ defaultProps: { radius: "lg" }, classNames: { title: classes.modalTitle } }),
+    Modal: Modal.extend({
+      defaultProps: { radius: "lg" },
+      classNames: { title: classes.modalTitle },
+    }),
   },
 });
 
@@ -281,7 +284,10 @@ export function mantineThemeForPalette(palette: Palette): MantineThemeOverride {
   if (palette === DEFAULT_PALETTE) return mantineTheme;
   let theme = paletteThemes.get(palette);
   if (!theme) {
-    theme = mergeThemeOverrides(mantineTheme, { primaryColor: palette, primaryShade: PALETTE_SHADES[palette] });
+    theme = mergeThemeOverrides(mantineTheme, {
+      primaryColor: palette,
+      primaryShade: PALETTE_SHADES[palette],
+    });
     paletteThemes.set(palette, theme);
   }
   return theme;

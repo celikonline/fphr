@@ -179,14 +179,18 @@ describe("grouped sidebar - collapsed mode", () => {
     setAuthState(["employee.employees.read"]);
     renderNavList(true, ["/app/employees"]);
 
-    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).toHaveAttribute("data-current");
+    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).toHaveAttribute(
+      "data-current"
+    );
   });
 
   it("leaves groups unmarked when the current page is outside them", () => {
     setAuthState(["employee.employees.read"]);
     renderNavList(true, ["/app"]);
 
-    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).not.toHaveAttribute("data-current");
+    expect(screen.getByRole("button", { name: "İnsan Kaynakları" })).not.toHaveAttribute(
+      "data-current"
+    );
   });
 });
 
