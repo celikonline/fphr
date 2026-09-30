@@ -1,9 +1,9 @@
 {
   "id": "TK-037",
   "baslik": "Testler tek ortak Postgres kullanir; test basina konteyner acilmaz",
-  "durum": "hazir",
+  "durum": "onaylandi",
   "sahip": "takim-gelistirici-dotnet",
-  "dal": "a/test-ortak-postgres",
+  "dal": "a/test-ortak-postgres-geri",
   "kaynak": "Kullanici istegi 2026-09-29 - TestFixture her test yontemi icin yeni postgres:17-alpine konteyneri aciyor; tum testler ayni kaynagi kullansin",
   "kabul": [
     "tests/Sense.Tests.Shared/Fixtures altinda SharedPostgres: yonetici baglanti metnini SENSE_TEST_POSTGRES ortam degiskeninden okur; tanimsiz/bossa Docker'a dokunmadan, 'once scripts/test-postgres.sh calistir' diyen acik bir hata firlatir. Testcontainers ile konteyner baslatan kod kalmaz.",
@@ -17,6 +17,6 @@
   ],
   "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY",
   "riskli_alan": false,
-  "kanit": ".claude/takim/kanit/a0a05051886daec9.json",
+  "kanit": ".claude/takim/kanit/b9c19816724c12c4.json",
   "handoff": "docs/takim/handoff/TK-037.md"
 }
