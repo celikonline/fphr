@@ -250,10 +250,13 @@ export default function LoginPage() {
 
       {/* Brand panel */}
       <aside
-        className={`hidden min-w-[400px] flex-none basis-[40%] flex-col justify-between p-10 lg:flex ${classes.brandPanel}`}
+        className={`hidden min-w-[440px] flex-none basis-[46%] flex-col justify-between p-14 lg:flex ${classes.brandPanel}`}
       >
+        <div className={`${classes.shape} ${classes.shapeBack}`} aria-hidden="true" />
+        <div className={`${classes.shape} ${classes.shapeFront}`} aria-hidden="true" />
+
         <Group gap="sm" wrap="nowrap" className={classes.reveal}>
-          <BrandMark />
+          <BrandMark onDark />
           <Stack gap={2}>
             <Text fz={20} fw={800} lh={1.1} lts={-0.4}>
               SenseHR
@@ -271,8 +274,8 @@ export default function LoginPage() {
           </span>
           <Title
             order={1}
-            mt="md"
-            fz={36}
+            mt="lg"
+            fz={42}
             fw={800}
             lh={1.15}
             lts={-0.8}
@@ -292,14 +295,14 @@ export default function LoginPage() {
             {t("auth:brandSubtitle")}
           </Text>
 
-          <Stack mt={24} gap="xs">
+          <Stack mt={40} gap="sm">
             {FEATURES.map(({ icon: Icon, key, color }, index) => (
               <div
                 key={key}
                 className={`${classes.feature} ${classes.reveal}`}
                 style={revealDelay(320 + index * 80)}
               >
-                <ThemeIcon color={color} size={36} radius="xs">
+                <ThemeIcon color={color} size={40} radius={10}>
                   <Icon size={20} />
                 </ThemeIcon>
                 <Text size="sm" fw={600}>

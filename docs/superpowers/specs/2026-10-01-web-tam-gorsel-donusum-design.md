@@ -26,7 +26,7 @@ Bu çalışma bir görsel ve etkileşim dönüşümüdür. API sözleşmeleri, y
 
 ### 1. Giriş, davet ve ilk kurulum
 
-Mevcut marka paneli ve kimlik akışları ortak bir görsel aileye bağlanır: formun tek ana eylemi, alanların açıklaması, hata ve MFA adımları açık bir okuma sırasındadır. `login`, `forgot-password`, `reset-password`, `invite-accept` ve `setup-wizard` hem dar hem geniş ekranda aynı etkileşim kurallarını kullanır. Dekor formu gölgelemez; hareket azaltma tercihinde dekoratif animasyon durur. İK işe alıştırma ekranı (`pages/onboarding.tsx`) kimlik kurulumu değil, aşağıdaki iş ekranı desenleriyle ele alınır.
+Mevcut marka paneli ve kimlik akışları ortak bir görsel aileye bağlanır: formun tek ana eylemi, alanların açıklaması, hata ve MFA adımları açık bir okuma sırasındadır. `login`, `forgot-password`, `reset-password`, `invite-accept` ve `setup-wizard` hem dar hem geniş ekranda aynı etkileşim kurallarını kullanır. Kullanıcının 2026-10-01 ek kararına göre **giriş sayfasının sol mor-mavi gradyanlı marka arka planı, nokta dokusu ve köşe şekilleri korunur**; düz uygulama şablonu giriş formu ve diğer ekranlarda geçerlidir. Dekor formu gölgelemez; hareket azaltma tercihinde dekoratif animasyon durur. İK işe alıştırma ekranı (`pages/onboarding.tsx`) kimlik kurulumu değil, aşağıdaki iş ekranı desenleriyle ele alınır.
 
 ### 2. Ana sayfa
 
