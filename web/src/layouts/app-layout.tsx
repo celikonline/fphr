@@ -57,7 +57,7 @@ function NotificationsButton() {
       tooltip={label}
       tooltipPosition="bottom"
       renderTarget={(unread) => (
-        <ActionIcon variant="default" size={40} radius="md" aria-label={label}>
+        <ActionIcon variant="default" size={34} radius="xs" aria-label={label}>
           <Indicator
             color="red"
             size={16}
@@ -137,15 +137,15 @@ function SidebarEdgeToggle({ collapsed, onToggle }: { collapsed: boolean; onTogg
   const Icon = collapsed ? ChevronRight : ChevronLeft;
 
   return (
-    <div className="group/edge absolute top-0 -right-4 z-20 h-16 w-9">
+    <div className="group/edge absolute top-0 -right-4 z-20 h-14 w-9">
       <Tooltip label={label} position="right" openDelay={300}>
         <ActionIcon
           variant="default"
           size={26}
-          radius="xl"
+          radius="xs"
           aria-label={label}
           onClick={onToggle}
-          className="absolute top-3 left-1/2 -translate-x-1/2 opacity-70 shadow-sm transition-opacity hover:opacity-100 group-hover/edge:opacity-100 focus-visible:opacity-100"
+          className="absolute top-2.5 left-1/2 -translate-x-1/2 opacity-70 transition-opacity hover:opacity-100 group-hover/edge:opacity-100 focus-visible:opacity-100"
         >
           <Icon size={16} />
         </ActionIcon>
@@ -163,7 +163,7 @@ function AppsLauncher() {
     <Menu position="bottom-end" width={320}>
       <Tooltip label={t("navigation:nav.apps")}>
         <Menu.Target>
-          <ActionIcon variant="filled" size={40} radius="md" aria-label={t("navigation:nav.apps")}>
+          <ActionIcon variant="filled" size={34} radius="xs" aria-label={t("navigation:nav.apps")}>
             <Grip size={20} />
           </ActionIcon>
         </Menu.Target>
@@ -241,11 +241,10 @@ function ImpersonationBanner() {
 }
 
 /**
- * Wordmark heading the sidebar column, sharing its width and background (Kolay İK reference layout). It
- * follows the desktop collapse preference so the navy column keeps one width from top to bottom.
+ * Wordmark heading the sidebar column. It follows the desktop collapse preference.
  */
 function Brand({ collapsed }: { collapsed: boolean }) {
-  const desktopWidth = collapsed ? "" : "md:w-64 md:justify-start md:px-5";
+  const desktopWidth = collapsed ? "" : "md:w-56 md:justify-start md:px-3";
   const fullMark = collapsed ? "hidden" : "hidden md:block";
   const shortMark = collapsed ? "" : "md:hidden";
 
@@ -255,7 +254,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
       className={`flex w-14 shrink-0 items-center justify-center ${desktopWidth} ${classes.rail}`}
     >
       <Text
-        fz={22}
+        fz={17}
         fw={800}
         lh={1}
         ff="var(--mantine-font-family-headings)"
@@ -266,7 +265,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
         SenseHR
       </Text>
       <Text
-        fz={22}
+        fz={19}
         fw={800}
         lh={1}
         ff="var(--mantine-font-family-headings)"
@@ -300,7 +299,7 @@ function BackButton() {
 
   return (
     <Tooltip label={label}>
-      <ActionIcon variant="default" size={40} radius="md" aria-label={label} onClick={handleBack}>
+      <ActionIcon variant="default" size={34} radius="xs" aria-label={label} onClick={handleBack}>
         <ArrowLeft size={20} />
       </ActionIcon>
     </Tooltip>
@@ -325,7 +324,7 @@ function TenantBadge() {
   );
 }
 
-/** Greeting at the start of the top bar: name, then today's date (Kolay İK reference layout). */
+/** Compact greeting at the start of the top bar. */
 function Greeting() {
   const { t, i18n } = useTranslation(["home"]);
   const user = useAuthStore((state) => state.user);
@@ -337,26 +336,20 @@ function Greeting() {
     month: "long",
     year: "numeric",
   }).format(today);
-  const weekdayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(today);
-
   return (
-    <div className="hidden min-w-0 flex-1 sm:block">
-      <Text size="sm" c="dimmed" truncate>
+    <div className="hidden min-w-0 flex-1 lg:block">
+      <Text size="xs" fw={600} truncate>
         {t("home:greeting", { name: user?.firstName || user?.name || "" })}
       </Text>
-      <Text fz={20} fw={500} lh={1.3} truncate>
-        <Text span inherit fw={400} c="dimmed">
-          {t("home:today")}
-        </Text>{" "}
-        {dateLabel}, {weekdayLabel}
+      <Text size="xs" c="dimmed" truncate>
+        {dateLabel}
       </Text>
     </div>
   );
 }
 
 /**
- * Main application shell, framed as a rounded panel on the page: top bar (wordmark over the sidebar
- * column, greeting, apps launcher) + single left sidebar (Kolay İK order) + content.
+ * Main application shell: compact top bar, bordered left navigation, and continuous content.
  */
 export default function AppLayout() {
   // Desktop-only preference - the mobile rail below is always icon-only regardless of this value.
@@ -368,12 +361,12 @@ export default function AppLayout() {
   return (
     <Box className={`flex h-screen flex-col ${classes.page}`} c="var(--mantine-color-text)">
       <ImpersonationBanner />
-      <div className="flex min-h-0 flex-1 p-2 md:p-4">
+      <div className="flex min-h-0 flex-1">
         <div className={`flex min-h-0 flex-1 flex-col ${classes.portal}`}>
-          <header className="flex h-18 shrink-0 items-stretch">
+          <header className="flex h-14 shrink-0 items-stretch">
             <Brand collapsed={collapsed} />
             <div
-              className={`flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6 ${classes.headerContent}`}
+              className={`flex min-w-0 flex-1 items-center justify-end gap-2 px-3 md:px-4 ${classes.headerContent}`}
             >
               <BackButton />
               <Greeting />
@@ -392,7 +385,7 @@ export default function AppLayout() {
             <div className="relative hidden shrink-0 md:flex">
               <aside
                 data-testid="sidebar-desktop"
-                className={`${collapsed ? "w-14" : "w-64"} flex shrink-0 flex-col ${classes.rail}`}
+                className={`${collapsed ? "w-14" : "w-56"} flex shrink-0 flex-col ${classes.rail}`}
               >
                 <NavList collapsed={collapsed} />
               </aside>

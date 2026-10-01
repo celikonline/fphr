@@ -1,0 +1,19 @@
+{
+  "id": "WEB-01",
+  "baslik": "SenseİK web arayüzünü düz SensePROJECT şablonuna dönüştür",
+  "durum": "calisiyor",
+  "sahip": "Codex",
+  "dal": "a/web-tam-gorsel-donusum",
+  "kabul": [
+    "SenseİK paleti ve mevcut veri, yetki, rota davranışları korunur.",
+    "Ortak kabuk, üst çubuk, sol menü ve bileşen geometrisi referanstaki düz, ince kenarlıklı ve kompakt sisteme uyar.",
+    "İlk teslim olan /app ayrı Docker önizlemesinde açılır; 375, 768 ve masaüstü genişliklerinde yatay taşma olmaz.",
+    "Giriş, parola sıfırlama, davet ve kurulum ekranları aynı yüzey ve köşe düzenini taşır.",
+    "Kalan erişilebilir web rotaları ekran ailesi desenleriyle incelenir ve doğrulanır.",
+    "Proje test kapısı yeşil kanıt üretir ve bağımsız gözden geçirici onay verir."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/WEB-01.md"
+}

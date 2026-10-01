@@ -82,8 +82,8 @@ function LoginThemeToggle() {
           <ActionIcon
             variant="default"
             size="lg"
-            radius="xl"
-            className="fixed right-6 top-6 z-20"
+            radius="xs"
+            className="fixed right-4 top-4 z-20"
             aria-label={t("common:theme")}
           >
             {icon}
@@ -250,13 +250,10 @@ export default function LoginPage() {
 
       {/* Brand panel */}
       <aside
-        className={`hidden min-w-[440px] flex-none basis-[46%] flex-col justify-between p-14 lg:flex ${classes.brandPanel}`}
+        className={`hidden min-w-[400px] flex-none basis-[40%] flex-col justify-between p-10 lg:flex ${classes.brandPanel}`}
       >
-        <div className={`${classes.shape} ${classes.shapeBack}`} aria-hidden="true" />
-        <div className={`${classes.shape} ${classes.shapeFront}`} aria-hidden="true" />
-
         <Group gap="sm" wrap="nowrap" className={classes.reveal}>
-          <BrandMark onDark />
+          <BrandMark />
           <Stack gap={2}>
             <Text fz={20} fw={800} lh={1.1} lts={-0.4}>
               SenseHR
@@ -274,8 +271,8 @@ export default function LoginPage() {
           </span>
           <Title
             order={1}
-            mt="lg"
-            fz={42}
+            mt="md"
+            fz={36}
             fw={800}
             lh={1.15}
             lts={-0.8}
@@ -295,14 +292,14 @@ export default function LoginPage() {
             {t("auth:brandSubtitle")}
           </Text>
 
-          <Stack mt={40} gap="sm">
+          <Stack mt={24} gap="xs">
             {FEATURES.map(({ icon: Icon, key, color }, index) => (
               <div
                 key={key}
                 className={`${classes.feature} ${classes.reveal}`}
                 style={revealDelay(320 + index * 80)}
               >
-                <ThemeIcon color={color} size={40} radius={10}>
+                <ThemeIcon color={color} size={36} radius="xs">
                   <Icon size={20} />
                 </ThemeIcon>
                 <Text size="sm" fw={600}>
@@ -319,7 +316,7 @@ export default function LoginPage() {
       </aside>
 
       {/* Form panel */}
-      <main className={`flex flex-1 items-center justify-center px-6 py-16 ${classes.formPanel}`}>
+      <main className={`flex flex-1 items-center justify-center px-6 py-12 ${classes.formPanel}`}>
         {mfaToken !== null ? (
           <form
             className={`w-full max-w-sm ${classes.reveal}`}
@@ -377,8 +374,7 @@ export default function LoginPage() {
               mt="xl"
               h={48}
               fullWidth
-              variant="gradient"
-              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              variant="filled"
               disabled={isLoading || mfaCode.length < 6}
               className={classes.submit}
             >
@@ -484,8 +480,7 @@ export default function LoginPage() {
               mt="xl"
               h={48}
               fullWidth
-              variant="gradient"
-              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              variant="filled"
               rightSection={isLoading ? undefined : <ArrowRight size={18} />}
               disabled={isLoading}
               className={classes.submit}

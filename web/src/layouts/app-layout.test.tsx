@@ -172,7 +172,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     renderAppLayout();
     const desktopSidebar = screen.getByTestId("sidebar-desktop");
 
-    expect(desktopSidebar.className).toContain("w-64");
+    expect(desktopSidebar.className).toContain("w-56");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 
@@ -198,7 +198,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     await user.click(screen.getByRole("button", { name: "Menüyü daralt" }));
     await user.click(screen.getByRole("button", { name: "Menüyü genişlet" }));
 
-    expect(desktopSidebar.className).toContain("w-64");
+    expect(desktopSidebar.className).toContain("w-56");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 

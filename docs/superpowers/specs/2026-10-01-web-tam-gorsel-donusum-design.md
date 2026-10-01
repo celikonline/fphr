@@ -14,7 +14,7 @@ Bu çalışma bir görsel ve etkileşim dönüşümüdür. API sözleşmeleri, y
 
 ## Mevcut temel ve görsel yön
 
-2026-09-28 tarihli [temel tasarım](2026-09-28-web-gorsel-standart-temel-design.md) ile bunun kodu korunur: Mantine 9, kurumsal paletler, Onest gövde, Bricolage Grotesque başlık, açık/koyu/sistem teması, lacivert gezinme rayı ve seçili öğenin içerik yüzeyine bağlandığı **özlük sekmesi**. Bu öğe ürünün tek güçlü imzasıdır. İçerik ekranlarında ek bir büyük dekoratif imza aranmaz.
+2026-09-28 tarihli [temel tasarım](2026-09-28-web-gorsel-standart-temel-design.md) içindeki Mantine 9, kurumsal paletler, Onest gövde, Bricolage Grotesque başlık ve açık/koyu/sistem teması korunur. Kullanıcının 2026-10-01 tarihinde verdiği SensePROJECT pano görseli, geometrinin yeni kaynağıdır: düz beyaz uygulama yüzeyi, kompakt üst çubuk, ince çizgili açık sol menü, açık mavi seçili satır, sıkı boşluklar ve çok küçük köşe yarıçapları. Önceki lacivert gezinme rayı, kavisli **özlük sekmesi**, büyük yuvarlatılmış kabuk ve gradyan ana sayfa odağı bu kararla kalkar. SenseİK'nin renk kimliği, metinleri ve yetki yapısı korunur.
 
 - Renk, tipografi, yarıçap ve bileşen görünümleri `web/src/lib/mantine-theme.ts` üzerinden; ek yüzey değişkenleri `web/src/styles/index.css` üzerinden gelir. Kullanıcının yedi kurumsal palet seçimi çalışmaya devam eder.
 - Mantine bileşenleri kullanılır. Tailwind yalnız yerleşim ve boşluk içindir. Bileşene özgü durum stili gerekiyorsa yanındaki CSS module Mantine değişkenlerini ve açık/koyu değerleri kullanır.
@@ -44,7 +44,7 @@ Detaylarda önce kimlik/durum ve en önemli eylem, ardından ilgili bilgi grupla
 
 | Aşama | Çıktı | Geçiş ölçütü |
 |---|---|---|
-| 1. Tema ve kabuk | Önceki temel tasarım | Kodda mevcut; regresyon kontrolü yapılır |
+| 1. Tema ve kabuk | Görsel referansa göre düz, kompakt ortak yapı | Ana sayfa önizlemesinde genişlik ve tema regresyonu kontrol edilir |
 | 2. Ana sayfa — ilk teslim | Role göre öncelikli başlangıç düzeni ve ayrı Docker önizlemesi | Mevcut widget verileri, izinleri ve hata yalıtımı korunur; kullanıcı sonucu Docker'da görür |
 | 3. Giriş ve ilk kurulum | Beş kimlik/kurulum ekranı için ortak desen | Giriş, MFA, davet ve parola akışları aynı davranışla çalışır |
 | 4. Yoğun listeler | Paylaşılan tablo/filtre/sayfalama deseni ve temsilci ekranlar | Çalışan + bordro + puantaj örneklerinden sonra aynı desen diğer listelere uygulanır |

@@ -7,6 +7,17 @@
   "inDays_one": "In {{count}} Tag",
   "inDays_other": "In {{count}} Tagen",
   "noWidgets": "Auf Ihrer Startseite gibt es nichts anzuzeigen.",
+  "focus": {
+    "eyebrow": "Heute im Fokus",
+    "approvals": { "title_one": "{{count}} Anfrage wartet auf Ihre Freigabe", "title_other": "{{count}} Anfragen warten auf Ihre Freigabe", "description": "Prüfen Sie ausstehende Anfragen und bringen Sie Ihr Team voran.", "action": "Freigaben öffnen" },
+    "leave": { "title": "Planen Sie Ihren Tag", "description": "Sehen Sie Ihren Urlaub und Ihre Anfragen an einem Ort.", "action": "Zum Urlaub" },
+    "directory": { "title": "Bleiben Sie mit Ihrem Team in Verbindung", "description": "Finden Sie Mitarbeitende und Teams und erreichen Sie die richtige Person.", "action": "Mitarbeitende ansehen" },
+    "account": { "title": "Willkommen bei SenseİK", "description": "Beginnen Sie mit einem Blick auf Ihre Kontodaten.", "action": "Zum Konto" }
+  },
+  "sections": {
+    "workflow": { "kicker": "Mein Arbeitsablauf", "title": "Ihre Aufgaben", "description": "Anfragen und Mitteilungen, die Ihre Aufmerksamkeit brauchen." },
+    "company": { "kicker": "Unternehmensleben", "title": "Was um Sie herum geschieht", "description": "Ihr Team, Termine und bevorstehende Ereignisse." }
+  },
   "daysSuffix": "T",
   "viewAll": "Alle anzeigen",
   "refresh": "Aktualisieren",

@@ -14,27 +14,18 @@
 
 @import "tailwindcss";
 
-/* Soft tonal fill for `variant="default"` buttons and action icons (see variantColorResolver in mantine-theme.ts). */
+/* Compact, bordered controls and a flat navigation surface. */
 :root[data-mantine-color-scheme="light"] {
-  --sense-tonal-bg: var(--mantine-color-gray-1);
-  --sense-tonal-hover: var(--mantine-color-gray-2);
+  --sense-tonal-bg: #ffffff;
+  --sense-tonal-hover: var(--mantine-color-gray-0);
   --sense-tonal-color: var(--mantine-color-gray-8);
-
-  /* Navigation rail (app-layout.module.css .rail): Gece Laciverti dominant surface. */
-  --sense-rail-bg: var(--mantine-color-navy-8);
-  --sense-rail-fg: var(--mantine-color-navy-1);
-  --sense-rail-fg-strong: #ffffff;
-  --sense-rail-hover: rgba(255, 255, 255, 0.08);
-  --sense-rail-divider: rgba(255, 255, 255, 0.1);
-  /* "Özlük sekmesi": the active rail item's fill matches the content surface it hands off to. */
-  --sense-rail-tab: var(--mantine-color-body);
-
-  /* Atmosphere behind the rounded shell (app-layout.tsx .page): a faint navy wash from the top-left corner. */
-  --sense-page-bg: var(--mantine-color-gray-0) radial-gradient(
-      1200px 600px at 0% 0%,
-      color-mix(in srgb, var(--mantine-color-navy-7) 7%, transparent),
-      transparent
-    );
+  --sense-rail-bg: #ffffff;
+  --sense-rail-fg: var(--mantine-color-gray-8);
+  --sense-rail-fg-strong: var(--mantine-color-navy-8);
+  --sense-rail-hover: var(--mantine-color-gray-0);
+  --sense-rail-divider: var(--mantine-color-default-border);
+  --sense-rail-tab: var(--mantine-primary-color-0);
+  --sense-page-bg: #ffffff;
 }
 
 :root[data-mantine-color-scheme="dark"] {
@@ -47,7 +38,7 @@
   --sense-rail-fg-strong: #ffffff;
   --sense-rail-hover: rgba(255, 255, 255, 0.08);
   --sense-rail-divider: rgba(255, 255, 255, 0.1);
-  --sense-rail-tab: var(--mantine-color-body);
+  --sense-rail-tab: var(--mantine-color-dark-5);
 
   --sense-page-bg: var(--mantine-color-dark-8);
 }

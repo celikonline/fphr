@@ -206,7 +206,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       background: "var(--sense-tonal-bg)",
       hover: "var(--sense-tonal-hover)",
       color: "var(--sense-tonal-color)",
-      border: "calc(0.0625rem * var(--mantine-scale)) solid transparent",
+      border: "calc(0.0625rem * var(--mantine-scale)) solid var(--mantine-color-default-border)",
     };
   }
   return defaultVariantColorsResolver(input);
@@ -256,19 +256,19 @@ export const mantineTheme = createTheme({
       h2: { fontWeight: "750" },
     },
   },
-  defaultRadius: "md",
+  defaultRadius: "xs",
   cursorType: "pointer",
   respectReducedMotion: true,
   components: {
     // Mantine badges are uppercase by default; the app shows statuses and counts in normal case.
     Badge: Badge.extend({ styles: { root: { textTransform: "none" } } }),
-    // Soft form styling (Google Meet style): tonal inputs, pill buttons, panel fieldsets, rounder dialogs.
-    Button: Button.extend({ defaultProps: { radius: "xl" } }),
+    // Compact controls with defined edges follow the approved SensePROJECT reference.
+    Button: Button.extend({ defaultProps: { radius: "xs" } }),
     Input: Input.extend({ classNames: { wrapper: classes.inputWrapper, input: classes.input } }),
     InputWrapper: InputWrapper.extend({ classNames: { label: classes.label } }),
     Fieldset: Fieldset.extend({ classNames: { root: classes.fieldset, legend: classes.legend } }),
     Modal: Modal.extend({
-      defaultProps: { radius: "lg" },
+      defaultProps: { radius: "sm" },
       classNames: { title: classes.modalTitle },
     }),
   },
