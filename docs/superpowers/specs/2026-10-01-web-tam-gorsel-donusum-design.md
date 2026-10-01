@@ -4,7 +4,7 @@
 
 ## Amaç ve kararlar
 
-SenseİK'nin web arayüzünün bütün erişilebilir ekranları aynı tasarım dilini ve kalite tabanını taşıyacak. Kullanıcı kurumsal mavi/lacivert kimliğin korunmasını ve önce web'in dönüştürülmesini seçti. Expo mobil uygulaması ayrı, daha önce onaylanmış mobil tasarım belgesinde kalır.
+SenseİK'nin web arayüzünün bütün erişilebilir ekranları aynı tasarım dilini ve kalite tabanını taşıyacak. Kullanıcı kurumsal mavi/lacivert kimliğin korunmasını ve önce web'in dönüştürülmesini seçti. İlk uygulama `/app` ana sayfasıdır; ayrı Docker önizlemesinde gösterildikten sonra diğer ekranlara devam edilir. Expo mobil uygulaması ayrı, daha önce onaylanmış mobil tasarım belgesinde kalır.
 
 Bu çalışma bir görsel ve etkileşim dönüşümüdür. API sözleşmeleri, yetkiler, iş kuralları, rota adresleri, sorgu anahtarları ve mevcut kullanıcı verisi korunur. Bir ekranda bunları değiştirmek gerekiyorsa bağımsız iş olarak ele alınır.
 
@@ -45,8 +45,8 @@ Detaylarda önce kimlik/durum ve en önemli eylem, ardından ilgili bilgi grupla
 | Aşama | Çıktı | Geçiş ölçütü |
 |---|---|---|
 | 1. Tema ve kabuk | Önceki temel tasarım | Kodda mevcut; regresyon kontrolü yapılır |
-| 2. Giriş ve ilk kurulum | Beş kimlik/kurulum ekranı için ortak desen | Giriş, MFA, davet ve parola akışları aynı davranışla çalışır |
-| 3. Ana sayfa | Role göre öncelikli başlangıç düzeni | Mevcut widget verileri, izinleri ve hata yalıtımı korunur |
+| 2. Ana sayfa — ilk teslim | Role göre öncelikli başlangıç düzeni ve ayrı Docker önizlemesi | Mevcut widget verileri, izinleri ve hata yalıtımı korunur; kullanıcı sonucu Docker'da görür |
+| 3. Giriş ve ilk kurulum | Beş kimlik/kurulum ekranı için ortak desen | Giriş, MFA, davet ve parola akışları aynı davranışla çalışır |
 | 4. Yoğun listeler | Paylaşılan tablo/filtre/sayfalama deseni ve temsilci ekranlar | Çalışan + bordro + puantaj örneklerinden sonra aynı desen diğer listelere uygulanır |
 | 5. Kalan rotalar | Detay, form, ayarlar, özel ve herkese açık ekranlar | Rota envanterindeki her erişilebilir ekran incelenmiş ve doğrulanmıştır |
 
