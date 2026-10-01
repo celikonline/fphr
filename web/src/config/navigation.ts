@@ -83,7 +83,7 @@ export interface NavItem {
 /** CSS var for a NavItem's (or NavGroup's) icon accent, for use as the lucide icon's `color` prop or a styles override. */
 export function navIconColor(item: { iconColor?: CorporateColorKey }): string {
   return item.iconColor
-    ? `var(--mantine-color-${item.iconColor}-6)`
+    ? `light-dark(var(--mantine-color-${item.iconColor}-6), var(--mantine-color-${item.iconColor}-4))`
     : "var(--mantine-primary-color-filled)";
 }
 

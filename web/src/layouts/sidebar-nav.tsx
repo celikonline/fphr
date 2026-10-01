@@ -76,7 +76,7 @@ export function WorkflowInboxNavItem({
           styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
           inline
         >
-          <Icon size={20} />
+          <Icon size={20} color={navIconColor(item)} />
         </Indicator>
       }
       label={collapsed ? undefined : label}
@@ -116,7 +116,7 @@ export function NavItemLink({
       aria-label={collapsed ? label : undefined}
       mod={{ collapsed }}
       classNames={NAV_LINK_CLASS_NAMES}
-      leftSection={<Icon size={20} />}
+      leftSection={<Icon size={20} color="var(--mantine-color-dimmed)" />}
       label={collapsed ? undefined : label}
       rightSection={
         !collapsed ? (
@@ -135,7 +135,7 @@ export function NavItemLink({
       aria-label={collapsed ? label : undefined}
       mod={{ collapsed }}
       classNames={NAV_LINK_CLASS_NAMES}
-      leftSection={<Icon size={20} />}
+      leftSection={<Icon size={20} color={navIconColor(item)} />}
       label={collapsed ? undefined : label}
     />
   );
@@ -175,7 +175,7 @@ function ExpandedNavGroup({
       aria-expanded={opened}
       childrenOffset={28}
       classNames={NAV_LINK_CLASS_NAMES}
-      leftSection={<Icon size={20} />}
+      leftSection={<Icon size={20} color={navIconColor(group)} />}
       label={t(group.labelKey)}
     >
       {items.map((item) =>
@@ -226,7 +226,7 @@ function CollapsedNavGroup({
           aria-label={label}
           mod={{ collapsed: true, current: isCurrent }}
           classNames={NAV_LINK_CLASS_NAMES}
-          leftSection={<Icon size={20} />}
+          leftSection={<Icon size={20} color={navIconColor(group)} />}
           noWrap
         />
       </Menu.Target>
@@ -242,7 +242,7 @@ function CollapsedNavGroup({
                 key={item.key}
                 component="div"
                 disabled
-                leftSection={<ItemIcon size={16} />}
+                leftSection={<ItemIcon size={16} color="var(--mantine-color-dimmed)" />}
                 rightSection={
                   <Badge size="xs" variant="light" color="gray" tt="none">
                     {t("navigation:nav.comingSoon")}

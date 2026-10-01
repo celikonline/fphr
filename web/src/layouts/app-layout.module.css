@@ -56,10 +56,6 @@
   font-weight: 650;
 }
 
-.rail .navLink:is([aria-current="page"], [data-current]) .navSection {
-  color: var(--mantine-primary-color-filled);
-}
-
 .rail .railSearch[data-variant="default"] {
   --input-bg: var(--mantine-color-body);
   --input-bd: var(--mantine-color-default-border);

@@ -1,6 +1,6 @@
 # SenseİK web görsel dönüşüm önizlemesi
 
-İlk teslim `/app` ana sayfasıdır. Önizleme, çalışan `senseik-web` konteynerini değiştirmeden aynı Docker ağındaki API'yi kullanır. Adres: <http://127.0.0.1:13005/app>. Girişin sol marka paneli: <http://127.0.0.1:13005/login>.
+İlk teslim `/app` ana sayfasıdır. Önizleme, çalışan `senseik-web` konteynerini değiştirmeden aynı Docker ağındaki API'yi kullanır. Adres: <http://127.0.0.1:13007/app>. Girişin sol marka paneli: <http://127.0.0.1:13007/login>.
 
 Worktree kökünde:
 
@@ -11,7 +11,7 @@ docker build -f web/Dockerfile \
   -t senseik-web-gorsel-preview .
 docker run -d --name senseik-web-preview \
   --network senseik_default \
-  -p 127.0.0.1:13005:8080 \
+  -p 127.0.0.1:13007:8080 \
   senseik-web-gorsel-preview
 ```
 
