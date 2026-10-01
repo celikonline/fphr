@@ -30,7 +30,7 @@ Mevcut marka paneli ve kimlik akışları ortak bir görsel aileye bağlanır: f
 
 ### 2. Ana sayfa
 
-Ana sayfa kullanıcının **bugün yapacağı işi** öne çıkarır. Rol ve izinlere göre mevcut veriden sıradaki anlamlı eylem seçilir; veri yoksa açıklayıcı karşılama ve erişilebilir başlangıç eylemi gösterilir. Onaylar, yaklaşan izinler, duyurular ve diğer mevcut widget'lar bu önceliğin altında sakin gruplar halinde yer alır. Yeni veri kaynağı veya sahte metrik eklenmez. Widget'lar bağımsız yüklenir; birinin hatası kalan içeriği kapatmaz.
+Ana sayfa onaylar, yaklaşan izinler, duyurular ve diğer mevcut widget'ları doğrudan dengeli kart gruplarında gösterir. Kullanıcının ek kararına göre “Bugünün odağı” paneli ile “Gündeminiz” ve “Çevrenizde olanlar” bölüm başlıkları görünmez; kartlar korunur. Yeni veri kaynağı veya sahte metrik eklenmez. Widget'lar bağımsız yüklenir; birinin hatası kalan içeriği kapatmaz.
 
 ### 3. Yoğun liste ve arama
 
@@ -45,7 +45,7 @@ Detaylarda önce kimlik/durum ve en önemli eylem, ardından ilgili bilgi grupla
 | Aşama | Çıktı | Geçiş ölçütü |
 |---|---|---|
 | 1. Tema ve kabuk | Görsel referansa göre düz, kompakt ortak yapı | Ana sayfa önizlemesinde genişlik ve tema regresyonu kontrol edilir |
-| 2. Ana sayfa — ilk teslim | Role göre öncelikli başlangıç düzeni ve ayrı Docker önizlemesi | Mevcut widget verileri, izinleri ve hata yalıtımı korunur; kullanıcı sonucu Docker'da görür |
+| 2. Ana sayfa — ilk teslim | Dengeli kart düzeni ve ayrı Docker önizlemesi | Mevcut widget verileri, izinleri ve hata yalıtımı korunur; kullanıcı sonucu Docker'da görür |
 | 3. Giriş ve ilk kurulum | Beş kimlik/kurulum ekranı için ortak desen | Giriş, MFA, davet ve parola akışları aynı davranışla çalışır |
 | 4. Yoğun listeler | Paylaşılan tablo/filtre/sayfalama deseni ve temsilci ekranlar | Çalışan + bordro + puantaj örneklerinden sonra aynı desen diğer listelere uygulanır |
 | 5. Kalan rotalar | Detay, form, ayarlar, özel ve herkese açık ekranlar | Rota envanterindeki her erişilebilir ekran incelenmiş ve doğrulanmıştır |

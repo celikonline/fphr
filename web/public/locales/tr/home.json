@@ -7,16 +7,9 @@
   "inDays_one": "{{count}} gün sonra",
   "inDays_other": "{{count}} gün sonra",
   "noWidgets": "Ana sayfanızda gösterilecek bir bilgi yok.",
-  "focus": {
-    "eyebrow": "Bugünün odağı",
-    "approvals": { "title_one": "{{count}} talep onayınızı bekliyor", "title_other": "{{count}} talep onayınızı bekliyor", "description": "Bekleyen talepleri inceleyip ekibinizin işini ilerletin.", "action": "Onayları aç" },
-    "leave": { "title": "Gününüzü planlayın", "description": "İzinlerinizi ve taleplerinizi tek yerden gözden geçirin.", "action": "İzinlerime git" },
-    "directory": { "title": "Ekibinizle bağlantıda kalın", "description": "Çalışanları ve ekipleri keşfederek doğru kişiye ulaşın.", "action": "Çalışanları gör" },
-    "account": { "title": "SenseİK'ye hoş geldiniz", "description": "Hesap bilgilerinizi gözden geçirerek başlayın.", "action": "Hesabıma git" }
-  },
   "sections": {
-    "workflow": { "kicker": "İş akışım", "title": "Gündeminiz", "description": "Takip etmeniz gereken talepler ve duyurular." },
-    "company": { "kicker": "Şirket yaşamı", "title": "Çevrenizde olanlar", "description": "Ekibiniz, takvim ve yaklaşan günler." }
+    "workflow": { "title": "Gündeminiz" },
+    "company": { "title": "Çevrenizde olanlar" }
   },
   "daysSuffix": "g",
   "viewAll": "Tümünü Gör",

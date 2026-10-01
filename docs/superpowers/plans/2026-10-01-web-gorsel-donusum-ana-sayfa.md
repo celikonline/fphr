@@ -10,13 +10,15 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-01-web-tam-gorsel-donusum-design.md` (özellikle “Ana sayfa” ve 2026-10-01 ilk teslim kararı).
 
+**Sonraki kullanıcı kararı (2026-10-01):** Aşağıdaki ilk uygulama adımlarında geçen `HomeFocus` paneli ile görünen iş akışı/şirket başlıkları kaldırıldı. Kartlar ve izin/veri kapıları korundu. İK mesajları sayfasının sol iç boşluğu düzeltildi. Güncel Docker önizlemesi `127.0.0.1:13009` adresindedir; eski `13008` kayıtları ilk teslimin tarihsel adımlarıdır.
+
 ## Global Constraints
 
 - `web/src/lib/mantine-theme.ts` paleti, Onest/Bricolage fontları, açık/koyu/sistem teması ve kullanıcı paleti korunur.
 - Mevcut home widget veri kaynakları, sorgu anahtarları, modül/izin kapıları, linkler ve hata yalıtımı korunur.
 - Yeni metin `web/public/locales/{tr,en,de}/home.json` dosyalarında birlikte yazılır.
 - 375/768/1440 px'te gövde yatay taşmaz; klavye odağı ve azaltılmış hareket tercihi gözetilir.
-- Mevcut `senseik-web` (:13000) ve `senseik-api` (:18080) konteynerleri yeniden oluşturulmaz; güncel önizleme :13008'de ayrı konteynerdir.
+- Mevcut `senseik-web` (:13000) ve `senseik-api` (:18080) konteynerleri yeniden oluşturulmaz; güncel önizleme :13009'da ayrı konteynerdir.
 
 ## Review Focus
 

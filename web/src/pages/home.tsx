@@ -60,7 +60,6 @@ import { getMyAnnouncementFeed } from "@/services/announcements.service";
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDate, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
-import { HomeFocus } from "./home-focus";
 import styles from "./home.module.css";
 
 // The charting library is the single heaviest dependency on this screen and only one widget needs it,
@@ -1192,14 +1191,12 @@ export default function HomePage() {
   const { t } = useTranslation(["home", "navigation"]);
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
-  const canOpenDirectory = usePermission("employee.employees.read") || canViewDirectory;
   // senseik-057: widgets of a module the tenant turned off (Ayarlar → Modüller) are hidden, never 403-ing.
   const leaveEnabled = useModuleEnabled("leave");
   const announcementsEnabled = useModuleEnabled("announcements");
   const canViewLeaveBalances = usePermission("leave.my.balances") && leaveEnabled;
   const canViewTeamRequests = usePermission("leave.requests.read") && leaveEnabled;
   const canViewInbox = usePermission("workflow.inbox.view");
-  const canRequestLeave = usePermission("leave.my.requests") && leaveEnabled;
   // The leave calendar endpoint also requires the Calendar.ShowMenu access setting.
   const hasLeaveCalendarPermission = usePermission("leave.my.calendar");
   const showCalendarMenu = useAccessSetting("showCalendarMenu");
@@ -1233,22 +1230,11 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
-      <HomeFocus
-        canViewInbox={canViewInbox}
-        canRequestLeave={canRequestLeave}
-        canViewDirectory={canOpenDirectory}
-      />
+      <Title order={1} className="sr-only">{t("navigation:nav.home")}</Title>
       {hasWorkflow || hasCompany ? (
         <div className={styles.sections}>
           {hasWorkflow && (
-            <section className={styles.section} aria-labelledby="home-workflow-title">
-              <header className={styles.sectionHeader}>
-                <Text className={styles.sectionKicker}>{t("home:sections.workflow.kicker")}</Text>
-                <Title id="home-workflow-title" order={2} className={styles.sectionTitle}>
-                  {t("home:sections.workflow.title")}
-                </Title>
-                <Text className={styles.sectionDescription}>{t("home:sections.workflow.description")}</Text>
-              </header>
+            <section className={styles.section} aria-label={t("home:sections.workflow.title")}>
               <div className={styles.widgetGrid}>
                 {workflowWidgets.map((widget, index) => (
                   <div key={index} className={styles.widgetCell}>{widget}</div>
@@ -1257,14 +1243,7 @@ export default function HomePage() {
             </section>
           )}
           {hasCompany && (
-            <section className={styles.section} aria-labelledby="home-company-title">
-              <header className={styles.sectionHeader}>
-                <Text className={styles.sectionKicker}>{t("home:sections.company.kicker")}</Text>
-                <Title id="home-company-title" order={2} className={styles.sectionTitle}>
-                  {t("home:sections.company.title")}
-                </Title>
-                <Text className={styles.sectionDescription}>{t("home:sections.company.description")}</Text>
-              </header>
+            <section className={styles.section} aria-label={t("home:sections.company.title")}>
               <div className={styles.companyGrid}>
                 {companyWidgets.map((widget, index) => (
                   <div key={index} className={styles.widgetCell}>{widget}</div>

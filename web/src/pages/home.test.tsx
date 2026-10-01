@@ -136,24 +136,30 @@ describe("HomePage department distribution donut (senseik-042)", () => {
     renderHome();
 
     expect(await screen.findByText("Onayınızı bekleyen talep yok.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Gündeminiz" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByText("Gündeminiz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Çevrenizde olanlar")).not.toBeInTheDocument();
     expect(screen.getByText("Onay Bekleyenler")).toBeInTheDocument();
   });
 
-  it("offers employee navigation to roles with the employee read grant", () => {
+  it("does not show the removed focus panel to employee-only roles", () => {
     signInWithPermissions(["employee.employees.read"]);
     renderHome();
-    expect(screen.getByRole("link", { name: "Çalışanları gör" })).toHaveAttribute("href", "/app/employees");
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Çalışanları gör" })).not.toBeInTheDocument();
   });
 
   it("keeps unauthorized workflow widgets and their empty section out of the new layout", async () => {
     signInWithDirectoryPermissionOnly();
     renderHome();
 
-    expect(await screen.findByRole("heading", { name: "Çevrenizde olanlar" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Gündeminiz" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByText("Gündeminiz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Çevrenizde olanlar")).not.toBeInTheDocument();
     expect(screen.queryByText("Onay Bekleyenler")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Çalışanları gör" })).toHaveAttribute("href", "/app/employees");
   });
 
   it("shows the total headcount at the donut's center, not the department name", async () => {

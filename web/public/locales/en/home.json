@@ -7,16 +7,9 @@
   "inDays_one": "In {{count}} day",
   "inDays_other": "In {{count}} days",
   "noWidgets": "There is nothing to show on your home page.",
-  "focus": {
-    "eyebrow": "Today's focus",
-    "approvals": { "title_one": "{{count}} request awaits your approval", "title_other": "{{count}} requests await your approval", "description": "Review pending requests and keep your team moving.", "action": "Open approvals" },
-    "leave": { "title": "Plan your day", "description": "Review your leave and requests in one place.", "action": "Go to my leave" },
-    "directory": { "title": "Stay connected with your team", "description": "Find colleagues and teams to reach the right person.", "action": "View employees" },
-    "account": { "title": "Welcome to SenseİK", "description": "Get started by reviewing your account details.", "action": "Go to my account" }
-  },
   "sections": {
-    "workflow": { "kicker": "My workflow", "title": "On your agenda", "description": "Requests and announcements that need your attention." },
-    "company": { "kicker": "Company life", "title": "Around you", "description": "Your team, calendar, and upcoming dates." }
+    "workflow": { "title": "On your agenda" },
+    "company": { "title": "Around you" }
   },
   "daysSuffix": "d",
   "viewAll": "View all",
