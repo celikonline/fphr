@@ -12,6 +12,7 @@
 - Sol menü ikonları, Uygulamalar menüsüyle aynı `navIconColor` kaynağını kullanıyor. Koyu temada iki menü de okunabilir açık tonu seçiyor. İlgili 13 test, TypeScript, ilgili ESLint ve Docker build geçti; iki menü `/app` önizlemesinde karşılaştırıldı.
 - Kullanıcı geri bildirimiyle ana sayfanın sabit 2:1 bölüm ve iş akışı alt sütunları kaldırıldı. İş ve şirket kartları kendi tam genişlikli bölümlerinde içerik yüksekliğine göre dengeli akıyor. İlgili 11 test, TypeScript, ESLint ve Docker build geçti; 1280 px önizlemede sol/orta/sağ kart konumları ve yatay taşma doğrulandı.
 - Kullanıcının son kararıyla `/app` odak paneli ve iki görünür bölüm başlığı kaldırıldı; widget kartları, veri ve izin kapıları korundu. `/app/messages` sayfasına 16/24 px duyarlı iç boşluk eklendi. İlgili 15 test, TypeScript, ESLint, Vite ve Docker build geçti. 916 px Docker önizlemesinde mesaj başlığı ile sekmelerin içerik kenarından 24 px içeride olduğu ve gövdenin yatay taşmadığı doğrulandı.
+- Yeni referans görseline göre ana sayfa tek 3 kolonlu grid'e alındı: profil / izin bilgileri / yaklaşan izinler ilk satırda; dağılım / doğum günleri / resmi tatiller ikinci satırda; etkinlik takvimi sağ kolonda devam ediyor. 1280 px önizlemesinde kart sol konumları sırasıyla 250 / 584 / 917 px, ilk iki satır üstleri 82 / 559 px ve yatay taşma yok. Güncel önizleme `http://127.0.0.1:13010/app`.
 
 ## Kalan işler
 

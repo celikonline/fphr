@@ -1211,46 +1211,66 @@ export default function HomePage() {
   const showEvents = useAccessSetting("showEventCalendar") && canViewEvents;
   const hasOtherWorkflow = canViewTeamRequests || canViewAnnouncements || canViewLeaveBalances;
 
-  const workflowWidgets: ReactNode[] = [
-    canViewInbox && <PendingApprovalsWidget key="pending-approvals" showEmpty={!hasOtherWorkflow} />,
-    canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
-    canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
-    canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
-  ].filter(Boolean);
-  const companyWidgets: ReactNode[] = [
-    showOrgInfo && <OrgInfoWidget key="org" />,
-    showEvents && <EventsWidget key="events" />,
-    showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
-    showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,
-    canViewHolidays && <HolidaysWidget key="holidays" />,
-    canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
-  ].filter(Boolean);
-  const hasWorkflow = workflowWidgets.length > 0;
-  const hasCompany = companyWidgets.length > 0;
+  const dashboardWidgets: {
+    id: string;
+    content: ReactNode;
+    layout: string;
+  }[] = [
+    { id: "profile", content: showOrgInfo && <OrgInfoWidget />, layout: styles.profileCell },
+    {
+      id: "leave-info",
+      content: canViewLeaveBalances && <LeaveInfoWidget />,
+      layout: styles.leaveInfoCell,
+    },
+    {
+      id: "upcoming-leaves",
+      content: showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget />,
+      layout: styles.upcomingCell,
+    },
+    {
+      id: "distribution",
+      content: canViewDirectory && <DepartmentDistributionWidget />,
+      layout: styles.distributionCell,
+    },
+    {
+      id: "birthdays",
+      content: showBirthdays && canViewDirectory && <BirthdaysWidget />,
+      layout: styles.birthdaysCell,
+    },
+    { id: "holidays", content: canViewHolidays && <HolidaysWidget />, layout: styles.holidaysCell },
+    { id: "events", content: showEvents && <EventsWidget />, layout: styles.eventsCell },
+    {
+      id: "approvals",
+      content: canViewInbox && <PendingApprovalsWidget showEmpty={!hasOtherWorkflow} />,
+      layout: styles.extraCell,
+    },
+    {
+      id: "team-requests",
+      content: canViewTeamRequests && <TeamLeaveRequestsWidget />,
+      layout: styles.extraCell,
+    },
+    {
+      id: "announcements",
+      content: canViewAnnouncements && <AnnouncementsWidget />,
+      layout: styles.extraCell,
+    },
+  ].filter((widget) => Boolean(widget.content));
+  const hasDashboard = dashboardWidgets.length > 0;
 
   return (
     <div className={styles.page}>
       <Title order={1} className="sr-only">{t("navigation:nav.home")}</Title>
-      {hasWorkflow || hasCompany ? (
+      {hasDashboard ? (
         <div className={styles.sections}>
-          {hasWorkflow && (
-            <section className={styles.section} aria-label={t("home:sections.workflow.title")}>
-              <div className={styles.widgetGrid}>
-                {workflowWidgets.map((widget, index) => (
-                  <div key={index} className={styles.widgetCell}>{widget}</div>
-                ))}
-              </div>
-            </section>
-          )}
-          {hasCompany && (
-            <section className={styles.section} aria-label={t("home:sections.company.title")}>
-              <div className={styles.companyGrid}>
-                {companyWidgets.map((widget, index) => (
-                  <div key={index} className={styles.widgetCell}>{widget}</div>
-                ))}
-              </div>
-            </section>
-          )}
+          <section className={styles.section} aria-label={t("navigation:nav.home")}>
+            <div className={styles.dashboardGrid}>
+              {dashboardWidgets.map((widget) => (
+                <div key={widget.id} className={`${styles.widgetCell} ${widget.layout}`}>
+                  {widget.content}
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       ) : (
         <div className={styles.empty}>

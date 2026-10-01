@@ -10,7 +10,9 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-01-web-tam-gorsel-donusum-design.md` (özellikle “Ana sayfa” ve 2026-10-01 ilk teslim kararı).
 
-**Sonraki kullanıcı kararı (2026-10-01):** Aşağıdaki ilk uygulama adımlarında geçen `HomeFocus` paneli ile görünen iş akışı/şirket başlıkları kaldırıldı. Kartlar ve izin/veri kapıları korundu. İK mesajları sayfasının sol iç boşluğu düzeltildi. Güncel Docker önizlemesi `127.0.0.1:13009` adresindedir; eski `13008` kayıtları ilk teslimin tarihsel adımlarıdır.
+**Sonraki kullanıcı kararı (2026-10-01):** Aşağıdaki ilk uygulama adımlarında geçen `HomeFocus` paneli ile görünen iş akışı/şirket başlıkları kaldırıldı. Kartlar ve izin/veri kapıları korundu. İK mesajları sayfasının sol iç boşluğu düzeltildi. Güncel Docker önizlemesi `127.0.0.1:13010` adresindedir; eski `13008` ve `13009` kayıtları ilk teslimin tarihsel adımlarıdır.
+
+**Dashboard sıralama kararı (2026-10-01):** Kartlar referans düzene göre tek 3 kolonlu grid'de sıralanır: profil / izin bilgileri / yaklaşan izinler; çalışan dağılımı / yaklaşan doğum günleri / resmi tatiller; etkinlik takvimi sağ kolonda devam eder. İş akışı kartları ana sıranın altına akar.
 
 ## Global Constraints
 
