@@ -1214,16 +1214,12 @@ export default function HomePage() {
   const showEvents = useAccessSetting("showEventCalendar") && canViewEvents;
   const hasOtherWorkflow = canViewTeamRequests || canViewAnnouncements || canViewLeaveBalances;
 
-  const workflowColumns: ReactNode[][] = [
-    [
-      canViewInbox && <PendingApprovalsWidget key="pending-approvals" showEmpty={!hasOtherWorkflow} />,
-      canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
-    ],
-    [
-      canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
-      canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
-    ],
-  ].map((column) => column.filter(Boolean)).filter((column) => column.length > 0);
+  const workflowWidgets: ReactNode[] = [
+    canViewInbox && <PendingApprovalsWidget key="pending-approvals" showEmpty={!hasOtherWorkflow} />,
+    canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
+    canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
+    canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
+  ].filter(Boolean);
   const companyWidgets: ReactNode[] = [
     showOrgInfo && <OrgInfoWidget key="org" />,
     showEvents && <EventsWidget key="events" />,
@@ -1232,7 +1228,7 @@ export default function HomePage() {
     canViewHolidays && <HolidaysWidget key="holidays" />,
     canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
   ].filter(Boolean);
-  const hasWorkflow = workflowColumns.some((column) => column.length > 0);
+  const hasWorkflow = workflowWidgets.length > 0;
   const hasCompany = companyWidgets.length > 0;
 
   return (
@@ -1253,9 +1249,9 @@ export default function HomePage() {
                 </Title>
                 <Text className={styles.sectionDescription}>{t("home:sections.workflow.description")}</Text>
               </header>
-              <div className={workflowColumns.length === 1 ? styles.widgetStack : styles.widgetGrid}>
-                {workflowColumns.map((column, index) => (
-                  <div key={index} className={styles.widgetStack}>{column}</div>
+              <div className={styles.widgetGrid}>
+                {workflowWidgets.map((widget, index) => (
+                  <div key={index} className={styles.widgetCell}>{widget}</div>
                 ))}
               </div>
             </section>
@@ -1269,7 +1265,11 @@ export default function HomePage() {
                 </Title>
                 <Text className={styles.sectionDescription}>{t("home:sections.company.description")}</Text>
               </header>
-              <div className={styles.widgetStack}>{companyWidgets}</div>
+              <div className={styles.companyGrid}>
+                {companyWidgets.map((widget, index) => (
+                  <div key={index} className={styles.widgetCell}>{widget}</div>
+                ))}
+              </div>
             </section>
           )}
         </div>

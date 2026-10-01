@@ -16,7 +16,7 @@
 - Mevcut home widget veri kaynakları, sorgu anahtarları, modül/izin kapıları, linkler ve hata yalıtımı korunur.
 - Yeni metin `web/public/locales/{tr,en,de}/home.json` dosyalarında birlikte yazılır.
 - 375/768/1440 px'te gövde yatay taşmaz; klavye odağı ve azaltılmış hareket tercihi gözetilir.
-- Mevcut `senseik-web` (:13000) ve `senseik-api` (:18080) konteynerleri yeniden oluşturulmaz; güncel önizleme :13007'de ayrı konteynerdir.
+- Mevcut `senseik-web` (:13000) ve `senseik-api` (:18080) konteynerleri yeniden oluşturulmaz; güncel önizleme :13008'de ayrı konteynerdir.
 
 ## Review Focus
 
@@ -70,11 +70,13 @@
 
 **Interfaces:**
 - Consumes: mevcut `senseik_default` Docker ağı ve `senseik-api` servis adı.
-- Produces: yalnız `127.0.0.1:13007` üstünden erişilen `senseik-web-preview` konteyneri.
+- Produces: yalnız `127.0.0.1:13008` üstünden erişilen `senseik-web-preview` konteyneri.
 
-- [x] **Step 1: Docker ağı ve portu doğrula.** `senseik_default` ağı çalışıyor; PWA önbelleğini ayırmak için son önizleme 13007'de.
+- [x] **Step 1: Docker ağı ve portu doğrula.** `senseik_default` ağı çalışıyor; PWA önbelleğini ayırmak için son önizleme 13008'de.
 - [x] **Step 2: Worktree kaynağından imaj üret.** Repo kökünden `docker build -f web/Dockerfile --build-arg VITE_API_BASE_URL=/api --build-arg VITE_SHOW_DEMO_CREDENTIALS=true -t senseik-web-gorsel-preview .` çalıştır. Derleme mevcut `senseik-web` imajını değiştirmez.
-- [x] **Step 3: Ayrı konteyneri başlat.** `senseik-web-preview` konteyneri `127.0.0.1:13007` üzerinde çalışıyor; demo hesabıyla API destekli `/app` içerikleri doğrulandı.
+- [x] **Step 3: Ayrı konteyneri başlat.** `senseik-web-preview` konteyneri `127.0.0.1:13008` üzerinde çalışıyor; demo hesabıyla API destekli `/app` içerikleri doğrulandı.
+
+**Kullanıcı geri bildirimi (01.10):** Sabit 2:1 bölüm yerleşimi solda boşluk, sağda kart yığılması oluşturdu. Bölümler tam genişliğe alındı; iş kartları iki, şirket kartları üç dengeli sütunda akıyor (dar ekranda sütun sayısı azalıyor). Bu, Task 2'nin ilk 2:1 oranı kararının yerini alır.
 - [x] **Step 4: Tarayıcıda göster.** Demo hesabıyla `/app` açık/koyu, 375/768/masaüstü genişliklerinde incelendi; gövde yatay taşmıyor. Önizleme inceleme boyunca ayakta kalır.
 - [x] **Step 5: Belgele ve commit et.** `web-gorsel-donusum-onizleme.md` yeniden üretilebilir build/run/durdurma komutlarını ve portu içerir; sır veya demo parolası içermez.
 
