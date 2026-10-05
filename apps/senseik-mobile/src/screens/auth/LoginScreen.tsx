@@ -155,6 +155,7 @@ export default function LoginScreen({ navigation }: Props) {
                 <AuthHero />
                 <TenantChoicePanel
                   tenants={tenantChoices}
+                  error={formError}
                   onSelect={handleSelectTenant}
                   isLoading={isLoading}
                   onCancel={handleClearTenantChoices}

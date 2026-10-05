@@ -26,19 +26,36 @@ jobs:
           git fetch "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" main
           git reset --hard FETCH_HEAD   # .env ve override untracked — dokunulmaz
 
-      - name: Build + up
+      - name: Taban imajlar (Docker Hub limitine karşı ayna)
+        # Docker Hub anonim çekimi IP başına sınırlı (429 Too Many Requests, 30.09'da
+        # deploy'u düşürdü). Yerelde olmayan Docker Hub taban imajları Google'ın
+        # aynasından (mirror.gcr.io) çekilip aynı adla etiketlenir; derleme yerel kopyayı kullanır.
         run: |
           cd "$HOME/uygulamalar/senseik"
-          docker compose up -d --build
+          for img in $(grep -hoE '^FROM [^ ]+' web/Dockerfile src/Sense.Api/Dockerfile src/Sense.Worker/Dockerfile | awk '{print $2}' | sort -u); do
+            case "$img" in *.*/*) continue;; esac          # mcr.microsoft.com vb. Docker Hub dışı
+            docker image inspect "$img" >/dev/null 2>&1 && continue
+            ref="$img"; case "$ref" in */*) ;; *) ref="library/$ref";; esac
+            docker pull -q "mirror.gcr.io/$ref" && docker tag "mirror.gcr.io/$ref" "$img"
+          done
 
-      - name: Migrasyon (idempotent)
+      - name: Build
+        run: cd "$HOME/uygulamalar/senseik" && docker compose build
+
+      - name: Migrasyon (uygulamadan ÖNCE)
+        # Yeni kod eski şemayla açılırsa açılış seed'i/sorguları düşer (30.09'da yaşandı):
+        # önce api+worker durur, şema güncellenir, sonra yeni sürüm başlar. Veri silinmez.
         run: |
           cd "$HOME/uygulamalar/senseik"
+          docker compose stop api worker
           PGS=$(grep ^POSTGRES_PASSWORD .env | cut -d= -f2)
           docker run --rm --network senseik_default \
             -v "$HOME/uygulamalar/senseik":/src -w /src -v senseik_nuget:/root/.nuget \
             -e ConnectionStrings__Database="Host=senseik-postgres;Port=5432;Database=senseik;Username=sense;Password=$PGS" \
             mcr.microsoft.com/dotnet/sdk:10.0 dotnet run --project src/Sense.Migrator -- migrate
+
+      - name: Up
+        run: cd "$HOME/uygulamalar/senseik" && docker compose up -d
 
       - name: Web'i tazele
         # nginx upstream IP'yi açılışta çözer — api yeniden yaratıldıysa web
