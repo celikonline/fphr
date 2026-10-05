@@ -63,11 +63,13 @@ jobs:
         env:
           ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
           ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
+          SENSE_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;Database=postgres
         run: dotnet test Sense.slnx -c Release --no-build --filter "Category!=Integration" --logger "trx;LogFileName=unit-tests.trx"
       - name: Integration Tests
         env:
           ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
           ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
+          SENSE_TEST_POSTGRES: Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;Database=postgres
         run: dotnet test Sense.slnx -c Release --no-build --filter "Category=Integration" --logger "trx;LogFileName=integration-tests.trx"
       - uses: actions/upload-artifact@v7
         if: always()

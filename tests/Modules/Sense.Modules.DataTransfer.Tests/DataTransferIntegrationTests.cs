@@ -73,6 +73,9 @@ public sealed class DataTransferIntegrationTests : TestFixture
     [Fact]
     public async Task Upsert_InsertsUpdatesAndReportsRowErrors_WithResultFile()
     {
+        // Satır hata mesajları istek kültüründe yerelleşir; beklenen metin Türkçe olduğundan host dili (ör. LANG=en_US) sonucu
+        // değiştirmesin. Async metotta kültür değişikliği çağırana sızmaz.
+        System.Globalization.CultureInfo.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
         var tenantId = SetUser();
         var org = await SeedOrgAsync(tenantId);
         var ali = await CreateEmployeeAsync("Ali", "Kaya", Tckn.Next());

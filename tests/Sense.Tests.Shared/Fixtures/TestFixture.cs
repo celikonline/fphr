@@ -14,14 +14,14 @@ using Sense.Shared.Infrastructure.Messaging;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
 using Sense.Shared.Kernel.Results;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Sense.Tests.Shared.Fixtures;
 
 /// <summary>
 /// Reusable test fixture for unit/integration tests.
-/// - Wraps PostgreSQL testcontainers for isolated DB instances
+/// - Opens a unique database per test instance on the shared Postgres server (see <see cref="SharedPostgres"/>,
+///   TK-032) instead of a Testcontainers container per test
 /// - Per-test isolation via Respawn
 /// - Properties for DbContext, TenantContext, Dispatcher, and ServiceProvider
 /// - Helper methods for tenant/user creation, command/query execution, and audit inspection
@@ -29,7 +29,9 @@ namespace Sense.Tests.Shared.Fixtures;
 [Collection("PostgreSQL")]
 public abstract class TestFixture : IAsyncLifetime
 {
-    private PostgreSqlContainer? _postgresContainer;
+    private string? _adminConnectionString;
+    private string? _databaseName;
+    private string? _connectionString;
     private Respawner? _respawner;
     protected IServiceProvider? ServiceProvider { get; private set; }
     protected IDispatcher? Dispatcher { get; private set; }
@@ -50,17 +52,16 @@ public abstract class TestFixture : IAsyncLifetime
     /// </summary>
     protected virtual Task OnDatabaseReadyAsync() => Task.CompletedTask;
 
-    /// <summary>Initialize the test container and services.</summary>
+    /// <summary>
+    /// Initialize services against a fresh, uniquely-named database on the shared Postgres server pointed to by
+    /// <see cref="SharedPostgres.EnvironmentVariableName"/>.
+    /// </summary>
     public async ValueTask InitializeAsync()
     {
-        _postgresContainer = new PostgreSqlBuilder("postgres:17-alpine")
-            .WithDatabase("test_db")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
-
-        await _postgresContainer.StartAsync();
-        var connectionString = _postgresContainer.GetConnectionString();
+        _adminConnectionString = SharedPostgres.GetAdminConnectionString();
+        _databaseName = SharedPostgres.CreateDatabaseName();
+        await SharedPostgres.CreateDatabaseAsync(_adminConnectionString, _databaseName);
+        _connectionString = SharedPostgres.BuildConnectionString(_adminConnectionString, _databaseName);
 
         // Build service collection with shared infrastructure
         var services = new ServiceCollection();
@@ -69,7 +70,7 @@ public abstract class TestFixture : IAsyncLifetime
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                { "ConnectionStrings:Database", connectionString },
+                { "ConnectionStrings:Database", _connectionString },
                 { "ConnectionStrings:Redis", "" },
                 { "Serilog:MinimumLevel", "Information" },
                 { "Paging:DefaultPageSize", "50" },
@@ -115,7 +116,7 @@ public abstract class TestFixture : IAsyncLifetime
             SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents", "datatransfer", "workflow", "notifications", "attendance" },
         };
 
-        await using (var respawnerConnection = new Npgsql.NpgsqlConnection(connectionString))
+        await using (var respawnerConnection = new Npgsql.NpgsqlConnection(_connectionString))
         {
             await respawnerConnection.OpenAsync();
             try
@@ -129,22 +130,37 @@ public abstract class TestFixture : IAsyncLifetime
         }
     }
 
-    /// <summary>Clean up resources.</summary>
+    /// <summary>
+    /// Clean up resources: dispose the service provider, then drop this instance's database on the shared
+    /// server. A drop failure (e.g. a lingering connection the pool clear didn't reach in time) is logged, not
+    /// thrown - the test itself already ran and passed/failed on its own merits, and failing disposal here would
+    /// misreport an otherwise-good test as broken. The orphaned <c>sense_test_*</c> database is harmless (unique
+    /// per test instance) and disappears the next time <c>scripts/test-postgres.sh</c> recreates the container.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_postgresContainer != null)
+        (ServiceProvider as IAsyncDisposable)?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        if (_adminConnectionString == null || _databaseName == null)
         {
-            await _postgresContainer.StopAsync();
-            await _postgresContainer.DisposeAsync();
+            return;
         }
 
-        (ServiceProvider as IAsyncDisposable)?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        try
+        {
+            await SharedPostgres.DropDatabaseAsync(_adminConnectionString, _databaseName);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(
+                $"SharedPostgres: '{_databaseName}' veritabanı silinemedi (test sonucu etkilenmedi): {ex}");
+        }
     }
 
     /// <summary>Reset database between tests. No-ops if no module ever registered a table (nothing to reset).</summary>
     public async Task ResetDatabaseAsync()
     {
-        if (_postgresContainer == null)
+        if (_connectionString == null)
         {
             throw new InvalidOperationException("Test fixture not initialized.");
         }
@@ -154,8 +170,7 @@ public abstract class TestFixture : IAsyncLifetime
             return;
         }
 
-        var connectionString = _postgresContainer.GetConnectionString();
-        await using var connection = new Npgsql.NpgsqlConnection(connectionString);
+        await using var connection = new Npgsql.NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
         await _respawner.ResetAsync(connection);
     }
