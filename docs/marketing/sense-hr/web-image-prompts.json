@@ -1,0 +1,23 @@
+{
+  "tool": "image_gen.imagegen",
+  "date": "2026-10-06",
+  "images": [
+    {
+      "key": "desktop_hero",
+      "file": "sense-hr-web-mobil-hero.png",
+      "refs": [
+        "C:/Users/ALG0013/Documents/GitHub/senseik/docs/marketing/sense-hr/assets/web/sense-hr-web-ana-sayfa.jpg",
+        "C:/Users/ALG0013/Documents/GitHub/senseik/apps/senseik-mobile/docs/screenshots/05-ana-sayfa.jpg"
+      ],
+      "prompt": "Create a polished 16:9 Turkish B2B SaaS campaign image for AlgoSense Sense HR. High quality realistic device mockup composition matching a sophisticated forest green #103b29 and graphite #151918 corporate technology website. Background subtle dark green gradients, fine dot grid, soft lime green lighting, clean editorial typography. Exact headline at top left: 'Sense HR'. Exact subheadline: 'Web ve mobilde aynı çalışma alanı'. A large premium front-facing laptop centered lower and taking 75% width with a slim bezel and almost rectangular screen, and a smartphone standing overlapping the right side. Use reference 1, the actual web home screenshot, as the entire laptop display. Use reference 2, the actual mobile home screenshot, as the entire phone display. Keep both supplied interfaces faithful: preserve their original colors, text, navigation, layout and demo values. Do not create additional dashboards, invented data, features or widgets. Screen faces nearly parallel to image plane for legibility. Fit screenshots to display proportion with no stretching or important content cropping. No extra random decorations or people. Small discreet footer text 'Demo ekranları'. White Turkish headline text with correctly accented letters. No watermark, no fake logo. Generous clean spacing, strong visual hierarchy."
+    },
+    {
+      "key": "desktop_calendar",
+      "file": "sense-hr-web-izin-takvimi-tanitim.png",
+      "refs": [
+        "C:/Users/ALG0013/Documents/GitHub/senseik/docs/marketing/sense-hr/assets/web/sense-hr-web-izin-takvimi.jpg"
+      ],
+      "prompt": "Create a high-end 16:9 Turkish enterprise HR product campaign visual for Sense HR, consistent with a dark forest green #103b29 and graphite #151918 AlgoSense website style. Exact top-left heading 'İzin planını birlikte görün'. Smaller line 'Sense HR · İzin takvimi'. Large realistic front-facing desktop monitor with thin graphite bezel on a minimal dark desk, using the supplied actual web calendar screenshot as its complete screen content. The display should occupy most of the canvas, roughly 80% width. Preserve actual UI exactly: original light background, left navigation, employee names, October 2026 calendar grid and green/yellow leave bars. No invented dates, analytics, employees, buttons, captions inside the UI, or features. Nearly orthographic screen plane to ensure real screenshot legibility; no stretching and no important screen cropping. Subtle glowing green light behind monitor, fine sparse dot grid, restrained clean contemporary corporate appearance. White headline correctly spelled in Turkish. Add discreet footer text 'Demo ekranı'. No people, no watermark, no fake logo."
+    }
+  ]
+}

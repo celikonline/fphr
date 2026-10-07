@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-06",
+  "page_url": "https://chatgpt.com/space/page_13aab78f4ea88191adbe56cde2d9c795",
+  "source": "http://localhost:13000",
+  "data": "Demo HR Company — seeded demo records",
+  "capture": {
+    "viewport": "1280x720",
+    "format": "JPEG",
+    "method": "Browser screenshot; unedited",
+    "dimensions_note": "No viewport resizing"
+  },
+  "selected_screenshots": [
+    {
+      "key": "home",
+      "file": "assets/web/sense-hr-web-ana-sayfa.jpg",
+      "reference": "library-file:fde1_bGliZmlsZV9HTkkxZzlsV1R1ZGpKM3VJUHNVdHpB_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    },
+    {
+      "key": "profile",
+      "file": "assets/web/sense-hr-web-calisan-karti.jpg",
+      "reference": "library-file:fde1_bGliZmlsZV9PR1ZEZGxDdDNlWXRhZFpKa3hZMGp3_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    },
+    {
+      "key": "calendar",
+      "file": "assets/web/sense-hr-web-izin-takvimi.jpg",
+      "reference": "library-file:fde1_bGliZmlsZV9WOG1oNk9Hbi01eUhsRWtVMjIzS2xR_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    },
+    {
+      "key": "metrics",
+      "file": "assets/web/sense-hr-web-ik-gostergeleri.jpg",
+      "reference": "library-file:fde1_bGliZmlsZV9xay1pQjNNWEJfeWxGbkxqckoyV0RR_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    }
+  ],
+  "campaign_images": [
+    {
+      "key": "desktop_hero",
+      "file": "assets/sense-hr-web-mobil-hero.png",
+      "type": "AI device composition based on supplied real screenshots",
+      "reference": "library-file:fde1_bGliZmlsZV9kZHNwQzloblVoYkllSkktTTc0bG53_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    },
+    {
+      "key": "desktop_calendar",
+      "file": "assets/sense-hr-web-izin-takvimi-tanitim.png",
+      "type": "AI device composition based on supplied real screenshots",
+      "reference": "library-file:fde1_bGliZmlsZV9JYmc2ZmR3M2ZUNVJ1Q1NBNlZuUlJn_FileDrive_d3e3fcb95d3c819180af74177bd10dc6"
+    }
+  ],
+  "excluded": "Payroll periods and shift assignments were empty in the running demo; these screenshots were not selected for marketing.",
+  "page_image_count": 9
+}
