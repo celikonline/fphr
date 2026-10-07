@@ -63,7 +63,12 @@ public sealed class SendHrMessageValidator : AbstractValidator<SendHrMessageComm
     public SendHrMessageValidator()
     {
         RuleFor(x => x.Subject).NotEmpty().MaximumLength(NotificationsLimits.HrMessageSubjectMaxLength);
-        RuleFor(x => x.Body).NotEmpty().MaximumLength(NotificationsLimits.HrMessageBodyMaxLength);
+        RuleFor(x => x.Body)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .MaximumLength(NotificationsLimits.HrMessageBodyMaxLength)
+            .Must(body => HrMessageContentSanitizer.VisibleTextLength(body) <= NotificationsLimits.HrMessageVisibleTextMaxLength)
+            .WithMessage($"The visible text cannot exceed {NotificationsLimits.HrMessageVisibleTextMaxLength} characters.");
         RuleFor(x => x.Channels).NotEmpty();
         RuleFor(x => x).Must(x => !HrMessageSelection.IsEmpty(x.Selection) || x.GroupIds is { Count: > 0 })
             .WithMessage("Recipients are required.").OverridePropertyName("Recipients");
@@ -135,7 +140,8 @@ public sealed class SendHrMessageHandler(
             return Error.Rule(NotificationsErrors.RecipientsRequired);
         }
 
-        var message = new HrMessage(tenant.TenantId, senderUserId, command.Subject, command.Body, command.Importance, channels);
+        var sanitizedBody = HrMessageContentSanitizer.Sanitize(command.Body);
+        var message = new HrMessage(tenant.TenantId, senderUserId, command.Subject, sanitizedBody, command.Importance, channels);
         foreach (var recipient in recipients)
         {
             message.AddRecipient(recipient.EmployeeId, recipient.UserId);

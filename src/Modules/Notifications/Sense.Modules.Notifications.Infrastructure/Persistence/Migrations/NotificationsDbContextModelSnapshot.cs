@@ -150,8 +150,8 @@ namespace Sense.Modules.Notifications.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Body")
                         .IsRequired()
-                        .HasMaxLength(4096)
-                        .HasColumnType("character varying(4096)")
+                        .HasMaxLength(1000000)
+                        .HasColumnType("character varying(1000000)")
                         .HasColumnName("body");
 
                     b.Property<string>("Channels")

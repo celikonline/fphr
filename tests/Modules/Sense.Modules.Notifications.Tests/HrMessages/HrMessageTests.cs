@@ -249,16 +249,4 @@ public sealed class HrMessageTests : TestFixture
         // Only the chosen channel is used: no in-app row for an e-mail-only message.
         (await db.UserNotifications.IgnoreQueryFilters().AnyAsync(n => n.SourceEventId == result.Value.Id)).ShouldBeFalse();
     }
-
-    [Fact]
-    public void Content_over_4096_rejected()
-    {
-        var validator = new SendHrMessageValidator();
-        var selection = new EmployeeSelection([Guid.NewGuid()], null, null);
-
-        validator.Validate(Send(selection, body: new string('a', 4097))).IsValid.ShouldBeFalse();
-        validator.Validate(Send(selection, body: new string('a', 4096))).IsValid.ShouldBeTrue();
-        Should.Throw<ArgumentException>(() => new HrMessage(
-            Guid.NewGuid(), Guid.NewGuid(), "s", new string('a', 4097), HrMessageImportance.Normal, [NotificationChannels.InApp]));
-    }
 }

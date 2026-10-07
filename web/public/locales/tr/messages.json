@@ -33,7 +33,9 @@
     "next": "Sonraki",
     "detail": "Mesaj detayı",
     "close": "Kapat",
-    "open": "Mesajı aç: {{subject}}"
+    "open": "Mesajı aç: {{subject}}",
+    "enterFullScreen": "Tam ekran yap",
+    "exitFullScreen": "Tam ekrandan çık"
   },
   "compose": {
     "recipients": "Alıcılar",
@@ -52,6 +54,8 @@
     "noChannel": "En az bir kanal seçin.",
     "subject": "Başlık",
     "body": "İçerik",
+    "bodyPlaceholder": "Mesajınızı yazın veya panodan görsel yapıştırın…",
+    "pastedImageAlt": "Panodan yapıştırılan görsel",
     "counter": "{{count}} / {{max}}",
     "importance": "Önem",
     "send": "Gönder",

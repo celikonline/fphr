@@ -72,6 +72,8 @@ beforeAll(() => {
     writable: true,
     value: { addEventListener: () => {}, removeEventListener: () => {} },
   });
+  document.elementFromPoint = () => null;
+  HTMLElement.prototype.getClientRects = () => [] as unknown as DOMRectList;
 });
 
 function renderUi(ui: React.ReactNode) {
@@ -156,7 +158,7 @@ describe("messages", () => {
     await waitFor(() =>
       expect(vi.mocked(sendHrMessage).mock.calls[0]?.[0]).toEqual({
         subject: "Duyuru",
-        body: "Merhaba dünya",
+        body: "<p>Merhaba dünya</p>",
         importance: "high",
         channels: ["email"],
         selection: SELECTION,
@@ -244,6 +246,89 @@ describe("messages", () => {
       expect(screen.queryByText("İyi bayramlar dilerim")).not.toBeInTheDocument()
     );
     await waitFor(() => expect(opener).toHaveFocus());
+  });
+
+  it("message_detail_toggles_full_screen_and_resets_on_close", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listInbox).mockResolvedValue({
+      items: [
+        {
+          id: "m1",
+          senderUserId: "u1",
+          subject: "Bayram tatili",
+          body: "İyi bayramlar dilerim",
+          importance: "normal",
+          channels: ["email"],
+          recipientCount: 3,
+          sentAt: "2026-09-20T08:00:00Z",
+        },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    });
+    renderUi(<InboxTab />);
+    await user.click(await screen.findByRole("button", { name: "Mesajı aç: Bayram tatili" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).not.toHaveAttribute("data-full-screen");
+    await user.click(within(dialog).getByRole("button", { name: trMessages.list.enterFullScreen }));
+    expect(screen.getByRole("dialog")).toHaveAttribute("data-full-screen", "true");
+
+    const shrink = within(screen.getByRole("dialog")).getByRole("button", {
+      name: trMessages.list.exitFullScreen,
+    });
+    expect(shrink).toHaveAttribute("title", trMessages.list.exitFullScreen);
+    await user.click(shrink);
+    expect(screen.getByRole("dialog")).not.toHaveAttribute("data-full-screen");
+
+    // Full screen again, then close with Escape: reopening starts at the normal size and focus returns to the row.
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: trMessages.list.enterFullScreen,
+      })
+    );
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const opener = screen.getByRole("button", { name: "Mesajı aç: Bayram tatili" });
+    await waitFor(() => expect(opener).toHaveFocus());
+    await user.click(opener);
+    expect(await screen.findByRole("dialog")).not.toHaveAttribute("data-full-screen");
+  });
+
+  it("message_body_wraps_long_tokens_and_stays_plain_text", async () => {
+    const user = userEvent.setup();
+    const longToken =
+      "C:\\Users\\ik\\Belgeler\\" + "cok-uzun-klasor-adi-".repeat(12) + "rapor.xlsx";
+    const html = '<img src=x onerror="alert(1)">';
+    vi.mocked(listInbox).mockResolvedValue({
+      items: [
+        {
+          id: "m1",
+          senderUserId: "u1",
+          subject: "Dosya yolu",
+          body: `Birinci satır\n${longToken}\n${html}`,
+          importance: "normal",
+          channels: ["email"],
+          recipientCount: 1,
+          sentAt: "2026-09-20T08:00:00Z",
+        },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    });
+    renderUi(<InboxTab />);
+    await user.click(await screen.findByRole("button", { name: "Mesajı aç: Dosya yolu" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const body = within(dialog).getByText(/Birinci satır/);
+    expect(body.style.whiteSpace).toBe("pre-wrap");
+    expect(body.style.overflowWrap).toBe("anywhere");
+    expect(body.textContent).toContain(longToken);
+    // The markup is shown as text, never injected.
+    expect(body.textContent).toContain(html);
+    expect(dialog.querySelector("img")).toBeNull();
   });
 
   it("group_delete_asks_confirmation_and_filter_group_is_dynamic", async () => {

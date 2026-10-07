@@ -33,7 +33,9 @@
     "next": "Next",
     "detail": "Message details",
     "close": "Close",
-    "open": "Open message: {{subject}}"
+    "open": "Open message: {{subject}}",
+    "enterFullScreen": "Enter full screen",
+    "exitFullScreen": "Exit full screen"
   },
   "compose": {
     "recipients": "Recipients",
@@ -52,6 +54,8 @@
     "noChannel": "Select at least one channel.",
     "subject": "Subject",
     "body": "Content",
+    "bodyPlaceholder": "Write your message or paste an image from the clipboard…",
+    "pastedImageAlt": "Image pasted from clipboard",
     "counter": "{{count}} / {{max}}",
     "importance": "Importance",
     "send": "Send",
