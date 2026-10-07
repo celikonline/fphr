@@ -1094,24 +1094,28 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Zimmet</value></data>
-  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
-  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları ve boşta envanteri (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Kimlik numarası doluysa aktif çalışanla eşleştirilir ve veriliş tarihi zorunludur; çalışan bulunamazsa satır hatalı sayılır.</value></data>
   <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>Kategori adı sistemde yoksa otomatik oluşturulur; büyük/küçük harf ve boşluk farkı gözetilmeden mevcut kategoriyle eşleştirilir.</value></data>
-  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>İade tarihi doldurulursa satır kapalı (iade edilmiş) bir zimmet olarak, boş bırakılırsa açık (üzerinde duran) bir zimmet olarak işlenir.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>Çalışan kimlik numarası doluysa iade tarihi satırı kapalı (iade edilmiş) zimmet yapar; iade tarihi boşsa açık zimmet oluşturulur.</value></data>
+  <data name="import.template.assets.zimmet.instruction.inventory" xml:space="preserve"><value>Boşta envanter için kimlik numarası, veriliş ve iade tarihlerini boş bırakın. Aynı kategori ve seri numarası mevcut varlığı eşleştirir; boşta satır mevcut atamayı veya durumu değiştirmez. Varlık adı isteğe bağlıdır; boşsa kategori ve seri numarasından oluşturulur.</value></data>
   <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Doğru: hâlâ çalışanın üzerinde duran bir zimmet.</value></data>
   <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Doğru: iade edilmiş, geçmiş bir zimmet.</value></data>
+  <data name="import.template.assets.zimmet.sample.inventory" xml:space="preserve"><value>Doğru: henüz bir çalışana atanmamış, boşta envanter.</value></data>
   <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
-  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir. Boşta envanter için boş bırakın.</value></data>
   <data name="import.column.assets.categoryName" xml:space="preserve"><value>Kategori</value></data>
   <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Ekipman kategorisi (örn. Bilgisayar, Telefon, Araç); yoksa otomatik oluşturulur.</value></data>
   <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Seri numarası</value></data>
   <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>Varsa cihazın seri numarası; aynı kategori + seri no ile mevcut zimmet güncellenir, boşsa yeni zimmet oluşturulur.</value></data>
   <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Zimmet veriliş tarihi</value></data>
-  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY).</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY); kimlik numarası doluysa zorunlu, boşta envanter için boş bırakın.</value></data>
   <data name="import.column.assets.returnedAt" xml:space="preserve"><value>İade tarihi</value></data>
   <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>Ekipmanın iade edildiği tarih (GG.AA.YYYY); boş bırakılırsa zimmet hâlâ açık kabul edilir.</value></data>
   <data name="import.column.assets.note" xml:space="preserve"><value>Açıklama</value></data>
   <data name="import.column.assets.note.description" xml:space="preserve"><value>Zimmetin önemli detayları (marka/model vb.); opsiyonel.</value></data>
+  <data name="import.column.assets.name" xml:space="preserve"><value>Varlık adı</value></data>
+  <data name="import.column.assets.name.description" xml:space="preserve"><value>İsteğe bağlı varlık adı (en fazla 255 karakter); yeni varlıkta boşsa kategori ve seri numarasından oluşturulur, mevcut varlıkta ad korunur.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>
@@ -1240,6 +1244,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>Bu seri numaralı cihaz şu anda başka bir çalışana zimmetli.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>İade tarihi zimmet veriliş tarihinden önce olamaz.</value></data>
   <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>Bu zimmet ataması onay bekleyen durumda değil ya da farklı bir onay sürecine ait.</value></data>
+  <data name="asset.tag_in_use" xml:space="preserve"><value>Bu demirbaş numarası başka bir zimmette kullanılıyor.</value></data>
+  <data name="asset.cost_invalid" xml:space="preserve"><value>Alış bedeli negatif olamaz.</value></data>
+  <data name="asset.warranty_before_purchase" xml:space="preserve"><value>Garanti bitiş tarihi alış tarihinden önce olamaz.</value></data>
+  <data name="asset.already_acknowledged" xml:space="preserve"><value>Bu zimmetin teslimi zaten onaylanmış.</value></data>
+  <data name="asset.not_assignee" xml:space="preserve"><value>Teslim aldığını yalnızca zimmetin atandığı çalışan onaylayabilir.</value></data>
+  <data name="asset.cannot_lose" xml:space="preserve"><value>Emekliye ayrılmış, zaten kayıp olan veya atama onayı bekleyen bir zimmet kayıp olarak bildirilemez.</value></data>
+  <data name="asset.note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>Zimmet veriliş tarihi çalışanın işe giriş tarihinden önce olamaz.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
@@ -1533,6 +1544,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Zimmetli</value></data>
   <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Hizmet dışı</value></data>
   <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Atama bekliyor</value></data>
+  <data name="report.enum.AssetStatus.Lost" xml:space="preserve"><value>Kayıp</value></data>
   <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Masraf</value></data>
   <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Avans</value></data>
   <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Fazla mesai</value></data>

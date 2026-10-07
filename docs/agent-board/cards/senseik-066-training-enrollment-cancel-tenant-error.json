@@ -1,0 +1,19 @@
+{
+  "id": "senseik-066",
+  "title": "Eğitim oturumunda katılımcı 'Çıkar' (ve muhtemelen Tamamlandı/Etkinleştir/Kapat) 'Kayıt başka bir şirket hesabına ait' hatası veriyor",
+  "owner": "all",
+  "state": "review",
+  "branch": "dev",
+  "worktree": "",
+  "resolution": "Kök neden doğrulandı: EnrollmentRepository/TrainingProgramRepository.UpdateAsync izlenen varlıkta DbSet.Update() çağırıyordu (TenantId dahil tüm alanlar Modified -> AuditTenantInterceptor TenantMismatchException). Düzeltme: izlenen varlıkta işlem yok (değişiklik algılama), detached varlıkta TenantId hariç Modified. Gerçek interceptor'lı 5 test düzeltme öncesi kırmızı, sonrası yeşil (Training 38/38, TenantIsolation 8/8, Architecture 60/60). Ayrıntı: docs/handoffs/zimmet-v2.md.",
+  "acceptance": [
+    "Katılımcı 'Çıkar' (CancelEnrollment) hatasız çalışır; kayıt silinmez, 'iptal edildi' durumuna alınıp iptal tarihi/nedeni saklanır.",
+    "Aynı kök nedenden etkilenen diğer uçlar (katılımcı 'Tamamlandı', eğitim programı 'Etkinleştir' ve 'Kapat') hatasız çalışır.",
+    "Hata, gerçek AuditTenantInterceptor ile çalışan bir entegrasyon testiyle önce KIRMIZI üretilir, sonra düzeltilir (mevcut testler interceptor'ı kullanmadığı için yakalamıyor olabilir).",
+    "Kiracı izolasyonu gevşetilmez: AuditTenantInterceptor 'TenantId değiştirilemez' koruması aynen kalır; düzeltme repository tarafındadır."
+  ],
+  "merge_gate": "Training .NET testleri + tam dotnet test kapısı",
+  "handoff": "",
+  "source": "Kullanıcı ekran görüntüsü 2026-10-07: Eğitim > İş Güvenliği oturumu > Katılımcılar > Çıkar -> üç kez 'Hata: Kayıt başka bir şirket hesabına ait.' toast'u.",
+  "hypothesis": "DOĞRULANMADI. Training.Infrastructure EnrollmentRepository.UpdateAsync ve TrainingProgramRepository.UpdateAsync, zaten izlenen (tracked) varlıkta context.<Set>.Update(entity) çağırıyor; bu, TenantId dahil tüm özellikleri Modified işaretliyor. AuditTenantInterceptor (SavingChanges, EntityState.Modified dalı) TenantId.IsModified görünce TenantMismatchException('TenantIdImmutable') fırlatıyor; GlobalExceptionHandler bunu tenant.mismatch ('Kayıt başka bir şirket hesabına ait.') olarak döndürüyor. Update() çağrısı Cancel/Complete/Activate/Close handler'larında gereksiz (varlık zaten izleniyor, değişiklikler otomatik algılanır). Başka hiçbir modül repository'sinde Update() kullanılmıyor."
+}

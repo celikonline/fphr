@@ -1,4 +1,14 @@
 {
+  "import": {
+    "action": "Add in bulk from Excel",
+    "title": "Bulk asset import from Excel",
+    "description": "Upload assigned assets and unassigned inventory in the same file. Leave the employee national ID and assignment dates empty to create unassigned inventory. The issue date is required when an employee is provided. After uploading, map the columns and run the import.",
+    "loading": "Loading the asset import template…",
+    "loadError": "The asset import template could not be loaded. Check your connection and try again.",
+    "retry": "Try again",
+    "unavailable": "The asset import template is unavailable. Contact your administrator to check your import permissions.",
+    "back": "Back to asset inventory"
+  },
   "section": {
     "title": "Assets",
     "assign": "Assign asset",
@@ -20,8 +30,23 @@
     "errors": {
       "generic": "The action could not be completed.",
       "loadFailed": "Assets could not be loaded.",
-      "nameAndCategoryRequired": "A name and category are required for a new asset."
-    }
+      "nameAndCategoryRequired": "A name and category are required for a new asset.",
+      "retry": "The action could not be completed. Check your connection and try again."
+    },
+    "assetTag": "Asset tag",
+    "assetTagHint": "Must be unique within the company.",
+    "brand": "Brand",
+    "model": "Model",
+    "purchase": "Purchase",
+    "purchaseDate": "Purchase date",
+    "purchaseCost": "Purchase cost",
+    "warrantyEndsOn": "Warranty ends",
+    "condition": "Condition",
+    "returnCondition": "Condition on return",
+    "returnNote": "Return note",
+    "returnNoteHint": "Optional; describe any damage or missing parts (up to 500 characters).",
+    "history": "Past assets",
+    "historyEmpty": "No returned or lost assets."
   },
   "categories": {
     "title": "Asset categories",
@@ -53,14 +78,23 @@
     "status": {
       "unassigned": "Unassigned",
       "assigned": "Assigned",
-      "retired": "Retired"
+      "retired": "Retired",
+      "pendingAssignment": "Pending approval",
+      "lost": "Lost"
+    },
+    "condition": {
+      "good": "Good",
+      "fair": "Fair",
+      "damaged": "Damaged"
     }
   },
   "page": {
     "title": "Assets",
     "inventory": "Inventory",
     "mine": "My assets",
-    "mineEmpty": "No assets are assigned to you."
+    "mineEmpty": "No assets are assigned to you.",
+    "history": "My past assets",
+    "historyEmpty": "You have no assets that were returned or reported lost."
   },
   "inventory": {
     "create": "Add asset",
@@ -74,14 +108,68 @@
     "categoryFilter": "Category filter",
     "allStatuses": "All statuses",
     "allCategories": "All categories",
-    "empty": "No assets match this filter.",
+    "empty": "No assets match your search or filter. Shorten the search or clear the filters.",
     "retire": "Retire",
     "retireTitle": "Retire asset?",
     "retireDescription": "\"{{name}}\" will be retired and can no longer be assigned.",
-    "retired": "Asset retired."
+    "retired": "Asset retired.",
+    "search": "Search assets",
+    "searchPlaceholder": "Name, serial number, asset tag, brand or model",
+    "emptyAll": "No assets recorded yet.",
+    "rowAction": "{{action}}: {{name}}"
   },
   "replacement": {
     "due": "Replace by {{date}}",
     "overdue": "Replacement overdue ({{date}})"
+  },
+  "summary": {
+    "title": "Asset summary",
+    "loadFailed": "The summary could not be loaded. Refresh the page and try again.",
+    "total": "Total",
+    "unassigned": "Unassigned",
+    "assigned": "Assigned",
+    "pendingAssignment": "Pending approval",
+    "unacknowledged": "Awaiting receipt confirmation",
+    "warrantyExpired": "Warranty ended",
+    "warrantyExpiring": "Warranty ends within 60 days",
+    "replacementOverdue": "PPE replacement overdue",
+    "lost": "Lost"
+  },
+  "warranty": {
+    "expired": "Warranty ended ({{date}})",
+    "expiring": "Warranty ends ({{date}})"
+  },
+  "acknowledgement": {
+    "pending": "Awaiting receipt confirmation",
+    "never": "Receipt was not confirmed",
+    "done": "Received: {{date}}",
+    "action": "I received it",
+    "success": "Your receipt confirmation was saved.",
+    "failed": "The receipt confirmation could not be saved. Check that the asset is assigned to you and not yet confirmed, then try again."
+  },
+  "history": {
+    "action": "Assignment history",
+    "title": "Assignment history of \"{{name}}\"",
+    "empty": "No assignments recorded for this asset.",
+    "loadFailed": "The history could not be loaded. Refresh the page and try again.",
+    "ongoing": "ongoing",
+    "open": "In use",
+    "note": "Note: {{note}}",
+    "endReason": {
+      "returned": "Returned",
+      "lost": "Lost"
+    },
+    "returnCondition": "Condition on return: {{condition}}"
+  },
+  "lost": {
+    "action": "Report lost",
+    "title": "Report \"{{name}}\" as lost",
+    "description": "The asset is marked as lost and can no longer be assigned. This cannot be undone.",
+    "descriptionAssigned": "The asset is marked as lost and the employee's assignment is closed as lost. This cannot be undone.",
+    "occurredOn": "Date lost",
+    "note": "Note",
+    "noteHint": "Optional; describe how the loss was noticed (up to 500 characters).",
+    "confirm": "Mark as lost",
+    "done": "Asset marked as lost."
   }
 }

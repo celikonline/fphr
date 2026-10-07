@@ -1,0 +1,19 @@
+{
+  "id": "senseik-067",
+  "title": "Tüm ekranların çoklu kiracı (multi-tenant) uyumunu yeni şirket ile uçtan uca doğrulama",
+  "owner": "all",
+  "state": "backlog",
+  "branch": "dev",
+  "worktree": "",
+  "acceptance": [
+    "'Yeni şirket ekle' akışı (kurulum/şirket oluşturma ekranları) sıfırdan açılan yeni bir şirketle uçtan uca çalışır: şirket oluşturulur, sahip kullanıcı giriş yapar, sistem rolleri/izinleri/kategori seed'leri (izin türleri, zimmet kategorileri, belge türleri vb.) yeni kiracıda oluşur.",
+    "Yeni şirketle tüm menü ekranları (Ana sayfa, Çalışanlar, İzin, Bordro, Harcama, Zimmet, Eğitim, İSG, Onay kutusu, Ayarlar, Raporlar vb.) açılır; boş durumlar düzgün görünür, hiçbir ekran 'Kayıt başka bir şirket hesabına ait' (tenant.mismatch), 403 veya 500 üretmez.",
+    "DEĞİŞMEZ KURAL (kullanıcı 2026-10-07): bir şirketin AYARLARI (TenantSettings, erişim ayarları, kategori/katalog/şablon/politika kayıtları, rol-izin atamaları, bildirim/belge şablonları dahil) ve KAYITLARI hiçbir koşulda başka bir şirkete okunamaz, yazılamaz, kopyalanamaz veya varsayılan olarak 'miras' kalmaz. Kiracıya özgü olmayan (global/seed) veri varsa listelenir ve gerekçelendirilir; A şirketinde yapılan ayar değişikliği B şirketinde görünmez, yeni şirket kendi ayarlarını temiz varsayılanlarla başlatır (başka şirketten kopyalamaz).",
+    "Her ekranın yazma işlemleri (oluştur/güncelle/sil/onayla) yeni şirkette denenir; kiracılar arası sızıntı yoktur: A şirketinin verisi B şirketinde listelenmez/okunmaz/değiştirilemez (iki kiracılı entegrasyon testi + manuel kontrol).",
+    "Bulunan her hata için önce hatayı üreten test, sonra düzeltme; düzeltmeler kiracı izolasyonunu (AuditTenantInterceptor, global query filter) gevşetmez.",
+    "Bulgular ve ekran-ekran sonuç tablosu `docs/handoffs/multi-tenant-new-company-verification.md` dosyasına yazılır; doğrulanmayan ekran 'uyumlu' diye işaretlenmez."
+  ],
+  "merge_gate": "Tam dotnet test kapısı + web testleri + yeni şirketle canlı tarayıcı doğrulaması (demo DB'yi bozmadan, ayrı yeni kiracı; test kalıntısı temizlenir)",
+  "handoff": "docs/handoffs/multi-tenant-new-company-verification.md",
+  "source": "Kullanıcı isteği 2026-10-07: 'tüm ekranlar multi tenanta uygun çalışıyor değil mi, yeni şirket ekle ekranları yeni şirket ile test et'. Tetikleyici bulgu: senseik-066 (Eğitim > Çıkar 'tenant.mismatch' hatası) çoklu kiracı korumasının repository seviyesinde yanlış tetiklenebildiğini gösteriyor. NOT: 'tüm ekranlar uyumlu' iddiası şu an KANITLANMAMIŞTIR; bu kart o kanıtı üretmek içindir."
+}

@@ -3,6 +3,7 @@ using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -14,7 +15,10 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Assets.Application.Assets;
 
 [RequiresPermission("assets.assets.manage")]
-public sealed record CreateAssetCommand(Guid CategoryId, string Name, string? SerialNumber, string? Description) : ICommand<Guid>;
+public sealed record CreateAssetCommand(
+    Guid CategoryId, string Name, string? SerialNumber, string? Description,
+    string? AssetTag = null, string? Brand = null, string? Model = null,
+    DateOnly? PurchaseDate = null, decimal? PurchaseCost = null, DateOnly? WarrantyEndsOn = null) : ICommand<Guid>;
 
 public sealed class CreateAssetValidator : AbstractValidator<CreateAssetCommand>
 {
@@ -24,6 +28,10 @@ public sealed class CreateAssetValidator : AbstractValidator<CreateAssetCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(AssetsLimits.NameMaxLength);
         RuleFor(x => x.SerialNumber).MaximumLength(AssetsLimits.SerialNumberMaxLength).When(x => x.SerialNumber is not null);
         RuleFor(x => x.Description).MaximumLength(AssetsLimits.DescriptionMaxLength).When(x => x.Description is not null);
+        RuleFor(x => x.AssetTag).MaximumLength(AssetsLimits.AssetTagMaxLength).When(x => x.AssetTag is not null);
+        RuleFor(x => x.Brand).MaximumLength(AssetsLimits.BrandMaxLength).When(x => x.Brand is not null);
+        RuleFor(x => x.Model).MaximumLength(AssetsLimits.ModelMaxLength).When(x => x.Model is not null);
+        RuleFor(x => x.PurchaseCost).PrecisionScale(AssetsLimits.CostPrecision, AssetsLimits.CostScale, false).When(x => x.PurchaseCost is not null);
     }
 }
 
@@ -38,10 +46,16 @@ public sealed class CreateAssetHandler(ITenantContext tenant, IAssetRepository a
             return category.Error;
         }
 
-        var created = Asset.Create(tenant.TenantId, command.CategoryId, command.Name, command.SerialNumber, command.Description);
+        var details = new AssetDetails(command.AssetTag, command.Brand, command.Model, command.PurchaseDate, command.PurchaseCost, command.WarrantyEndsOn);
+        var created = Asset.Create(tenant.TenantId, command.CategoryId, command.Name, command.SerialNumber, command.Description, details);
         if (created.IsFailure)
         {
             return created.Error;
+        }
+
+        if (created.Value.AssetTag is { } tag && await assets.IsAssetTagTakenAsync(tag, null, cancellationToken))
+        {
+            return Error.Conflict(AssetsDomainErrors.TagInUse);
         }
 
         assets.Add(created.Value);
@@ -50,7 +64,11 @@ public sealed class CreateAssetHandler(ITenantContext tenant, IAssetRepository a
 }
 
 [RequiresPermission("assets.assets.manage")]
-public sealed record UpdateAssetCommand(Guid AssetId, string Name, string? SerialNumber, string? Description) : ICommand;
+public sealed record UpdateAssetCommand(
+    Guid AssetId, string Name, string? SerialNumber, string? Description,
+    string? AssetTag = null, string? Brand = null, string? Model = null,
+    DateOnly? PurchaseDate = null, decimal? PurchaseCost = null, DateOnly? WarrantyEndsOn = null,
+    AssetCondition? Condition = null) : ICommand;
 
 public sealed class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
 {
@@ -60,9 +78,15 @@ public sealed class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(AssetsLimits.NameMaxLength);
         RuleFor(x => x.SerialNumber).MaximumLength(AssetsLimits.SerialNumberMaxLength).When(x => x.SerialNumber is not null);
         RuleFor(x => x.Description).MaximumLength(AssetsLimits.DescriptionMaxLength).When(x => x.Description is not null);
+        RuleFor(x => x.AssetTag).MaximumLength(AssetsLimits.AssetTagMaxLength).When(x => x.AssetTag is not null);
+        RuleFor(x => x.Brand).MaximumLength(AssetsLimits.BrandMaxLength).When(x => x.Brand is not null);
+        RuleFor(x => x.Model).MaximumLength(AssetsLimits.ModelMaxLength).When(x => x.Model is not null);
+        RuleFor(x => x.PurchaseCost).PrecisionScale(AssetsLimits.CostPrecision, AssetsLimits.CostScale, false).When(x => x.PurchaseCost is not null);
+        RuleFor(x => x.Condition).IsInEnum().When(x => x.Condition is not null);
     }
 }
 
+/// <summary>Replaces the editable fields (PUT semantics): künye fields not sent are cleared; a null Condition leaves the current one.</summary>
 public sealed class UpdateAssetHandler(IAssetRepository assets) : ICommandHandler<UpdateAssetCommand>
 {
     public async Task<Result> Handle(UpdateAssetCommand command, CancellationToken cancellationToken)
@@ -73,7 +97,17 @@ public sealed class UpdateAssetHandler(IAssetRepository assets) : ICommandHandle
             return existing.Error;
         }
 
-        return existing.Value.Update(command.Name, command.SerialNumber, command.Description);
+        var details = new AssetDetails(command.AssetTag, command.Brand, command.Model, command.PurchaseDate, command.PurchaseCost, command.WarrantyEndsOn);
+        var updated = existing.Value.Update(command.Name, command.SerialNumber, command.Description, details, command.Condition);
+        if (updated.IsFailure)
+        {
+            return updated;
+        }
+
+        // A failed command is not saved, so the (already applied) in-memory edit is discarded with the unit of work.
+        return existing.Value.AssetTag is { } tag && await assets.IsAssetTagTakenAsync(tag, existing.Value.Id, cancellationToken)
+            ? Error.Conflict(AssetsDomainErrors.TagInUse)
+            : Result.Success();
     }
 }
 
@@ -143,13 +177,17 @@ public sealed class AssignAssetHandler(ITenantContext tenant, IAssetRepository a
     }
 }
 
-/// <summary>Returns an Assigned asset; writes AssetReturned to this module's own outbox.</summary>
+/// <summary>Returns an Assigned asset (recording its condition and an optional note on the ledger); writes AssetReturned to this module's own outbox.</summary>
 [RequiresPermission("assets.assets.manage")]
-public sealed record ReturnAssetCommand(Guid AssetId, DateOnly ReturnedAt) : ICommand;
+public sealed record ReturnAssetCommand(Guid AssetId, DateOnly ReturnedAt, AssetCondition Condition = AssetCondition.Good, string? Note = null) : ICommand;
 
 public sealed class ReturnAssetValidator : AbstractValidator<ReturnAssetCommand>
 {
-    public ReturnAssetValidator() => RuleFor(x => x.AssetId).NotEmpty();
+    public ReturnAssetValidator()
+    {
+        RuleFor(x => x.AssetId).NotEmpty();
+        RuleFor(x => x.Condition).IsInEnum();
+    }
 }
 
 public sealed class ReturnAssetHandler(IAssetRepository assets, IIntegrationEventOutbox outbox) : ICommandHandler<ReturnAssetCommand>
@@ -164,7 +202,7 @@ public sealed class ReturnAssetHandler(IAssetRepository assets, IIntegrationEven
 
         var asset = existing.Value;
         var employeeId = asset.AssignedEmployeeId;
-        var returned = asset.Return(command.ReturnedAt);
+        var returned = asset.Return(command.ReturnedAt, command.Condition, command.Note);
         if (returned.IsFailure)
         {
             return returned;
@@ -198,5 +236,59 @@ public sealed class RetireAssetHandler(IAssetRepository assets) : ICommandHandle
         }
 
         return existing.Value.Retire();
+    }
+}
+
+/// <summary>Reports an Unassigned or Assigned asset lost; when held by an employee the open ledger row closes with EndReason=Lost.</summary>
+[RequiresPermission("assets.assets.manage")]
+public sealed record MarkAssetLostCommand(Guid AssetId, DateOnly OccurredOn, string? Note = null) : ICommand;
+
+public sealed class MarkAssetLostValidator : AbstractValidator<MarkAssetLostCommand>
+{
+    public MarkAssetLostValidator() => RuleFor(x => x.AssetId).NotEmpty();
+}
+
+public sealed class MarkAssetLostHandler(IAssetRepository assets) : ICommandHandler<MarkAssetLostCommand>
+{
+    public async Task<Result> Handle(MarkAssetLostCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await assets.GetByIdAsync(command.AssetId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        return existing.Value.MarkLost(command.OccurredOn, command.Note);
+    }
+}
+
+/// <summary>Self-service "teslim aldım": the employee holding the asset confirms receipt of the open assignment.</summary>
+[RequiresPermission("assets.my.assets")]
+[RequiresAccessSetting(AccessSettingKeys.HomeShowAssets)]
+public sealed record AcknowledgeAssetCommand(Guid AssetId) : ICommand;
+
+public sealed class AcknowledgeAssetValidator : AbstractValidator<AcknowledgeAssetCommand>
+{
+    public AcknowledgeAssetValidator() => RuleFor(x => x.AssetId).NotEmpty();
+}
+
+public sealed class AcknowledgeAssetHandler(ICurrentUser currentUser, IAssetRepository assets, TimeProvider clock)
+    : ICommandHandler<AcknowledgeAssetCommand>
+{
+    public async Task<Result> Handle(AcknowledgeAssetCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await assets.GetByIdAsync(command.AssetId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        // A user without an employee record can never be the assignee.
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.Forbidden(AssetsDomainErrors.NotAssignee);
+        }
+
+        return existing.Value.Acknowledge(employeeId, clock.GetUtcNow().UtcDateTime);
     }
 }

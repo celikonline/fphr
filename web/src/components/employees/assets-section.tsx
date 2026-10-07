@@ -18,6 +18,10 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { PackagePlus, Undo2 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ReturnAssetForm, type ReturnAssetValues } from "@/components/assets/asset-dialogs";
+import { ASSET_STATUS_COLOR } from "@/components/assets/asset-inventory";
+import { ConditionBadge, UnacknowledgedBadge, WarrantyBadge } from "@/components/assets/asset-badges";
+import { PastAssignmentsSection } from "@/components/assets/assignment-history";
 import ReplacementDueBadge from "@/components/assets/replacement-due-badge";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -27,23 +31,18 @@ import type { EmployeeCardTabProps } from "@/components/employees/card-tabs";
 import {
   assignAsset,
   createAsset,
+  getEmployeeAssetHistory,
   getEmployeeAssets,
+  getMyAssetHistory,
   getMyAssets,
   listAssetCategories,
   listAssets,
   returnAsset,
   type Asset,
   type AssetCategory,
-  type AssetStatus,
 } from "@/services/assets.service";
 
 export const ASSETS_CARD_TAB_PERMISSIONS = ["assets.assets.view", "assets.my.assets"];
-
-const STATUS_COLOR: Record<AssetStatus, string> = {
-  unassigned: "gray",
-  assigned: "green",
-  retired: "dark",
-};
 
 const NEW_ASSET = "__new__";
 
@@ -54,7 +53,7 @@ function todayDateOnly(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** "Zimmet" (roadmap #65): the employee's currently assigned equipment; HR can assign a (new or existing unassigned) asset or return an assigned one. */
+/** "Zimmet" (roadmap #65): the employee's currently assigned equipment and, below it, past (closed) assignments; HR can assign a (new or existing unassigned) asset or return an assigned one. */
 export function AssetsSection({ employee }: EmployeeCardTabProps) {
   const { t, i18n } = useTranslation(["assets", "common"]);
   const canViewAny = usePermission("assets.assets.view");
@@ -70,6 +69,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
     data: assets = [],
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey,
     queryFn: () => (canViewAny ? getEmployeeAssets(employee.id) : getMyAssets()),
@@ -85,10 +85,11 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
     categoriesQuery.data?.find((c) => c.id === categoryId)?.name ?? categoryId;
 
   const returnMutation = useMutation({
-    mutationFn: ({ asset, returnedAt }: { asset: Asset; returnedAt: string }) =>
-      returnAsset(asset.id, returnedAt),
+    mutationFn: ({ asset, values }: { asset: Asset; values: ReturnAssetValues }) =>
+      returnAsset(asset.id, values.returnedAt, values.condition, values.note),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey });
+      void queryClient.invalidateQueries({ queryKey: ["assets"] });
       toast({
         variant: "success",
         title: t("common:success"),
@@ -126,7 +127,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
 
       {isError ? (
         <Text size="sm" c="red">
-          {t("assets:section.errors.loadFailed")}
+          {getApiErrorMessage(error, t("assets:section.errors.loadFailed"))}
         </Text>
       ) : assets.length === 0 ? (
         <Text size="sm" c="dimmed">
@@ -142,9 +143,12 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
                     {asset.name}
                   </Text>
                   <Badge variant="light">{categoryName(asset.categoryId)}</Badge>
-                  <Badge variant="filled" color={STATUS_COLOR[asset.status]}>
+                  <Badge variant="filled" color={ASSET_STATUS_COLOR[asset.status]}>
                     {t(`assets:enum.status.${asset.status}`)}
                   </Badge>
+                  <UnacknowledgedBadge asset={asset} />
+                  <ConditionBadge condition={asset.condition} />
+                  <WarrantyBadge asset={asset} />
                   <ReplacementDueBadge asset={asset} />
                 </Group>
                 <Text size="xs" c="dimmed">
@@ -162,6 +166,10 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
                   type="button"
                   variant="subtle"
                   size="sm"
+                  aria-label={t("assets:inventory.rowAction", {
+                    action: t("assets:section.return"),
+                    name: asset.name,
+                  })}
                   leftSection={<Undo2 size={14} />}
                   onClick={() => setReturning(asset)}
                 >
@@ -193,56 +201,27 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
         >
           <ReturnAssetForm
             busy={returnMutation.isPending}
+            minDate={returning.issuedAt ?? undefined}
+            defaultCondition={returning.condition}
             onCancel={() => setReturning(null)}
-            onSubmit={(returnedAt) => returnMutation.mutate({ asset: returning, returnedAt })}
+            onSubmit={(values) => returnMutation.mutate({ asset: returning, values })}
           />
         </Modal>
       )}
-    </Card>
-  );
-}
 
-function ReturnAssetForm({
-  busy,
-  onCancel,
-  onSubmit,
-}: {
-  busy: boolean;
-  onCancel: () => void;
-  onSubmit: (returnedAt: string) => void;
-}) {
-  const { t } = useTranslation(["assets", "common"]);
-  const [returnedAt, setReturnedAt] = useState(todayDateOnly());
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    onSubmit(returnedAt);
-  }
-
-  return (
-    <form onSubmit={submit}>
-      <Stack gap="md">
-        <Stack gap={4}>
-          <Text size="sm" fw={500}>
-            {t("assets:section.returnedAt")}
-          </Text>
-          <DatePicker
-            id="asset-returnedAt"
-            value={returnedAt}
-            disabled={busy}
-            onChange={setReturnedAt}
+      {!isError && (
+        <div className="mt-6">
+          <PastAssignmentsSection
+            queryKey={["assets", "employee-history", employee.id, canViewAny]}
+            load={() => (canViewAny ? getEmployeeAssetHistory(employee.id) : getMyAssetHistory())}
+            heading={t("assets:section.history")}
+            headingOrder={5}
+            emptyText={t("assets:section.historyEmpty")}
+            categoryName={canViewAny ? (id) => categoriesQuery.data?.find((c) => c.id === id)?.name : undefined}
           />
-        </Stack>
-        <Group justify="flex-end" gap="sm">
-          <Button type="button" variant="default" onClick={onCancel} disabled={busy}>
-            {t("common:cancel")}
-          </Button>
-          <Button type="submit" loading={busy}>
-            {t("assets:section.return")}
-          </Button>
-        </Group>
-      </Stack>
-    </form>
+        </div>
+      )}
+    </Card>
   );
 }
 

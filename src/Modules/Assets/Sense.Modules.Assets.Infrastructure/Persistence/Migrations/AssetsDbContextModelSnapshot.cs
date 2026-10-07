@@ -34,13 +34,29 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("approval_request_id");
 
+                    b.Property<string>("AssetTag")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("asset_tag");
+
                     b.Property<Guid?>("AssignedEmployeeId")
                         .HasColumnType("uuid")
                         .HasColumnName("assigned_employee_id");
 
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("brand");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("category_id");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("condition");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -58,6 +74,11 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly?>("IssuedAt")
                         .HasColumnType("date")
                         .HasColumnName("issued_at");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
@@ -81,6 +102,15 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("pending_issued_at");
 
+                    b.Property<decimal?>("PurchaseCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("purchase_cost");
+
+                    b.Property<DateOnly?>("PurchaseDate")
+                        .HasColumnType("date")
+                        .HasColumnName("purchase_date");
+
                     b.Property<DateOnly?>("ReturnedAt")
                         .HasColumnType("date")
                         .HasColumnName("returned_at");
@@ -100,6 +130,10 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<DateOnly?>("WarrantyEndsOn")
+                        .HasColumnType("date")
+                        .HasColumnName("warranty_ends_on");
+
                     b.HasKey("Id")
                         .HasName("pk_assets");
 
@@ -108,6 +142,11 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "ApprovalRequestId")
                         .HasDatabaseName("ix_assets_tenant_id_approval_request_id");
+
+                    b.HasIndex("TenantId", "AssetTag")
+                        .IsUnique()
+                        .HasDatabaseName("ix_assets_tenant_id_asset_tag")
+                        .HasFilter("asset_tag IS NOT NULL");
 
                     b.HasIndex("TenantId", "AssignedEmployeeId")
                         .HasDatabaseName("ix_assets_tenant_id_assigned_employee_id");
@@ -119,6 +158,90 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_assets_tenant_id_status");
 
                     b.ToTable("assets", "assets");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Assets.Domain.Assets.AssetAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("acknowledged_at");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("asset_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("end_reason");
+
+                    b.Property<DateOnly>("IssuedAt")
+                        .HasColumnType("date")
+                        .HasColumnName("issued_at");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("ReturnCondition")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("return_condition");
+
+                    b.Property<DateOnly?>("ReturnedAt")
+                        .HasColumnType("date")
+                        .HasColumnName("returned_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_asset_assignments");
+
+                    b.HasIndex("AssetId")
+                        .HasDatabaseName("ix_asset_assignments_asset_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_asset_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "AssetId")
+                        .HasDatabaseName("ix_asset_assignments_tenant_id_asset_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_asset_assignments_tenant_id_employee_id");
+
+                    b.HasIndex(new[] { "TenantId", "AssetId" }, "ux_asset_assignments_tenant_id_asset_id_open")
+                        .IsUnique()
+                        .HasDatabaseName("ix_asset_assignments_tenant_id_asset_id1")
+                        .HasFilter("returned_at IS NULL");
+
+                    b.ToTable("asset_assignments", "assets");
                 });
 
             modelBuilder.Entity("Sense.Modules.Assets.Domain.Assets.AssetCategory", b =>
@@ -364,6 +487,21 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "assets");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Assets.Domain.Assets.AssetAssignment", b =>
+                {
+                    b.HasOne("Sense.Modules.Assets.Domain.Assets.Asset", null)
+                        .WithMany("Assignments")
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_asset_assignments_assets_asset_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Assets.Domain.Assets.Asset", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 #pragma warning restore 612, 618
         }

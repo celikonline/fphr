@@ -1,4 +1,14 @@
 {
+  "import": {
+    "action": "Aus Excel gesammelt hinzufügen",
+    "title": "Arbeitsmittel aus Excel importieren",
+    "description": "Zugewiesene Arbeitsmittel und freien Bestand können Sie in derselben Datei hochladen. Lassen Sie die nationale ID des Mitarbeiters und die Zuweisungsdaten leer, um freien Bestand anzulegen. Wenn ein Mitarbeiter angegeben ist, ist das Ausgabedatum erforderlich. Ordnen Sie nach dem Hochladen die Spalten zu und starten Sie den Import.",
+    "loading": "Die Importvorlage für Arbeitsmittel wird geladen…",
+    "loadError": "Die Importvorlage konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "retry": "Erneut versuchen",
+    "unavailable": "Die Importvorlage für Arbeitsmittel ist nicht verfügbar. Wenden Sie sich an Ihren Administrator, um Ihre Importberechtigungen zu prüfen.",
+    "back": "Zurück zum Arbeitsmittelbestand"
+  },
   "section": {
     "title": "Arbeitsmittel",
     "assign": "Arbeitsmittel zuweisen",
@@ -20,8 +30,23 @@
     "errors": {
       "generic": "Die Aktion konnte nicht abgeschlossen werden.",
       "loadFailed": "Die Arbeitsmittel konnten nicht geladen werden.",
-      "nameAndCategoryRequired": "Für ein neues Arbeitsmittel sind Name und Kategorie erforderlich."
-    }
+      "nameAndCategoryRequired": "Für ein neues Arbeitsmittel sind Name und Kategorie erforderlich.",
+      "retry": "Die Aktion konnte nicht abgeschlossen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+    },
+    "assetTag": "Inventarnummer",
+    "assetTagHint": "Muss im Unternehmen eindeutig sein.",
+    "brand": "Marke",
+    "model": "Modell",
+    "purchase": "Anschaffung",
+    "purchaseDate": "Anschaffungsdatum",
+    "purchaseCost": "Anschaffungskosten",
+    "warrantyEndsOn": "Garantie bis",
+    "condition": "Zustand",
+    "returnCondition": "Zustand bei Rückgabe",
+    "returnNote": "Rückgabenotiz",
+    "returnNoteHint": "Optional; Schäden oder fehlende Teile angeben (höchstens 500 Zeichen).",
+    "history": "Frühere Arbeitsmittel",
+    "historyEmpty": "Keine zurückgegebenen oder verlorenen Arbeitsmittel."
   },
   "categories": {
     "title": "Arbeitsmittelkategorien",
@@ -53,14 +78,23 @@
     "status": {
       "unassigned": "Nicht zugewiesen",
       "assigned": "Zugewiesen",
-      "retired": "Ausgemustert"
+      "retired": "Ausgemustert",
+      "pendingAssignment": "Zuweisung in Genehmigung",
+      "lost": "Verloren"
+    },
+    "condition": {
+      "good": "Gut",
+      "fair": "Befriedigend",
+      "damaged": "Beschädigt"
     }
   },
   "page": {
     "title": "Arbeitsmittel",
     "inventory": "Bestand",
     "mine": "Meine Arbeitsmittel",
-    "mineEmpty": "Ihnen sind keine Arbeitsmittel zugewiesen."
+    "mineEmpty": "Ihnen sind keine Arbeitsmittel zugewiesen.",
+    "history": "Meine früheren Arbeitsmittel",
+    "historyEmpty": "Sie haben keine zurückgegebenen oder als verloren gemeldeten Arbeitsmittel."
   },
   "inventory": {
     "create": "Arbeitsmittel hinzufügen",
@@ -74,14 +108,68 @@
     "categoryFilter": "Kategoriefilter",
     "allStatuses": "Alle Status",
     "allCategories": "Alle Kategorien",
-    "empty": "Keine Arbeitsmittel entsprechen diesem Filter.",
+    "empty": "Keine Arbeitsmittel entsprechen Suche oder Filter. Kürzen Sie die Suche oder setzen Sie die Filter zurück.",
     "retire": "Ausmustern",
     "retireTitle": "Arbeitsmittel ausmustern?",
     "retireDescription": "„{{name}}\" wird ausgemustert und kann nicht mehr zugewiesen werden.",
-    "retired": "Arbeitsmittel ausgemustert."
+    "retired": "Arbeitsmittel ausgemustert.",
+    "search": "Arbeitsmittel suchen",
+    "searchPlaceholder": "Name, Seriennummer, Inventarnummer, Marke oder Modell",
+    "emptyAll": "Noch keine Arbeitsmittel erfasst.",
+    "rowAction": "{{action}}: {{name}}"
   },
   "replacement": {
     "due": "Austausch bis {{date}}",
     "overdue": "Austausch überfällig ({{date}})"
+  },
+  "summary": {
+    "title": "Übersicht der Arbeitsmittel",
+    "loadFailed": "Die Übersicht konnte nicht geladen werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    "total": "Gesamt",
+    "unassigned": "Nicht zugewiesen",
+    "assigned": "Zugewiesen",
+    "pendingAssignment": "Zuweisung in Genehmigung",
+    "unacknowledged": "Empfangsbestätigung offen",
+    "warrantyExpired": "Garantie abgelaufen",
+    "warrantyExpiring": "Garantie endet in 60 Tagen",
+    "replacementOverdue": "PSA-Austausch überfällig",
+    "lost": "Verloren"
+  },
+  "warranty": {
+    "expired": "Garantie abgelaufen ({{date}})",
+    "expiring": "Garantie endet ({{date}})"
+  },
+  "acknowledgement": {
+    "pending": "Empfangsbestätigung offen",
+    "never": "Empfang wurde nicht bestätigt",
+    "done": "Empfangen: {{date}}",
+    "action": "Erhalten bestätigen",
+    "success": "Ihre Empfangsbestätigung wurde gespeichert.",
+    "failed": "Die Empfangsbestätigung konnte nicht gespeichert werden. Prüfen Sie, ob das Arbeitsmittel Ihnen zugewiesen und noch nicht bestätigt ist, und versuchen Sie es erneut."
+  },
+  "history": {
+    "action": "Zuweisungsverlauf",
+    "title": "Zuweisungsverlauf von „{{name}}\"",
+    "empty": "Für dieses Arbeitsmittel sind keine Zuweisungen erfasst.",
+    "loadFailed": "Der Verlauf konnte nicht geladen werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    "ongoing": "laufend",
+    "open": "In Nutzung",
+    "note": "Notiz: {{note}}",
+    "endReason": {
+      "returned": "Zurückgegeben",
+      "lost": "Verloren"
+    },
+    "returnCondition": "Zustand bei Rückgabe: {{condition}}"
+  },
+  "lost": {
+    "action": "Verlust melden",
+    "title": "„{{name}}\" als verloren melden",
+    "description": "Das Arbeitsmittel wird als verloren markiert und kann nicht mehr zugewiesen werden. Dies kann nicht rückgängig gemacht werden.",
+    "descriptionAssigned": "Das Arbeitsmittel wird als verloren markiert und die Zuweisung an die Mitarbeitenden wird als Verlust beendet. Dies kann nicht rückgängig gemacht werden.",
+    "occurredOn": "Verlustdatum",
+    "note": "Notiz",
+    "noteHint": "Optional; beschreiben Sie, wie der Verlust bemerkt wurde (höchstens 500 Zeichen).",
+    "confirm": "Als verloren markieren",
+    "done": "Arbeitsmittel als verloren markiert."
   }
 }

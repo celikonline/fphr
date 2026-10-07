@@ -1085,24 +1085,28 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
   <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Equipment</value></data>
-  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Bulk-import equipment (computers, phones, vehicles, etc.) assigned to employees.</value></data>
-  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Employees are matched by national id; a row with no matching active employee is an error.</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Bulk-import equipment assigned to employees and unassigned inventory (computers, phones, vehicles, etc.).</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>A provided national id must match an active employee and requires an issue date; an unmatched employee is a row error.</value></data>
   <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>A category name that doesn't exist yet is created automatically; matching against existing categories ignores case and whitespace.</value></data>
-  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>A filled-in return date makes the row a closed (already returned) item; leaving it blank makes it an open (currently held) item.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>With an employee national id, a return date makes the row a closed (already returned) assignment; a blank return date creates an open assignment.</value></data>
+  <data name="import.template.assets.zimmet.instruction.inventory" xml:space="preserve"><value>For unassigned inventory, leave national id, issue date and return date blank. The same category and serial number matches an existing asset; inventory rows preserve its assignment and status. Asset name is optional; when blank, new names use category and serial number.</value></data>
   <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Valid: still held by the employee.</value></data>
   <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Valid: a returned, past item.</value></data>
+  <data name="import.template.assets.zimmet.sample.inventory" xml:space="preserve"><value>Valid: unassigned inventory, not yet issued to an employee.</value></data>
   <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>National id</value></data>
-  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11-digit national id; the employee is matched by this number.</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11-digit national id used to match the employee; leave blank for unassigned inventory.</value></data>
   <data name="import.column.assets.categoryName" xml:space="preserve"><value>Category</value></data>
   <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Equipment category (e.g. Computer, Phone, Vehicle); created automatically if it doesn't exist.</value></data>
   <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Serial number</value></data>
   <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>The device's serial number, if any; the same category + serial number updates the existing item, otherwise a new item is created.</value></data>
   <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Issue date</value></data>
-  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>The date the equipment was issued to the employee (dd.MM.yyyy).</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>The date issued to the employee (dd.MM.yyyy); required when national id is filled in, blank for unassigned inventory.</value></data>
   <data name="import.column.assets.returnedAt" xml:space="preserve"><value>Return date</value></data>
   <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>The date the equipment was returned (dd.MM.yyyy); left blank, the item is still considered open.</value></data>
   <data name="import.column.assets.note" xml:space="preserve"><value>Description</value></data>
   <data name="import.column.assets.note.description" xml:space="preserve"><value>Notable details about the item (brand/model etc.); optional.</value></data>
+  <data name="import.column.assets.name" xml:space="preserve"><value>Asset name</value></data>
+  <data name="import.column.assets.name.description" xml:space="preserve"><value>Optional asset name (up to 255 characters); if blank, new names use category and serial number, existing names are preserved.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>
@@ -1231,6 +1235,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>A device with this serial number is currently assigned to another employee.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>The return date cannot be before the issue date.</value></data>
   <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>This asset's assignment is not pending approval, or belongs to a different approval process.</value></data>
+  <data name="asset.tag_in_use" xml:space="preserve"><value>This asset tag is already used by another asset.</value></data>
+  <data name="asset.cost_invalid" xml:space="preserve"><value>The purchase cost cannot be negative.</value></data>
+  <data name="asset.warranty_before_purchase" xml:space="preserve"><value>The warranty end date cannot be before the purchase date.</value></data>
+  <data name="asset.already_acknowledged" xml:space="preserve"><value>Receipt of this asset has already been acknowledged.</value></data>
+  <data name="asset.not_assignee" xml:space="preserve"><value>Only the employee this asset is assigned to can acknowledge receipt.</value></data>
+  <data name="asset.cannot_lose" xml:space="preserve"><value>A retired, already lost or pending-assignment asset cannot be reported lost.</value></data>
+  <data name="asset.note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Employee not found.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>The issue date cannot be before the employee's hire date.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
@@ -1524,6 +1535,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Assigned</value></data>
   <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Retired</value></data>
   <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Pending assignment</value></data>
+  <data name="report.enum.AssetStatus.Lost" xml:space="preserve"><value>Lost</value></data>
   <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Expense</value></data>
   <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Advance</value></data>
   <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Overtime</value></data>
