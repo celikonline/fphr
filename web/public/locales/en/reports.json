@@ -57,6 +57,10 @@
         "summary": {
           "label": "Employee leave balance report",
           "description": "Annual leave balances as of today: remaining, total entitled, carry-over losses, used and future approved leave."
+        },
+        "detail": {
+          "label": "Employee leave details report",
+          "description": "Current annual leave entitlement, carry-over and usage. Select a month/year to add historical range balances."
         }
       },
       "requests": {
@@ -166,7 +170,10 @@
     "runError": "The report could not be generated.",
     "dataError": "The report data could not be loaded.",
     "idle": "Choose the required filters and press Apply.",
-    "downloadPdf": "Download PDF"
+    "downloadPdf": "Download PDF",
+    "queued": "The report is queued. Preparation may take a minute.",
+    "running": "The report is being prepared. Results will appear here when ready.",
+    "pdfPreparing": "The PDF is being prepared and will download when ready."
   },
   "params": {
     "orgUnitIds": "Units",
@@ -263,12 +270,24 @@
     }
   },
   "kpi": {
-    "CAREER_PATH_RATIO": { "label": "Career path ratio" },
-    "GENDER_RATIO": { "label": "Gender distribution" },
-    "TURNOVER_RATE": { "label": "Turnover rate" },
-    "EARLY_TURNOVER_RATE": { "label": "Early attrition share (first 6 months)" },
-    "GENDER_RATIO_BY_UNIT": { "label": "Gender distribution by unit" },
-    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Gender distribution by department" },
+    "CAREER_PATH_RATIO": {
+      "label": "Career path ratio"
+    },
+    "GENDER_RATIO": {
+      "label": "Gender distribution"
+    },
+    "TURNOVER_RATE": {
+      "label": "Turnover rate"
+    },
+    "EARLY_TURNOVER_RATE": {
+      "label": "Early attrition share (first 6 months)"
+    },
+    "GENDER_RATIO_BY_UNIT": {
+      "label": "Gender distribution by unit"
+    },
+    "GENDER_RATIO_BY_DEPARTMENT": {
+      "label": "Gender distribution by department"
+    },
     "dimensions": {
       "Promotion": "Promotion",
       "LateralMove": "Lateral move",

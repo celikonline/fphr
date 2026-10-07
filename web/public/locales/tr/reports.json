@@ -57,6 +57,10 @@
         "summary": {
           "label": "Çalışan izin bakiye raporu",
           "description": "Yıllık izin bakiyeleri bugüne göre: kalan, toplam hak edilen, devir kayıpları, kullanılan ve ileri tarihli onaylılar."
+        },
+        "detail": {
+          "label": "Çalışan izin bilgileri raporu",
+          "description": "Yıllık izinlerin güncel hak ediş, devir ve kullanım ayrıntıları. Ay/yıl seçerseniz ayrıca tarih aralığı bakiyeleri eklenir."
         }
       },
       "requests": {
@@ -166,7 +170,10 @@
     "runError": "Rapor oluşturulamadı.",
     "dataError": "Rapor verisi yüklenemedi.",
     "idle": "Zorunlu filtreleri seçip Uygula'ya basın.",
-    "downloadPdf": "PDF indir"
+    "downloadPdf": "PDF indir",
+    "queued": "Rapor sıraya alındı. Hazırlanması bir dakika sürebilir.",
+    "running": "Rapor hazırlanıyor. Hazır olduğunda sonuçlar burada gösterilecek.",
+    "pdfPreparing": "PDF hazırlanıyor. Hazır olduğunda indirilecek."
   },
   "params": {
     "orgUnitIds": "Birimler",
@@ -263,12 +270,24 @@
     }
   },
   "kpi": {
-    "CAREER_PATH_RATIO": { "label": "Kariyer yolu oranı" },
-    "GENDER_RATIO": { "label": "Cinsiyet dağılımı" },
-    "TURNOVER_RATE": { "label": "İşten ayrılma oranı" },
-    "EARLY_TURNOVER_RATE": { "label": "Erken ayrılma payı (ilk 6 ay)" },
-    "GENDER_RATIO_BY_UNIT": { "label": "Birim bazında cinsiyet dağılımı" },
-    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Departman bazında cinsiyet dağılımı" },
+    "CAREER_PATH_RATIO": {
+      "label": "Kariyer yolu oranı"
+    },
+    "GENDER_RATIO": {
+      "label": "Cinsiyet dağılımı"
+    },
+    "TURNOVER_RATE": {
+      "label": "İşten ayrılma oranı"
+    },
+    "EARLY_TURNOVER_RATE": {
+      "label": "Erken ayrılma payı (ilk 6 ay)"
+    },
+    "GENDER_RATIO_BY_UNIT": {
+      "label": "Birim bazında cinsiyet dağılımı"
+    },
+    "GENDER_RATIO_BY_DEPARTMENT": {
+      "label": "Departman bazında cinsiyet dağılımı"
+    },
     "dimensions": {
       "Promotion": "Terfi",
       "LateralMove": "Yatay geçiş",

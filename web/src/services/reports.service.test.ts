@@ -244,6 +244,22 @@ describe("reports.service", () => {
       expect(result.blob).toEqual(mockBlob);
     });
 
+    it("requests a PDF rendered from the same execution snapshot", async () => {
+      const mockBlob = new Blob(["pdf data"], { type: "application/pdf" });
+      mockApiClient.get.mockResolvedValueOnce({
+        data: mockBlob,
+        headers: { "content-disposition": "attachment; filename=report.pdf" },
+      });
+
+      const result = await reportsService.downloadReportExecution("exec-123", "report.pdf", "pdf");
+
+      expect(mockApiClient.get).toHaveBeenCalledWith("/v1/reports/executions/exec-123/download", {
+        params: { format: "pdf" },
+        responseType: "blob",
+      });
+      expect(result.fileName).toBe("report.pdf");
+    });
+
     it("uses fallback filename when Content-Disposition is missing", async () => {
       const mockBlob = new Blob(["test data"]);
       mockApiClient.get.mockResolvedValueOnce({

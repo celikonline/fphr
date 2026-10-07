@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Globalization;
+using Sense.Shared.Contracts.Events;
 using FluentValidation;
 using Sense.Modules.Reporting.Contracts;
 using Sense.Modules.Reporting.Domain;
@@ -31,7 +33,9 @@ public sealed class RequestReportHandler(
     ITenantContext tenant,
     ICurrentUser currentUser,
     IPermissionService permissions,
-    TimeProvider clock) : ICommandHandler<RequestReportCommand, ReportExecutionDto>
+    TimeProvider clock,
+    IIntegrationEventOutbox? outbox = null,
+    IDataScopeService? dataScope = null) : ICommandHandler<RequestReportCommand, ReportExecutionDto>
 {
     public async Task<Result<ReportExecutionDto>> Handle(RequestReportCommand command, CancellationToken cancellationToken)
     {
@@ -68,6 +72,22 @@ public sealed class RequestReportHandler(
 
         var execution = created.Value;
         executions.Add(execution);
+        if (provider.ExecutionMode == "async")
+        {
+            if (userId == Guid.Empty || outbox is null || dataScope is null)
+            {
+                return Error.Forbidden(ReportingErrors.ReportPermissionDenied);
+            }
+
+            var visible = provider.RequiredPermission is { } permission
+                ? await dataScope.GetVisibleEmployeeIdsAsync(permission, cancellationToken)
+                : new HashSet<Guid>();
+            var sensitive = await permissions.HasAsync(userId, "employee.sensitive.view", cancellationToken);
+            outbox.Enqueue(new ReportGenerationRequested(tenant.TenantId, execution.Id, userId, currentUser.EmployeeId,
+                currentUser.Email, currentUser.DisplayName, CultureInfo.CurrentUICulture.Name, command.Notify, visible?.ToList(), sensitive));
+            return ReportExecutionDto.From(execution);
+        }
+
         execution.Start(now);
 
         // A provider is third-party (another module's code) from this handler's point of view; a failure there

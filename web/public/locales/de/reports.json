@@ -57,6 +57,10 @@
         "summary": {
           "label": "Urlaubssaldo-Bericht",
           "description": "Jahresurlaubssalden zum heutigen Tag: Rest, Gesamtanspruch, Übertragsverluste, genommen und künftig genehmigt."
+        },
+        "detail": {
+          "label": "Detaillierter Urlaubsbericht",
+          "description": "Aktueller Jahresurlaubsanspruch, Übertrag und Verbrauch. Monat/Jahr ergänzt historische Zeitraumssalden."
         }
       },
       "requests": {
@@ -166,7 +170,10 @@
     "runError": "Der Bericht konnte nicht erstellt werden.",
     "dataError": "Die Berichtsdaten konnten nicht geladen werden.",
     "idle": "Wählen Sie die erforderlichen Filter und klicken Sie auf Anwenden.",
-    "downloadPdf": "PDF herunterladen"
+    "downloadPdf": "PDF herunterladen",
+    "queued": "Der Bericht ist in der Warteschlange. Die Erstellung kann eine Minute dauern.",
+    "running": "Der Bericht wird erstellt. Die Ergebnisse erscheinen hier, sobald er bereit ist.",
+    "pdfPreparing": "Die PDF wird erstellt und anschließend heruntergeladen."
   },
   "params": {
     "orgUnitIds": "Einheiten",
@@ -263,12 +270,24 @@
     }
   },
   "kpi": {
-    "CAREER_PATH_RATIO": { "label": "Karrierepfad-Quote" },
-    "GENDER_RATIO": { "label": "Geschlechterverteilung" },
-    "TURNOVER_RATE": { "label": "Fluktuationsrate" },
-    "EARLY_TURNOVER_RATE": { "label": "Frühfluktuation (erste 6 Monate)" },
-    "GENDER_RATIO_BY_UNIT": { "label": "Geschlechterverteilung nach Einheit" },
-    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Geschlechterverteilung nach Abteilung" },
+    "CAREER_PATH_RATIO": {
+      "label": "Karrierepfad-Quote"
+    },
+    "GENDER_RATIO": {
+      "label": "Geschlechterverteilung"
+    },
+    "TURNOVER_RATE": {
+      "label": "Fluktuationsrate"
+    },
+    "EARLY_TURNOVER_RATE": {
+      "label": "Frühfluktuation (erste 6 Monate)"
+    },
+    "GENDER_RATIO_BY_UNIT": {
+      "label": "Geschlechterverteilung nach Einheit"
+    },
+    "GENDER_RATIO_BY_DEPARTMENT": {
+      "label": "Geschlechterverteilung nach Abteilung"
+    },
     "dimensions": {
       "Promotion": "Beförderung",
       "LateralMove": "Lateraler Wechsel",
