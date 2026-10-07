@@ -15,6 +15,9 @@ public static class LeaveDomainErrors
     public const string TypeConsecutiveDaysInvalid = "leave.type.consecutive_days_invalid";
     public const string TypeWaitingPeriodInvalid = "leave.type.waiting_period_invalid";
     public const string TypeSeniorityTiersOnlyAnnual = "leave.type.seniority_tiers_only_annual";
+    public const string TypeHourlyThresholdInvalid = "leave.type.hourly_threshold_invalid";
+    public const string TypeHourlyHalfDayDaysInvalid = "leave.type.hourly_half_day_days_invalid";
+    public const string TypeBirthdayPolicyInvalid = "leave.type.birthday_policy_invalid";
     public const string LedgerAmountZero = "leave.ledger.amount_zero";
     public const string LedgerReasonRequired = "leave.ledger.reason_required";
     public const string ProfileNotFound = "leave.profile.not_found";

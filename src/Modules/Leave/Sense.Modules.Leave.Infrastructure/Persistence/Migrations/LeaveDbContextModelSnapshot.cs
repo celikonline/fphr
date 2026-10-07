@@ -1437,6 +1437,21 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("eligible_gender");
 
+                    b.Property<string>("Feb29Policy")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("feb29policy");
+
+                    b.Property<decimal>("HourlyHalfDayDays")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)")
+                        .HasColumnName("hourly_half_day_days");
+
+                    b.Property<int?>("HourlyHalfDayThresholdMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("hourly_half_day_threshold_minutes");
+
                     b.Property<bool>("IsDisabled")
                         .HasColumnType("boolean")
                         .HasColumnName("is_disabled");
@@ -1532,6 +1547,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("unit");
+
+                    b.Property<bool>("UseOnlyOnBirthday")
+                        .HasColumnType("boolean")
+                        .HasColumnName("use_only_on_birthday");
 
                     b.Property<int>("WaitingPeriodMonths")
                         .HasColumnType("integer")

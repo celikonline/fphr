@@ -102,7 +102,7 @@ internal static class LeaveRequestPreview
         // On failure (e.g. missing time range while typing) show the best-effort fraction instead of the whole-day count.
         var days = valid.IsSuccess ? valid.Value.Days : type.Unit switch
         {
-            LeaveUnit.Hourly when startTime is { } st && endTime is { } et && et > st => LeavePartialDay.HourlyFraction(st, et),
+            LeaveUnit.Hourly when startTime is { } st && endTime is { } et && et > st => LeavePartialDay.HourlyFractionWithThreshold(st, et, type.HourlyHalfDayThresholdMinutes, type.HourlyHalfDayDays),
             LeaveUnit.HalfDay => LeavePartialDay.HalfDayFraction,
             _ => count.Days,
         };

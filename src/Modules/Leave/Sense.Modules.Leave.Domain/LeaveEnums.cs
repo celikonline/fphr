@@ -82,6 +82,13 @@ public enum LeaveUnit
     Hourly = 2,
 }
 
+/// <summary>Which calendar day represents a 29 February birthday in non-leap years.</summary>
+public enum LeaveFeb29Policy
+{
+    UseFebruary28 = 0,
+    UseMarch1 = 1,
+}
+
 /// <summary>Which half of the work day a <see cref="LeaveUnit.HalfDay"/> request covers.</summary>
 public enum HalfDayPeriod
 {

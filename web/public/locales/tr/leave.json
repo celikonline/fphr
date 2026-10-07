@@ -99,6 +99,10 @@
     "female": "Yalnızca kadın",
     "male": "Yalnızca erkek"
   },
+  "feb29Policy": {
+    "useFebruary28": "28 Şubat",
+    "useMarch1": "1 Mart"
+  },
   "negativeBalance": {
     "none": "Kapalı",
     "unlimited": "Limitsiz eksi bakiye",
@@ -149,6 +153,12 @@
     "waitingPeriodMonthsHint": "İşe başlamadan sonra bu tür talep edilemeyen süre.",
     "eligibleGender": "Uygun cinsiyet",
     "eligibleGenderHint": "Yalnızca seçilen cinsiyetteki çalışanlar bu türü talep edebilir; cinsiyeti kayıtlı olmayan çalışanlara kısıtlama uygulanmaz.",
+    "useOnlyOnBirthday": "Yalnızca doğum gününde kullanılabilir",
+    "useOnlyOnBirthdayHint": "Talep tarihi çalışanın kayıtlı doğum tarihiyle eşleşmelidir.",
+    "feb29Policy": "29 Şubat doğum günü (artık olmayan yıl)",
+    "hourlyHalfDayThresholdMinutes": "Yarım güne dönüşüm eşiği (dakika)",
+    "hourlyHalfDayThresholdMinutesHint": "Boş bırakılırsa dönüşüm kapalıdır. Eşikten uzun talepler ayarlanan gün kadar düşülür.",
+    "hourlyHalfDayDays": "Eşik aşılınca düşülecek gün",
     "requiresDescription": "Açıklama zorunlu",
     "requiresSubstitute": "Vekil ataması zorunlu",
     "requiresDocument": "Belge zorunlu",

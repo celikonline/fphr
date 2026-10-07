@@ -224,6 +224,37 @@ describe("LeaveTypeDialog (denetim A6 eligible gender)", () => {
   });
 });
 
+describe("LeaveTypeDialog (configurable birthday and hourly policies)", () => {
+  it("renders and saves birthday-only and leap-day settings", async () => {
+    const user = userEvent.setup();
+    const annual = seededAnnualType();
+    renderDialog({
+      ...annual,
+      settings: { ...annual.settings, code: "birthday", name: "Doğum günü izni", useOnlyOnBirthday: true, feb29Policy: "useMarch1" },
+    });
+
+    expect(screen.getByRole("checkbox", { name: /Yalnızca doğum gününde kullanılabilir/ })).toBeChecked();
+    expect((screen.getByRole("combobox", { name: /29 Şubat doğum günü/ }) as HTMLInputElement).value).toBe("1 Mart");
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    const calls = vi.mocked(updateLeaveType).mock.calls;
+    const [, , payload] = calls[calls.length - 1];
+    expect(payload.useOnlyOnBirthday).toBe(true);
+    expect(payload.feb29Policy).toBe("useMarch1");
+  });
+
+  it("renders the optional hourly threshold and day fraction", () => {
+    const annual = seededAnnualType();
+    renderDialog({
+      ...annual,
+      settings: { ...annual.settings, code: "jobSearch", unit: "hourly", hourlyHalfDayThresholdMinutes: 180, hourlyHalfDayDays: 0.5 },
+    });
+
+    expect(screen.getByLabelText(/Yarım güne dönüşüm eşiği/)).toHaveValue("180");
+    expect(screen.getByLabelText(/Eşik aşılınca düşülecek gün/)).toHaveValue("0.5");
+  });
+});
+
 describe("LeaveTypeDialog (TK-012 field-scoped server errors)", () => {
   function axiosError(data: unknown) {
     return { isAxiosError: true, response: { status: 400, data } };

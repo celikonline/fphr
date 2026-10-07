@@ -704,6 +704,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.type.consecutive_days_invalid" xml:space="preserve"><value>Minimum days cannot exceed maximum days.</value></data>
   <data name="leave.type.waiting_period_invalid" xml:space="preserve"><value>Waiting period must be between 0 and 24 months.</value></data>
   <data name="leave.type.seniority_tiers_only_annual" xml:space="preserve"><value>Seniority tiers can only be defined on the annual leave type.</value></data>
+  <data name="leave.type.hourly_threshold_invalid" xml:space="preserve"><value>Hourly half-day threshold must be between 1 and 1440 minutes on hourly leave types.</value></data>
+  <data name="leave.type.hourly_half_day_days_invalid" xml:space="preserve"><value>Days charged above the threshold must be between 0.5 and 1.</value></data>
+  <data name="leave.type.birthday_policy_invalid" xml:space="preserve"><value>Birthday policies can only be used on the birthday leave type.</value></data>
   <data name="leave.type.no_balance" xml:space="preserve"><value>This leave type does not keep a balance (only per-year limited types do).</value></data>
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Days cannot be zero.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>A reason is required.</value></data>
@@ -779,6 +782,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.requests.bypass_approval" xml:space="preserve"><value>Approve leave without the approval process</value></data>
   <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>You are not allowed to record leave without the approval process.</value></data>
   <data name="leave.errors.gender_not_eligible" xml:space="preserve"><value>This leave type is not available for the employee's gender.</value></data>
+  <data name="leave.errors.birthday_requires_single_date" xml:space="preserve"><value>Birthday leave can only be requested for a single day.</value></data>
+  <data name="leave.errors.birthday_date_only" xml:space="preserve"><value>This leave can only be used on the employee's birthday.</value></data>
+  <data name="leave.errors.birthday_birth_date_missing" xml:space="preserve"><value>The employee's date of birth must be recorded to request birthday leave.</value></data>
   <data name="leave.errors.substitute_required" xml:space="preserve"><value>You must choose a substitute for this leave type.</value></data>
   <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>The substitute cannot be the employee requesting the leave.</value></data>
   <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>The selected substitute was not found or is not active.</value></data>

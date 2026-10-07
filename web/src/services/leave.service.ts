@@ -36,6 +36,7 @@ export type CarryOverMode = "reset" | "unlimited" | "limited";
 export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
 /** Mirrors `LeaveEligibleGender`: who may request a type (Babalık = male, Doğum/Süt = female). */
 export type LeaveEligibleGender = "any" | "female" | "male";
+export type LeaveFeb29Policy = "useFebruary28" | "useMarch1";
 /** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
 export type LeaveHalfDayPeriod = "morning" | "afternoon";
 export type LeaveLedgerEntryType =
@@ -296,6 +297,10 @@ export interface LeaveTypeSettings {
   isStatutory: boolean;
   /** Absent on older API builds (treated as `any`). */
   eligibleGender?: LeaveEligibleGender;
+  useOnlyOnBirthday?: boolean;
+  feb29Policy?: LeaveFeb29Policy;
+  hourlyHalfDayThresholdMinutes?: number | null;
+  hourlyHalfDayDays?: number;
 }
 
 export interface LeaveType {

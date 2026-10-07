@@ -713,6 +713,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.type.consecutive_days_invalid" xml:space="preserve"><value>En az gün sayısı en çok gün sayısından büyük olamaz.</value></data>
   <data name="leave.type.waiting_period_invalid" xml:space="preserve"><value>Bekleme süresi 0 ile 24 ay arasında olmalıdır.</value></data>
   <data name="leave.type.seniority_tiers_only_annual" xml:space="preserve"><value>Kıdem kademeleri yalnız yıllık izin türünde tanımlanabilir.</value></data>
+  <data name="leave.type.hourly_threshold_invalid" xml:space="preserve"><value>Saatlik yarım gün eşiği, saatlik türlerde 1 ile 1440 dakika arasında olmalıdır.</value></data>
+  <data name="leave.type.hourly_half_day_days_invalid" xml:space="preserve"><value>Eşik aşılınca düşülecek gün değeri 0,5 ile 1 arasında olmalıdır.</value></data>
+  <data name="leave.type.birthday_policy_invalid" xml:space="preserve"><value>Doğum günü politikaları yalnız doğum günü izin türünde kullanılabilir.</value></data>
   <data name="leave.type.no_balance" xml:space="preserve"><value>Bu izin türü bakiye tutmaz (yalnız yıl içinde limitli türler).</value></data>
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Gün sayısı sıfır olamaz.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>Gerekçe zorunludur.</value></data>
@@ -788,6 +791,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.requests.bypass_approval" xml:space="preserve"><value>İzni onay sürecine dahil etmeden onaylama</value></data>
   <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>Onay süreci olmadan izin kaydetme yetkiniz yok.</value></data>
   <data name="leave.errors.gender_not_eligible" xml:space="preserve"><value>Bu izin türü çalışanın cinsiyeti için kullanılamaz.</value></data>
+  <data name="leave.errors.birthday_requires_single_date" xml:space="preserve"><value>Doğum günü izni yalnız tek bir gün için talep edilebilir.</value></data>
+  <data name="leave.errors.birthday_date_only" xml:space="preserve"><value>Bu izin yalnız çalışanın doğum gününde kullanılabilir.</value></data>
+  <data name="leave.errors.birthday_birth_date_missing" xml:space="preserve"><value>Doğum günü izni için çalışanın doğum tarihi kayıtlı olmalıdır.</value></data>
   <data name="leave.errors.substitute_required" xml:space="preserve"><value>Bu izin türü için vekil seçmelisiniz.</value></data>
   <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>Vekil, izin talep eden çalışanın kendisi olamaz.</value></data>
   <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>Seçilen vekil bulunamadı veya aktif değil.</value></data>

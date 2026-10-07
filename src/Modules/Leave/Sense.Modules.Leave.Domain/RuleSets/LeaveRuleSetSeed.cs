@@ -82,7 +82,7 @@ public static class LeaveRuleSetSeed
         // (sonlandırma yalnız etkin son iş günü kaydeder) - bkz. handoff "Ertelenen kalemler".
         yield return new LeaveTypeSettings(LeaveTypeCode.JobSearch, "leave.type.job_search", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: SingleDayMax, MinConsecutiveDays: LeavePartialDay.HoursFraction(d.JobSearchMinHoursPerDay),
-            Unit: LeaveUnit.Hourly, IsStatutory: true);
+            Unit: LeaveUnit.Hourly, IsStatutory: true, HourlyHalfDayThresholdMinutes: 180, HourlyHalfDayDays: LeavePartialDay.HalfDayFraction);
         yield return new LeaveTypeSettings(LeaveTypeCode.Marriage, "leave.type.marriage", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: d.MarriageDays, IsStatutory: true);
         yield return new LeaveTypeSettings(LeaveTypeCode.Bereavement, "leave.type.bereavement", null, true, LeaveLimitType.PerRequest,
@@ -105,7 +105,8 @@ public static class LeaveRuleSetSeed
         // olarak uygular (senseik-036 md.3). Yaş (<1) koşulu Employee'deki çocuk verisinden okunmadığı için İK onayında.
         yield return new LeaveTypeSettings(LeaveTypeCode.Breastfeeding, "leave.type.breastfeeding", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: SingleDayMax, MaxConsecutiveDays: LeavePartialDay.HoursFraction(d.BreastfeedingHoursPerDay),
-            Unit: LeaveUnit.Hourly, IsStatutory: true, EligibleGender: LeaveEligibleGender.Female);
+            Unit: LeaveUnit.Hourly, IsStatutory: true, EligibleGender: LeaveEligibleGender.Female,
+            HourlyHalfDayThresholdMinutes: 180, HourlyHalfDayDays: LeavePartialDay.HalfDayFraction);
         // 4857 Ek md.2 son fıkra - %70 engelli veya süreğen hastalığı olan çocuğu bulunan işçiye yılda azami
         // DisabledChildDaysPerYear gün ücretli izin (senseik-036 md.4).
         yield return new LeaveTypeSettings(LeaveTypeCode.DisabledChild, "leave.type.disabled_child", null, true, LeaveLimitType.PerYear,
@@ -116,6 +117,6 @@ public static class LeaveRuleSetSeed
             AnnualDays: RemoteWorkDaysPerYear, AccrualFrequency: AccrualFrequency.Yearly, AccrualTiming: AccrualTiming.StartOfPeriod,
             AccrualBasis: AccrualBasis.CalendarYear, CarryOverMode: CarryOverMode.Reset, RequiresDescription: true, ShowTypeNameOnCalendar: true, IsDisabled: true);
         yield return new LeaveTypeSettings(LeaveTypeCode.Birthday, "leave.type.template.birthday", null, true, LeaveLimitType.PerRequest,
-            PerRequestMaxDays: BirthdayMaxDays, IsDisabled: true);
+            PerRequestMaxDays: BirthdayMaxDays, IsDisabled: true, UseOnlyOnBirthday: true);
     }
 }

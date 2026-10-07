@@ -29,6 +29,7 @@ import {
   type AccrualTiming,
   type CarryOverMode,
   type LeaveEligibleGender,
+  type LeaveFeb29Policy,
   type LeaveLimitType,
   type LeaveRuleSet,
   type LeaveSeniorityTier,
@@ -105,6 +106,10 @@ function defaultSettings(): LeaveTypeSettings {
     isDisabled: false,
     isStatutory: false,
     eligibleGender: "any",
+    useOnlyOnBirthday: false,
+    feb29Policy: "useFebruary28",
+    hourlyHalfDayThresholdMinutes: null,
+    hourlyHalfDayDays: 0.5,
   };
 }
 
@@ -188,7 +193,11 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 description={t("leave:types.codeHint")}
                 data={CODES.map((code) => ({ value: code, label: t(`leave:code.${code}`) }))}
                 value={settings.code}
-                onChange={(value) => value && set("code", value as LeaveTypeCode)}
+                onChange={(value) => {
+                  if (!value) return;
+                  set("code", value as LeaveTypeCode);
+                  set("useOnlyOnBirthday", value === "birthday");
+                }}
                 allowDeselect={false}
                 disabled={busy}
                 inputWrapperOrder={["label", "input", "description"]}
@@ -404,7 +413,11 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 label={t("leave:ruleSets.col.unit")}
                 data={UNITS.map((option) => ({ value: option, label: t(`leave:unit.${option}`) }))}
                 value={settings.unit}
-                onChange={(value) => value && set("unit", value as LeaveUnit)}
+                onChange={(value) => {
+                  if (!value) return;
+                  set("unit", value as LeaveUnit);
+                  if (value !== "hourly") set("hourlyHalfDayThresholdMinutes", null);
+                }}
                 allowDeselect={false}
                 disabled={busy}
               />
@@ -421,6 +434,55 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
               disabled={busy}
               inputWrapperOrder={["label", "input", "description"]}
             />
+            {settings.code === "birthday" && (
+              <>
+                <Checkbox
+                  mt="md"
+                  label={t("leave:types.useOnlyOnBirthday")}
+                  description={t("leave:types.useOnlyOnBirthdayHint")}
+                  checked={settings.useOnlyOnBirthday ?? false}
+                  disabled={busy}
+                  onChange={(event) => set("useOnlyOnBirthday", event.currentTarget.checked)}
+                />
+                <Select
+                  id="leave-type-feb29Policy"
+                  mt="md"
+                  label={t("leave:types.feb29Policy")}
+                  data={(["useFebruary28", "useMarch1"] as LeaveFeb29Policy[]).map((option) => ({ value: option, label: t(`leave:feb29Policy.${option}`) }))}
+                  value={settings.feb29Policy ?? "useFebruary28"}
+                  onChange={(value) => value && set("feb29Policy", value as LeaveFeb29Policy)}
+                  allowDeselect={false}
+                  disabled={busy || !settings.useOnlyOnBirthday}
+                />
+              </>
+            )}
+            {settings.unit === "hourly" && (
+              <div className="grid w-full gap-4 sm:grid-cols-2" style={{ marginTop: "var(--mantine-spacing-md)" }}>
+                <NumberInput
+                  id="leave-type-hourlyHalfDayThresholdMinutes"
+                  label={t("leave:types.hourlyHalfDayThresholdMinutes")}
+                  description={t("leave:types.hourlyHalfDayThresholdMinutesHint")}
+                  min={1}
+                  max={1440}
+                  value={settings.hourlyHalfDayThresholdMinutes ?? undefined}
+                  disabled={busy}
+                  error={fieldErrorMessage("hourlyHalfDayThresholdMinutes")}
+                  onChange={(value) => set("hourlyHalfDayThresholdMinutes", typeof value === "number" ? value : null)}
+                  inputWrapperOrder={["label", "input", "description"]}
+                />
+                <NumberInput
+                  id="leave-type-hourlyHalfDayDays"
+                  label={t("leave:types.hourlyHalfDayDays")}
+                  min={0.5}
+                  max={1}
+                  step={0.1}
+                  value={settings.hourlyHalfDayDays ?? 0.5}
+                  disabled={busy}
+                  error={fieldErrorMessage("hourlyHalfDayDays")}
+                  onChange={(value) => typeof value === "number" && set("hourlyHalfDayDays", value)}
+                />
+              </div>
+            )}
             <NumberInput
               id="leave-type-waitingPeriodMonths"
               mt="md"

@@ -68,12 +68,12 @@ public sealed class LeaveGenderEligibilityTests
         LeaveGenderEligibility.IsEligible(required, EmployeeGender.Other).ShouldBeTrue();
     }
 
-    private sealed record Fixture(LeaveRequestRules Rules, LeaveRuleSet Set, Guid EmployeeId, IEmployeeLookup Employees)
+    private sealed record Fixture(LeaveRequestRules Rules, LeaveRuleSet Set, Guid TenantId, Guid EmployeeId, IEmployeeLookup Employees, IEmployeeBirthDateLookup BirthDates)
     {
         public Guid TypeId(LeaveTypeCode code) => Set.Types.Single(t => t.Code == code).Id;
     }
 
-    private static Fixture NewFixture(EmployeeGender? gender)
+    private static Fixture NewFixture(EmployeeGender? gender, bool missingBirthDate = false)
     {
         var tenantId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
@@ -91,8 +91,10 @@ public sealed class LeaveGenderEligibilityTests
             .Returns(new LeaveDayCount(2m, 0, 0, []));
         var employees = Substitute.For<IEmployeeLookup>();
         employees.GetGenderAsync(Arg.Any<Guid>(), employeeId, Arg.Any<CancellationToken>()).Returns(gender);
-        var rules = new LeaveRequestRules(profiles, ruleSets, requests, Substitute.For<ILeaveLedgerRepository>(), days, null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees, Substitute.For<IDocumentAttachmentLookup>());
-        return new Fixture(rules, set, employeeId, employees);
+        var birthDates = Substitute.For<IEmployeeBirthDateLookup>();
+        birthDates.GetBirthDateAsync(Arg.Any<Guid>(), employeeId, Arg.Any<CancellationToken>()).Returns(missingBirthDate ? null : new DateOnly(1990, 10, 5));
+        var rules = new LeaveRequestRules(profiles, ruleSets, requests, Substitute.For<ILeaveLedgerRepository>(), days, null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees, Substitute.For<IDocumentAttachmentLookup>(), birthDates);
+        return new Fixture(rules, set, tenantId, employeeId, employees, birthDates);
     }
 
     private static Task<Sense.Shared.Kernel.Results.Result<(LeaveType Type, decimal Days)>> ValidateAsync(Fixture f, LeaveTypeCode code, bool requireSelfService = true) =>
@@ -147,5 +149,55 @@ public sealed class LeaveGenderEligibilityTests
         (await ValidateAsync(fixture, LeaveTypeCode.Marriage)).IsSuccess.ShouldBeTrue();
 
         await fixture.Employees.DidNotReceiveWithAnyArgs().GetGenderAsync(default, default, default);
+    }
+
+    [Fact]
+    public async Task BirthdayLeave_IsRejectedOutsideTheRecordedBirthday()
+    {
+        var fixture = NewFixture(EmployeeGender.Female);
+        var birthday = fixture.Set.Types.Single(t => t.Code == LeaveTypeCode.Birthday);
+        fixture.Set.UpdateType(birthday.Id, birthday.ToSettings() with { IsDisabled = false }).IsSuccess.ShouldBeTrue();
+
+        var result = await fixture.Rules.ValidateAsync(Guid.NewGuid(), fixture.EmployeeId, birthday.Id, Start.AddDays(1), Start.AddDays(1), "birthday", null, CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(LeaveRequestErrors.BirthdayDateOnly);
+    }
+
+    [Fact]
+    public async Task BirthdayLeave_IsBlockedWhenBirthDateIsMissing()
+    {
+        var fixture = NewFixture(EmployeeGender.Female, missingBirthDate: true);
+        var birthday = fixture.Set.Types.Single(t => t.Code == LeaveTypeCode.Birthday);
+        fixture.Set.UpdateType(birthday.Id, birthday.ToSettings() with { IsDisabled = false }).IsSuccess.ShouldBeTrue();
+
+        var result = await fixture.Rules.ValidateAsync(Guid.NewGuid(), fixture.EmployeeId, birthday.Id, Start, Start, "birthday", null, CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(LeaveRequestErrors.BirthdayBirthDateMissing);
+    }
+
+    [Fact]
+    public async Task BirthdayLeave_LooksUpBirthDateUsingTheCurrentTenantAndEmployee()
+    {
+        var fixture = NewFixture(EmployeeGender.Female);
+        var birthday = fixture.Set.Types.Single(t => t.Code == LeaveTypeCode.Birthday);
+        fixture.Set.UpdateType(birthday.Id, birthday.ToSettings() with { IsDisabled = false }).IsSuccess.ShouldBeTrue();
+
+        await fixture.Rules.ValidateAsync(fixture.TenantId, fixture.EmployeeId, birthday.Id, Start.AddDays(1), Start.AddDays(1), "birthday", null, CancellationToken.None);
+
+        await fixture.BirthDates.Received(1).GetBirthDateAsync(fixture.TenantId, fixture.EmployeeId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HourlyLeave_UsesConfiguredThresholdInRequestValidation()
+    {
+        var fixture = NewFixture(EmployeeGender.Female);
+
+        var result = await fixture.Rules.ValidateAsync(Guid.NewGuid(), fixture.EmployeeId, fixture.TypeId(LeaveTypeCode.JobSearch), Start, Start,
+            "job search", null, CancellationToken.None, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(12, 1));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Days.ShouldBe(0.5m);
     }
 }

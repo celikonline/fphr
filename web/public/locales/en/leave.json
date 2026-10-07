@@ -99,6 +99,10 @@
     "female": "Women only",
     "male": "Men only"
   },
+  "feb29Policy": {
+    "useFebruary28": "February 28",
+    "useMarch1": "March 1"
+  },
   "negativeBalance": {
     "none": "Off",
     "unlimited": "Unlimited negative balance",
@@ -149,6 +153,12 @@
     "waitingPeriodMonthsHint": "How long after hire this type cannot be requested.",
     "eligibleGender": "Eligible gender",
     "eligibleGenderHint": "Only employees of the selected gender can request this type; employees with no recorded gender are not restricted.",
+    "useOnlyOnBirthday": "Only usable on the employee's birthday",
+    "useOnlyOnBirthdayHint": "The request date must match the employee's recorded date of birth.",
+    "feb29Policy": "February 29 birthday in non-leap years",
+    "hourlyHalfDayThresholdMinutes": "Half-day conversion threshold (minutes)",
+    "hourlyHalfDayThresholdMinutesHint": "Leave blank to disable. Longer requests consume the configured number of days.",
+    "hourlyHalfDayDays": "Days charged above the threshold",
     "requiresDescription": "Description required",
     "requiresSubstitute": "Substitute assignment required",
     "requiresDocument": "Document required",

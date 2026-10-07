@@ -1,0 +1,19 @@
+{
+  "id": "senseik-065",
+  "title": "İş günü, doğum günü ve saatlik izin kurallarını ayarlanabilir yapma",
+  "owner": "all",
+  "state": "review",
+  "branch": "a/configurable-leave-policies",
+  "worktree": ".codex/worktrees/configurable-leave-policy/senseik",
+  "acceptance": [
+    "İş günü/hafta tatili/resmî tatil hesabı atanmış çalışma takvimi, izin türünün CountsNonWorkingDays ayarı ve mevcut tam hafta cumartesi kuralı ile yönetilir; bu ayarlar web'de anlaşılır biçimde kalır.",
+    "Doğum günü izin türü açılıp kapatılabilir; gün hakkı mevcut talep limitiyle ayarlanır, yalnız çalışanın doğum tarihinde talep sunucuda doğrulanır.",
+    "Doğum tarihi eksikse yalnız-doğum-günü politikası talebi engeller; 29 Şubat kuralı şirket/kural setinde 28 Şubat veya 1 Mart olarak seçilebilir (varsayılan 28 Şubat). Doğum günü hafta tatili/tatile denk gelirse izin türünün mevcut CountsNonWorkingDays tercihi geçerlidir.",
+    "Saatlik izin türünde yarım güne dönüşüm açılıp kapatılabilir; eşik dakika ve kesinti gün değeri ayarlanabilir. Seed saatlik izinler 180 dakika ve 0,5 gün ile başlar; eşit süre dönüşmez, yalnızca eşikten uzun süre dönüşür.",
+    "Talep önizlemesi ve kaydı aynı hesaplamayı kullanır; mevcut taleplerin saklı CalculatedDays değeri kural değişti diye geriye dönük değiştirilmez.",
+    "Tenant izolasyonu, doğum günü, 29 Şubat, eşik sınırı ve kural geçerliliği testlerle doğrulanır; EF migration gerekiyorsa Leave modülünde üretilir."
+  ],
+  "merge_gate": "Identity/Leave odaklı .NET testleri + gerekiyorsa Leave migration/model kontrolü + web tsc + changed-file ESLint + ilgili Leave Vitest + Vite build + git diff --check",
+  "handoff": "docs/handoffs/configurable-leave-policies.md",
+  "source": "Kullanıcı isteği 2026-10-07: yalnız kullanılan iş günlerinin bakiyeden düşmesi, doğum günü izninin o tarihle sınırlandırılması ve 3 saatten fazla saatlik iznin yarım gün sayılması ayarlanabilir olsun; sıradaki backlog işi."
+}

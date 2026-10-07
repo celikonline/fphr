@@ -99,6 +99,10 @@
     "female": "Nur Frauen",
     "male": "Nur Männer"
   },
+  "feb29Policy": {
+    "useFebruary28": "28. Februar",
+    "useMarch1": "1. März"
+  },
   "negativeBalance": {
     "none": "Aus",
     "unlimited": "Unbegrenzter Negativsaldo",
@@ -149,6 +153,12 @@
     "waitingPeriodMonthsHint": "Wie lange nach dem Eintritt diese Art nicht beantragt werden kann.",
     "eligibleGender": "Berechtigtes Geschlecht",
     "eligibleGenderHint": "Nur Mitarbeitende des gewählten Geschlechts können diesen Typ beantragen; ohne erfasstes Geschlecht gilt keine Einschränkung.",
+    "useOnlyOnBirthday": "Nur am Geburtstag nutzbar",
+    "useOnlyOnBirthdayHint": "Das Antragsdatum muss dem eingetragenen Geburtsdatum der Person entsprechen.",
+    "feb29Policy": "Geburtstag am 29. Februar in Nichtschaltjahren",
+    "hourlyHalfDayThresholdMinutes": "Schwelle für Umwandlung in einen halben Tag (Minuten)",
+    "hourlyHalfDayThresholdMinutesHint": "Leer lassen, um die Umwandlung zu deaktivieren. Längere Anträge werden mit den eingestellten Tagen berechnet.",
+    "hourlyHalfDayDays": "Abgezogene Tage oberhalb der Schwelle",
     "requiresDescription": "Beschreibung erforderlich",
     "requiresSubstitute": "Vertretung erforderlich",
     "requiresDocument": "Nachweis erforderlich",
