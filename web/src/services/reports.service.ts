@@ -1,8 +1,7 @@
 /**
- * Reporting module (roadmap #70): mirrors `ReportsController` (`/v1/reports`). R0: generation is
- * synchronous - `requestReport` returns the finished (Succeeded/Failed) execution in the same
- * response, no polling loop needed today - but the Queued/Running/Succeeded/Failed shape is kept
- * as-is so a later move onto a background worker doesn't change this service's surface.
+ * Reporting module (roadmap #70): mirrors `ReportsController` (`/v1/reports`). Report executions
+ * can finish synchronously or be queued for background generation; consumers poll their execution
+ * and download the persisted output when it succeeds.
  *
  * The catalog mirrors Kolay İK's Raporlar menu: every report carries a menu category
  * (İdari / Çalışan / İzinler / Finans) and the filters it accepts (Birimler, Yıl, Ay, tarih aralığı,
@@ -49,6 +48,8 @@ export interface ReportCatalogItem {
   key: string;
   categoryKey: string;
   parameters: ReportParameter[];
+  /** Omitted by older APIs; default is synchronous generation. */
+  executionMode?: "sync" | "async";
 }
 
 export interface ReportExecution {
@@ -110,8 +111,7 @@ export async function getReportCatalog(): Promise<ReportCatalogItem[]> {
 }
 
 /**
- * Requests a report; the response's status already reflects the (synchronous, R0) outcome.
- * `notify: false` (the on-screen report page) skips the "report ready" e-mail.
+ * Requests a report. `notify: false` skips the "report ready" e-mail.
  */
 export async function requestReport(
   reportKey: string,
@@ -140,10 +140,17 @@ export async function getReportExecutionData(id: string, params: ReportDataParam
   return data;
 }
 
-/** Downloads a succeeded execution's generated file (server file name via Content-Disposition, else fallbackName). */
-export async function downloadReportExecution(id: string, fallbackName: string): Promise<DownloadedReportFile> {
+/** Downloads a succeeded execution's generated file or a PDF rendered from that same snapshot. */
+export async function downloadReportExecution(
+  id: string,
+  fallbackName: string,
+  format: "xlsx" | "pdf" = "xlsx",
+): Promise<DownloadedReportFile> {
   try {
-    const response = await apiClient.get<Blob>(`${REPORTS_BASE}/executions/${id}/download`, { responseType: "blob" });
+    const response = await apiClient.get<Blob>(`${REPORTS_BASE}/executions/${id}/download`, {
+      ...(format === "pdf" ? { params: { format } } : {}),
+      responseType: "blob",
+    });
     const disposition = response.headers["content-disposition"];
     return {
       blob: response.data,

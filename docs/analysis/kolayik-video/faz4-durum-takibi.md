@@ -1,5 +1,11 @@
 # Faz 4 Durum Takibi
 
+**2026-10-07 — #44/#70 öncelikli geliştirme:** Kullanıcı talebiyle ayrıntılı yıllık izin bakiye
+raporu (`leave.balance.detail`) önceliklendirildi. Güncel bakiye alanları, ay/yıl aralık kolonları,
+Excel/PDF çıktısı ve arka plan üretimi mevcut rapor akışına eklendi; tam test kapısı ve bağımsız son inceleme bekleniyor.
+İş ve kabul kriterleri: [leave-balance-detail](../../takim/isler/leave-balance-detail.json).
+Bu not tamamlanma beyanı değildir; test kapısı ve bağımsız inceleme sonucuna göre güncellenecek.
+
 **2026-10-07 — #65/#117 ek kapsam, incelemede:** Zimmet envanterine doğrudan **Excel’den toplu ekle**
 penceresi eklendi; mevcut `assets.zimmet` şablonu isteğe bağlı varlık adı ve çalışansız boşta envanter
 satırlarını destekleyecek şekilde genişletildi. Çalışanlı satırlarda veriliş tarihi koşullu zorunlu;

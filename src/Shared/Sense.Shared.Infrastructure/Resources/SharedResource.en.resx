@@ -1958,4 +1958,26 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.leave.description.description" xml:space="preserve"><value>Optional note; recommended for balancing/reconciliation rows.</value></data>
   <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Leave usage report</value></data>
   <data name="expense.item.receipt_type_not_allowed" xml:space="preserve"><value>Receipt attachments must be PDF or a supported image and must not exceed 100 MB.</value></data>
+  <data name="report.col.extraGrantDays" xml:space="preserve"><value>Extra grants</value></data>
+  <data name="report.col.totalEntitledDays" xml:space="preserve"><value>Total entitlement</value></data>
+  <data name="report.col.carryOverLossDays" xml:space="preserve"><value>Carry-over losses</value></data>
+  <data name="report.col.carriedOverDays" xml:space="preserve"><value>Carried into current period</value></data>
+  <data name="report.col.availableCarriedOverDays" xml:space="preserve"><value>Available carry-over</value></data>
+  <data name="report.col.lastPeriodAccruedDays" xml:space="preserve"><value>Accrued in current period</value></data>
+  <data name="report.col.currentPeriodOpeningBalance" xml:space="preserve"><value>Current period opening balance</value></data>
+  <data name="report.col.currentPeriodUsedDays" xml:space="preserve"><value>Used in current period</value></data>
+  <data name="report.col.totalUsedDays" xml:space="preserve"><value>Total used</value></data>
+  <data name="report.col.currentBalance" xml:space="preserve"><value>Current balance</value></data>
+  <data name="report.col.currentPeriodFutureApprovedDays" xml:space="preserve"><value>Future approved in current period</value></data>
+  <data name="report.col.currentPeriodAvailableBalance" xml:space="preserve"><value>Available current period balance</value></data>
+  <data name="report.col.nextAccrualDate" xml:space="preserve"><value>Next accrual date</value></data>
+  <data name="report.col.nextPeriodApprovedDays" xml:space="preserve"><value>Approved in next period</value></data>
+  <data name="report.col.employmentStatus" xml:space="preserve"><value>Employment status</value></data>
+  <data name="report.col.range" xml:space="preserve"><value>Date range</value></data>
+  <data name="report.col.rangeOpeningBalance" xml:space="preserve"><value>Range opening balance</value></data>
+  <data name="report.col.rangeApprovedDays" xml:space="preserve"><value>Approved days in range</value></data>
+  <data name="report.col.rangeClosingBalance" xml:space="preserve"><value>Range closing balance</value></data>
+  <data name="report.col.rangePendingDays" xml:space="preserve"><value>Pending days in range</value></data>
+  <data name="report.sheet.leaveBalanceDetail" xml:space="preserve"><value>Employee leave details</value></data>
+  <data name="Reporting.GenerationFailed" xml:space="preserve"><value>The report could not be generated. Please try again.</value></data>
 </root>

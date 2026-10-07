@@ -129,6 +129,58 @@ describe("ReportViewerPage", () => {
     vi.mocked(downloadReportExecution).mockResolvedValue({ blob: new Blob(), fileName: "x.xlsx" });
   });
 
+
+  it("polls an asynchronous leave detail run, keeps the grid hidden until ready and requests its ready email", async () => {
+    const detail: ReportCatalogItem = { key: "leave.balance.detail", categoryKey: "administrative", parameters: [], executionMode: "async" };
+    vi.mocked(getReportCatalog).mockResolvedValue([detail]);
+    const queued: ReportExecution = { ...EXECUTION, id: "detail-1", reportKey: detail.key, status: "queued", resultFileName: null };
+    vi.mocked(requestReport).mockResolvedValue(queued);
+    vi.mocked(getReportExecution).mockResolvedValueOnce(queued).mockResolvedValueOnce({ ...queued, status: "running" }).mockResolvedValue({ ...queued, status: "succeeded", resultFileName: "Detay.xlsx" });
+    renderPage("/app/reports/leave.balance.detail");
+    await waitFor(() => expect(requestReport).toHaveBeenCalledWith(detail.key, {}, { notify: true }));
+    expect(await screen.findByText("Rapor sıraya alındı. Hazırlanması bir dakika sürebilir.")).toBeInTheDocument();
+    expect(getReportExecutionData).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Excel indir" })).toBeDisabled();
+    expect(await screen.findByText("Ayşe", {}, { timeout: 7000 })).toBeInTheDocument();
+    expect(getReportExecutionData).toHaveBeenCalledWith("detail-1", expect.anything());
+  });
+
+  it("stops polling and enables retry when an asynchronous execution status request fails", async () => {
+    const detail: ReportCatalogItem = { key: "leave.balance.detail", categoryKey: "administrative", parameters: [], executionMode: "async" };
+    vi.mocked(getReportCatalog).mockResolvedValue([detail]);
+    const queued: ReportExecution = { ...EXECUTION, id: "detail-1", reportKey: detail.key, status: "queued", resultFileName: null };
+    vi.mocked(requestReport).mockResolvedValue(queued);
+    vi.mocked(getReportExecution).mockRejectedValue(new Error("status unavailable"));
+    renderPage("/app/reports/leave.balance.detail");
+
+    expect(await screen.findByText("Rapor sıraya alındı. Hazırlanması bir dakika sürebilir.")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Uygula" })).toBeEnabled();
+    await waitFor(() => expect(getReportExecution).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+    expect(getReportExecution).toHaveBeenCalledTimes(1);
+  });
+
+  it("downloads the PDF from the selected execution snapshot", async () => {
+    const user = userEvent.setup();
+    const detail: ReportCatalogItem = { key: "leave.balance.detail", categoryKey: "administrative", parameters: [], executionMode: "async" };
+    vi.mocked(getReportCatalog).mockResolvedValue([detail]);
+    vi.mocked(getReportExecution).mockResolvedValue({
+      ...EXECUTION,
+      id: "detail-1",
+      reportKey: detail.key,
+      status: "succeeded",
+      resultFileName: "Detay.xlsx",
+    });
+    renderPage("/app/reports/leave.balance.detail?execution=detail-1");
+    await screen.findByText("Ayşe");
+    await user.click(screen.getByRole("button", { name: "PDF indir" }));
+
+    await waitFor(() => expect(downloadReportExecution).toHaveBeenCalledWith("detail-1", `${detail.key}.pdf`, "pdf"));
+    expect(requestReport).not.toHaveBeenCalled();
+    expect(saveDownloadedReportFile).toHaveBeenCalled();
+  });
+
   it("generates the report once on open (even under StrictMode) without the e-mail and shows the rows", async () => {
     renderPage("/app/reports/employee.list", { strict: true });
 
@@ -172,16 +224,20 @@ describe("ReportViewerPage", () => {
     expect(screen.queryByText("Ayşe")).not.toBeInTheDocument();
   });
 
-  it("downloads a PDF from a separate run of the same filters with format=pdf", async () => {
+  it("downloads a PDF from the selected report execution", async () => {
     const user = userEvent.setup();
+    vi.mocked(requestReport).mockResolvedValue({
+      ...EXECUTION,
+      id: "employee-pdf-1",
+      resultFileName: "Çalışan listesi.pdf",
+    });
     renderPage("/app/reports/employee.list?execution=exec-1");
     await screen.findByText("Ayşe");
-    vi.mocked(requestReport).mockResolvedValue({ ...EXECUTION, id: "exec-pdf", resultFileName: "Çalışan listesi.pdf" });
 
     await user.click(screen.getByRole("button", { name: "PDF indir" }));
 
     await waitFor(() => expect(requestReport).toHaveBeenCalledWith("employee.list", { format: "pdf" }, { notify: false }));
-    await waitFor(() => expect(downloadReportExecution).toHaveBeenCalledWith("exec-pdf", "Çalışan listesi.pdf"));
+    await waitFor(() => expect(downloadReportExecution).toHaveBeenCalledWith("employee-pdf-1", "Çalışan listesi.pdf"));
     expect(saveDownloadedReportFile).toHaveBeenCalled();
   });
 

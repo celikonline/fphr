@@ -1,6 +1,7 @@
 using Sense.Modules.Reporting.Contracts;
 using Sense.Modules.Reporting.Domain;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
@@ -28,7 +29,7 @@ public sealed class ListReportCatalogHandler(IEnumerable<IReportProvider> provid
         {
             if (provider.RequiredPermission is null || await permissions.HasAsync(userId, provider.RequiredPermission, cancellationToken))
             {
-                visible.Add(new ReportCatalogItemDto(provider.Key, provider.CategoryKey, provider.Parameters));
+                visible.Add(new ReportCatalogItemDto(provider.Key, provider.CategoryKey, provider.Parameters, provider.ExecutionMode));
             }
         }
 
@@ -63,9 +64,10 @@ public sealed class GetReportExecutionHandler(IReportExecutionRepository executi
 
 /// <summary>Self-service: downloads a succeeded execution's generated file.</summary>
 [RequiresPermission("reports.my.executions")]
-public sealed record GetReportExecutionFileQuery(Guid Id) : IQuery<ReportExecutionFileDto>;
+public sealed record GetReportExecutionFileQuery(Guid Id, string? Format = null) : IQuery<ReportExecutionFileDto>;
 
-public sealed class GetReportExecutionFileHandler(IReportExecutionRepository executions, ICurrentUser currentUser)
+public sealed class GetReportExecutionFileHandler(
+    IReportExecutionRepository executions, ICurrentUser currentUser, IReportTableReader? tableReader = null, ISimplePdfWriter? pdfWriter = null)
     : IQueryHandler<GetReportExecutionFileQuery, ReportExecutionFileDto>
 {
     public async Task<Result<ReportExecutionFileDto>> Handle(GetReportExecutionFileQuery query, CancellationToken cancellationToken)
@@ -86,8 +88,82 @@ public sealed class GetReportExecutionFileHandler(IReportExecutionRepository exe
             return Error.Validation(ReportingErrors.ReportNotReady);
         }
 
-        return new ReportExecutionFileDto(execution.Value.ResultFileName!, execution.Value.ResultContentType!, execution.Value.ResultContent);
+        if (string.IsNullOrWhiteSpace(query.Format) || query.Format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return new ReportExecutionFileDto(execution.Value.ResultFileName!, execution.Value.ResultContentType!, execution.Value.ResultContent);
+        }
+
+        if (!query.Format.Equals("pdf", StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(execution.Value.ResultContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", StringComparison.OrdinalIgnoreCase))
+        {
+            return Error.Validation(ReportingErrors.PreviewNotAvailable);
+        }
+
+        IReadOnlyList<ExportTable> tables;
+        try
+        {
+            tables = tableReader?.Read(execution.Value.ResultContent, cancellationToken)
+                ?? throw new InvalidDataException("Report table reader is unavailable.");
+        }
+        catch (InvalidDataException)
+        {
+            return Error.Validation(ReportingErrors.PreviewNotAvailable);
+        }
+
+        var blocks = new List<SimplePdfBlock>();
+        foreach (var table in tables)
+        {
+            const int groupWidth = 6;
+            if (table.Columns.Count <= 2)
+            {
+                AddTableBlock(blocks, table, Enumerable.Range(0, table.Columns.Count), table.SheetName);
+                continue;
+            }
+
+            for (var start = 2; start < table.Columns.Count; start += groupWidth)
+            {
+                if (blocks.Count > 0)
+                {
+                    blocks.Add(new SimplePdfPageBreak());
+                }
+
+                var indices = new[] { 0, 1 }.Concat(Enumerable.Range(start, Math.Min(groupWidth, table.Columns.Count - start)));
+                AddTableBlock(blocks, table, indices, table.SheetName);
+            }
+        }
+
+        var document = new SimplePdfDocument(
+            Path.ChangeExtension(execution.Value.ResultFileName ?? execution.Value.ReportKey, ".pdf"),
+            null,
+            blocks,
+            execution.Value.CompletedAt?.ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture),
+            Landscape: true);
+        var pdf = pdfWriter?.Write(document)
+            ?? throw new InvalidOperationException("PDF writer is unavailable.");
+        return new ReportExecutionFileDto(document.Title, "application/pdf", pdf);
     }
+
+    private static void AddTableBlock(List<SimplePdfBlock> blocks, ExportTable table, IEnumerable<int> columnIndices, string? heading)
+    {
+        var indices = columnIndices.ToArray();
+        blocks.Add(new SimplePdfTable(
+            heading,
+            indices.Select(i => table.Columns[i].Header).ToArray(),
+            table.Rows.Select(row => (IReadOnlyList<string>)indices.Select(i => CellText(row[i])).ToArray()).ToArray(),
+            indices.Select((column, position) => (column, position))
+                .Where(x => table.Columns[x.column].Type == ExportColumnType.Number)
+                .Select(x => x.position)
+                .ToArray()));
+    }
+
+    private static string CellText(object? value) => value switch
+    {
+        null => string.Empty,
+        DateOnly date => date.ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture),
+        DateTime date => date.ToString("dd.MM.yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture),
+        IFormattable formatted => formatted.ToString(null, System.Globalization.CultureInfo.CurrentCulture) ?? string.Empty,
+        _ => value.ToString() ?? string.Empty,
+    };
 }
 
 /// <summary>Self-service: the caller's own report execution history, newest first.</summary>

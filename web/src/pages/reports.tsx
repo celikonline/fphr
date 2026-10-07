@@ -114,6 +114,11 @@ function ReportCatalogAndHistory() {
     queryKey: ["reports", "executions", page, pageSize],
     queryFn: () => listReportExecutions({ page, pageSize }),
     enabled: canViewHistory,
+    refetchInterval: (query) =>
+      query.state.status !== "error" &&
+      query.state.data?.items.some((item) => item.status === "queued" || item.status === "running")
+        ? 3000
+        : false,
     placeholderData: (previous) => previous,
   });
 

@@ -45,11 +45,11 @@ public sealed class ReportsController : ApiControllerBase
     public async Task<IActionResult> Data(Guid id, [FromQuery] int sheet, [FromQuery] PagedQuery paging, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetReportExecutionDataQuery(id, sheet, paging), ct));
 
-    /// <summary>Downloads a succeeded execution's generated file.</summary>
+    /// <summary>Downloads a succeeded execution's generated file (or renders the saved workbook snapshot as PDF).</summary>
     [HttpGet("executions/{id:guid}/download")]
-    public async Task<IActionResult> Download(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Download(Guid id, [FromQuery] string? format, CancellationToken ct)
     {
-        var result = await Dispatcher.Query(new GetReportExecutionFileQuery(id), ct);
+        var result = await Dispatcher.Query(new GetReportExecutionFileQuery(id, format), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
 }
