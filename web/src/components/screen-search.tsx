@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
-import { Combobox, Kbd, Text, TextInput, useCombobox } from "@mantine/core";
+import { Combobox, Kbd, Text, TextInput, useCombobox, type TextInputProps } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import { APP_LAUNCHER_ITEMS, NAV_ITEMS, SETTINGS_SECTIONS } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
@@ -26,7 +26,7 @@ interface SearchEntry {
  * Header search over every screen the user may open (menu, apps, settings pages), permission and module filtered
  * like the menus themselves. Ctrl/Cmd+K focuses it; Enter opens the first hit.
  */
-export default function ScreenSearch() {
+export default function ScreenSearch({ classNames }: { classNames?: TextInputProps["classNames"] }) {
   const { t, i18n } = useTranslation(["navigation"]);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +116,8 @@ export default function ScreenSearch() {
               </Text>
             ) : null
           }
-          className="w-full min-w-0 max-w-sm"
+          className="w-full min-w-0"
+          classNames={classNames}
           data-testid="screen-search"
         />
       </Combobox.Target>
