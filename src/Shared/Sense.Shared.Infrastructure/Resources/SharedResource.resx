@@ -1954,4 +1954,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.leave.description" xml:space="preserve"><value>Açıklama</value></data>
   <data name="import.column.leave.description.description" xml:space="preserve"><value>İsteğe bağlı not; denkleştirme satırlarında açıklama önerilir.</value></data>
   <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Kullanılan izin raporu</value></data>
+  <data name="expense.item.receipt_type_not_allowed" xml:space="preserve"><value>Fiş eki PDF veya desteklenen bir resim olmalı ve 100 MB sınırını aşmamalıdır.</value></data>
 </root>

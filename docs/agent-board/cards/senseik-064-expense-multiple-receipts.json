@@ -1,0 +1,22 @@
+{
+  "id": "senseik-064",
+  "title": "Harcama kalemine birden fazla fiş ve fatura belgesi ekleme",
+  "owner": "Codex frontend/backend takımı",
+  "state": "review",
+  "branch": "dev (henüz commit/push yok)",
+  "worktree": "C:/Users/ALG0013/.codex/worktrees/sensehr-reference-topbar/senseik",
+  "acceptance": [
+    "Aynı gider kalemine birden fazla PDF veya fiş/fatura görseli eklenebilir; dosya adları ve kaldırma işlemi görünür.",
+    "Belgeler gerçek Documents yükleme akışı ile saklanır; tenant, sahiplik ve erişim kontrolü sunucuda uygulanır.",
+    "Birden fazla belge aynı gider tutarını çoğaltmaz; eski tek belgeli kayıtlar ve belgeli/belgesiz bordro ayrımı korunur.",
+    "Yükleme veya kalem kaydetme hatasında seçim korunur; yeniden deneme kalemi çoğaltmaz; işlem sürerken gönderim engellenir.",
+    "Kaydedilen belgeler harcama detayından ve yetkili inceleme ekranından açılabilir; mobil ve açık/koyu tema çalışır."
+  ],
+  "merge_gate": "Expense/Documents testleri, gerçek EF migration, web tsc/eslint/ilgili Vitest/Vite build; bağımsız inceleme ve yerel Docker tarayıcı doğrulaması",
+  "handoff": "docs/handoffs/expense-multiple-receipts.md",
+  "source": "Kullanıcı isteği 2026-10-07: harcamaya fiş, fatura belgesi ekleyebilsin birden çok",
+  "queue_order": 1,
+  "local_delivery": "2026-10-07: yerel Docker 13000/13018 üzerinde çalışıyor; bir taslak kalemde iki gerçek yükleme ve PDF açma doğrulandı. Canlı mobil emülasyon aracı etkisiz; mobil tarayıcı kontrolü bekliyor.",
+  "verification": "Bağımsız 304/304: Expense 85, Workflow 138, Architecture 60, web 21; tsc, ESLint, Vite ve diffcheck geçti. EF model/migration uyumlu, Expense-only geçiş yedekli yerel DB'ye uygulandı.",
+  "review_decision": "Teknik kriterler karşılandı; migration birleştirme incelemesi için İNSAN ONAYI GEREKLİ etiketi var. Commit/push/merge yapılmadı."
+}

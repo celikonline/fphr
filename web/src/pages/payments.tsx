@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -10,6 +10,8 @@ import {
   Badge,
   Button,
   Card,
+  ActionIcon,
+  Fieldset,
   Group,
   Modal,
   NumberInput,
@@ -27,9 +29,10 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle, CreditCard, Info, Plus, Receipt, Sparkles, Trash2, Wallet } from "lucide-react";
 import NoAccess from "@/components/no-access";
+import { ExpenseClaimDetail, ExpenseReceiptList } from "@/components/expense/expense-claim-detail";
+import { ExpenseReceiptUpload, useExpenseReceiptUploads } from "@/components/expense/expense-receipt-upload";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
-import { RowIconButton } from "@/components/ui/row-icon-button";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
@@ -81,6 +84,7 @@ function Payments() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [claimDialogOpen, setClaimDialogOpen] = useState(() => canClaims && searchParams.get("new") === "expense");
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(() => canAdvances && searchParams.get("new") === "advance");
+  const [detailClaimId, setDetailClaimId] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get("new")) {
@@ -135,11 +139,15 @@ function Payments() {
             {t("expense:payments.empty")}
           </Text>
         ) : isMobile ? (
-          <PaymentsMobileList rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} />
+          <PaymentsMobileList rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} onDetail={canClaims ? setDetailClaimId : undefined} />
         ) : (
-          <PaymentsTable rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} />
+          <PaymentsTable rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} onDetail={canClaims ? setDetailClaimId : undefined} />
         )}
       </Card>
+
+      {detailClaimId && <Modal opened onClose={() => setDetailClaimId(null)} title={t("expense:claim.dialogTitle")} size="lg" fullScreen={Boolean(isMobile)}>
+        <ExpenseClaimDetail claimId={detailClaimId} />
+      </Modal>}
 
       {claimDialogOpen && (
         <ExpenseClaimDialog
@@ -173,11 +181,13 @@ function PaymentsTable({
   formatDate,
   formatAmount,
   t,
+  onDetail,
 }: {
   rows: PaymentOverviewRow[];
   formatDate: (value: string) => string;
   formatAmount: (value: number, currency: string) => string;
   t: (key: string, options?: Record<string, unknown>) => string;
+  onDetail?: (claimId: string) => void;
 }) {
   return (
     <Table.ScrollContainer minWidth={560}>
@@ -189,6 +199,7 @@ function PaymentsTable({
             <Table.Th>{t("expense:payments.col.description")}</Table.Th>
             <Table.Th>{t("expense:payments.col.amount")}</Table.Th>
             <Table.Th>{t("expense:payments.col.status")}</Table.Th>
+            {onDetail && <Table.Th>{t("common:actions")}</Table.Th>}
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -203,6 +214,7 @@ function PaymentsTable({
                   {enumLabel(t, "expense:status", row.status)}
                 </Badge>
               </Table.Td>
+              {onDetail && <Table.Td>{row.kind === "expense" && <Button type="button" size="xs" variant="light" onClick={() => onDetail(row.sourceId)}>{t("expense:attachments.details")}</Button>}</Table.Td>}
             </Table.Tr>
           ))}
         </Table.Tbody>
@@ -217,11 +229,13 @@ function PaymentsMobileList({
   formatDate,
   formatAmount,
   t,
+  onDetail,
 }: {
   rows: PaymentOverviewRow[];
   formatDate: (value: string) => string;
   formatAmount: (value: number, currency: string) => string;
   t: (key: string, options?: Record<string, unknown>) => string;
+  onDetail?: (claimId: string) => void;
 }) {
   return (
     <Stack gap="sm">
@@ -235,6 +249,7 @@ function PaymentsMobileList({
               {enumLabel(t, "expense:status", row.status)}
             </Badge>
           </Group>
+          {onDetail && row.kind === "expense" && <Button type="button" mt="xs" size="xs" variant="light" onClick={() => onDetail(row.sourceId)}>{t("expense:attachments.details")}</Button>}
           <Text size="sm" truncate="end" mt={6}>
             {row.description ?? "—"}
           </Text>
@@ -273,6 +288,9 @@ function ExpenseClaimDialog({
   const [itemDescription, setItemDescription] = useState("");
   // Hızlı giriş (senseik-035 pilot): serbest metinden kategori/tutar/tarih/açıklama çıkarımı, tamamen yerel (KVKK).
   const [quickInputText, setQuickInputText] = useState("");
+  const receipts = useExpenseReceiptUploads();
+  const adding = useRef(false);
+  const [itemError, setItemError] = useState<string | null>(null);
 
   const categoriesQuery = useQuery({ queryKey: CATEGORIES_KEY, queryFn: () => listExpenseCategories() });
   const claimQuery = useQuery({ queryKey: [...CLAIM_KEY, claimId], queryFn: () => getExpenseClaim(claimId!), enabled: Boolean(claimId) });
@@ -284,24 +302,34 @@ function ExpenseClaimDialog({
   });
 
   const addItemMutation = useMutation({
-    mutationFn: () =>
-      addExpenseItem(claimId!, {
+    mutationFn: async () => {
+      setItemError(null);
+      const receiptFileIds = await receipts.resolveFileIds();
+      return addExpenseItem(claimId!, {
         categoryId,
         amount: Number(itemAmount),
         receiptDate,
         taxRate: taxRate === "" ? null : Number(taxRate),
         currency: "TRY",
         description: itemDescription || null,
-      }),
-    onSuccess: () => {
+        receiptFileIds,
+      });
+    },
+    retry: false,
+    onSuccess: async () => {
       setCategoryId("");
       setItemAmount("");
       setTaxRate("");
       setItemDescription("");
       setQuickInputText("");
+      receipts.reset();
+      await queryClient.invalidateQueries({ queryKey: [...CLAIM_KEY, claimId] });
+    },
+    onError: (error) => {
+      setItemError(getApiErrorMessage(error, t("expense:genericError")));
       void queryClient.invalidateQueries({ queryKey: [...CLAIM_KEY, claimId] });
     },
-    onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("expense:genericError")) }),
+    onSettled: () => { adding.current = false; },
   });
 
   const removeItemMutation = useMutation({
@@ -346,6 +374,7 @@ function ExpenseClaimDialog({
   };
 
   const claim: ExpenseClaim | undefined = claimQuery.data;
+  const busy = createMutation.isPending || addItemMutation.isPending || removeItemMutation.isPending || submitMutation.isPending;
   const canAddItem = categoryId !== "" && itemAmount !== "" && Number(itemAmount) > 0;
   const selectedCategory = (categoriesQuery.data ?? []).find((category) => category.id === categoryId);
   const selectedCategoryMaxAmount = selectedCategory?.maxAmount;
@@ -354,7 +383,7 @@ function ExpenseClaimDialog({
     selectedCategoryMaxAmount != null && itemAmount !== "" && Number(itemAmount) > selectedCategoryMaxAmount;
 
   return (
-    <Modal opened onClose={onClose} title={t("expense:claim.dialogTitle")} size="lg" fullScreen={isMobile}>
+    <Modal opened onClose={() => !busy && onClose()} closeOnClickOutside={!busy} closeOnEscape={!busy} withCloseButton={!busy} title={t("expense:claim.dialogTitle")} size="lg" fullScreen={isMobile}>
       <Stack gap="md">
         {!claimId ? (
           <>
@@ -367,7 +396,7 @@ function ExpenseClaimDialog({
               minRows={2}
             />
             <Group justify="flex-end">
-              <Button type="button" variant="default" onClick={onClose}>
+              <Button type="button" variant="default" onClick={onClose} disabled={busy}>
                 {t("common:cancel")}
               </Button>
               <Button type="button" loading={createMutation.isPending} onClick={() => createMutation.mutate()}>
@@ -377,7 +406,8 @@ function ExpenseClaimDialog({
           </>
         ) : (
           <>
-            <Card withBorder padding="md" bg="var(--mantine-color-gray-0)">
+            <Fieldset disabled={busy} style={{ padding: 0, border: 0, minWidth: 0 }}>
+            <Card withBorder padding="md" bg="var(--mantine-color-default-hover)">
               <Stack gap="xs">
                 <Text fw={500} size="sm">
                   {t("expense:quickInput.label")}
@@ -448,33 +478,36 @@ function ExpenseClaimDialog({
                     {t("expense:item.limitWarning", { limit: formatMoney(selectedCategoryMaxAmount, "TRY", i18n.language) })}
                   </Alert>
                 )}
-                {/* TALIMAT gün açılışı tur 1 FE md.4: fiş yükleme bu dilimde yok (ReceiptFileId hep null),
-                    bordroya vergisiz eklenme kuralını (BE md.5) bilgilendirici olarak önden göster; engellemez. */}
+                <ExpenseReceiptUpload receipts={receipts} disabled={busy} />
+                {receipts.files.length === 0 && (
                 <Alert color="blue" icon={<Info className="h-4 w-4" />} py="xs" variant="light">
                   {t("expense:item.noReceiptWarning")}
-                </Alert>
+                </Alert>)}
+                {itemError && <Alert color="red" role="alert">{t("expense:attachments.itemError")} {itemError}</Alert>}
                 <Group justify="flex-end">
                   <Button
                     type="button"
                     size="sm"
                     leftSection={<Plus className="h-4 w-4" />}
-                    disabled={!canAddItem}
+                    disabled={!canAddItem || busy}
                     loading={addItemMutation.isPending}
-                    onClick={() => addItemMutation.mutate()}
+                    onClick={() => { if (!adding.current && !busy) { adding.current = true; addItemMutation.mutate(); } }}
                   >
                     {t("expense:claim.addItem")}
                   </Button>
                 </Group>
               </Stack>
             </Card>
+            </Fieldset>
 
             {claimQuery.isLoading ? (
               <Skeleton h={80} />
             ) : (
               <Stack gap="xs">
                 {(claim?.items ?? []).map((item) => (
-                  <Group key={item.id} justify="space-between" wrap="nowrap">
-                    <div>
+                  <Card key={item.id} withBorder padding="sm">
+                  <Group justify="space-between" wrap="wrap">
+                    <div style={{ minWidth: 0 }}>
                       <Group gap="xs" wrap="nowrap">
                         <Text size="sm">{item.description || categoryName((categoriesQuery.data ?? []).find((c) => c.id === item.categoryId) ?? { id: "", code: "", nameKey: "", defaultTaxRate: null, isActive: true })}</Text>
                         {item.exceedsCategoryLimit && (
@@ -493,14 +526,16 @@ function ExpenseClaimDialog({
                       <Text size="sm" fw={500}>
                         {item.amount.toLocaleString(i18n.language)} {item.currency}
                       </Text>
-                      <RowIconButton
-                        label={t("common:delete")}
-                        icon={<Trash2 className="h-4 w-4" />}
+                      <ActionIcon type="button" variant="subtle"
+                        aria-label={t("common:delete")}
                         color="red"
+                        disabled={busy}
                         onClick={() => removeItemMutation.mutate(item.id)}
-                      />
+                      ><Trash2 className="h-4 w-4" /></ActionIcon>
                     </Group>
                   </Group>
+                  <ExpenseReceiptList claimId={claimId} item={item} />
+                  </Card>
                 ))}
                 {(claim?.items ?? []).length === 0 && (
                   <Text size="sm" c="dimmed">
@@ -516,12 +551,12 @@ function ExpenseClaimDialog({
                 {claim?.items[0]?.currency ?? "TRY"}
               </Text>
               <Group gap="xs">
-                <Button type="button" variant="default" onClick={onClose}>
+                <Button type="button" variant="default" onClick={onClose} disabled={busy}>
                   {t("common:close")}
                 </Button>
                 <Button
                   type="button"
-                  disabled={(claim?.items.length ?? 0) === 0}
+                  disabled={(claim?.items.length ?? 0) === 0 || busy || receipts.files.length > 0}
                   loading={submitMutation.isPending}
                   onClick={() => submitMutation.mutate()}
                 >

@@ -187,4 +187,95 @@ public sealed class ExpenseReceiptValidationTests
         result.IsSuccess.ShouldBeTrue();
         item.ReceiptFileId.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task AddItem_MultipleDistinctReceipts_DoNotMultiplyAmountOrTax()
+    {
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        documents.GetActiveAsync(TenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, AttachedDocumentInfo>
+            {
+                [first] = new(first, "one.pdf", "application/pdf", 100, UserId, null),
+                [second] = new(second, "two.png", "image/png", 200, OtherUserId, EmployeeId),
+            });
+        var result = await new AddExpenseItemHandler(tenant, currentUser, claims, categories, documents, TimeProvider.System).Handle(
+            new(claim.Id, category.Id, 120m, Today, 20m, "TRY", "ignored", null, [first.ToString(), second.ToString(), first.ToString()]), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        var item = claim.Items.Single();
+        item.ReceiptAttachments.Select(a => a.DocumentId).ShouldBe([first, second]);
+        item.ReceiptFileId.ShouldBe(first.ToString());
+        claim.TotalAmount.ShouldBe(120m);
+        item.TaxAmount.ShouldBe(20m);
+    }
+
+    [Fact]
+    public async Task UpdateItem_OneInvalidAttachment_LeavesEntireItemUnchanged()
+    {
+        var own = GivenDocument(UserId, null);
+        var item = claim.AddItem(category.Id, 100m, Today, null, "TRY", own.ToString(), "original").Value;
+        var result = await new UpdateExpenseItemHandler(tenant, currentUser, claims, documents, TimeProvider.System).Handle(
+            new(claim.Id, item.Id, category.Id, 250m, Today, 20m, "TRY", null, "changed", [own.ToString(), Guid.NewGuid().ToString()]), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        item.Amount.ShouldBe(100m);
+        item.Description.ShouldBe("original");
+        item.ReceiptFileId.ShouldBe(own.ToString());
+        item.ReceiptAttachments.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("text/html", 100)]
+    [InlineData("image/svg+xml", 100)]
+    [InlineData("application/pdf", 104857601)]
+    public async Task AddItem_UnsupportedOrOversizedReceipt_IsRejected(string contentType, long size)
+    {
+        var id = Guid.NewGuid();
+        documents.GetActiveAsync(TenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, AttachedDocumentInfo> { [id] = new(id, "receipt", contentType, size, UserId, null) });
+        var result = await AddItem(id.ToString());
+        result.IsFailure.ShouldBeTrue();
+        claim.Items.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateItem_ExplicitEmptyList_ClearsAllReceiptsDespiteLegacyArgument()
+    {
+        var own = GivenDocument(UserId, null);
+        var item = claim.AddItem(category.Id, 100m, Today, null, "TRY", own.ToString(), null).Value;
+        var result = await new UpdateExpenseItemHandler(tenant, currentUser, claims, documents, TimeProvider.System).Handle(
+            new(claim.Id, item.Id, category.Id, 100m, Today, null, "TRY", own.ToString(), null, []), CancellationToken.None);
+        result.IsSuccess.ShouldBeTrue();
+        item.ReceiptAttachments.ShouldBeEmpty();
+        item.ReceiptFileId.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateItem_UnchangedLegacyStorageKey_IsPreservedWithoutDocumentLookup()
+    {
+        var item = claim.AddItem(category.Id, 100m, Today, null, "TRY", "old-storage/receipt.pdf", null).Value;
+        var result = await UpdateItem(item.Id, item.ReceiptFileId);
+        result.IsSuccess.ShouldBeTrue();
+        item.ReceiptFileId.ShouldBe("old-storage/receipt.pdf");
+        item.ReceiptAttachments.ShouldBeEmpty();
+        await documents.DidNotReceiveWithAnyArgs().GetActiveAsync(default, default!, default);
+    }
+
+    [Theory]
+    [InlineData("application/pdf")]
+    [InlineData("image/jpeg")]
+    [InlineData("image/pjpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/gif")]
+    [InlineData("image/webp")]
+    [InlineData("image/heic")]
+    [InlineData("image/heif")]
+    public async Task AddItem_SupportedReceiptAtSizeLimit_IsAccepted(string contentType)
+    {
+        var id = Guid.NewGuid();
+        documents.GetActiveAsync(TenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, AttachedDocumentInfo> { [id] = new(id, "receipt", contentType, 104857600, UserId, null) });
+        (await AddItem(id.ToString())).IsSuccess.ShouldBeTrue();
+    }
 }

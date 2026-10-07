@@ -31,7 +31,7 @@
     "description": "Allgemeine Beschreibung",
     "descriptionPlaceholder": "z. B. Kundenbesuch",
     "continue": "Weiter",
-    "addItem": "Beleg hinzufügen",
+    "addItem": "Ausgabenposition hinzufügen",
     "noItems": "Noch keine Belege hinzugefügt.",
     "total": "Gesamtbetrag",
     "submit": "Einreichen",
@@ -118,6 +118,27 @@
       "loadFailed": "Die Kategorien konnten nicht geladen werden.",
       "codeRequired": "Code ist erforderlich.",
       "nameRequired": "Name ist erforderlich."
+    }
+  },
+  "attachments": {
+    "label": "Beleg-/Rechnungsdokumente",
+    "hint": "Mehrere Dokumente pro Ausgabenposition. PDF, JPEG, PNG, GIF, WebP oder HEIC; bis zu 100 MB pro Dokument.",
+    "choose": "Dokumente auswählen",
+    "remove": "{{name}} entfernen",
+    "open": "{{name}} öffnen",
+    "empty": "Keine Dokumente angehängt.",
+    "details": "Dokumente und Details ansehen",
+    "item": "Ausgabenposition",
+    "sizeError": "Jedes Dokument muss Inhalt haben und darf höchstens 100 MB groß sein.",
+    "typeError": "Wählen Sie ein PDF-, JPEG-, PNG-, GIF-, WebP- oder HEIC-Dokument.",
+    "uploadError": "Einige Dokumente konnten nicht hochgeladen werden. Erfolgreiche Uploads bleiben erhalten; versuchen Sie es erneut.",
+    "downloadError": "Das Dokument konnte nicht geöffnet werden. Versuchen Sie es erneut.",
+    "itemError": "Die Position konnte nicht hinzugefügt werden. Prüfen Sie die gespeicherten Positionen unten, bevor Sie sie erneut hinzufügen.",
+    "status": {
+      "selected": "Bereit zum Hochladen",
+      "uploading": "Wird hochgeladen…",
+      "uploaded": "Hochgeladen",
+      "failed": "Upload fehlgeschlagen; erneut versuchen."
     }
   }
 }

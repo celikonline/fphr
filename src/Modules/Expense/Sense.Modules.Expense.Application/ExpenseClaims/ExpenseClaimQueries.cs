@@ -1,4 +1,5 @@
 using Sense.Modules.Expense.Domain;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -10,7 +11,8 @@ namespace Sense.Modules.Expense.Application.ExpenseClaims;
 [RequiresPermission("expense.my.claims")]
 public sealed record ListMyExpenseClaimsQuery : IQuery<IReadOnlyList<ExpenseClaimDto>>;
 
-public sealed class ListMyExpenseClaimsHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories)
+public sealed class ListMyExpenseClaimsHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories,
+    IDocumentAttachmentLookup documents, ITenantContext tenant)
     : IQueryHandler<ListMyExpenseClaimsQuery, IReadOnlyList<ExpenseClaimDto>>
 {
     public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(ListMyExpenseClaimsQuery query, CancellationToken cancellationToken)
@@ -22,7 +24,7 @@ public sealed class ListMyExpenseClaimsHandler(ICurrentUser currentUser, IExpens
 
         var list = await claims.ListByEmployeeAsync(employeeId, cancellationToken);
         var categoryLimits = await ExpenseCategoryLimitsHelper.CategoryLimitsAsync(categories, cancellationToken);
-        IReadOnlyList<ExpenseClaimDto> dtos = list.Select(c => ExpenseClaimMapper.ToDto(c, categoryLimits)).ToList();
+        var dtos = await ExpenseClaimMapper.ToDtosAsync(list, categoryLimits, documents, tenant.TenantId, cancellationToken);
         return Result.Success(dtos);
     }
 }
@@ -30,7 +32,8 @@ public sealed class ListMyExpenseClaimsHandler(ICurrentUser currentUser, IExpens
 [RequiresPermission("expense.my.claims")]
 public sealed record GetExpenseClaimQuery(Guid ClaimId) : IQuery<ExpenseClaimDto>;
 
-public sealed class GetExpenseClaimHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories)
+public sealed class GetExpenseClaimHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories,
+    IDocumentAttachmentLookup documents, ITenantContext tenant)
     : IQueryHandler<GetExpenseClaimQuery, ExpenseClaimDto>
 {
     public async Task<Result<ExpenseClaimDto>> Handle(GetExpenseClaimQuery query, CancellationToken cancellationToken)
@@ -47,7 +50,7 @@ public sealed class GetExpenseClaimHandler(ICurrentUser currentUser, IExpenseCla
         }
 
         var categoryLimits = await ExpenseCategoryLimitsHelper.CategoryLimitsAsync(categories, cancellationToken);
-        return ExpenseClaimMapper.ToDto(existing.Value, categoryLimits);
+        return (await ExpenseClaimMapper.ToDtosAsync([existing.Value], categoryLimits, documents, tenant.TenantId, cancellationToken)).Single();
     }
 }
 
@@ -55,14 +58,21 @@ public sealed class GetExpenseClaimHandler(ICurrentUser currentUser, IExpenseCla
 [RequiresPermission("expense.claims.view")]
 public sealed record ListExpenseClaimsQuery(ExpenseClaimStatus? Status) : IQuery<IReadOnlyList<ExpenseClaimDto>>;
 
-public sealed class ListExpenseClaimsHandler(IExpenseClaimRepository claims, IExpenseCategoryRepository categories)
+public sealed class ListExpenseClaimsHandler(IExpenseClaimRepository claims, IExpenseCategoryRepository categories,
+    IDocumentAttachmentLookup documents, ITenantContext tenant, IDataScopeService dataScope)
     : IQueryHandler<ListExpenseClaimsQuery, IReadOnlyList<ExpenseClaimDto>>
 {
     public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(ListExpenseClaimsQuery query, CancellationToken cancellationToken)
     {
         var list = await claims.ListAsync(query.Status, cancellationToken);
+        var visibleEmployees = await dataScope.GetVisibleEmployeeIdsAsync("expense.claims.view", cancellationToken);
+        if (visibleEmployees is not null)
+        {
+            list = list.Where(c => visibleEmployees.Contains(c.EmployeeId)).ToArray();
+        }
+
         var categoryLimits = await ExpenseCategoryLimitsHelper.CategoryLimitsAsync(categories, cancellationToken);
-        IReadOnlyList<ExpenseClaimDto> dtos = list.Select(c => ExpenseClaimMapper.ToDto(c, categoryLimits)).ToList();
+        var dtos = await ExpenseClaimMapper.ToDtosAsync(list, categoryLimits, documents, tenant.TenantId, cancellationToken);
         return Result.Success(dtos);
     }
 }

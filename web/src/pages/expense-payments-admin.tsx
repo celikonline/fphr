@@ -7,6 +7,7 @@ import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Tabs, Text,
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
+import { ExpenseClaimDetail } from "@/components/expense/expense-claim-detail";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -88,6 +89,7 @@ function ClaimsWorklist() {
   const isMobile = useMediaQuery("(max-width: 390px)");
   const [status, setStatus] = useState<ExpenseClaimStatus>("approved");
   const [payTarget, setPayTarget] = useState<ExpenseClaim | null>(null);
+  const [detailClaimId, setDetailClaimId] = useState<string | null>(null);
 
   const claimsQuery = useQuery({ queryKey: [...CLAIMS_KEY, status], queryFn: () => listExpenseClaims(status) });
   const claims = useMemo(() => claimsQuery.data ?? [], [claimsQuery.data]);
@@ -131,13 +133,15 @@ function ClaimsWorklist() {
       header: "",
       meta: { label: t("common:actions"), headerClassName: "w-32" },
       enableSorting: false,
-      cell: ({ row }) =>
-        canPay &&
+      cell: ({ row }) => <Group gap="xs">
+        <Button type="button" size="xs" variant="default" onClick={() => setDetailClaimId(row.original.id)}>{t("expense:attachments.details")}</Button>
+        {canPay &&
         row.original.status === "approved" && (
           <Button type="button" size="xs" variant="light" leftSection={<Banknote size={14} />} onClick={() => setPayTarget(row.original)}>
             {t("expense:admin.pay")}
           </Button>
-        ),
+        )}
+      </Group>,
     },
   ];
 
@@ -165,10 +169,15 @@ function ClaimsWorklist() {
           isLoading={claimsQuery.isLoading}
           canPay={canPay}
           onPay={setPayTarget}
+          onDetail={setDetailClaimId}
         />
       ) : (
         <DataTable table={table} isLoading={claimsQuery.isLoading} emptyMessage={t("expense:admin.empty")} />
       )}
+
+      {detailClaimId && <Modal opened onClose={() => setDetailClaimId(null)} title={t("expense:claim.dialogTitle")} size="lg" fullScreen={Boolean(isMobile)}>
+        <ExpenseClaimDetail claimId={detailClaimId} review />
+      </Modal>}
 
       {payTarget && (
         <PayDialog
@@ -192,11 +201,13 @@ function ClaimsMobileList({
   isLoading,
   canPay,
   onPay,
+  onDetail,
 }: {
   claims: ExpenseClaim[];
   isLoading: boolean;
   canPay: boolean;
   onPay: (claim: ExpenseClaim) => void;
+  onDetail: (claimId: string) => void;
 }) {
   const { t, i18n } = useTranslation(["expense", "common"]);
 
@@ -230,13 +241,14 @@ function ClaimsMobileList({
               {claim.totalAmount.toLocaleString(i18n.language)} {claim.items[0]?.currency ?? "TRY"}
             </Text>
           </Group>
-          {canPay && claim.status === "approved" && (
             <Group justify="flex-end" mt="xs">
+              <Button type="button" size="xs" variant="default" onClick={() => onDetail(claim.id)}>{t("expense:attachments.details")}</Button>
+          {canPay && claim.status === "approved" && (
               <Button type="button" size="xs" variant="light" leftSection={<Banknote size={14} />} onClick={() => onPay(claim)}>
                 {t("expense:admin.pay")}
               </Button>
-            </Group>
           )}
+            </Group>
         </Card>
       ))}
     </Stack>

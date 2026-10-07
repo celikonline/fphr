@@ -11,6 +11,13 @@ const EXPENSE_BASE = "/v1/expense";
 export type ExpenseClaimStatus = "draft" | "submitted" | "approved" | "rejected" | "paid";
 export type AdvanceRequestStatus = "submitted" | "approved" | "rejected" | "paid";
 
+export interface ExpenseReceiptAttachment {
+  documentId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+}
+
 export interface ExpenseItem {
   id: string;
   categoryId: string;
@@ -20,6 +27,7 @@ export interface ExpenseItem {
   taxAmount: number;
   currency: string;
   receiptFileId: string | null;
+  receiptAttachments: ExpenseReceiptAttachment[];
   description: string | null;
   /** S-9 (Faz 7 tur 3): true when `amount` exceeds the category's `maxAmount`; a warning, not a submit blocker. Absent on older API responses. */
   exceedsCategoryLimit?: boolean;
@@ -47,6 +55,8 @@ export interface AddExpenseItemInput {
   taxRate?: number | null;
   currency: string;
   receiptFileId?: string | null;
+  /** When present, this list takes precedence over the legacy receiptFileId. */
+  receiptFileIds?: string[];
   description?: string | null;
 }
 
@@ -57,6 +67,20 @@ export async function listMyExpenseClaims(): Promise<ExpenseClaim[]> {
 
 export async function getExpenseClaim(id: string): Promise<ExpenseClaim> {
   const { data } = await apiClient.get<ExpenseClaim>(`${EXPENSE_BASE}/claims/${id}`);
+  return data;
+}
+
+export async function reviewExpenseClaim(id: string): Promise<ExpenseClaim> {
+  const { data } = await apiClient.get<ExpenseClaim>(`${EXPENSE_BASE}/claims/${id}/review`);
+  return data;
+}
+
+export async function getExpenseReceiptDownloadUrl(claimId: string, itemId: string, documentId: string): Promise<{
+  url: string; expiresAt: string; fileName: string; contentType: string;
+}> {
+  const { data } = await apiClient.get<{ url: string; expiresAt: string; fileName: string; contentType: string }>(
+    `${EXPENSE_BASE}/claims/${claimId}/items/${itemId}/attachments/${documentId}/download-url`,
+  );
   return data;
 }
 

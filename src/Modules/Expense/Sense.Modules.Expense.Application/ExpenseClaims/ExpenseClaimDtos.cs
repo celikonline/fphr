@@ -1,10 +1,16 @@
 using Sense.Modules.Expense.Domain.ExpenseClaims;
+using Sense.Modules.Documents.Contracts;
 
 namespace Sense.Modules.Expense.Application.ExpenseClaims;
 
 public sealed record ExpenseItemDto(
     Guid Id, Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, decimal TaxAmount,
-    string Currency, string? ReceiptFileId, string? Description, bool ExceedsCategoryLimit = false);
+    string Currency, string? ReceiptFileId, string? Description, bool ExceedsCategoryLimit = false)
+{
+    public IReadOnlyList<ExpenseReceiptAttachmentDto> ReceiptAttachments { get; init; } = [];
+}
+
+public sealed record ExpenseReceiptAttachmentDto(Guid DocumentId, string FileName, string ContentType, long Size);
 
 public sealed record ExpenseClaimDto(
     Guid Id, Guid EmployeeId, string? Description, decimal TotalAmount, ExpenseClaimStatus Status,
@@ -13,6 +19,30 @@ public sealed record ExpenseClaimDto(
 
 internal static class ExpenseClaimMapper
 {
+    public static async Task<IReadOnlyList<ExpenseClaimDto>> ToDtosAsync(
+        IReadOnlyList<ExpenseClaim> claims, IReadOnlyDictionary<Guid, decimal?> categoryLimits,
+        IDocumentAttachmentLookup documents, Guid tenantId, CancellationToken ct)
+    {
+        var ids = claims.SelectMany(c => c.Items).SelectMany(DocumentIds).Distinct().ToArray();
+        var active = ids.Length == 0 ? new Dictionary<Guid, AttachedDocumentInfo>()
+            : await documents.GetActiveAsync(tenantId, ids, ct);
+        return claims.Select(c => ToDto(c, categoryLimits) with
+        {
+            Items = c.Items.Select(item => ToDto(item, categoryLimits) with
+            {
+                ReceiptAttachments = DocumentIds(item).Where(active.ContainsKey).Select(id =>
+                {
+                    var info = active[id];
+                    return new ExpenseReceiptAttachmentDto(id, info.FileName, info.ContentType, info.Size);
+                }).ToList(),
+            }).ToList(),
+        }).ToList();
+    }
+
+    public static IReadOnlyList<Guid> DocumentIds(ExpenseItem item) =>
+        item.ReceiptAttachments.Count > 0 ? item.ReceiptAttachments.Select(a => a.DocumentId).ToArray()
+        : Guid.TryParse(item.ReceiptFileId, out var legacy) ? [legacy] : [];
+
     /// <summary><paramref name="categoryLimits"/>: categoryId -> MaxAmount (S-9's ExceedsCategoryLimit, a warning
     /// only - it never blocks submission, see ExpenseCategory.MaxAmount doc). Missing/null entries mean "no limit".</summary>
     public static ExpenseClaimDto ToDto(ExpenseClaim claim, IReadOnlyDictionary<Guid, decimal?> categoryLimits) =>

@@ -1945,4 +1945,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.leave.description" xml:space="preserve"><value>Description</value></data>
   <data name="import.column.leave.description.description" xml:space="preserve"><value>Optional note; recommended for balancing/reconciliation rows.</value></data>
   <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Leave usage report</value></data>
+  <data name="expense.item.receipt_type_not_allowed" xml:space="preserve"><value>Receipt attachments must be PDF or a supported image and must not exceed 100 MB.</value></data>
 </root>

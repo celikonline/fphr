@@ -31,7 +31,7 @@
     "description": "Genel açıklama",
     "descriptionPlaceholder": "Örn. müşteri ziyareti",
     "continue": "Devam et",
-    "addItem": "Fiş ekle",
+    "addItem": "Harcama kalemi ekle",
     "noItems": "Henüz fiş eklenmedi.",
     "total": "Toplam tutar",
     "submit": "Gönder",
@@ -118,6 +118,27 @@
       "loadFailed": "Kategoriler yüklenemedi.",
       "codeRequired": "Kod zorunludur.",
       "nameRequired": "Ad zorunludur."
+    }
+  },
+  "attachments": {
+    "label": "Fiş/fatura belgeleri",
+    "hint": "Bir harcama kalemine birden fazla belge ekleyebilirsiniz. PDF, JPEG, PNG, GIF, WebP veya HEIC; belge başına en çok 100 MB.",
+    "choose": "Belgeleri seçin",
+    "remove": "{{name}} belgesini kaldır",
+    "open": "{{name}} belgesini aç",
+    "empty": "Belge eklenmemiş.",
+    "details": "Belgeleri ve detayı gör",
+    "item": "Harcama kalemi",
+    "sizeError": "Her belge 100 MB veya daha küçük olmalı ve boş olmamalıdır.",
+    "typeError": "PDF, JPEG, PNG, GIF veya WebP ya da HEIC belgesi seçin.",
+    "uploadError": "Bazı belgeler yüklenemedi. Yüklenenler korundu; tekrar deneyin.",
+    "downloadError": "Belge açılamadı. Tekrar deneyin.",
+    "itemError": "Kalem eklenemedi. Tekrar eklemeden önce aşağıdaki kaydedilmiş kalemleri kontrol edin.",
+    "status": {
+      "selected": "Yüklenmeye hazır",
+      "uploading": "Yükleniyor…",
+      "uploaded": "Yüklendi",
+      "failed": "Yüklenemedi; tekrar deneyebilirsiniz."
     }
   }
 }

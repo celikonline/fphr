@@ -1,0 +1,19 @@
+# senseik-064 — çoklu harcama belgeleri
+
+2026-10-07: geliştirildi, yerel Docker 13000/13018'e uygulandı; kart durumu `review`. Commit/push/merge yapılmadı. Ardından iş sırasındaki `senseik-065` ayarlanabilir izin politikaları hâlâ backlog'dadır.
+
+Aynı gider kaleminde birden fazla PDF/fiş-fatura görseli seçilir. Seçilen dosyaların adları, boyutları, yükleme durumları ve kaldırma işlemleri gösterilir. Documents initiate/PUT/confirm tamamlandıktan sonra kalem bir kez kaydedilir; başarısız yüklemede başarılı belge ID'leri ve seçim korunur. Birden fazla belge gider tutarını çoğaltmaz. Kullanıcı detayı, onay kutusu ve İK/finans incelemesi ortak belge bileşenini kullanır.
+
+API `receiptFileIds` listesi belirleyicidir; boş liste ekleri temizler. Alan gönderilmezse eski `receiptFileId` davranışı korunur. `receiptAttachments` belge metadata listesidir. Belge açma endpoint'i tenant, kayda erişim, kalem ve belge ilişkisinden sonra kısa süreli download URL üretir. Owner, çalışan kapsamıyla İK ve doğru onay tarafının erişimi ayrı doğrulanır. İK liste sorgusu belge metadata aramasından önce kapsam filtresini uygular. Workflow okuma portu Contracts üzerinden kullanılır; Expense okuma erişimi yalnız API katmanında kaydedilir, Worker DI etkilenmez.
+
+Gerçek EF 10.0.12 migration: `20261007085050_AddExpenseReceiptAttachments`. Yeni child tablo ve unique kalem/belge indeksi vardır; legacy GUID belge referansları linklere taşınır, eski scalar değerleri aynen kalır. `has-pending-model-changes` temizdir. Son mevcut Expense migration'dan üretilen idempotent SQL incelendi ve yalnız Expense şemasına uygulandı; diğer modül migration'ları çalıştırılmadı. Öncesinde 928652 bayt custom-format DB yedeği alındı; geçişten sonra eski kalem/receipt scalar fingerprint'i aynı kaldı.
+
+Bağımsız doğrulama: Expense 85, Workflow 138, Architecture 60 ve web 21 olmak üzere **304/304 test**, atlanan 0. TypeScript, değişen dosyalarda ESLint, Vite build ve diffcheck geçti. Genel takım gate betikleri checkout'ta bulunmadığından scoped kapılar kullanıldı. İlk Expense koşumundaki 7 hata eksik `SENSE_TEST_POSTGRES` kaynaklıydı; repo test-Postgres ayarıyla tam koşum 85/85 geçti.
+
+Gerçek tarayıcı kanıtı: sentetik PDF ve PNG dosyası tek gider kalemine yüklendi. Veritabanı doğrulaması 1 taslak, 1 kalem, 2 belge bağlantısı ve toplam 12,5 TRY verdi. Protected download sonrasında PDF viewer test faturasını açtı. Gönderim/onay/ödeme yapılmadı. Açık tema kaydedilmiş belge listesi ve koyu tema çoklu seçim/uzun dosya adı/kaldırma doğrulandı. Tema tercihi ve önceki demo İK oturumu geri yüklendi.
+
+Canlı mobil sınırı: belgelenmiş viewport aracı 375×812 ayarını başarılı döndürdü ancak mevcut ve yeni IAB sekmeleri 1280×720 kaldı. Bu sebeple mobil browser testi **doğrulanamadı**; responsive kod ve metin sarma var, gerçek 375px cihaz kontrolü ayrıca yapılmalı. Yetkili Inbox/İK'da yeni sentetik talep runtime kontrolü yapılmadı çünkü taslak gönderilmedi; üç görüntüleme yolu ilgili web testlerinde doğrulandı.
+
+Bağımsız inceleme teknik kriterleri karşılanmış buldu, açık kritik/önemli hata bırakmadı. `.claude/agents/takim-gozden-gecirici.md` migration yoluna dokunulduğunda birleştirme incelemesine **İNSAN ONAYI GEREKLİ** etiketi ister; bu etiket korunmuştur. Yerel özellik uygulaması kullanıcı talebi kapsamında tamamlandı; birleştirme/üretim dağıtımı yapılmadı.
+
+Kanıt klasörü: `C:/Users/ALG0013/.codex/tmp/senseik-expense-receipts-2026-10-07`. `source-manifest.json` kök/worktree/build source 41 dosya hash'ini içerir. `deploy-record.json`, `database-runtime-proof.json`, `browser-runtime-proof.json`, migration SQL/logları ve test logları bu klasördedir. Kökün önceden değiştirilmiş `pnpm-lock.yaml` dosyası korunmuş, Docker HEAD lock'lu kaynak snapshot'ından build edilmiştir. API/Worker/Web geri dönüş image tag'leri `senseik-{api,worker,web}:before-expense-receipts-20261007` olarak durur.

@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Expense.Application;
+using Sense.Modules.Expense.Application.ExpenseClaims;
 using Sense.Modules.Expense.Contracts;
 using Sense.Modules.Expense.Infrastructure;
 using Sense.Modules.Expense.Infrastructure.Persistence;
@@ -46,6 +47,7 @@ public sealed class ExpenseModule : IModule
             typeof(ExpensePermissions).Assembly);
 
         services.AddExpenseCoreServices();
+        services.AddScoped<ExpenseClaimReadAccess>();
 
         // Employee card PDF section (API only).
         services.AddScoped<Sense.Modules.Employee.Contracts.CardPdf.IEmployeeCardPdfSection, Infrastructure.CardPdf.ExpenseCardPdfSection>();

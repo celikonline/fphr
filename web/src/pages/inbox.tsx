@@ -6,6 +6,7 @@ import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Text, Textarea, Tit
 import { Inbox as InboxIcon } from "lucide-react";
 import { ApprovalCard, type ApprovalCardField } from "@/components/ui/approval-card";
 import NoAccess from "@/components/no-access";
+import { ExpenseClaimDetail } from "@/components/expense/expense-claim-detail";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -258,6 +259,7 @@ function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDial
       }
     >
       <Stack gap="md">
+        {["expenseclaim", "expense"].includes(task.requestType.toLowerCase()) && <ExpenseClaimDetail claimId={task.subjectId} review />}
         {fields.length > 0 && (
           <Card withBorder padding="sm">
             <Group gap="lg" wrap="wrap">

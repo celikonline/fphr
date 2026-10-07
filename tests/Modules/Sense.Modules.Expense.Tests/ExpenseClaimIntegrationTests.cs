@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Expense.Domain;
@@ -124,5 +126,85 @@ public sealed class ExpenseClaimIntegrationTests : TestFixture
             var reloaded = (await claims.GetByIdAsync(claimId)).Value;
             reloaded.Status.ShouldBe(ExpenseClaimStatus.Approved);
         }
+    }
+
+    [Fact]
+    public async Task Receipts_AppendedToTrackedItem_ReplacedAndRemoved_PersistWithoutChangingMoney()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        var third = Guid.NewGuid();
+        Guid claimId;
+        Guid itemId;
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+            var claim = ExpenseClaim.Create(tenantId, Guid.NewGuid(), null);
+            var item = claim.AddItem(Guid.NewGuid(), 120m, DateOnly.FromDateTime(DateTime.UtcNow), 20m, "TRY", first.ToString(), null).Value;
+            db.ExpenseClaims.Add(claim);
+            await db.SaveChangesAsync();
+            claimId = claim.Id;
+            itemId = item.Id;
+        }
+        using (var append = ServiceProvider!.CreateScope())
+        {
+            var db = append.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+            var claim = (await append.ServiceProvider.GetRequiredService<IExpenseClaimRepository>().GetByIdAsync(claimId)).Value;
+            claim.UpdateItem(itemId, claim.Items.Single().CategoryId, 120m, claim.Items.Single().ReceiptDate, 20m, "TRY", first.ToString(), null, [first, second]);
+            await db.SaveChangesAsync();
+        }
+        using (var replace = ServiceProvider!.CreateScope())
+        {
+            var db = replace.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+            var claim = (await replace.ServiceProvider.GetRequiredService<IExpenseClaimRepository>().GetByIdAsync(claimId)).Value;
+            var item = claim.Items.Single();
+            item.ReceiptAttachments.Count.ShouldBe(2);
+            item.ReceiptAttachments.Select(a => a.DocumentId).ShouldBe([first, second]);
+            claim.TotalAmount.ShouldBe(120m);
+            item.TaxAmount.ShouldBe(20m);
+            claim.UpdateItem(itemId, item.CategoryId, item.Amount, item.ReceiptDate, item.TaxRate, item.Currency, third.ToString(), null, [third]);
+            await db.SaveChangesAsync();
+        }
+        using (var remove = ServiceProvider!.CreateScope())
+        {
+            var db = remove.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+            var claim = (await remove.ServiceProvider.GetRequiredService<IExpenseClaimRepository>().GetByIdAsync(claimId)).Value;
+            claim.Items.Single().ReceiptAttachments.Single().DocumentId.ShouldBe(third);
+            claim.Items.Single().ReceiptFileId.ShouldBe(third.ToString());
+            claim.RemoveItem(itemId);
+            await db.SaveChangesAsync();
+            (await db.Set<ExpenseReceiptAttachment>().CountAsync(a => a.ExpenseItemId == itemId)).ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public async Task ReceiptMigration_BackfillsOnlyValidLegacyGuids_AndPreservesLegacyKeys()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        using var services = ServiceProvider!.CreateScope();
+        var db = services.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+        var migrator = db.GetService<IMigrator>();
+        await migrator.MigrateAsync("20260916143213_AddExpenseCategoryLimit");
+        var claimId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var firstItem = Guid.NewGuid();
+        var secondItem = Guid.NewGuid();
+        var documentId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var legacyKey = "old-storage/receipt.pdf";
+        var legacyGuid = "  " + documentId.ToString().ToUpperInvariant() + "  ";
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO expense.expense_claims (id, tenant_id, employee_id, total_amount, status, created_at) VALUES ({claimId}, {tenantId}, {employeeId}, 200, 'Draft', {now})");
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO expense.expense_items (id, claim_id, category_id, amount, receipt_date, tax_amount, currency, receipt_file_id, created_at) VALUES ({firstItem}, {claimId}, {categoryId}, 100, {DateOnly.FromDateTime(now)}, 0, 'TRY', {legacyGuid}, {now}), ({secondItem}, {claimId}, {categoryId}, 100, {DateOnly.FromDateTime(now)}, 0, 'TRY', {legacyKey}, {now})");
+        await migrator.MigrateAsync();
+        var claim = (await services.ServiceProvider.GetRequiredService<IExpenseClaimRepository>().GetByIdAsync(claimId)).Value;
+        claim.Items.Single(i => i.Id == firstItem).ReceiptAttachments.Single().DocumentId.ShouldBe(documentId);
+        claim.Items.Single(i => i.Id == firstItem).ReceiptFileId.ShouldBe(legacyGuid);
+        claim.Items.Single(i => i.Id == secondItem).ReceiptAttachments.ShouldBeEmpty();
+        claim.Items.Single(i => i.Id == secondItem).ReceiptFileId.ShouldBe(legacyKey);
+        claim.TotalAmount.ShouldBe(200m);
     }
 }

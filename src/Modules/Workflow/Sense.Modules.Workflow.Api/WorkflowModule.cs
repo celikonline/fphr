@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Workflow.Application;
+using Sense.Modules.Workflow.Application.ApprovalRequests;
 using Sense.Modules.Workflow.Application.Delegations;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
@@ -65,6 +66,7 @@ public sealed class WorkflowModule : IModule
 
         // Cross-module read/write ports consumed by other modules (future Leave, Expense, ...)
         services.AddScoped<IApprovalRequestLookup, ApprovalRequestLookup>();
+        services.AddScoped<IApprovalRequestReadAccess, ApprovalRequestReadAccess>();
         services.AddScoped<IWorkflowService, WorkflowService>();
 
         // FG-008 decide-bulk: one child scope (own DbContext + transaction) per task decision
