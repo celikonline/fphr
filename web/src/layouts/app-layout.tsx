@@ -1,5 +1,4 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@mantine/hooks";
 import {
@@ -22,15 +21,17 @@ import {
   Building2,
   Grip,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Settings,
   ShieldAlert,
   UserCircle,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
-import { APP_LAUNCHER_ITEMS, navIconColor } from "@/config/navigation";
+import { APP_LAUNCHER_ITEMS, NAV_ITEMS, navIconColor } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
@@ -42,6 +43,14 @@ import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
+const SETTINGS_ITEMS = NAV_ITEMS.filter((item) => item.key === "settings");
+// The hub is always reachable; show its shortcut only when an enabled request flow is available.
+const CREATE_ITEMS = [
+  { path: "/app/leave", permissions: ["leave.my.requests"] },
+  { path: "/app/leave/overtimes", permissions: ["leave.my.overtimes"] },
+  { path: "/app/payments", permissions: ["expense.my.claims"] },
+  { path: "/app/payments", permissions: ["expense.my.advances"] },
+];
 
 /** Per-viewer convenience, not shared state - remembered locally, never sent to the server. */
 const SIDEBAR_COLLAPSED_KEY = "senseik.sidebar.collapsed";
@@ -57,7 +66,10 @@ function NotificationsButton() {
       tooltip={label}
       tooltipPosition="bottom"
       renderTarget={(unread) => (
-        <ActionIcon variant="default" size={40} radius="md" aria-label={label}>
+        <ActionIcon
+          variant="subtle" size={32} radius="sm" aria-label={label}
+          className={classes.headerAction}
+        >
           <Indicator
             color="red"
             size={16}
@@ -68,7 +80,7 @@ function NotificationsButton() {
             styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
             inline
           >
-            <Bell size={20} className="block" />
+            <Bell size={18} className="block" />
           </Indicator>
         </ActionIcon>
       )}
@@ -99,8 +111,11 @@ function UserMenu() {
     <Menu position="bottom-end" width={240}>
       <Tooltip label={label} openDelay={300}>
         <Menu.Target>
-          <ActionIcon variant="transparent" size={40} radius="xl" aria-label={label}>
-            <Avatar color="navy" radius="xl" size={40}>
+          <ActionIcon
+            variant="subtle" size={32} radius="xl" aria-label={label}
+            className={classes.headerAction}
+          >
+            <Avatar color="blue" variant="filled" radius="xl" size={28} className={classes.headerAvatar}>
               {initialsOf(user)}
             </Avatar>
           </ActionIcon>
@@ -114,6 +129,9 @@ function UserMenu() {
           <Text size="xs" c="dimmed" truncate>
             {user.email}
           </Text>
+          <div className="mt-2">
+            <TenantBadge />
+          </div>
         </div>
         <Menu.Divider />
         <Menu.Item component={Link} to="/app/account" leftSection={<UserCircle size={16} />}>
@@ -127,44 +145,44 @@ function UserMenu() {
   );
 }
 
-/**
- * Collapse/expand control on the seam between the sidebar and the content. It stays invisible until the pointer
- * nears the top of that seam (or the button gets keyboard focus), so it does not clutter the menu.
- */
-function SidebarEdgeToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+/** Desktop navigation preference, controlled once from the top bar. */
+function SidebarToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const { t } = useTranslation(["navigation"]);
   const label = t(collapsed ? "navigation:nav.expandSidebar" : "navigation:nav.collapseSidebar");
-  const Icon = collapsed ? ChevronRight : ChevronLeft;
+  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
-    <div className="group/edge absolute top-0 -right-4 z-20 h-16 w-9">
-      <Tooltip label={label} position="right" openDelay={300}>
-        <ActionIcon
-          variant="default"
-          size={26}
-          radius="xl"
-          aria-label={label}
-          onClick={onToggle}
-          className="absolute top-3 left-1/2 -translate-x-1/2 opacity-70 shadow-sm transition-opacity hover:opacity-100 group-hover/edge:opacity-100 focus-visible:opacity-100"
-        >
-          <Icon size={16} />
-        </ActionIcon>
-      </Tooltip>
-    </div>
+    <Tooltip label={label} position="bottom" openDelay={300}>
+      <ActionIcon
+        variant="subtle"
+        size={32}
+        radius="sm"
+        aria-label={label}
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        aria-controls="desktop-navigation"
+        className={`${classes.headerAction} ${classes.sidebarToggle}`}
+      >
+        <Icon size={18} />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
-/** The filled square launcher at the end of the top bar (Kolay İK reference layout). */
+/** Compact app launcher beside the brand. */
 function AppsLauncher() {
   const { t } = useTranslation(["navigation"]);
   const allowed = useVisibleItems(ACTIVE_APPS);
 
   return (
-    <Menu position="bottom-end" width={320}>
+    <Menu position="bottom-start" width={320}>
       <Tooltip label={t("navigation:nav.apps")}>
         <Menu.Target>
-          <ActionIcon variant="filled" size={40} radius="md" aria-label={t("navigation:nav.apps")}>
-            <Grip size={20} />
+          <ActionIcon
+            variant="subtle" size={32} radius="sm" aria-label={t("navigation:nav.apps")}
+            className={classes.headerAction}
+          >
+            <Grip size={18} />
           </ActionIcon>
         </Menu.Target>
       </Tooltip>
@@ -213,6 +231,41 @@ function AppsLauncher() {
   );
 }
 
+/** Use the existing request hub so choosing a flow mounts its page and opens its dialog. */
+function CreateButton() {
+  const { t } = useTranslation(["navigation"]);
+  const allowed = useVisibleItems(CREATE_ITEMS);
+  if (allowed.length === 0) return null;
+
+  return (
+    <Button
+      component={Link} to="/app/requests"
+      size="compact-sm" radius="sm" leftSection={<Plus size={16} />}
+      aria-label={t("navigation:create.label")} className={classes.createButton}
+    >
+      <span className={classes.createLabel}>{t("navigation:create.label")}</span>
+    </Button>
+  );
+}
+
+function SettingsButton() {
+  const { t } = useTranslation(["navigation"]);
+  const allowed = useVisibleItems(SETTINGS_ITEMS);
+  if (allowed.length === 0) return null;
+  const item = allowed[0];
+  const label = t(item.labelKey);
+  return (
+    <Tooltip label={label} openDelay={300}>
+      <ActionIcon
+        component={Link} to={item.path} variant="subtle" size={32} radius="sm"
+        aria-label={label} className={classes.headerAction}
+      >
+        <Settings size={18} />
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
 /** Persistent warning while the session runs under a support-access (impersonation) grant. */
 function ImpersonationBanner() {
   const { t } = useTranslation(["common"]);
@@ -240,40 +293,27 @@ function ImpersonationBanner() {
   );
 }
 
-/**
- * Wordmark heading the sidebar column, sharing its width and background (Kolay İK reference layout). It
- * follows the desktop collapse preference so the navy column keeps one width from top to bottom.
- */
-function Brand({ collapsed }: { collapsed: boolean }) {
-  const desktopWidth = collapsed ? "" : "md:w-64 md:justify-start md:px-5";
-  const fullMark = collapsed ? "hidden" : "hidden md:block";
-  const shortMark = collapsed ? "" : "md:hidden";
-
+/** Product identity stays visible independently of the navigation width. */
+function Brand() {
   return (
-    <Link
-      to="/app"
-      className={`flex w-14 shrink-0 items-center justify-center ${desktopWidth} ${classes.rail}`}
-    >
+    <Link to="/app" className={classes.brand} aria-label="SenseHR">
+      <svg
+        width="22" height="22" viewBox="0 0 24 24" fill="currentColor"
+        aria-hidden="true" className={classes.brandMark}
+      >
+        <rect x="2" y="2" width="13" height="13" rx="4" />
+        <rect x="10" y="10" width="12" height="12" rx="4" opacity="0.65" />
+      </svg>
       <Text
-        fz={22}
-        fw={800}
+        component="span"
+        fz={16}
+        fw={750}
         lh={1}
         ff="var(--mantine-font-family-headings)"
-        c="var(--sense-rail-fg-strong)"
         style={{ letterSpacing: "-0.02em" }}
-        className={fullMark}
+        className={classes.brandName}
       >
         SenseHR
-      </Text>
-      <Text
-        fz={22}
-        fw={800}
-        lh={1}
-        ff="var(--mantine-font-family-headings)"
-        c="var(--sense-rail-fg-strong)"
-        className={shortMark}
-      >
-        S
       </Text>
     </Link>
   );
@@ -300,14 +340,17 @@ function BackButton() {
 
   return (
     <Tooltip label={label}>
-      <ActionIcon variant="default" size={40} radius="md" aria-label={label} onClick={handleBack}>
-        <ArrowLeft size={20} />
+      <ActionIcon
+        variant="subtle" size={32} radius="sm" aria-label={label}
+        onClick={handleBack} className={classes.headerAction}
+      >
+        <ArrowLeft size={18} />
       </ActionIcon>
     </Tooltip>
   );
 }
 
-/** Company the current session is logged in to (tenant name from /me), shown beside the apps launcher. */
+/** Company the current session is logged in to, shown inside the profile menu. */
 function TenantBadge() {
   const tenantName = useAuthStore((state) => state.user?.tenant?.name);
 
@@ -325,38 +368,8 @@ function TenantBadge() {
   );
 }
 
-/** Greeting at the start of the top bar: name, then today's date (Kolay İK reference layout). */
-function Greeting() {
-  const { t, i18n } = useTranslation(["home"]);
-  const user = useAuthStore((state) => state.user);
-
-  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
-  const [today] = useState(() => new Date());
-  const dateLabel = new Intl.DateTimeFormat(i18n.language, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(today);
-  const weekdayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(today);
-
-  return (
-    <div className="hidden min-w-0 flex-1 sm:block">
-      <Text size="sm" c="dimmed" truncate>
-        {t("home:greeting", { name: user?.firstName || user?.name || "" })}
-      </Text>
-      <Text fz={20} fw={500} lh={1.3} truncate>
-        <Text span inherit fw={400} c="dimmed">
-          {t("home:today")}
-        </Text>{" "}
-        {dateLabel}, {weekdayLabel}
-      </Text>
-    </div>
-  );
-}
-
 /**
- * Main application shell, framed as a rounded panel on the page: top bar (wordmark over the sidebar
- * column, greeting, apps launcher) + single left sidebar (Kolay İK order) + content.
+ * Main application shell: compact top bar, bordered left navigation, and continuous content.
  */
 export default function AppLayout() {
   // Desktop-only preference - the mobile rail below is always icon-only regardless of this value.
@@ -368,21 +381,24 @@ export default function AppLayout() {
   return (
     <Box className={`flex h-screen flex-col ${classes.page}`} c="var(--mantine-color-text)">
       <ImpersonationBanner />
-      <div className="flex min-h-0 flex-1 p-2 md:p-4">
+      <div className="flex min-h-0 flex-1">
         <div className={`flex min-h-0 flex-1 flex-col ${classes.portal}`}>
-          <header className="flex h-18 shrink-0 items-stretch">
-            <Brand collapsed={collapsed} />
-            <div
-              className={`flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6 ${classes.headerContent}`}
-            >
-              <BackButton />
-              <Greeting />
-              <div className="hidden min-w-0 flex-1 sm:block md:max-w-sm">
-                <ScreenSearch />
-              </div>
-              <TenantBadge />
+          <header className={classes.topbar}>
+            <div className={classes.headerStart}>
+              <SidebarToggle
+                collapsed={collapsed} onToggle={() => setCollapsed((current) => !current)}
+              />
               <AppsLauncher />
+              <Brand />
+              <BackButton />
+            </div>
+            <div className={classes.headerSearch}>
+              <ScreenSearch classNames={{ input: classes.searchInput, section: classes.searchSection }} />
+            </div>
+            <div className={classes.headerEnd}>
+              <CreateButton />
               <NotificationsButton />
+              <SettingsButton />
               <UserMenu />
             </div>
           </header>
@@ -391,15 +407,12 @@ export default function AppLayout() {
             {/* Sidebar - full labels from md up, user can collapse to icon-only via SidebarToggle */}
             <div className="relative hidden shrink-0 md:flex">
               <aside
+                id="desktop-navigation"
                 data-testid="sidebar-desktop"
-                className={`${collapsed ? "w-14" : "w-64"} flex shrink-0 flex-col ${classes.rail}`}
+                className={`${collapsed ? "w-14" : "w-56"} flex shrink-0 flex-col ${classes.rail}`}
               >
                 <NavList collapsed={collapsed} />
               </aside>
-              <SidebarEdgeToggle
-                collapsed={collapsed}
-                onToggle={() => setCollapsed((current) => !current)}
-              />
             </div>
 
             {/* Mobile icon rail - always icon-only, unaffected by the desktop collapse preference */}

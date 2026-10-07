@@ -82,8 +82,8 @@ function LoginThemeToggle() {
           <ActionIcon
             variant="default"
             size="lg"
-            radius="xl"
-            className="fixed right-6 top-6 z-20"
+            radius="xs"
+            className="fixed right-4 top-4 z-20"
             aria-label={t("common:theme")}
           >
             {icon}
@@ -319,7 +319,7 @@ export default function LoginPage() {
       </aside>
 
       {/* Form panel */}
-      <main className={`flex flex-1 items-center justify-center px-6 py-16 ${classes.formPanel}`}>
+      <main className={`flex flex-1 items-center justify-center px-6 py-12 ${classes.formPanel}`}>
         {mfaToken !== null ? (
           <form
             className={`w-full max-w-sm ${classes.reveal}`}
@@ -377,8 +377,7 @@ export default function LoginPage() {
               mt="xl"
               h={48}
               fullWidth
-              variant="gradient"
-              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              variant="filled"
               disabled={isLoading || mfaCode.length < 6}
               className={classes.submit}
             >
@@ -484,8 +483,7 @@ export default function LoginPage() {
               mt="xl"
               h={48}
               fullWidth
-              variant="gradient"
-              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              variant="filled"
               rightSection={isLoading ? undefined : <ArrowRight size={18} />}
               disabled={isLoading}
               className={classes.submit}

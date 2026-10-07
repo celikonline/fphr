@@ -165,3 +165,11 @@ PC-A hattı (kalem ayrıntısı [faz1a-durum-takibi.md](../analysis/kolayik-vide
 - **Faz 0 takip tablosunun güncel olmaması:** PC-B yanlış "bitti" varsayımıyla bağımlı iş açar → §2.2 zorunlu.
 - **Tek geliştirici iki makine:** darboğaz kod yazmak değil, inceleme ve merge olur → PR'ları küçük tut; aynı gün iki makinede aynı sıcak dosyaya dokunmaktan kaçın.
 - **Farklı ortam:** PC-B'de Docker imaj sürümleri ve `.env` farklıysa "bende çalışıyor" hataları → `.nvmrc`, `global.json` ve compose dosyalarına uy; `.env` farkları `.env.example`'a yansıtılsın.
+
+## 2026-10-07 — Ayrıntılı izin bakiye raporu dosya sahipliği
+
+`takim/leave-balance-detail`: Leave rapor/projeksiyon dosyaları, Reporting async
+sözleşme/handler/job/DI dosyaları, Shared Export PDF seçenekleri ve TR/EN kaynaklar,
+web rapor sayfası/viewer/service ve TR/EN/DE rapor etiketleri bu işin geliştiricisine aittir.
+Mevcut ortak dosyalarda diğer oturumların değişiklikleri korunur. Ana oturum iş kartı,
+handoff ve Faz 4 durum belgesini yönetir; bağımsız gözden geçirici salt okuma yapar.

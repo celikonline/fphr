@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Expense.Application.ExpenseClaims;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Shared.Web.Controllers;
 
@@ -9,9 +10,11 @@ namespace Sense.Modules.Expense.Api.Controllers;
 
 public sealed record CreateExpenseClaimRequest(string? Description);
 
-public sealed record AddExpenseItemRequest(Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description);
+public sealed record AddExpenseItemRequest(Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description,
+    IReadOnlyList<string>? ReceiptFileIds = null);
 
-public sealed record UpdateExpenseItemRequest(Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description);
+public sealed record UpdateExpenseItemRequest(Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description,
+    IReadOnlyList<string>? ReceiptFileIds = null);
 
 public sealed record PayExpenseClaimRequest(string? PaymentNote);
 
@@ -39,6 +42,16 @@ public sealed class ExpenseClaimsController : ApiControllerBase
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetExpenseClaimQuery(id), ct));
 
+    [HttpGet(ApiRoutes.IdParam + "/review")]
+    [ProducesResponseType<ExpenseClaimDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Review(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ReviewExpenseClaimQuery(id), ct));
+
+    [HttpGet(ApiRoutes.IdParam + "/items/{itemId:guid}/attachments/{documentId:guid}/download-url")]
+    [ProducesResponseType<AttachedDocumentDownloadUrl>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DownloadReceipt(Guid id, Guid itemId, Guid documentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new DownloadExpenseReceiptQuery(id, itemId, documentId), ct));
+
     /// <summary>Creates a Draft expense claim to add receipt items to.</summary>
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
@@ -50,7 +63,7 @@ public sealed class ExpenseClaimsController : ApiControllerBase
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> AddItem(Guid id, [FromBody] AddExpenseItemRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
-            new AddExpenseItemCommand(id, request.CategoryId, request.Amount, request.ReceiptDate, request.TaxRate, request.Currency, request.ReceiptFileId, request.Description),
+            new AddExpenseItemCommand(id, request.CategoryId, request.Amount, request.ReceiptDate, request.TaxRate, request.Currency, request.ReceiptFileId, request.Description, request.ReceiptFileIds),
             ct));
 
     /// <summary>Edits a receipt line on a Draft claim.</summary>
@@ -58,7 +71,7 @@ public sealed class ExpenseClaimsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateItem(Guid id, Guid itemId, [FromBody] UpdateExpenseItemRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
-            new UpdateExpenseItemCommand(id, itemId, request.CategoryId, request.Amount, request.ReceiptDate, request.TaxRate, request.Currency, request.ReceiptFileId, request.Description),
+            new UpdateExpenseItemCommand(id, itemId, request.CategoryId, request.Amount, request.ReceiptDate, request.TaxRate, request.Currency, request.ReceiptFileId, request.Description, request.ReceiptFileIds),
             ct));
 
     /// <summary>Removes a receipt line from a Draft claim.</summary>

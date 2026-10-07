@@ -61,7 +61,8 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
         new(Guid.CreateVersion7(), tenantId, employeeId, description);
 
     public Result<ExpenseItem> AddItem(
-        Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description)
+        Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description,
+        IReadOnlyCollection<Guid>? receiptDocumentIds = null)
     {
         if (Status != ExpenseClaimStatus.Draft)
         {
@@ -73,7 +74,7 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(ExpenseDomainErrors.ClaimCurrencyMismatch);
         }
 
-        var validated = ExpenseItem.Create(Id, categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description);
+        var validated = ExpenseItem.Create(Id, categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description, receiptDocumentIds);
         if (validated.IsFailure)
         {
             return validated.Error;
@@ -85,7 +86,8 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
     }
 
     public Result UpdateItem(
-        Guid itemId, Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description)
+        Guid itemId, Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description,
+        IReadOnlyCollection<Guid>? receiptDocumentIds = null)
     {
         if (Status != ExpenseClaimStatus.Draft)
         {
@@ -103,7 +105,7 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(ExpenseDomainErrors.ClaimCurrencyMismatch);
         }
 
-        var updated = item.Update(categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description);
+        var updated = item.Update(categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description, receiptDocumentIds);
         if (updated.IsFailure)
         {
             return updated;
@@ -206,6 +208,8 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
 /// <summary>One receipt line of an <see cref="ExpenseClaim"/>. Owns its own Guid id so it can be addressed by PUT/DELETE .../items/{itemId}.</summary>
 public sealed class ExpenseItem : Entity<Guid>
 {
+    private readonly List<ExpenseReceiptAttachment> _receiptAttachments = [];
+
     private ExpenseItem()
     {
     }
@@ -224,6 +228,7 @@ public sealed class ExpenseItem : Entity<Guid>
         Currency = currency;
         ReceiptFileId = receiptFileId;
         Description = description;
+        ReplaceReceipts(receiptFileId, null);
     }
 
     public Guid ClaimId { get; private set; }
@@ -244,10 +249,13 @@ public sealed class ExpenseItem : Entity<Guid>
 
     public string? ReceiptFileId { get; private set; }
 
+    public IReadOnlyList<ExpenseReceiptAttachment> ReceiptAttachments => _receiptAttachments.OrderBy(a => a.Position).ThenBy(a => a.Id).ToArray();
+
     public string? Description { get; private set; }
 
     internal static Result<ExpenseItem> Create(
-        Guid claimId, Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description)
+        Guid claimId, Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description,
+        IReadOnlyCollection<Guid>? receiptDocumentIds = null)
     {
         var validated = Validate(amount, taxRate, currency);
         if (validated is not null)
@@ -255,13 +263,20 @@ public sealed class ExpenseItem : Entity<Guid>
             return validated;
         }
 
-        return new ExpenseItem(
+        var item = new ExpenseItem(
             Guid.CreateVersion7(), claimId, categoryId, amount, receiptDate, taxRate, CalculateTaxAmount(amount, taxRate),
             currency.Trim().ToUpperInvariant(), Trim(receiptFileId, ExpenseLimits.FileKeyMaxLength), Trim(description, ExpenseLimits.DescriptionMaxLength));
+        if (receiptDocumentIds is not null)
+        {
+            item.ReplaceReceipts(receiptFileId, receiptDocumentIds);
+        }
+
+        return item;
     }
 
     internal Result Update(
-        Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description)
+        Guid categoryId, decimal amount, DateOnly receiptDate, decimal? taxRate, string currency, string? receiptFileId, string? description,
+        IReadOnlyCollection<Guid>? receiptDocumentIds = null)
     {
         var validated = Validate(amount, taxRate, currency);
         if (validated is not null)
@@ -275,9 +290,30 @@ public sealed class ExpenseItem : Entity<Guid>
         TaxRate = taxRate;
         TaxAmount = CalculateTaxAmount(amount, taxRate);
         Currency = currency.Trim().ToUpperInvariant();
-        ReceiptFileId = Trim(receiptFileId, ExpenseLimits.FileKeyMaxLength);
+        ReplaceReceipts(Trim(receiptFileId, ExpenseLimits.FileKeyMaxLength), receiptDocumentIds);
         Description = Trim(description, ExpenseLimits.DescriptionMaxLength);
         return Result.Success();
+    }
+
+    private void ReplaceReceipts(string? legacyFileId, IReadOnlyCollection<Guid>? documentIds)
+    {
+        var ids = documentIds?.Distinct().ToArray()
+            ?? (Guid.TryParse(legacyFileId, out var legacyId) ? [legacyId] : Array.Empty<Guid>());
+        _receiptAttachments.RemoveAll(a => !ids.Contains(a.DocumentId));
+        for (var position = 0; position < ids.Length; position++)
+        {
+            var id = ids[position];
+            var attachment = _receiptAttachments.FirstOrDefault(a => a.DocumentId == id);
+            if (attachment is null)
+            {
+                attachment = ExpenseReceiptAttachment.Create(Id, id);
+                _receiptAttachments.Add(attachment);
+            }
+
+            attachment.SetPosition(position);
+        }
+
+        ReceiptFileId = documentIds is not null ? ids.Length > 0 ? ids[0].ToString() : null : legacyFileId;
     }
 
     private static Error? Validate(decimal amount, decimal? taxRate, string currency)
@@ -315,4 +351,24 @@ public sealed class ExpenseItem : Entity<Guid>
 
     private static string? Trim(string? value, int maxLength) =>
         string.IsNullOrWhiteSpace(value) ? null : Guard.MaxLength(value.Trim(), maxLength);
+}
+
+/// <summary>A link to an existing Documents record; deleting this link never deletes the document or blob.</summary>
+public sealed class ExpenseReceiptAttachment : Entity<Guid>
+{
+    private ExpenseReceiptAttachment() { }
+
+    private ExpenseReceiptAttachment(Guid itemId, Guid documentId) : base(Guid.CreateVersion7())
+    {
+        ExpenseItemId = itemId;
+        DocumentId = documentId;
+    }
+
+    public Guid ExpenseItemId { get; private set; }
+    public Guid DocumentId { get; private set; }
+    public int Position { get; private set; }
+
+    internal void SetPosition(int position) => Position = position;
+
+    internal static ExpenseReceiptAttachment Create(Guid itemId, Guid documentId) => new(itemId, documentId);
 }

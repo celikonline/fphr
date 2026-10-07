@@ -1,16 +1,13 @@
-/*
- * Soft form surfaces (Google Meet style): inputs are tonal blue-gray fills without a hard border, and pick up a
- * brand border with a light ring on focus. Error/success states keep Mantine's colored borders.
- */
+/* Defined form edges and restrained focus treatment across the web app. */
 
 .inputWrapper {
-  --input-radius: calc(0.75rem * var(--mantine-scale));
+  --input-radius: var(--mantine-radius-xs);
   --input-bd-focus: var(--mantine-primary-color-filled);
 }
 
 .inputWrapper:where([data-variant="default"], [data-variant="filled"]):not([data-error], [data-success]) {
-  --input-bg: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
-  --input-bd: transparent;
+  --input-bg: var(--mantine-color-body);
+  --input-bd: var(--mantine-color-default-border);
 }
 
 .inputWrapper:where([data-variant="default"], [data-variant="filled"]) {
@@ -25,19 +22,19 @@
 }
 
 .input:hover:not(:focus, :focus-within, :disabled, [data-disabled]) {
-  --input-bg: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  --input-bd: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
 }
 
 .input:focus,
 .input:focus-within {
   --input-bg: var(--mantine-color-body);
-  box-shadow: 0 0 0 calc(0.1875rem * var(--mantine-scale))
+  box-shadow: 0 0 0 calc(0.125rem * var(--mantine-scale))
     light-dark(var(--mantine-primary-color-1), color-mix(in srgb, var(--mantine-primary-color-filled) 25%, transparent));
 }
 
 .inputWrapper[data-error] .input:focus,
 .inputWrapper[data-error] .input:focus-within {
-  box-shadow: 0 0 0 calc(0.1875rem * var(--mantine-scale))
+  box-shadow: 0 0 0 calc(0.125rem * var(--mantine-scale))
     light-dark(var(--mantine-color-red-1), rgba(220, 92, 108, 0.25));
 }
 
@@ -46,19 +43,17 @@
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
 }
 
-/* Sections become soft panels; the legend sits inside the panel as a heading instead of cutting a border. */
+/* Fieldsets share the thin-border geometry of inputs and cards. */
 .fieldset {
-  border-color: transparent;
-  border-radius: var(--mantine-radius-lg);
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  border-color: var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xs);
+  background-color: var(--mantine-color-body);
   padding-top: var(--mantine-spacing-md);
 }
 
 .legend {
-  float: inline-start;
-  width: 100%;
-  padding: 0;
-  margin-bottom: var(--mantine-spacing-sm);
+  padding-inline: var(--mantine-spacing-xs);
+  margin-bottom: 0;
   font-weight: 600;
   color: light-dark(var(--mantine-primary-color-8), var(--mantine-primary-color-3));
 }

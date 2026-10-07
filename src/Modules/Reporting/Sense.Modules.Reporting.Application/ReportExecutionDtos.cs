@@ -29,7 +29,7 @@ public sealed record ReportExecutionDto(
 /// from the "reports" i18n namespace), its menu category (<see cref="ReportCategories"/>) and the filters it accepts -
 /// the web draws the parameter form from <see cref="Parameters"/> (birim ağacı, yıl, ay, tarih aralığı, anahtar).
 /// </summary>
-public sealed record ReportCatalogItemDto(string Key, string CategoryKey, IReadOnlyList<ReportParameterDescriptor> Parameters);
+public sealed record ReportCatalogItemDto(string Key, string CategoryKey, IReadOnlyList<ReportParameterDescriptor> Parameters, string ExecutionMode = "sync");
 
 public sealed record ReportExecutionFileDto(string FileName, string ContentType, byte[] Content);
 

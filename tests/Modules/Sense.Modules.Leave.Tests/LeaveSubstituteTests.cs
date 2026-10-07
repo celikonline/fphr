@@ -55,7 +55,7 @@ public sealed class LeaveSubstituteTests
         var rules = new LeaveRequestRules(
             Substitute.For<IEmployeeLeaveProfileRepository>(), Substitute.For<ILeaveRuleSetRepository>(), requests, Substitute.For<ILeaveLedgerRepository>(),
             Substitute.For<ILeaveDayCalculator>(), null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees,
-            Substitute.For<IDocumentAttachmentLookup>());
+            Substitute.For<IDocumentAttachmentLookup>(), Substitute.For<IEmployeeBirthDateLookup>());
         return new Fixture(rules, set.Types.Single(t => t.Code == LeaveTypeCode.Marriage), Guid.NewGuid(), substituteId, requests, employees);
     }
 

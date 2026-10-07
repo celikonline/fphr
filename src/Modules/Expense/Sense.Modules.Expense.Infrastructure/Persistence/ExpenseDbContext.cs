@@ -113,6 +113,19 @@ public sealed class ExpenseItemConfiguration : IEntityTypeConfiguration<ExpenseI
         b.Property(x => x.Description).HasMaxLength(ExpenseTables.DescriptionLength);
 
         b.HasIndex(x => x.ClaimId);
+        b.HasMany(x => x.ReceiptAttachments).WithOne().HasForeignKey(x => x.ExpenseItemId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.ReceiptAttachments).AutoInclude();
+    }
+}
+
+public sealed class ExpenseReceiptAttachmentConfiguration : IEntityTypeConfiguration<ExpenseReceiptAttachment>
+{
+    public void Configure(EntityTypeBuilder<ExpenseReceiptAttachment> b)
+    {
+        b.ToTable("expense_receipt_attachments");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.HasIndex(x => new { x.ExpenseItemId, x.DocumentId }).IsUnique();
     }
 }
 

@@ -19,7 +19,11 @@ public static class NotificationsLimits
     public const int DeviceNameMaxLength = 100;
 
     public const int HrMessageSubjectMaxLength = 300;
-    public const int HrMessageBodyMaxLength = 4096;
+    /// <summary>Rich HTML storage ceiling; the visible text is limited separately by <see cref="HrMessageVisibleTextMaxLength"/>.</summary>
+    public const int HrMessageBodyMaxLength = 1_000_000;
+
+    /// <summary>Maximum characters of visible text (tags stripped, entities decoded) in an HR message body.</summary>
+    public const int HrMessageVisibleTextMaxLength = 4096;
     public const int HrMessageChannelsMaxLength = 60;
     public const int MessageGroupNameMaxLength = 200;
 }

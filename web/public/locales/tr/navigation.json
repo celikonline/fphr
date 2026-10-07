@@ -159,6 +159,9 @@
     "delegations": "Onay vekaletleri",
     "delegationsDesc": "Onay yetkisini süreli olarak başkasına devretme"
   },
+  "create": {
+    "label": "Oluştur"
+  },
   "search": {
     "label": "Ekran ara",
     "placeholder": "Ekran ara…",

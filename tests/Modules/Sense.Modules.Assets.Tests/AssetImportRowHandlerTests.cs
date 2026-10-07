@@ -33,7 +33,7 @@ public sealed class AssetImportRowHandlerTests
     private AssetImportRowHandler CreateHandler() => new(_tenant, _employeeLookup, _categories, _assets, _unitOfWork);
 
     private static ImportRow Row(
-        int rowNumber, string? nationalId, string? categoryName, string? serialNumber, string? assignedAt, string? returnedAt = null, string? note = null)
+        int rowNumber, string? nationalId, string? categoryName, string? serialNumber, string? assignedAt, string? returnedAt = null, string? note = null, string? name = null)
     {
         var values = new Dictionary<string, ImportCell>();
         void Set(string key, string? value)
@@ -50,6 +50,7 @@ public sealed class AssetImportRowHandlerTests
         Set(AssetImportColumns.AssignedAt, assignedAt);
         Set(AssetImportColumns.ReturnedAt, returnedAt);
         Set(AssetImportColumns.Note, note);
+        Set(AssetImportColumns.Name, name);
         return new ImportRow(rowNumber, values);
     }
 
@@ -152,7 +153,8 @@ public sealed class AssetImportRowHandlerTests
         var result = await CreateHandler().ProcessAsync(batch, TestContext.Current.CancellationToken);
 
         result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Error);
-        result.Rows[0].Errors.Count(e => e.Code == ImportErrorCodes.RequiredMissing).ShouldBe(3);
+        result.Rows[0].Errors.Count(e => e.Code == ImportErrorCodes.RequiredMissing).ShouldBe(1);
+        result.Rows[0].Errors[0].Column.ShouldBe(AssetImportColumns.CategoryName);
     }
 
     [Fact]
@@ -276,5 +278,272 @@ public sealed class AssetImportRowHandlerTests
         result.Rows.First(r => r.RowNumber == 3).Outcome.ShouldBe(ImportRowOutcome.Error);
         _assets.DidNotReceive().Add(Arg.Any<Asset>());
         await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Template_InventoryAndLegacyAssignmentColumnsRemainAvailable()
+    {
+        var template = new AssetImportTemplate();
+        var columns = await template.GetColumnsAsync(TestContext.Current.CancellationToken);
+
+        template.Code.ShouldBe("assets.zimmet");
+        columns.Single(c => c.Key == AssetImportColumns.NationalId).Requirement.ShouldBe(ImportColumnRequirement.Optional);
+        columns.Single(c => c.Key == AssetImportColumns.NationalId).IsMatchKey.ShouldBeFalse();
+        columns.Single(c => c.Key == AssetImportColumns.AssignedAt).Requirement.ShouldBe(ImportColumnRequirement.Optional);
+        columns.Single(c => c.Key == AssetImportColumns.Name).Requirement.ShouldBe(ImportColumnRequirement.Optional);
+        columns.Single(c => c.Key == AssetImportColumns.CategoryName).Requirement.ShouldBe(ImportColumnRequirement.Always);
+        template.GetSampleRows(columns).ShouldContain(r => !r.Values.ContainsKey(AssetImportColumns.NationalId) || string.IsNullOrWhiteSpace(r.Values[AssetImportColumns.NationalId]));
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", "")]
+    [InlineData("   ", "   ")]
+    public async Task ProcessAsync_InventoryRow_CreatesUnassignedAssetWithoutLookingUpAnEmployee(string? employee, string? date)
+    {
+        var result = await CreateHandler().ProcessAsync(
+            Batch(ImportFailurePolicy.SkipInvalidRows, Row(2, employee, "Bilgisayar", " SN-20 ", date, date, " Stok ", " Elite book ")),
+            TestContext.Current.CancellationToken);
+
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.Name == "Elite book" && a.SerialNumber == "SN-20" && a.Description == "Stok" &&
+            a.Status == AssetStatus.Unassigned && a.AssignedEmployeeId == null && a.IssuedAt == null && a.ReturnedAt == null && a.Assignments.Count == 0));
+        await _employeeLookup.DidNotReceive().FindActiveByNationalIdAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_MixedInventoryAndAssignmentRows_BothAreImported()
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.AllOrNothing,
+            Row(2, null, "Bilgisayar", "SN-20", null), Row(3, NationalId, "Telefon", "SN-21", "01.09.2026")),
+            TestContext.Current.CancellationToken);
+
+        result.Applied.ShouldBeTrue();
+        result.Rows.ShouldAllBe(r => r.Outcome == ImportRowOutcome.Inserted);
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.Status == AssetStatus.Unassigned && a.Name == "Bilgisayar – SN-20"));
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.Status == AssetStatus.Assigned && a.Assignments.Count == 1));
+    }
+
+    [Theory]
+    [InlineData("01.09.2026", null)]
+    [InlineData(null, "02.09.2026")]
+    [InlineData("invalid", null)]
+    public async Task ProcessAsync_DateWithoutEmployee_ReportsMissingEmployee(string? assigned, string? returned)
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", "SN-20", assigned, returned)), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Error);
+        result.Rows[0].Errors.ShouldContain(e => e.Column == AssetImportColumns.NationalId && e.Code == ImportErrorCodes.RequiredMissing);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_EmployeeWithoutIssueDate_ReportsMissingDate()
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, NationalId, "Bilgisayar", "SN-20", "   ")), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Column == AssetImportColumns.AssignedAt && e.Code == ImportErrorCodes.RequiredMissing);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_TooLongName_ReportsValueTooLongBeforeMutation()
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", "SN-20", null, name: new string('a', AssetsLimits.NameMaxLength + 1))), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Column == AssetImportColumns.Name && e.Code == ImportErrorCodes.ValueTooLong);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
+    }
+
+    [Theory]
+    [InlineData(AssetStatus.Assigned)]
+    [InlineData(AssetStatus.Unassigned)]
+    [InlineData(AssetStatus.Retired)]
+    [InlineData(AssetStatus.Lost)]
+    [InlineData(AssetStatus.PendingAssignment)]
+    public async Task ProcessAsync_MatchingInventoryRow_PreservesAssetStateAndLedger(AssetStatus status)
+    {
+        var category = AssetCategory.Create(TenantId, "bilgisayar", "Bilgisayar").Value;
+        var details = new AssetDetails("TAG-20", "Brand", "Model", new DateOnly(2026, 1, 1), 1234m, new DateOnly(2027, 1, 1));
+        var asset = Asset.Create(TenantId, category.Id, "Existing", "SN-20", "Details", details).Value;
+        asset.Update(asset.Name, asset.SerialNumber, asset.Description, condition: AssetCondition.Damaged);
+        if (status == AssetStatus.Assigned) asset.Assign(EmployeeId, new DateOnly(2026, 9, 1));
+        if (status == AssetStatus.Retired) asset.Retire();
+        if (status == AssetStatus.Lost) asset.MarkLost(new DateOnly(2026, 9, 1));
+        if (status == AssetStatus.PendingAssignment) asset.RequestAssignment(EmployeeId, new DateOnly(2026, 9, 1));
+        var assignmentCount = asset.Assignments.Count;
+        var employee = asset.AssignedEmployeeId;
+        var issued = asset.IssuedAt;
+        _categories.ListAsync(Arg.Any<CancellationToken>()).Returns((IReadOnlyList<AssetCategory>)[category]);
+        _assets.FindByCategoryAndSerialNumberAsync(category.Id, "SN-20", Arg.Any<CancellationToken>()).Returns(asset);
+
+        var result = await CreateHandler().ProcessAsync(UpdateOnlyBatch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", "SN-20", null, note: "   ", name: "Updated name")), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Updated);
+        asset.Name.ShouldBe("Updated name");
+        asset.Description.ShouldBe("Details");
+        asset.Status.ShouldBe(status);
+        asset.AssignedEmployeeId.ShouldBe(employee);
+        asset.IssuedAt.ShouldBe(issued);
+        asset.Assignments.Count.ShouldBe(assignmentCount);
+        asset.AssetTag.ShouldBe(details.AssetTag);
+        asset.Brand.ShouldBe(details.Brand);
+        asset.Model.ShouldBe(details.Model);
+        asset.PurchaseDate.ShouldBe(details.PurchaseDate);
+        asset.PurchaseCost.ShouldBe(details.PurchaseCost);
+        asset.WarrantyEndsOn.ShouldBe(details.WarrantyEndsOn);
+        asset.Condition.ShouldBe(AssetCondition.Damaged);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
+    }
+
+    [Theory]
+    [InlineData("SN-20")]
+    [InlineData("sn-20")]
+    public async Task ProcessAsync_DuplicateCategoryAndSerialInBatch_CreatesOnePhysicalAsset(string secondSerial)
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", " SN-20 ", null), Row(3, NationalId, "bilgisayar", secondSerial, "01.09.2026")), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        result.Rows[1].Outcome.ShouldBe(ImportRowOutcome.Updated);
+        result.Rows[0].TargetEntityId.ShouldBe(result.Rows[1].TargetEntityId);
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.Status == AssetStatus.Assigned));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ProcessAsync_UpdateOnly_BlankSerial_ReportsMissingMatchKey(string serial)
+    {
+        var result = await CreateHandler().ProcessAsync(UpdateOnlyBatch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", serial, null)), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Column == AssetImportColumns.SerialNumber && e.Code == ImportErrorCodes.RequiredMissing);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_InvalidClosedRow_DoesNotPersistAnOrphanAssetAlongsideValidRows()
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, NationalId, "Bilgisayar", "BAD", "02.09.2026", "01.09.2026"),
+            Row(3, NationalId, "Telefon", "GOOD", "01.09.2026")), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Code == AssetsDomainErrors.ReturnBeforeIssue);
+        _assets.DidNotReceive().Add(Arg.Is<Asset>(a => a.SerialNumber == "BAD"));
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.SerialNumber == "GOOD"));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_InvalidClosedRow_DoesNotMutateExistingUnassignedAsset()
+    {
+        var category = AssetCategory.Create(TenantId, "bilgisayar", "Bilgisayar").Value;
+        var asset = Asset.Create(TenantId, category.Id, "Existing", "SN-20", null).Value;
+        _categories.ListAsync(Arg.Any<CancellationToken>()).Returns((IReadOnlyList<AssetCategory>)[category]);
+        _assets.FindByCategoryAndSerialNumberAsync(category.Id, "SN-20", Arg.Any<CancellationToken>()).Returns(asset);
+
+        await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, NationalId, "Bilgisayar", "SN-20", "02.09.2026", "01.09.2026"),
+            Row(3, null, "Telefon", "GOOD", null)), TestContext.Current.CancellationToken);
+
+        asset.Status.ShouldBe(AssetStatus.Unassigned);
+        asset.Assignments.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AllOrNothing_LateDomainFailure_DoesNotSaveAndSkipsSuccessfulRows()
+    {
+        var category = AssetCategory.Create(TenantId, "bilgisayar", "Bilgisayar").Value;
+        var assigned = Asset.Create(TenantId, category.Id, "Existing", "TAKEN", null).Value;
+        assigned.Assign(EmployeeId, new DateOnly(2026, 9, 1));
+        _categories.ListAsync(Arg.Any<CancellationToken>()).Returns((IReadOnlyList<AssetCategory>)[category]);
+        _assets.FindByCategoryAndSerialNumberAsync(category.Id, "TAKEN", Arg.Any<CancellationToken>()).Returns(assigned);
+
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.AllOrNothing,
+            Row(2, NationalId, "Telefon", "NEW", "01.09.2026"),
+            Row(3, NationalId, "Bilgisayar", "TAKEN", "01.09.2026")), TestContext.Current.CancellationToken);
+
+        result.Applied.ShouldBeFalse();
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Skipped);
+        result.Rows[0].TargetEntityId.ShouldBeNull();
+        result.Rows[1].Errors.ShouldContain(e => e.Code == AssetsDomainErrors.AlreadyAssigned);
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AllOrNothing_LateLookupFailure_DoesNotSave()
+    {
+        var category = AssetCategory.Create(TenantId, "bilgisayar", "Bilgisayar").Value;
+        var asset = Asset.Create(TenantId, category.Id, "Existing", "SN-20", null).Value;
+        _categories.ListAsync(Arg.Any<CancellationToken>()).Returns((IReadOnlyList<AssetCategory>)[category]);
+        _assets.FindByCategoryAndSerialNumberAsync(category.Id, "SN-20", Arg.Any<CancellationToken>()).Returns(asset);
+
+        var result = await CreateHandler().ProcessAsync(UpdateOnlyBatch(ImportFailurePolicy.AllOrNothing,
+            Row(2, NationalId, "Bilgisayar", "SN-20", "01.09.2026"),
+            Row(3, null, "Unknown", "MISSING", null)), TestContext.Current.CancellationToken);
+
+        result.Applied.ShouldBeFalse();
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Skipped);
+        result.Rows[1].Errors.ShouldContain(e => e.Code == ImportErrorCodes.LookupNotFound);
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ProcessAsync_InventoryWithoutSerial_CreatesDistinctItemsWithCategoryNameFallback(string? serial)
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, null, "Bilgisayar", serial, null), Row(3, null, "Bilgisayar", serial, null)), TestContext.Current.CancellationToken);
+
+        result.Rows.ShouldAllBe(r => r.Outcome == ImportRowOutcome.Inserted);
+        result.Rows[0].TargetEntityId.ShouldNotBe(result.Rows[1].TargetEntityId);
+        _assets.Received(2).Add(Arg.Is<Asset>(a => a.SerialNumber == null && a.Name == "Bilgisayar"));
+        await _assets.DidNotReceive().FindByCategoryAndSerialNumberAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(AssetImportColumns.CategoryName, AssetsLimits.CategoryNameMaxLength)]
+    [InlineData(AssetImportColumns.SerialNumber, AssetsLimits.SerialNumberMaxLength)]
+    [InlineData(AssetImportColumns.Note, AssetsLimits.DescriptionMaxLength)]
+    public async Task ProcessAsync_InventoryWithTooLongField_ReportsColumnError(string column, int limit)
+    {
+        var cells = new Dictionary<string, ImportCell>
+        {
+            [AssetImportColumns.CategoryName] = new("Bilgisayar"),
+            [column] = new(new string('a', limit + 1)),
+        };
+
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows, new ImportRow(2, cells)), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Column == column && e.Code == ImportErrorCodes.ValueTooLong);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
+        _categories.DidNotReceive().Add(Arg.Any<AssetCategory>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AssignedAssetNameAtLimit_PreservesExplicitNameAndLedger()
+    {
+        var name = new string('a', AssetsLimits.NameMaxLength);
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, NationalId, "Bilgisayar", "SN-20", "01.09.2026", name: name)), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Outcome.ShouldBe(ImportRowOutcome.Inserted);
+        _assets.Received(1).Add(Arg.Is<Asset>(a => a.Name == name && a.Status == AssetStatus.Assigned && a.Assignments.Count == 1));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_AssignmentWithInvalidDate_ReportsColumnError()
+    {
+        var result = await CreateHandler().ProcessAsync(Batch(ImportFailurePolicy.SkipInvalidRows,
+            Row(2, NationalId, "Bilgisayar", "SN-20", "invalid")), TestContext.Current.CancellationToken);
+
+        result.Rows[0].Errors.ShouldContain(e => e.Column == AssetImportColumns.AssignedAt && e.Code == ImportErrorCodes.InvalidDate);
+        _assets.DidNotReceive().Add(Arg.Any<Asset>());
     }
 }

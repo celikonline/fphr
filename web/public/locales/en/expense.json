@@ -31,7 +31,7 @@
     "description": "General description",
     "descriptionPlaceholder": "E.g. client visit",
     "continue": "Continue",
-    "addItem": "Add receipt",
+    "addItem": "Add expense item",
     "noItems": "No receipts added yet.",
     "total": "Total amount",
     "submit": "Submit",
@@ -118,6 +118,27 @@
       "loadFailed": "Categories could not be loaded.",
       "codeRequired": "Code is required.",
       "nameRequired": "Name is required."
+    }
+  },
+  "attachments": {
+    "label": "Receipt/invoice documents",
+    "hint": "Attach multiple documents to one expense item. PDF, JPEG, PNG, GIF, WebP or HEIC; up to 100 MB per document.",
+    "choose": "Choose documents",
+    "remove": "Remove {{name}}",
+    "open": "Open {{name}}",
+    "empty": "No documents attached.",
+    "details": "View documents and details",
+    "item": "Expense item",
+    "sizeError": "Each document must be non-empty and no larger than 100 MB.",
+    "typeError": "Choose a PDF, JPEG, PNG, GIF, WebP or HEIC document.",
+    "uploadError": "Some documents could not be uploaded. Successful uploads are preserved; try again.",
+    "downloadError": "Could not open the document. Try again.",
+    "itemError": "Could not add the item. Check the saved items below before adding it again.",
+    "status": {
+      "selected": "Ready to upload",
+      "uploading": "Uploading…",
+      "uploaded": "Uploaded",
+      "failed": "Upload failed; you can try again."
     }
   }
 }

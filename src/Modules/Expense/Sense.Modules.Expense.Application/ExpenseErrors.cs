@@ -10,6 +10,7 @@ public static class ExpenseErrors
     /// <summary>ReceiptFileId is not an Active document of the caller (own upload or filed to the claim's employee). Payroll
     /// pays receipted items tax-free, so an unverifiable id must never land on an item.</summary>
     public const string ReceiptNotFound = "expense.item.receipt_not_found";
+    public const string ReceiptTypeNotAllowed = "expense.item.receipt_type_not_allowed";
 
     /// <summary>PUT /expense/categories/{id}: the seeded system catalog (<see cref="Categories.ExpenseCategorySeed"/>) may
     /// have its <c>MaxAmount</c> edited, but not its name - it is the localization key other places (e.g. the self-service

@@ -13,13 +13,14 @@ public static class AssetImportColumns
     public const string AssignedAt = "assignedAt";
     public const string ReturnedAt = "returnedAt";
     public const string Note = "note";
+    public const string Name = "name";
 
     public static string HeaderKey(string key) => "import.column.assets." + key;
 }
 
 /// <summary>
 /// Zimmet aktarım şablonu (11.3.08 md.5/md.67): Kimlik no / Kategori / Seri no / Veriliş tarihi / İade tarihi /
-/// Açıklama. Kategori adı bulunamazsa find-or-create (kod otomatik üretilir); seri no doluysa aynı kategori + seri
+/// Açıklama / Varlık adı. Çalışan ve tarihler boşsa satır boşta envanterdir. Kategori adı bulunamazsa find-or-create (kod otomatik üretilir); seri no doluysa aynı kategori + seri
 /// no'lu mevcut varlık yeniden kullanılır, boşsa yeni varlık oluşturulur. İade tarihi doluysa satır kapalı bir
 /// atama (Unassigned + ReturnedAt) üretir, boşsa açık atama (Assigned). Plandaki "E-posta" kolonu kasıtlı olarak
 /// yok: zimmet bildirimi artık her atama/iade işleminde otomatik gidiyor (roadmap #116), satır bazlı bir
@@ -45,17 +46,19 @@ public sealed class AssetImportTemplate : IImportTemplate
         KeyPrefix + "instruction.match",
         KeyPrefix + "instruction.category",
         KeyPrefix + "instruction.returned",
+        KeyPrefix + "instruction.inventory",
     ];
 
     public Task<IReadOnlyList<ImportColumn>> GetColumnsAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<ImportColumn>>(
         [
-            Column(AssetImportColumns.NationalId, ImportColumnDataType.NationalId, ImportColumnRequirement.Always, isMatchKey: true),
+            Column(AssetImportColumns.NationalId, ImportColumnDataType.NationalId, ImportColumnRequirement.Optional),
             Column(AssetImportColumns.CategoryName, ImportColumnDataType.Text, ImportColumnRequirement.Always),
             Column(AssetImportColumns.SerialNumber, ImportColumnDataType.Text, ImportColumnRequirement.Optional),
-            Column(AssetImportColumns.AssignedAt, ImportColumnDataType.Date, ImportColumnRequirement.Always),
+            Column(AssetImportColumns.AssignedAt, ImportColumnDataType.Date, ImportColumnRequirement.Optional),
             Column(AssetImportColumns.ReturnedAt, ImportColumnDataType.Date, ImportColumnRequirement.Optional),
             Column(AssetImportColumns.Note, ImportColumnDataType.Text, ImportColumnRequirement.Optional),
+            Column(AssetImportColumns.Name, ImportColumnDataType.Text, ImportColumnRequirement.Optional),
         ]);
 
     public IReadOnlyList<ImportSampleRow> GetSampleRows(IReadOnlyList<ImportColumn> columns) =>
@@ -78,6 +81,16 @@ public sealed class AssetImportTemplate : IImportTemplate
             [AssetImportColumns.ReturnedAt] = "15.08.2026",
             [AssetImportColumns.Note] = string.Empty,
         }, KeyPrefix + "sample.closed"),
+        new(true, new Dictionary<string, string>
+        {
+            [AssetImportColumns.NationalId] = string.Empty,
+            [AssetImportColumns.CategoryName] = "Bilgisayar",
+            [AssetImportColumns.SerialNumber] = "SN-00124",
+            [AssetImportColumns.AssignedAt] = string.Empty,
+            [AssetImportColumns.ReturnedAt] = string.Empty,
+            [AssetImportColumns.Note] = string.Empty,
+            [AssetImportColumns.Name] = "Elite book",
+        }, KeyPrefix + "sample.inventory"),
     ];
 
     private static ImportColumn Column(string key, ImportColumnDataType type, ImportColumnRequirement requirement, bool isMatchKey = false) =>

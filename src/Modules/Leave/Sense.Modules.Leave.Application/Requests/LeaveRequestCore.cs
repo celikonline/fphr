@@ -33,6 +33,9 @@ public static class LeaveRequestErrors
     public const string NotOwner = "leave.request.not_owner";
     public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
     public const string GenderNotEligible = "leave.errors.gender_not_eligible";
+    public const string BirthdayRequiresSingleDate = "leave.errors.birthday_requires_single_date";
+    public const string BirthdayDateOnly = "leave.errors.birthday_date_only";
+    public const string BirthdayBirthDateMissing = "leave.errors.birthday_birth_date_missing";
     public const string SubstituteRequired = "leave.errors.substitute_required";
     public const string SubstituteIsRequester = "leave.errors.substitute_is_requester";
     public const string SubstituteNotFound = "leave.errors.substitute_not_found";

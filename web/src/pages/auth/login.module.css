@@ -1,8 +1,7 @@
 .page {
-  background-color: var(--mantine-color-body);
+  background: var(--mantine-color-body);
 }
 
-/* Brand panel: Kurumsal Lacivert in both color schemes, lit by Kurumsal Mavi and Yardımcı Renk 1 glows. */
 .brandPanel {
   position: relative;
   isolation: isolate;
@@ -15,7 +14,6 @@
     linear-gradient(160deg, var(--mantine-color-navy-7), var(--mantine-color-navy-9));
 }
 
-/* Dot grid fading out toward the bottom. */
 .brandPanel::before {
   content: "";
   position: absolute;
@@ -26,7 +24,6 @@
   mask-image: linear-gradient(to bottom, black, transparent 70%);
 }
 
-/* The two overlapping squares of the brand mark, enlarged as background art. */
 .shape {
   position: absolute;
   z-index: -1;
@@ -72,7 +69,6 @@
   backdrop-filter: blur(8px);
 }
 
-/* Buton/Patlangaç Rengi 2 dot with a ripple. */
 .pulse {
   position: relative;
   width: 8px;
@@ -116,157 +112,64 @@
   translate: 4px 0;
 }
 
-/*
- * Form panel: a light echo of the brand panel - Kurumsal Mavi, Yardımcı Renk 1 and 2 glows over a pale blue wash
- * (deeper navy tints in the dark scheme), with the same fading dot grid and a slowly drifting orb.
- */
 .formPanel {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background-image:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--mantine-color-brand-6) 30%, transparent), transparent 45%),
-    radial-gradient(
-      circle at 0% 100%,
-      light-dark(
-        color-mix(in srgb, var(--mantine-color-blue-6) 22%, transparent),
-        color-mix(in srgb, var(--mantine-color-blue-6) 45%, transparent)
-      ),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at 0% 25%,
-      light-dark(
-        color-mix(in srgb, var(--mantine-color-cyan-4) 22%, transparent),
-        color-mix(in srgb, var(--mantine-color-navy-6) 35%, transparent)
-      ),
-      transparent 40%
-    ),
-    linear-gradient(
-      160deg,
-      light-dark(var(--mantine-color-white), var(--mantine-color-dark-7)),
-      light-dark(var(--mantine-color-brand-0), var(--mantine-color-navy-9))
-    );
+  background: var(--mantine-color-body);
 }
 
-.formPanel::before,
-.formPanel::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.formPanel::before {
-  inset: 0;
-  background-image: radial-gradient(
-    light-dark(
-      color-mix(in srgb, var(--mantine-color-brand-6) 16%, transparent),
-      color-mix(in srgb, white 10%, transparent)
-    )
-    1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-  mask-image: radial-gradient(circle at 100% 0%, black, transparent 60%);
-}
-
-.formPanel::after {
-  right: -160px;
-  bottom: 12%;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background-image: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--mantine-color-brand-5) 24%, transparent),
-    transparent 70%
-  );
-  animation: float 14s ease-in-out -3s infinite;
-}
-
-/* Buton/Patlangaç 2 → 3 accent above the form title. */
 .accentBar {
-  width: 40px;
-  height: 4px;
-  border-radius: 4px;
-  background-image: linear-gradient(90deg, var(--mantine-color-orange-6), var(--mantine-color-yellow-6));
+  width: 32px;
+  height: 3px;
+  background: var(--mantine-primary-color-filled);
 }
 
 .input:focus,
 .input:focus-within {
-  border-color: var(--mantine-color-brand-6);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mantine-color-brand-6) 22%, transparent);
+  border-color: var(--mantine-primary-color-filled);
 }
 
-/*
- * MFA code entry (item 4, gün açılışı tur 1): the 6 cells default to a fixed gap, which overflows the
- * `max-w-sm` form on narrow phones (~360-390px, e.g. common Android/iPhone SE widths) once the surrounding
- * `px-6` padding is subtracted. Spreading the fixed-size cells across the full width lets the gaps shrink
- * instead, so the row never needs horizontal scroll down to ~300px of usable width.
- */
 .mfaCode {
   width: 100%;
   justify-content: space-between;
 }
 
 .submit {
-  box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--mantine-color-brand-6) 75%, transparent);
-  transition:
-    translate 150ms ease,
-    box-shadow 150ms ease;
+  box-shadow: none;
 }
 
-.submit:hover:not(:disabled) {
-  translate: 0 -1px;
-  box-shadow: 0 16px 32px -12px color-mix(in srgb, var(--mantine-color-brand-6) 90%, transparent);
-}
-
-/* Tenant picker row (senseik-025): Card rendered as a native <button>, so it needs the usual browser button
- * resets on top of Card's own layout, plus the hover/press affordances a clickable card should have. */
 .tenantCard {
   appearance: none;
   width: 100%;
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-md);
-  background-color: var(--mantine-color-body);
+  border-radius: var(--mantine-radius-xs);
+  background: var(--mantine-color-body);
   font: inherit;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    translate 150ms ease,
-    box-shadow 150ms ease;
 }
 
 .tenantCard:hover:not(:disabled) {
-  border-color: var(--mantine-color-brand-6);
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
-  translate: 0 -1px;
-  box-shadow: 0 10px 22px -14px color-mix(in srgb, var(--mantine-color-brand-6) 55%, transparent);
+  border-color: var(--mantine-primary-color-filled);
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
 }
 
 .tenantCard:focus-visible {
-  outline: 2px solid var(--mantine-color-brand-6);
+  outline: 2px solid var(--mantine-primary-color-filled);
   outline-offset: 2px;
 }
 
 .tenantCard:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  translate: none;
-  box-shadow: none;
 }
 
 .demo {
   padding: 10px 12px;
-  border: 1px dashed var(--mantine-color-default-border);
-  border-radius: var(--mantine-radius-md);
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xs);
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
 }
 
 .reveal {
@@ -296,8 +199,7 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .shape,
-  .pulse::after,
-  .formPanel::after {
+  .pulse::after {
     animation: none;
   }
 }

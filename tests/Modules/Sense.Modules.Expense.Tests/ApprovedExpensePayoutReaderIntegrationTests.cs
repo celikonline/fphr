@@ -153,4 +153,28 @@ public sealed class ApprovedExpensePayoutReaderIntegrationTests : TestFixture
 
         result.ShouldBeEmpty();
     }
+
+    [Fact]
+    public async Task GetAsync_MultipleReceipts_CountsExpenseOnce_AndPreservesLegacyClassification()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        using var services = ServiceProvider!.CreateScope();
+        var db = services.ServiceProvider.GetRequiredService<ExpenseDbContext>();
+        var claim = ExpenseClaim.Create(tenantId, employeeId, null);
+        var categoryId = Guid.NewGuid();
+        claim.AddItem(categoryId, 120m, new(2026, 9, 10), 20m, "TRY", null, null, [Guid.NewGuid(), Guid.NewGuid()]);
+        claim.AddItem(categoryId, 80m, new(2026, 9, 10), null, "TRY", "legacy-key", null);
+        claim.AddItem(categoryId, 50m, new(2026, 9, 10), null, "TRY", null, null);
+        claim.Submit();
+        var approvalId = Guid.NewGuid();
+        claim.AttachApproval(approvalId, DateTime.UtcNow);
+        claim.Approve(approvalId, new(2026, 9, 15, 0, 0, 0, DateTimeKind.Utc));
+        db.ExpenseClaims.Add(claim);
+        await db.SaveChangesAsync();
+        var totals = (await services.ServiceProvider.GetRequiredService<IApprovedExpensePayoutReader>().GetAsync(tenantId, 2026, 9, [employeeId])).Single();
+        totals.ApprovedExpenseTotal.ShouldBe(200m);
+        totals.UndocumentedExpenseTotal.ShouldBe(50m);
+    }
 }

@@ -1,5 +1,20 @@
 # Faz 4 Durum Takibi
 
+**2026-10-07 — #44/#70 öncelikli geliştirme:** Kullanıcı talebiyle ayrıntılı yıllık izin bakiye
+raporu (`leave.balance.detail`) önceliklendirildi. Güncel bakiye alanları, ay/yıl aralık kolonları,
+Excel/PDF çıktısı ve arka plan üretimi mevcut rapor akışına eklendi; tam test kapısı ve bağımsız son inceleme bekleniyor.
+İş ve kabul kriterleri: [leave-balance-detail](../../takim/isler/leave-balance-detail.json).
+Bu not tamamlanma beyanı değildir; test kapısı ve bağımsız inceleme sonucuna göre güncellenecek.
+
+**2026-10-07 — #65/#117 ek kapsam, incelemede:** Zimmet envanterine doğrudan **Excel’den toplu ekle**
+penceresi eklendi; mevcut `assets.zimmet` şablonu isteğe bağlı varlık adı ve çalışansız boşta envanter
+satırlarını destekleyecek şekilde genişletildi. Çalışanlı satırlarda veriliş tarihi koşullu zorunlu;
+ortak kolon eşleştirme/sonuç akışı kullanılır, işlem sonrası envanter sorguları yenilenir.
+Frontend ilgili testleri 30/30 ve tip/lint/build kontrolleri, filtresiz tam Assets testleri 187/187 geçti;
+depo geneli test kapısı ve bağımsız inceleme sonuçları
+[senseik-068 handoff](../../handoffs/assets-excel-bulk-import.md) ile iş raporunda izlenir.
+Bu not mevcut v2 geliştirmelerini tamamlanmış saymaz; #65'in genel durumunu değiştirmez.
+
 Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem #62–#74, + #41/#44/#45'in Faz 4'e düşen tüketici tarafı); ayrıntı [11.3.09-dosya-belge-kvkk-vize.md](./11.3.09-dosya-belge-kvkk-vize.md) (D1 kalemi), [11.3.08-harcama-avans-odemeler-zimmet.md](./11.3.08-harcama-avans-odemeler-zimmet.md) (Ex0 kalemi).
 
 **Son güncelleme:** 2026-09-22 (As2: #115 plan↔kod analizi bitti [11.3.08-zimmet-mevcut-urun-iliskisi.md, 11.3.08-zimmet-ekran-paritesi.md]; #116 zimmet atama/iade bildirimi, #117 zimmet aktarım şablonu, #118 işten çıkışta iade edilmemiş zimmet bildirimi eklendi, üçü de ✅ Bitti)

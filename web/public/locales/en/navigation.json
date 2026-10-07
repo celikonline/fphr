@@ -159,6 +159,9 @@
     "delegations": "Approval delegations",
     "delegationsDesc": "Delegate approval authority for a period"
   },
+  "create": {
+    "label": "Create"
+  },
   "search": {
     "label": "Search screens",
     "placeholder": "Search screens…",

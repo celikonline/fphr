@@ -20,6 +20,8 @@ public sealed record SimplePdfTable(
     IReadOnlyList<int>? RightAlignedColumns = null) : SimplePdfBlock;
 
 /// <summary>Signature boxes side by side at the end of a document (e.g. "İşveren / Kaşe - İmza").</summary>
+public sealed record SimplePdfPageBreak : SimplePdfBlock;
+
 public sealed record SimplePdfSignatures(IReadOnlyList<string> Labels) : SimplePdfBlock;
 
 /// <summary>A full-width shaded band that opens a section of a multi-section document (e.g. employee card PDF).</summary>
@@ -33,7 +35,8 @@ public sealed record SimplePdfDocument(
     string Title,
     string? Issuer,
     IReadOnlyList<SimplePdfBlock> Blocks,
-    string? Footer = null);
+    string? Footer = null,
+    bool Landscape = false);
 
 /// <summary>
 /// Structured document → PDF bytes (QuestPDF implementation in Sense.Shared.Infrastructure). Used for documents a module

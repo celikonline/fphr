@@ -30,7 +30,7 @@ public sealed class QuestPdfSimpleWriter : ISimplePdfWriter
 
         return Document.Create(container => container.Page(page =>
         {
-            page.Size(PageSizes.A4);
+            page.Size(document.Landscape ? PageSizes.A4.Landscape() : PageSizes.A4);
             page.Margin(PageMargin);
             page.DefaultTextStyle(x => x.FontSize(BaseFontSize));
 
@@ -72,6 +72,9 @@ public sealed class QuestPdfSimpleWriter : ISimplePdfWriter
     {
         switch (block)
         {
+            case SimplePdfPageBreak:
+                container.PageBreak();
+                break;
             case SimplePdfParagraph paragraph:
                 var span = container.Text(paragraph.Text);
                 if (paragraph.Bold)

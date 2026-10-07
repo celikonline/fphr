@@ -21,6 +21,15 @@ public static class LeavePartialDay
         return decimal.Round(minutes / dailyWorkMinutes, 4, MidpointRounding.AwayFromZero);
     }
 
+    /// <summary>Applies a configured strict threshold before using the normal hourly fraction.</summary>
+    public static decimal HourlyFractionWithThreshold(TimeOnly start, TimeOnly end, int? halfDayThresholdMinutes, decimal halfDayDays)
+    {
+        var minutes = (decimal)(end - start).Ticks / TimeSpan.TicksPerMinute;
+        return halfDayThresholdMinutes is { } threshold && minutes > threshold
+            ? halfDayDays
+            : HourlyFraction(start, end);
+    }
+
     /// <summary>
     /// A flat statutory hour count (e.g. "günde en az 2 saat iş arama izni", 4857 md.27; "günde 1,5 saat süt izni",
     /// md.74/son) expressed as the same day-fraction <see cref="HourlyFraction"/> produces, so it can be compared

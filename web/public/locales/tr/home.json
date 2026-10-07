@@ -7,6 +7,10 @@
   "inDays_one": "{{count}} gün sonra",
   "inDays_other": "{{count}} gün sonra",
   "noWidgets": "Ana sayfanızda gösterilecek bir bilgi yok.",
+  "sections": {
+    "workflow": { "title": "Gündeminiz" },
+    "company": { "title": "Çevrenizde olanlar" }
+  },
   "daysSuffix": "g",
   "viewAll": "Tümünü Gör",
   "refresh": "Yenile",

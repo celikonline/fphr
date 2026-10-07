@@ -7,6 +7,10 @@
   "inDays_one": "In {{count}} day",
   "inDays_other": "In {{count}} days",
   "noWidgets": "There is nothing to show on your home page.",
+  "sections": {
+    "workflow": { "title": "On your agenda" },
+    "company": { "title": "Around you" }
+  },
   "daysSuffix": "d",
   "viewAll": "View all",
   "refresh": "Refresh",

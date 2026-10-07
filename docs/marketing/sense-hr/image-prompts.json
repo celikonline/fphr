@@ -1,0 +1,27 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "date": "2026-10-06",
+  "page_id": "page_13aab78f4ea88191adbe56cde2d9c795",
+  "images": [
+    {
+      "key": "hero",
+      "refs": [
+        "C:/Users/ALG0013/Documents/GitHub/senseik/apps/senseik-mobile/docs/screenshots/05-ana-sayfa.jpg",
+        "C:/Users/ALG0013/Documents/GitHub/senseik/apps/senseik-mobile/docs/screenshots/18-onaylarim.jpg"
+      ],
+      "prompt": "Use case: ads-marketing. Create one polished landscape 16:9 product hero banner for the Turkish AlgoSense website, for Sense HR. Background: deep forest green #103b29 fading to graphite #151918, subtle fine dotted texture, restrained studio lighting. Left 48%: exact large white text \"Sense HR\", then exact two-line text \"İnsan kaynakları ve bordro\" / \"tek platformda\". Small eyebrow \"ALGOSENSE\". Right 48%: two elegant realistic premium smartphone devices, front-facing with a very slight angle, displaying the supplied actual product screenshots. Image 1 is the home screen compositing input; image 2 is the approvals screen compositing input. Preserve the supplied screen contents and Turkish text accurately, do not redesign their UI, invent data, add dashboards, analytics, logos or product functions. The product screens retain their original blue and purple colours. Devices entirely inside canvas with generous margins, no cropping. No other devices. Small bottom-left caption exact \"Demo ekranları\". Sophisticated enterprise product photography composition, crisp typography, generous whitespace, no people, no stock icons, no extra claim, no buttons, no badges, no watermark."
+    },
+    {
+      "key": "leave",
+      "refs": [
+        "C:/Users/ALG0013/Documents/GitHub/senseik/apps/senseik-mobile/docs/screenshots/15-izinlerim.jpg",
+        "C:/Users/ALG0013/Documents/GitHub/senseik/apps/senseik-mobile/docs/screenshots/18-onaylarim.jpg"
+      ],
+      "prompt": "Use case: ads-marketing. Create one polished landscape 16:9 Sense HR feature banner. Match a premium AlgoSense website campaign: deep forest green #103b29 and graphite #151918, restrained fine dotted texture, white typography, blue/purple product screens. Left: exact large white headline on two lines \"İzin ve onaylar\" / \"aynı akışta\". Smaller text \"Sense HR\". Right: two premium realistic smartphones upright and mostly front-facing; first phone shows supplied image 1 (actual employee leave screen), second shows supplied image 2 (actual manager approvals). Images are compositing inputs, preserve their visible actual interface, Turkish labels and demo records without redesigning or inventing extra screen data. Don't add icons or claims. Thin subtle visual connection between devices suggests employee to manager. Phones fully visible with generous margins, original screenshot aspect ratio, unclipped. Small caption exact \"Demo ekranları\". No other text, no people, no invented dashboard, no watermarks. Consistent deliberate editorial hierarchy, excellent Turkish text fidelity."
+    },
+    {
+      "key": "workflow",
+      "prompt": "Use case: infographic-diagram. Create one polished landscape 16:9 enterprise product explainer visual for Sense HR in the same deep forest green #103b29 / graphite #151918 campaign palette with crisp white typography and restrained cyan highlights #008cf0. Exact main heading at upper left \"İK süreçleri bir arada\"; exact small eyebrow \"SENSE HR\". Center: four refined connected physical glass tiles, evenly spaced horizontally, with simple elegant pictograms and exact Turkish labels: \"Çalışan kayıtları\", \"İzin ve onaylar\", \"Puantaj\", \"Bordro\". Pictograms: employee card, calendar check, clock, payroll document. A subtle connecting path unifies the four operations, not a dense flowchart. Spacious art direction, fine dotted texture, dimensional studio lighting and soft shadows, understated high-end business software visual. These are conceptual illustrations, not actual app screenshots: do not show app UI, fictitious data, numbers, graphs, percentages, features beyond the four named operations. Small bottom-left caption exact \"Süreç anlatımı\". No other text, no people, no logo invention, no badge, no watermark."
+    }
+  ]
+}

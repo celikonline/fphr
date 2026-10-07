@@ -348,6 +348,48 @@ describe("LoginScreen", () => {
 
     expect(login).toHaveBeenCalledWith("ayse@ornek.com", "gizli-sifre", "acme");
   });
+
+  it("shows the generic error on the company-select step when the selected login is rejected", async () => {
+    const tenants: TenantChoice[] = [
+      { tenantId: "tenant-1", slug: "acme", name: "Acme A.Ş." },
+      { tenantId: "tenant-2", slug: "beta", name: "Beta Ltd." },
+    ];
+    const props = buildProps();
+    const renderer = await renderScreen(props);
+
+    const emailInput = renderer.root.findAll(
+      (node) => node.props.placeholder === "ad.soyad@sirket.com"
+    )[0];
+    const passwordInput = renderer.root.findAll(
+      (node) => node.props.placeholder === "Şifrenizi girin"
+    )[0];
+
+    await act(async () => {
+      emailInput.props.onChangeText("ayse@ornek.com");
+      passwordInput.props.onChangeText("gizli-sifre");
+    });
+
+    mockStore({ tenantChoices: tenants });
+    await act(async () => {
+      renderer.update(<LoginScreen {...props} />);
+    });
+
+    expect(allTexts(renderer)).not.toContain("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
+
+    const acmeRow = renderer.root
+      .findAllByType(TouchableOpacity)
+      .find((instance) =>
+        instance.findAllByType(Text).some((node) => extractText(node.children) === "Acme A.Ş.")
+      );
+
+    login.mockRejectedValueOnce(new Error("x"));
+    await act(async () => {
+      acmeRow?.props.onPress();
+    });
+
+    expect(login).toHaveBeenCalledWith("ayse@ornek.com", "gizli-sifre", "acme");
+    expect(allTexts(renderer)).toContain("E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
+  });
 });
 
 describe("LoginScreen in English (FG-001b)", () => {

@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { MantineProvider } from "@mantine/core";
-import { MemoryRouter, Routes, Route } from "react-router";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router";
 import trNavigation from "../../public/locales/tr/navigation.json";
 import trCommon from "../../public/locales/tr/common.json";
 import AppLayout from "./app-layout";
@@ -58,8 +58,10 @@ beforeEach(() => {
   localStorage.clear();
   vi.clearAllMocks();
 
-  // Only items without a `permissions` list (e.g. "home") are relied on in these tests, so the
-  // exact permission strings here don't matter - they just need to exist for state.hasPermission.
+  setViewer();
+});
+
+function setViewer(permissions: string[] = [], disabledModules: string[] = []) {
   const state = {
     user: {
       id: "u1",
@@ -67,15 +69,15 @@ beforeEach(() => {
       lastName: "Lovelace",
       email: "ada@acme.test",
       name: "Ada Lovelace",
-      permissions: [] as string[],
+      permissions,
       tenant: { id: "t1", name: "Acme Anonim Şirketi", slug: "acme" },
     },
-    features: { accessSettingsBypass: true, access: {} },
+    features: { accessSettingsBypass: true, access: {}, disabledModules },
     hasPermission: (permission: string) => state.user.permissions.includes(permission),
     logout: mockLogout,
   };
   mockUseAuthStore.mockImplementation((selector: (s: typeof state) => unknown) => selector(state));
-});
+}
 
 function createTestI18n() {
   const instance = i18next.createInstance();
@@ -96,10 +98,12 @@ function renderAppLayout(initialEntries: string[] = ["/app"], initialIndex?: num
     <I18nextProvider i18n={createTestI18n()}>
       <MantineProvider>
         <MemoryRouter initialEntries={initialEntries} initialIndex={initialIndex}>
+          <CurrentPath />
           <Routes>
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<div>Page content</div>} />
               <Route path="reports" element={<div>Reports page</div>} />
+              <Route path="*" element={<div>Request page</div>} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -108,13 +112,91 @@ function renderAppLayout(initialEntries: string[] = ["/app"], initialIndex?: num
   );
 }
 
+function CurrentPath() {
+  const location = useLocation();
+  return <div data-testid="current-path">{location.pathname}{location.search}</div>;
+}
+
 describe("AppLayout tenant badge", () => {
-  it("shows the name of the company the user is logged in to", () => {
+  it("shows the company inside the profile menu when it is opened", async () => {
+    const user = userEvent.setup();
     renderAppLayout();
 
+    expect(screen.queryByTestId("tenant-badge")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Profilim" }));
     expect(
-      within(screen.getByTestId("tenant-badge")).getByText("Acme Anonim Şirketi")
+      within(await screen.findByTestId("tenant-badge")).getByText("Acme Anonim Şirketi")
     ).toBeDefined();
+  });
+});
+
+describe("AppLayout create shortcut", () => {
+  it.each([
+    ["leave.my.requests", "/app/leave"],
+    ["leave.my.overtimes", "/app/leave/overtimes"],
+    ["expense.my.claims", "/app/payments"],
+    ["expense.my.advances", "/app/payments"],
+  ])("opens the request hub from an existing page with %s", async (permission, path) => {
+    setViewer([permission]);
+    const user = userEvent.setup();
+    renderAppLayout([path]);
+
+    const shortcut = screen.getByRole("link", { name: "Oluştur" });
+    expect(shortcut).toHaveAttribute("href", "/app/requests");
+    await user.click(shortcut);
+
+    expect(screen.getByTestId("current-path")).toHaveTextContent(/^\/app\/requests$/);
+  });
+
+  it("hides the shortcut for unrelated permissions", () => {
+    setViewer(["employee.employees.read"]);
+    renderAppLayout();
+
+    expect(screen.queryByRole("link", { name: "Oluştur" })).toBeNull();
+  });
+
+  it("keeps the hub shortcut when an allowed module is still enabled", async () => {
+    setViewer(["leave.my.requests", "leave.my.overtimes", "expense.my.claims"], ["leave"]);
+    const user = userEvent.setup();
+    renderAppLayout();
+
+    await user.click(screen.getByRole("link", { name: "Oluştur" }));
+    expect(screen.getByTestId("current-path")).toHaveTextContent(/^\/app\/requests$/);
+  });
+
+  it("hides the create control when no requests are available", () => {
+    renderAppLayout();
+    expect(screen.queryByRole("link", { name: "Oluştur" })).toBeNull();
+  });
+
+  it("hides the create control when all permitted modules are disabled", () => {
+    setViewer(["leave.my.requests", "expense.my.advances"], ["leave", "expense"]);
+    renderAppLayout();
+    expect(screen.queryByRole("link", { name: "Oluştur" })).toBeNull();
+  });
+});
+
+describe("AppLayout settings shortcut", () => {
+  it("only shows the shortcut with a settings permission", () => {
+    renderAppLayout();
+    expect(within(screen.getByRole("banner")).queryByRole("link", { name: "Ayarlar" })).toBeNull();
+  });
+
+  it("links to the settings hub with the same permission gate as navigation", () => {
+    setViewer(["identity.tenant.view"]);
+    renderAppLayout();
+    expect(within(screen.getByRole("banner")).getByRole("link", { name: "Ayarlar" })).toHaveAttribute("href", "/app/settings");
+  });
+});
+
+describe("AppLayout search shortcut", () => {
+  it("focuses the screen search with Ctrl+K", async () => {
+    const user = userEvent.setup();
+    renderAppLayout();
+
+    await user.keyboard("{Control>}k{/Control}");
+
+    expect(screen.getByRole("textbox", { name: "Ekran ara" })).toHaveFocus();
   });
 });
 
@@ -172,7 +254,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     renderAppLayout();
     const desktopSidebar = screen.getByTestId("sidebar-desktop");
 
-    expect(desktopSidebar.className).toContain("w-64");
+    expect(desktopSidebar.className).toContain("w-56");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 
@@ -198,7 +280,7 @@ describe("AppLayout sidebar collapse toggle", () => {
     await user.click(screen.getByRole("button", { name: "Menüyü daralt" }));
     await user.click(screen.getByRole("button", { name: "Menüyü genişlet" }));
 
-    expect(desktopSidebar.className).toContain("w-64");
+    expect(desktopSidebar.className).toContain("w-56");
     expect(within(desktopSidebar).getByText("Ana sayfa")).toBeDefined();
   });
 

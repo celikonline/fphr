@@ -33,7 +33,9 @@
     "next": "Weiter",
     "detail": "Nachrichtendetails",
     "close": "Schließen",
-    "open": "Nachricht öffnen: {{subject}}"
+    "open": "Nachricht öffnen: {{subject}}",
+    "enterFullScreen": "Vollbild",
+    "exitFullScreen": "Vollbild beenden"
   },
   "compose": {
     "recipients": "Empfänger",
@@ -52,6 +54,8 @@
     "noChannel": "Wählen Sie mindestens einen Kanal.",
     "subject": "Betreff",
     "body": "Inhalt",
+    "bodyPlaceholder": "Nachricht schreiben oder Bild aus der Zwischenablage einfügen…",
+    "pastedImageAlt": "Aus der Zwischenablage eingefügtes Bild",
     "counter": "{{count}} / {{max}}",
     "importance": "Wichtigkeit",
     "send": "Senden",

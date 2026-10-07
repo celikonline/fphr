@@ -16,6 +16,7 @@ import {
   Skeleton,
   Stack,
   Text,
+  Title,
 } from "@mantine/core";
 import {
   BarChart3,
@@ -59,6 +60,7 @@ import { getMyAnnouncementFeed } from "@/services/announcements.service";
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDate, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
+import styles from "./home.module.css";
 
 // The charting library is the single heaviest dependency on this screen and only one widget needs it,
 // so it loads after the dashboard paints instead of holding up the first screen after sign-in.
@@ -89,10 +91,11 @@ const CHART_COLORS = [
   "var(--mantine-color-blue-6)",
   "var(--mantine-color-gold-6)",
 ];
-/** Thin border plus a soft outer ring: the reference cards read as a double border. */
+/** Thin borders keep widgets visually aligned with the compact application shell. */
 const CARD_STYLE: CSSProperties = {
   borderColor: "var(--mantine-color-default-border)",
-  boxShadow: "0 0 0 4px var(--mantine-color-gray-light)",
+  boxShadow: "none",
+  minWidth: 0,
 };
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 /** `InboxTaskDto.submittedAt` is a full timestamp (not a `DateOnly`), so `formatDateOnly` doesn't apply. */
@@ -125,7 +128,7 @@ function PersonAvatar({ employeeId, displayName }: { employeeId: string; display
 
 function WidgetFrame({ children }: { children: ReactNode }) {
   return (
-    <Card withBorder radius="md" padding="lg" style={CARD_STYLE}>
+    <Card withBorder radius="xs" padding="md" style={CARD_STYLE}>
       {children}
     </Card>
   );
@@ -146,19 +149,19 @@ function WidgetCard({
 }) {
   return (
     <WidgetFrame>
-      <Group justify="space-between" gap="sm" wrap="nowrap" mb="xl">
-        <Group gap="md" wrap="nowrap" className="min-w-0">
+      <Group justify="space-between" gap="sm" wrap="nowrap" mb="md">
+        <Group gap="sm" wrap="nowrap" className="min-w-0">
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center"
             style={{
               backgroundColor: accent,
               color: "white",
-              borderRadius: "var(--mantine-radius-md)",
+              borderRadius: "var(--mantine-radius-xs)",
             }}
           >
             {icon}
           </span>
-          <Text fz={17} fw={450} truncate>
+          <Text fz={15} fw={600} truncate>
             {title}
           </Text>
         </Group>
@@ -699,7 +702,7 @@ function TeamLeaveRequestsWidget() {
  * `/app/inbox` - this widget only surfaces the count and the top items. `InboxTaskDto.submittedAt` (Faz 1
  * tur 2, BE-added) shows a short TR date when present; older/unfilled tasks just omit it.
  */
-function PendingApprovalsWidget() {
+function PendingApprovalsWidget({ showEmpty = false }: { showEmpty?: boolean }) {
   const { t, i18n } = useTranslation(["home", "workflow"]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["home", "pending-approvals"],
@@ -708,8 +711,8 @@ function PendingApprovalsWidget() {
   });
   const entries = useMemo(() => (data ?? []).slice(0, APPROVAL_LIMIT), [data]);
 
-  // Not an approver, or an approver with nothing pending right now - the card simply doesn't render.
-  if (!isLoading && !error && entries.length === 0) return null;
+  // Keep an empty state only when this is the section's sole possible widget.
+  if (!showEmpty && !isLoading && !error && entries.length === 0) return null;
 
   return (
     <WidgetCard
@@ -728,6 +731,8 @@ function PendingApprovalsWidget() {
         <WidgetSkeleton />
       ) : error ? (
         <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
+      ) : entries.length === 0 ? (
+        <WidgetMessage>{t("home:pendingApprovals.empty")}</WidgetMessage>
       ) : (
         <>
           <RowList
@@ -1204,42 +1209,73 @@ export default function HomePage() {
   const canViewEvents = usePermission("announcements.my.events") && announcementsEnabled;
   const canViewAnnouncements = usePermission("announcements.my.feed") && announcementsEnabled;
   const showEvents = useAccessSetting("showEventCalendar") && canViewEvents;
+  const hasOtherWorkflow = canViewTeamRequests || canViewAnnouncements || canViewLeaveBalances;
 
-  // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
-  const columns: ReactNode[][] = [
-    [
-      showOrgInfo && <OrgInfoWidget key="org" />,
-      canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
-      canViewHolidays && <HolidaysWidget key="holidays" />,
-    ],
-    [
-      canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
-      canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
-      showEvents && <EventsWidget key="events" />,
-    ],
-    [
-      showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,
-      canViewInbox && <PendingApprovalsWidget key="pending-approvals" />,
-      canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
-      showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
-    ],
-  ].map((column) => column.filter(Boolean));
-  const hasAnyWidget = columns.some((column) => column.length > 0);
+  const dashboardWidgets: {
+    id: string;
+    content: ReactNode;
+    layout: string;
+  }[] = [
+    { id: "profile", content: showOrgInfo && <OrgInfoWidget />, layout: styles.profileCell },
+    {
+      id: "leave-info",
+      content: canViewLeaveBalances && <LeaveInfoWidget />,
+      layout: styles.leaveInfoCell,
+    },
+    {
+      id: "upcoming-leaves",
+      content: showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget />,
+      layout: styles.upcomingCell,
+    },
+    {
+      id: "distribution",
+      content: canViewDirectory && <DepartmentDistributionWidget />,
+      layout: styles.distributionCell,
+    },
+    {
+      id: "birthdays",
+      content: showBirthdays && canViewDirectory && <BirthdaysWidget />,
+      layout: styles.birthdaysCell,
+    },
+    { id: "holidays", content: canViewHolidays && <HolidaysWidget />, layout: styles.holidaysCell },
+    { id: "events", content: showEvents && <EventsWidget />, layout: styles.eventsCell },
+    {
+      id: "approvals",
+      content: canViewInbox && <PendingApprovalsWidget showEmpty={!hasOtherWorkflow} />,
+      layout: styles.extraCell,
+    },
+    {
+      id: "team-requests",
+      content: canViewTeamRequests && <TeamLeaveRequestsWidget />,
+      layout: styles.extraCell,
+    },
+    {
+      id: "announcements",
+      content: canViewAnnouncements && <AnnouncementsWidget />,
+      layout: styles.extraCell,
+    },
+  ].filter((widget) => Boolean(widget.content));
+  const hasDashboard = dashboardWidgets.length > 0;
 
   return (
-    <div className="max-w-6xl p-5 md:p-7">
-      {hasAnyWidget ? (
-        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
-          {columns.map((column, index) => (
-            <div key={index} className="flex flex-col gap-5">
-              {column}
+    <div className={styles.page}>
+      <Title order={1} className="sr-only">{t("navigation:nav.home")}</Title>
+      {hasDashboard ? (
+        <div className={styles.sections}>
+          <section className={styles.section} aria-label={t("navigation:nav.home")}>
+            <div className={styles.dashboardGrid}>
+              {dashboardWidgets.map((widget) => (
+                <div key={widget.id} className={`${styles.widgetCell} ${widget.layout}`}>
+                  {widget.content}
+                </div>
+              ))}
             </div>
-          ))}
+          </section>
         </div>
       ) : (
-        <WidgetFrame>
-          <WidgetMessage>{t("home:noWidgets")}</WidgetMessage>
-        </WidgetFrame>
+        <div className={styles.empty}>
+          <WidgetFrame><WidgetMessage>{t("home:noWidgets")}</WidgetMessage></WidgetFrame>
+        </div>
       )}
     </div>
   );

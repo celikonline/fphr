@@ -1,0 +1,21 @@
+# WEB-01 — çalışma kaydı
+
+## 2026-10-01 ilk teslim
+
+- Kullanıcının SensePROJECT pano görseli referans alındı. SenseİK renkleri korundu; uygulama kabuğu beyaz, kenarlıklı ve kompakt düzene geçirildi.
+- `/app` rol ve gerçek veriye bağlı odak eylemi, iş akışı ve şirket bağlamı bölümleriyle düzenlendi. Var olan widget izin/modül kapıları korundu.
+- Kullanıcı geri bildirimiyle girişin sol marka panelindeki mor-mavi gradyan, nokta dokusu ve arka plan şekilleri korundu. Form, parola sıfırlama, davet ve ilk kurulum düz yüzey düzeninde kaldı.
+- Ayrı Docker önizlemesi: `http://127.0.0.1:13009/app` (`senseik-web-preview`, yalnız loopback).
+- İlgili 22 kabuk/ana sayfa testi ve 13 kimlik/kurulum testi geçti. TypeScript, ESLint (0 hata, 1 mevcut uyarı), Vite ve Docker build geçti. 375/768/masaüstü görsel denetiminde yatay taşma bulunmadı.
+- Proje çapı `test-kapisi.mjs` koşusu 15 dakikayı aşmasına ve sonuç üretmemesine rağmen süreç etkin kaldı; koşu durduruldu. Yeşil kapı kanıtı henüz yok.
+- Kullanıcının ek görsel kararı sonrası giriş panelinin önceki CSS gradyanı, nokta dokusu ve şekilleri geri alındı. `login.test.tsx` 5/5, TypeScript, ilgili ESLint ve Docker build geçti; `/login` Docker önizlemesinde görsel olarak doğrulandı.
+- Sol menü ikonları, Uygulamalar menüsüyle aynı `navIconColor` kaynağını kullanıyor. Koyu temada iki menü de okunabilir açık tonu seçiyor. İlgili 13 test, TypeScript, ilgili ESLint ve Docker build geçti; iki menü `/app` önizlemesinde karşılaştırıldı.
+- Kullanıcı geri bildirimiyle ana sayfanın sabit 2:1 bölüm ve iş akışı alt sütunları kaldırıldı. İş ve şirket kartları kendi tam genişlikli bölümlerinde içerik yüksekliğine göre dengeli akıyor. İlgili 11 test, TypeScript, ESLint ve Docker build geçti; 1280 px önizlemede sol/orta/sağ kart konumları ve yatay taşma doğrulandı.
+- Kullanıcının son kararıyla `/app` odak paneli ve iki görünür bölüm başlığı kaldırıldı; widget kartları, veri ve izin kapıları korundu. `/app/messages` sayfasına 16/24 px duyarlı iç boşluk eklendi. İlgili 15 test, TypeScript, ESLint, Vite ve Docker build geçti. 916 px Docker önizlemesinde mesaj başlığı ile sekmelerin içerik kenarından 24 px içeride olduğu ve gövdenin yatay taşmadığı doğrulandı.
+- Yeni referans görseline göre ana sayfa tek 3 kolonlu grid'e alındı: profil / izin bilgileri / yaklaşan izinler ilk satırda; dağılım / doğum günleri / resmi tatiller ikinci satırda; etkinlik takvimi sağ kolonda devam ediyor. 1280 px önizlemesinde kart sol konumları sırasıyla 250 / 584 / 917 px, ilk iki satır üstleri 82 / 559 px ve yatay taşma yok. Güncel önizleme `http://127.0.0.1:13010/app`.
+
+## Kalan işler
+
+- Liste, detay, form, ayarlar ve özel ekran ailelerini aynı düz şablonla bitir.
+- Proje test kapısını tamamlayıp geçerli kanıt al.
+- Bağımsız gözden geçiriciye kabul ölçütlerini doğrulat.

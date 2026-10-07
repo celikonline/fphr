@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="HtmlSanitizer" />
   </ItemGroup>
 
 </Project>

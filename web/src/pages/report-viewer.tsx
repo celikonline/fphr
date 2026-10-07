@@ -24,7 +24,6 @@ import {
   getReportCatalog,
   getReportExecution,
   getReportExecutionData,
-  REPORT_PARAMETER_KEYS,
   REPORT_PREVIEW_UNAVAILABLE_CODE,
   requestReport,
   saveDownloadedReportFile,
@@ -33,6 +32,7 @@ import {
 
 const DEFAULT_PAGE_SIZE = 50;
 const SEARCH_DEBOUNCE_MS = 300;
+const EXECUTION_POLL_INTERVAL_MS = 1000;
 const EXECUTION_PARAM = "execution";
 
 /**
@@ -103,7 +103,7 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
   const canRun = canGenerate && allSatisfied(report.parameters, values);
 
   const runMutation = useMutation({
-    mutationFn: () => requestReport(report.key, values, { notify: false }),
+    mutationFn: () => requestReport(report.key, values, { notify: report.executionMode === "async" }),
     onSuccess: (execution) => {
       void queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
       if (execution.status === "failed") {
@@ -133,6 +133,11 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
     queryKey: ["reports", "execution", executionId],
     queryFn: () => getReportExecution(executionId ?? ""),
     enabled: executionId !== null,
+    refetchInterval: (query) =>
+      query.state.status !== "error" &&
+      (query.state.data?.status === "queued" || query.state.data?.status === "running")
+        ? EXECUTION_POLL_INTERVAL_MS
+        : false,
     retry: false,
   });
   const execution =
@@ -165,7 +170,8 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
         sort,
       }),
     enabled: succeeded,
-    placeholderData: (previous) => previous,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === execution?.id ? previous : undefined,
     retry: false,
   });
   const previewUnavailable =
@@ -187,34 +193,45 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
       }),
   });
 
-  // PDF: the grid shows the Excel run; PDF is a separate run of the same filters with `format=pdf`, downloaded directly.
+  // Leave detail PDFs reuse the selected workbook snapshot. Other reports keep their existing provider flow.
   const pdfMutation = useMutation({
-    mutationFn: () =>
-      requestReport(
+    mutationFn: async () => {
+      if (report.key === "leave.balance.detail") {
+        return {
+          kind: "snapshot" as const,
+          file: await downloadReportExecution(execution?.id ?? "", `${report.key}.pdf`, "pdf"),
+        };
+      }
+      const pdfExecution = await requestReport(
         report.key,
-        { ...values, [REPORT_PARAMETER_KEYS.format]: "pdf" },
+        { ...values, format: "pdf" },
         { notify: false }
-      ),
-    onSuccess: async (pdfExecution) => {
+      );
+      if (pdfExecution.status !== "succeeded") {
+        return { kind: "generated" as const, execution: pdfExecution };
+      }
+      return {
+        kind: "generated" as const,
+        execution: pdfExecution,
+        file: await downloadReportExecution(
+          pdfExecution.id,
+          pdfExecution.resultFileName ?? `${report.key}.pdf`
+        ),
+      };
+    },
+    onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
-      if (pdfExecution.status === "failed") {
+      if (result.kind === "snapshot" || result.file) {
+        saveDownloadedReportFile(result.file);
+      } else if (result.execution.status === "failed") {
         toast({
           variant: "destructive",
           title: t("common:error"),
-          description: pdfExecution.errorMessage ?? t("reports:viewer.runError"),
+          description: result.execution.errorMessage ?? t("reports:viewer.runError"),
         });
-        return;
-      }
-      if (pdfExecution.status !== "succeeded") {
+      } else {
         toast({ variant: "success", title: t("reports:run.successNoDownload") });
-        return;
       }
-      saveDownloadedReportFile(
-        await downloadReportExecution(
-          pdfExecution.id,
-          pdfExecution.resultFileName ?? `${report.key}.pdf`
-        )
-      );
     },
     onError: (error) =>
       toast({
@@ -224,6 +241,10 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
       }),
   });
 
+  const executionPollingError =
+    executionQuery.isError && (execution?.status === "queued" || execution?.status === "running");
+  const awaitingExecution =
+    !executionPollingError && (execution?.status === "queued" || execution?.status === "running");
   const apply = () => {
     setRunError(null);
     runMutation.mutate();
@@ -266,7 +287,7 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
                 type="button"
                 variant="default"
                 leftSection={<Download size={16} />}
-                disabled={!canRun}
+                disabled={report.key === "leave.balance.detail" ? !succeeded : !canRun}
                 loading={pdfMutation.isPending}
                 onClick={() => pdfMutation.mutate()}
               >
@@ -277,7 +298,7 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
               <Button
                 type="button"
                 leftSection={<Play size={16} />}
-                disabled={!canRun}
+                disabled={!canRun || awaitingExecution}
                 loading={runMutation.isPending}
                 onClick={apply}
               >
@@ -288,6 +309,16 @@ function ReportViewer({ report }: { report: ReportCatalogItem }) {
         </Stack>
       </Card>
 
+      {execution && awaitingExecution && (
+        <Alert color="blue" variant="light" role="status">
+          {t(execution.status === "queued" ? "reports:viewer.queued" : "reports:viewer.running")}
+        </Alert>
+      )}
+      {executionPollingError && (
+        <Alert color="red" variant="light">
+          {getApiErrorMessage(executionQuery.error, t("reports:viewer.runError"))}
+        </Alert>
+      )}
       {failedMessage && (
         <Alert color="red" variant="light">
           {failedMessage}

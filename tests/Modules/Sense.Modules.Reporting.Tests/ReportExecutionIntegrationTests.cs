@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.Reporting.Api;
 using Sense.Modules.Reporting.Application;
+using Sense.Modules.Reporting.Contracts;
 using Sense.Modules.Reporting.Domain;
 using Sense.Modules.Reporting.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Contracts.Events;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
@@ -35,6 +39,7 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
         new ReportingModule().AddModule(services, configuration);
         services.AddSingleton<IPermissionService, GrantAllPermissions>();
         services.AddSingleton<IDataScopeService, UnrestrictedDataScope>();
+        services.AddSingleton(Substitute.For<IBackgroundJobService>());
         // AccessSettingsAuthorizationBehaviour ctor'u IAccessSettingsService ister; bu sorgulardaki Forbidden/NotFound
         // sahiplik/tenant-filtre kararlarıdır, erişim ayarından değil - o yüzden her şeyi açan fake güvenli.
         services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
@@ -42,6 +47,13 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
 
     protected override async Task OnDatabaseReadyAsync() =>
         await ServiceProvider!.GetRequiredService<ReportingDbContext>().Database.MigrateAsync();
+
+    [Fact]
+    public void ReportGenerationRequested_HasExactlyOneHandlerInModuleComposition()
+    {
+        using var scope = ServiceProvider!.CreateScope();
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<ReportGenerationRequested>>().Count().ShouldBe(1);
+    }
 
     [Fact]
     public async Task GetReportExecutionFileQuery_WhenRequestedByAnotherUser_FailsForbidden_ThroughRealTenantFilterAndOwnershipCheck()

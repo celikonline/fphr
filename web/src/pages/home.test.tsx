@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth.store";
 import HomePage from "./home";
 import { getLeaveCalendar, type LeaveCalendarEntry } from "@/services/leave.service";
 import { getUpcomingHolidays } from "@/services/home.service";
+import { listInbox } from "@/services/workflow.service";
 import { addDaysToDateOnly, toDateOnly } from "@/lib/dates";
 
 // senseik-042 (halka grafik merkezi): the donut's center must show the grand total headcount,
@@ -27,6 +28,11 @@ vi.mock("@/services/home.service", async () => {
   const actual =
     await vi.importActual<typeof import("@/services/home.service")>("@/services/home.service");
   return { ...actual, getUpcomingHolidays: vi.fn() };
+});
+
+vi.mock("@/services/workflow.service", async () => {
+  const actual = await vi.importActual<typeof import("@/services/workflow.service")>("@/services/workflow.service");
+  return { ...actual, listInbox: vi.fn() };
 });
 
 vi.mock("@/services/employees.service", async () => {
@@ -81,7 +87,7 @@ function createTestI18n() {
 /** Only `employee.directory.view` is granted, and no access-setting feature is enabled, so of every
  * gated widget on the dashboard only "Çalışan Dağılımı" (department distribution) mounts - keeping
  * this test from having to mock every other home widget's service call. */
-function signInWithDirectoryPermissionOnly() {
+function signInWithPermissions(permissions: string[]) {
   useAuthStore.setState({
     hasHydrated: true,
     token: "test-token",
@@ -91,7 +97,7 @@ function signInWithDirectoryPermissionOnly() {
       name: "Test User",
       roles: [],
       roleLabels: [],
-      permissions: ["employee.directory.view"],
+      permissions,
     },
     features: {
       access: {} as never,
@@ -100,6 +106,10 @@ function signInWithDirectoryPermissionOnly() {
       disabledModules: [],
     },
   });
+}
+
+function signInWithDirectoryPermissionOnly() {
+  signInWithPermissions(["employee.directory.view"]);
 }
 
 function renderHome() {
@@ -120,6 +130,38 @@ function renderHome() {
 }
 
 describe("HomePage department distribution donut (senseik-042)", () => {
+  it("shows an empty approval state when inbox is the only workflow widget", async () => {
+    vi.mocked(listInbox).mockResolvedValue([]);
+    signInWithPermissions(["workflow.inbox.view"]);
+    renderHome();
+
+    expect(await screen.findByText("Onayınızı bekleyen talep yok.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByText("Gündeminiz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Çevrenizde olanlar")).not.toBeInTheDocument();
+    expect(screen.getByText("Onay Bekleyenler")).toBeInTheDocument();
+  });
+
+  it("does not show the removed focus panel to employee-only roles", () => {
+    signInWithPermissions(["employee.employees.read"]);
+    renderHome();
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Çalışanları gör" })).not.toBeInTheDocument();
+  });
+
+  it("keeps unauthorized workflow widgets and their empty section out of the new layout", async () => {
+    signInWithDirectoryPermissionOnly();
+    renderHome();
+
+    expect(screen.getByRole("heading", { name: "Ana sayfa", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText("Bugünün odağı")).not.toBeInTheDocument();
+    expect(screen.queryByText("Gündeminiz")).not.toBeInTheDocument();
+    expect(screen.queryByText("Çevrenizde olanlar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Onay Bekleyenler")).not.toBeInTheDocument();
+  });
+
   it("shows the total headcount at the donut's center, not the department name", async () => {
     signInWithDirectoryPermissionOnly();
     renderHome();

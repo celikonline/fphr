@@ -351,6 +351,50 @@ namespace Sense.Modules.Expense.Infrastructure.Persistence.Migrations
                     b.ToTable("expense_items", "expense");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Expense.Domain.ExpenseClaims.ExpenseReceiptAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Guid>("ExpenseItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_item_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.HasKey("Id")
+                        .HasName("pk_expense_receipt_attachments");
+
+                    b.HasIndex("ExpenseItemId", "DocumentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_expense_receipt_attachments_expense_item_id_document_id");
+
+                    b.ToTable("expense_receipt_attachments", "expense");
+                });
+
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -550,9 +594,24 @@ namespace Sense.Modules.Expense.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_expense_items_expense_claims_claim_id");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Expense.Domain.ExpenseClaims.ExpenseReceiptAttachment", b =>
+                {
+                    b.HasOne("Sense.Modules.Expense.Domain.ExpenseClaims.ExpenseItem", null)
+                        .WithMany("ReceiptAttachments")
+                        .HasForeignKey("ExpenseItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_expense_receipt_attachments_expense_items_expense_item_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Expense.Domain.ExpenseClaims.ExpenseClaim", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Expense.Domain.ExpenseClaims.ExpenseItem", b =>
+                {
+                    b.Navigation("ReceiptAttachments");
                 });
 #pragma warning restore 612, 618
         }

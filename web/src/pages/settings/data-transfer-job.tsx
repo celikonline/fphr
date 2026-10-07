@@ -26,7 +26,7 @@ export default function DataTransferJobPage() {
 
 function DataTransferJob() {
   const { id = "" } = useParams<{ id: string }>();
-  const { t, i18n } = useTranslation(["dataTransfer", "common"]);
+  const { t, i18n } = useTranslation(["dataTransfer", "common", "assets"]);
   const lang = useApiLanguage();
 
   const jobQuery = useQuery({
@@ -58,6 +58,11 @@ function DataTransferJob() {
         >
           {t("dataTransfer:job.back")}
         </Button>
+        {job?.templateCode === "assets.zimmet" && (
+          <Button component={Link} to="/app/assets" variant="subtle" size="sm" ml={-12} leftSection={<ArrowLeft size={16} />}>
+            {t("assets:import.back")}
+          </Button>
+        )}
         {job && (
           <Group justify="space-between" align="flex-start" gap="sm" w="100%">
             <div>

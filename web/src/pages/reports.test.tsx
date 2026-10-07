@@ -149,6 +149,20 @@ describe("ReportsPage", () => {
     expect(screen.queryByText("rapor-001.xlsx")).not.toBeInTheDocument();
   });
 
+  it("stops polling execution history after a refresh request fails", async () => {
+    const activePage = executionsFor(1);
+    activePage.items[0] = { ...activePage.items[0], status: "running" };
+    vi.mocked(listReportExecutions)
+      .mockImplementationOnce(async () => activePage)
+      .mockRejectedValueOnce(new Error("history refresh failed"));
+    renderPage();
+
+    expect(await screen.findByText("rapor-001.xlsx")).toBeInTheDocument();
+    await waitFor(() => expect(listReportExecutions).toHaveBeenCalledTimes(2), { timeout: 5000 });
+    await new Promise((resolve) => setTimeout(resolve, 3300));
+    expect(listReportExecutions).toHaveBeenCalledTimes(2);
+  }, 10000);
+
   it("filters the catalog by the search text, ignoring case and Turkish diacritics", async () => {
     const user = userEvent.setup();
     renderPage();

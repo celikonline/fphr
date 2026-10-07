@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
   const errorText = (code?: string) => (code ? t(`auth:resetPasswordPage.errors.${code}`, { min: MIN_PASSWORD_LENGTH }) : null);
 
   return (
-    <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-default-hover)">
+    <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-body)">
       <Card withBorder padding="xl" w="100%" maw={448} className={classes.card}>
         {!token || expired ? (
           <Stack align="center" ta="center" gap="xs">

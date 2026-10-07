@@ -1,5 +1,6 @@
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
+using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Paging;
@@ -8,16 +9,18 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Assets.Application.Assets;
 
-/// <summary>Lists assets within the tenant, optionally filtered by employee/status/category (HR/manager view).</summary>
+/// <summary>Lists assets within the tenant, optionally filtered by employee/status/category and a free-text search (HR/manager view).</summary>
 [RequiresPermission("assets.assets.view")]
-public sealed record ListAssetsQuery(Guid? EmployeeId, AssetStatus? Status, Guid? CategoryId, PagedQuery Paging) : IQuery<PagedResult<AssetDto>>;
+public sealed record ListAssetsQuery(Guid? EmployeeId, AssetStatus? Status, Guid? CategoryId, PagedQuery Paging, string? Search = null)
+    : IQuery<PagedResult<AssetDto>>;
 
 public sealed class ListAssetsHandler(IAssetRepository assets, IAssetCategoryRepository categories) : IQueryHandler<ListAssetsQuery, PagedResult<AssetDto>>
 {
     public async Task<Result<PagedResult<AssetDto>>> Handle(ListAssetsQuery query, CancellationToken cancellationToken)
     {
-        var total = await assets.CountAsync(query.EmployeeId, query.Status, query.CategoryId, cancellationToken);
-        var list = await assets.ListAsync(query.EmployeeId, query.Status, query.CategoryId, query.Paging.Skip, query.Paging.PageSize, cancellationToken);
+        var total = await assets.CountAsync(query.EmployeeId, query.Status, query.CategoryId, query.Search, cancellationToken);
+        var list = await assets.ListAsync(
+            query.EmployeeId, query.Status, query.CategoryId, query.Search, query.Paging.Skip, query.Paging.PageSize, cancellationToken);
 
         var toDto = await AssetMapper.CreateAsync(categories, cancellationToken);
         var items = list.Select(toDto).ToList();
@@ -43,7 +46,7 @@ public sealed class GetAssetHandler(IAssetRepository assets, IAssetCategoryRepos
     }
 }
 
-/// <summary>The employee card's "Zimmet" tab (HR/manager view) - the assets currently assigned to this employee (no assignment history/ledger, see IAssetRepository.ListByEmployeeAsync remarks).</summary>
+/// <summary>The employee card's "Zimmet" tab (HR/manager view) - the assets currently assigned to this employee (past assignments: GetEmployeeAssetHistoryQuery).</summary>
 [RequiresPermission("assets.assets.view")]
 public sealed record GetEmployeeAssetsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<AssetDto>>;
 
@@ -60,6 +63,7 @@ public sealed class GetEmployeeAssetsHandler(IAssetRepository assets, IAssetCate
 
 /// <summary>Self-service: the equipment currently assigned to the caller's own employee record.</summary>
 [RequiresPermission("assets.my.assets")]
+[RequiresAccessSetting(AccessSettingKeys.HomeShowAssets)]
 public sealed record GetMyAssetsQuery : IQuery<IReadOnlyList<AssetDto>>;
 
 public sealed class GetMyAssetsHandler(ICurrentUser currentUser, IAssetRepository assets, IAssetCategoryRepository categories)

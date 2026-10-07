@@ -1,0 +1,20 @@
+{
+  "id": "senseik-068",
+  "title": "Zimmet ekranından Excel ile atanmış zimmet ve boşta envanter ekleme",
+  "owner": "Codex frontend/backend takımı",
+  "state": "review",
+  "branch": "dev (mevcut ortak çalışma dalı; commit/push yok)",
+  "worktree": "C:/Users/ALG0013/Documents/GitHub/senseik",
+  "acceptance": [
+    "Zimmet envanterinde aktarım yetkileri olan kullanıcı Excel’den toplu ekleme penceresini açabilir; yetkisiz kullanıcıya eylem gösterilmez.",
+    "Mevcut assets.zimmet şablonu indirilebilir, XLSX/CSV dosyası yüklenebilir ve ortak kolon eşleştirme/sonuç ekranına geçilir.",
+    "Çalışan ve atama tarihleri boş olan satır boşta envanter oluşturur; çalışan kimlik numarası ve veriliş tarihi dolu olan satır mevcut zimmet atama davranışını korur.",
+    "Çalışansız atama tarihleri, çalışana ait eksik veriliş tarihi, bilinmeyen çalışan ve geçersiz alanlar satır bazında hata üretir; isteğe bağlı varlık adı desteklenir.",
+    "Aktarım tamamlandığında zimmet verileri yenilenir ve iş ekranından zimmet envanterine dönülebilir.",
+    "TR/EN/DE web metinleri, backend şablon açıklamaları, ilgili testler ve bağımsız gözden geçirme bulunur; önceki ortak çalışma ağacı değişiklikleri korunur."
+  ],
+  "merge_gate": "node .claude/takim/betikler/test-kapisi.mjs; Assets/DataTransfer testleri; web tsc/eslint/Vitest/build; bağımsız takım incelemesi",
+  "handoff": "docs/handoffs/assets-excel-bulk-import.md",
+  "source": "2026-10-07 kullanıcı isteği ve kapsam cevabı: Atanmış zimmetler ve boşta envanter",
+  "verification": "Assets 187/187; ilgili web 30/30; tam web 1306 geçti; build/lint/tip kontrolü başarılı. Tam kapı .NET Notifications Content_over_4096_rejected testi nedeniyle kırmızı (25a42497abfb6361); bağımsız son kapı bekliyor."
+}

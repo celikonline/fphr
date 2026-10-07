@@ -11,8 +11,8 @@ import {
   Stack,
   Text,
   TextInput,
-  Textarea,
 } from "@mantine/core";
+import MessageRichEditor from "@/components/messages/message-rich-editor";
 import SelectionField from "@/components/messages/selection-field";
 import { isSelectionEmpty } from "@/components/messages/selection-summary";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import {
   HR_MESSAGES_KEY,
   HR_MESSAGE_BODY_MAX,
+  HR_MESSAGE_BODY_STORAGE_MAX,
   HR_MESSAGE_SUBJECT_MAX,
   MESSAGE_GROUPS_KEY,
   listMessageGroups,
@@ -39,6 +40,7 @@ export default function ComposeTab() {
   const [channels, setChannels] = useState<HrMessageChannel[]>(["email", "in_app"]);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [bodyTextLength, setBodyTextLength] = useState(0);
   const [importance, setImportance] = useState<HrMessageImportance>("normal");
 
   const groups = useQuery({
@@ -55,6 +57,7 @@ export default function ComposeTab() {
       setGroupIds([]);
       setSubject("");
       setBody("");
+      setBodyTextLength(0);
       setImportance("normal");
       void queryClient.invalidateQueries({ queryKey: HR_MESSAGES_KEY });
     },
@@ -67,8 +70,9 @@ export default function ComposeTab() {
     hasRecipients &&
     channels.length > 0 &&
     subject.trim().length > 0 &&
-    body.trim().length > 0 &&
-    body.length <= HR_MESSAGE_BODY_MAX &&
+    bodyTextLength > 0 &&
+    bodyTextLength <= HR_MESSAGE_BODY_MAX &&
+    body.length <= HR_MESSAGE_BODY_STORAGE_MAX &&
     !send.isPending;
 
   const toggleChannel = (channel: HrMessageChannel, checked: boolean) =>
@@ -82,7 +86,7 @@ export default function ComposeTab() {
       importance,
       channels,
       selection: isSelectionEmpty(selection) ? null : selection,
-      groupIds: groupIds.length > 0 ? groupIds : undefined,
+      ...(groupIds.length > 0 ? { groupIds } : {}),
     });
   }
 
@@ -143,20 +147,22 @@ export default function ComposeTab() {
         onChange={(e) => setSubject(e.currentTarget.value)}
         required
       />
-      <Textarea
-        label={t("compose.body")}
-        value={body}
-        minRows={6}
-        autosize
-        maxLength={HR_MESSAGE_BODY_MAX}
-        onChange={(e) => setBody(e.currentTarget.value)}
-        description={
-          <span data-testid="body-counter">
-            {t("compose.counter", { count: body.length, max: HR_MESSAGE_BODY_MAX })}
-          </span>
-        }
-        required
-      />
+      <Stack gap={4}>
+        <Text component="label" fw={500} size="sm">
+          {t("compose.body")} <span aria-hidden="true">*</span>
+        </Text>
+        <MessageRichEditor
+          content={body}
+          maxTextLength={HR_MESSAGE_BODY_MAX}
+          onChange={(html, text) => {
+            setBody(html);
+            setBodyTextLength(text.length);
+          }}
+        />
+        <Text size="xs" c="dimmed" data-testid="body-counter">
+          {t("compose.counter", { count: bodyTextLength, max: HR_MESSAGE_BODY_MAX })}
+        </Text>
+      </Stack>
       <Stack gap={4}>
         <Text size="sm" fw={500}>
           {t("compose.importance")}

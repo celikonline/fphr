@@ -713,6 +713,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.type.consecutive_days_invalid" xml:space="preserve"><value>En az gün sayısı en çok gün sayısından büyük olamaz.</value></data>
   <data name="leave.type.waiting_period_invalid" xml:space="preserve"><value>Bekleme süresi 0 ile 24 ay arasında olmalıdır.</value></data>
   <data name="leave.type.seniority_tiers_only_annual" xml:space="preserve"><value>Kıdem kademeleri yalnız yıllık izin türünde tanımlanabilir.</value></data>
+  <data name="leave.type.hourly_threshold_invalid" xml:space="preserve"><value>Saatlik yarım gün eşiği, saatlik türlerde 1 ile 1440 dakika arasında olmalıdır.</value></data>
+  <data name="leave.type.hourly_half_day_days_invalid" xml:space="preserve"><value>Eşik aşılınca düşülecek gün değeri 0,5 ile 1 arasında olmalıdır.</value></data>
+  <data name="leave.type.birthday_policy_invalid" xml:space="preserve"><value>Doğum günü politikaları yalnız doğum günü izin türünde kullanılabilir.</value></data>
   <data name="leave.type.no_balance" xml:space="preserve"><value>Bu izin türü bakiye tutmaz (yalnız yıl içinde limitli türler).</value></data>
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Gün sayısı sıfır olamaz.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>Gerekçe zorunludur.</value></data>
@@ -788,6 +791,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.requests.bypass_approval" xml:space="preserve"><value>İzni onay sürecine dahil etmeden onaylama</value></data>
   <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>Onay süreci olmadan izin kaydetme yetkiniz yok.</value></data>
   <data name="leave.errors.gender_not_eligible" xml:space="preserve"><value>Bu izin türü çalışanın cinsiyeti için kullanılamaz.</value></data>
+  <data name="leave.errors.birthday_requires_single_date" xml:space="preserve"><value>Doğum günü izni yalnız tek bir gün için talep edilebilir.</value></data>
+  <data name="leave.errors.birthday_date_only" xml:space="preserve"><value>Bu izin yalnız çalışanın doğum gününde kullanılabilir.</value></data>
+  <data name="leave.errors.birthday_birth_date_missing" xml:space="preserve"><value>Doğum günü izni için çalışanın doğum tarihi kayıtlı olmalıdır.</value></data>
   <data name="leave.errors.substitute_required" xml:space="preserve"><value>Bu izin türü için vekil seçmelisiniz.</value></data>
   <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>Vekil, izin talep eden çalışanın kendisi olamaz.</value></data>
   <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>Seçilen vekil bulunamadı veya aktif değil.</value></data>
@@ -1088,24 +1094,28 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Zimmet</value></data>
-  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
-  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları ve boşta envanteri (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Kimlik numarası doluysa aktif çalışanla eşleştirilir ve veriliş tarihi zorunludur; çalışan bulunamazsa satır hatalı sayılır.</value></data>
   <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>Kategori adı sistemde yoksa otomatik oluşturulur; büyük/küçük harf ve boşluk farkı gözetilmeden mevcut kategoriyle eşleştirilir.</value></data>
-  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>İade tarihi doldurulursa satır kapalı (iade edilmiş) bir zimmet olarak, boş bırakılırsa açık (üzerinde duran) bir zimmet olarak işlenir.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>Çalışan kimlik numarası doluysa iade tarihi satırı kapalı (iade edilmiş) zimmet yapar; iade tarihi boşsa açık zimmet oluşturulur.</value></data>
+  <data name="import.template.assets.zimmet.instruction.inventory" xml:space="preserve"><value>Boşta envanter için kimlik numarası, veriliş ve iade tarihlerini boş bırakın. Aynı kategori ve seri numarası mevcut varlığı eşleştirir; boşta satır mevcut atamayı veya durumu değiştirmez. Varlık adı isteğe bağlıdır; boşsa kategori ve seri numarasından oluşturulur.</value></data>
   <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Doğru: hâlâ çalışanın üzerinde duran bir zimmet.</value></data>
   <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Doğru: iade edilmiş, geçmiş bir zimmet.</value></data>
+  <data name="import.template.assets.zimmet.sample.inventory" xml:space="preserve"><value>Doğru: henüz bir çalışana atanmamış, boşta envanter.</value></data>
   <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
-  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir. Boşta envanter için boş bırakın.</value></data>
   <data name="import.column.assets.categoryName" xml:space="preserve"><value>Kategori</value></data>
   <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Ekipman kategorisi (örn. Bilgisayar, Telefon, Araç); yoksa otomatik oluşturulur.</value></data>
   <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Seri numarası</value></data>
   <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>Varsa cihazın seri numarası; aynı kategori + seri no ile mevcut zimmet güncellenir, boşsa yeni zimmet oluşturulur.</value></data>
   <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Zimmet veriliş tarihi</value></data>
-  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY).</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY); kimlik numarası doluysa zorunlu, boşta envanter için boş bırakın.</value></data>
   <data name="import.column.assets.returnedAt" xml:space="preserve"><value>İade tarihi</value></data>
   <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>Ekipmanın iade edildiği tarih (GG.AA.YYYY); boş bırakılırsa zimmet hâlâ açık kabul edilir.</value></data>
   <data name="import.column.assets.note" xml:space="preserve"><value>Açıklama</value></data>
   <data name="import.column.assets.note.description" xml:space="preserve"><value>Zimmetin önemli detayları (marka/model vb.); opsiyonel.</value></data>
+  <data name="import.column.assets.name" xml:space="preserve"><value>Varlık adı</value></data>
+  <data name="import.column.assets.name.description" xml:space="preserve"><value>İsteğe bağlı varlık adı (en fazla 255 karakter); yeni varlıkta boşsa kategori ve seri numarasından oluşturulur, mevcut varlıkta ad korunur.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>
@@ -1234,6 +1244,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>Bu seri numaralı cihaz şu anda başka bir çalışana zimmetli.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>İade tarihi zimmet veriliş tarihinden önce olamaz.</value></data>
   <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>Bu zimmet ataması onay bekleyen durumda değil ya da farklı bir onay sürecine ait.</value></data>
+  <data name="asset.tag_in_use" xml:space="preserve"><value>Bu demirbaş numarası başka bir zimmette kullanılıyor.</value></data>
+  <data name="asset.cost_invalid" xml:space="preserve"><value>Alış bedeli negatif olamaz.</value></data>
+  <data name="asset.warranty_before_purchase" xml:space="preserve"><value>Garanti bitiş tarihi alış tarihinden önce olamaz.</value></data>
+  <data name="asset.already_acknowledged" xml:space="preserve"><value>Bu zimmetin teslimi zaten onaylanmış.</value></data>
+  <data name="asset.not_assignee" xml:space="preserve"><value>Teslim aldığını yalnızca zimmetin atandığı çalışan onaylayabilir.</value></data>
+  <data name="asset.cannot_lose" xml:space="preserve"><value>Emekliye ayrılmış, zaten kayıp olan veya atama onayı bekleyen bir zimmet kayıp olarak bildirilemez.</value></data>
+  <data name="asset.note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>Zimmet veriliş tarihi çalışanın işe giriş tarihinden önce olamaz.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
@@ -1527,6 +1544,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.AssetStatus.Assigned" xml:space="preserve"><value>Zimmetli</value></data>
   <data name="report.enum.AssetStatus.Retired" xml:space="preserve"><value>Hizmet dışı</value></data>
   <data name="report.enum.AssetStatus.PendingAssignment" xml:space="preserve"><value>Atama bekliyor</value></data>
+  <data name="report.enum.AssetStatus.Lost" xml:space="preserve"><value>Kayıp</value></data>
   <data name="report.enum.PaymentKind.Expense" xml:space="preserve"><value>Masraf</value></data>
   <data name="report.enum.PaymentKind.Advance" xml:space="preserve"><value>Avans</value></data>
   <data name="report.enum.PaymentKind.Overtime" xml:space="preserve"><value>Fazla mesai</value></data>
@@ -1948,4 +1966,27 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.leave.description" xml:space="preserve"><value>Açıklama</value></data>
   <data name="import.column.leave.description.description" xml:space="preserve"><value>İsteğe bağlı not; denkleştirme satırlarında açıklama önerilir.</value></data>
   <data name="report.sheet.leaveMonthlyUsage" xml:space="preserve"><value>Kullanılan izin raporu</value></data>
+  <data name="expense.item.receipt_type_not_allowed" xml:space="preserve"><value>Fiş eki PDF veya desteklenen bir resim olmalı ve 100 MB sınırını aşmamalıdır.</value></data>
+  <data name="report.col.extraGrantDays" xml:space="preserve"><value>Ekstra izinler</value></data>
+  <data name="report.col.totalEntitledDays" xml:space="preserve"><value>Toplam hak edilen</value></data>
+  <data name="report.col.carryOverLossDays" xml:space="preserve"><value>Devir kayıpları</value></data>
+  <data name="report.col.carriedOverDays" xml:space="preserve"><value>Güncel döneme devreden izin hakkı</value></data>
+  <data name="report.col.availableCarriedOverDays" xml:space="preserve"><value>Kullanılabilir devreden izin hakkı</value></data>
+  <data name="report.col.lastPeriodAccruedDays" xml:space="preserve"><value>Son dönemde hak edilen</value></data>
+  <data name="report.col.currentPeriodOpeningBalance" xml:space="preserve"><value>Güncel dönem başındaki izin hakkı</value></data>
+  <data name="report.col.currentPeriodUsedDays" xml:space="preserve"><value>Güncel dönemde kullanılan</value></data>
+  <data name="report.col.totalUsedDays" xml:space="preserve"><value>Toplam kullanılan</value></data>
+  <data name="report.col.currentBalance" xml:space="preserve"><value>Güncel bakiye</value></data>
+  <data name="report.col.currentPeriodFutureApprovedDays" xml:space="preserve"><value>Güncel dönemdeki ileri tarihli izinler</value></data>
+  <data name="report.col.currentPeriodAvailableBalance" xml:space="preserve"><value>Güncel dönem kullanılabilir bakiye</value></data>
+  <data name="report.col.nextAccrualDate" xml:space="preserve"><value>Sonraki izin hak ediş tarihi</value></data>
+  <data name="report.col.nextPeriodApprovedDays" xml:space="preserve"><value>Sonraki dönem için onaylanmış izinler</value></data>
+  <data name="report.col.employmentStatus" xml:space="preserve"><value>Çalışma durumu</value></data>
+  <data name="report.col.range" xml:space="preserve"><value>Tarih aralığı</value></data>
+  <data name="report.col.rangeOpeningBalance" xml:space="preserve"><value>Tarih aralığı başındaki bakiye</value></data>
+  <data name="report.col.rangeApprovedDays" xml:space="preserve"><value>Tarih aralığı için onaylanmış izinler</value></data>
+  <data name="report.col.rangeClosingBalance" xml:space="preserve"><value>Tarih aralığı sonundaki bakiye</value></data>
+  <data name="report.col.rangePendingDays" xml:space="preserve"><value>Tarih aralığı için onay bekleyen izinler</value></data>
+  <data name="report.sheet.leaveBalanceDetail" xml:space="preserve"><value>Çalışan izin bilgileri</value></data>
+  <data name="Reporting.GenerationFailed" xml:space="preserve"><value>Rapor oluşturulamadı. Lütfen tekrar deneyin.</value></data>
 </root>

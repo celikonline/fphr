@@ -126,6 +126,9 @@ export default function ColumnMappingStep({ job, template }: ColumnMappingStepPr
       setPhase("idle");
       queryClient.setQueryData(["datatransfer", "import-job", job.id], finished);
       invalidateLists();
+      if (job.templateCode === "assets.zimmet") {
+        void queryClient.invalidateQueries({ queryKey: ["assets"] });
+      }
     },
     onError: (error) => {
       const wasRunning = phaseRef.current === "running";

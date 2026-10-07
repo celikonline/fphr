@@ -3,6 +3,8 @@ using Sense.Modules.Reporting.Application;
 using Sense.Modules.Reporting.Contracts;
 using Sense.Modules.Reporting.Domain;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Export;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -204,6 +206,34 @@ public sealed class ReportingHandlerTests
     }
 
     [Fact]
+    public async Task GetReportExecutionFileHandler_PdfRendersTheSavedExecutionSnapshot()
+    {
+        var savedWorkbook = new byte[] { 7, 8, 9 };
+        var execution = ReportExecution.Create(TenantId, "leave.balance.detail", null, UserId, DateTime.UtcNow).Value;
+        execution.Start(DateTime.UtcNow);
+        execution.Complete("leave-balances.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", savedWorkbook, DateTime.UtcNow);
+        var executions = Substitute.For<IReportExecutionRepository>();
+        executions.GetByIdAsync(execution.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(execution));
+        var reader = Substitute.For<IReportTableReader>();
+        reader.Read(savedWorkbook, Arg.Any<CancellationToken>()).Returns([
+            new ExportTable("Balances", [new ExportColumn("Employee"), new ExportColumn("Balance", ExportColumnType.Number)],
+                [["Ayşe", 12m]])]);
+        var pdfWriter = Substitute.For<ISimplePdfWriter>();
+        pdfWriter.Write(Arg.Any<SimplePdfDocument>()).Returns([1, 2, 3]);
+        var handler = new GetReportExecutionFileHandler(executions, CurrentUser(), reader, pdfWriter);
+
+        var result = await handler.Handle(new GetReportExecutionFileQuery(execution.Id, "pdf"), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.FileName.ShouldBe("leave-balances.pdf");
+        result.Value.ContentType.ShouldBe("application/pdf");
+        result.Value.Content.ShouldBe([1, 2, 3]);
+        reader.Received(1).Read(savedWorkbook, Arg.Any<CancellationToken>());
+        var document = pdfWriter.ReceivedCalls().Single().GetArguments()[0].ShouldBeOfType<SimplePdfDocument>();
+        document.Blocks.OfType<SimplePdfTable>().Single().Rows.Single().ShouldBe(["Ayşe", "12"]);
+    }
+
+    [Fact]
     public async Task ListMyReportExecutionsHandler_ReturnsRequesterOwnHistoryPaged()
     {
         var execution = ReportExecution.Create(TenantId, "documents.missingDocuments", null, UserId, DateTime.UtcNow).Value;
@@ -335,6 +365,34 @@ public sealed class ReportingHandlerTests
         result.Value[2].CategoryKey.ShouldBe(ReportCategories.Leave);
         result.Value[2].Parameters.Single().Kind.ShouldBe(ReportParameterKind.DateRange);
         result.Value[2].Parameters.Single().IsRequired.ShouldBeTrue();
+    }
+
+
+    [Fact]
+    public async Task BackgroundReport_ReturnsQueuedWithoutGeneratingOrMailingOnTheRequest()
+    {
+        var provider = new BackgroundProvider();
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System, outbox, Substitute.For<IDataScopeService>());
+        var result = await handler.Handle(new RequestReportCommand(provider.Key, null), TestContext.Current.CancellationToken);
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(ReportExecutionStatus.Queued);
+        provider.Generated.ShouldBeFalse();
+        outbox.Received(1).Enqueue(Arg.Is<ReportGenerationRequested>(e => e.ExecutionId == result.Value.Id && e.RequestedByUserId == UserId && e.TenantId == TenantId && e.Notify));
+    }
+
+    private sealed class BackgroundProvider : IReportProvider
+    {
+        public string Key => "leave.balance.detail";
+        public string CategoryKey => ReportCategories.Administrative;
+        public string? RequiredPermission => null;
+        public string ExecutionMode => "async";
+        public bool Generated { get; private set; }
+        public Task<ReportFileResult> GenerateAsync(Guid tenantId, IReadOnlyDictionary<string,string> parameters, CancellationToken cancellationToken)
+        {
+            Generated = true;
+            return Task.FromResult(new ReportFileResult("detail.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", [1]));
+        }
     }
 
     private sealed class FakeReportProvider(

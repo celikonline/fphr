@@ -1,4 +1,14 @@
 {
+  "import": {
+    "action": "Excel’den toplu ekle",
+    "title": "Excel’den toplu zimmet ekleme",
+    "description": "Atanmış zimmetleri ve boşta envanteri aynı dosyada yükleyebilirsiniz. Çalışan kimlik numarası ve atama tarihleri boşsa boşta envanter oluşturulur. Çalışan girildiğinde veriliş tarihi zorunludur. Yükleme sonrası kolonları eşleştirip aktarımı başlatın.",
+    "loading": "Zimmet aktarım şablonu yükleniyor…",
+    "loadError": "Zimmet aktarım şablonu yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "unavailable": "Zimmet aktarım şablonu kullanılamıyor. Aktarım yetkinizi kontrol etmek için yöneticinize başvurun.",
+    "back": "Zimmet envanterine dön"
+  },
   "section": {
     "title": "Zimmet",
     "assign": "Zimmet ata",
@@ -20,8 +30,23 @@
     "errors": {
       "generic": "İşlem tamamlanamadı.",
       "loadFailed": "Zimmetler yüklenemedi.",
-      "nameAndCategoryRequired": "Yeni zimmet için ad ve kategori zorunludur."
-    }
+      "nameAndCategoryRequired": "Yeni zimmet için ad ve kategori zorunludur.",
+      "retry": "İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin."
+    },
+    "assetTag": "Demirbaş no",
+    "assetTagHint": "Şirket içinde benzersiz olmalı.",
+    "brand": "Marka",
+    "model": "Model",
+    "purchase": "Alış",
+    "purchaseDate": "Alış tarihi",
+    "purchaseCost": "Alış bedeli",
+    "warrantyEndsOn": "Garanti bitişi",
+    "condition": "Fiziksel durum",
+    "returnCondition": "İade durumu",
+    "returnNote": "İade notu",
+    "returnNoteHint": "İsteğe bağlı; hasar veya eksik parça varsa yazın (en fazla 500 karakter).",
+    "history": "Geçmiş zimmetler",
+    "historyEmpty": "İade edilmiş veya kayıp bildirilmiş zimmet yok."
   },
   "categories": {
     "title": "Zimmet kategorileri",
@@ -53,14 +78,23 @@
     "status": {
       "unassigned": "Boşta",
       "assigned": "Atanmış",
-      "retired": "Kullanım dışı"
+      "retired": "Kullanım dışı",
+      "pendingAssignment": "Atama onayında",
+      "lost": "Kayıp"
+    },
+    "condition": {
+      "good": "Sağlam",
+      "fair": "Orta",
+      "damaged": "Hasarlı"
     }
   },
   "page": {
     "title": "Zimmet",
     "inventory": "Envanter",
     "mine": "Zimmetlerim",
-    "mineEmpty": "Üzerinize kayıtlı zimmet yok."
+    "mineEmpty": "Üzerinize kayıtlı zimmet yok.",
+    "history": "Geçmiş zimmetlerim",
+    "historyEmpty": "Daha önce iade ettiğiniz veya kayıp bildirilen zimmetiniz yok."
   },
   "inventory": {
     "create": "Zimmet ekle",
@@ -74,14 +108,68 @@
     "categoryFilter": "Kategori filtresi",
     "allStatuses": "Tüm durumlar",
     "allCategories": "Tüm kategoriler",
-    "empty": "Bu filtreye uyan zimmet yok.",
+    "empty": "Aramaya veya filtreye uyan zimmet yok. Aramayı kısaltın ya da filtreleri temizleyin.",
     "retire": "Kullanım dışı bırak",
     "retireTitle": "Zimmet kullanım dışı bırakılsın mı?",
     "retireDescription": "\"{{name}}\" kullanım dışı bırakılacak ve bir daha atanamayacak.",
-    "retired": "Zimmet kullanım dışı bırakıldı."
+    "retired": "Zimmet kullanım dışı bırakıldı.",
+    "search": "Zimmet ara",
+    "searchPlaceholder": "Ad, seri no, demirbaş no, marka veya model",
+    "emptyAll": "Henüz kayıtlı zimmet yok.",
+    "rowAction": "{{action}}: {{name}}"
   },
   "replacement": {
     "due": "Yenileme: {{date}}",
     "overdue": "Yenileme gecikti ({{date}})"
+  },
+  "summary": {
+    "title": "Zimmet özeti",
+    "loadFailed": "Özet yüklenemedi. Sayfayı yenileyip tekrar deneyin.",
+    "total": "Toplam",
+    "unassigned": "Boşta",
+    "assigned": "Atanmış",
+    "pendingAssignment": "Atama onayında",
+    "unacknowledged": "Teslim onayı bekleyen",
+    "warrantyExpired": "Garantisi biten",
+    "warrantyExpiring": "Garantisi 60 gün içinde biten",
+    "replacementOverdue": "KKD yenilemesi geciken",
+    "lost": "Kayıp"
+  },
+  "warranty": {
+    "expired": "Garanti bitti ({{date}})",
+    "expiring": "Garanti bitiyor ({{date}})"
+  },
+  "acknowledgement": {
+    "pending": "Teslim onayı bekliyor",
+    "never": "Teslim onayı verilmedi",
+    "done": "Teslim alındı: {{date}}",
+    "action": "Teslim aldım",
+    "success": "Teslim onayınız kaydedildi.",
+    "failed": "Teslim onayı kaydedilemedi. Zimmetin size atanmış ve henüz onaylanmamış olduğunu kontrol edip tekrar deneyin."
+  },
+  "history": {
+    "action": "Atama geçmişi",
+    "title": "\"{{name}}\" atama geçmişi",
+    "empty": "Bu zimmet için kayıtlı atama yok.",
+    "loadFailed": "Geçmiş yüklenemedi. Sayfayı yenileyip tekrar deneyin.",
+    "ongoing": "devam ediyor",
+    "open": "Zimmette",
+    "note": "Not: {{note}}",
+    "endReason": {
+      "returned": "İade edildi",
+      "lost": "Kayıp"
+    },
+    "returnCondition": "İade durumu: {{condition}}"
+  },
+  "lost": {
+    "action": "Kayıp bildir",
+    "title": "\"{{name}}\" zimmetini kayıp bildir",
+    "description": "Zimmet kayıp olarak işaretlenir ve artık atanamaz. Bu işlem geri alınamaz.",
+    "descriptionAssigned": "Zimmet kayıp olarak işaretlenir ve çalışandaki atama kayıp nedeniyle kapanır. Bu işlem geri alınamaz.",
+    "occurredOn": "Kayıp tarihi",
+    "note": "Kayıp notu",
+    "noteHint": "İsteğe bağlı; olayın nasıl fark edildiğini yazın (en fazla 500 karakter).",
+    "confirm": "Kayıp olarak işaretle",
+    "done": "Zimmet kayıp olarak işaretlendi."
   }
 }

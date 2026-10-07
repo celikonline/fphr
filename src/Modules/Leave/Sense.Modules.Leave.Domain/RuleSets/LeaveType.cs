@@ -1,3 +1,4 @@
+using Sense.Modules.Leave.Domain.Calendar;
 using Sense.Shared.Kernel.Domain;
 using Sense.Shared.Kernel.Results;
 
@@ -42,6 +43,9 @@ public static class LeaveValidationFields
     public const string MaxConsecutiveDays = "maxConsecutiveDays";
     public const string WaitingPeriodMonths = "waitingPeriodMonths";
     public const string SeniorityTiers = "seniorityTiers";
+    public const string HourlyHalfDayThresholdMinutes = "hourlyHalfDayThresholdMinutes";
+    public const string HourlyHalfDayDays = "hourlyHalfDayDays";
+    public const string Feb29Policy = "feb29Policy";
 }
 
 /// <summary>The "Yeni Tür ve Kural Ekle" wizard field set (11.3.5 Alanlar), validated as one unit on save.</summary>
@@ -77,7 +81,11 @@ public sealed record LeaveTypeSettings(
     bool AllowSelfServiceRequest = true,
     bool IsDisabled = false,
     bool IsStatutory = false,
-    LeaveEligibleGender EligibleGender = LeaveEligibleGender.Any)
+    LeaveEligibleGender EligibleGender = LeaveEligibleGender.Any,
+    bool UseOnlyOnBirthday = false,
+    LeaveFeb29Policy Feb29Policy = LeaveFeb29Policy.UseFebruary28,
+    int? HourlyHalfDayThresholdMinutes = null,
+    decimal HourlyHalfDayDays = LeavePartialDay.HalfDayFraction)
 {
     public Result Validate()
     {
@@ -117,6 +125,21 @@ public sealed record LeaveTypeSettings(
         if (WaitingPeriodMonths is < 0 or > LeaveLimits.MaxWaitingPeriodMonths)
         {
             return Error.Validation(LeaveDomainErrors.TypeWaitingPeriodInvalid, (LeaveValidationFields.Key, LeaveValidationFields.WaitingPeriodMonths));
+        }
+
+        if (HourlyHalfDayThresholdMinutes is { } threshold && (Unit != LeaveUnit.Hourly || threshold is < 1 or > 1440))
+        {
+            return Error.Validation(LeaveDomainErrors.TypeHourlyThresholdInvalid, (LeaveValidationFields.Key, LeaveValidationFields.HourlyHalfDayThresholdMinutes));
+        }
+
+        if (HourlyHalfDayDays is < 0.5m or > 1m)
+        {
+            return Error.Validation(LeaveDomainErrors.TypeHourlyHalfDayDaysInvalid, (LeaveValidationFields.Key, LeaveValidationFields.HourlyHalfDayDays));
+        }
+
+        if (!Enum.IsDefined(Feb29Policy) || ((UseOnlyOnBirthday || Feb29Policy != LeaveFeb29Policy.UseFebruary28) && Code != LeaveTypeCode.Birthday))
+        {
+            return Error.Validation(LeaveDomainErrors.TypeBirthdayPolicyInvalid, (LeaveValidationFields.Key, LeaveValidationFields.Feb29Policy));
         }
 
         if (SeniorityTiers is { Count: > 0 } && Code != LeaveTypeCode.Annual)
@@ -218,6 +241,14 @@ public sealed class LeaveType : TenantEntity<Guid>
     /// <summary>Who may request the type: Any (default) or one gender (Babalık = Male, Doğum/Süt = Female). Unknown employee gender never restricts.</summary>
     public LeaveEligibleGender EligibleGender { get; private set; }
 
+    public bool UseOnlyOnBirthday { get; private set; }
+
+    public LeaveFeb29Policy Feb29Policy { get; private set; }
+
+    public int? HourlyHalfDayThresholdMinutes { get; private set; }
+
+    public decimal HourlyHalfDayDays { get; private set; }
+
     public bool HasBalance => LimitType == LeaveLimitType.PerYear;
 
     public LeaveTypeSettings ToSettings() => new(
@@ -225,7 +256,8 @@ public sealed class LeaveType : TenantEntity<Guid>
         NegativeBalance, NegativeBalanceLimitDays, AccrualFrequency, AccrualTiming, AccrualBasis, CarryOverMode, CarryOverMaxDays,
         _seniorityTiers.Select(t => new LeaveSeniorityTier(t.AfterYears, t.Comparison, t.ExtraDays)).ToList(),
         MinConsecutiveDays, MaxConsecutiveDays, Unit, RequiresDescription, RequiresSubstitute, RequiresDocument, WaitingPeriodMonths,
-        CountsNonWorkingDays, CountsTowardAccrualService, ShowTypeNameOnCalendar, IsSensitive, AllowSelfServiceRequest, IsDisabled, IsStatutory, EligibleGender);
+        CountsNonWorkingDays, CountsTowardAccrualService, ShowTypeNameOnCalendar, IsSensitive, AllowSelfServiceRequest, IsDisabled, IsStatutory, EligibleGender,
+        UseOnlyOnBirthday, Feb29Policy, HourlyHalfDayThresholdMinutes, HourlyHalfDayDays);
 
     internal void Update(LeaveTypeSettings settings) => Apply(settings with { IsStatutory = IsStatutory });
 
@@ -270,5 +302,9 @@ public sealed class LeaveType : TenantEntity<Guid>
         IsDisabled = s.IsDisabled;
         IsStatutory = s.IsStatutory;
         EligibleGender = s.EligibleGender;
+        UseOnlyOnBirthday = s.UseOnlyOnBirthday;
+        Feb29Policy = s.Feb29Policy;
+        HourlyHalfDayThresholdMinutes = s.HourlyHalfDayThresholdMinutes;
+        HourlyHalfDayDays = s.HourlyHalfDayDays;
     }
 }

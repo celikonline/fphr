@@ -40,7 +40,8 @@ public sealed class CreateExpenseClaimHandler(ITenantContext tenant, ICurrentUse
 
 [RequiresPermission("expense.my.claims")]
 public sealed record AddExpenseItemCommand(
-    Guid ClaimId, Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description)
+    Guid ClaimId, Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description,
+    IReadOnlyList<string>? ReceiptFileIds = null)
     : ICommand<Guid>;
 
 public sealed class AddExpenseItemValidator : AbstractValidator<AddExpenseItemCommand>
@@ -89,20 +90,22 @@ public sealed class AddExpenseItemHandler(
             return Error.Validation(ExpenseErrors.CategoryInactive);
         }
 
-        var receipt = await ReceiptDocuments.ResolveAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId, command.ReceiptFileId, cancellationToken);
+        var receipt = await ReceiptDocuments.ResolveManyAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId,
+            command.ReceiptFileIds ?? (string.IsNullOrWhiteSpace(command.ReceiptFileId) ? [] : [command.ReceiptFileId]), cancellationToken);
         if (receipt.IsFailure)
         {
             return receipt.Error;
         }
 
-        var added = existing.Value.AddItem(command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, receipt.Value, command.Description);
+        var added = existing.Value.AddItem(command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, null, command.Description, receipt.Value);
         return added.IsFailure ? added.Error : added.Value.Id;
     }
 }
 
 [RequiresPermission("expense.my.claims")]
 public sealed record UpdateExpenseItemCommand(
-    Guid ClaimId, Guid ItemId, Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description)
+    Guid ClaimId, Guid ItemId, Guid CategoryId, decimal Amount, DateOnly ReceiptDate, decimal? TaxRate, string Currency, string? ReceiptFileId, string? Description,
+    IReadOnlyList<string>? ReceiptFileIds = null)
     : ICommand;
 
 public sealed class UpdateExpenseItemValidator : AbstractValidator<UpdateExpenseItemCommand>
@@ -140,14 +143,29 @@ public sealed class UpdateExpenseItemHandler(
             return Error.Validation(ExpenseDomainErrors.ItemReceiptDateInFuture);
         }
 
-        var receipt = await ReceiptDocuments.ResolveAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId, command.ReceiptFileId, cancellationToken);
+        var item = existing.Value.Items.FirstOrDefault(i => i.Id == command.ItemId);
+        if (item is null)
+        {
+            return Error.NotFound(ExpenseDomainErrors.ItemNotFound);
+        }
+
+        // Previously stored non-GUID file keys stay valid for payroll when editing unrelated fields.
+        if (command.ReceiptFileIds is null && item.ReceiptFileId is { } legacy
+            && !Guid.TryParse(legacy, out _) && string.Equals(legacy, command.ReceiptFileId?.Trim(), StringComparison.Ordinal))
+        {
+            return existing.Value.UpdateItem(command.ItemId, command.CategoryId, command.Amount, command.ReceiptDate,
+                command.TaxRate, command.Currency, legacy, command.Description);
+        }
+
+        var receipt = await ReceiptDocuments.ResolveManyAsync(documents, tenant.TenantId, existing.Value.EmployeeId, currentUser.UserId,
+            command.ReceiptFileIds ?? (string.IsNullOrWhiteSpace(command.ReceiptFileId) ? [] : [command.ReceiptFileId]), cancellationToken);
         if (receipt.IsFailure)
         {
             return receipt.Error;
         }
 
         return existing.Value.UpdateItem(
-            command.ItemId, command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, receipt.Value, command.Description);
+            command.ItemId, command.CategoryId, command.Amount, command.ReceiptDate, command.TaxRate, command.Currency, null, command.Description, receipt.Value);
     }
 }
 
@@ -264,6 +282,44 @@ public sealed class PayExpenseClaimHandler(ICurrentUser currentUser, TimeProvide
 /// </summary>
 internal static class ReceiptDocuments
 {
+    private static readonly HashSet<string> ContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "application/pdf", "image/jpeg", "image/pjpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif",
+    };
+
+    public static async Task<Result<IReadOnlyCollection<Guid>>> ResolveManyAsync(
+        IDocumentAttachmentLookup documents, Guid tenantId, Guid claimEmployeeId, Guid? actingUserId,
+        IReadOnlyList<string> receiptFileIds, CancellationToken ct)
+    {
+        var ids = new List<Guid>();
+        foreach (var value in receiptFileIds)
+        {
+            if (!Guid.TryParse(value?.Trim(), out var id) || id == Guid.Empty)
+            {
+                return Error.Validation(ExpenseErrors.ReceiptNotFound);
+            }
+
+            if (!ids.Contains(id)) ids.Add(id);
+        }
+
+        if (ids.Count == 0) return Result.Success<IReadOnlyCollection<Guid>>(ids);
+        var active = await documents.GetActiveAsync(tenantId, ids, ct);
+        foreach (var id in ids)
+        {
+            if (!active.TryGetValue(id, out var info) || !IsOwnedBy(info, claimEmployeeId, actingUserId))
+            {
+                return Error.Validation(ExpenseErrors.ReceiptNotFound);
+            }
+
+            if (!ContentTypes.Contains(info.ContentType.Split(';')[0].Trim()) || info.Size <= 0 || info.Size > 100L * 1024 * 1024)
+            {
+                return Error.Validation(ExpenseErrors.ReceiptTypeNotAllowed);
+            }
+        }
+
+        return Result.Success<IReadOnlyCollection<Guid>>(ids);
+    }
+
     /// <summary>Returns the canonical document id to store, or null when no receipt was given.</summary>
     public static async Task<Result<string?>> ResolveAsync(
         IDocumentAttachmentLookup documents, Guid tenantId, Guid claimEmployeeId, Guid? actingUserId, string? receiptFileId, CancellationToken ct)
@@ -278,10 +334,10 @@ internal static class ReceiptDocuments
             return Error.Validation(ExpenseErrors.ReceiptNotFound);
         }
 
-        var active = await documents.GetActiveAsync(tenantId, [documentId], ct);
-        if (!active.TryGetValue(documentId, out var info) || !IsOwnedBy(info, claimEmployeeId, actingUserId))
+        var resolved = await ResolveManyAsync(documents, tenantId, claimEmployeeId, actingUserId, [receiptFileId], ct);
+        if (resolved.IsFailure)
         {
-            return Error.Validation(ExpenseErrors.ReceiptNotFound);
+            return resolved.Error;
         }
 
         return Result.Success<string?>(documentId.ToString());

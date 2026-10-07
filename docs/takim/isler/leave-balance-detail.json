@@ -1,0 +1,22 @@
+{
+  "id": "leave-balance-detail",
+  "baslik": "Faz 4 öncelik: ayrıntılı izin bakiye raporu",
+  "durum": "incelemede",
+  "sahip": "takim-gelistirici-dotnet + takim-gelistirici-node",
+  "dal": "takim/leave-balance-detail",
+  "oncelik": "P1 — kullanıcı tarafından önceliklendirildi (2026-10-07)",
+  "kabul": [
+    "leave.balance.detail İdari rapor kataloğuna eklenir; yıllık izin, kiracıya ait dinamik kariyer kolonları ve analizdeki güncel bakiye alanlarını mevcut motorla hesaplar.",
+    "Birimler, ay/yıl ve işten ayrılanları dahil et filtreleri desteklenir; güncel alanlar filtreden bağımsızdır. Ay/yıl varsa beş tarih aralığı kolonu eklenir; yalnız yıl Aralık, yalnız ay cari yıl olarak çözülür.",
+    "Tarih aralığı bakiyelerinde devir, kayıp, ekstra izin, düzeltme ve iptal ters kayıtları dikkate alınır; onaylı/bekleyen taleplerin aralıkla kesişen izin günleri çalışma takvimi ve kısmi gün kurallarıyla hesaplanır.",
+    "Kiracı, çalışan veri kapsamı ve hassas kimlik numarası yetkisi sunucuda uygulanır; arka plan üretimi isteği yapanın yetkisini korur.",
+    "Ayrıntılı rapor arka planda üretilir; oluşturulduğu işlem kalıcı olmadan iş çalışmaz; yinelenen teslim güvenlidir. Excel/PDF çıktısı, geçmiş ve hazır e-posta bağlantısı mevcut rapor akışında çalışır.",
+    "Web TR/EN/DE başlıkları, filtreler, kuyruk/çalışıyor durumunun izlenmesi, sonuç tablosu ve indirme akışını destekler; diğer raporlar davranışlarını korur.",
+    "Anlamlı hesap, veri kapsamı, parametre, asenkron yürütme ve web akışı testleri ile filtresiz test kapısı çalıştırılır; bağımsız gözden geçirme yapılır."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "riskli_alan": true,
+  "risk_notu": "Çalışan kişisel verileri, yetki kapsamı ve izin hesapları; korumalı dala birleştirme yapılmaz.",
+  "kanit": null,
+  "handoff": "docs/takim/handoff/leave-balance-detail.md"
+}

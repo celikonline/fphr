@@ -32,7 +32,8 @@ public sealed class LeaveRequestRules(
     LeaveBalanceService balances,
     LeaveBackdatePolicy backdatePolicy,
     IEmployeeLookup employees,
-    IDocumentAttachmentLookup documents)
+    IDocumentAttachmentLookup documents,
+    IEmployeeBirthDateLookup birthDates)
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
@@ -67,6 +68,25 @@ public sealed class LeaveRequestRules(
             return Error.Validation(LeaveRequestErrors.TypeNotAvailable);
         }
 
+        if (type.UseOnlyOnBirthday)
+        {
+            if (start != end)
+            {
+                return Error.Validation(LeaveRequestErrors.BirthdayRequiresSingleDate);
+            }
+
+            var birthDate = await birthDates.GetBirthDateAsync(tenantId, employeeId, ct);
+            if (birthDate is null)
+            {
+                return Error.Validation(LeaveRequestErrors.BirthdayBirthDateMissing);
+            }
+
+            if (!LeaveBirthdayPolicy.IsBirthday(birthDate.Value, start, type.Feb29Policy))
+            {
+                return Error.Validation(LeaveRequestErrors.BirthdayDateOnly);
+            }
+        }
+
         if (type.EligibleGender != LeaveEligibleGender.Any
             && !LeaveGenderEligibility.IsEligible(type.EligibleGender, await employees.GetGenderAsync(tenantId, employeeId, ct)))
         {
@@ -95,7 +115,9 @@ public sealed class LeaveRequestRules(
         {
             // Hourly/HalfDay still need the single day to be open (not a holiday/weekly rest the type doesn't count).
             var dayOpen = (await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct)).Days > 0m;
-            days = !dayOpen ? 0m : type.Unit == LeaveUnit.Hourly ? LeavePartialDay.HourlyFraction(startTime!.Value, endTime!.Value) : LeavePartialDay.HalfDayFraction;
+            days = !dayOpen ? 0m : type.Unit == LeaveUnit.Hourly
+                ? LeavePartialDay.HourlyFractionWithThreshold(startTime!.Value, endTime!.Value, type.HourlyHalfDayThresholdMinutes, type.HourlyHalfDayDays)
+                : LeavePartialDay.HalfDayFraction;
         }
 
         // Manager/HR entering leave on behalf may override the auto-calculated day count (m.24); every limit/balance

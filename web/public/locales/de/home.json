@@ -7,6 +7,10 @@
   "inDays_one": "In {{count}} Tag",
   "inDays_other": "In {{count}} Tagen",
   "noWidgets": "Auf Ihrer Startseite gibt es nichts anzuzeigen.",
+  "sections": {
+    "workflow": { "title": "Ihre Aufgaben" },
+    "company": { "title": "Was um Sie herum geschieht" }
+  },
   "daysSuffix": "T",
   "viewAll": "Alle anzeigen",
   "refresh": "Aktualisieren",

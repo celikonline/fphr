@@ -159,6 +159,9 @@
     "delegations": "Genehmigungsvertretungen",
     "delegationsDesc": "Genehmigungsbefugnis befristet delegieren"
   },
+  "create": {
+    "label": "Erstellen"
+  },
   "search": {
     "label": "Bildschirme suchen",
     "placeholder": "Bildschirme suchen…",

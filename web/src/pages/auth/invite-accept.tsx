@@ -47,7 +47,7 @@ type FormValues = z.infer<typeof schema>;
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
-    <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-default-hover)">
+    <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-body)">
       <Card withBorder padding="xl" w="100%" maw={448} className={classes.card}>
         {children}
       </Card>

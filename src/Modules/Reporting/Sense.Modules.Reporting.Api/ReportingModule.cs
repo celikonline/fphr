@@ -37,5 +37,6 @@ public sealed class ReportingModule : IModule
             typeof(ReportingPermissions).Assembly);
 
         services.AddReportingCoreServices();
+        services.AddHostedService<Sense.Modules.Reporting.Infrastructure.Jobs.ReportOutboxHostedService>();
     }
 }

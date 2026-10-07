@@ -206,7 +206,7 @@ public static class ReportParameters
         }
 
         var from = new DateOnly(y, m, 1);
-        return (from, from.AddMonths(1).AddDays(-1));
+        return (from, new DateOnly(y, m, DateTime.DaysInMonth(y, m)));
     }
 }
 
@@ -221,6 +221,9 @@ public interface IReportProvider
 {
     /// <summary>Kararlı anahtar, örn. "leave.balance.summary"; web görünen adı/açıklamayı "reports" i18n alanından bu anahtarla çözer.</summary>
     string Key { get; }
+
+    /// <summary>sync (default) or async; background reports return a queued execution.</summary>
+    string ExecutionMode => "sync";
 
     /// <summary>Menü kategorisi; <see cref="ReportCategories"/> anahtarlarından biri.</summary>
     string CategoryKey { get; }

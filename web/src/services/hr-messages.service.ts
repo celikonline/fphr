@@ -12,7 +12,10 @@ export type HrMessageImportance = "normal" | "high";
 /** "sms" is rejected by the server until a provider exists (SmsChannelUnavailable). */
 export type HrMessageChannel = "email" | "in_app" | "sms";
 
+/** Maximum visible text characters in the editor (markup and pasted images are not counted). */
 export const HR_MESSAGE_BODY_MAX = 4096;
+/** Storage ceiling for sanitized rich HTML, including inline clipboard images. */
+export const HR_MESSAGE_BODY_STORAGE_MAX = 1_000_000;
 export const HR_MESSAGE_SUBJECT_MAX = 300;
 
 export interface HrMessage {

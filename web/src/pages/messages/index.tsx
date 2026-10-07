@@ -15,7 +15,7 @@ export default function MessagesPage() {
   if (!canView) return <NoAccess />;
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="w-full min-w-0 p-4 md:p-6">
       <div>
         <Title order={2}>{t("title")}</Title>
         <Text c="dimmed">{t("subtitle")}</Text>

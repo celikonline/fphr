@@ -9,7 +9,8 @@ namespace Sense.Modules.Assets.Application.Import;
 
 /// <summary>
 /// Applies "assets.zimmet" rows (11.3.08 md.67). Every row is validated (employee match, category/date presence,
-/// field lengths) before anything is touched; then valid rows resolve/create a category, resolve/create an asset
+/// field lengths) before anything is touched; rows without an employee or dates import unassigned inventory.
+/// Valid rows resolve/create a category, resolve/create an asset
 /// (same category + serial number = same physical item), and apply Assign (open row) or Assign+Return/Return
 /// (closed row) - reusing Asset's own domain validation for the "already assigned/retired" and "return before
 /// issue" cases instead of re-deriving them. AllOrNothing applies nothing when any row fails. Deliberately does not
@@ -39,11 +40,7 @@ public sealed class AssetImportRowHandler(
         {
             var errors = new List<ImportRowError>();
 
-            var nationalId = row.Get(AssetImportColumns.NationalId)?.Text?.Trim();
-            if (string.IsNullOrEmpty(nationalId))
-            {
-                errors.Add(new ImportRowError(AssetImportColumns.NationalId, ImportErrorCodes.RequiredMissing));
-            }
+            var nationalId = OptionalText(row, AssetImportColumns.NationalId);
 
             var categoryName = row.Get(AssetImportColumns.CategoryName)?.Text?.Trim();
             if (string.IsNullOrEmpty(categoryName))
@@ -55,7 +52,7 @@ public sealed class AssetImportRowHandler(
                 CheckLength(AssetImportColumns.CategoryName, categoryName, AssetsLimits.CategoryNameMaxLength, errors);
             }
 
-            var serialNumber = row.Get(AssetImportColumns.SerialNumber)?.Text?.Trim();
+            var serialNumber = OptionalText(row, AssetImportColumns.SerialNumber);
             if (serialNumber is not null)
             {
                 CheckLength(AssetImportColumns.SerialNumber, serialNumber, AssetsLimits.SerialNumberMaxLength, errors);
@@ -66,14 +63,24 @@ public sealed class AssetImportRowHandler(
                 errors.Add(new ImportRowError(AssetImportColumns.SerialNumber, ImportErrorCodes.RequiredMissing));
             }
 
-            var note = row.Get(AssetImportColumns.Note)?.Text?.Trim();
+            var note = OptionalText(row, AssetImportColumns.Note);
             if (note is not null)
             {
                 CheckLength(AssetImportColumns.Note, note, AssetsLimits.DescriptionMaxLength, errors);
             }
 
-            var assignedAt = ParseDate(row, AssetImportColumns.AssignedAt, required: true, errors);
+            var name = OptionalText(row, AssetImportColumns.Name);
+            if (name is not null)
+            {
+                CheckLength(AssetImportColumns.Name, name, AssetsLimits.NameMaxLength, errors);
+            }
+
+            var assignedAt = ParseDate(row, AssetImportColumns.AssignedAt, required: nationalId is not null, errors);
             var returnedAt = ParseDate(row, AssetImportColumns.ReturnedAt, required: false, errors);
+            if (nationalId is null && (HasDate(row, AssetImportColumns.AssignedAt) || HasDate(row, AssetImportColumns.ReturnedAt)))
+            {
+                errors.Add(new ImportRowError(AssetImportColumns.NationalId, ImportErrorCodes.RequiredMissing));
+            }
 
             Guid? employeeId = null;
             if (nationalId is not null)
@@ -90,13 +97,13 @@ public sealed class AssetImportRowHandler(
                 }
             }
 
-            if (errors.Count > 0 || employeeId is null || categoryName is null || assignedAt is null)
+            if (errors.Count > 0 || categoryName is null)
             {
                 results[row.RowNumber] = new ImportRowResult(row.RowNumber, ImportRowOutcome.Error, nationalId, employeeId, errors);
                 continue;
             }
 
-            plans.Add(new AssetImportPlan(row.RowNumber, nationalId!, employeeId.Value, categoryName, serialNumber, assignedAt.Value, returnedAt, note));
+            plans.Add(new AssetImportPlan(row.RowNumber, nationalId, employeeId, categoryName, serialNumber, assignedAt, returnedAt, note, name));
         }
 
         if (batch.FailurePolicy == ImportFailurePolicy.AllOrNothing && results.Count > 0)
@@ -113,13 +120,17 @@ public sealed class AssetImportRowHandler(
         var existingCategories = await categories.ListAsync(cancellationToken).ConfigureAwait(false);
         var categoryByName = existingCategories.ToDictionary(c => c.Name, c => c, StringComparer.OrdinalIgnoreCase);
         var usedCodes = new HashSet<string>(existingCategories.Select(c => c.Code), StringComparer.OrdinalIgnoreCase);
+        var pendingCategories = new List<AssetCategory>();
+        var pendingAssets = new List<Asset>();
+        var usedCategoryIds = new HashSet<Guid>();
+        var assetBySerial = new Dictionary<(Guid CategoryId, string SerialNumber), Asset>();
 
         foreach (var plan in plans)
         {
             var isUpdateOnly = batch.Mode == ImportMode.UpdateOnly;
 
             // UpdateOnly never creates a category: an unknown category name means the asset cannot exist either.
-            var category = isUpdateOnly ? categoryByName.GetValueOrDefault(plan.CategoryName) : ResolveCategory(plan.CategoryName, categoryByName, usedCodes);
+            var category = isUpdateOnly ? categoryByName.GetValueOrDefault(plan.CategoryName) : ResolveCategory(plan.CategoryName, categoryByName, usedCodes, pendingCategories);
             if (category is null)
             {
                 results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Error, plan.NationalId, null,
@@ -127,9 +138,14 @@ public sealed class AssetImportRowHandler(
                 continue;
             }
 
-            var existing = plan.SerialNumber is not null
-                ? await assets.FindByCategoryAndSerialNumberAsync(category.Id, plan.SerialNumber, cancellationToken).ConfigureAwait(false)
-                : null;
+            Asset? existing = null;
+            if (plan.SerialNumber is { } serial)
+            {
+                if (!assetBySerial.TryGetValue((category.Id, serial.ToUpperInvariant()), out existing))
+                {
+                    existing = await assets.FindByCategoryAndSerialNumberAsync(category.Id, serial, cancellationToken).ConfigureAwait(false);
+                }
+            }
 
             if (existing is null && isUpdateOnly)
             {
@@ -142,7 +158,15 @@ public sealed class AssetImportRowHandler(
             var asset = existing;
             if (asset is null)
             {
-                var displayName = plan.SerialNumber is not null ? $"{plan.CategoryName} – {plan.SerialNumber}" : plan.CategoryName;
+                var displayName = plan.Name ?? (plan.SerialNumber is not null ? $"{plan.CategoryName} – {plan.SerialNumber}" : plan.CategoryName);
+                if (displayName.Length > AssetsLimits.NameMaxLength)
+                {
+                    var errors = new List<ImportRowError>();
+                    CheckLength(AssetImportColumns.Name, displayName, AssetsLimits.NameMaxLength, errors);
+                    results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Error, plan.NationalId, null, errors);
+                    continue;
+                }
+
                 var created = Asset.Create(tenant.TenantId, category.Id, displayName, plan.SerialNumber, plan.Note);
                 if (created.IsFailure)
                 {
@@ -151,12 +175,13 @@ public sealed class AssetImportRowHandler(
                 }
 
                 asset = created.Value;
-                assets.Add(asset);
             }
 
-            var applied = plan.ReturnedAt is { } returnedAt
-                ? CloseAssignment(asset, plan.EmployeeId, plan.AssignedAt, returnedAt)
-                : asset.Assign(plan.EmployeeId, plan.AssignedAt);
+            var applied = plan.EmployeeId is { } employeeId
+                ? plan.ReturnedAt is { } returnedAt
+                    ? CloseAssignment(asset, employeeId, plan.AssignedAt!.Value, returnedAt)
+                    : asset.Assign(employeeId, plan.AssignedAt!.Value)
+                : Result.Success();
 
             if (applied.IsFailure)
             {
@@ -164,13 +189,51 @@ public sealed class AssetImportRowHandler(
                 continue;
             }
 
+            // Inventory updates edit descriptive fields only, preserving status, assignee and ledger.
+            if (existing is not null && (plan.Name is not null || plan.Note is not null))
+            {
+                asset.Update(plan.Name ?? asset.Name, asset.SerialNumber, plan.Note ?? asset.Description);
+            }
+
+            if (existing is null)
+            {
+                pendingAssets.Add(asset);
+            }
+
+            if (plan.SerialNumber is { } serialNumber)
+            {
+                assetBySerial[(category.Id, serialNumber.ToUpperInvariant())] = asset;
+            }
+
+            usedCategoryIds.Add(category.Id);
+
             results[plan.RowNumber] = new ImportRowResult(
                 plan.RowNumber, existing is null ? ImportRowOutcome.Inserted : ImportRowOutcome.Updated, plan.NationalId, asset.Id, []);
             anyChange = true;
         }
 
+        if (batch.FailurePolicy == ImportFailurePolicy.AllOrNothing && results.Values.Any(r => r.Outcome == ImportRowOutcome.Error))
+        {
+            foreach (var plan in plans.Where(p => results[p.RowNumber].Outcome != ImportRowOutcome.Error))
+            {
+                results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Skipped, plan.NationalId, null, []);
+            }
+
+            return new ImportBatchResult(Ordered(batch, results), Applied: false);
+        }
+
         if (anyChange)
         {
+            foreach (var category in pendingCategories.Where(c => usedCategoryIds.Contains(c.Id)))
+            {
+                categories.Add(category);
+            }
+
+            foreach (var asset in pendingAssets)
+            {
+                assets.Add(asset);
+            }
+
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -182,6 +245,13 @@ public sealed class AssetImportRowHandler(
     {
         if (asset.Status == AssetStatus.Unassigned)
         {
+            // Return validates against the issue date, but Assign has already mutated the ledger by then.
+            // Reject this case before Assign so SkipInvalidRows cannot save a half-applied assignment.
+            if (returnedAt < assignedAt)
+            {
+                return Error.Validation(AssetsDomainErrors.ReturnBeforeIssue);
+            }
+
             var assigned = asset.Assign(employeeId, assignedAt);
             if (assigned.IsFailure)
             {
@@ -192,7 +262,7 @@ public sealed class AssetImportRowHandler(
         return asset.Return(returnedAt);
     }
 
-    private AssetCategory ResolveCategory(string name, Dictionary<string, AssetCategory> categoryByName, HashSet<string> usedCodes)
+    private AssetCategory ResolveCategory(string name, Dictionary<string, AssetCategory> categoryByName, HashSet<string> usedCodes, List<AssetCategory> pendingCategories)
     {
         if (categoryByName.TryGetValue(name, out var existing))
         {
@@ -203,7 +273,7 @@ public sealed class AssetImportRowHandler(
         usedCodes.Add(code);
         var created = AssetCategory.Create(tenant.TenantId, code, name).Value;
         categoryByName[name] = created;
-        categories.Add(created);
+        pendingCategories.Add(created);
         return created;
     }
 
@@ -263,7 +333,7 @@ public sealed class AssetImportRowHandler(
     private static DateOnly? ParseDate(ImportRow row, string key, bool required, List<ImportRowError> errors)
     {
         var cell = row.Get(key);
-        if (cell is null)
+        if (cell is null || (cell.DateValue is null && string.IsNullOrWhiteSpace(cell.Text)))
         {
             if (required)
             {
@@ -296,8 +366,14 @@ public sealed class AssetImportRowHandler(
 
     private static IReadOnlyList<ImportRowResult> Ordered(ImportBatch batch, Dictionary<int, ImportRowResult> results) =>
         batch.Rows.Where(r => results.ContainsKey(r.RowNumber)).Select(r => results[r.RowNumber]).ToList();
+
+    private static string? OptionalText(ImportRow row, string key) =>
+        string.IsNullOrWhiteSpace(row.Get(key)?.Text) ? null : row.Get(key)!.Text!.Trim();
+
+    private static bool HasDate(ImportRow row, string key) =>
+        row.Get(key) is { } cell && (cell.DateValue is not null || !string.IsNullOrWhiteSpace(cell.Text));
 }
 
 /// <summary>A valid row, ready to resolve/create a category+asset and apply the assignment.</summary>
 internal sealed record AssetImportPlan(
-    int RowNumber, string NationalId, Guid EmployeeId, string CategoryName, string? SerialNumber, DateOnly AssignedAt, DateOnly? ReturnedAt, string? Note);
+    int RowNumber, string? NationalId, Guid? EmployeeId, string CategoryName, string? SerialNumber, DateOnly? AssignedAt, DateOnly? ReturnedAt, string? Note, string? Name);

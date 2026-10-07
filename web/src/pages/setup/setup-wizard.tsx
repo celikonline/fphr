@@ -33,7 +33,7 @@ export default function SetupWizardPage() {
   const back = () => setActive((step) => Math.max(step - 1, 0));
 
   return (
-    <div className="max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-4 p-4 md:p-6">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <Rocket size={24} /> {t("setup:title")}
@@ -47,7 +47,7 @@ export default function SetupWizardPage() {
         ))}
       </Stepper>
 
-      <Card withBorder padding="lg">
+      <Card withBorder radius="xs" padding="lg">
         {active === 0 && <CompanyStep onContinue={next} />}
         {active === 1 && <CalendarLocationStep onContinue={next} onBack={back} />}
         {active === 2 && <StructureStep onContinue={next} onBack={back} />}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Domain;
+using Sense.Shared.Kernel.Domain;
 
 namespace Sense.Modules.Training.Infrastructure.Persistence;
 
@@ -35,7 +36,17 @@ public sealed class EnrollmentRepository(TrainingDbContext context) : IEnrollmen
 
     public async Task UpdateAsync(Enrollment enrollment, CancellationToken ct = default)
     {
-        context.Enrollments.Update(enrollment);
+        // A tracked entity (every command handler loads it through GetByIdAsync in the same scope) is persisted by
+        // change detection; DbSet.Update() would flag every property - TenantId included - as modified, which
+        // AuditTenantInterceptor rightly rejects (tenant.mismatch). Only a detached entity needs marking, and
+        // never its TenantId.
+        var entry = context.Entry(enrollment);
+        if (entry.State == EntityState.Detached)
+        {
+            entry.State = EntityState.Modified;
+            entry.Property(nameof(ITenantEntity.TenantId)).IsModified = false;
+        }
+
         await Task.CompletedTask;
     }
 
