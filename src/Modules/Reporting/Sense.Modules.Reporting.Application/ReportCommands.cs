@@ -12,10 +12,8 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Reporting.Application;
 
 /// <summary>
-/// Requests a report (Kolay İK: rapor türü + Birimler/Ay/Yıl filtreleri → oluştur). Runs synchronously today (R0 - see
-/// ReportExecution's remark); the state machine it drives (Queued -&gt; Running -&gt; Succeeded/Failed) is the same
-/// one a future async path would use, so moving generation onto Hangfire later only changes who calls
-/// Start/Complete/Fail, not the aggregate or this DTO shape.
+/// Requests a report (Kolay İK: rapor türü + filters → generate). Async providers return a queued execution; sync
+/// providers complete it in the request. The existing state machine drives both paths.
 /// <c>Notify=false</c> (the on-screen report page) skips the 'report ready' e-mail — the caller is already looking at the result.
 /// </summary>
 [RequiresPermission("reports.executions.generate")]
@@ -35,7 +33,8 @@ public sealed class RequestReportHandler(
     IPermissionService permissions,
     TimeProvider clock,
     IIntegrationEventOutbox? outbox = null,
-    IDataScopeService? dataScope = null) : ICommandHandler<RequestReportCommand, ReportExecutionDto>
+    IDataScopeService? dataScope = null,
+    IEnumerable<ICustomReportFieldContributor>? customContributors = null) : ICommandHandler<RequestReportCommand, ReportExecutionDto>
 {
     public async Task<Result<ReportExecutionDto>> Handle(RequestReportCommand command, CancellationToken cancellationToken)
     {
@@ -62,6 +61,15 @@ public sealed class RequestReportHandler(
             return validation.Error;
         }
 
+        if (provider.Key == "report.custom")
+        {
+            var customValidation = await ValidateCustomReportAsync(parameters, userId, cancellationToken);
+            if (customValidation.IsFailure)
+            {
+                return customValidation.Error;
+            }
+        }
+
         var now = clock.GetUtcNow().UtcDateTime;
         var parametersJson = parameters.Count > 0 ? JsonSerializer.Serialize(parameters) : null;
         var created = ReportExecution.Create(tenant.TenantId, command.ReportKey, parametersJson, userId, now);
@@ -79,9 +87,9 @@ public sealed class RequestReportHandler(
                 return Error.Forbidden(ReportingErrors.ReportPermissionDenied);
             }
 
-            var visible = provider.RequiredPermission is { } permission
+            var visible = provider.DataScopePermission is { } permission
                 ? await dataScope.GetVisibleEmployeeIdsAsync(permission, cancellationToken)
-                : new HashSet<Guid>();
+                : null;
             var sensitive = await permissions.HasAsync(userId, "employee.sensitive.view", cancellationToken);
             outbox.Enqueue(new ReportGenerationRequested(tenant.TenantId, execution.Id, userId, currentUser.EmployeeId,
                 currentUser.Email, currentUser.DisplayName, CultureInfo.CurrentUICulture.Name, command.Notify, visible?.ToList(), sensitive));
@@ -109,5 +117,64 @@ public sealed class RequestReportHandler(
         }
 
         return ReportExecutionDto.From(execution);
+    }
+
+    private async Task<Result> ValidateCustomReportAsync(Dictionary<string, string> parameters, Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty || !await permissions.HasAsync(userId, ReportingPermissions.CustomBuild.Key, cancellationToken))
+        {
+            return Error.Forbidden(ReportingErrors.ReportPermissionDenied);
+        }
+
+        if (!parameters.TryGetValue("fieldKeys", out var serializedKeys))
+        {
+            return Error.Validation(CustomReportErrors.NoFieldsSelected);
+        }
+
+        string[] fieldKeys;
+        try
+        {
+            fieldKeys = JsonSerializer.Deserialize<string[]>(serializedKeys) ?? [];
+        }
+        catch (JsonException)
+        {
+            return Error.Validation(CustomReportErrors.UnknownField);
+        }
+
+        var contributors = customContributors ?? [];
+        var fields = new List<CustomReportFieldDescriptor>();
+        foreach (var contributor in contributors)
+        {
+            fields.AddRange(await contributor.GetFieldsAsync(tenant.TenantId, cancellationToken));
+        }
+
+        var currentPermissions = await permissions.GetPermissionsAsync(userId, cancellationToken);
+        var availableFields = CustomReportFieldCatalog.Filter(fields, currentPermissions);
+        var from = ReportParameters.GetDate(parameters, ReportParameterKeys.From);
+        var to = ReportParameters.GetDate(parameters, ReportParameterKeys.To);
+        var selected = CustomReportSelectionValidator.Validate(availableFields, fieldKeys, currentPermissions, from, to);
+        if (!selected.IsValid)
+        {
+            return Error.Validation(selected.ErrorCode!);
+        }
+
+        if (!ReportParameters.TryGetGuidList(parameters, ReportParameterKeys.OrgUnitIds, out var units))
+        {
+            return Error.Validation(CustomReportErrors.InvalidOrgUnits);
+        }
+
+        if (units.Count > 0 && dataScope is not null)
+        {
+            foreach (var permission in selected.Fields.Select(field => field.ScopePermission).Where(value => value is not null).Distinct(StringComparer.Ordinal))
+            {
+                var accessible = await dataScope.GetAccessibleOrgUnitIdsAsync(permission!, cancellationToken);
+                if (accessible is not null && units.Any(unit => !accessible.Contains(unit)))
+                {
+                    return Error.Validation(CustomReportErrors.InvalidOrgUnits);
+                }
+            }
+        }
+
+        return Result.Success();
     }
 }

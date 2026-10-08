@@ -329,6 +329,36 @@ public sealed class ReportingHandlerTests
     }
 
     [Fact]
+    public async Task CustomReportRequest_WithIncompatibleDetails_FailsBeforeQueueing()
+    {
+        var provider = new FakeReportProvider(
+            "report.custom", ReportingPermissions.CustomBuild.Key, new ReportFileResult("r.xlsx", "x", [1]), ReportCategories.Employee,
+            [new ReportParameterDescriptor("fieldKeys", ReportParameterKind.Select, IsRequired: true), new ReportParameterDescriptor(ReportParameterKeys.DateRange, ReportParameterKind.DateRange)]);
+        var permissions = Substitute.For<IPermissionService>();
+        permissions.HasAsync(UserId, ReportingPermissions.CustomBuild.Key, Arg.Any<CancellationToken>()).Returns(true);
+        permissions.GetPermissionsAsync(UserId, Arg.Any<CancellationToken>()).Returns(new HashSet<string>());
+        var contributor = Substitute.For<ICustomReportFieldContributor>();
+        contributor.GetFieldsAsync(TenantId, Arg.Any<CancellationToken>()).Returns([
+            new CustomReportFieldDescriptor("leave.request.days", CustomReportKeys.LeaveRequests, "label", CustomReportValueType.Number, CustomReportGrain.Detail, 1),
+            new CustomReportFieldDescriptor("leave.overtime.workDate", CustomReportKeys.LeaveOvertime, "label", CustomReportValueType.Date, CustomReportGrain.Detail, 1),
+        ]);
+        var executions = Substitute.For<IReportExecutionRepository>();
+        var handler = new RequestReportHandler([provider], executions, Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), permissions,
+            TimeProvider.System, customContributors: [contributor]);
+
+        var result = await handler.Handle(new RequestReportCommand("report.custom", new Dictionary<string, string>
+        {
+            ["fieldKeys"] = "[\"leave.request.days\",\"leave.overtime.workDate\"]",
+            ["from"] = "2026-01-01",
+            ["to"] = "2026-12-31",
+        }), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(CustomReportErrors.IncompatibleDetails);
+        executions.DidNotReceive().Add(Arg.Any<ReportExecution>());
+    }
+
+    [Fact]
     public async Task RequestReportHandler_TrimsAndDropsBlankParametersBeforeCallingProvider()
     {
         var provider = new FakeReportProvider(

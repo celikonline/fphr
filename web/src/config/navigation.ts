@@ -191,7 +191,7 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.reports",
     path: "/app/reports",
     icon: BarChart3,
-    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
+    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions", "reports.custom.build"],
     iconColor: "blue",
   },
   {
@@ -472,7 +472,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     labelKey: "apps.analytics",
     path: "/app/reports",
     icon: PieChart,
-    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
+    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions", "reports.custom.build"],
     iconColor: "blue",
   },
   {

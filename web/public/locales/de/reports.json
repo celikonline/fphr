@@ -159,6 +159,34 @@
     "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen.",
     "successNoDownload": "Der Bericht wird erstellt; laden Sie ihn unter Meine Berichte herunter, sobald er fertig ist."
   },
+  "groups": {
+    "employee": { "general": "Mitarbeiterinformationen", "career": "Organisation" },
+    "leave": { "requests": "Urlaubsanträge", "balance": "Urlaubssaldo", "overtime": "Überstunden" }
+  },
+  "fields": {
+    "employee": {
+      "firstName": "Vorname", "lastName": "Nachname", "status": "Beschäftigungsstatus", "workEmail": "Geschäftliche E-Mail",
+      "mobilePhone": "Mobiltelefon", "nationalId": "Personalausweisnummer", "birthDate": "Geburtsdatum",
+      "hireDate": "Eintrittsdatum", "orgUnit": "Organisationseinheit"
+    },
+    "leave": {
+      "request": { "type": "Urlaubsart", "startDate": "Startdatum", "endDate": "Enddatum", "days": "Tage", "status": "Antragsstatus" },
+      "overtime": { "workDate": "Arbeitstag", "durationMinutes": "Überstunden (Minuten)", "payableMinutes": "Vergütungszeit (Minuten)", "status": "Antragsstatus", "converted": "In Urlaub umgewandelt" },
+      "balance": { "current": "Aktueller Jahresurlaubsaldo" }
+    }
+  },
+  "build": {
+    "title": "Selbst erstellen",
+    "subtitle": "Wählen Sie zulässige Felder und erstellen Sie einen einmaligen Excel-Bericht.",
+    "open": "Benutzerdefinierten Bericht erstellen",
+    "loading": "Berichtsfelder werden geladen…",
+    "catalogError": "Berichtsfelder konnten nicht geladen werden. Prüfen Sie Zugriff und Verbindung und versuchen Sie es erneut.",
+    "empty": "Für Sie sind keine Berichtsfelder verfügbar.",
+    "invalidRange": "Prüfen Sie den Zeitraum für Detailberichte; er darf höchstens 12 Monate umfassen.",
+    "generate": "Excel-Bericht erstellen",
+    "queued": "Der Bericht wurde eingereiht und erscheint nach Fertigstellung in Ihren letzten Berichten.",
+    "error": "Der benutzerdefinierte Bericht konnte nicht erstellt werden. Prüfen Sie Auswahl und Zeitraum."
+  },
   "viewer": {
     "search": "In den Ergebnissen suchen",
     "noRows": "Keine Datensätze für diese Filter.",

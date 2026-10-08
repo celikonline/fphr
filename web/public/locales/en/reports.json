@@ -159,6 +159,34 @@
     "noFilters": "This report takes no filters; you can generate it right away.",
     "successNoDownload": "The report is being prepared; download it from My reports when it is ready."
   },
+  "groups": {
+    "employee": { "general": "Employee information", "career": "Organization" },
+    "leave": { "requests": "Leave requests", "balance": "Leave balance", "overtime": "Overtime" }
+  },
+  "fields": {
+    "employee": {
+      "firstName": "First name", "lastName": "Last name", "status": "Employment status", "workEmail": "Work e-mail",
+      "mobilePhone": "Mobile phone", "nationalId": "National ID", "birthDate": "Birth date",
+      "hireDate": "Hire date", "orgUnit": "Organization unit"
+    },
+    "leave": {
+      "request": { "type": "Leave type", "startDate": "Start date", "endDate": "End date", "days": "Days", "status": "Request status" },
+      "overtime": { "workDate": "Work date", "durationMinutes": "Overtime (minutes)", "payableMinutes": "Payable time (minutes)", "status": "Request status", "converted": "Converted to leave" },
+      "balance": { "current": "Current annual leave balance" }
+    }
+  },
+  "build": {
+    "title": "Build your own",
+    "subtitle": "Choose permitted fields and prepare a one-time Excel report.",
+    "open": "Build a custom report",
+    "loading": "Loading report fields…",
+    "catalogError": "Report fields could not be loaded. Check your access and connection, then try again.",
+    "empty": "There are no report fields available to you.",
+    "invalidRange": "Check the detail report date range; it can be at most 12 months.",
+    "generate": "Generate Excel report",
+    "queued": "The report was queued. It will appear in your recent reports when ready.",
+    "error": "The custom report could not be generated. Check your selection and date range."
+  },
   "viewer": {
     "search": "Search results",
     "noRows": "No records match these filters.",

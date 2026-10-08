@@ -52,6 +52,31 @@ export interface ReportCatalogItem {
   executionMode?: "sync" | "async";
 }
 
+export type CustomReportValueType = "text" | "number" | "date" | "boolean" | "currency";
+export type CustomReportGrain = "employee" | "detail";
+
+export interface CustomReportField {
+  key: string;
+  groupKey: string;
+  labelKey: string;
+  valueType: CustomReportValueType;
+  grain: CustomReportGrain;
+  sortOrder: number;
+  requiredPermission?: string | null;
+  scopePermission?: string | null;
+}
+
+export interface CustomReportGroup {
+  key: string;
+  labelKey: string;
+  sortOrder: number;
+}
+
+export interface CustomReportCatalog {
+  groups: CustomReportGroup[];
+  fields: CustomReportField[];
+}
+
 export interface ReportExecution {
   id: string;
   reportKey: string;
@@ -107,6 +132,12 @@ export interface DownloadedReportFile {
 /** Reports the caller may generate (every registered provider whose permission, if any, they hold), category order. */
 export async function getReportCatalog(): Promise<ReportCatalogItem[]> {
   const { data } = await apiClient.get<ReportCatalogItem[]>(`${REPORTS_BASE}/catalog`);
+  return data;
+}
+
+/** Field catalog already filtered by the caller's custom-builder and field permissions. */
+export async function getCustomReportCatalog(): Promise<CustomReportCatalog> {
+  const { data } = await apiClient.get<CustomReportCatalog>(`${REPORTS_BASE}/custom/catalog`);
   return data;
 }
 

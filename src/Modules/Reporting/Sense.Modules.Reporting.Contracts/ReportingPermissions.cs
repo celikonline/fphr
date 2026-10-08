@@ -37,10 +37,19 @@ public static class ReportingPermissions
         "Raporlar",
         "Kendi oluşturduğunuz raporları görüntüleme ve indirme");
 
+    /// <summary>Build one-time custom reports from the caller's authorized field catalog.</summary>
+    public static readonly Permission CustomBuild = new(
+        "reports.custom.build",
+        Module,
+        "Özel Rapor Oluşturma",
+        "Raporlar",
+        "İzin verilen alanlardan tek seferlik özel rapor oluşturma");
+
     public static IEnumerable<Permission> All =>
     [
         CatalogView,
         ExecutionsGenerate,
         MyExecutions,
+        CustomBuild,
     ];
 }

@@ -12,6 +12,7 @@ import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import { ReportCatalog, reportLabelKey } from "@/components/reports/report-catalog";
 import { ReportParameterForm } from "@/components/reports/report-parameter-form";
+import { CustomReportBuilder } from "@/components/reports/custom-report-builder";
 import { allSatisfied, defaultValuesFor, valuesToSearchParams, type ParameterValues } from "@/components/reports/report-parameters";
 import { WorkforceKpiPanel } from "@/components/reports/workforce-kpi-panel";
 import { toast } from "@/hooks/use-toast";
@@ -45,7 +46,7 @@ const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
 export default function ReportsPage() {
   const { t } = useTranslation(["reports"]);
   const canViewKpis = usePermission("analytics.kpi.view");
-  const canUseReports = useAnyPermission(["reports.catalog.view", "reports.my.executions"]);
+  const canUseReports = useAnyPermission(["reports.catalog.view", "reports.my.executions", "reports.custom.build"]);
   const [tab, setTab] = useState<string | null>(null);
 
   if (!canViewKpis && !canUseReports) return <NoAccess />;
@@ -97,6 +98,7 @@ function ReportCatalogAndHistory() {
   const canViewCatalog = usePermission("reports.catalog.view");
   const canGenerate = usePermission("reports.executions.generate");
   const canViewHistory = usePermission("reports.my.executions");
+  const canBuildCustom = usePermission("reports.custom.build");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_EXECUTIONS_PAGE_SIZE);
@@ -223,6 +225,7 @@ function ReportCatalogAndHistory() {
 
   return (
     <Stack gap="xl">
+      {canBuildCustom && canGenerate && canViewHistory ? <CustomReportBuilder /> : null}
       {canViewCatalog && (
         <div className="grid gap-4 lg:grid-cols-12">
           <div className="lg:col-span-7">

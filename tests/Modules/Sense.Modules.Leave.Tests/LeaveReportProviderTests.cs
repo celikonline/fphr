@@ -263,7 +263,7 @@ public sealed class LeaveReportProviderTests : TestFixture
         _permissions.HasAsync(userId, "employee.sensitive.view", Arg.Any<CancellationToken>()).Returns(true);
         _dataScope.GetVisibleEmployeeIdsAsync(LeavePermissions.BalancesRead.Key, Arg.Any<CancellationToken>()).Returns(currentVisible);
         _employees.ListAsync(tenantId,
-                Arg.Is<IReadOnlyCollection<Guid>?>(ids => ids is not null && ids.ToHashSet().SetEquals(currentVisible)),
+                Arg.Is<IReadOnlyCollection<Guid>?>(ids => ids != null && ids.ToHashSet().SetEquals(currentVisible)),
                 Arg.Any<IReadOnlyCollection<Guid>?>(), false, Arg.Any<CancellationToken>())
             .Returns([
                 Row(inBothScopes, "Visible", "Employee", new DateOnly(2024, 1, 1)) with { NationalId = "10000000146" },
