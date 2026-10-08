@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Sense.Shared.Contracts.Configuration;
+using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Controllers;
@@ -66,6 +67,7 @@ public sealed partial class GlobalExceptionHandler(
     {
         ValidationException v => (ErrorType.Validation, ErrorCodes.ValidationError, ToErrorDictionary(v), StatusCodes.Status400BadRequest),
         TenantMismatchException => (ErrorType.Forbidden, ErrorCodes.TenantMismatch, null, StatusCodes.Status403Forbidden),
+        CommercialCapacityExceededException => (ErrorType.Rule, "commercial.employee_capacity_exceeded", null, StatusCodes.Status409Conflict),
         UnauthorizedAccessException => (ErrorType.Unauthorized, ErrorCodes.Unauthenticated, null, StatusCodes.Status401Unauthorized),
         OperationCanceledException => (ErrorType.Failure, ErrorCodes.RequestCancelled, null, ClientClosedRequest),
         Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => (ErrorType.Conflict, ErrorCodes.ConcurrencyConflict, null, StatusCodes.Status409Conflict),

@@ -9,6 +9,7 @@ using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Audit;
 using Sense.Shared.Kernel.ValueObjects;
@@ -18,7 +19,8 @@ using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 namespace Sense.Modules.Employee.Infrastructure.Persistence;
 
 /// <summary>Employee module DbContext.</summary>
-public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> options, ITenantContext tenantContext)
+public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> options, ITenantContext tenantContext,
+    ICommercialEntitlements? commercialEntitlements = null)
     : ModuleDbContext(options, tenantContext)
 {
     public const string SchemaName = "employee";
@@ -26,6 +28,33 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
     public override string Schema => SchemaName;
 
     public DbSet<EmployeeEntity> Employees => Set<EmployeeEntity>();
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ChangeTracker.DetectChanges();
+        var added = ChangeTracker.Entries<EmployeeEntity>().Where(e => e.State == EntityState.Added).ToArray();
+        if (added.Length == 0 || commercialEntitlements is null)
+            return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        // Serialize capacity-changing writes across API instances. Execute through ModuleDbContext's retry-aware
+        // transaction helper so Npgsql's configured execution strategy accepts the user-created transaction.
+        var saved = 0;
+        await ExecuteInTransactionAsync(async ct =>
+        {
+            foreach (var group in added.GroupBy(e => e.Entity.TenantId))
+            {
+                var limit = await commercialEntitlements.GetEmployeeLimitAsync(group.Key, ct).ConfigureAwait(false);
+                if (limit is null) continue;
+                var lockKey = group.Key.ToString();
+                await Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({lockKey}, 0))", ct).ConfigureAwait(false);
+                var existingCount = await Employees.IgnoreQueryFilters().CountAsync(e => e.TenantId == group.Key, ct).ConfigureAwait(false);
+                // Capacity covers retained employee records, including drafts, so an import cannot bypass the limit.
+                if (existingCount + group.Count() > limit) throw new CommercialCapacityExceededException(limit.Value);
+            }
+            saved = await base.SaveChangesAsync(ct).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
+        return saved;
+    }
 
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
 

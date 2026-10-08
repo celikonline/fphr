@@ -31,6 +31,10 @@ public sealed class ModuleAccessService(
         }
 
         var tenantId = tenant.TenantId;
+        // Sales-managed entitlements are checked directly; a revoked or upgraded license must not wait for cache expiry.
+        var salesTenant = await db.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken).ConfigureAwait(false);
+        if (salesTenant is not null && Sense.Modules.Identity.Domain.Tenants.CommercialLicense.Read(salesTenant.SettingsJson) is not null)
+            return Sense.Modules.Identity.Application.Tenants.CommercialLicenseRules.DisabledModules(salesTenant);
         return await cache.GetOrCreateInContextAsync(
             Key(tenantId),
             async ct => await LoadAsync(tenantId, ct).ConfigureAwait(false),
@@ -57,7 +61,7 @@ public sealed class ModuleAccessService(
             .FirstOrDefaultAsync(t => t.Id == tenantId, ct)
             .ConfigureAwait(false);
 
-        return current?.ModuleSettings.DisabledModules.ToArray() ?? [];
+        return current is null ? [] : Sense.Modules.Identity.Application.Tenants.CommercialLicenseRules.DisabledModules(current).ToArray();
     }
 
     private static string Key(Guid tenantId) => CacheKeys.Join(ModuleCacheKeyPrefixes.DisabledModules, tenantId.ToString("N"));

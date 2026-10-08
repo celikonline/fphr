@@ -80,6 +80,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<ModuleAccessService>();
         services.AddScoped<IModuleAccessService>(sp => sp.GetRequiredService<ModuleAccessService>());
         services.AddScoped<IModuleSettingsCacheInvalidator>(sp => sp.GetRequiredService<ModuleAccessService>());
+        services.AddScoped<Sense.Shared.Contracts.Modules.ICommercialEntitlements, CommercialEntitlements>();
         services.AddScoped<IImpersonationSessionValidator, ImpersonationSessionValidator>();
 
         services.AddScoped<AccessTypeGuard>();

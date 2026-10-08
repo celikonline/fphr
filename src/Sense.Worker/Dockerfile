@@ -4,7 +4,7 @@
 #   docker build -f src/Sense.Worker/Dockerfile -t senseik-worker .
 
 # Pinned to the exact SDK patch in global.json - see src/Sense.Api/Dockerfile for why.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 WORKDIR /src
 
 COPY Directory.Build.props Directory.Packages.props global.json .editorconfig ./

@@ -40,9 +40,9 @@ public sealed record CreateTenantCommand(
     TenantOwnerMode OwnerMode,
     string? Password,
     string? Phone,
-    string? Language) : ICommand<CreateTenantResult>;
+    string? Language, CommercialLicense? License = null) : ICommand<CreateTenantResult>;
 
-public sealed record CreateTenantResult(Guid TenantId, string Slug, Guid OwnerUserId, bool InvitationSent);
+public sealed record CreateTenantResult(Guid TenantId, string Slug, Guid OwnerUserId, bool InvitationSent, string? InvitationUrl = null);
 
 public sealed class CreateTenantValidator : AbstractValidator<CreateTenantCommand>
 {
@@ -54,6 +54,7 @@ public sealed class CreateTenantValidator : AbstractValidator<CreateTenantComman
         RuleFor(x => x.OwnerFirstName).NotEmpty().MaximumLength(IdentityLimits.NameMaxLength);
         RuleFor(x => x.OwnerLastName).NotEmpty().MaximumLength(IdentityLimits.NameMaxLength);
         RuleFor(x => x.OwnerMode).IsInEnum();
+        When(x => x.License is not null, () => RuleFor(x => x.License!).SetValidator(new CommercialLicenseValidator()));
 
         When(x => x.OwnerMode == TenantOwnerMode.Password, () =>
         {
@@ -104,7 +105,21 @@ public sealed class CreateTenantHandler(
         var now = clock.GetUtcNow().UtcDateTime;
         var slug = command.Slug.Trim().ToLowerInvariant();
 
-        if (PlatformTenant.IsPlatform(slug) || await tenants.SlugExistsAsync(slug, cancellationToken).ConfigureAwait(false))
+        var existing = await tenants.GetBySlugAsync(slug, cancellationToken).ConfigureAwait(false);
+        if (existing is not null && command.License is not null && CommercialLicense.Read(existing.SettingsJson)?.Reference == command.License.Reference)
+        {
+            // Retrying after an HTTP timeout must never create a second company or broaden an existing license.
+            using var retryScope = tenantSetter.BeginScope(existing.Id, existing.Slug);
+            var existingOwner = await users.GetByEmailAsync(command.OwnerEmail, cancellationToken).ConfigureAwait(false);
+            if (existingOwner is null) return Error.Conflict(IdentityErrors.TenantSlugTaken);
+            if (existingOwner.PasswordHash is not null) return new CreateTenantResult(existing.Id, existing.Slug, existingOwner.Id, false);
+            var pending = await invitations.GetPendingByUserAsync(existingOwner.Id, cancellationToken).ConfigureAwait(false);
+            pending?.Revoke();
+            _ = AddOwnerInvitation(existing.Id, existingOwner, callerId, now, cfg, out var renewedToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return new CreateTenantResult(existing.Id, existing.Slug, existingOwner.Id, false, links.InviteAccept(renewedToken));
+        }
+        if (PlatformTenant.IsPlatform(slug) || existing is not null)
         {
             return Error.Conflict(IdentityErrors.TenantSlugTaken);
         }
@@ -116,6 +131,7 @@ public sealed class CreateTenantHandler(
         }
 
         var tenant = tenantResult.Value;
+        if (command.License is not null) tenant.UpdateSettings(command.License.WriteTo(tenant.SettingsJson));
         tenants.Add(tenant);
 
         // Bu noktadan sonra yazılan tüm kiracı verileri yeni kiracıya ait olmalı. Kayıt bu kapsam İÇİNDE yapılır: çağıranın
@@ -155,13 +171,14 @@ public sealed class CreateTenantHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        if (invitation is not null && rawToken is not null)
+        if (invitation is not null && rawToken is not null && command.License is null)
         {
             await mailer.SendInvitationAsync(owner.Email, owner.FullName, tenant.Name, links.InviteAccept(rawToken), invitation.ExpiresAt, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        return new CreateTenantResult(tenant.Id, tenant.Slug, owner.Id, invitation is not null);
+        return new CreateTenantResult(tenant.Id, tenant.Slug, owner.Id, invitation is not null && command.License is null,
+            command.License is not null && rawToken is not null ? links.InviteAccept(rawToken) : null);
     }
 
     private Invitation AddOwnerInvitation(Guid tenantId, User owner, Guid invitedBy, DateTime now, IdentityOptions cfg, out string rawToken)
