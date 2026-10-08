@@ -13,6 +13,20 @@
       "approved": "Onaylandı",
       "paid": "Ödendi",
       "locked": "Kilitli"
+    },
+    "openAction": "Dönem aç",
+    "emptyState": {
+      "title": "Henüz bordro dönemi yok",
+      "description": "Bordro hesabı için önce bir dönem açılır. Dönemi açmadan önce çalışanların bordro parametreleri (ücret türü, SGK durumu, yemek/yol) çalışan kartı > Bordro sekmesinde tanımlı olmalıdır; parametresi veya maaşı olmayan çalışanlar hesaba alınmaz.",
+      "employeesLink": "Çalışanlar",
+      "importLink": "Bordro PDF yükle"
+    },
+    "openDialog": {
+      "title": "Bordro dönemi aç",
+      "year": "Yıl",
+      "month": "Ay",
+      "submit": "Dönemi aç",
+      "error": "Dönem açılamadı."
     }
   },
   "adjustments": {
@@ -200,6 +214,16 @@
       "employee": "Çalışan",
       "gross": "Brüt",
       "net": "Net"
+    },
+    "emptyState": {
+      "description": "Bordro satırları \"Hesapla\" ile üretilir. Bordro parametresi veya maaşı olmayan çalışanlar atlanır; eksik bilgileri çalışan kartı > Bordro sekmesinden tamamlayabilirsiniz.",
+      "employeesLink": "Çalışanlar",
+      "openOnly": "Dönem açık olmadığı için hesaplama yapılamaz."
+    },
+    "run": {
+      "action": "Hesapla",
+      "success": "{{calculated}} çalışan için bordro hesaplandı, {{skipped}} çalışan atlandı.",
+      "error": "Bordro hesaplanamadı."
     }
   },
   "myPayslips": {

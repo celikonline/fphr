@@ -13,6 +13,20 @@
       "approved": "Genehmigt",
       "paid": "Ausgezahlt",
       "locked": "Gesperrt"
+    },
+    "openAction": "Periode öffnen",
+    "emptyState": {
+      "title": "Noch keine Abrechnungsperiode",
+      "description": "Vor der Abrechnung muss eine Periode geöffnet werden. Davor müssen die Abrechnungsparameter der Mitarbeitenden (Lohnart, SGK-Status, Essen/Fahrt) in der Mitarbeiterkarte > Reiter Abrechnung hinterlegt sein; Mitarbeitende ohne Parameter oder Gehalt werden nicht berechnet.",
+      "employeesLink": "Mitarbeitende",
+      "importLink": "Abrechnungs-PDFs hochladen"
+    },
+    "openDialog": {
+      "title": "Abrechnungsperiode öffnen",
+      "year": "Jahr",
+      "month": "Monat",
+      "submit": "Periode öffnen",
+      "error": "Die Periode konnte nicht geöffnet werden."
     }
   },
   "adjustments": {
@@ -200,6 +214,16 @@
       "employee": "Mitarbeitende:r",
       "gross": "Brutto",
       "net": "Netto"
+    },
+    "emptyState": {
+      "description": "Abrechnungspositionen entstehen über \"Berechnen\". Mitarbeitende ohne Abrechnungsparameter oder Gehalt werden übersprungen; ergänzen Sie fehlende Daten in der Mitarbeiterkarte > Reiter Abrechnung.",
+      "employeesLink": "Mitarbeitende",
+      "openOnly": "Die Periode ist nicht offen und kann daher nicht berechnet werden."
+    },
+    "run": {
+      "action": "Berechnen",
+      "success": "Abrechnung für {{calculated}} Mitarbeitende berechnet, {{skipped}} übersprungen.",
+      "error": "Die Abrechnung konnte nicht berechnet werden."
     }
   },
   "myPayslips": {

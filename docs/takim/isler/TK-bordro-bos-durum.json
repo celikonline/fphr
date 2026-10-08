@@ -1,0 +1,20 @@
+{
+  "id": "TK-bordro-bos-durum",
+  "baslik": "Bordro boş durumları: kullanıcıyı yönlendir, dönem aç / hesapla eylemleri ve ilgili ekran bağlantıları",
+  "durum": "incelendi",
+  "sahip": "takim-gelistirici-node",
+  "dal": "dev",
+  "kabul": [
+    "web/src/pages/payroll/periods.tsx: dönem listesi boşken (hem md+ tablo hem dar ekran kart listesi) düz 'Henüz açılmış bir bordro dönemi yok.' yerine yönlendirici bir boş durum gösterilir: kısa açıklama (bordro hesabı için önce dönem açılır; dönem açmadan önce çalışanların bordro parametreleri çalışan kartı > Bordro sekmesinde tanımlı olmalı), birincil eylem 'Dönem aç', ve bağlantılar: Çalışanlar listesi (/app/employees) ve — payroll.payslip.import yetkisi varsa — Bordro PDF yükle (/app/payroll/payslip-import).",
+    "Sayfa başlığının yanında her zaman görünen bir 'Dönem aç' düğmesi vardır (liste doluyken de). Düğme yıl + ay seçtiren bir Mantine Modal açar (varsayılan: içinde bulunulan ay); onaylayınca yeni services/payroll.service.ts fonksiyonu openPayrollPeriod(year, month) → POST /payroll/periods {year, month} çağrılır, dönüşte liste sorgusu (['payroll','periods']) invalidate edilir ve kullanıcı /app/payroll/periods/<id> sayfasına yönlendirilir. Hata (ör. payroll.errors.period_already_open) getApiErrorMessage ile modal içinde gösterilir.",
+    "web/src/pages/payroll/period-detail.tsx: dönemde bordro satırı yokken ('periodDetail.empty') yalnız metin yerine yönlendirici boş durum gösterilir: açıklama (satırlar 'Hesapla' ile üretilir; bordro parametresi veya maaşı olmayan çalışanlar atlanır), dönem durumu 'open' iken birincil eylem 'Hesapla' (yeni servis fonksiyonu runPayrollPeriod(id) → POST /payroll/periods/{id}/run; başarıda dönem detayı sorgusu invalidate edilir, toast ile üretilen satır sayısı/özet gösterilir), ve Çalışanlar listesine bağlantı.",
+    "Yeni metinler web/public/locales/{tr,en,de}/payroll.json içine periods.* ve periodDetail.* altına eklenir (üç dilde de); kodda sabit metin yok.",
+    "Mevcut tasarım desenleri korunur: Mantine 9 (Modal, Select/NumberInput ya da @mantine/dates MonthPickerInput), lucide ikonlar, react-router Link; shadcn/Radix yok.",
+    "Testler: web/src/pages/payroll/periods.test.tsx (boş listede yönlendirme metni + bağlantılar + 'Dönem aç' modalı POST'u doğru yıl/ay ile çağırır) ve period-detail için boş durumda 'Hesapla' düğmesinin runPayrollPeriod'u çağırdığını doğrulayan test — payslip-import.test.tsx desenine göre (i18n instance, MantineProvider, QueryClientProvider, MemoryRouter, servis mock).",
+    "Test kapısı (node .claude/takim/betikler/test-kapisi.mjs) YEŞİL; ayrıca web'de pnpm exec tsc --noEmit ve pnpm exec eslint src temiz."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY",
+  "riskli_alan": false,
+  "kanit": ".claude/takim/kanit/dd5e6137db3c193d.json",
+  "handoff": "docs/takim/handoff/TK-bordro-bos-durum.md"
+}

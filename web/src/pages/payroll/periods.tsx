@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Wallet } from "lucide-react";
-import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Plus, Wallet } from "lucide-react";
+import { Badge, Button, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { PeriodOpenModal } from "./period-open-modal";
+import { PeriodsEmptyState } from "./periods-empty-state";
 import { listPayrollPeriods, type PayrollPeriod, type PayrollPeriodStatus } from "@/services/payroll.service";
 
 const PERIODS_QUERY_KEY = ["payroll", "periods"] as const;
@@ -21,8 +23,8 @@ const STATUS_COLOR: Record<PayrollPeriodStatus, string> = {
 };
 
 /**
- * Bordro dönemleri - salt okunur liste (Faz 7 tur 3 web dilimi). Dönem açma/çalıştırma ve "Değişenler" filtresi
- * bu dilimin dışında; bu sayfa yalnızca `PayrollPeriodsController`'ın dönem listesini gösterir.
+ * Bordro dönemleri listesi (Faz 7 tur 3 web dilimi) + "Dönem aç" eylemi. Hesaplama dönem detayında yapılır;
+ * "Değişenler" filtresi bu dilimin dışında.
  */
 export default function PayrollPeriodsPage() {
   const canView = usePermission("payroll.period.recalculate");
@@ -34,6 +36,7 @@ function PayrollPeriodsList() {
   const { t, i18n } = useTranslation(["payroll", "common"]);
 
   const periodsQuery = useQuery({ queryKey: PERIODS_QUERY_KEY, queryFn: listPayrollPeriods });
+  const [openDialog, setOpenDialog] = useState(false);
   const periods = useMemo(() => periodsQuery.data ?? [], [periodsQuery.data]);
 
   const periodLabel = (period: PayrollPeriod) =>
@@ -65,14 +68,23 @@ function PayrollPeriodsList() {
 
   const table = useDataTable({ columns, data: periods, getRowId: (r) => r.id });
 
+  const emptyState = <PeriodsEmptyState onOpenPeriod={() => setOpenDialog(true)} />;
+
   return (
     <div className="w-full space-y-6 p-6 md:p-10">
-      <div>
-        <Title order={1} size="h2" className="flex items-center gap-2">
-          <Wallet size={24} /> {t("payroll:periods.title")}
-        </Title>
-        <Text c="dimmed">{t("payroll:periods.subtitle")}</Text>
-      </div>
+      <Group justify="space-between" align="flex-start" gap="sm">
+        <div>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <Wallet size={24} /> {t("payroll:periods.title")}
+          </Title>
+          <Text c="dimmed">{t("payroll:periods.subtitle")}</Text>
+        </div>
+        <Button leftSection={<Plus size={16} />} onClick={() => setOpenDialog(true)}>
+          {t("payroll:periods.openAction")}
+        </Button>
+      </Group>
+
+      <PeriodOpenModal opened={openDialog} onClose={() => setOpenDialog(false)} />
 
       <Card withBorder padding="lg">
         {periodsQuery.isError ? (
@@ -83,7 +95,7 @@ function PayrollPeriodsList() {
           <>
             {/* Geniş ekran: tablo */}
             <div className="hidden md:block">
-              <DataTable table={table} isLoading={periodsQuery.isLoading} emptyMessage={t("payroll:periods.empty")} />
+              <DataTable table={table} isLoading={periodsQuery.isLoading} emptyMessage={emptyState} />
             </div>
 
             {/* Dar ekran (≤390px dahil): kart listesi */}
@@ -93,9 +105,7 @@ function PayrollPeriodsList() {
                   {t("common:loading")}
                 </Text>
               ) : periods.length === 0 ? (
-                <Text size="sm" c="dimmed" ta="center" p="lg">
-                  {t("payroll:periods.empty")}
-                </Text>
+                emptyState
               ) : (
                 <Stack gap="sm">
                   {periods.map((period) => (

@@ -13,6 +13,20 @@
       "approved": "Approved",
       "paid": "Paid",
       "locked": "Locked"
+    },
+    "openAction": "Open period",
+    "emptyState": {
+      "title": "No payroll period yet",
+      "description": "A period has to be opened before payroll can be calculated. Before opening it, employees' payroll parameters (wage basis, SGK status, meal/transport) must be defined on the employee card > Payroll tab; employees without parameters or salary are not calculated.",
+      "employeesLink": "Employees",
+      "importLink": "Upload payroll PDFs"
+    },
+    "openDialog": {
+      "title": "Open payroll period",
+      "year": "Year",
+      "month": "Month",
+      "submit": "Open period",
+      "error": "The period could not be opened."
     }
   },
   "adjustments": {
@@ -200,6 +214,16 @@
       "employee": "Employee",
       "gross": "Gross",
       "net": "Net"
+    },
+    "emptyState": {
+      "description": "Payslip lines are produced with \"Calculate\". Employees without payroll parameters or salary are skipped; complete the missing data on the employee card > Payroll tab.",
+      "employeesLink": "Employees",
+      "openOnly": "The period is not open, so it cannot be calculated."
+    },
+    "run": {
+      "action": "Calculate",
+      "success": "Payroll calculated for {{calculated}} employees, {{skipped}} skipped.",
+      "error": "Payroll could not be calculated."
     }
   },
   "myPayslips": {

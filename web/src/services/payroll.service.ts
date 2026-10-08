@@ -239,6 +239,27 @@ export async function listGarnishmentOrders(employeeId: string): Promise<Garnish
   return data;
 }
 
+/** Opens a new payroll period for the year/month ("Dönem aç"); returns its id (`payroll.period.recalculate`). */
+export async function openPayrollPeriod(year: number, month: number): Promise<string> {
+  const { data } = await apiClient.post<string>(`${PAYROLL_BASE}/periods`, { year, month });
+  return data;
+}
+
+/** `PayrollPeriodRunSummary`: outcome of a full period calculation; skipped employees carry a machine-readable reason. */
+export interface PayrollPeriodRunSummary {
+  runId: string;
+  calculatedCount: number;
+  skippedCount: number;
+  skipped: { employeeId: string; reason: string }[];
+  warnings: { employeeId: string; code: string; details?: string }[];
+}
+
+/** Calculates every eligible employee's payslip in the period ("Hesapla"); employees without payroll profile/salary are skipped (`payroll.period.recalculate`). */
+export async function runPayrollPeriod(id: string): Promise<PayrollPeriodRunSummary> {
+  const { data } = await apiClient.post<PayrollPeriodRunSummary>(`${PAYROLL_BASE}/periods/${id}/run`);
+  return data;
+}
+
 /** Approves the period (Open → Approved); the backend refuses while changed payslips are not recalculated (`payroll.period.approve`). */
 export async function approvePayrollPeriod(id: string): Promise<void> {
   await apiClient.post(`${PAYROLL_BASE}/periods/${id}/approve`);

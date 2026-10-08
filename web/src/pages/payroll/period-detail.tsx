@@ -11,6 +11,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
 import { getCostCenters } from "@/services/organization.service";
 import { ClosingChecklist } from "./closing-checklist";
+import { PeriodEmptyState } from "./period-empty-state";
 import { PeriodActions } from "./period-actions";
 import { PeriodAdjustments } from "./period-adjustments";
 import { PeriodComparison } from "./period-comparison";
@@ -244,9 +245,7 @@ function PayrollPeriodDetail() {
 
       <Card withBorder padding="lg">
         {payslips.length === 0 ? (
-          <Text size="sm" c="dimmed" ta="center" p="lg">
-            {t("payroll:periodDetail.empty")}
-          </Text>
+          <PeriodEmptyState periodId={period.id} status={period.status} />
         ) : (
           <>
             {/* Geniş ekran: tablo */}
