@@ -9,7 +9,7 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Identity.Application.Tenants;
 
 /// <summary>Modüller sayfasının tek satırı: katalogdaki modül, temel (kapatılamaz) mı, bu kiracı için açık mı.</summary>
-public sealed record ModuleSettingItemDto(string Key, bool IsCore, bool Enabled);
+public sealed record ModuleSettingItemDto(string Key, bool IsCore, bool Enabled, bool IsLicensed = true);
 
 /// <summary>
 /// Ayarlar &gt; Sistem ayarları &gt; Modüller (senseik-057). <see cref="Modules"/> tüm katalog (<see cref="ProductModules.All"/>
@@ -20,6 +20,14 @@ public sealed record ModuleSettingsDto(IReadOnlyList<ModuleSettingItemDto> Modul
     public static ModuleSettingsDto From(TenantModuleSettings settings) => new(
         ProductModules.All.Select(m => new ModuleSettingItemDto(m.Key, !m.IsToggleable, !settings.IsDisabled(m.Key))).ToList(),
         settings.DisabledModules);
+
+    public static ModuleSettingsDto From(Tenant tenant)
+    {
+        var license = CommercialLicense.Read(tenant.SettingsJson);
+        var disabled = CommercialLicenseRules.DisabledModules(tenant);
+        return new(ProductModules.All.Select(m => new ModuleSettingItemDto(m.Key, !m.IsToggleable,
+            !disabled.Contains(m.Key), !m.IsToggleable || license is null || license.Modules.Contains(m.Key))).ToList(), disabled);
+    }
 }
 
 /// <summary>Modül ayarlarını okur. Erişim ayarları/güvenlik politikasıyla aynı desen: "identity.tenant.view" yeterli,
@@ -38,7 +46,7 @@ public sealed class GetModuleSettingsHandler(ITenantRepository tenants, ITenantC
             return Error.NotFound(IdentityErrors.TenantNotFound);
         }
 
-        return ModuleSettingsDto.From(tenant.ModuleSettings);
+        return ModuleSettingsDto.From(tenant);
     }
 }
 
@@ -69,7 +77,14 @@ public sealed class UpdateModuleSettingsHandler(
             return Error.NotFound(IdentityErrors.TenantNotFound);
         }
 
-        tenant.UpdateModuleSettings(TenantModuleSettings.WithDisabled(requested));
+        var license = CommercialLicense.Read(tenant.SettingsJson);
+        if (license is not null && ProductModules.All.Any(m => m.IsToggleable &&
+            !license.Modules.Contains(m.Key) && !requested.Contains(m.Key)))
+            return Error.Forbidden("commercial.module.not_licensed");
+
+        // License exclusions are derived, not user preferences: storing them would keep a future upgrade disabled.
+        var stored = license is null ? requested : requested.Where(license.Modules.Contains).ToArray();
+        tenant.UpdateModuleSettings(TenantModuleSettings.WithDisabled(stored));
         await cache.InvalidateTenantAsync(tenant.Id, cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }

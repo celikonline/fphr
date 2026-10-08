@@ -61,7 +61,7 @@ function ModulesUsersForm({
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [finishError, setFinishError] = useState<string | null>(null);
 
-  const optionalModules = modules.modules.filter((module) => !module.isCore);
+  const optionalModules = modules.modules.filter((module) => !module.isCore && module.isLicensed !== false);
   const modulesChanged = [...disabled].sort().join() !== [...modules.disabledModules].sort().join();
 
   const inviteMutation = useMutation({
