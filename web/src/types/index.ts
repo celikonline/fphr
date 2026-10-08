@@ -135,6 +135,8 @@ export interface ModuleSettingItem {
   key: string;
   isCore: boolean;
   enabled: boolean;
+  /** False for a sales-managed module outside the purchased/demo allowlist. */
+  isLicensed?: boolean;
 }
 
 /** Mirrors `ModuleSettingsDto` (Identity): whole catalog + the tenant's disabled keys (the PUT body shape). */

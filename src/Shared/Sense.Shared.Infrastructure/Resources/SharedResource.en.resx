@@ -1561,6 +1561,15 @@ The report you requested has been generated. Click the link to view and download
   <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Report sheet not found.</value></data>
   <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>The sort column is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
+  <data name="report_execution.custom.no_fields" xml:space="preserve"><value>Select at least one report field.</value></data>
+  <data name="report_execution.custom.unknown_field" xml:space="preserve"><value>One of the selected report fields is no longer available. Refresh the fields and try again.</value></data>
+  <data name="report_execution.custom.duplicate_field" xml:space="preserve"><value>A report field cannot be selected more than once.</value></data>
+  <data name="report_execution.custom.field_permission_denied" xml:space="preserve"><value>You do not have permission to view some selected report fields.</value></data>
+  <data name="report_execution.custom.incompatible_details" xml:space="preserve"><value>Only compatible detail fields can be selected together.</value></data>
+  <data name="report_execution.custom.date_range_required" xml:space="preserve"><value>Select a date range for detail fields.</value></data>
+  <data name="report_execution.custom.date_range_invalid" xml:space="preserve"><value>The date range is invalid or longer than 12 months.</value></data>
+  <data name="report_execution.custom.invalid_org_units" xml:space="preserve"><value>You do not have access to one of the selected units.</value></data>
+  <data name="report_execution.custom.row_limit_exceeded" xml:space="preserve"><value>The report exceeds the row limit. Narrow the date range and try again.</value></data>
   <!-- Announcements + Support (Help Center + Contact support - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>View announcements</value></data>
   <data name="announcements.announcements.manage" xml:space="preserve"><value>Manage announcements</value></data>

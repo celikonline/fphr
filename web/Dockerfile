@@ -21,7 +21,7 @@ COPY packages/api-client/package.json packages/api-client/package.json
 COPY apps/senseik-mobile/package.json apps/senseik-mobile/package.json
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --filter web...
+    pnpm install --frozen-lockfile --ignore-scripts --filter web...
 
 COPY web/ web/
 COPY packages/api-client/ packages/api-client/
@@ -36,6 +36,8 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 # The login page's "Demo kullanıcıları" hint is hidden in production builds unless this is "true" (D-6).
 ARG VITE_SHOW_DEMO_CREDENTIALS=false
 ENV VITE_SHOW_DEMO_CREDENTIALS=$VITE_SHOW_DEMO_CREDENTIALS
+ARG VITE_SALES_URL=http://localhost:4173
+ENV VITE_SALES_URL=$VITE_SALES_URL
 
 RUN pnpm --filter web build
 

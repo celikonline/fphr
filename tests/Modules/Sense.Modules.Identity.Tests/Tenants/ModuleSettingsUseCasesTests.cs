@@ -93,6 +93,28 @@ public sealed class ModuleSettingsUseCasesTests
     // --- Handlers ---
 
     [Fact]
+    public async Task CommercialSettings_ReflectLicenseAndRejectUnlicensedEnable()
+    {
+        var tenant = NewTenant("licensed-demo");
+        tenant.UpdateSettings(new CommercialLicense("trial", "growth", ["employee", "leave", "expense"],
+            10, DateTime.UtcNow.AddDays(14), "test-lead").WriteTo(tenant.SettingsJson));
+        var (tenants, context) = RepoFor(tenant);
+        var cache = Substitute.For<IModuleSettingsCacheInvalidator>();
+        var read = await new GetModuleSettingsHandler(tenants, context).Handle(new GetModuleSettingsQuery(), CancellationToken.None);
+        read.Value.Modules.Single(m => m.Key == "leave").Enabled.ShouldBeTrue();
+        read.Value.Modules.Single(m => m.Key == "assets").Enabled.ShouldBeFalse();
+        read.Value.Modules.Single(m => m.Key == "assets").IsLicensed.ShouldBeFalse();
+        var update = new UpdateModuleSettingsHandler(tenants, context, cache);
+        var denied = await update.Handle(new UpdateModuleSettingsCommand([]), CancellationToken.None);
+        denied.IsFailure.ShouldBeTrue();
+        denied.Error.Code.ShouldBe("commercial.module.not_licensed");
+        tenant.ModuleSettings.DisabledModules.ShouldBeEmpty();
+        (await update.Handle(new UpdateModuleSettingsCommand(read.Value.DisabledModules.Concat(["leave"]).ToArray()), CancellationToken.None)).IsSuccess.ShouldBeTrue();
+        tenant.ModuleSettings.IsDisabled("leave").ShouldBeTrue();
+        tenant.ModuleSettings.DisabledModules.ShouldBe(["leave"]);
+    }
+
+    [Fact]
     public async Task Get_ReturnsWholeCatalog_AllEnabled_ForFreshTenant()
     {
         var tenant = NewTenant("acme");

@@ -231,6 +231,9 @@ public interface IReportProvider
     /// <summary>Temel <c>reports.*</c> kapısının ötesinde çağıranın taşıması gereken ek izin; null = yok.</summary>
     string? RequiredPermission { get; }
 
+    /// <summary>Çalışan veri kapsamı görüntüsünü üretirken kullanılacak izin; null = sağlayıcı kapsamı kendisi çözer.</summary>
+    string? DataScopePermission => RequiredPermission;
+
     /// <summary>Raporun kabul ettiği filtreler; boş = filtresiz. Web bu listeden parametre formunu çizer.</summary>
     IReadOnlyList<ReportParameterDescriptor> Parameters => [];
 

@@ -16,6 +16,7 @@ public static class ReportingServiceCollectionExtensions
         services.AddScoped<IReportExecutionRepository, ReportExecutionRepository>();
         services.AddScoped<IReportingUnitOfWork>(sp => sp.GetRequiredService<ReportingDbContext>());
         services.AddScoped<IReportMailer, ReportMailer>();
+        services.AddScoped<IReportProvider, CustomReportProvider>();
         services.AddScoped<ReportGenerationContext>();
         services.AddScoped<IReportGenerationContext>(sp => sp.GetRequiredService<ReportGenerationContext>());
         services.AddScoped<IScheduledJobHandler, ReportGenerationJob>();

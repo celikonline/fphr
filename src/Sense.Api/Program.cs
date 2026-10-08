@@ -89,6 +89,7 @@ try
 
     app.UseAuthentication();
     app.UseRequestContext();
+    app.UseMiddleware<CommercialLicenseMiddleware>();
     app.UseAuthorization();
 
     app.MapControllers();

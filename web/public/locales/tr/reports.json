@@ -159,6 +159,34 @@
     "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz.",
     "successNoDownload": "Rapor hazırlanıyor; hazır olunca Raporlarım listesinden indirebilirsiniz."
   },
+  "groups": {
+    "employee": { "general": "Çalışan bilgileri", "career": "Organizasyon" },
+    "leave": { "requests": "İzin talepleri", "balance": "İzin bakiyesi", "overtime": "Fazla mesai" }
+  },
+  "fields": {
+    "employee": {
+      "firstName": "Ad", "lastName": "Soyad", "status": "Çalışma durumu", "workEmail": "İş e-postası",
+      "mobilePhone": "Cep telefonu", "nationalId": "T.C. kimlik numarası", "birthDate": "Doğum tarihi",
+      "hireDate": "İşe giriş tarihi", "orgUnit": "Organizasyon birimi"
+    },
+    "leave": {
+      "request": { "type": "İzin türü", "startDate": "Başlangıç tarihi", "endDate": "Bitiş tarihi", "days": "Gün sayısı", "status": "Talep durumu" },
+      "overtime": { "workDate": "Çalışma tarihi", "durationMinutes": "Fazla mesai (dakika)", "payableMinutes": "Ödenecek süre (dakika)", "status": "Talep durumu", "converted": "İzne dönüştürüldü" },
+      "balance": { "current": "Güncel yıllık izin bakiyesi" }
+    }
+  },
+  "build": {
+    "title": "Kendin oluştur",
+    "subtitle": "İzin verilen alanları seçip tek seferlik Excel raporu hazırlayın.",
+    "open": "Özel rapor oluştur",
+    "loading": "Rapor alanları yükleniyor…",
+    "catalogError": "Rapor alanları yüklenemedi. Yetkinizi ve bağlantınızı kontrol edip yeniden deneyin.",
+    "empty": "Kullanabileceğiniz rapor alanı bulunmuyor.",
+    "invalidRange": "Detay raporları için tarih aralığını kontrol edin; en fazla 12 ay olabilir.",
+    "generate": "Excel raporu oluştur",
+    "queued": "Rapor sıraya alındı. Hazır olduğunda son raporlarınızda görünecek.",
+    "error": "Özel rapor oluşturulamadı. Seçiminizi ve tarih aralığını kontrol edin."
+  },
   "viewer": {
     "search": "Sonuçlarda ara",
     "noRows": "Bu filtrelerle gösterilecek kayıt yok.",

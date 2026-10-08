@@ -104,7 +104,7 @@ public sealed class LoginHandler(
             return Error.Unauthorized(IdentityErrors.InvalidCredentials);
         }
 
-        if (tenantEntity is null || !tenantEntity.IsWritable)
+        if (tenantEntity is null || !Sense.Modules.Identity.Application.Tenants.CommercialLicenseRules.CanAccess(tenantEntity, now))
         {
             return Error.Unauthorized(IdentityErrors.TenantInactive);
         }
@@ -175,7 +175,7 @@ public sealed class CompleteMfaLoginHandler(
 
         var now = clock.GetUtcNow().UtcDateTime;
         var tenantEntity = await tenants.GetByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
-        if (tenantEntity is null || !tenantEntity.IsWritable)
+        if (tenantEntity is null || !Sense.Modules.Identity.Application.Tenants.CommercialLicenseRules.CanAccess(tenantEntity, now))
         {
             return Error.Unauthorized(IdentityErrors.TenantInactive);
         }

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Reporting.Application;
+using Sense.Modules.Reporting.Contracts;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Web.Controllers;
 
@@ -9,7 +10,7 @@ namespace Sense.Modules.Reporting.Api.Controllers;
 
 public sealed record RequestReportRequest(string ReportKey, Dictionary<string, string>? Parameters, bool? Notify = null);
 
-/// <summary>Report catalog + on-demand generation + execution history (roadmap #70, R0: synchronous generation, email-linked delivery).</summary>
+/// <summary>Report catalog, one-time custom reports, generation, and execution history.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/reports")]
 [Authorize]
@@ -21,7 +22,13 @@ public sealed class ReportsController : ApiControllerBase
     public async Task<IActionResult> Catalog(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListReportCatalogQuery(), ct));
 
-    /// <summary>Requests a report; the response's Status reflects the (synchronous, R0) outcome.</summary>
+    /// <summary>Fields the caller may use to build a one-time report.</summary>
+    [HttpGet("custom/catalog")]
+    [ProducesResponseType<CustomReportCatalog>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CustomCatalog(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetCustomReportCatalogQuery(), ct));
+
+    /// <summary>Requests a report; async providers return queued executions.</summary>
     [HttpPost("executions")]
     [ProducesResponseType<ReportExecutionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> RequestReport([FromBody] RequestReportRequest request, CancellationToken ct) =>

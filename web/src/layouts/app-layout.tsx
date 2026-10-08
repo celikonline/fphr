@@ -35,6 +35,7 @@ import { APP_LAUNCHER_ITEMS, NAV_ITEMS, navIconColor } from "@/config/navigation
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
+import { CommercialLicenseBanner } from "@/components/commercial-license-banner";
 import SettingsSubNav from "@/components/settings-subnav";
 import ScreenSearch from "@/components/screen-search";
 import ModuleRouteGuard from "@/components/module-disabled";
@@ -430,6 +431,7 @@ export default function AppLayout() {
               {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
               <RouteBoundary>
                 <ModuleRouteGuard>
+                  <CommercialLicenseBanner />
                   <SetupGuard />
                 </ModuleRouteGuard>
               </RouteBoundary>

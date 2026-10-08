@@ -9,6 +9,55 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Reporting.Application;
 
+/// <summary>Authorized field catalog for the one-time custom report builder.</summary>
+[RequiresPermission("reports.custom.build")]
+public sealed record GetCustomReportCatalogQuery : IQuery<CustomReportCatalog>;
+
+public sealed class GetCustomReportCatalogHandler(
+    IEnumerable<ICustomReportFieldContributor> contributors,
+    ICurrentUser currentUser,
+    ITenantContext tenant,
+    IPermissionService permissions) : IQueryHandler<GetCustomReportCatalogQuery, CustomReportCatalog>
+{
+    public async Task<Result<CustomReportCatalog>> Handle(GetCustomReportCatalogQuery query, CancellationToken cancellationToken)
+    {
+        var userId = currentUser.UserId ?? Guid.Empty;
+        if (userId == Guid.Empty || !await permissions.HasAsync(userId, ReportingPermissions.CustomBuild.Key, cancellationToken))
+        {
+            return Error.Forbidden(ReportingErrors.ReportPermissionDenied);
+        }
+
+        var fields = new List<CustomReportFieldDescriptor>();
+        foreach (var contributor in contributors)
+        {
+            fields.AddRange(await contributor.GetFieldsAsync(tenant.TenantId, cancellationToken));
+        }
+
+        var allowed = CustomReportFieldCatalog.Filter(fields, await permissions.GetPermissionsAsync(userId, cancellationToken));
+        var groups = allowed
+            .Select(field => field.GroupKey)
+            .Distinct(StringComparer.Ordinal)
+            .Select(key => new CustomReportGroupDescriptor(key, $"reports:groups.{key}", CustomReportGroupOrder(key)))
+            .OrderBy(group => group.SortOrder)
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .ToArray();
+
+        return Result.Success(new CustomReportCatalog(groups, allowed));
+    }
+
+    private static int CustomReportGroupOrder(string key) => key switch
+    {
+        CustomReportKeys.EmployeeGeneral => 0,
+        CustomReportKeys.EmployeeCareer => 1,
+        CustomReportKeys.EmployeeCustomFields => 2,
+        CustomReportKeys.LeaveRequests => 3,
+        CustomReportKeys.LeaveBalance => 4,
+        CustomReportKeys.LeaveOvertime => 5,
+        CustomReportKeys.ExpensePayments => 6,
+        _ => int.MaxValue,
+    };
+}
+
 /// <summary>
 /// Reports the caller may generate - every registered IReportProvider whose RequiredPermission (if any) the caller
 /// holds, ordered by menu category (İdari / Çalışan / İzinler / Finans) then key. Kolay İK's unit-manager rule
@@ -27,6 +76,11 @@ public sealed class ListReportCatalogHandler(IEnumerable<IReportProvider> provid
         var visible = new List<ReportCatalogItemDto>();
         foreach (var provider in providers)
         {
+            if (provider.Key == "report.custom")
+            {
+                continue;
+            }
+
             if (provider.RequiredPermission is null || await permissions.HasAsync(userId, provider.RequiredPermission, cancellationToken))
             {
                 visible.Add(new ReportCatalogItemDto(provider.Key, provider.CategoryKey, provider.Parameters, provider.ExecutionMode));

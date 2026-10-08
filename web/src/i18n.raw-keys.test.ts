@@ -16,12 +16,21 @@ function lookup(tree: Tree, path: string): string | undefined {
 }
 
 const REPORTS: Record<string, Tree> = { tr: trReports.catalog, en: enReports.catalog, de: deReports.catalog } as Record<string, Tree>;
+const REPORT_GROUPS: Record<string, Tree> = { tr: trReports.groups, en: enReports.groups, de: deReports.groups } as Record<string, Tree>;
+const REPORT_FIELDS: Record<string, Tree> = { tr: trReports.fields, en: enReports.fields, de: deReports.fields } as Record<string, Tree>;
 const NOTIFICATIONS: Record<string, Tree> = { tr: trNotifications, en: enNotifications, de: deNotifications } as Record<string, Tree>;
 
 describe.each(["tr", "en", "de"])("%s locale", (locale) => {
   it.each(["leave.overtime.monthly", "leave.reconciliation.form"])("has a report label and description for %s", (reportKey) => {
     expect(lookup(REPORTS[locale], `${reportKey}.label`)).toBeTruthy();
     expect(lookup(REPORTS[locale], `${reportKey}.description`)).toBeTruthy();
+  });
+
+  it("translates custom report groups and fields", () => {
+    expect(lookup(REPORT_GROUPS[locale], "employee.general")).toBeTruthy();
+    expect(lookup(REPORT_GROUPS[locale], "leave.requests")).toBeTruthy();
+    expect(lookup(REPORT_FIELDS[locale], "employee.firstName")).toBeTruthy();
+    expect(lookup(REPORT_FIELDS[locale], "leave.request.days")).toBeTruthy();
   });
 
   it("names the document expiry reminder notification and its category", () => {

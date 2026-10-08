@@ -409,6 +409,28 @@ describe("SetupWizardPage", () => {
     expect(createUnit).not.toHaveBeenCalled();
   });
 
+  it("only offers licensed modules and completes a sales demo without enabling excluded modules", async () => {
+    vi.mocked(getModuleSettings).mockResolvedValue({
+      modules: [
+        { key: "employee", isCore: true, enabled: true, isLicensed: true },
+        { key: "leave", isCore: false, enabled: true, isLicensed: true },
+        { key: "payroll", isCore: false, enabled: false, isLicensed: false },
+      ],
+      disabledModules: ["payroll"],
+    });
+    const user = userEvent.setup();
+    renderWizard();
+    await completeCompanyStep(user);
+    await user.click(await screen.findByRole("button", { name: trSetup.actions.skip }));
+    await user.click(await screen.findByRole("button", { name: trSetup.actions.skip }));
+    expect(await screen.findByRole("switch", { name: "İzin" })).toBeChecked();
+    expect(screen.queryByRole("switch", { name: "Bordro" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: trSetup.actions.finish }));
+    expect(await screen.findByText("Home page")).toBeInTheDocument();
+    expect(updateModuleSettings).not.toHaveBeenCalled();
+    expect(completeTenantSetup).toHaveBeenCalledTimes(1);
+  });
+
   it("refuses an invitation without a role and never calls the API", async () => {
     const user = userEvent.setup();
     renderWizard();

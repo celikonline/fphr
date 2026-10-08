@@ -52,7 +52,7 @@ public sealed class RefreshTokenHandler(
 
         var user = await users.GetByIdAsync(existing.UserId, cancellationToken).ConfigureAwait(false);
         var tenant = await tenants.GetByIdAsync(existing.TenantId, cancellationToken).ConfigureAwait(false);
-        if (user is null || tenant is null || !tenant.IsWritable)
+        if (user is null || tenant is null || !Sense.Modules.Identity.Application.Tenants.CommercialLicenseRules.CanAccess(tenant, now))
         {
             return Error.Unauthorized(IdentityErrors.RefreshTokenInvalid);
         }

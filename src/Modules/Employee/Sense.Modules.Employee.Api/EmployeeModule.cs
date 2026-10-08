@@ -140,6 +140,7 @@ public sealed class EmployeeModule : IModule
 
         // Raporlar menüsü katkıları (roadmap #70): rapor okuyucu portu + Employee'nin hazır raporları.
         services.AddScoped<IEmployeeReportReader, EmployeeReportReader>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.ICustomReportFieldContributor, Infrastructure.Reporting.EmployeeCustomReportContributor>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeListReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.SalaryListReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.DepartedEmployeesReportProvider>();

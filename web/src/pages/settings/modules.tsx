@@ -145,7 +145,7 @@ function ModuleSettingsForm() {
                       aria-label={name(module.key)}
                       checked={!disabledSet.has(module.key)}
                       onChange={(e) => onToggle(module, e.currentTarget.checked)}
-                      disabled={!canManage || saveMutation.isPending}
+                      disabled={!canManage || module.isLicensed === false || saveMutation.isPending}
                     />
                   </Group>
                 </div>

@@ -8,6 +8,7 @@ using NSubstitute;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Ledger;
 using Sense.Modules.Leave.Contracts;
@@ -49,6 +50,9 @@ public sealed class CompanyLeaveLedgerTests : TestFixture
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly IOrgUnitLookup _orgUnits = Substitute.For<IOrgUnitLookup>();
     private readonly IEmployeeReportReader _employees = Substitute.For<IEmployeeReportReader>();
+    private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();
+    private readonly ITenantTimeZoneLookup _timeZones = Substitute.For<ITenantTimeZoneLookup>();
+    private readonly ILeaveDayCalculator _days = Substitute.For<ILeaveDayCalculator>();
 
     private static readonly OrgUnitTypeInfo CompanyLevel = new(Guid.NewGuid(), "Company", "Şirket", 0);
     private static readonly OrgUnitTypeInfo DepartmentLevel = new(Guid.NewGuid(), "Department", "Departman", 1);
@@ -76,6 +80,11 @@ public sealed class CompanyLeaveLedgerTests : TestFixture
         services.AddSingleton(_dataScope);
         services.AddSingleton(_orgUnits);
         services.AddSingleton(_employees);
+        services.AddSingleton(_permissions);
+        services.AddSingleton(_timeZones);
+        services.AddSingleton(_days);
+        services.AddSingleton<ISimplePdfWriter, QuestPdfSimpleWriter>();
+        services.AddSingleton<TimeProvider>(TimeProvider.System);
 
         _orgUnits.ListActiveTypesAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns([CompanyLevel, DepartmentLevel]);
         _orgUnits.ListActiveUnitsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns([Acme, Engineering]);

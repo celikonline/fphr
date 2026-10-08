@@ -1570,6 +1570,15 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report_execution.sheet_invalid" xml:space="preserve"><value>Rapor sayfası bulunamadı.</value></data>
   <data name="report_execution.sort_column_invalid" xml:space="preserve"><value>Sıralanacak sütun geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
+  <data name="report_execution.custom.no_fields" xml:space="preserve"><value>En az bir rapor alanı seçin.</value></data>
+  <data name="report_execution.custom.unknown_field" xml:space="preserve"><value>Seçilen rapor alanlarından biri artık kullanılamıyor. Alanları yenileyip tekrar deneyin.</value></data>
+  <data name="report_execution.custom.duplicate_field" xml:space="preserve"><value>Aynı rapor alanı birden fazla seçilemez.</value></data>
+  <data name="report_execution.custom.field_permission_denied" xml:space="preserve"><value>Seçilen rapor alanlarından bazılarını görüntüleme yetkiniz yok.</value></data>
+  <data name="report_execution.custom.incompatible_details" xml:space="preserve"><value>Bir raporda yalnızca uyumlu detay alanları birlikte seçilebilir.</value></data>
+  <data name="report_execution.custom.date_range_required" xml:space="preserve"><value>Detay alanları için tarih aralığı seçin.</value></data>
+  <data name="report_execution.custom.date_range_invalid" xml:space="preserve"><value>Tarih aralığı geçersiz veya 12 aydan uzun.</value></data>
+  <data name="report_execution.custom.invalid_org_units" xml:space="preserve"><value>Seçilen birimlerden birine erişiminiz yok.</value></data>
+  <data name="report_execution.custom.row_limit_exceeded" xml:space="preserve"><value>Rapor satır sınırını aşıyor. Tarih aralığını daraltıp tekrar deneyin.</value></data>
   <!-- Announcements + Support (Yardım Merkezi + Desteğe bağlan - roadmap #69) -->
   <data name="announcements.announcements.view" xml:space="preserve"><value>Duyuruları görüntüleme</value></data>
   <data name="announcements.announcements.manage" xml:space="preserve"><value>Duyuru yönetimi</value></data>
