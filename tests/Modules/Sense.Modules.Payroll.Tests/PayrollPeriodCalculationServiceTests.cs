@@ -281,7 +281,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var employee = Guid.NewGuid();
         profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
         salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
-        workedTime.GetAsync(TenantId, employee, 2026, 3, Arg.Any<CancellationToken>())
+        workedTime.GetAsync(TenantId, employee, 2026, 3, null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Sense.Modules.Payroll.Application.Ports.WorkedTimeSummary?>(new Sense.Modules.Payroll.Application.Ports.WorkedTimeSummary(31, 0, 0m, PublicHolidayDaysWorked: 1, WeeklyRestDaysWorked: 1)));
         Payslip? created = null;
         payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
@@ -395,7 +395,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
         salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
-        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
         absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<int?>(5));
@@ -432,7 +432,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
         salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
-        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
 
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
@@ -658,7 +658,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var normal = Guid.NewGuid();
         GivenEmployee(profiles, salaryLookup, noDays);
         GivenEmployee(profiles, salaryLookup, normal);
-        workedTimeReader.GetAsync(TenantId, noDays, 2026, 9, Arg.Any<CancellationToken>())
+        workedTimeReader.GetAsync(TenantId, noDays, 2026, 9, null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 0, MissingDays: 30, OvertimeHours: 0m)));
 
         var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [noDays, normal], CancellationToken.None);
@@ -682,6 +682,280 @@ public sealed class PayrollPeriodCalculationServiceTests
         summary.CalculatedCount.ShouldBe(1);
         summary.Skipped.ShouldBe([new PayrollSkippedEmployee(broken, PayrollSkipReasons.CalculationFailed)]);
         payslips.Received(1).Add(Arg.Any<Payslip>());
+    }
+
+    // ---- Günlük / saatlik ücret (PAY-WAGE-BASIS) ----
+
+    private static EmployeePayrollProfile ProfileWithWageBasis(Guid employeeId, WageBasis wageBasis) => EmployeePayrollProfile.Create(
+        TenantId, employeeId,
+        new EmployeePayrollProfileData(
+            SgkWorkplaceCompanyId, null, new DateOnly(2026, 1, 1), null,
+            wageBasis, SgkStatus.Normal, null,
+            MealBenefitVariant.None, 0m, TransportVariant.None, PayrollPaymentMethod.Bank, null,
+            SickDaysReducePay: false, ExternalPayrollCode: null, Notes: null)).Value;
+
+    private static EmployeeCurrentSalary WageSalary(EmployeePayFrequency frequency, decimal amount, EmployeeSalaryType type = EmployeeSalaryType.Gross) =>
+        new(amount, "TRY", type, frequency, new DateOnly(2026, 1, 1));
+
+    private static void GivenWageEmployee(
+        IEmployeePayrollProfileRepository profiles, IEmployeeSalaryLookup salaryLookup, Guid employeeId,
+        WageBasis basis, EmployeeCurrentSalary salary, DateOnly? hireDate = null)
+    {
+        profiles.FindCurrentAsync(employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeePayrollProfile?>(ProfileWithWageBasis(employeeId, basis)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeCurrentSalary?>(salary));
+        salaryLookup.GetEmploymentDatesAsync(TenantId, employeeId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeEmploymentDates?>(new EmployeeEmploymentDates(hireDate, null)));
+    }
+
+    private static decimal CapturedGross(IPayslipRepository payslips)
+    {
+        var created = (Payslip)payslips.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(IPayslipRepository.Add)).GetArguments()[0]!;
+        return created.GrossAmount;
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_CalculatesAFullMonthDailyWage_AsDailyRateTimes30PaidDays()
+    {
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        CapturedGross(payslips).ShouldBe(60_000m); // 2,000 x 30
+        var earnings = CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.Earnings);
+        earnings.Inputs["wageBasis"].ShouldBe("daily");
+        earnings.Inputs["unitRate"].ShouldBe("2000");
+        earnings.Inputs["paidDays"].ShouldBe("30");
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_CalculatesAFullMonthHourlyWage_AsHourlyRateTimes7Point5TimesPaidDays()
+    {
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Hourly, WageSalary(EmployeePayFrequency.Hourly, 200m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        CapturedGross(payslips).ShouldBe(45_000m); // 200 x 7.5 x 30 (225 saat)
+        var earnings = CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.Earnings);
+        earnings.Inputs["wageBasis"].ShouldBe("hourly");
+        earnings.Inputs["paidHours"].ShouldBe("225");
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWageHiredMidMonth_IsNotProratedTwice_ButSgkBoundsFollowThePaidDays()
+    {
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m), hireDate: new DateOnly(2026, 9, 16));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(30_000m); // 2,000 x 15, not 60,000 x 15/30 on top of that
+        var sgkBase = CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.SgkBase);
+        sgkBase.Inputs["sgkCeiling"].ShouldBe("112500"); // 225,000 x 15/30
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWage_DeductsUnexcusedAbsenceDaysFromThePaidDays()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 9, Arg.Any<CancellationToken>()).Returns(Task.FromResult<int?>(5));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(50_000m); // 2,000 x (30 - 5)
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_HourlyWage_UsesAttendanceMissingDaysToReduceThePaidDays()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Hourly, WageSalary(EmployeePayFrequency.Hourly, 200m));
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 9, null, null, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 26, MissingDays: 4, OvertimeHours: 0m)));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(39_000m); // 200 x 7.5 x (30 - 4)
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWage_WithEveryDayMissing_IsSkippedAsNoWorkedDays()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 9, Arg.Any<CancellationToken>()).Returns(Task.FromResult<int?>(30));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NoWorkedDays)]);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Theory]
+    [InlineData(WageBasis.Weekly, EmployeePayFrequency.Weekly)]
+    [InlineData(WageBasis.Yearly, EmployeePayFrequency.Yearly)]
+    public async Task RecalculateAllAsync_StillSkipsWeeklyAndYearlyWageBasis(WageBasis basis, EmployeePayFrequency frequency)
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, basis, WageSalary(frequency, 10_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.WageBasisNotMonthly)]);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Theory]
+    [InlineData(WageBasis.Daily, EmployeePayFrequency.Monthly)]
+    [InlineData(WageBasis.Monthly, EmployeePayFrequency.Hourly)]
+    [InlineData(WageBasis.Hourly, EmployeePayFrequency.Daily)]
+    public async Task RecalculateAllAsync_SkipsAnEmployeeWhoseWageBasisDisagreesWithThePayFrequency(WageBasis basis, EmployeePayFrequency frequency)
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, basis, WageSalary(frequency, 2_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.WageBasisMismatch)]);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_SkipsANetDailyWage_WithAnExplicitReason()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 1_500m, EmployeeSalaryType.Net));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NetWageBasisUnsupported)]);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWage_PaysOvertimeOnTheMonthlyEquivalent()
+    {
+        var overtime = Substitute.For<Sense.Modules.Leave.Contracts.IOvertimePayrollReader>();
+        var employeeId = Guid.NewGuid();
+        // 10 hours at 25%: monthly equivalent 2,000 x 30 = 60,000; hourly 60,000 / 225 = 266.67; 10 x 266.67 x 1.25 = 3,333.38
+        overtime.GetAsync(TenantId, Arg.Any<int>(), Arg.Any<int>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Sense.Modules.Leave.Contracts.OvertimePayrollLine>>([new Sense.Modules.Leave.Contracts.OvertimePayrollLine(employeeId, 600, 0, 0)]));
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, overtimeOverride: overtime);
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(63_333.38m);
+    }
+
+    [Fact]
+    public void PeriodWageMath_UsesA225HourMonth_AndA30DayMonth()
+    {
+        PeriodWageMath.MonthlyWorkingHours.ShouldBe(225m);
+        PeriodWageMath.MonthlyEquivalent(WageBasis.Daily, 100m).ShouldBe(3_000m);
+        PeriodWageMath.MonthlyEquivalent(WageBasis.Hourly, 100m).ShouldBe(22_500m);
+        PeriodWageMath.PeriodGross(WageBasis.Hourly, 100m, 10).ShouldBe(7_500m);
+        Should.Throw<NotSupportedException>(() => PeriodWageMath.PeriodGross(WageBasis.Weekly, 100m, 10));
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWageHiredMidMonth_PassesTheEmploymentWindowToAttendance_SoDaysBeforeHireAreNotDeductedTwice()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m), hireDate: new DateOnly(2026, 9, 16));
+        // Attendance sees only 16-30 Eylül: 2 eksik iş günü pencere içinde.
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 9, new DateOnly(2026, 9, 16), new DateOnly(2026, 9, 30), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 11, MissingDays: 2, OvertimeHours: 0m)));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(26_000m); // 2,000 x (15 - 2)
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_FullMonthWorker_DoesNotPassAnAttendanceWindow()
+    {
+        var service = BuildService(out _, out _, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        await workedTimeReader.Received(1).GetAsync(TenantId, employeeId, 2026, 9, null, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWageHiredMidMonth_DeductsUnexcusedAbsenceFromTheKistDays()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m), hireDate: new DateOnly(2026, 9, 16));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 9, Arg.Any<CancellationToken>()).Returns(Task.FromResult<int?>(2));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(26_000m); // 2,000 x (15 - 2)
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWageHiredMidMonth_AddsABonusOnTopOfTheKistWage()
+    {
+        var adjustments = Substitute.For<IPayrollAdjustmentRepository>();
+        var employeeId = Guid.NewGuid();
+        adjustments.ListByEmployeeAndMonthAsync(employeeId, 2026, 9, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment>>(
+                [Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment.Create(TenantId, employeeId, 2026, 9, Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustmentKind.Bonus, "Prim", 10_000m).Value]));
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, adjustmentsOverride: adjustments);
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m), hireDate: new DateOnly(2026, 9, 16));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(40_000m); // 2,000 x 15 + 10,000, the bonus is not prorated
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWage_PaysHolidayWorkOnTheDailyRate()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 9, null, null, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(30, 0, 0m, PublicHolidayDaysWorked: 1, WeeklyRestDaysWorked: 1)));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(64_000m); // 60,000 + 2 x (60,000 / 30)
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_DailyWage_ComputesUnionDuesOnTheMonthlyEquivalent()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out var unionMemberships);
+        var employeeId = Guid.NewGuid();
+        GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m));
+        var membership = EmployeeUnionMembership.Create(TenantId, employeeId, new EmployeeUnionMembershipData(
+            Guid.NewGuid(), new DateOnly(2026, 1, 10), new DateOnly(2026, 1, 15), UnionCoverageType.Member, UnionDuesRule.PercentOfGross, 0.01m, null)).Value;
+        unionMemberships.FindCurrentAsync(employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeUnionMembership?>(membership));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.Deductions).Inputs["unionDues"].ShouldBe("600"); // 1% x (2,000 x 30)
     }
 
     private static decimal CapturedDaysStepOutput(IPayslipCalculationTraceRepository traces)

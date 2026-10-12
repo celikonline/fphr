@@ -10,19 +10,28 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
     : IAttendanceMonthlySummaryReader
 {
     public async Task<IReadOnlyList<AttendanceMonthlySummary>> GetAsync(
-        Guid tenantId, int year, int month, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
+        Guid tenantId, int year, int month, IReadOnlyCollection<Guid> employeeIds,
+        DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default)
     {
         if (employeeIds.Count == 0)
         {
             return [];
         }
 
-        var from = new DateOnly(year, month, 1);
-        var to = from.AddMonths(1).AddDays(-1);
+        var monthStart = new DateOnly(year, month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        // The optional window is clamped into the month; no window = the whole month.
+        var windowStart = from is { } f && f > monthStart ? f : monthStart;
+        var windowEnd = to is { } t && t < monthEnd ? t : monthEnd;
+        if (windowStart > windowEnd)
+        {
+            return [];
+        }
+
         var ids = employeeIds.ToList();
 
         var rows = await context.AttendanceDays.AsNoTracking()
-            .Where(d => d.TenantId == tenantId && ids.Contains(d.EmployeeId) && d.Date >= from && d.Date <= to)
+            .Where(d => d.TenantId == tenantId && ids.Contains(d.EmployeeId) && d.Date >= windowStart && d.Date <= windowEnd)
             .Select(d => new { d.EmployeeId, d.Date, d.PlannedMinutes, d.WorkedMinutes, d.OverrideWorkedMinutes })
             .ToListAsync(cancellationToken);
 
@@ -32,9 +41,9 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
         }
 
         var isPeriodLocked = await context.ShiftPlanLocks.AsNoTracking()
-            .AnyAsync(l => l.TenantId == tenantId && l.PeriodMonth == from && l.UnlockedAt == null, cancellationToken);
+            .AnyAsync(l => l.TenantId == tenantId && l.PeriodMonth == monthStart && l.UnlockedAt == null, cancellationToken);
 
-        var nonWorking = await nonWorkingDays.ResolveAsync(tenantId, ids, from, to, cancellationToken);
+        var nonWorking = await nonWorkingDays.ResolveAsync(tenantId, ids, windowStart, windowEnd, cancellationToken);
         var summaries = new List<AttendanceMonthlySummary>(ids.Count);
         foreach (var group in rows.GroupBy(r => r.EmployeeId))
         {
@@ -43,7 +52,7 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
             var workedMinutesTotal = effectiveMinutes.Sum();
             var overtimeMinutes = group.Sum(r => Math.Max((r.OverrideWorkedMinutes ?? r.WorkedMinutes) - r.PlannedMinutes, 0));
 
-            var workingDays = await schedules.GetWorkingDaysAsync(group.Key, from, to, cancellationToken);
+            var workingDays = await schedules.GetWorkingDaysAsync(group.Key, windowStart, windowEnd, cancellationToken);
             // Resmi tatil ve onaylı izin günleri çalışılması gerekmeyen gündür: kayıt yoksa eksik sayılmaz (çalışılmışsa zaten workedDays içinde).
             var workedDates = group.Where(r => (r.OverrideWorkedMinutes ?? r.WorkedMinutes) > 0).Select(r => r.Date).ToHashSet();
             var excusedDays = workingDays.Count(d => nonWorking.Contains(group.Key, d) && !workedDates.Contains(d));

@@ -55,7 +55,7 @@ public sealed class OvertimeCostKpiHandlerTests
             .Returns((IReadOnlySet<Guid>?)null);
         _employeeDirectory.ListActiveEmployeeIdsAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<Guid> { employeeId });
-        _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { employeeId })), Arg.Any<CancellationToken>())
+        _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { employeeId })), null, null, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary> { new(employeeId, 20m, 160m, 0m, 10m, false) });
         _salaryLookup.GetCurrentSalariesAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { employeeId })), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<Guid, EmployeeCurrentSalary>
@@ -90,7 +90,7 @@ public sealed class OvertimeCostKpiHandlerTests
             .Returns(new List<Guid> { activeEmployeeId, suspendedEmployeeId });
         _employeeDirectory.ListActiveEmployeeIdsAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<Guid> { activeEmployeeId });
-        _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), Arg.Any<CancellationToken>())
+        _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), null, null, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary> { new(activeEmployeeId, 20m, 160m, 0m, 5m, false) });
         _salaryLookup.GetCurrentSalariesAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<Guid, EmployeeCurrentSalary>

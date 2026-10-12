@@ -11,14 +11,15 @@ namespace Sense.Modules.Payroll.Infrastructure.Adapters;
 /// </summary>
 public sealed class AttendanceWorkedTimeReaderAdapter(IAttendanceMonthlySummaryReader summaries) : IWorkedTimeReader
 {
-    public async Task<WorkedTimeSummary?> GetAsync(Guid tenantId, Guid employeeId, int year, int month, CancellationToken cancellationToken = default)
+    public async Task<WorkedTimeSummary?> GetAsync(Guid tenantId, Guid employeeId, int year, int month,
+        DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default)
     {
         // The Attendance port is batch-shaped (Payroll's own period run calls this per employee in a loop today -
         // see PayrollPeriodCalculationService.CalculateOneAsync - so this always asks for a one-employee batch).
         // Absence from the result list means Attendance has no AttendanceDay rows for this employee/month at all
         // ("veri yok", not "0 gün" - see AttendanceMonthlySummary's own doc), which this maps to null exactly like
         // NullWorkedTimeReader, so the caller falls back to the full-calendar-month assumption.
-        var results = await summaries.GetAsync(tenantId, year, month, [employeeId], cancellationToken);
+        var results = await summaries.GetAsync(tenantId, year, month, [employeeId], from, to, cancellationToken);
         var match = results.FirstOrDefault(r => r.EmployeeId == employeeId);
         if (match is null)
         {

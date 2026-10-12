@@ -24,6 +24,8 @@ public static class PayrollSkipReasons
 {
     public const string NoPayrollProfile = "no_payroll_profile";
     public const string WageBasisNotMonthly = "wage_basis_not_monthly";
+    public const string WageBasisMismatch = "wage_basis_mismatch";
+    public const string NetWageBasisUnsupported = "net_wage_basis_unsupported";
     public const string NoSalaryRecord = "no_salary_record";
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
@@ -164,9 +166,10 @@ public sealed class PayrollPeriodCalculationService(
             return PayrollSkipReasons.NoPayrollProfile; // no payroll profile covering this period yet
         }
 
-        if (profile.WageBasis != WageBasis.Monthly)
+        // Monthly, Daily and Hourly are calculated; Weekly and Yearly are still out of scope.
+        if (profile.WageBasis != WageBasis.Monthly && !PeriodWageMath.IsSupported(profile.WageBasis))
         {
-            return PayrollSkipReasons.WageBasisNotMonthly; // PayrollCalculator only supports Monthly this slice (P1 placeholder)
+            return PayrollSkipReasons.WageBasisNotMonthly;
         }
 
         // The salary in force at the period's end, not today's (a later raise must not rewrite a closed month).
@@ -176,20 +179,41 @@ public sealed class PayrollPeriodCalculationService(
             return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
         }
 
+        // The salary record's pay frequency says what the amount means (monthly gross, daily gross or hourly gross); it must agree with the profile.
+        if (!WageBasisMatchesPayFrequency(profile.WageBasis, salary.PayFrequency))
+        {
+            return PayrollSkipReasons.WageBasisMismatch;
+        }
+
+        var isPeriodWage = profile.WageBasis != WageBasis.Monthly;
+        if (isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net)
+        {
+            // BASİTLEŞTİRME: net günlük/saatlik ücretin net→brüt çözümü (aylık NetToGrossSolver'a eşdeğer) yapılmıyor; sessizce yanlış hesap yerine atlanır.
+            return PayrollSkipReasons.NetWageBasisUnsupported;
+        }
+
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
         // girdi - bkz. ResolvePriorCumulativeGvBaseAsync (bu metodun altında).
         // TB-7 Attendance köprüsü (roadmap #23): null (no adapter wired yet, or Attendance has no data for this
         // employee/period) keeps today's full-month assumption; once IWorkedTimeReader has a real Attendance-backed
         // implementation, WorkedDays reflects actual attendance instead.
-        var workedTime = await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
+        // Kıst ayında PDKS yalnız istihdam penceresine bakar: işe girişten önceki / çıkıştan sonraki iş günleri "eksik gün" sayılıp
+        // paidDays30'dan ikinci kez düşülmesin. Tam ayda pencere verilmez (aylık çalışanın davranışı aynı kalır).
+        var workedTime = isPartialMonth
+            ? await workedTimeReader.GetAsync(
+                tenant.TenantId, employeeId, period.Year, period.Month,
+                EmploymentProration.EffectiveStart(periodStart, employment?.HireDate), EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate), cancellationToken)
+            : await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken: cancellationToken);
 
         int workedDays;
+        int missingDays;
         if (workedTime is not null)
         {
             // Attendance (PDKS) already resolved a worked-day figure - use it as-is; the Leave absence bridge below
             // is skipped entirely to avoid double-counting the same missing days from two sources (G-7-08/09, faz-07
             // tur 2 madde 3 "Çift sayım kuralı").
             workedDays = workedTime.WorkedDays;
+            missingDays = workedTime.MissingDays;
         }
         else
         {
@@ -199,6 +223,7 @@ public sealed class PayrollPeriodCalculationService(
             // workedDays unchanged (G-7-08 PO kararı: WorkedDays bu turda yalnız bugünkü kullanım - yemek
             // pro-rasyonu - için, hafta tatili/resmi tatil ücret hakkına dokunmaz).
             var unexcusedDays = await absenceDaysReader.GetUnexcusedDaysAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
+            missingDays = unexcusedDays is > 0 ? unexcusedDays.Value : 0;
             workedDays = unexcusedDays is > 0 ? Math.Max(0, calendarDays - unexcusedDays.Value) : calendarDays;
         }
 
@@ -211,6 +236,14 @@ public sealed class PayrollPeriodCalculationService(
         {
             // e.g. Attendance has a check-in but no worked-minutes day: PayrollCalculator requires >= 1 worked day.
             logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: no worked days.", employeeId, period.Year, period.Month);
+            return PayrollSkipReasons.NoWorkedDays;
+        }
+
+        // Günlük/saatlik ücret: ücretli gün = 30 esaslı kısmi ay günü eksi eksik gün (Attendance varsa MissingDays, yoksa Leave'in mazeretsiz devamsızlığı); 0'ın altına inmez.
+        var wagePaidDays = Math.Max(0, paidDays30 - missingDays);
+        if (isPeriodWage && wagePaidDays <= 0)
+        {
+            logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: no paid days.", employeeId, period.Year, period.Month);
             return PayrollSkipReasons.NoWorkedDays;
         }
 
@@ -237,7 +270,11 @@ public sealed class PayrollPeriodCalculationService(
         // Net ücret (net→brüt): a fixed-net salary is grossed up with the same calculator so the employee keeps exactly that net after the
         // month's premiums and taxes (cumulative bracket, exemptions and disability reduction included). Solved on a full month with no
         // additions or deductions, then the normal run prorates that gross for a partial month and adds meal/overtime/deductions as usual.
-        var grossMonthly = salary.SalaryType == EmployeeSalaryType.Net
+        // Günlük/saatlik ücretlide grossMonthly aylık karşılıktır (günlük x 30, saatlik x 225): fazla mesai, tatil ücreti ve sendika aidatı onunla hesaplanır; dönem brütü PeriodWage ile bulunur.
+        var periodWage = isPeriodWage ? new PeriodWage(profile.WageBasis, salary.Amount, wagePaidDays) : null;
+        var grossMonthly = isPeriodWage
+            ? PeriodWageMath.MonthlyEquivalent(profile.WageBasis, salary.Amount)
+            : salary.SalaryType == EmployeeSalaryType.Net
             ? NetToGrossSolver.Solve(
                 salary.Amount,
                 candidateGross => PayrollCalculator.Calculate(
@@ -295,7 +332,15 @@ public sealed class PayrollPeriodCalculationService(
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
             AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + holidayPay + extraGross,
-            ProratedPaidDays: isPartialMonth ? paidDays30 : null);
+            ProratedPaidDays: ProratedDays(),
+            Wage: periodWage);
+
+        // SGK taban/tavan ve asgari ücret istisnaları kısmi ayda kıst gün, günlük/saatlikte eksik gün düşülmüş ücretli gün kadar ölçeklenir.
+        int? ProratedDays()
+        {
+            var scaledDays = isPeriodWage ? wagePaidDays : paidDays30;
+            return scaledDays < EmploymentProration.PayrollMonthDays ? scaledDays : null;
+        }
 
         // Net prim: brütleştirilir - çalışanın eline tam girilen net geçecek şekilde, ayın diğer kazançları ve dilim/kümülatif matrahla birlikte.
         var netBonusGross = netAdjustmentsTotal > 0m
@@ -346,6 +391,14 @@ public sealed class PayrollPeriodCalculationService(
 
         return null;
     }
+
+    private static bool WageBasisMatchesPayFrequency(WageBasis basis, EmployeePayFrequency frequency) => basis switch
+    {
+        WageBasis.Monthly => frequency == EmployeePayFrequency.Monthly,
+        WageBasis.Daily => frequency == EmployeePayFrequency.Daily,
+        WageBasis.Hourly => frequency == EmployeePayFrequency.Hourly,
+        _ => false,
+    };
 
     /// <summary>senseik-019 2a: Ocak'ta (yeni takvim yılı) her zaman 0'dan başlanır. Aksi halde bu çalışanın AYNI YILDAKİ
     /// en yakın önceki dönem Payslip'inin CUMULATIVE_BASE çıktısı devralınır (ara bir ay açılmamış/çalışanın o ayda

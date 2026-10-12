@@ -848,6 +848,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.period.recalculate" xml:space="preserve"><value>Recalculate a payroll period</value></data>
   <data name="payroll.period.not_found" xml:space="preserve"><value>Payroll period not found.</value></data>
   <data name="payroll.period.not_open" xml:space="preserve"><value>The payroll period is not open.</value></data>
+  <data name="payroll.skip.wage_basis_mismatch" xml:space="preserve"><value>The wage basis on the payroll profile does not match the pay frequency of the salary record; the employee was not calculated.</value></data>
+  <data name="payroll.skip.net_wage_basis_unsupported" xml:space="preserve"><value>Daily/hourly employees with a net wage cannot be calculated yet; enter a gross wage.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Payslip not found.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Period month must be between 1 and 12.</value></data>
   <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Period year must be between {minYear} and {maxYear}.</value></data>

@@ -1,0 +1,25 @@
+{
+  "id": "PAY-WAGE-BASIS",
+  "baslik": "Bordro: günlük ve saatlik ücretli çalışanların hesaplanması (Bakanlığa verilen söz madde 6)",
+  "durum": "onaylandi",
+  "sahip": "takim-gelistirici-dotnet",
+  "dal": "takim/bordro-gunluk-saatlik-ucret",
+  "kabul": [
+    "PayrollPeriodCalculationService günlük (Daily) ve saatlik (Hourly) ücretli çalışanı artık 'wage_basis_not_monthly' ile atlamıyor; haftalık (Weekly) ve yıllık (Yearly) eskisi gibi atlanmaya devam ediyor.",
+    "Tutarın anlamı maaş kaydının ödeme düzeninden (EmployeeCurrentSalary.PayFrequency) okunur: Monthly = aylık brüt, Daily = günlük brüt, Hourly = saat brütü. Profildeki WageBasis ile maaş kaydının ödeme düzeni uyuşmazsa çalışan yeni bir atlama nedeniyle (ör. 'wage_basis_mismatch') atlanır ve bu neden SharedResource{,.en}.resx'e ve web'de atlama nedenlerinin gösterildiği yere eklenir.",
+    "Ücretli gün = 30 (kısmi ayda mevcut paidDays30) eksi eksik gün (Attendance verisi varsa MissingDays, yoksa Leave'den gelen mazeretsiz devamsızlık günü); alt sınır 0. Ücretli gün 0 ise mevcut NoWorkedDays davranışı korunur.",
+    "Günlük ücret: dönem brütü = günlük ücret × ücretli gün. Saatlik ücret: dönem brütü = saat ücreti × 7,5 × ücretli gün (aylık 225 saat standardı; sabit isimli bir sabit/mevzuat parametresi olarak, sihirli sayı olmadan).",
+    "Günlük/saatlik çalışanın brütü kısmi ayda ikinci kez oranlanmaz (ProratedPaidDays ile çift oranlama yok); ancak SGK gün sayısı, SGK tavan/taban ve asgari ücret istisnası gibi gün bazlı hesaplar ücretli gün sayısına göre yapılır. Bunun PayrollCalculator'da nasıl sağlandığı kodda ve testte görünür.",
+    "Fazla mesai, tatil ücreti ve sendika aidatı hesapları günlük/saatlik çalışanda aylık karşılığı kullanır (günlük × 30, saatlik × 225), böylece saat ücreti günlük/saatlik ücretle tutarlı çıkar.",
+    "Net ücret tipindeki (SalaryType=Net) günlük/saatlik çalışan için davranış açıkça tanımlanır: ya doğru net→brüt çözümü yapılır ya da ayrı bir atlama nedeniyle atlanır; sessizce yanlış hesap yapılmaz.",
+    "Hesap izi (trace) brütün nasıl bulunduğunu gösterir (ücret esası, birim ücret, ücretli gün/saat).",
+    "Golden-set / birim testleri: tam ay günlük, tam ay saatlik, ay ortası işe giren günlük, eksik günlü (devamsızlık) günlük, PDKS verili saatlik, Weekly hâlâ atlanıyor, uyuşmazlık atlanıyor. Mevcut aylık testlerin hiçbiri değişmeden yeşil kalır.",
+    "faz3-durum-takibi.md'ye koda göre doğrulanmış bir satır/değişiklik notu eklenir.",
+    "Test kapısı (node .claude/takim/betikler/test-kapisi.mjs) yeşil."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "riskli_alan": true,
+  "riskli_alan_notu": "para (bordro hesabı) — birleştirme öncesi insan onayı ve SMMM kontrolü gerekir; 225 saat/7,5 saat ve ücretli gün kuralı basitleştirmedir.",
+  "kanit": ".claude/takim/kanit/ec6d19f17ea6af23.json (kapı YEŞİL, 5686 test)",
+  "handoff": "docs/takim/handoff/PAY-WAGE-BASIS.md"
+}

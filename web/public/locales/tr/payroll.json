@@ -60,6 +60,10 @@
     "totalNet": "Toplam net",
     "totalEmployerCost": "Toplam işveren maliyeti",
     "skipped": "{{count}} çalışan hesaplanamadı (eksik profil veya maaş).",
+    "skipReasons": {
+      "wage_basis_mismatch": "Bordro profilindeki ücret esası ile maaş kaydının ödeme düzeni uyuşmuyor",
+      "net_wage_basis_unsupported": "Net ücretli günlük/saatlik çalışanlar henüz hesaplanamıyor; brüt ücret girin"
+    },
     "employee": "Çalışan",
     "gross": "Brüt",
     "net": "Net",

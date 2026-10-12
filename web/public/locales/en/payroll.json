@@ -60,6 +60,10 @@
     "totalNet": "Total net",
     "totalEmployerCost": "Total employer cost",
     "skipped": "{{count}} employees could not be calculated (missing profile or salary).",
+    "skipReasons": {
+      "wage_basis_mismatch": "The payroll profile wage basis does not match the salary record pay frequency",
+      "net_wage_basis_unsupported": "Daily/hourly employees with a net wage cannot be calculated yet; enter a gross wage"
+    },
     "employee": "Employee",
     "gross": "Gross",
     "net": "Net",

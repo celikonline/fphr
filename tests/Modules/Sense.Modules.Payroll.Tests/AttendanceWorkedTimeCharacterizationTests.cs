@@ -22,7 +22,7 @@ public sealed class AttendanceWorkedTimeCharacterizationTests
     {
         var employeeId = Guid.NewGuid();
         var summaries = Substitute.For<IAttendanceMonthlySummaryReader>();
-        summaries.GetAsync(TenantId, 2026, 8, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Single() == employeeId), Arg.Any<CancellationToken>())
+        summaries.GetAsync(TenantId, 2026, 8, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Single() == employeeId), null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<AttendanceMonthlySummary>>(
             [
                 new AttendanceMonthlySummary(
@@ -31,7 +31,7 @@ public sealed class AttendanceWorkedTimeCharacterizationTests
             ]));
 
         var adapter = new AttendanceWorkedTimeReaderAdapter(summaries);
-        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 8, TestContext.Current.CancellationToken);
+        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 8, null, null, TestContext.Current.CancellationToken);
 
         result.ShouldBe(new WorkedTimeSummary(WorkedDays: 8, MissingDays: 13, OvertimeHours: 6.5m, PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1));
     }
