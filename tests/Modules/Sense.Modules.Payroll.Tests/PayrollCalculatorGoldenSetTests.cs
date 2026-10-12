@@ -367,4 +367,223 @@ public sealed class PayrollCalculatorGoldenSetTests
         withDues.NetAmount.ShouldBe(noDues.NetAmount - 2_000m);
         withDues.GrossAmount.ShouldBe(noDues.GrossAmount); // dues never reduce GROSS/EARNINGS
     }
+
+    // ---- PAY-FORMULA-3: formüllü ödeme türleri (PayItems). Aşağıdaki senaryolar yalnız kalemli hesabı sınar; kalemsiz hesap yukarıdaki testlerle aynen korunur. ----
+
+    private static PayrollCalculationInput PlainInput(decimal salary = 200_000m) =>
+        new(salary, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+
+    private static PayItemEarning Item(
+        decimal amount, bool sgk = true, bool incomeTax = true, bool stamp = true, string code = "PRIM", decimal? netTarget = null) =>
+        new(code, "Test kalemi", amount, sgk, incomeTax, stamp, "deger", new Dictionary<string, decimal> { ["deger"] = amount }, netTarget);
+
+    [Fact]
+    public void PayItems_NullOrEmpty_LeaveTheTraceExactlyAsBefore()
+    {
+        var options = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web);
+        var plain = PayrollCalculator.Calculate(PlainInput(), Snapshot);
+        var withEmpty = PayrollCalculator.Calculate(PlainInput() with { PayItems = [] }, Snapshot);
+
+        var plainJson = System.Text.Json.JsonSerializer.Serialize(plain.Steps, options);
+        System.Text.Json.JsonSerializer.Serialize(withEmpty.Steps, options).ShouldBe(plainJson);
+
+        // Hiçbir adım kalem alanı taşımaz: ne PAY_ITEM adımı, ne payItems* girdisi, ne "payItem" JSON alanı.
+        plain.Steps.ShouldNotContain(s => s.Code == PayrollTraceStepCodes.PayItem);
+        plainJson.ShouldNotContain("payItem");
+        plain.Step(PayrollTraceStepCodes.Earnings).Inputs.Keys.Order().ShouldBe(["additionalTaxableEarnings", "baseSalary", "grossTotal"]);
+        plain.Step(PayrollTraceStepCodes.SgkBase).Inputs.Keys.Order().ShouldBe(["gross", "mealSgkExcess", "sgkCeiling", "sgkFloor"]);
+        plain.Step(PayrollTraceStepCodes.GvBase).Inputs.Keys.Order().ShouldBe(["gross", "mealGvExcess", "sgkEmployee", "unempEmployee"]);
+        plain.Step(PayrollTraceStepCodes.StampTax).Inputs.Keys.Order().ShouldBe(["gross", "rate"]);
+        plain.Step(PayrollTraceStepCodes.StampTax).Formula.ShouldBe("gross * damga vergisi oranı");
+    }
+
+    [Fact]
+    public void FullyTaxablePayItem_GivesTheSameFiguresAsAdditionalTaxableEarnings()
+    {
+        var viaItem = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(10_000m)] }, Snapshot);
+        var viaAdditional = PayrollCalculator.Calculate(PlainInput() with { AdditionalTaxableEarnings = 10_000m }, Snapshot);
+
+        viaItem.GrossAmount.ShouldBe(viaAdditional.GrossAmount);
+        viaItem.NetAmount.ShouldBe(viaAdditional.NetAmount);
+        viaItem.EmployerCost.ShouldBe(viaAdditional.EmployerCost);
+        foreach (var code in new[]
+        {
+            PayrollTraceStepCodes.Earnings, PayrollTraceStepCodes.SgkBase, PayrollTraceStepCodes.SgkEmployee, PayrollTraceStepCodes.GvBase,
+            PayrollTraceStepCodes.IncomeTax, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.Net, PayrollTraceStepCodes.EmployerCost,
+        })
+        {
+            viaItem.Step(code).Output.ShouldBe(viaAdditional.Step(code).Output, code);
+        }
+
+        viaItem.GrossAmount.ShouldBe(210_000m);
+    }
+
+    [Fact]
+    public void PayItemSteps_ComeBeforeEarnings_AndRecordFormulaVariablesAndFlags()
+    {
+        var item = new PayItemEarning(
+            "YEMEK", "Yemek yardımı", 1_500m, SgkSubject: false, IncomeTaxSubject: true, StampTaxSubject: true,
+            "min(asgari_ucret * 0.05; deger)",
+            new Dictionary<string, decimal> { ["asgari_ucret"] = 30_000m, ["deger"] = 1_500m });
+
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [item] }, Snapshot);
+
+        result.Steps.Select(s => s.Code).Take(3).ShouldBe([PayrollTraceStepCodes.Days, PayrollTraceStepCodes.PayItem, PayrollTraceStepCodes.Earnings]);
+        result.Steps.Select(s => s.Order).ShouldBe(Enumerable.Range(1, result.Steps.Count).ToList()); // sıra numaraları kesintisiz
+        var step = result.Step(PayrollTraceStepCodes.Earnings);
+        step.Inputs["payItemsTotal"].ShouldBe("1500");
+
+        var payItemStep = result.Steps.Single(s => s.Code == PayrollTraceStepCodes.PayItem);
+        payItemStep.PayItem.ShouldBe("YEMEK");
+        payItemStep.Output.ShouldBe(1_500m);
+        payItemStep.Formula.ShouldBe(item.Formula);
+        payItemStep.Inputs["code"].ShouldBe("YEMEK");
+        payItemStep.Inputs["amountBasis"].ShouldBe("gross");
+        payItemStep.Inputs["sgkSubject"].ShouldBe("0");
+        payItemStep.Inputs["incomeTaxSubject"].ShouldBe("1");
+        payItemStep.Inputs["variable.asgari_ucret"].ShouldBe("30000");
+        payItemStep.Inputs["variable.deger"].ShouldBe("1500");
+        payItemStep.ParameterRefs.ShouldContain(r => r.Key == "Payroll.MinimumWage.Gross" && r.Value == 30_000m);
+        result.Step(PayrollTraceStepCodes.SgkBase).Inputs["payItemsSgkExempt"].ShouldBe("1500");
+        result.Step(PayrollTraceStepCodes.GvBase).Inputs["payItemsGvExempt"].ShouldBe("0");
+        result.Step(PayrollTraceStepCodes.StampTax).Inputs["payItemsStampExempt"].ShouldBe("0");
+    }
+
+    [Fact]
+    public void SgkExemptPayItem_JoinsGrossAndGvAndStamp_ButNotTheSgkBase()
+    {
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(10_000m, sgk: false)] }, Snapshot);
+
+        result.Step(PayrollTraceStepCodes.Earnings).Output.ShouldBe(210_000m);
+        result.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(200_000m); // 210,000 - 10,000 (SGK'dan muaf)
+        result.Step(PayrollTraceStepCodes.SgkEmployee).Output.ShouldBe(28_000m);
+        result.Step(PayrollTraceStepCodes.UnempEmployee).Output.ShouldBe(2_000m);
+        result.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(180_000m); // 210,000 - 28,000 - 2,000
+        result.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBe(1_593.90m); // 210,000 * 0.759%
+    }
+
+    [Fact]
+    public void IncomeTaxExemptPayItem_LeavesTheGvBaseButStaysInSgkAndStamp()
+    {
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(10_000m, incomeTax: false)] }, Snapshot);
+
+        result.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(210_000m);
+        result.Step(PayrollTraceStepCodes.SgkEmployee).Output.ShouldBe(29_400m); // 210,000 * 14%
+        result.Step(PayrollTraceStepCodes.UnempEmployee).Output.ShouldBe(2_100m);
+        result.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(168_500m); // 210,000 - 10,000 - 29,400 - 2,100
+        result.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBe(1_593.90m);
+    }
+
+    [Fact]
+    public void StampExemptPayItem_LeavesTheStampBaseButStaysInSgkAndGv()
+    {
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(10_000m, stamp: false)] }, Snapshot);
+
+        result.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(210_000m);
+        result.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(178_500m); // 210,000 - 29,400 - 2,100
+        result.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBe(1_518m); // 200,000 * 0.759%
+    }
+
+    [Fact]
+    public void FullyExemptPayItem_AddsItsAmountToNetAndEmployerCostWithoutTouchingAnyBase()
+    {
+        var plain = PayrollCalculator.Calculate(PlainInput(), Snapshot);
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(10_000m, sgk: false, incomeTax: false, stamp: false)] }, Snapshot);
+
+        foreach (var code in new[]
+        {
+            PayrollTraceStepCodes.SgkBase, PayrollTraceStepCodes.SgkEmployee, PayrollTraceStepCodes.GvBase, PayrollTraceStepCodes.IncomeTax,
+            PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.EmployerSgk, PayrollTraceStepCodes.EmployerUnemp,
+        })
+        {
+            result.Step(code).Output.ShouldBe(plain.Step(code).Output, code);
+        }
+
+        result.GrossAmount.ShouldBe(plain.GrossAmount + 10_000m);
+        result.NetAmount.ShouldBe(plain.NetAmount + 10_000m);
+        result.EmployerCost.ShouldBe(plain.EmployerCost + 10_000m);
+    }
+
+    [Fact]
+    public void ExemptPayItem_NeverPullsTheSgkBaseBelowTheFloor()
+    {
+        // 30,000 asgari ücretli çalışan + SGK'dan muaf 5,000: brüt 35,000, SGK matrahı 30,000 (taban).
+        var result = PayrollCalculator.Calculate(PlainInput(30_000m) with { PayItems = [Item(5_000m, sgk: false)] }, Snapshot);
+
+        result.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(30_000m);
+        result.Step(PayrollTraceStepCodes.Earnings).Output.ShouldBe(35_000m);
+    }
+
+    [Fact]
+    public void MultiplePayItems_AreSummedAndEachGetsItsOwnStep()
+    {
+        var result = PayrollCalculator.Calculate(
+            PlainInput() with { PayItems = [Item(1_000m, code: "A"), Item(2_000m, sgk: false, code: "B")] }, Snapshot);
+
+        result.Steps.Where(s => s.Code == PayrollTraceStepCodes.PayItem).Select(s => s.PayItem).ShouldBe(["A", "B"]);
+        result.Step(PayrollTraceStepCodes.Earnings).Inputs["payItemsTotal"].ShouldBe("3000");
+        result.Step(PayrollTraceStepCodes.Earnings).Output.ShouldBe(203_000m);
+        result.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(201_000m);
+    }
+
+    [Fact]
+    public void PayItemOnAProratedMonth_UsesTheProratedBaseButTheItemAsGiven()
+    {
+        // Kıst ay (15 gün): aylık ücret yarıya iner; kalem tutarı (formülün işi) olduğu gibi eklenir.
+        var input = PlainInput(60_000m) with { ProratedPaidDays = 15, PayItems = [Item(2_000m)] };
+
+        var result = PayrollCalculator.Calculate(input, Snapshot);
+
+        PayrollCalculator.BaseSalary(input).ShouldBe(30_000m);
+        result.Step(PayrollTraceStepCodes.Earnings).Output.ShouldBe(32_000m);
+    }
+
+    [Fact]
+    public void PayItemOnADailyWageEmployee_AddsToTheDailyWagePeriodGross()
+    {
+        var input = PlainInput(60_000m) with { Wage = new PeriodWage(WageBasis.Daily, 2_000m, 25), ProratedPaidDays = 25, PayItems = [Item(1_500m)] };
+
+        var result = PayrollCalculator.Calculate(input, Snapshot);
+
+        PayrollCalculator.BaseSalary(input).ShouldBe(50_000m); // 2,000 x 25
+        result.Step(PayrollTraceStepCodes.Earnings).Output.ShouldBe(51_500m);
+    }
+
+    [Fact]
+    public void BaseSalary_MatchesTheEarningsStepsBaseSalaryInEveryShape()
+    {
+        PayrollCalculationInput[] inputs =
+        [
+            PlainInput(),
+            PlainInput(45_000m) with { ProratedPaidDays = 17 },
+            PlainInput(60_000m) with { Wage = new PeriodWage(WageBasis.Hourly, 150m, 20), ProratedPaidDays = 20 },
+        ];
+
+        foreach (var input in inputs)
+        {
+            var earnings = PayrollCalculator.Calculate(input, Snapshot).Step(PayrollTraceStepCodes.Earnings);
+            decimal.Parse(earnings.Inputs["baseSalary"], System.Globalization.CultureInfo.InvariantCulture).ShouldBe(PayrollCalculator.BaseSalary(input));
+        }
+    }
+
+    [Fact]
+    public void NegativePayItemAmount_IsRejectedByTheEngine()
+    {
+        Should.Throw<Exception>(() => PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(-1m)] }, Snapshot));
+    }
+
+    [Fact]
+    public void NetPayItem_GrossedUpWithTheSolver_LeavesTheEmployeeTheTargetNetWithinOneKurus()
+    {
+        const decimal netTarget = 10_000m;
+        var baseline = PayrollCalculator.Calculate(PlainInput(), Snapshot);
+
+        var grossUp = NetToGrossSolver.SolveExtra(netTarget, extra => PayrollCalculator.Calculate(PlainInput() with { AdditionalTaxableEarnings = extra }, Snapshot));
+        var result = PayrollCalculator.Calculate(PlainInput() with { PayItems = [Item(grossUp, netTarget: netTarget)] }, Snapshot);
+
+        grossUp.ShouldBeGreaterThan(netTarget);
+        Math.Abs(result.NetAmount - baseline.NetAmount - netTarget).ShouldBeLessThanOrEqualTo(0.01m);
+        result.Steps.Single(s => s.Code == PayrollTraceStepCodes.PayItem).Inputs["netTarget"].ShouldBe("10000");
+        result.Steps.Single(s => s.Code == PayrollTraceStepCodes.PayItem).Inputs["amountBasis"].ShouldBe("net");
+    }
 }

@@ -5,6 +5,7 @@ using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
+using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -130,7 +131,9 @@ public sealed class PayrollPeriodCalculationServiceTests
         out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader,
         out IEmployeeUnionMembershipRepository unionMemberships, IPayrollPeriodRepository? periodsOverride = null,
         Sense.Modules.Leave.Contracts.IOvertimePayrollReader? overtimeOverride = null,
-        IPayrollAdjustmentRepository? adjustmentsOverride = null)
+        IPayrollAdjustmentRepository? adjustmentsOverride = null,
+        Sense.Modules.Payroll.Domain.IEmployeePayItemAssignmentRepository? payItemAssignmentsOverride = null,
+        Sense.Modules.Payroll.Domain.IPayItemDefinitionRepository? payItemDefinitionsOverride = null)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -162,6 +165,8 @@ public sealed class PayrollPeriodCalculationServiceTests
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
             workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup, unionMemberships,
             overtimeReader, adjustmentsOverride ?? Substitute.For<IPayrollAdjustmentRepository>(),
+            payItemAssignmentsOverride ?? Substitute.For<Sense.Modules.Payroll.Domain.IEmployeePayItemAssignmentRepository>(),
+            payItemDefinitionsOverride ?? Substitute.For<Sense.Modules.Payroll.Domain.IPayItemDefinitionRepository>(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
     }
 
@@ -977,5 +982,301 @@ public sealed class PayrollPeriodCalculationServiceTests
             .Single(c => c.GetMethodInfo().Name == nameof(IPayslipCalculationTraceRepository.Add))
             .GetArguments()[0]!;
         return JsonSerializer.Deserialize<List<TraceStep>>(captured.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+    }
+
+    // ---- PAY-FORMULA-3: formüllü ödeme türleri (pay items) in the period run. Yukarıdaki testlere dokunulmadı. ----
+
+    private sealed record PayItemRun(PayrollPeriodRunSummary Summary, Payslip? Payslip, IReadOnlyList<TraceStep> Steps);
+
+    private static PayItemDefinition NewPayItem(
+        string code, string formula, Sense.Modules.Payroll.Domain.PayItems.PayItemAmountBasis basis = Sense.Modules.Payroll.Domain.PayItems.PayItemAmountBasis.Gross,
+        bool sgk = true, bool incomeTax = true, bool stamp = true, DateOnly? validTo = null) =>
+        Sense.Modules.Payroll.Domain.PayItems.PayItemDefinition.Create(
+            TenantId, code,
+            new Sense.Modules.Payroll.Domain.PayItems.PayItemDefinitionData(
+                code + " adı", Sense.Modules.Payroll.Domain.PayItems.PayItemDirection.Earning, basis, sgk, incomeTax, stamp, formula, null, new DateOnly(2026, 1, 1), validTo)).Value;
+
+    private static Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment NewAssignment(
+        Guid employeeId, PayItemDefinition definition, decimal? value, DateOnly? from = null, DateOnly? to = null) =>
+        Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment.Create(
+            TenantId, employeeId, definition, value, from ?? new DateOnly(2026, 9, 1), to, new HashSet<DateOnly>()).Value;
+
+    private static (IEmployeePayItemAssignmentRepository Assignments, IPayItemDefinitionRepository Definitions) PayItemRepositories(
+        IReadOnlyList<Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment> assignments, IReadOnlyList<PayItemDefinition> definitions)
+    {
+        var assignmentRepository = Substitute.For<IEmployeePayItemAssignmentRepository>();
+        assignmentRepository.ListCoveringMonthAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(assignments));
+        var definitionRepository = Substitute.For<IPayItemDefinitionRepository>();
+        definitionRepository.ListByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(definitions));
+        return (assignmentRepository, definitionRepository);
+    }
+
+    /// <summary>Runs one September employee (50,000 gross unless <paramref name="given"/> arranges another) through the real service with the given pay items.</summary>
+    private static async Task<PayItemRun> RunWithPayItemsAsync(
+        IReadOnlyList<(PayItemDefinition Definition, decimal? Value)> items,
+        IPayrollAdjustmentRepository? adjustments = null,
+        Action<IEmployeePayrollProfileRepository, IEmployeeSalaryLookup, Guid>? given = null,
+        Guid? forEmployee = null)
+    {
+        var employeeId = forEmployee ?? Guid.NewGuid();
+        var (assignmentRepository, definitionRepository) = PayItemRepositories(
+            items.Select(i => NewAssignment(employeeId, i.Definition, i.Value)).ToList(), items.Select(i => i.Definition).ToList());
+        var service = BuildService(
+            out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            adjustmentsOverride: adjustments, payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        (given ?? ((p, s, id) => GivenEmployee(p, s, id, Salary(50_000m))))(profiles, salaryLookup, employeeId);
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        var added = payslips.ReceivedCalls().SingleOrDefault(c => c.GetMethodInfo().Name == nameof(IPayslipRepository.Add));
+        var traceAdded = traces.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(IPayslipCalculationTraceRepository.Add));
+        return new PayItemRun(summary, (Payslip?)added?.GetArguments()[0], traceAdded ? CapturedSteps(traces) : []);
+    }
+
+    private static IPayrollAdjustmentRepository AdjustmentsOf(Guid employeeId, params (decimal Amount, bool IsNet)[] adjustments)
+    {
+        var repository = Substitute.For<IPayrollAdjustmentRepository>();
+        IReadOnlyList<Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment> list = adjustments
+            .Select(a => Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment.Create(
+                TenantId, employeeId, 2026, 9, Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustmentKind.Bonus, "Prim", a.Amount, a.IsNet).Value)
+            .ToList();
+        repository.ListByEmployeeAndMonthAsync(employeeId, Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(list));
+        return repository;
+    }
+
+    private static TraceStep PayItemStepOf(PayItemRun run, string code) => run.Steps.Single(s => s.Code == PayrollTraceStepCodes.PayItem && s.PayItem == code);
+
+    [Fact]
+    public async Task PayItems_GrossItem_AddsToTheGrossAndWritesAPayItemTraceStep()
+    {
+        var run = await RunWithPayItemsAsync([(NewPayItem("YEMEK", "deger"), 5_000m)]);
+
+        run.Summary.CalculatedCount.ShouldBe(1);
+        run.Payslip!.GrossAmount.ShouldBe(55_000m);
+        var step = PayItemStepOf(run, "YEMEK");
+        step.Formula.ShouldBe("deger");
+        step.Output.ShouldBe(5_000m);
+        step.Inputs["variable.deger"].ShouldBe("5000");
+        run.Steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Inputs["payItemsTotal"].ShouldBe("5000");
+    }
+
+    [Fact]
+    public async Task PayItems_FullyTaxableItem_GivesTheSameResultAsTheSameAmountAsABonus()
+    {
+        var withItem = await RunWithPayItemsAsync([(NewPayItem("PRIM", "deger"), 10_000m)]);
+        var employeeId = Guid.NewGuid();
+        var withBonus = await RunWithPayItemsAsync([], AdjustmentsOf(employeeId, (10_000m, false)), forEmployee: employeeId);
+
+        withItem.Payslip!.GrossAmount.ShouldBe(withBonus.Payslip!.GrossAmount);
+        withItem.Payslip.NetAmount.ShouldBe(withBonus.Payslip.NetAmount);
+        withItem.Payslip.EmployerCost.ShouldBe(withBonus.Payslip.EmployerCost);
+    }
+
+    [Fact]
+    public async Task PayItems_SgkExemptItem_LeavesTheSgkBaseOnTheBaseGross()
+    {
+        var run = await RunWithPayItemsAsync([(NewPayItem("KRES", "deger", sgk: false), 4_000m)]);
+
+        run.Steps.Single(s => s.Code == PayrollTraceStepCodes.SgkBase).Output.ShouldBe(50_000m);
+        run.Steps.Single(s => s.Code == PayrollTraceStepCodes.SgkBase).Inputs["payItemsSgkExempt"].ShouldBe("4000");
+        run.Payslip!.GrossAmount.ShouldBe(54_000m);
+    }
+
+    [Fact]
+    public async Task PayItems_FormulaVariables_AreReadFromTheEmployeeMonth()
+    {
+        // İşe giriş 2020-03-10, Eylül 2026 sonu: 6 tam yıl. Tam ay: ucretli_gun 30, takvim_gunu 30, ay 9.
+        var run = await RunWithPayItemsAsync(
+            [
+                (NewPayItem("A_KIDEM", "kidem_yili * 100"), null),
+                (NewPayItem("B_GUN", "ucretli_gun + takvim_gunu + ay"), null),
+                (NewPayItem("C_ASGARI", "asgari_ucret / 10"), null),
+                (NewPayItem("D_BRUT", "brut / 100"), null),
+            ],
+            given: (p, s, id) => GivenEmployee(p, s, id, Salary(50_000m), hireDate: new DateOnly(2020, 3, 10)));
+
+        PayItemStepOf(run, "A_KIDEM").Output.ShouldBe(600m);
+        PayItemStepOf(run, "B_GUN").Output.ShouldBe(69m); // 30 + 30 + 9
+        PayItemStepOf(run, "C_ASGARI").Output.ShouldBe(3_000m);
+        PayItemStepOf(run, "C_ASGARI").ParameterRefs.ShouldContain(r => r.Key == "Payroll.MinimumWage.Gross");
+        PayItemStepOf(run, "D_BRUT").Output.ShouldBe(500m);
+    }
+
+    [Fact]
+    public async Task PayItems_PartialMonth_PaidDaysAndBrutFollowTheKistMonth()
+    {
+        // 16 Eylül'de işe giriş: 15 ücretli gün (30 gün esası), brüt 50,000 x 15/30 = 25,000.
+        var run = await RunWithPayItemsAsync(
+            [(NewPayItem("A_GUN", "ucretli_gun"), null), (NewPayItem("B_BRUT", "brut"), null)],
+            given: (p, s, id) => GivenEmployee(p, s, id, Salary(50_000m), hireDate: new DateOnly(2026, 9, 16)));
+
+        PayItemStepOf(run, "A_GUN").Output.ShouldBe(15m);
+        PayItemStepOf(run, "B_BRUT").Output.ShouldBe(25_000m);
+        PayItemStepOf(run, "B_BRUT").Inputs["variable.brut"].ShouldBe("25000");
+        run.Steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Inputs["baseSalary"].ShouldBe("25000");
+    }
+
+    [Fact]
+    public async Task PayItems_DailyWage_GunlukUcretIsTheUnitRateAndPaidDaysTheWageDays()
+    {
+        var run = await RunWithPayItemsAsync(
+            [(NewPayItem("A_GUNLUK", "gunluk_ucret"), null), (NewPayItem("B_GUN", "ucretli_gun"), null), (NewPayItem("C_BRUT", "brut / 60"), null)],
+            given: (p, s, id) => GivenWageEmployee(p, s, id, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m)));
+
+        PayItemStepOf(run, "A_GUNLUK").Output.ShouldBe(2_000m);
+        PayItemStepOf(run, "B_GUN").Output.ShouldBe(30m);
+        PayItemStepOf(run, "C_BRUT").Output.ShouldBe(1_000m); // 60,000 / 60
+        run.Payslip!.GrossAmount.ShouldBe(63_030m); // 60,000 + 2,000 + 30 + 1,000
+    }
+
+    [Fact]
+    public async Task PayItems_NetWageEmployee_SeesTheAgreedNetAsNetHedefAndStaysGrossedUpWithoutItems()
+    {
+        var net = await RunWithPayItemsAsync(
+            [(NewPayItem("NETREF", "net_hedef / 10"), null)],
+            given: (p, s, id) => GivenEmployee(p, s, id, WageSalary(EmployeePayFrequency.Monthly, 40_000m, EmployeeSalaryType.Net)));
+        var withoutItems = await RunWithPayItemsAsync(
+            [], given: (p, s, id) => GivenEmployee(p, s, id, WageSalary(EmployeePayFrequency.Monthly, 40_000m, EmployeeSalaryType.Net)));
+
+        PayItemStepOf(net, "NETREF").Output.ShouldBe(4_000m);
+        // Net ücretin brütleştirilmesi kalemlerden bağımsız: kalem üstüne eklenir.
+        net.Steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Inputs["baseSalary"]
+            .ShouldBe(withoutItems.Steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Inputs["baseSalary"]);
+        net.Payslip!.GrossAmount.ShouldBe(withoutItems.Payslip!.GrossAmount + 4_000m);
+    }
+
+    [Fact]
+    public async Task PayItems_FormulaFailure_SkipsTheEmployeeWithPayItemFormulaFailed()
+    {
+        var run = await RunWithPayItemsAsync([(NewPayItem("BOLME", "brut / (deger - deger)"), 5m)]);
+
+        run.Summary.CalculatedCount.ShouldBe(0);
+        run.Summary.Skipped.ShouldHaveSingleItem().Reason.ShouldBe("pay_item_formula_failed");
+        run.Payslip.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task PayItems_FormulaFailure_DoesNotStopOtherEmployees()
+    {
+        var bad = Guid.NewGuid();
+        var good = Guid.NewGuid();
+        var badItem = NewPayItem("BOLME", "brut / (deger - deger)");
+        var (assignmentRepository, definitionRepository) = PayItemRepositories([NewAssignment(bad, badItem, 5m)], [badItem]);
+        var service = BuildService(
+            out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        GivenEmployee(profiles, salaryLookup, bad, Salary(50_000m));
+        GivenEmployee(profiles, salaryLookup, good, Salary(50_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [bad, good], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        summary.Skipped.Select(s => s.EmployeeId).ShouldBe([bad]);
+        CapturedGross(payslips).ShouldBe(50_000m);
+    }
+
+    [Fact]
+    public async Task PayItems_NegativeResult_IsZeroWithAWarning()
+    {
+        var run = await RunWithPayItemsAsync([(NewPayItem("EKSI", "brut - deger"), 70_000m)]);
+
+        run.Summary.CalculatedCount.ShouldBe(1);
+        run.Payslip!.GrossAmount.ShouldBe(50_000m);
+        PayItemStepOf(run, "EKSI").Output.ShouldBe(0m);
+        var warning = run.Summary.Warnings.Where(w => w.Code == "pay_item_negative_result").ShouldHaveSingleItem();
+        warning.Details.ShouldBe("EKSI"); // yalnız kalem kodu, tutar yok
+    }
+
+    [Fact]
+    public async Task PayItems_InactiveDefinition_OutOfRangeDefinitionAndExpiredAssignment_AreIgnored()
+    {
+        var employeeId = Guid.NewGuid();
+        var inactive = NewPayItem("PASIF", "deger");
+        var assignmentOfInactive = NewAssignment(employeeId, inactive, 1_000m);
+        inactive.Deactivate();
+        var expiredDefinition = NewPayItem("ESKI", "deger", validTo: new DateOnly(2026, 8, 31));
+        var assignmentOfExpiredDefinition = NewAssignment(employeeId, expiredDefinition, 1_000m);
+        var activeDefinition = NewPayItem("BITMIS", "deger");
+        var assignmentEnded = NewAssignment(employeeId, activeDefinition, 1_000m, from: new DateOnly(2026, 7, 1), to: new DateOnly(2026, 8, 1));
+        var (assignmentRepository, definitionRepository) = PayItemRepositories(
+            [assignmentOfInactive, assignmentOfExpiredDefinition, assignmentEnded], [inactive, expiredDefinition, activeDefinition]);
+        var service = BuildService(
+            out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(50_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        CapturedGross(payslips).ShouldBe(50_000m);
+        CapturedSteps(traces).ShouldNotContain(s => s.Code == PayrollTraceStepCodes.PayItem);
+    }
+
+    [Fact]
+    public async Task PayItems_NetItem_LeavesTheEmployeeTheNetOnTopOfTheNormalNet()
+    {
+        var baseline = await RunWithPayItemsAsync([]);
+        var run = await RunWithPayItemsAsync([(NewPayItem("NETPRIM", "deger", Sense.Modules.Payroll.Domain.PayItems.PayItemAmountBasis.Net), 10_000m)]);
+
+        var step = PayItemStepOf(run, "NETPRIM");
+        step.Inputs["amountBasis"].ShouldBe("net");
+        step.Inputs["netTarget"].ShouldBe("10000");
+        step.Output.ShouldBeGreaterThan(10_000m);
+        Math.Abs(run.Payslip!.NetAmount - baseline.Payslip!.NetAmount - 10_000m).ShouldBeLessThanOrEqualTo(0.01m);
+        run.Payslip.GrossAmount.ShouldBe(50_000m + step.Output);
+    }
+
+    [Fact]
+    public async Task PayItems_NetBonusAndNetItem_AreGrossedUpTogetherAndSplitByNetAmount()
+    {
+        var employeeId = Guid.NewGuid();
+        var baseline = await RunWithPayItemsAsync([]);
+        var run = await RunWithPayItemsAsync(
+            [(NewPayItem("NETPRIM", "deger", Sense.Modules.Payroll.Domain.PayItems.PayItemAmountBasis.Net), 10_000m)],
+            AdjustmentsOf(employeeId, (5_000m, true)),
+            forEmployee: employeeId);
+
+        Math.Abs(run.Payslip!.NetAmount - baseline.Payslip!.NetAmount - 15_000m).ShouldBeLessThanOrEqualTo(0.01m);
+        var itemGross = PayItemStepOf(run, "NETPRIM").Output;
+        var bonusGross = decimal.Parse(run.Steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Inputs["additionalTaxableEarnings"], System.Globalization.CultureInfo.InvariantCulture);
+        (itemGross + bonusGross).ShouldBe(run.Payslip.GrossAmount - 50_000m);
+        (itemGross / (itemGross + bonusGross)).ShouldBe(2m / 3m, 0.001m);
+    }
+
+    [Fact]
+    public async Task PayItems_WithoutAnyAssignment_TheTraceAndFiguresAreExactlyTheOldOnes()
+    {
+        var run = await RunWithPayItemsAsync([]);
+
+        run.Payslip!.GrossAmount.ShouldBe(50_000m);
+        run.Steps.Select(s => s.Code).ShouldBe(
+        [
+            PayrollTraceStepCodes.Days, PayrollTraceStepCodes.Earnings, PayrollTraceStepCodes.SgkBase, PayrollTraceStepCodes.SgkEmployee,
+            PayrollTraceStepCodes.UnempEmployee, PayrollTraceStepCodes.GvBase, PayrollTraceStepCodes.DisabilityReduction, PayrollTraceStepCodes.CumulativeBase,
+            PayrollTraceStepCodes.IncomeTax, PayrollTraceStepCodes.MinWageExemptionGv, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.MinWageExemptionDv,
+            PayrollTraceStepCodes.Deductions, PayrollTraceStepCodes.Net, PayrollTraceStepCodes.EmployerSgk, PayrollTraceStepCodes.EmployerDiscount,
+            PayrollTraceStepCodes.EmployerUnemp, PayrollTraceStepCodes.EmployerCost,
+        ]);
+        run.Steps.SelectMany(s => s.Inputs.Keys).ShouldNotContain(k => k.StartsWith("payItems", StringComparison.Ordinal));
+        run.Steps.ShouldAllBe(s => s.PayItem == null);
+        run.Summary.Warnings.ShouldNotContain(w => w.Code == "pay_item_negative_result");
+    }
+
+    [Fact]
+    public async Task PayItems_Preview_IncludesTheItems_AndWritesNothing()
+    {
+        var employeeId = Guid.NewGuid();
+        var item = NewPayItem("YEMEK", "deger");
+        var (assignmentRepository, definitionRepository) = PayItemRepositories([NewAssignment(employeeId, item, 5_000m)], [item]);
+        var service = BuildService(
+            out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(50_000m));
+
+        var preview = await service.PreviewAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        preview.Lines.ShouldHaveSingleItem().Gross.ShouldBe(55_000m);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+        traces.DidNotReceive().Add(Arg.Any<PayslipCalculationTrace>());
     }
 }

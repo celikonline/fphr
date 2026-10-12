@@ -67,6 +67,10 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// ORANLAMAZ; yalnız SGK taban/tavan ve asgari ücret istisnalarını ücretli güne göre ölçekler (çağıran bunu ücretli
 /// gün 30'dan azsa o gün sayısıyla doldurur).
 /// </param>
+/// <param name="PayItems">
+/// PAY-FORMULA: already-evaluated formula pay items (<see cref="PayItemEarning"/>). Each amount is added to the gross; the
+/// SGK/GV/damga flags decide which bases it joins. Null or empty = no pay items, the pre-existing behaviour and trace exactly.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -83,4 +87,5 @@ public sealed record PayrollCalculationInput(
     IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
     decimal UnionDuesAmount = 0m,
     int? ProratedPaidDays = null,
-    PeriodWage? Wage = null);
+    PeriodWage? Wage = null,
+    IReadOnlyList<PayItemEarning>? PayItems = null);

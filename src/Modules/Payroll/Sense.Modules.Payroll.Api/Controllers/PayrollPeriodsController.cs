@@ -181,6 +181,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     public async Task<IActionResult> Adjustments(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListPayrollAdjustmentsQuery(id), ct));
 
+    /// <summary>The pay item (formüllü ödeme) lines of every payslip in the period, from each payslip's latest calculation trace.</summary>
+    [HttpGet("{id:guid}/pay-item-lines")]
+    [ProducesResponseType<IReadOnlyList<Sense.Modules.Payroll.Application.PayItems.PayItemLineDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> PayItemLines(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new Sense.Modules.Payroll.Application.PayItems.ListPeriodPayItemLinesQuery(id), ct));
+
     /// <summary>Adds a gross one-off earning to an employee in an open period; returns its id.</summary>
     [HttpPost("{id:guid}/adjustments")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]

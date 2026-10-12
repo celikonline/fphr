@@ -16,6 +16,7 @@ public static class PayslipDocumentBuilder
     private const string Title = "ÜCRET PUSULASI (4857 s. İş Kanunu md.37)";
     private const string GrossLabel = "Brüt Ücret (maktu + varsa fazla mesai/tatil ücreti)";
     private const string NetLabel = "NET ÖDENEN";
+    private const string TotalGrossLabel = "Toplam Brüt";
 
     public static string BuildText(string employeeName, int year, int month, IReadOnlyList<TraceStep> steps, decimal grossAmount, decimal netAmount)
     {
@@ -30,7 +31,10 @@ public static class PayslipDocumentBuilder
         }
 
         sb.Append("\nKAZANÇLAR\n");
-        AppendLine(sb, GrossLabel, grossAmount);
+        foreach (var (label, amount) in Earnings(steps, grossAmount))
+        {
+            AppendLine(sb, label, amount);
+        }
 
         sb.Append("\nKESİNTİLER\n");
         foreach (var (label, amount) in Deductions(steps))
@@ -64,11 +68,37 @@ public static class PayslipDocumentBuilder
             issuer,
             [
                 new SimplePdfKeyValues(null, identity),
-                new SimplePdfTable("Kazançlar", columns, [[GrossLabel, Format(grossAmount)]], amountColumn),
+                new SimplePdfTable("Kazançlar", columns, Earnings(steps, grossAmount).Select(e => (IReadOnlyList<string>)[e.Label, Format(e.Amount)]).ToList(), amountColumn),
                 new SimplePdfTable("Kesintiler", columns, Deductions(steps).Select(d => (IReadOnlyList<string>)[d.Label, Format(d.Amount)]).ToList(), amountColumn),
                 new SimplePdfParagraph($"{NetLabel}: {Format(netAmount)} TL", Bold: true),
             ],
             "Bu pusula SenseİK bordro kayıtlarından oluşturulmuştur.");
+    }
+
+    /// <summary>
+    /// The Kazançlar rows. Without pay items (no PAY_ITEM trace step) the single gross row of old payslips, unchanged. With pay items:
+    /// the base gross row (total minus the items), one row per item (a net item shows its net target) and "Toplam Brüt".
+    /// </summary>
+    private static IReadOnlyList<(string Label, decimal Amount)> Earnings(IReadOnlyList<TraceStep> steps, decimal grossAmount)
+    {
+        var payItems = steps.Where(s => s.Code == PayrollTraceStepCodes.PayItem).ToList();
+        if (payItems.Count == 0)
+        {
+            return [(GrossLabel, grossAmount)];
+        }
+
+        var rows = new List<(string Label, decimal Amount)> { (GrossLabel, grossAmount - payItems.Sum(s => s.Output)) };
+        foreach (var step in payItems)
+        {
+            var name = step.Inputs.GetValueOrDefault("name") ?? step.PayItem ?? string.Empty;
+            var label = step.Inputs.TryGetValue("netTarget", out var raw) && decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out var net)
+                ? $"{name} (net {Format(net)} TL)"
+                : name;
+            rows.Add((label, step.Output));
+        }
+
+        rows.Add((TotalGrossLabel, grossAmount));
+        return rows;
     }
 
     /// <summary>

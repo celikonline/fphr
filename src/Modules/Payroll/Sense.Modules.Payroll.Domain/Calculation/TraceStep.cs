@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Sense.Modules.Payroll.Domain.Garnishments;
 
 namespace Sense.Modules.Payroll.Domain.Calculation;
@@ -13,6 +14,8 @@ public sealed record TraceParameterRef(string Key, decimal Value, DateOnly Valid
 /// One step of a <see cref="PayrollCalculationResult"/> (11.3.7 "Hesap turnusolu"): brüt→net akışının bir adımı.
 /// <paramref name="Inputs"/> are stringified for display only (trace is a read-only audit document, not a re-computable
 /// graph); <paramref name="Formula"/> is a human-readable description of what was computed, not an evaluable expression.
+/// <paramref name="PayItem"/> is the pay item definition code and is only set on PAY_ITEM steps (omitted from the stored JSON otherwise,
+/// so a payslip without pay items keeps a byte-identical trace).
 /// </summary>
 public sealed record TraceStep(
     int Order,
@@ -21,7 +24,8 @@ public sealed record TraceStep(
     IReadOnlyDictionary<string, string> Inputs,
     string Formula,
     decimal Output,
-    IReadOnlyList<TraceParameterRef> ParameterRefs);
+    IReadOnlyList<TraceParameterRef> ParameterRefs,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? PayItem = null);
 
 /// <summary>Result of <see cref="PayrollCalculator.Calculate"/>: the full step trace plus the headline amounts a <c>Payslip</c> stores.</summary>
 /// <param name="GarnishmentApplied">senseik-019 2c: per-order amount <see cref="GarnishmentCalculator"/> applied this
@@ -41,6 +45,7 @@ public sealed record PayrollCalculationResult(
 public static class PayrollTraceStepCodes
 {
     public const string Days = "DAYS";
+    public const string PayItem = "PAY_ITEM";
     public const string Earnings = "EARNINGS";
     public const string SgkBase = "SGK_BASE";
     public const string SgkEmployee = "SGK_EMPLOYEE";

@@ -121,6 +121,7 @@ public sealed class PayrollPeriodFeaturesTests
             Substitute.For<IGarnishmentOrderRepository>(), Substitute.For<IEmployeeDisabilityLookup>(),
             Substitute.For<Sense.Modules.Payroll.Domain.IEmployeeUnionMembershipRepository>(),
             Substitute.For<Sense.Modules.Leave.Contracts.IOvertimePayrollReader>(), Substitute.For<IPayrollAdjustmentRepository>(),
+            Substitute.For<Sense.Modules.Payroll.Domain.IEmployeePayItemAssignmentRepository>(), Substitute.For<Sense.Modules.Payroll.Domain.IPayItemDefinitionRepository>(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
 
         var handler = new RecalculateAllPayslipsHandler(tenant, Substitute.For<Sense.Shared.Contracts.Context.ICurrentUser>(), periods, employeeDirectory, calculation);

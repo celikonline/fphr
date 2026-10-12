@@ -62,7 +62,8 @@
     "skipped": "{{count}} Mitarbeitende konnten nicht berechnet werden (fehlendes Profil oder Gehalt).",
     "skipReasons": {
       "wage_basis_mismatch": "Die Lohnbasis im Abrechnungsprofil passt nicht zum Zahlungsrhythmus des Gehaltsdatensatzes",
-      "net_wage_basis_unsupported": "Tages-/Stundenlöhner mit Nettolohn können noch nicht berechnet werden; bitte Bruttolohn erfassen"
+      "net_wage_basis_unsupported": "Tages-/Stundenlöhner mit Nettolohn können noch nicht berechnet werden; bitte Bruttolohn erfassen",
+      "pay_item_formula_failed": "Die Formel einer Zahlungsart konnte nicht berechnet werden (z. B. Division durch null); bitte Formel und zugewiesenen Wert prüfen"
     },
     "employee": "Mitarbeitende",
     "gross": "Brutto",
@@ -291,5 +292,11 @@
       "duplicate_registration": "Mehrere Dateien für dieselbe Personalnummer/Zeitraum",
       "delivery_failed": "Dokument konnte nicht zugestellt werden"
     }
+  },
+  "warnings": {
+    "pay_item_negative_result": "Die Formel einer Zahlungsart ergab einen negativen Wert und wurde auf 0 gesetzt"
+  },
+  "dirtyReasons": {
+    "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert"
   }
 }

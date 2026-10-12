@@ -62,7 +62,8 @@
     "skipped": "{{count}} çalışan hesaplanamadı (eksik profil veya maaş).",
     "skipReasons": {
       "wage_basis_mismatch": "Bordro profilindeki ücret esası ile maaş kaydının ödeme düzeni uyuşmuyor",
-      "net_wage_basis_unsupported": "Net ücretli günlük/saatlik çalışanlar henüz hesaplanamıyor; brüt ücret girin"
+      "net_wage_basis_unsupported": "Net ücretli günlük/saatlik çalışanlar henüz hesaplanamıyor; brüt ücret girin",
+      "pay_item_formula_failed": "Bir ödeme türünün formülü hesaplanamadı (örn. sıfıra bölme); formülü ve atama değerini kontrol edin"
     },
     "employee": "Çalışan",
     "gross": "Brüt",
@@ -291,5 +292,11 @@
       "duplicate_registration": "Aynı sicil/dönem için birden fazla dosya",
       "delivery_failed": "Belge teslim edilemedi"
     }
+  },
+  "warnings": {
+    "pay_item_negative_result": "Ödeme türü formülü negatif çıktı, 0 olarak alındı"
+  },
+  "dirtyReasons": {
+    "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti"
   }
 }

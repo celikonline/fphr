@@ -32,6 +32,8 @@ public static class PayrollCalculator
 
         Guard.Against(input.AdditionalTaxableEarnings < 0m, "AdditionalTaxableEarnings cannot be negative.");
         Guard.Against(input.AdvanceDeductionTotal < 0m, "AdvanceDeductionTotal cannot be negative.");
+        var payItems = input.PayItems ?? [];
+        Guard.Against(payItems.Any(i => i.GrossAmount < 0m), "Pay item amounts cannot be negative.");
         if (!Enum.IsDefined(input.MealVariant))
         {
             throw new NotSupportedException($"Meal benefit variant '{input.MealVariant}' is not a known value.");
@@ -53,14 +55,28 @@ public static class PayrollCalculator
             "workedDays (Attendance eksik gün girdisi yok - tam ay varsayımı, TODO roadmap #23)",
             days, []));
 
+        // PAY_ITEM (formüllü ödeme türleri, PAY-FORMULA-3): her kalem için bir adım, EARNINGS'ten önce. Kalem yoksa hiç adım eklenmez, iz değişmez.
+        foreach (var item in payItems)
+        {
+            steps.Add(PayItemStep(order++, item, p));
+        }
+
+        var payItemsTotal = Round(payItems.Sum(i => i.GrossAmount));
+        var payItemsSgkExempt = payItems.Where(i => !i.SgkSubject).Sum(i => i.GrossAmount);
+        var payItemsGvExempt = payItems.Where(i => !i.IncomeTaxSubject).Sum(i => i.GrossAmount);
+        var payItemsStampExempt = payItems.Where(i => !i.StampTaxSubject).Sum(i => i.GrossAmount);
+
         // EARNINGS (maktu ücret + varsa fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar, senseik-019 2d)
         // Kıst ücret (işe giriş/çıkış ayı): 30 gün esasıyla orantı; tam ayda 1 (önceki davranış birebir korunur).
-        var proration = input.ProratedPaidDays is { } paidDays and > 0 and < 30 ? paidDays / 30m : 1m;
-        var baseSalary = input.Wage is { } wage
-            ? PeriodWageMath.PeriodGross(wage.Basis, wage.UnitRate, wage.PaidDays) // günlük/saatlik: brüt zaten ücretli güne göre, ikinci oranlama yok
-            : proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
-        var gross = Round(baseSalary + input.AdditionalTaxableEarnings);
+        var proration = Proration(input);
+        var baseSalary = BaseSalary(input);
+        var gross = Round(baseSalary + input.AdditionalTaxableEarnings + payItemsTotal);
         var earningsInputs = Map(("baseSalary", baseSalary), ("additionalTaxableEarnings", input.AdditionalTaxableEarnings), ("grossTotal", gross));
+        if (payItems.Count > 0)
+        {
+            earningsInputs["payItemsTotal"] = Format(payItemsTotal);
+        }
+
         if (input.Wage is { } traced)
         {
             // Hesap izi: brütün nasıl bulunduğu (ücret esası, birim ücret, ücretli gün/saat).
@@ -118,11 +134,19 @@ public static class PayrollCalculator
         // SGK_BASE
         var sgkFloor = Round(p.SgkFloor * proration);
         var sgkCeiling = Round(p.SgkCeiling * proration);
-        var sgkBase = Math.Clamp(gross + mealSgkExcess, sgkFloor, sgkCeiling);
+        var sgkBase = Math.Clamp(gross - payItemsSgkExempt + mealSgkExcess, sgkFloor, sgkCeiling);
+        var sgkBaseInputs = Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", sgkFloor), ("sgkCeiling", sgkCeiling));
+        if (payItems.Count > 0)
+        {
+            sgkBaseInputs["payItemsSgkExempt"] = Format(payItemsSgkExempt);
+        }
+
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.SgkBase, "payroll.trace.step.sgk_base",
-            Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", sgkFloor), ("sgkCeiling", sgkCeiling)),
-            "clamp(gross + yemek SGK istisna aşımı, taban, tavan)",
+            sgkBaseInputs,
+            payItems.Count > 0
+                ? "clamp(gross - SGK'dan muaf ödeme türleri + yemek SGK istisna aşımı, taban, tavan)"
+                : "clamp(gross + yemek SGK istisna aşımı, taban, tavan)",
             Round(sgkBase),
             [Ref("Payroll.Sgk.Floor", p.SgkFloor, p), Ref("Payroll.Sgk.Ceiling", p.SgkCeiling, p)]));
 
@@ -143,11 +167,19 @@ public static class PayrollCalculator
             unempEmployee, [Ref("Payroll.Unemployment.EmployeeRate", p.UnemploymentEmployeeRate, p)]));
 
         // GV_BASE
-        var gvBase = Round(gross + mealGvExcess - sgkEmployee - unempEmployee);
+        var gvBase = Round(gross - payItemsGvExempt + mealGvExcess - sgkEmployee - unempEmployee);
+        var gvBaseInputs = Map(("gross", gross), ("mealGvExcess", mealGvExcess), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee));
+        if (payItems.Count > 0)
+        {
+            gvBaseInputs["payItemsGvExempt"] = Format(payItemsGvExempt);
+        }
+
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.GvBase, "payroll.trace.step.gv_base",
-            Map(("gross", gross), ("mealGvExcess", mealGvExcess), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee)),
-            "gross + yemek GV istisna aşımı - SGK_EMPLOYEE - UNEMP_EMPLOYEE",
+            gvBaseInputs,
+            payItems.Count > 0
+                ? "gross - GV'den muaf ödeme türleri + yemek GV istisna aşımı - SGK_EMPLOYEE - UNEMP_EMPLOYEE"
+                : "gross + yemek GV istisna aşımı - SGK_EMPLOYEE - UNEMP_EMPLOYEE",
             gvBase, []));
 
         // DISABILITY_REDUCTION (GVK md.31, senseik-019 2b): matrah indirimi, MINWAGE_EXEMPTION_GV'den ÖNCE uygulanır.
@@ -217,11 +249,17 @@ public static class PayrollCalculator
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]));
 
         // STAMP_TAX
-        var stampTax = Round(gross * p.StampTaxRate);
+        var stampTax = Round((gross - payItemsStampExempt) * p.StampTaxRate);
+        var stampTaxInputs = Map(("gross", gross), ("rate", p.StampTaxRate));
+        if (payItems.Count > 0)
+        {
+            stampTaxInputs["payItemsStampExempt"] = Format(payItemsStampExempt);
+        }
+
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.StampTax, "payroll.trace.step.stamp_tax",
-            Map(("gross", gross), ("rate", p.StampTaxRate)),
-            "gross * damga vergisi oranı",
+            stampTaxInputs,
+            payItems.Count > 0 ? "(gross - damgadan muaf ödeme türleri) * damga vergisi oranı" : "gross * damga vergisi oranı",
             stampTax, [Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
 
         // MINWAGE_EXEMPTION_DV
@@ -305,6 +343,49 @@ public static class PayrollCalculator
             employerCost, []));
 
         return new PayrollCalculationResult(steps, Round(gross), net, employerCost, garnishmentResult.AppliedAmounts);
+    }
+
+    /// <summary>
+    /// The period's base wage the pay-item formulas call <c>brut</c>: monthly salary (prorated for a partial month) or, for a
+    /// daily/hourly employee, the wage x paid days. Overtime, other earnings and pay items are NOT included. The same figure
+    /// <see cref="Calculate"/> uses as its <c>baseSalary</c>.
+    /// </summary>
+    public static decimal BaseSalary(PayrollCalculationInput input)
+    {
+        var proration = Proration(input);
+        return input.Wage is { } wage
+            ? PeriodWageMath.PeriodGross(wage.Basis, wage.UnitRate, wage.PaidDays) // günlük/saatlik: brüt zaten ücretli güne göre, ikinci oranlama yok
+            : proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
+    }
+
+    private static decimal Proration(PayrollCalculationInput input) =>
+        input.ProratedPaidDays is { } paidDays and > 0 and < 30 ? paidDays / 30m : 1m;
+
+    private static TraceStep PayItemStep(int order, PayItemEarning item, PayrollLegislationSnapshot p)
+    {
+        var inputs = new Dictionary<string, string>
+        {
+            ["code"] = item.Code,
+            ["name"] = item.Name,
+            ["amountBasis"] = item.NetTarget is null ? "gross" : "net",
+            ["sgkSubject"] = item.SgkSubject ? "1" : "0",
+            ["incomeTaxSubject"] = item.IncomeTaxSubject ? "1" : "0",
+            ["stampTaxSubject"] = item.StampTaxSubject ? "1" : "0",
+        };
+        foreach (var (name, value) in item.UsedVariables.OrderBy(v => v.Key, StringComparer.Ordinal))
+        {
+            inputs[$"variable.{name}"] = Format(value);
+        }
+
+        if (item.NetTarget is { } netTarget)
+        {
+            inputs["netTarget"] = Format(netTarget);
+        }
+
+        IReadOnlyList<TraceParameterRef> refs = item.UsedVariables.ContainsKey("asgari_ucret")
+            ? [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]
+            : [];
+        return new TraceStep(order, PayrollTraceStepCodes.PayItem, "payroll.trace.step.pay_item", inputs, item.Formula, item.GrossAmount, refs, item.Code);
     }
 
     private static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);

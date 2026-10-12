@@ -57,4 +57,66 @@ public sealed class PayslipDocumentBuilderTests
 
         text.ShouldContain("NET ÖDENEN: 50.000,00 TL");
     }
+
+    // ---- PAY-FORMULA-3: kalemli pusula; kalemsiz çıktı aynı ----
+
+    private static TraceStep PayItemStep(string code, string name, decimal amount, decimal? netTarget = null)
+    {
+        var inputs = new Dictionary<string, string> { ["code"] = code, ["name"] = name };
+        if (netTarget is { } net)
+        {
+            inputs["netTarget"] = net.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return new TraceStep(0, PayrollTraceStepCodes.PayItem, "title", inputs, "deger", amount, [], code);
+    }
+
+    private static List<TraceStep> StepsWithItems() =>
+    [
+        Step(PayrollTraceStepCodes.Days, 30, new Dictionary<string, string> { ["workedDays"] = "30", ["calendarDaysInMonth"] = "30" }),
+        PayItemStep("YEMEK", "Yemek yardımı", 1_500m),
+        PayItemStep("NETPRIM", "Net prim", 12_345.67m, 10_000m),
+    ];
+
+    private static IEnumerable<string> PdfRows(Sense.Shared.Contracts.Export.SimplePdfDocument document, string tableTitle) =>
+        document.Blocks.OfType<Sense.Shared.Contracts.Export.SimplePdfTable>().Single(t => t.Heading == tableTitle).Rows
+            .Select(r => string.Join(" | ", r));
+
+    [Fact]
+    public void BuildText_WithPayItems_ListsEachItemAndTheTotalGross()
+    {
+        var text = PayslipDocumentBuilder.BuildText("Ayşe Yılmaz", 2026, 9, StepsWithItems(), 63_845.67m, 50_000m);
+
+        text.ShouldContain("Yemek yardımı: 1.500,00 TL");
+        text.ShouldContain("Net prim (net 10.000,00 TL): 12.345,67 TL");
+        text.ShouldContain("Toplam Brüt: 63.845,67 TL");
+        text.ShouldContain("Brüt Ücret (maktu + varsa fazla mesai/tatil ücreti): 50.000,00 TL"); // 63.845,67 - 1.500 - 12.345,67
+    }
+
+    [Fact]
+    public void BuildPdf_WithPayItems_HasTheSameEarningsRows()
+    {
+        var document = PayslipDocumentBuilder.BuildPdf("Ayşe Yılmaz", "Acme", 2026, 9, StepsWithItems(), 63_845.67m, 50_000m);
+
+        PdfRows(document, "Kazançlar").ToList().ShouldBe(
+        [
+            "Brüt Ücret (maktu + varsa fazla mesai/tatil ücreti) | 50.000,00",
+            "Yemek yardımı | 1.500,00",
+            "Net prim (net 10.000,00 TL) | 12.345,67",
+            "Toplam Brüt | 63.845,67",
+        ]);
+    }
+
+    [Fact]
+    public void Build_WithoutPayItems_KeepsTheSingleGrossRow()
+    {
+        var steps = new List<TraceStep> { Step(PayrollTraceStepCodes.Days, 30, new Dictionary<string, string> { ["workedDays"] = "30", ["calendarDaysInMonth"] = "30" }) };
+
+        var text = PayslipDocumentBuilder.BuildText("Ayşe Yılmaz", 2026, 9, steps, 50_000m, 40_000m);
+        var document = PayslipDocumentBuilder.BuildPdf("Ayşe Yılmaz", null, 2026, 9, steps, 50_000m, 40_000m);
+
+        text.ShouldContain("KAZANÇLAR\n  Brüt Ücret (maktu + varsa fazla mesai/tatil ücreti): 50.000,00 TL\n\nKESİNTİLER");
+        text.ShouldNotContain("Toplam Brüt");
+        PdfRows(document, "Kazançlar").ToList().ShouldBe(["Brüt Ücret (maktu + varsa fazla mesai/tatil ücreti) | 50.000,00"]);
+    }
 }

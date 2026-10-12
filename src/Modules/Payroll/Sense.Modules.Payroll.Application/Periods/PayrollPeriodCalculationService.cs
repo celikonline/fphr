@@ -2,10 +2,12 @@ using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
+using Sense.Modules.Payroll.Application.PayItems;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -30,10 +32,20 @@ public static class PayrollSkipReasons
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
     public const string CalculationFailed = "calculation_failed";
+
+    /// <summary>A pay item's formula could not be evaluated for this employee (division by zero, overflow, ...); the log names only the pay item code.</summary>
+    public const string PayItemFormulaFailed = "pay_item_formula_failed";
 }
 
 /// <summary>senseik-019 2a: non-blocking warning from payroll run (e.g. cumulative GV_BASE unavailable for mid-year employee).</summary>
 public sealed record PayrollWarning(Guid EmployeeId, string Code, string? Details = null);
+
+/// <summary>Warning codes added by the pay-item (formüllü ödeme) integration.</summary>
+public static class PayrollWarningCodes
+{
+    /// <summary>A pay item's formula came out negative and was set to 0; <see cref="PayrollWarning.Details"/> is the pay item code.</summary>
+    public const string PayItemNegativeResult = "pay_item_negative_result";
+}
 
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
 /// <see cref="CalculatedCount"/>) when they have no payroll profile/salary record, a non-Monthly WageBasis, a Net
@@ -78,6 +90,8 @@ public sealed class PayrollPeriodCalculationService(
     IEmployeeUnionMembershipRepository unionMemberships,
     IOvertimePayrollReader overtimeReader,
     IPayrollAdjustmentRepository adjustmentRepository,
+    IEmployeePayItemAssignmentRepository payItemAssignments,
+    IPayItemDefinitionRepository payItemDefinitions,
     ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -104,6 +118,7 @@ public sealed class PayrollPeriodCalculationService(
         var periodStart = new DateOnly(period.Year, period.Month, 1);
         var calendarDays = DateTime.DaysInMonth(period.Year, period.Month);
         var snapshot = await PayrollLegislationSnapshotResolver.ResolveAsync(legislationReader, periodStart, cancellationToken);
+        var payItemPlan = await LoadPayItemPlanAsync(periodStart, cancellationToken);
 
         var calculated = 0;
         var skipped = new List<PayrollSkippedEmployee>();
@@ -113,7 +128,7 @@ public sealed class PayrollPeriodCalculationService(
             string? skipReason;
             try
             {
-                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, cancellationToken);
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, payItemPlan, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -145,7 +160,8 @@ public sealed class PayrollPeriodCalculationService(
 
     /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code. Accumulates warnings in the provided list.</summary>
     private async Task<string?> CalculateOneAsync(
-        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, List<PayrollPreviewLine>? preview, CancellationToken cancellationToken)
+        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, List<PayrollPreviewLine>? preview,
+        IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>> payItemPlan, CancellationToken cancellationToken)
     {
         var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
 
@@ -317,7 +333,7 @@ public sealed class PayrollPeriodCalculationService(
         // Nakit yol yardımı: ayni (kart, servis) çalışana para ödemez; nakit olan çalıştığı gün kadar vergiye ve SGK ya tabi ek kazançtır.
         var transportPay = profile.TransportVariant == TransportVariant.Cash ? profile.TransportDailyAmount * workedDays : 0m;
 
-        PayrollCalculationInput BuildInput(decimal extraGross) => new(
+        PayrollCalculationInput BuildInput(decimal extraGross, IReadOnlyList<PayItemEarning>? payItemEarnings = null) => new(
             GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
@@ -333,7 +349,8 @@ public sealed class PayrollPeriodCalculationService(
             UnionDuesAmount: unionDuesAmount,
             AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + holidayPay + extraGross,
             ProratedPaidDays: ProratedDays(),
-            Wage: periodWage);
+            Wage: periodWage,
+            PayItems: payItemEarnings is { Count: > 0 } ? payItemEarnings : null);
 
         // SGK taban/tavan ve asgari ücret istisnaları kısmi ayda kıst gün, günlük/saatlikte eksik gün düşülmüş ücretli gün kadar ölçeklenir.
         int? ProratedDays()
@@ -342,11 +359,52 @@ public sealed class PayrollPeriodCalculationService(
             return scaledDays < EmploymentProration.PayrollMonthDays ? scaledDays : null;
         }
 
+        // Formüllü ödeme türleri (PAY-FORMULA-3): değişkenler kalemler eklenmeden önceki girdiden okunur; atama yoksa bu blok hiç çalışmaz.
+        IReadOnlyList<EvaluatedPayItem> evaluatedItems = [];
+        if (payItemPlan.TryGetValue(employeeId, out var assignedItems) && assignedItems.Count > 0)
+        {
+            var baseInput = BuildInput(0m);
+            var facts = new PayItemVariableFacts(
+                NetTarget: !isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net ? salary.Amount : 0m,
+                MissingDays: missingDays,
+                SeniorityYears: PayItemVariables.SeniorityYears(employment?.HireDate, periodEnd),
+                OvertimeHours: overtime is null ? 0m : (overtime.Rate25Minutes + overtime.Rate50Minutes) / 60m);
+            var evaluation = PayItemEvaluator.Evaluate(assignedItems, deger => PayItemVariables.Build(baseInput, snapshot, facts, deger));
+            if (!evaluation.Succeeded)
+            {
+                // Tutar ve formül metni loga yazılmaz; yalnız ödeme türü kodu.
+                logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: formula of pay item {PayItemCode} failed.", employeeId, period.Year, period.Month, evaluation.FailedCode);
+                return PayrollSkipReasons.PayItemFormulaFailed;
+            }
+
+            warnings.AddRange(evaluation.NegativeCodes.Select(code => new PayrollWarning(employeeId, PayrollWarningCodes.PayItemNegativeResult, code)));
+            evaluatedItems = evaluation.Items;
+        }
+
+        // Brüt kalemler olduğu gibi girer; net kalemler (yalnız tam vergiye tabi) net primlerle TEK çözümde brütleştirilir.
+        var grossEarnings = evaluatedItems.Where(i => !i.IsNet).Select(i => ToEarning(i, i.Amount, null)).ToList();
+        var netItems = evaluatedItems.Where(i => i.IsNet).ToList();
+        var netExtraTotal = netAdjustmentsTotal + netItems.Sum(i => i.Amount);
+
         // Net prim: brütleştirilir - çalışanın eline tam girilen net geçecek şekilde, ayın diğer kazançları ve dilim/kümülatif matrahla birlikte.
-        var netBonusGross = netAdjustmentsTotal > 0m
-            ? NetToGrossSolver.SolveExtra(netAdjustmentsTotal, extra => PayrollCalculator.Calculate(BuildInput(extra), snapshot))
+        var netBonusGross = netExtraTotal > 0m
+            ? NetToGrossSolver.SolveExtra(netExtraTotal, extra => PayrollCalculator.Calculate(BuildInput(extra, grossEarnings), snapshot))
             : 0m;
-        var input = BuildInput(netBonusGross);
+        var adjustmentGross = netBonusGross;
+        IReadOnlyList<decimal> netItemGross = [];
+        if (netItems.Count > 0)
+        {
+            (adjustmentGross, netItemGross) = PayItemNetAllocator.Allocate(netBonusGross, netAdjustmentsTotal, netItems.Select(i => i.Amount).ToList());
+        }
+
+        var payItemEarnings = new List<PayItemEarning>();
+        var netIndex = 0;
+        foreach (var item in evaluatedItems)
+        {
+            payItemEarnings.Add(item.IsNet ? ToEarning(item, netItemGross[netIndex++], item.Amount) : ToEarning(item, item.Amount, null));
+        }
+
+        var input = BuildInput(adjustmentGross, payItemEarnings);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
 
@@ -391,6 +449,44 @@ public sealed class PayrollPeriodCalculationService(
 
         return null;
     }
+
+    /// <summary>
+    /// Loads, once per run, the pay item assignments in force in the month (assignment range covers the month, definition active and
+    /// date-overlapping) grouped by employee. Passive definitions and out-of-range assignments never reach the calculation.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>>> LoadPayItemPlanAsync(
+        DateOnly periodStart, CancellationToken cancellationToken)
+    {
+        var plan = new Dictionary<Guid, List<(EmployeePayItemAssignment, PayItemDefinition)>>();
+        var covering = (await payItemAssignments.ListCoveringMonthAsync(periodStart, cancellationToken))?.Where(a => a.IsCovered(periodStart)).ToList() ?? [];
+        if (covering.Count == 0)
+        {
+            return plan;
+        }
+
+        var definitions = ((await payItemDefinitions.ListByIdsAsync(covering.Select(a => a.PayItemDefinitionId).Distinct().ToList(), cancellationToken)) ?? [])
+            .ToDictionary(d => d.Id);
+        foreach (var assignment in covering)
+        {
+            if (!definitions.TryGetValue(assignment.PayItemDefinitionId, out var definition) || !definition.IsEffectiveInMonth(periodStart))
+            {
+                continue;
+            }
+
+            if (!plan.TryGetValue(assignment.EmployeeId, out var list))
+            {
+                list = [];
+                plan[assignment.EmployeeId] = list;
+            }
+
+            list.Add((assignment, definition));
+        }
+
+        return plan;
+    }
+
+    private static PayItemEarning ToEarning(EvaluatedPayItem item, decimal grossAmount, decimal? netTarget) => new(
+        item.Code, item.Name, grossAmount, item.SgkSubject, item.IncomeTaxSubject, item.StampTaxSubject, item.Formula, item.UsedVariables, netTarget);
 
     private static bool WageBasisMatchesPayFrequency(WageBasis basis, EmployeePayFrequency frequency) => basis switch
     {
