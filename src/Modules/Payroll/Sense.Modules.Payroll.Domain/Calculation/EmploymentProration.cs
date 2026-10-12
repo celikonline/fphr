@@ -30,6 +30,10 @@ public static class EmploymentProration
         return Math.Max(1, endDay - startDay + 1);
     }
 
+    /// <summary>The last day the employee is employed inside the period (termination date when it falls before the period end).</summary>
+    public static DateOnly EffectiveEnd(DateOnly periodEnd, DateOnly? terminationDate) =>
+        terminationDate is { } terminated && terminated < periodEnd ? terminated : periodEnd;
+
     /// <summary>The first day the employee is employed inside the period (hire date when it falls after the period start).</summary>
     public static DateOnly EffectiveStart(DateOnly periodStart, DateOnly? hireDate) =>
         hireDate is { } hired && hired > periodStart ? hired : periodStart;

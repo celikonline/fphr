@@ -60,6 +60,13 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// mid-month; the maktu brüt ücret, the SGK taban/tavan and the asgari ücret istisnaları are all scaled by
 /// <c>ProratedPaidDays / 30</c>. Null (or >= 30) = full month, the pre-existing behaviour.
 /// </param>
+/// <param name="Wage">
+/// Günlük/saatlik ücretli çalışan (<see cref="PeriodWage"/>): null = aylık ücretli, önceki davranış. Doluysa
+/// <paramref name="GrossMonthlySalary"/> birim ücretin AYLIK KARŞILIĞI olur (günlük x 30, saatlik x 225) ve dönem
+/// brütü <see cref="PeriodWageMath.PeriodGross"/> ile bulunur - <paramref name="ProratedPaidDays"/> brütü ikinci kez
+/// ORANLAMAZ; yalnız SGK taban/tavan ve asgari ücret istisnalarını ücretli güne göre ölçekler (çağıran bunu ücretli
+/// gün 30'dan azsa o gün sayısıyla doldurur).
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -75,4 +82,5 @@ public sealed record PayrollCalculationInput(
     decimal AdvanceDeductionTotal = 0m,
     IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
     decimal UnionDuesAmount = 0m,
-    int? ProratedPaidDays = null);
+    int? ProratedPaidDays = null,
+    PeriodWage? Wage = null);

@@ -23,6 +23,13 @@ public static class PayrollCalculator
     {
         Guard.Against(input.GrossMonthlySalary <= 0m, "GrossMonthlySalary must be positive.");
         Guard.Positive(input.WorkedDays, nameof(input.WorkedDays));
+        if (input.Wage is { } w)
+        {
+            Guard.Against(!PeriodWageMath.IsSupported(w.Basis), "Wage basis must be Daily or Hourly.");
+            Guard.Against(w.UnitRate <= 0m, "Wage unit rate must be positive.");
+            Guard.Against(w.PaidDays is < 1 or > EmploymentProration.PayrollMonthDays, "Wage paid days must be between 1 and 30.");
+        }
+
         Guard.Against(input.AdditionalTaxableEarnings < 0m, "AdditionalTaxableEarnings cannot be negative.");
         Guard.Against(input.AdvanceDeductionTotal < 0m, "AdvanceDeductionTotal cannot be negative.");
         if (!Enum.IsDefined(input.MealVariant))
@@ -49,12 +56,29 @@ public static class PayrollCalculator
         // EARNINGS (maktu ücret + varsa fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar, senseik-019 2d)
         // Kıst ücret (işe giriş/çıkış ayı): 30 gün esasıyla orantı; tam ayda 1 (önceki davranış birebir korunur).
         var proration = input.ProratedPaidDays is { } paidDays and > 0 and < 30 ? paidDays / 30m : 1m;
-        var baseSalary = proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
+        var baseSalary = input.Wage is { } wage
+            ? PeriodWageMath.PeriodGross(wage.Basis, wage.UnitRate, wage.PaidDays) // günlük/saatlik: brüt zaten ücretli güne göre, ikinci oranlama yok
+            : proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
         var gross = Round(baseSalary + input.AdditionalTaxableEarnings);
+        var earningsInputs = Map(("baseSalary", baseSalary), ("additionalTaxableEarnings", input.AdditionalTaxableEarnings), ("grossTotal", gross));
+        if (input.Wage is { } traced)
+        {
+            // Hesap izi: brütün nasıl bulunduğu (ücret esası, birim ücret, ücretli gün/saat).
+            earningsInputs["wageBasis"] = traced.Basis == WageBasis.Hourly ? "hourly" : "daily";
+            earningsInputs["unitRate"] = Format(traced.UnitRate);
+            earningsInputs["paidDays"] = traced.PaidDays.ToString(CultureInfo.InvariantCulture);
+            if (traced.Basis == WageBasis.Hourly)
+            {
+                earningsInputs["paidHours"] = Format(traced.PaidDays * PeriodWageMath.DailyWorkingHours);
+            }
+        }
+
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Earnings, "payroll.trace.step.earnings",
-            Map(("baseSalary", baseSalary), ("additionalTaxableEarnings", input.AdditionalTaxableEarnings), ("grossTotal", gross)),
-            "maktu aylık ücret + fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar (varsa)",
+            earningsInputs,
+            input.Wage is null
+                ? "maktu aylık ücret + fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar (varsa)"
+                : "günlük ücret x ücretli gün (saatlik: saat ücreti x 7,5 x ücretli gün) + ek vergiye tabi kazançlar (varsa)",
             gross, []));
 
         // Meal benefit (11.3.07-bordro.md "Yemek varyant kuralları", worked-day pro-rated):

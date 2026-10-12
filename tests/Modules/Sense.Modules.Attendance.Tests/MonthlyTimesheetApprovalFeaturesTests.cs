@@ -71,7 +71,7 @@ public sealed class MonthlyTimesheetApprovalFeaturesTests
             .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeA });
         _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
-        _attendanceSummaries.GetAsync(_tenantId, PeriodMonth.Year, PeriodMonth.Month, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+        _attendanceSummaries.GetAsync(_tenantId, PeriodMonth.Year, PeriodMonth.Month, Arg.Any<IReadOnlyCollection<Guid>>(), null, null, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary>());
         _leaveDays.GetMonthlySummaryAsync(_tenantId, PeriodMonth, PeriodMonth.AddMonths(1).AddDays(-1), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<LeaveDaySummary>());
@@ -96,7 +96,7 @@ public sealed class MonthlyTimesheetApprovalFeaturesTests
             .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeA });
         _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
-        _attendanceSummaries.GetAsync(_tenantId, PeriodMonth.Year, PeriodMonth.Month, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+        _attendanceSummaries.GetAsync(_tenantId, PeriodMonth.Year, PeriodMonth.Month, Arg.Any<IReadOnlyCollection<Guid>>(), null, null, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary> { new(_employeeA, 20, 160, 1, 5, true) });
         _leaveDays.GetMonthlySummaryAsync(_tenantId, PeriodMonth, PeriodMonth.AddMonths(1).AddDays(-1), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<LeaveDaySummary> { new(_employeeA, 2, 0, 1) });

@@ -423,7 +423,7 @@ public sealed class AttendanceIntegrationTests : TestFixture
 
         using var read = ServiceProvider.CreateScope();
         var reader = read.ServiceProvider.GetRequiredService<IAttendanceMonthlySummaryReader>();
-        var result = await reader.GetAsync(tenantId, 2026, 9, [withRecords, withoutRecords], TestContext.Current.CancellationToken);
+        var result = await reader.GetAsync(tenantId, 2026, 9, [withRecords, withoutRecords], null, null, TestContext.Current.CancellationToken);
 
         result.Count.ShouldBe(1); // withoutRecords hiç kayıt bırakmadı - "veri yok" olarak listede yer almaz.
         var summary = result.Single();
@@ -477,7 +477,7 @@ public sealed class AttendanceIntegrationTests : TestFixture
         var reader = new Infrastructure.Lookups.AttendanceMonthlySummaryReader(
             db, scope.ServiceProvider.GetRequiredService<IWorkScheduleReadService>(), new Application.AttendanceDays.NonWorkingDayResolver(leave, holidays));
 
-        var summary = (await reader.GetAsync(tenantId, 2026, 9, [employeeId], TestContext.Current.CancellationToken)).Single();
+        var summary = (await reader.GetAsync(tenantId, 2026, 9, [employeeId], null, null, TestContext.Current.CancellationToken)).Single();
 
         summary.WorkedDays.ShouldBe(2m);
         summary.MissingDays.ShouldBe((decimal)(workingDaysInMonth - 2 - 3)); // 3 Eylül tatil + 4 ve 7 Eylül izin

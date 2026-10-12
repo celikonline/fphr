@@ -149,7 +149,7 @@ public sealed class GetOvertimeCostKpiHandler(
             return Result.Success(new OvertimeCostKpiDto(query.Year, query.Month, [], 0, 0));
         }
 
-        var summaries = await attendanceSummaries.GetAsync(tenant.TenantId, query.Year, query.Month, employeeIds, cancellationToken);
+        var summaries = await attendanceSummaries.GetAsync(tenant.TenantId, query.Year, query.Month, employeeIds, cancellationToken: cancellationToken);
 
         // G-10-19: one batched salary lookup instead of one round trip per employee with an attendance summary.
         var salariesByEmployeeId = await salaryLookup.GetCurrentSalariesAsync(

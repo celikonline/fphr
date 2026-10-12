@@ -20,12 +20,12 @@ public sealed class AttendanceWorkedTimeReaderAdapterTests
     {
         var employeeId = Guid.NewGuid();
         var summaries = Substitute.For<IAttendanceMonthlySummaryReader>();
-        summaries.GetAsync(TenantId, 2026, 3, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Single() == employeeId), Arg.Any<CancellationToken>())
+        summaries.GetAsync(TenantId, 2026, 3, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Single() == employeeId), null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<AttendanceMonthlySummary>>(
                 [new AttendanceMonthlySummary(employeeId, WorkedDays: 18.5m, WorkedHours: 148m, MissingDays: 12.5m, OvertimeHours: 4m, IsPeriodLocked: true)]));
 
         var adapter = new AttendanceWorkedTimeReaderAdapter(summaries);
-        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 3, CancellationToken.None);
+        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 3, null, null, CancellationToken.None);
 
         result.ShouldNotBeNull();
         result.WorkedDays.ShouldBe(19); // 18.5 rounds away from zero
@@ -38,11 +38,11 @@ public sealed class AttendanceWorkedTimeReaderAdapterTests
     {
         var employeeId = Guid.NewGuid();
         var summaries = Substitute.For<IAttendanceMonthlySummaryReader>();
-        summaries.GetAsync(TenantId, 2026, 3, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+        summaries.GetAsync(TenantId, 2026, 3, Arg.Any<IReadOnlyCollection<Guid>>(), null, null, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<AttendanceMonthlySummary>>([]));
 
         var adapter = new AttendanceWorkedTimeReaderAdapter(summaries);
-        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 3, CancellationToken.None);
+        var result = await adapter.GetAsync(TenantId, employeeId, 2026, 3, null, null, CancellationToken.None);
 
         result.ShouldBeNull();
     }

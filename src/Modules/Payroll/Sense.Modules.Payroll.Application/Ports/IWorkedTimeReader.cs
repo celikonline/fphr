@@ -21,5 +21,10 @@ public interface IWorkedTimeReader
 {
     /// <summary>Null = no data for this employee/period (Attendance not tracking it yet, or no adapter wired) - the
     /// caller must fall back to the full calendar month, exactly like before this port existed.</summary>
-    Task<WorkedTimeSummary?> GetAsync(Guid tenantId, Guid employeeId, int year, int month, CancellationToken cancellationToken = default);
+    /// <param name="from">Optional window start inside the month (kıst ayı: işe giriş günü); null = whole month.</param>
+    /// <param name="to">Optional window end inside the month (kıst ayı: işten çıkış günü); null = whole month. Days outside the
+    /// window are never reported as missing.</param>
+    Task<WorkedTimeSummary?> GetAsync(
+        Guid tenantId, Guid employeeId, int year, int month,
+        DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
 }

@@ -20,6 +20,11 @@ public sealed record AttendanceMonthlySummary(
 /// </summary>
 public interface IAttendanceMonthlySummaryReader
 {
+    /// <param name="from">Optional window start (clamped into the month); null = first day of the month.</param>
+    /// <param name="to">Optional window end (clamped into the month); null = last day of the month. A window narrower than the
+    /// month (Payroll's kıst ayı: işe giriş/çıkış arası) limits the rows, the scheduled working days and the holiday/rest-day counts to
+    /// that window, so days outside the employment are never counted as missing. Null/null = the whole month, the pre-existing behaviour.</param>
     Task<IReadOnlyList<AttendanceMonthlySummary>> GetAsync(
-        Guid tenantId, int year, int month, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
+        Guid tenantId, int year, int month, IReadOnlyCollection<Guid> employeeIds,
+        DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
 }

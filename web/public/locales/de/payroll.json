@@ -60,6 +60,10 @@
     "totalNet": "Netto gesamt",
     "totalEmployerCost": "Arbeitgeberkosten gesamt",
     "skipped": "{{count}} Mitarbeitende konnten nicht berechnet werden (fehlendes Profil oder Gehalt).",
+    "skipReasons": {
+      "wage_basis_mismatch": "Die Lohnbasis im Abrechnungsprofil passt nicht zum Zahlungsrhythmus des Gehaltsdatensatzes",
+      "net_wage_basis_unsupported": "Tages-/Stundenlöhner mit Nettolohn können noch nicht berechnet werden; bitte Bruttolohn erfassen"
+    },
     "employee": "Mitarbeitende",
     "gross": "Brutto",
     "net": "Netto",

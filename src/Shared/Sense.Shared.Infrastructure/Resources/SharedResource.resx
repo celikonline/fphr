@@ -857,6 +857,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.period.recalculate" xml:space="preserve"><value>Bordro dönemini yeniden hesaplama</value></data>
   <data name="payroll.period.not_found" xml:space="preserve"><value>Bordro dönemi bulunamadı.</value></data>
   <data name="payroll.period.not_open" xml:space="preserve"><value>Bordro dönemi açık değil.</value></data>
+  <data name="payroll.skip.wage_basis_mismatch" xml:space="preserve"><value>Bordro profilindeki ücret esası ile maaş kaydının ödeme düzeni uyuşmuyor; çalışan hesaplanmadı.</value></data>
+  <data name="payroll.skip.net_wage_basis_unsupported" xml:space="preserve"><value>Net ücretli günlük/saatlik çalışanlar henüz hesaplanamıyor; brüt ücret girin.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Bordro satırı bulunamadı.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Dönem ayı 1-12 aralığında olmalıdır.</value></data>
   <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Dönem yılı {minYear} ile {maxYear} arasında olmalıdır.</value></data>

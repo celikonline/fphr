@@ -123,7 +123,7 @@ public sealed class GetMonthlyTimesheetHandler(
         var periodMonth = MonthlyTimesheetApproval.NormalizeToMonthStart(query.PeriodMonth);
         var periodEnd = periodMonth.AddMonths(1).AddDays(-1);
 
-        var attendanceByEmployee = (await attendanceSummaries.GetAsync(tenant.TenantId, periodMonth.Year, periodMonth.Month, employeeIds, cancellationToken))
+        var attendanceByEmployee = (await attendanceSummaries.GetAsync(tenant.TenantId, periodMonth.Year, periodMonth.Month, employeeIds, cancellationToken: cancellationToken))
             .ToDictionary(s => s.EmployeeId);
         var leaveByEmployee = (await leaveDays.GetMonthlySummaryAsync(tenant.TenantId, periodMonth, periodEnd, employeeIds, cancellationToken))
             .ToDictionary(s => s.EmployeeId);

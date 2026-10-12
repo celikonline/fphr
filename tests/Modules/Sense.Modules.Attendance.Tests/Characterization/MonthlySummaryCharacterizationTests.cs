@@ -63,12 +63,34 @@ public sealed class MonthlySummaryCharacterizationTests : AttendanceCharacteriza
 
         using var read = ServiceProvider!.CreateScope();
         var reader = read.ServiceProvider.GetRequiredService<IAttendanceMonthlySummaryReader>();
-        var summary = (await reader.GetAsync(tenantId, CharacterizationMonth.Year, CharacterizationMonth.Month, [employeeId], ct)).ShouldHaveSingleItem();
+        var summary = (await reader.GetAsync(tenantId, CharacterizationMonth.Year, CharacterizationMonth.Month, [employeeId], null, null, ct)).ShouldHaveSingleItem();
 
         // Gözlenen: 8 çalışılan gün (pazar dahil), 3600 dk = 60 sa (12 Ağustos için override 480), Ağustos 2026'da 21 iş günü
         // - 8 = 13 eksik gün (pazar çalışması da eksik günden düşülüyor), fazla mesai 120 + 240 + 30 = 390 dk = 6,5 sa.
         summary.ShouldBe(new AttendanceMonthlySummary(
             employeeId, WorkedDays: 8m, WorkedHours: 60m, MissingDays: 13m, OvertimeHours: 6.5m, IsPeriodLocked: false,
             PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1));
+    }
+
+    [Fact]
+    public async Task Monthly_summary_with_a_window_ignores_working_days_outside_it()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var ct = TestContext.Current.CancellationToken;
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        await SeedMixedMonthAsync(tenantId, employeeId, ct);
+
+        using var read = ServiceProvider!.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IAttendanceMonthlySummaryReader>();
+        var monthStart = new DateOnly(CharacterizationMonth.Year, CharacterizationMonth.Month, 1);
+        // 10-14 Ağustos (Pzt-Cum): 5 iş günü, 10/11/12'de kayıt var -> 2 eksik; ayın diğer 11 eksik iş günü (3-7, 17-31) pencere dışında kalır.
+        var summary = (await reader.GetAsync(
+            tenantId, monthStart.Year, monthStart.Month, [employeeId], monthStart.AddDays(9), monthStart.AddDays(13), ct)).ShouldHaveSingleItem();
+
+        summary.WorkedDays.ShouldBe(3m);
+        summary.MissingDays.ShouldBe(2m);
+        summary.OvertimeHours.ShouldBe(0.5m);
+        summary.WeeklyRestDaysWorked.ShouldBe(0);
     }
 }
