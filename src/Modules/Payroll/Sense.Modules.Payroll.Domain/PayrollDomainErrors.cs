@@ -85,6 +85,18 @@ public static class PayrollDomainErrors
 
     /// <summary>The signed-in user has no linked employee record, so there are no "my" payslips to act on.</summary>
     public const string NoEmployeeForUser = "payroll.errors.no_employee_for_user";
+
+    // Pay-item formula language (positions are 1-based; Error.Args: position, name, max).
+    public const string FormulaEmpty = "payroll.formula.empty";
+    public const string FormulaSyntax = "payroll.formula.syntax";
+    public const string FormulaUnknownVariable = "payroll.formula.unknown_variable";
+    public const string FormulaUnknownFunction = "payroll.formula.unknown_function";
+    public const string FormulaArgumentCount = "payroll.formula.argument_count";
+    public const string FormulaTooLong = "payroll.formula.too_long";
+    public const string FormulaTooDeep = "payroll.formula.too_deep";
+    public const string FormulaDivisionByZero = "payroll.formula.division_by_zero";
+    public const string FormulaOverflow = "payroll.formula.overflow";
+    public const string FormulaDecimalComma = "payroll.formula.decimal_comma";
 }
 
 /// <summary>Domain limits.</summary>

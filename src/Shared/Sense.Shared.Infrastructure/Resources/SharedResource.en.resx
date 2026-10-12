@@ -1991,4 +1991,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.col.rangePendingDays" xml:space="preserve"><value>Pending days in range</value></data>
   <data name="report.sheet.leaveBalanceDetail" xml:space="preserve"><value>Employee leave details</value></data>
   <data name="Reporting.GenerationFailed" xml:space="preserve"><value>The report could not be generated. Please try again.</value></data>
+  <data name="payroll.formula.empty" xml:space="preserve"><value>The formula cannot be empty.</value></data>
+  <data name="payroll.formula.syntax" xml:space="preserve"><value>Syntax error in the formula (position {position}).</value></data>
+  <data name="payroll.formula.unknown_variable" xml:space="preserve"><value>Unknown variable '{name}' (position {position}).</value></data>
+  <data name="payroll.formula.unknown_function" xml:space="preserve"><value>Unknown function '{name}' (position {position}).</value></data>
+  <data name="payroll.formula.argument_count" xml:space="preserve"><value>Wrong number of arguments for '{name}' (position {position}).</value></data>
+  <data name="payroll.formula.too_long" xml:space="preserve"><value>Formula limit exceeded: at most {max} (position {position}).</value></data>
+  <data name="payroll.formula.too_deep" xml:space="preserve"><value>Formula is nested too deeply: at most {max} levels (position {position}).</value></data>
+  <data name="payroll.formula.division_by_zero" xml:space="preserve"><value>Division by zero (position {position}).</value></data>
+  <data name="payroll.formula.overflow" xml:space="preserve"><value>Number too large; the result exceeds the allowed range (position {position}).</value></data>
+  <data name="payroll.formula.decimal_comma" xml:space="preserve"><value>Use a dot as the decimal separator, not a comma (position {position}).</value></data>
 </root>

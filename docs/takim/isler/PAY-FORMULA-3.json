@@ -1,0 +1,23 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-formullu-odeme",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "id": "PAY-FORMULA-3",
+  "baslik": "Hesaba, hesap izine ve pusulaya entegrasyon",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": true,
+  "kabul": [
+    "PayrollCalculationInput.PayItems ve kalem bazlı SGK/GV/damga matrahları plana uygun; kalemsiz tüm mevcut altın set ve testler değişmeden yeşil, hesap izi bire bir aynı.",
+    "Tam vergiye tabi brüt X kalemin sonucu AdditionalTaxableEarnings=X ile aynı; SGK/GV/damga/hepsinden muaf senaryolarda doğru matrahlar.",
+    "Net kalem net hedefe ±0,01 TL ulaşır; net ek kazanç + net kalem birlikte tutarlı dağıtım.",
+    "Kıst ay (ucretli_gun) ve günlük/saatlik ücretli (gunluk_ucret) senaryoları doğru.",
+    "Formül hatası pay_item_formula_failed ile atlanır; negatif sonuç 0 + pay_item_negative_result uyarısı; pasif tanım ve geçerlilik dışı atama girmez; önizleme kalemleri içerir.",
+    "PAY_ITEM trace adımları (formül metni, girdiler); pusulada (PDF ve düz metin) kalem satırları, kalemsiz eski çıktı aynı.",
+    "GET /periods/{id}/pay-item-lines doğru.",
+    "faz3-durum-takibi.md'ye koda göre doğrulanmış not.",
+    "Test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-FORMULA-3.md",
+  "plan": "docs/takim/handoff/PAY-FORMULA-PLAN.md"
+}

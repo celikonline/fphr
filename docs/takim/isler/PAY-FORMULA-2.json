@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-formullu-odeme",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "id": "PAY-FORMULA-2",
+  "baslik": "Ödeme türü tanımı ve çalışana atama (Domain, Application, API, persistence, migration)",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": true,
+  "kabul": [
+    "PAY-FORMULA-PLAN.md \"Sözleşmeler\" bölümündeki uçlar, DTO'lar, hata kodları ve izin (payroll.payitem.manage, PayrollPermissions.All) birebir uygulanmış.",
+    "Kod tekilliği 409; Net kalemde üç vergi bayrağı true zorunlu; Deduction reddedilir; formül kayıt anında doğrulanır (PAY-FORMULA-1).",
+    "Kapalı döneme atama reddedilir; 500+ çalışan ve 50+ kalem reddedilir; formül deger kullanıyor ama değer/varsayılan yoksa hata.",
+    "Atama/tanım değişiminde doğru çalışanlar pay_item_changed ile işaretlenir.",
+    "Migration dotnet-ef ile üretilmiş (elle yazılmamış), tablolar ve indeksler plana uygun; PendingModelChangesWarning yok.",
+    "Olumsuz izin testi (403), kiracı yalıtımı testleri; domain, application ve Postgres entegrasyon testleri.",
+    "Test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-FORMULA-2.md",
+  "plan": "docs/takim/handoff/PAY-FORMULA-PLAN.md"
+}

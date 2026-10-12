@@ -1,0 +1,18 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-formullu-odeme",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "id": "PAY-FORMULA-5",
+  "baslik": "Web: atama ve dönem dökümü",
+  "sahip": "takim-gelistirici-node",
+  "riskli_alan": false,
+  "kabul": [
+    "period-pay-items.tsx (period-detail.tsx'e kart), çalışan payroll-section.tsx'te tekrarlayan atamalar.",
+    "Dönemde tekli ve toplu atama (çok çalışan seçimi), liste, değer/bitiş ayı düzenleme, silme; dönem açık değilse işlem düğmeleri gizli.",
+    "Hesaplanan kalem satırları pay-item-lines ucundan gösterilir; pay_item_formula_failed, pay_item_negative_result ve pay_item_changed etiketleri i18n tr/en/de.",
+    "Testler, tsc, eslint, vite build yeşil; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-FORMULA-5.md",
+  "plan": "docs/takim/handoff/PAY-FORMULA-PLAN.md"
+}

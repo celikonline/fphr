@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-formullu-odeme",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "id": "PAY-FORMULA-1",
+  "baslik": "Formül değerlendirici (Domain, saf)",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": false,
+  "kabul": [
+    "docs/takim/handoff/PAY-FORMULA-PLAN.md \"Formül dili\" bölümündeki dil, işleçler, fonksiyonlar (TR+EN adlar), sınırlar ve hata kodları uygulanmış (Domain/PayItems/Formulas/).",
+    "PayrollFormula.Parse ve Evaluate yalnız Result döner, exception fırlatmaz; sabit tohumlu 10.000 rastgele girdilik testte hiç exception yok.",
+    "eger/if yalnız seçilen dalı hesaplar; sıfıra bölme ve taşma Result hatası.",
+    "Sonuçlar tr-TR ve en-US kültürlerinde aynı; yalnız decimal aritmetik; virgül ondalık decimal_comma hatası.",
+    "Bilinmeyen değişken/fonksiyon konumla reddedilir; usedVariables doğru; PayItemVariableNames izinli değişken listesi (plan) sabit.",
+    "Hata kodları SharedResource{,.en}.resx ve PayrollDomainErrors sona eklenmiş.",
+    "Test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-FORMULA-1.md",
+  "plan": "docs/takim/handoff/PAY-FORMULA-PLAN.md"
+}

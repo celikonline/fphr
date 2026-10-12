@@ -1,0 +1,20 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-formullu-odeme",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "id": "PAY-FORMULA-4",
+  "baslik": "Web: ödeme türü tanımları ekranı",
+  "sahip": "takim-gelistirici-node",
+  "riskli_alan": false,
+  "kabul": [
+    "pay-items.tsx, pay-item-form.tsx, formula-editor.tsx, payroll-pay-items.service.ts; rota ve menü (payroll.payitem.manage), i18n tr/en/de payItems bloğu.",
+    "Liste, oluşturma, düzenleme, aktif/pasif; kod düzenlemede kilitli; Net seçilince vergi bayrakları kilitli.",
+    "Formül yalnız sunucu ucuyla doğrulanır (istemcide ayrıştırıcı yok); hata konumu, kullanılan değişkenler ve örnek sonuç gösterilir; değişken/fonksiyon kataloğu listelenir.",
+    "İzni olmayan kullanıcı düğmeleri görmez; eksik alanlar null kabul edilir.",
+    "Testler (pay-items.test.tsx, formula-editor.test.tsx) ve i18n eşlik testi, tsc, eslint, vite build yeşil.",
+    "Test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-FORMULA-4.md",
+  "plan": "docs/takim/handoff/PAY-FORMULA-PLAN.md"
+}

@@ -2000,4 +2000,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.col.rangePendingDays" xml:space="preserve"><value>Tarih aralığı için onay bekleyen izinler</value></data>
   <data name="report.sheet.leaveBalanceDetail" xml:space="preserve"><value>Çalışan izin bilgileri</value></data>
   <data name="Reporting.GenerationFailed" xml:space="preserve"><value>Rapor oluşturulamadı. Lütfen tekrar deneyin.</value></data>
+  <data name="payroll.formula.empty" xml:space="preserve"><value>Formül boş olamaz.</value></data>
+  <data name="payroll.formula.syntax" xml:space="preserve"><value>Formülde söz dizimi hatası var (konum {position}).</value></data>
+  <data name="payroll.formula.unknown_variable" xml:space="preserve"><value>Bilinmeyen değişken '{name}' (konum {position}).</value></data>
+  <data name="payroll.formula.unknown_function" xml:space="preserve"><value>Bilinmeyen işlev '{name}' (konum {position}).</value></data>
+  <data name="payroll.formula.argument_count" xml:space="preserve"><value>'{name}' işlevi için bağımsız değişken sayısı geçersiz (konum {position}).</value></data>
+  <data name="payroll.formula.too_long" xml:space="preserve"><value>Formül sınırı aşıldı: en fazla {max} (konum {position}).</value></data>
+  <data name="payroll.formula.too_deep" xml:space="preserve"><value>Formül çok iç içe: en fazla {max} düzey (konum {position}).</value></data>
+  <data name="payroll.formula.division_by_zero" xml:space="preserve"><value>Sıfıra bölme (konum {position}).</value></data>
+  <data name="payroll.formula.overflow" xml:space="preserve"><value>Sayı çok büyük; sonuç sınırı aştı (konum {position}).</value></data>
+  <data name="payroll.formula.decimal_comma" xml:space="preserve"><value>Ondalık ayırıcı olarak nokta kullanın, virgül kullanmayın (konum {position}).</value></data>
 </root>
