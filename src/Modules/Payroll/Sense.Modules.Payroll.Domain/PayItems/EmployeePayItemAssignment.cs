@@ -62,7 +62,7 @@ public sealed class EmployeePayItemAssignment : TenantAggregateRoot<Guid>
             return Error.Validation(PayrollDomainErrors.PayItemInactive);
         }
 
-        if (closedMonths.Contains(fromMonth))
+        if (closedMonths.Any(m => m >= fromMonth && (toMonth is null || m <= toMonth)))
         {
             return Error.Validation(PayrollDomainErrors.PayItemAssignmentPeriodClosed);
         }

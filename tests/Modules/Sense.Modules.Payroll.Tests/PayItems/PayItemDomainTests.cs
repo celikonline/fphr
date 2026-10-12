@@ -199,6 +199,17 @@ public sealed class PayItemDomainTests
     }
 
     [Fact]
+    public void Assignment_CoveringALaterClosedMonth_IsRejected_EvenWhenTheStartIsOpen()
+    {
+        // Reopened January, closed February: an open-ended or Jan..Mar range would cover February.
+        var closed = Closed((2026, 2));
+        EmployeePayItemAssignment.Create(TenantId, EmployeeId, Definition(), 1m, Jan, null, closed).Error.Code.ShouldBe(PayrollDomainErrors.PayItemAssignmentPeriodClosed);
+        EmployeePayItemAssignment.Create(TenantId, EmployeeId, Definition(), 1m, Jan, Jan.AddMonths(2), closed).Error.Code.ShouldBe(PayrollDomainErrors.PayItemAssignmentPeriodClosed);
+        EmployeePayItemAssignment.Create(TenantId, EmployeeId, Definition(), 1m, Jan, Jan, closed).IsSuccess.ShouldBeTrue();
+        EmployeePayItemAssignment.Create(TenantId, EmployeeId, Definition(), 1m, Jan.AddMonths(2), null, closed).IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Assignment_StartingAfterAClosedMonth_IsAllowed()
     {
         EmployeePayItemAssignment.Create(TenantId, EmployeeId, Definition(), 1m, Jan.AddMonths(1), null, Closed((2026, 1))).IsSuccess.ShouldBeTrue();

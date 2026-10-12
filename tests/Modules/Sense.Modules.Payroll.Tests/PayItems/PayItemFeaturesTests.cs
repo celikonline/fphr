@@ -428,6 +428,38 @@ public sealed class PayItemFeaturesTests
     }
 
     [Fact]
+    public async Task Assign_RefusesARangeThatReachesALaterClosedPeriod_EvenWhenTheStartHasNoPeriodYet()
+    {
+        var definition = Stored();
+        var approved = PayrollPeriod.Create(TenantId, 2026, 7).Value;
+        approved.Approve(null);
+        _periods.ListAllAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayrollPeriod>>([approved]));
+
+        var result = await AssignHandler().Handle(new CreatePayItemAssignmentsCommand(definition.Id, [EmployeeA], 1m, 2026, 6, null, null), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PayItemAssignmentPeriodClosed);
+        _assignments.DidNotReceive().Add(Arg.Any<EmployeePayItemAssignment>());
+    }
+
+    [Fact]
+    public async Task UpdateAssignment_RefusesExtendingTheEndPastTheMonthlyLimit()
+    {
+        var definition = Stored();
+        var target = Assignment(definition, EmployeeA, new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 1));
+        var others = Enumerable.Range(0, 50)
+            .Select(i => Assignment(PayItemDefinition.Create(TenantId, $"ITEM{i}", PayItemDomainTests.Data()).Value, EmployeeA, new DateOnly(2026, 7, 1), null))
+            .ToList();
+        _assignments.FindByIdAsync(target.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayItemAssignment?>(target));
+        _assignments.ListByEmployeeAsync(EmployeeA, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<EmployeePayItemAssignment>>([target, .. others]));
+        var handler = new UpdatePayItemAssignmentHandler(_periods, _definitions, _assignments, _flagger);
+
+        (await handler.Handle(new UpdatePayItemAssignmentCommand(target.Id, 1m, 2026, 7), CancellationToken.None)).Error.Code
+            .ShouldBe(PayrollDomainErrors.PayItemAssignmentTooMany);
+        (await handler.Handle(new UpdatePayItemAssignmentCommand(target.Id, 1m, 2026, 6), CancellationToken.None)).IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task UpdateAssignment_OfAnUnknownId_IsNotFound()
     {
         var handler = new UpdatePayItemAssignmentHandler(_periods, _definitions, _assignments, _flagger);

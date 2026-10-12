@@ -223,6 +223,12 @@ public sealed class UpdatePayItemAssignmentHandler(
             return Error.Conflict(PayrollDomainErrors.PayItemAssignmentOverlap);
         }
 
+        var others = sameEmployee.Where(a => a.Id != assignment.Id).ToList();
+        if (EmployeePayItemAssignment.ExceedsMonthlyLimit(others, assignment.ValidFromMonth, newTo))
+        {
+            return Error.Validation(PayrollDomainErrors.PayItemAssignmentTooMany);
+        }
+
         var updated = assignment.Update(definition, command.Value, newTo, closed);
         if (updated.IsFailure)
         {
