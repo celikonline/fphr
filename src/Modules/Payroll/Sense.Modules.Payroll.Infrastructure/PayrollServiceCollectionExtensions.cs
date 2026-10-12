@@ -7,6 +7,7 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Closing;
+using Sense.Modules.Payroll.Application.PayItems;
 using Sense.Modules.Payroll.Application.Payslips;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Severance;
@@ -41,6 +42,11 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();
         services.AddScoped<IUnionRepository, UnionRepository>();
         services.AddScoped<IEmployeeUnionMembershipRepository, EmployeeUnionMembershipRepository>();
+
+        // PAY-FORMULA: formül tabanlı ödeme türleri ve çalışana atamaları.
+        services.AddScoped<IPayItemDefinitionRepository, PayItemDefinitionRepository>();
+        services.AddScoped<IEmployeePayItemAssignmentRepository, EmployeePayItemAssignmentRepository>();
+        services.AddScoped<PayItemChangeFlagger>();
 
         // senseik-010/F-03: Documents' DocumentRequirementMaterializationService reads this to materialize
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.

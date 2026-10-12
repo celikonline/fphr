@@ -97,6 +97,24 @@ public static class PayrollDomainErrors
     public const string FormulaDivisionByZero = "payroll.formula.division_by_zero";
     public const string FormulaOverflow = "payroll.formula.overflow";
     public const string FormulaDecimalComma = "payroll.formula.decimal_comma";
+
+    // PAY-FORMULA-2: pay item definitions and assignments.
+    public const string PayItemCodeInvalid = "payroll.errors.pay_item_code_invalid";
+    public const string PayItemCodeTaken = "payroll.errors.pay_item_code_taken";
+    public const string PayItemNameInvalid = "payroll.errors.pay_item_name_invalid";
+    public const string PayItemDirectionNotSupported = "payroll.errors.pay_item_direction_not_supported";
+    public const string PayItemNetRequiresFullyTaxable = "payroll.errors.pay_item_net_requires_fully_taxable";
+    public const string PayItemDateRangeInvalid = "payroll.errors.pay_item_date_range_invalid";
+    public const string PayItemNotFound = "payroll.errors.pay_item_not_found";
+    public const string PayItemInactive = "payroll.errors.pay_item_inactive";
+    public const string PayItemAssignmentNotFound = "payroll.errors.pay_item_assignment_not_found";
+    public const string PayItemAssignmentPeriodClosed = "payroll.errors.pay_item_assignment_period_closed";
+    public const string PayItemAssignmentTooMany = "payroll.errors.pay_item_assignment_too_many";
+    public const string PayItemAssignmentValueRequired = "payroll.errors.pay_item_assignment_value_required";
+    public const string PayItemAssignmentOverlap = "payroll.errors.pay_item_assignment_overlap";
+
+    /// <summary>Reuses the shared Employee.Contracts "employee.not_found" message for an unknown/other-tenant employee id.</summary>
+    public const string PayItemEmployeeNotFound = "employee.not_found";
 }
 
 /// <summary>Domain limits.</summary>
@@ -121,6 +139,12 @@ public static class PayrollLimits
     public const int IncentiveLawCodeMaxLength = 30;
     public const int UnionNameMaxLength = 200;
     public const int UnionIndustryBranchCodeMaxLength = 30;
+
+    /// <summary>PAY-FORMULA: at most this many pay items may apply to one employee in one month.</summary>
+    public const int MaxPayItemsPerEmployeeMonth = 50;
+
+    /// <summary>PAY-FORMULA: employees per bulk pay-item assignment request.</summary>
+    public const int MaxPayItemAssignmentEmployees = 500;
 
     /// <summary>E2: an employee's payslip objection text.</summary>
     public const int ObjectionReasonMaxLength = 1000;

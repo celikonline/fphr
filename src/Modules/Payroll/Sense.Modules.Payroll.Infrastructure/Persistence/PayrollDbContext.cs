@@ -9,6 +9,7 @@ using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -53,6 +54,10 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<PayrollAdjustment> Adjustments => Set<PayrollAdjustment>();
 
+    public DbSet<PayItemDefinition> PayItemDefinitions => Set<PayItemDefinition>();
+
+    public DbSet<EmployeePayItemAssignment> PayItemAssignments => Set<EmployeePayItemAssignment>();
+
     /// <summary>payroll.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -80,6 +85,8 @@ internal static class PayrollTables
     public const string ExitSettlementLines = "exit_settlement_lines";
     public const string PeriodClosingChecks = "period_closing_checks";
     public const string Adjustments = "payroll_adjustments";
+    public const string PayItemDefinitions = "payroll_pay_item_definitions";
+    public const string PayItemAssignments = "payroll_pay_item_assignments";
     public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
@@ -338,6 +345,40 @@ public sealed class PayrollAdjustmentConfiguration : IEntityTypeConfiguration<Pa
         b.Property(x => x.Label).HasMaxLength(PayrollLimits.AdjustmentLabelMaxLength).IsRequired();
         b.Property(x => x.IsNet).HasDefaultValue(false);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Year, x.Month });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class PayItemDefinitionConfiguration : IEntityTypeConfiguration<PayItemDefinition>
+{
+    public void Configure(EntityTypeBuilder<PayItemDefinition> b)
+    {
+        b.ToTable(PayrollTables.PayItemDefinitions);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Code).HasMaxLength(PayItemDefinition.CodeMaxLength).IsRequired();
+        b.Property(x => x.Name).HasMaxLength(PayItemDefinition.NameMaxLength).IsRequired();
+        b.Property(x => x.Direction).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.AmountBasis).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Formula).HasMaxLength(Domain.PayItems.Formulas.FormulaLimits.MaxTextLength).IsRequired();
+        b.Property(x => x.DefaultValue).HasPrecision(18, 4);
+        b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        b.Ignore(x => x.UsesValue);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class EmployeePayItemAssignmentConfiguration : IEntityTypeConfiguration<EmployeePayItemAssignment>
+{
+    public void Configure(EntityTypeBuilder<EmployeePayItemAssignment> b)
+    {
+        b.ToTable(PayrollTables.PayItemAssignments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Value).HasPrecision(18, 4);
+        b.HasOne<PayItemDefinition>().WithMany().HasForeignKey(x => x.PayItemDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFromMonth });
+        b.HasIndex(x => x.PayItemDefinitionId);
         b.Ignore(x => x.DomainEvents);
     }
 }

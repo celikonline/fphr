@@ -12,9 +12,17 @@ namespace Sense.Modules.Payroll.Application.Periods;
 /// </summary>
 public sealed class PayslipDirtyFlagService(IPayrollPeriodRepository periods, IPayslipDirtyFlagRepository dirtyFlags, TimeProvider clock)
 {
-    public async Task FlagAsync(Guid tenantId, Guid employeeId, DateOnly effectiveFrom, string reason, Guid? sourceEventId, CancellationToken cancellationToken)
+    /// <param name="throughMonth">When set, only open periods up to and including this month are flagged (a bounded
+    /// range such as a pay item assignment with an end month); null = every open period from <paramref name="effectiveFrom"/> on.</param>
+    public async Task FlagAsync(
+        Guid tenantId, Guid employeeId, DateOnly effectiveFrom, string reason, Guid? sourceEventId, CancellationToken cancellationToken, DateOnly? throughMonth = null)
     {
         var openPeriods = await periods.ListOpenCoveringOrAfterAsync(effectiveFrom, cancellationToken);
+        if (throughMonth is { } through)
+        {
+            openPeriods = openPeriods.Where(p => p.Year < through.Year || (p.Year == through.Year && p.Month <= through.Month)).ToList();
+        }
+
         if (openPeriods.Count == 0)
         {
             return;

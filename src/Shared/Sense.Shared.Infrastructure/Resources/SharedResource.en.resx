@@ -2001,4 +2001,19 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.formula.division_by_zero" xml:space="preserve"><value>Division by zero (position {position}).</value></data>
   <data name="payroll.formula.overflow" xml:space="preserve"><value>Number too large; the result exceeds the allowed range (position {position}).</value></data>
   <data name="payroll.formula.decimal_comma" xml:space="preserve"><value>Use a dot as the decimal separator, not a comma (position {position}).</value></data>
+  <data name="payroll.payitem.manage" xml:space="preserve"><value>Define formula pay items and assign them to employees</value></data>
+  <data name="payroll.dirty.reason.pay_item_changed" xml:space="preserve"><value>Pay item (formula payment) changed</value></data>
+  <data name="payroll.errors.pay_item_code_invalid" xml:space="preserve"><value>The code must start with an upper-case letter, contain only upper-case letters, digits and underscores, and be 2-32 characters long.</value></data>
+  <data name="payroll.errors.pay_item_code_taken" xml:space="preserve"><value>A pay item with this code already exists.</value></data>
+  <data name="payroll.errors.pay_item_name_invalid" xml:space="preserve"><value>The pay item name is required and must be at most 100 characters.</value></data>
+  <data name="payroll.errors.pay_item_direction_not_supported" xml:space="preserve"><value>Only earning pay items can be defined for now.</value></data>
+  <data name="payroll.errors.pay_item_net_requires_fully_taxable" xml:space="preserve"><value>A net-amount pay item must be subject to SGK, income tax and stamp tax.</value></data>
+  <data name="payroll.errors.pay_item_date_range_invalid" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="payroll.errors.pay_item_not_found" xml:space="preserve"><value>Pay item not found.</value></data>
+  <data name="payroll.errors.pay_item_inactive" xml:space="preserve"><value>The pay item is inactive and cannot be assigned.</value></data>
+  <data name="payroll.errors.pay_item_assignment_not_found" xml:space="preserve"><value>Pay item assignment not found.</value></data>
+  <data name="payroll.errors.pay_item_assignment_period_closed" xml:space="preserve"><value>A closed payroll period cannot be changed; end the assignment by giving it an end month.</value></data>
+  <data name="payroll.errors.pay_item_assignment_too_many" xml:space="preserve"><value>An employee can have at most 50 pay items in a month, and a bulk assignment at most 500 employees.</value></data>
+  <data name="payroll.errors.pay_item_assignment_value_required" xml:space="preserve"><value>The formula uses 'deger'; enter a value on the assignment or set a default value on the definition.</value></data>
+  <data name="payroll.errors.pay_item_assignment_overlap" xml:space="preserve"><value>The employee already has an assignment of this pay item for an overlapping period.</value></data>
 </root>

@@ -2010,4 +2010,19 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.formula.division_by_zero" xml:space="preserve"><value>Sıfıra bölme (konum {position}).</value></data>
   <data name="payroll.formula.overflow" xml:space="preserve"><value>Sayı çok büyük; sonuç sınırı aştı (konum {position}).</value></data>
   <data name="payroll.formula.decimal_comma" xml:space="preserve"><value>Ondalık ayırıcı olarak nokta kullanın, virgül kullanmayın (konum {position}).</value></data>
+  <data name="payroll.payitem.manage" xml:space="preserve"><value>Ödeme türü formüllerini tanımlama ve çalışanlara atama</value></data>
+  <data name="payroll.dirty.reason.pay_item_changed" xml:space="preserve"><value>Ödeme türü (formüllü ödeme) değişti</value></data>
+  <data name="payroll.errors.pay_item_code_invalid" xml:space="preserve"><value>Kod büyük harfle başlamalı; yalnızca büyük harf, rakam ve alt çizgi içermeli ve 2-32 karakter olmalıdır.</value></data>
+  <data name="payroll.errors.pay_item_code_taken" xml:space="preserve"><value>Bu kodla bir ödeme türü zaten var.</value></data>
+  <data name="payroll.errors.pay_item_name_invalid" xml:space="preserve"><value>Ödeme türü adı boş olamaz ve en fazla 100 karakter olmalıdır.</value></data>
+  <data name="payroll.errors.pay_item_direction_not_supported" xml:space="preserve"><value>Şimdilik yalnızca kazanç türünde ödeme tanımlanabilir.</value></data>
+  <data name="payroll.errors.pay_item_net_requires_fully_taxable" xml:space="preserve"><value>Net tutarlı ödeme türünde SGK, gelir vergisi ve damga vergisi bayrakları açık olmalıdır.</value></data>
+  <data name="payroll.errors.pay_item_date_range_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="payroll.errors.pay_item_not_found" xml:space="preserve"><value>Ödeme türü bulunamadı.</value></data>
+  <data name="payroll.errors.pay_item_inactive" xml:space="preserve"><value>Ödeme türü pasif; atama yapılamaz.</value></data>
+  <data name="payroll.errors.pay_item_assignment_not_found" xml:space="preserve"><value>Ödeme türü ataması bulunamadı.</value></data>
+  <data name="payroll.errors.pay_item_assignment_period_closed" xml:space="preserve"><value>Kapanmış bir bordro dönemi değiştirilemez; atamayı bitiş ayı vererek kapatın.</value></data>
+  <data name="payroll.errors.pay_item_assignment_too_many" xml:space="preserve"><value>Bir çalışana bir ayda en fazla 50 ödeme türü atanabilir; toplu atamada en fazla 500 çalışan seçilebilir.</value></data>
+  <data name="payroll.errors.pay_item_assignment_value_required" xml:space="preserve"><value>Formül 'deger' kullanıyor; atamada bir değer girin ya da tanımda varsayılan değer belirleyin.</value></data>
+  <data name="payroll.errors.pay_item_assignment_overlap" xml:space="preserve"><value>Bu çalışanın bu ödeme türü için tarihleri çakışan bir ataması zaten var.</value></data>
 </root>

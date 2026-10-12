@@ -476,6 +476,166 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.ToTable("garnishment_orders", "payroll");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("PayItemDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pay_item_definition_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("ValidFromMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from_month");
+
+                    b.Property<DateOnly?>("ValidToMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to_month");
+
+                    b.Property<decimal?>("Value")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_pay_item_assignments");
+
+                    b.HasIndex("PayItemDefinitionId")
+                        .HasDatabaseName("ix_payroll_pay_item_assignments_pay_item_definition_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_payroll_pay_item_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "ValidFromMonth")
+                        .HasDatabaseName("ix_payroll_pay_item_assignments_tenant_id_employee_id_valid_fr");
+
+                    b.ToTable("payroll_pay_item_assignments", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.PayItems.PayItemDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AmountBasis")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("amount_basis");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<decimal?>("DefaultValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("default_value");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("direction");
+
+                    b.Property<string>("Formula")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("formula");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsIncomeTaxSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_income_tax_subject");
+
+                    b.Property<bool>("IsSgkSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sgk_subject");
+
+                    b.Property<bool>("IsStampTaxSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_stamp_tax_subject");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_pay_item_definitions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_payroll_pay_item_definitions_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payroll_pay_item_definitions_tenant_id_code");
+
+                    b.ToTable("payroll_pay_item_definitions", "payroll");
+                });
+
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.Payslips.Payslip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1399,6 +1559,16 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_exit_settlement_lines_exit_settlements_exit_settlement_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment", b =>
+                {
+                    b.HasOne("Sense.Modules.Payroll.Domain.PayItems.PayItemDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("PayItemDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payroll_pay_item_assignments_pay_item_definitions_pay_item_");
                 });
 
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.ExitSettlements.ExitSettlement", b =>

@@ -4,6 +4,7 @@ using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -220,4 +221,58 @@ public sealed class PayrollAdjustmentRepository(PayrollDbContext context) : IPay
 
     public async Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default) =>
         await context.Adjustments.Where(a => a.Year == year && a.Month == month).OrderBy(a => a.Label).ToListAsync(cancellationToken);
+}
+
+public sealed class PayItemDefinitionRepository(PayrollDbContext context) : IPayItemDefinitionRepository
+{
+    public void Add(PayItemDefinition definition) => context.PayItemDefinitions.Add(definition);
+
+    public async Task<PayItemDefinition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.PayItemDefinitions.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default) =>
+        await context.PayItemDefinitions.AnyAsync(d => d.Code == code, cancellationToken);
+
+    public async Task<IReadOnlyList<PayItemDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default) =>
+        await context.PayItemDefinitions.Where(d => includeInactive || d.IsActive).OrderBy(d => d.Code).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PayItemDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var list = ids.ToList();
+        return await context.PayItemDefinitions.Where(d => list.Contains(d.Id)).ToListAsync(cancellationToken);
+    }
+}
+
+public sealed class EmployeePayItemAssignmentRepository(PayrollDbContext context) : IEmployeePayItemAssignmentRepository
+{
+    public void Add(EmployeePayItemAssignment assignment) => context.PayItemAssignments.Add(assignment);
+
+    public void Remove(EmployeePayItemAssignment assignment) => context.PayItemAssignments.Remove(assignment);
+
+    public async Task<EmployeePayItemAssignment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.PayItemAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayItemAssignment>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.PayItemAssignments
+            .Where(a => a.EmployeeId == employeeId)
+            .OrderByDescending(a => a.ValidFromMonth)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayItemAssignment>> ListByEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
+    {
+        var ids = employeeIds.ToList();
+        return await context.PayItemAssignments.Where(a => ids.Contains(a.EmployeeId)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<EmployeePayItemAssignment>> ListCoveringMonthAsync(DateOnly monthStart, CancellationToken cancellationToken = default) =>
+        await context.PayItemAssignments
+            .Where(a => a.ValidFromMonth <= monthStart && (a.ValidToMonth == null || a.ValidToMonth >= monthStart))
+            .OrderBy(a => a.EmployeeId)
+            .ThenBy(a => a.ValidFromMonth)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayItemAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default) =>
+        await context.PayItemAssignments
+            .Where(a => a.PayItemDefinitionId == definitionId && (a.ValidToMonth == null || a.ValidToMonth >= notEndedBefore))
+            .ToListAsync(cancellationToken);
 }

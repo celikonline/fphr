@@ -30,6 +30,9 @@ public static class PayslipDirtyFlagReasons
 
     /// <summary><see cref="Periods.ChangeDetectionRun"/> hash mismatch ("event kaçırma sigortası").</summary>
     public const string HashMismatch = "hash_mismatch";
+
+    /// <summary>A formula pay item (ödeme türü) was assigned, changed or removed, or its definition changed (PAY-FORMULA).</summary>
+    public const string PayItemChanged = "pay_item_changed";
 }
 
 /// <summary>

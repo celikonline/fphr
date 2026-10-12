@@ -71,5 +71,9 @@ public static class PayrollPermissions
     public static readonly Permission MyPayslips = new(
         MyPayslipsKey, Module, "Kendi Ücret Pusulalarımı Görüntüleme", Group, "Kendi ücret pusulalarını görüntüleme ve indirme (yalnız ödenmiş/kilitli dönemler)");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, PayslipImport, MyPayslip, MyPayslips];
+    /// <summary>PAY-FORMULA: define formula-based pay items (ödeme türü) and assign them to employees.</summary>
+    public static readonly Permission PayItemManage = new(
+        "payroll.payitem.manage", Module, "payroll.payitem.manage", Group, "Define formula-based pay items and assign them to employees");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, PayslipImport, MyPayslip, MyPayslips, PayItemManage];
 }

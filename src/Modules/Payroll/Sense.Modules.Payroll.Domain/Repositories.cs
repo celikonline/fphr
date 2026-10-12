@@ -2,6 +2,7 @@ using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -182,4 +183,41 @@ public interface IPayrollAdjustmentRepository
 
     /// <summary>Every adjustment of one month, all employees (the period's "Ek kazançlar" list).</summary>
     Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default);
+}
+
+/// <summary>PAY-FORMULA: tenant-wide pay item (ödeme türü) definitions.</summary>
+public interface IPayItemDefinitionRepository
+{
+    void Add(PayItemDefinition definition);
+
+    Task<PayItemDefinition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
+
+    /// <summary>Definitions ordered by code; inactive ones only when <paramref name="includeInactive"/>.</summary>
+    Task<IReadOnlyList<PayItemDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PayItemDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
+}
+
+/// <summary>PAY-FORMULA: pay item assignments to employees.</summary>
+public interface IEmployeePayItemAssignmentRepository
+{
+    void Add(EmployeePayItemAssignment assignment);
+
+    void Remove(EmployeePayItemAssignment assignment);
+
+    Task<EmployeePayItemAssignment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every assignment of one employee, newest start first.</summary>
+    Task<IReadOnlyList<EmployeePayItemAssignment>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Assignments of the given employees (batch limit check), any range.</summary>
+    Task<IReadOnlyList<EmployeePayItemAssignment>> ListByEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Assignments covering the month starting <paramref name="monthStart"/>, all employees.</summary>
+    Task<IReadOnlyList<EmployeePayItemAssignment>> ListCoveringMonthAsync(DateOnly monthStart, CancellationToken cancellationToken = default);
+
+    /// <summary>Every assignment of one definition that has not ended before <paramref name="notEndedBefore"/>.</summary>
+    Task<IReadOnlyList<EmployeePayItemAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default);
 }
