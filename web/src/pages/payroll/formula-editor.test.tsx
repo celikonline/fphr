@@ -99,7 +99,7 @@ describe("FormulaEditor", () => {
 
     expect(await screen.findByText("Formül geçerli")).toBeInTheDocument();
     expect(screen.getByText(/Kullanılan değişkenler: brut/)).toBeInTheDocument();
-    expect(screen.getByText("2000")).toBeInTheDocument();
+    expect(screen.getByText(/^2\.?000$/)).toBeInTheDocument();
     expect(validatePayItemFormula).toHaveBeenCalledWith({ formula: "brut * 0.1", amountBasis: "gross", sampleValues: { brut: 20000, deger: 100 } });
   });
 
@@ -144,5 +144,12 @@ describe("FormulaEditor", () => {
     await screen.findByText("Formül geçerli");
     await user.type(screen.getByRole("textbox", { name: /^Formül/ }), "2");
     await waitFor(() => expect(screen.queryByText("Formül geçerli")).not.toBeInTheDocument());
+  });
+
+  it("shows a short error when the catalog cannot be loaded", async () => {
+    vi.mocked(getFormulaCatalog).mockReset().mockRejectedValue(new Error("boom"));
+    renderEditor("1");
+
+    expect(await screen.findByTestId("formula-catalog-error")).toHaveTextContent("Formül kataloğu yüklenemedi");
   });
 });

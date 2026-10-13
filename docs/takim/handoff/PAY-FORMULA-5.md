@@ -17,3 +17,8 @@
 - Toplu atamada "filtreyle tümünü seç" yok (sunucu id listesi ister, en çok 500).
 - Ay alanları yerel `<input type="month">`.
 - Riskli alan: yok.
+
+## İnceleme düzeltmeleri
+- Toplu atama testi artık iki çalışanla (employeeIds `["e9","e10"]`).
+- Hesaplanan kalemler sorgusu hata verirse boş durum yerine `payroll:loadErrors.payItemLines` hatası (+ test).
+- `formula-editor.tsx`: katalog sorgusu hatasında kısa hata metni (`loadErrors.formulaCatalog`, tr/en/de sona eklendi); `sampleResult` `Intl.NumberFormat(i18n.language)` ile gösterilir (+ test).

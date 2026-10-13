@@ -443,5 +443,9 @@
   "previewDetails": {
     "warningsTitle": "Uyarılar",
     "employeeCount": "{{count}} çalışan"
+  },
+  "loadErrors": {
+    "formulaCatalog": "Formül kataloğu yüklenemedi; değişken ve fonksiyon listesi gösterilemiyor.",
+    "payItemLines": "Hesaplanan kalemler yüklenemedi."
   }
 }

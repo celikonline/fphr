@@ -443,5 +443,9 @@
   "previewDetails": {
     "warningsTitle": "Warnings",
     "employeeCount": "{{count}} employees"
+  },
+  "loadErrors": {
+    "formulaCatalog": "The formula catalog could not be loaded; variables and functions cannot be listed.",
+    "payItemLines": "Calculated pay item lines could not be loaded."
   }
 }

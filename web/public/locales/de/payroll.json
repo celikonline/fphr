@@ -443,5 +443,9 @@
   "previewDetails": {
     "warningsTitle": "Warnungen",
     "employeeCount": "{{count}} Mitarbeiter"
+  },
+  "loadErrors": {
+    "formulaCatalog": "Der Formelkatalog konnte nicht geladen werden; Variablen und Funktionen werden nicht angezeigt.",
+    "payItemLines": "Berechnete Positionen konnten nicht geladen werden."
   }
 }

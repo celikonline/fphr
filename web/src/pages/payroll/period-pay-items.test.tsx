@@ -28,9 +28,14 @@ vi.mock("@/components/permission-guard", async () => {
 
 vi.mock("@/components/employees/employee-picker", () => ({
   default: ({ onChange }: { onChange: (value: { id: string; displayName: string } | null) => void }) => (
-    <button type="button" onClick={() => onChange({ id: "e9", displayName: "Zeynep Kaya" })}>
-      pick-employee
-    </button>
+    <>
+      <button type="button" onClick={() => onChange({ id: "e9", displayName: "Zeynep Kaya" })}>
+        pick-employee
+      </button>
+      <button type="button" onClick={() => onChange({ id: "e10", displayName: "Can Demir" })}>
+        pick-employee-2
+      </button>
+    </>
   ),
 }));
 
@@ -124,12 +129,13 @@ function serverError(detail: string): AxiosError {
   });
 }
 
-async function fillAndSubmitAssignment(user: ReturnType<typeof userEvent.setup>) {
+async function fillAndSubmitAssignment(user: ReturnType<typeof userEvent.setup>, second = false) {
   await user.click(await screen.findByRole("button", { name: "Ödeme türü ata" }));
   const dialog = await screen.findByRole("dialog");
   await user.click(within(dialog).getByRole("combobox", { name: /Ödeme türü/ }));
   await user.click(await screen.findByRole("option", { name: "YEMEK - Yemek yardımı", hidden: true }));
   await user.click(within(dialog).getByRole("button", { name: "pick-employee" }));
+  if (second) await user.click(within(dialog).getByRole("button", { name: "pick-employee-2" }));
   await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
 }
 
@@ -151,12 +157,12 @@ describe("PeriodPayItems", () => {
     const user = userEvent.setup();
     renderCard();
 
-    await fillAndSubmitAssignment(user);
+    await fillAndSubmitAssignment(user, true);
 
     await waitFor(() =>
       expect(createPayItemAssignments).toHaveBeenCalledWith({
         payItemDefinitionId: "d1",
-        employeeIds: ["e9"],
+        employeeIds: ["e9", "e10"],
         value: null,
         fromYear: 2026,
         fromMonth: 10,
@@ -241,6 +247,14 @@ describe("PeriodPayItems", () => {
     await waitFor(() => expect(screen.getAllByText("YEMEK - Yemek yardımı").length).toBe(2));
     expect(screen.queryByTestId("pay-item-lines-empty")).not.toBeInTheDocument();
     expect(listPeriodPayItemLines).toHaveBeenCalledWith("p1");
+  });
+
+  it("shows an error instead of the empty state when the lines query fails", async () => {
+    vi.mocked(listPeriodPayItemLines).mockRejectedValue(new Error("boom"));
+    renderCard();
+
+    expect(await screen.findByTestId("pay-item-lines-error")).toHaveTextContent("Hesaplanan kalemler yüklenemedi.");
+    expect(screen.queryByTestId("pay-item-lines-empty")).not.toBeInTheDocument();
   });
 
   it("shows an empty state when the period has no calculated lines", async () => {

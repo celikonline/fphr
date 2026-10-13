@@ -202,7 +202,7 @@ function EditBody({ assignment, onClose }: { assignment: PayItemAssignment; onCl
 
 function PayItemLinesCard({ periodId }: { periodId: string }) {
   const { t, i18n } = useTranslation(["payroll"]);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["payroll", "periods", periodId, "pay-item-lines"],
     queryFn: () => listPeriodPayItemLines(periodId),
     retry: false,
@@ -219,7 +219,11 @@ function PayItemLinesCard({ periodId }: { periodId: string }) {
       <Text size="xs" c="dimmed" mb="sm">
         {t("payroll:payItemLines.subtitle")}
       </Text>
-      {!data || data.length === 0 ? (
+      {isError || !data ? (
+        <Text size="sm" c="red" data-testid="pay-item-lines-error">
+          {t("payroll:loadErrors.payItemLines")}
+        </Text>
+      ) : data.length === 0 ? (
         <Text size="sm" c="dimmed" data-testid="pay-item-lines-empty">
           {t("payroll:payItemLines.empty")}
         </Text>

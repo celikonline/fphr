@@ -24,7 +24,7 @@ interface FormulaEditorProps {
  * Doğrulama yalnız `validate-formula` ucuyla yapılır (istemcide ayrıştırıcı yok); hata konumu 1 tabanlıdır.
  */
 export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorProps) {
-  const { t } = useTranslation(["payroll"]);
+  const { t, i18n } = useTranslation(["payroll"]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [result, setResult] = useState<FormulaValidation | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -32,6 +32,8 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
   const catalogQuery = useQuery({ queryKey: ["payroll", "pay-items", "formula-catalog"], queryFn: getFormulaCatalog, staleTime: CATALOG_STALE_MS });
   const variables = useMemo(() => catalogQuery.data?.variables ?? [], [catalogQuery.data]);
   const functions = useMemo(() => catalogQuery.data?.functions ?? [], [catalogQuery.data]);
+
+  const catalogFailed = catalogQuery.isError;
 
   const validate = useMutation({
     mutationFn: () => {
@@ -93,6 +95,11 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
         </Button>
       </Group>
 
+      {catalogFailed && (
+        <Alert color="red" data-testid="formula-catalog-error">
+          {t("payroll:loadErrors.formulaCatalog")}
+        </Alert>
+      )}
       {requestError && <Alert color="red">{requestError}</Alert>}
 
       {result?.isValid && (
@@ -102,7 +109,7 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
           </Text>
           {result.sampleResult != null && (
             <Text size="sm">
-              {t("payroll:payItems.formula.sampleResult")}: <b>{result.sampleResult}</b>
+              {t("payroll:payItems.formula.sampleResult")}: <b>{new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 6 }).format(result.sampleResult)}</b>
             </Text>
           )}
         </Alert>
