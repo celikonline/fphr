@@ -84,7 +84,8 @@
     "punchRequests": "Punch requests",
     "terminals": "Time clock terminals",
     "payslipImport": "External payslip PDF upload",
-    "payItems": "Pay item types"
+    "payItems": "Pay item types",
+    "incentives": "Incentives"
   },
   "settings": {
     "company": "Company and organization",

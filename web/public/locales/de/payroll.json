@@ -451,5 +451,127 @@
   "loadErrors": {
     "formulaCatalog": "Der Formelkatalog konnte nicht geladen werden; Variablen und Funktionen werden nicht angezeigt.",
     "payItemLines": "Berechnete Positionen konnten nicht geladen werden."
+  },
+  "incentives": {
+    "title": "Förderungen",
+    "subtitle": "Mandantenspezifische Fördermodelle: Arbeitgeber-SGK-Nachlass, Beitragsübernahme, Einkommensteuer-Erlass und reiner Meldecode. Nur vom Steuerberater/Experten genehmigte Definitionen fließen in die Berechnung ein.",
+    "new": "Neue Förderung",
+    "fromTemplate": "Aus Vorlage hinzufügen",
+    "showInactive": "Auch inaktive anzeigen",
+    "empty": "Es ist noch keine Förderung definiert. Beginnen Sie mit \"Aus Vorlage hinzufügen\" oder legen Sie mit \"Neue Förderung\" eine eigene an.",
+    "genericError": "Die Förderdefinitionen konnten nicht geladen werden.",
+    "edit": "Förderung {{code}} bearbeiten",
+    "toggleActive": "Förderung {{code}} aktivieren/deaktivieren",
+    "approve": "Genehmigen",
+    "revoke": "Genehmigung zurücknehmen",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "kind": "Art / Kategorie",
+      "lawReference": "Rechtsgrundlage",
+      "declarationCode": "Meldecode",
+      "approval": "Genehmigung",
+      "status": "Status"
+    },
+    "kind": {
+      "employerSgkRateDiscount": "Arbeitgeber-SGK-Satznachlass",
+      "employerShareCoverage": "Beitragsübernahme",
+      "incomeTaxWithholdingRelief": "Einkommensteuer-Erlass",
+      "declarationOnly": "Nur Meldecode"
+    },
+    "kindHint": {
+      "employerSgkRateDiscount": "Der Arbeitgeberbeitrag zur SGK wird um den auf die SGK-Bemessungsgrundlage angewandten Satz gemindert.",
+      "employerShareCoverage": "Der Staat übernimmt einen Anteil der gewählten Beitragsarten (Arbeitgeber-/Arbeitnehmer-SGK und Arbeitslosenversicherung).",
+      "incomeTaxWithholdingRelief": "Ein Anteil der einbehaltenen Einkommensteuer (nach Freibeträgen) wird erlassen; das Netto des Mitarbeiters bleibt gleich, die Arbeitgeberkosten sinken.",
+      "declarationOnly": "Nur der Förder-Gesetzescode wird in die Meldung geschrieben; die Berechnung bleibt unverändert."
+    },
+    "category": {
+      "sgk": "SGK",
+      "tax": "Steuer"
+    },
+    "coverageBase": {
+      "actualSgkBase": "Tatsächliche SGK-Bemessungsgrundlage",
+      "minimumWage": "Mindestlohn (gedeckelt)"
+    },
+    "approval": {
+      "approved": "Von Steuerberater genehmigt",
+      "pending": "Genehmigung ausstehend",
+      "incomplete": "Unvollständiger Entwurf"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "form": {
+      "createTitle": "Neue Förderung",
+      "editTitle": "Förderung bearbeiten",
+      "code": "Code",
+      "codeHint": "Großbuchstaben, Ziffern und Unterstrich (z. B. SGK_6111_ENTWURF); später nicht änderbar.",
+      "codeLocked": "Der Code kann nach dem Anlegen nicht geändert werden.",
+      "name": "Name",
+      "lawReference": "Rechtsgrundlage",
+      "declarationCode": "Gesetzescode der Meldung (APHB)",
+      "declarationCodeHint": "Nur Ziffern (höchstens 10), z. B. 05510. Erforderlich, um Förderungen der SGK-Kategorie zuzuweisen.",
+      "declarationCodeInvalid": "Der Meldecode darf nur Ziffern enthalten (höchstens 10).",
+      "kind": "Förderart",
+      "kindLockHint": "Die Kategorie (SGK oder Steuer) einer Förderung mit Zuweisungen kann nicht geändert werden.",
+      "rateLabel": {
+        "employerSgkRateDiscount": "Nachlasssatz",
+        "employerShareCoverage": "Übernahmeanteil",
+        "incomeTaxWithholdingRelief": "Erlassanteil der Einkommensteuer"
+      },
+      "rateMode": "Eingabeart für {{label}}",
+      "modePercent": "Prozent (%)",
+      "modeKey": "Rechtsparameter",
+      "keyPlaceholder": "Rechtsschlüssel wählen",
+      "keyCurrentValue": "Aktueller Wert: {{value}}",
+      "keyNotInForce": "Dieser Schlüssel scheint heute nicht in Kraft zu sein; er wird bei der Genehmigung geprüft.",
+      "catalogError": "Der Katalog der Rechtsparameter konnte nicht geladen werden.",
+      "coverageBase": "Übernahmebasis",
+      "capMultiplier": "Mindestlohn-Multiplikator (Deckel)",
+      "capMultiplierHint": "Die Basis wird auf den Mindestlohn mal diesen Multiplikator begrenzt (0-10).",
+      "covers": "Übernommene Beiträge",
+      "coversEmployerSgk": "Arbeitgeber-SGK",
+      "coversEmployerUnemployment": "Arbeitgeber-Arbeitslosenversicherung",
+      "coversEmployeeSgk": "Arbeitnehmer-SGK",
+      "coversEmployeeUnemployment": "Arbeitnehmer-Arbeitslosenversicherung",
+      "employerSgkRate": "Arbeitgeber-SGK-Satz",
+      "employerSgkRateHint": "Der Satz, mit dem der zu übernehmende Arbeitgeberanteil der SGK berechnet wird.",
+      "declarationOnlyHint": "Diese Art hat keine Berechnungsparameter; nur der Meldecode wird verwendet.",
+      "maxMonths": "Höchstzahl Monate",
+      "maxMonthsHint": "Falls gesetzt, ist bei der Zuweisung ein Endmonat erforderlich und die Gesamtmonate je Mitarbeiter dürfen sie nicht überschreiten.",
+      "validFrom": "Gültig ab",
+      "validFromHint": "Zuweisungen zählen erst ab diesem Datum. Leer bedeutet heute.",
+      "validTo": "Gültig bis",
+      "draftHint": "Sie können einen unvollständigen Entwurf speichern; die Vollständigkeit wird erst bei der Genehmigung geprüft.",
+      "approvalWillDrop": "Diese Definition ist genehmigt. Wenn Sie ein berechnungsrelevantes Feld (Art, Parameter, Meldecode, Monate, Datum) ändern, entfällt die Genehmigung und die Definition fließt bis zur erneuten Genehmigung nicht in die Berechnung ein.",
+      "save": "Speichern",
+      "error": "Die Förderung konnte nicht gespeichert werden."
+    },
+    "approveModal": {
+      "approveTitle": "Förderung {{code}} genehmigen",
+      "revokeTitle": "Genehmigung von {{code}} zurücknehmen",
+      "disclaimer": "Diese Genehmigung ist eine Erklärung des Steuerberaters/Experten. Für die Richtigkeit der Sätze und des Umfangs sind Sie verantwortlich; das System prüft die rechtliche Konformität nicht. Wer, wann und die Notiz werden gespeichert.",
+      "revokeHint": "Nach der Rücknahme fließt die Definition bis zur erneuten Genehmigung nicht in die Berechnung ein (der Meldecode wird weiterhin geschrieben).",
+      "incompleteHint": "Dieser Entwurf hat fehlende Felder; der Server nennt bei der Genehmigung das fehlende Feld.",
+      "note": "Notiz",
+      "noteHint": "Optional (höchstens 500 Zeichen), z. B. Verweis auf die Stellungnahme des Beraters.",
+      "confirmApprove": "Genehmigen",
+      "confirmRevoke": "Genehmigung zurücknehmen",
+      "approveError": "Die Genehmigung konnte nicht erteilt werden.",
+      "revokeError": "Die Genehmigung konnte nicht zurückgenommen werden."
+    },
+    "templates": {
+      "title": "Förderung aus Vorlage hinzufügen",
+      "intro": "Fertige Vorlagen werden in Ihren Mandanten kopiert. Die Sätze sind leer (nur 5510 kommt mit dem bisherigen Verhalten genehmigt); die echten Sätze tragen Sie mit Genehmigung des Steuerberaters/Experten ein.",
+      "preApproved": "Kommt genehmigt",
+      "alreadyAdded": "Hinzugefügt",
+      "add": "Hinzufügen",
+      "addAria": "Vorlage {{name}} hinzufügen",
+      "added": "{{name}} hinzugefügt",
+      "addError": "Die Vorlage konnte nicht hinzugefügt werden.",
+      "loadError": "Die Vorlagen konnten nicht geladen werden.",
+      "validFromNote": "Die hinzugefügte Definition gilt ab heute; bearbeiten Sie das Startdatum, wenn Sie sie früheren Monaten zuweisen."
+    }
   }
 }

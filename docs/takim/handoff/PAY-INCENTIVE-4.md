@@ -1,0 +1,19 @@
+# PAY-INCENTIVE-4 handoff: web teşvik tanımları ekranı
+
+## Ne yapıldı
+- `web/src/services/payroll-incentives.service.ts`: `IncentiveDefinitionsController` / `IncentiveDefinitionFeatures.cs` ile birebir tipler (kind `employerSgkRateDiscount|employerShareCoverage|incomeTaxWithholdingRelief|declarationOnly`, category `sgk|tax`, coverageBase `actualSgkBase|minimumWage`, rate `{value|legislationKey}`, `capMultiplier`, `employerSgkRate`, `covers*`); list/get/create/update/activate/deactivate/approve/revoke-approval/from-template/templates/parameter-catalog. Opsiyonel alanlar `T | null | undefined` (missing = null).
+- `pages/payroll/incentives.tsx`: liste (kod, ad, tür+kategori, kanun dayanağı, bildirge kodu, "SMMM onaylı"/"Onay bekliyor" rozeti [onaylayan + tarih altında, not tooltip'te], "Eksik taslak" işareti, durum, aktif/pasif anahtarı, düzenle). "Yeni teşvik", "Şablondan ekle", satırda "Onayla"/"Onayı geri al". Sayfa `trace.view` veya `incentive.manage` ile açılır; yazma düğmeleri `payroll.incentive.manage`, onay düğmeleri/modalı `payroll.incentive.approve` ister.
+- `incentive-form.tsx`: kind'a göre alan açar (a/c: oran; b: oran(pay), coverageBase, capMultiplier [yalnız minimumWage], işveren SGK oranı [yalnız coversEmployerSgk], covers* bayrakları; d: parametre yok, `parameters` gönderilmez). Oran = literal % (kesir olarak gönderilir, 5 -> 0.05) VEYA parameter-catalog anahtarı (seçilince güncel değer gösterilir). Kod düzenlemede kilitli (PUT'ta `code` yok); bildirge kodu yalnız rakam (<=10) doğrulaması; MaxMonths; geçerlilik tarihleri. Onaylı tanımda hesap alanı (kind/parametreler/bildirge kodu/maxMonths/tarihler) açılış değerinden farklıysa "onay düşecek" uyarısı; yalnız ad/dayanak değişirse uyarı yok. Eksik taslak kaydedilebilir. Sunucu hatası (örn. `incentive_kind_category_locked`) `getApiErrorMessage` ile gösterilir.
+- `incentive-approve-modal.tsx`: not alanı + "SMMM/uzman onayı beyanıdır; doğruluk sizin sorumluluğunuzdadır" açıklaması (i18n); onay/geri alma modları; sunucu hatası (tamlık, anahtar yok) modalda gösterilir, modal açık kalır.
+- `incentive-template-modal.tsx`: şablon listesi, `preApproved` ("Onaylı gelir") ve `alreadyAdded` ("Eklendi") rozeti; alreadyAdded olan "Ekle" düğmesi devre dışı; hata sunucu mesajıyla; ValidFrom=bugün notu (PAY-INCENTIVE-2 bilgi notu).
+- Rota `payroll/incentives` (`App.tsx`, sona); menü `incentives` (`config/navigation.ts` APP_LAUNCHER_ITEMS ve expensePayroll grubu, sona; izin `payroll.incentive.manage`); `navigation.json` tr/en/de `apps.incentives`; `payroll.json` tr/en/de sonuna `incentives` bloğu.
+
+## Testler (30 yeni)
+`incentives.test.tsx` (15): liste+rozetler, null toleransı, boş durum, aktif/pasif, onay/geri al düğmesi görünürlüğü, onay akışı (not + beyan), onay hatası sunucu mesajı, geri alma, approve izni yok, manage izni yok, boş durumda izinsiz, izinsiz sayfa, şablon listesi (alreadyAdded devre dışı + ekleme), şablon hatası sunucu mesajı, yeni teşvik formu. `incentive-form.test.tsx` (10): kind geçişleri, literal % -> kesir, b parametreleri, legislation anahtarı + güncel değer, taslak kaydı, bildirge kodu doğrulaması, kod kilidi/PUT'ta code yok, "onay düşecek" uyarısı (+ ad değişince yok, onaysızda yok), sunucu hata mesajı, null toleransı. `incentive-approve-modal.test.tsx` (4). i18n eşlik testleri yeşil.
+
+## Notlar / açık konular
+- Menü girdisi `payroll.incentive.manage` ister (iş kartı/PayItems kalıbı); yalnız `trace.view` olan kullanıcı menüde görmez ama URL ile salt okunur açar.
+- "Onay düşecek" uyarısı istemci tarafı karşılaştırmadır (açılış değerleri vs. form); asıl kural sunucudadır.
+- Kategori kilidi (atamalı tanımda SGK<->vergi) istemcide önceden bilinmez; sunucu `incentive_kind_category_locked` mesajı formda gösterilir, tür alanında yalnız ipucu var.
+- Atama, geçiş (legacy-profile-codes) ve uyarı etiketleri dilim 5'te.
+- Riskli alan: yok.

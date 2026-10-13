@@ -451,5 +451,127 @@
   "loadErrors": {
     "formulaCatalog": "Formül kataloğu yüklenemedi; değişken ve fonksiyon listesi gösterilemiyor.",
     "payItemLines": "Hesaplanan kalemler yüklenemedi."
+  },
+  "incentives": {
+    "title": "Teşvikler",
+    "subtitle": "Kiracınıza özel teşvik modelleri: işveren SGK indirimi, prim karşılama, gelir vergisi terkini ve yalnız bildirge kodu. Hesaba yalnız SMMM/uzman onaylı tanımlar girer.",
+    "new": "Yeni teşvik",
+    "fromTemplate": "Şablondan ekle",
+    "showInactive": "Pasif olanları da göster",
+    "empty": "Henüz tanımlı bir teşvik yok. \"Şablondan ekle\" ile hazır bir taslakla başlayabilir ya da \"Yeni teşvik\" ile kendi tanımınızı oluşturabilirsiniz.",
+    "genericError": "Teşvik tanımları yüklenemedi.",
+    "edit": "{{code}} kodlu teşviki düzenle",
+    "toggleActive": "{{code}} kodlu teşviki aktif/pasif yap",
+    "approve": "Onayla",
+    "revoke": "Onayı geri al",
+    "columns": {
+      "code": "Kod",
+      "name": "Ad",
+      "kind": "Tür / kategori",
+      "lawReference": "Kanun dayanağı",
+      "declarationCode": "Bildirge kodu",
+      "approval": "Onay",
+      "status": "Durum"
+    },
+    "kind": {
+      "employerSgkRateDiscount": "İşveren SGK oran indirimi",
+      "employerShareCoverage": "Prim karşılama",
+      "incomeTaxWithholdingRelief": "Gelir vergisi terkini",
+      "declarationOnly": "Yalnız bildirge kodu"
+    },
+    "kindHint": {
+      "employerSgkRateDiscount": "SGK matrahına uygulanan oran kadar işveren SGK primi indirilir.",
+      "employerShareCoverage": "Devlet; seçtiğiniz prim kalemlerinin belirli bir payını karşılar (işveren/işçi SGK ve işsizlik).",
+      "incomeTaxWithholdingRelief": "Kesilen gelir vergisinin (istisna sonrası) belirli bir payı terkin edilir; çalışanın neti değişmez, işveren maliyeti düşer.",
+      "declarationOnly": "Yalnızca bildirgeye teşvik kanun kodu yazılır; hesaplama değişmez."
+    },
+    "category": {
+      "sgk": "SGK",
+      "tax": "Vergi"
+    },
+    "coverageBase": {
+      "actualSgkBase": "Gerçek SGK matrahı",
+      "minimumWage": "Asgari ücret (tavanlı)"
+    },
+    "approval": {
+      "approved": "SMMM onaylı",
+      "pending": "Onay bekliyor",
+      "incomplete": "Eksik taslak"
+    },
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif"
+    },
+    "form": {
+      "createTitle": "Yeni teşvik",
+      "editTitle": "Teşviki düzenle",
+      "code": "Kod",
+      "codeHint": "Büyük harf, rakam ve alt çizgi (örn. SGK_6111_TASLAK); sonradan değiştirilemez.",
+      "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+      "name": "Ad",
+      "lawReference": "Kanun dayanağı",
+      "declarationCode": "Bildirge (APHB) kanun kodu",
+      "declarationCodeHint": "Yalnız rakam (en çok 10 hane), örn. 05510. SGK kategorisindeki teşvikleri atamak için gereklidir.",
+      "declarationCodeInvalid": "Bildirge kodu yalnız rakamlardan oluşmalı (en çok 10 hane).",
+      "kind": "Teşvik türü",
+      "kindLockHint": "Atamaları olan bir teşvikin kategorisi (SGK ↔ vergi) değiştirilemez.",
+      "rateLabel": {
+        "employerSgkRateDiscount": "İndirim oranı",
+        "employerShareCoverage": "Karşılama payı",
+        "incomeTaxWithholdingRelief": "Gelir vergisi teşvik payı"
+      },
+      "rateMode": "{{label}} giriş biçimi",
+      "modePercent": "Yüzde (%)",
+      "modeKey": "Mevzuat parametresi",
+      "keyPlaceholder": "Mevzuat anahtarı seçin",
+      "keyCurrentValue": "Güncel değer: {{value}}",
+      "keyNotInForce": "Bu anahtar bugün yürürlükte görünmüyor; onay sırasında doğrulanır.",
+      "catalogError": "Mevzuat parametre kataloğu yüklenemedi.",
+      "coverageBase": "Karşılama tabanı",
+      "capMultiplier": "Asgari ücret çarpanı (tavan)",
+      "capMultiplierHint": "Taban, asgari ücretin bu çarpanla çarpımıyla sınırlanır (0-10).",
+      "covers": "Karşılanan primler",
+      "coversEmployerSgk": "İşveren SGK",
+      "coversEmployerUnemployment": "İşveren işsizlik",
+      "coversEmployeeSgk": "İşçi SGK",
+      "coversEmployeeUnemployment": "İşçi işsizlik",
+      "employerSgkRate": "İşveren SGK oranı",
+      "employerSgkRateHint": "Karşılanacak işveren SGK payının hesaplandığı oran.",
+      "declarationOnlyHint": "Bu tür için hesaplama parametresi yoktur; yalnız bildirge kodu kullanılır.",
+      "maxMonths": "En çok ay sayısı",
+      "maxMonthsHint": "Doluysa atamada bitiş ayı zorunludur ve çalışan başına toplam ay bu sayıyı aşamaz.",
+      "validFrom": "Geçerlilik başlangıcı",
+      "validFromHint": "Atamalar yalnız bu tarihten itibaren etkin sayılır. Boşsa bugün.",
+      "validTo": "Geçerlilik bitişi",
+      "draftHint": "Eksik alanlarla taslak olarak kaydedebilirsiniz; tamlık yalnız onay sırasında aranır.",
+      "approvalWillDrop": "Bu tanım SMMM onaylı. Hesabı etkileyen bir alanı (tür, parametreler, bildirge kodu, ay sayısı, tarihler) değiştirirseniz onay düşecek ve yeniden onaylanana kadar tanım hesaba girmeyecek.",
+      "save": "Kaydet",
+      "error": "Teşvik kaydedilemedi."
+    },
+    "approveModal": {
+      "approveTitle": "{{code}} teşvikini onayla",
+      "revokeTitle": "{{code}} onayını geri al",
+      "disclaimer": "Bu onay, SMMM/uzman onayı beyanıdır. Oranların ve kapsamın doğruluğu sizin sorumluluğunuzdadır; sistem mevzuata uygunluğu denetlemez. Onaylayan, zaman ve not kaydedilir.",
+      "revokeHint": "Onay geri alınınca tanım yeniden onaylanana kadar hesaba girmez (bildirge kodu yazılmaya devam eder).",
+      "incompleteHint": "Bu taslakta eksik alanlar var; onay sırasında sunucu eksik alanı bildirecektir.",
+      "note": "Not",
+      "noteHint": "İsteğe bağlı (en çok 500 karakter), örn. danışman görüşü referansı.",
+      "confirmApprove": "Onayla",
+      "confirmRevoke": "Onayı geri al",
+      "approveError": "Onay verilemedi.",
+      "revokeError": "Onay geri alınamadı."
+    },
+    "templates": {
+      "title": "Şablondan teşvik ekle",
+      "intro": "Hazır şablonlar kiracınıza kopyalanır. Oranlar boş gelir (yalnız 5510 mevcut davranışla onaylı gelir); gerçek oranları SMMM/uzman onayıyla siz girersiniz.",
+      "preApproved": "Onaylı gelir",
+      "alreadyAdded": "Eklendi",
+      "add": "Ekle",
+      "addAria": "{{name}} şablonunu ekle",
+      "added": "{{name}} eklendi",
+      "addError": "Şablon eklenemedi.",
+      "loadError": "Şablonlar yüklenemedi.",
+      "validFromNote": "Eklenen tanımın geçerlilik başlangıcı bugündür; önceki aylara atama yapacaksanız tanımın başlangıç tarihini düzenleyin."
+    }
   }
 }

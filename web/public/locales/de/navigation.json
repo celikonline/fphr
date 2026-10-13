@@ -84,7 +84,8 @@
     "punchRequests": "Stempelanträge",
     "terminals": "Zeiterfassungsterminals",
     "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen",
-    "payItems": "Zahlungsarten"
+    "payItems": "Zahlungsarten",
+    "incentives": "Förderungen"
   },
   "settings": {
     "company": "Unternehmen und Organisation",

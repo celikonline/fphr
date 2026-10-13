@@ -84,7 +84,8 @@
     "punchRequests": "Kayıt talepleri",
     "terminals": "PDKS terminalleri",
     "payslipImport": "Dış bordro PDF yükleme",
-    "payItems": "Ödeme türleri"
+    "payItems": "Ödeme türleri",
+    "incentives": "Teşvikler"
   },
   "settings": {
     "company": "Şirket ve organizasyon",

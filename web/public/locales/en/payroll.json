@@ -451,5 +451,127 @@
   "loadErrors": {
     "formulaCatalog": "The formula catalog could not be loaded; variables and functions cannot be listed.",
     "payItemLines": "Calculated pay item lines could not be loaded."
+  },
+  "incentives": {
+    "title": "Incentives",
+    "subtitle": "Tenant-specific incentive models: employer SGK discount, premium coverage, income tax relief and declaration-code only. Only definitions approved by the accountant/expert enter the calculation.",
+    "new": "New incentive",
+    "fromTemplate": "Add from template",
+    "showInactive": "Show inactive too",
+    "empty": "No incentive is defined yet. Start from a ready draft with \"Add from template\" or create your own with \"New incentive\".",
+    "genericError": "Incentive definitions could not be loaded.",
+    "edit": "Edit incentive {{code}}",
+    "toggleActive": "Toggle incentive {{code}} active/inactive",
+    "approve": "Approve",
+    "revoke": "Revoke approval",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "kind": "Type / category",
+      "lawReference": "Legal basis",
+      "declarationCode": "Declaration code",
+      "approval": "Approval",
+      "status": "Status"
+    },
+    "kind": {
+      "employerSgkRateDiscount": "Employer SGK rate discount",
+      "employerShareCoverage": "Premium coverage",
+      "incomeTaxWithholdingRelief": "Income tax relief",
+      "declarationOnly": "Declaration code only"
+    },
+    "kindHint": {
+      "employerSgkRateDiscount": "The employer SGK premium is reduced by the rate applied to the SGK base.",
+      "employerShareCoverage": "The state covers a share of the premium items you select (employer/employee SGK and unemployment).",
+      "incomeTaxWithholdingRelief": "A share of the income tax withheld (after exemptions) is relieved; the employee's net does not change, the employer cost drops.",
+      "declarationOnly": "Only the incentive law code is written to the declaration; the calculation is unchanged."
+    },
+    "category": {
+      "sgk": "SGK",
+      "tax": "Tax"
+    },
+    "coverageBase": {
+      "actualSgkBase": "Actual SGK base",
+      "minimumWage": "Minimum wage (capped)"
+    },
+    "approval": {
+      "approved": "Approved by accountant",
+      "pending": "Awaiting approval",
+      "incomplete": "Incomplete draft"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "form": {
+      "createTitle": "New incentive",
+      "editTitle": "Edit incentive",
+      "code": "Code",
+      "codeHint": "Upper-case letters, digits and underscore (e.g. SGK_6111_DRAFT); cannot be changed later.",
+      "codeLocked": "The code cannot be changed once created.",
+      "name": "Name",
+      "lawReference": "Legal basis",
+      "declarationCode": "Declaration (APHB) law code",
+      "declarationCodeHint": "Digits only (up to 10), e.g. 05510. Required to assign SGK-category incentives.",
+      "declarationCodeInvalid": "The declaration code must contain digits only (up to 10).",
+      "kind": "Incentive type",
+      "kindLockHint": "The category (SGK vs. tax) of an incentive that has assignments cannot be changed.",
+      "rateLabel": {
+        "employerSgkRateDiscount": "Discount rate",
+        "employerShareCoverage": "Coverage share",
+        "incomeTaxWithholdingRelief": "Income tax relief share"
+      },
+      "rateMode": "Input mode for {{label}}",
+      "modePercent": "Percent (%)",
+      "modeKey": "Legislation parameter",
+      "keyPlaceholder": "Select a legislation key",
+      "keyCurrentValue": "Current value: {{value}}",
+      "keyNotInForce": "This key does not appear to be in force today; it is verified on approval.",
+      "catalogError": "The legislation parameter catalog could not be loaded.",
+      "coverageBase": "Coverage base",
+      "capMultiplier": "Minimum wage multiplier (cap)",
+      "capMultiplierHint": "The base is capped at the minimum wage times this multiplier (0-10).",
+      "covers": "Premiums covered",
+      "coversEmployerSgk": "Employer SGK",
+      "coversEmployerUnemployment": "Employer unemployment",
+      "coversEmployeeSgk": "Employee SGK",
+      "coversEmployeeUnemployment": "Employee unemployment",
+      "employerSgkRate": "Employer SGK rate",
+      "employerSgkRateHint": "The rate used to compute the employer SGK share to be covered.",
+      "declarationOnlyHint": "This type has no calculation parameters; only the declaration code is used.",
+      "maxMonths": "Maximum months",
+      "maxMonthsHint": "If set, an end month is required on assignment and the total months per employee cannot exceed it.",
+      "validFrom": "Valid from",
+      "validFromHint": "Assignments only count from this date. Today if empty.",
+      "validTo": "Valid to",
+      "draftHint": "You can save an incomplete draft; completeness is only checked on approval.",
+      "approvalWillDrop": "This definition is approved. Changing a calculation field (type, parameters, declaration code, months, dates) will drop the approval and the definition stays out of the calculation until it is approved again.",
+      "save": "Save",
+      "error": "The incentive could not be saved."
+    },
+    "approveModal": {
+      "approveTitle": "Approve incentive {{code}}",
+      "revokeTitle": "Revoke approval of {{code}}",
+      "disclaimer": "This approval is a declaration by the accountant/expert. The correctness of the rates and scope is your responsibility; the system does not check legal compliance. Who approved, when and the note are recorded.",
+      "revokeHint": "Once revoked, the definition stays out of the calculation until it is approved again (the declaration code is still written).",
+      "incompleteHint": "This draft has missing fields; the server will name the missing field on approval.",
+      "note": "Note",
+      "noteHint": "Optional (up to 500 characters), e.g. a reference to the advisor's opinion.",
+      "confirmApprove": "Approve",
+      "confirmRevoke": "Revoke approval",
+      "approveError": "The approval could not be given.",
+      "revokeError": "The approval could not be revoked."
+    },
+    "templates": {
+      "title": "Add incentive from template",
+      "intro": "Ready templates are copied to your tenant. Rates come empty (only 5510 comes approved, with the existing behavior); you enter the real rates with accountant/expert approval.",
+      "preApproved": "Comes approved",
+      "alreadyAdded": "Added",
+      "add": "Add",
+      "addAria": "Add template {{name}}",
+      "added": "{{name}} added",
+      "addError": "The template could not be added.",
+      "loadError": "Templates could not be loaded.",
+      "validFromNote": "The added definition is valid from today; edit its start date if you will assign it to earlier months."
+    }
   }
 }

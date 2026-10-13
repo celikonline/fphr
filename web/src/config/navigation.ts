@@ -56,6 +56,7 @@ import {
   GraduationCap,
   Smartphone,
   Calculator,
+  BadgeCheck,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -565,6 +566,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["payroll.payitem.manage"],
     iconColor: "navy",
   },
+  {
+    key: "incentives",
+    labelKey: "apps.incentives",
+    path: "/app/payroll/incentives",
+    icon: BadgeCheck,
+    permissions: ["payroll.incentive.manage"],
+    iconColor: "navy",
+  },
 ];
 
 export interface SettingsLink {
@@ -986,6 +995,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
         requireAppItem("payroll"),
         requireAppItem("payslipImport"),
         requireAppItem("payItems"),
+        requireAppItem("incentives"),
       ],
     },
   ],
