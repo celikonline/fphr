@@ -390,5 +390,58 @@
       "ay": "Dönem ayı (1-12)",
       "deger": "Çalışana atanırken girilen değer (yoksa varsayılan değer)"
     }
+  },
+  "assignments": {
+    "title": "Ödeme türü atamaları",
+    "subtitle": "Bu dönemde geçerli formüllü ödeme türleri. Açık dönemde atama ekleyebilir, değerini ya da bitiş ayını değiştirebilir veya silebilirsiniz.",
+    "employeeTitle": "Tekrarlayan ödeme türleri",
+    "employeeEmpty": "Bu çalışana atanmış bir ödeme türü yok.",
+    "add": "Ödeme türü ata",
+    "empty": "Bu dönem için atanmış bir ödeme türü yok.",
+    "loadError": "Atamalar yüklenemedi.",
+    "employee": "Çalışan",
+    "payItem": "Ödeme türü",
+    "value": "Değer",
+    "defaultValue": "Varsayılan",
+    "range": "Geçerlilik",
+    "openEnded": "süresiz",
+    "edit": "{{code}} atamasını düzenle",
+    "editTitle": "Atamayı düzenle",
+    "removeLabel": "{{code}} atamasını sil",
+    "remove": "Sil",
+    "removeConfirmTitle": "Atamayı sil",
+    "removeConfirm": "{{employee}} için {{code}} ataması silinsin mi?",
+    "error": "İşlem yapılamadı.",
+    "modal": {
+      "title": "Ödeme türü ata",
+      "payItem": "Ödeme türü",
+      "payItemPlaceholder": "Aktif bir ödeme türü seçin",
+      "noActiveItems": "Aktif ödeme türü bulunamadı",
+      "addEmployee": "Çalışan ekle",
+      "noEmployees": "Henüz çalışan seçilmedi; birden fazla çalışan ekleyebilirsiniz.",
+      "selectedCount": "{{count}} çalışan seçildi (en fazla {{max}})",
+      "removeEmployee": "{{name}} çalışanını listeden çıkar",
+      "tooMany": "En fazla {{max}} çalışana toplu atama yapılabilir.",
+      "value": "Değer",
+      "valueHint": "Boş bırakılırsa ödeme türünün varsayılan değeri kullanılır.",
+      "valueDefault": "Boş bırakılırsa varsayılan değer ({{value}}) kullanılır.",
+      "fromMonth": "Başlangıç ayı",
+      "toMonth": "Bitiş ayı",
+      "toMonthHint": "Boşsa süresiz; tek seferlik için başlangıçla aynı ay.",
+      "save": "Kaydet"
+    }
+  },
+  "payItemLines": {
+    "title": "Hesaplanan ödeme türü kalemleri",
+    "subtitle": "Dönemin son hesaplamasında formülle bulunan kazanç kalemleri.",
+    "empty": "Bu dönem için hesaplanmış ödeme türü kalemi yok (dönem henüz hesaplanmadı ya da atama yok).",
+    "employee": "Çalışan",
+    "payItem": "Kalem",
+    "amount": "Brüt tutar",
+    "netTarget": "Net hedef"
+  },
+  "previewDetails": {
+    "warningsTitle": "Uyarılar",
+    "employeeCount": "{{count}} çalışan"
   }
 }

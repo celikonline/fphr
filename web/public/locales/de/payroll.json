@@ -390,5 +390,58 @@
       "ay": "Periodenmonat (1-12)",
       "deger": "Bei der Zuweisung eingegebener Wert (sonst Standardwert)"
     }
+  },
+  "assignments": {
+    "title": "Zuweisungen von Zahlungsarten",
+    "subtitle": "In dieser Periode gültige formelbasierte Zahlungsarten. Solange die Periode offen ist, können Zuweisungen hinzugefügt, im Wert oder Endmonat geändert oder gelöscht werden.",
+    "employeeTitle": "Wiederkehrende Zahlungsarten",
+    "employeeEmpty": "Diesem Mitarbeiter ist keine Zahlungsart zugewiesen.",
+    "add": "Zahlungsart zuweisen",
+    "empty": "Für diese Periode ist keine Zahlungsart zugewiesen.",
+    "loadError": "Zuweisungen konnten nicht geladen werden.",
+    "employee": "Mitarbeiter",
+    "payItem": "Zahlungsart",
+    "value": "Wert",
+    "defaultValue": "Standard",
+    "range": "Gültig",
+    "openEnded": "unbefristet",
+    "edit": "Zuweisung {{code}} bearbeiten",
+    "editTitle": "Zuweisung bearbeiten",
+    "removeLabel": "Zuweisung {{code}} löschen",
+    "remove": "Löschen",
+    "removeConfirmTitle": "Zuweisung löschen",
+    "removeConfirm": "Zuweisung {{code}} für {{employee}} löschen?",
+    "error": "Der Vorgang ist fehlgeschlagen.",
+    "modal": {
+      "title": "Zahlungsart zuweisen",
+      "payItem": "Zahlungsart",
+      "payItemPlaceholder": "Aktive Zahlungsart wählen",
+      "noActiveItems": "Keine aktive Zahlungsart gefunden",
+      "addEmployee": "Mitarbeiter hinzufügen",
+      "noEmployees": "Noch kein Mitarbeiter gewählt; es können mehrere hinzugefügt werden.",
+      "selectedCount": "{{count}} Mitarbeiter gewählt (max. {{max}})",
+      "removeEmployee": "{{name}} aus der Liste entfernen",
+      "tooMany": "Höchstens {{max}} Mitarbeiter können gleichzeitig zugewiesen werden.",
+      "value": "Wert",
+      "valueHint": "Leer = Standardwert der Zahlungsart.",
+      "valueDefault": "Leer = Standardwert ({{value}}).",
+      "fromMonth": "Startmonat",
+      "toMonth": "Endmonat",
+      "toMonthHint": "Leer = unbefristet; für Einmalzahlungen derselbe Monat wie der Start.",
+      "save": "Speichern"
+    }
+  },
+  "payItemLines": {
+    "title": "Berechnete Zahlungsart-Positionen",
+    "subtitle": "Durch Formeln ermittelte Bezüge der letzten Berechnung der Periode.",
+    "empty": "Für diese Periode gibt es keine berechneten Positionen (noch nicht berechnet oder nichts zugewiesen).",
+    "employee": "Mitarbeiter",
+    "payItem": "Position",
+    "amount": "Bruttobetrag",
+    "netTarget": "Nettoziel"
+  },
+  "previewDetails": {
+    "warningsTitle": "Warnungen",
+    "employeeCount": "{{count}} Mitarbeiter"
   }
 }

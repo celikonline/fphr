@@ -390,5 +390,58 @@
       "ay": "Period month (1-12)",
       "deger": "Value entered at assignment (default value if none)"
     }
+  },
+  "assignments": {
+    "title": "Pay item assignments",
+    "subtitle": "Formula pay items effective in this period. While the period is open you can add assignments, change their value or end month, or delete them.",
+    "employeeTitle": "Recurring pay items",
+    "employeeEmpty": "No pay item is assigned to this employee.",
+    "add": "Assign pay item",
+    "empty": "No pay item is assigned for this period.",
+    "loadError": "Assignments could not be loaded.",
+    "employee": "Employee",
+    "payItem": "Pay item",
+    "value": "Value",
+    "defaultValue": "Default",
+    "range": "Valid",
+    "openEnded": "open-ended",
+    "edit": "Edit assignment {{code}}",
+    "editTitle": "Edit assignment",
+    "removeLabel": "Delete assignment {{code}}",
+    "remove": "Delete",
+    "removeConfirmTitle": "Delete assignment",
+    "removeConfirm": "Delete the {{code}} assignment for {{employee}}?",
+    "error": "The operation failed.",
+    "modal": {
+      "title": "Assign pay item",
+      "payItem": "Pay item",
+      "payItemPlaceholder": "Select an active pay item",
+      "noActiveItems": "No active pay items found",
+      "addEmployee": "Add employee",
+      "noEmployees": "No employee selected yet; you can add several employees.",
+      "selectedCount": "{{count}} employees selected (max {{max}})",
+      "removeEmployee": "Remove {{name}} from the list",
+      "tooMany": "At most {{max}} employees can be assigned at once.",
+      "value": "Value",
+      "valueHint": "If empty, the pay item's default value is used.",
+      "valueDefault": "If empty, the default value ({{value}}) is used.",
+      "fromMonth": "Start month",
+      "toMonth": "End month",
+      "toMonthHint": "Empty = open-ended; same month as the start for a one-off.",
+      "save": "Save"
+    }
+  },
+  "payItemLines": {
+    "title": "Calculated pay item lines",
+    "subtitle": "Earning lines produced by formulas in the period's latest calculation.",
+    "empty": "No calculated pay item lines for this period (not calculated yet, or nothing assigned).",
+    "employee": "Employee",
+    "payItem": "Item",
+    "amount": "Gross amount",
+    "netTarget": "Net target"
+  },
+  "previewDetails": {
+    "warningsTitle": "Warnings",
+    "employeeCount": "{{count}} employees"
   }
 }

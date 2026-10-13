@@ -14,6 +14,7 @@ import { ClosingChecklist } from "./closing-checklist";
 import { PeriodEmptyState } from "./period-empty-state";
 import { PeriodActions } from "./period-actions";
 import { PeriodAdjustments } from "./period-adjustments";
+import { PeriodPayItems } from "./period-pay-items";
 import { PeriodComparison } from "./period-comparison";
 import { PeriodPreview } from "./period-preview";
 import { PeriodReceiptMatching } from "./period-receipt-matching";
@@ -234,6 +235,8 @@ function PayrollPeriodDetail() {
       <PeriodActions periodId={period.id} status={period.status} />
 
       <PeriodAdjustments periodId={period.id} status={period.status} />
+
+      <PeriodPayItems period={period} />
 
       <PeriodPreview periodId={period.id} status={period.status} />
 

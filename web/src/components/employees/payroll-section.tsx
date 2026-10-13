@@ -12,6 +12,7 @@ import {
 } from "@/services/payroll.service";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { EmployeePayslipsCard } from "./employee-payslips-card";
+import { EmployeePayItemsCard } from "./employee-pay-items-card";
 import { ExitSettlementSection } from "./exit-settlement-section";
 
 /** "Bordro" tab: visible with either read gate; each card then checks its own permission. */
@@ -27,6 +28,7 @@ export function PayrollSection({ employee }: { employee: EmployeeDetail }) {
       {canViewProfile && <PayrollProfileCard employeeId={employee.id} />}
       {canViewPayslips && <EmployeePayslipsCard employeeId={employee.id} />}
       {canViewPayslips && <GarnishmentsCard employeeId={employee.id} />}
+      {canViewPayslips && <EmployeePayItemsCard employee={employee} />}
       <ExitSettlementSection employee={employee} />
     </Stack>
   );

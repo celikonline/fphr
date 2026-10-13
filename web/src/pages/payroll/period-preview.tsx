@@ -69,6 +69,12 @@ export function PeriodPreview({
           {data.skippedCount > 0 && (
             <Alert color="yellow" mb="sm">
               {t("payroll:preview.skipped", { count: data.skippedCount })}
+              <ReasonList entries={groupCounts((data.skipped ?? []).map((entry) => entry.reason))} labelKey="payroll:preview.skipReasons" testId="preview-skip-reasons" />
+            </Alert>
+          )}
+          {(data.warnings ?? []).length > 0 && (
+            <Alert color="orange" mb="sm" title={t("payroll:previewDetails.warningsTitle")}>
+              <ReasonList entries={groupCounts((data.warnings ?? []).map((entry) => entry.code))} labelKey="payroll:warnings" testId="preview-warnings" />
             </Alert>
           )}
           <Table.ScrollContainer minWidth={480}>
@@ -107,5 +113,26 @@ function Stat({ label, value }: { label: string; value: string }) {
       </Text>
       <Text fw={600}>{value}</Text>
     </div>
+  );
+}
+
+function groupCounts(codes: string[]): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const code of codes) counts.set(code, (counts.get(code) ?? 0) + 1);
+  return [...counts];
+}
+
+/** One line per machine reason code with the number of affected employees; unknown codes fall back to the raw code. */
+function ReasonList({ entries, labelKey, testId }: { entries: [string, number][]; labelKey: string; testId: string }) {
+  const { t } = useTranslation(["payroll"]);
+  if (entries.length === 0) return null;
+  return (
+    <ul className="mt-1 list-disc pl-5" data-testid={testId}>
+      {entries.map(([code, count]) => (
+        <li key={code}>
+          {t(`${labelKey}.${code}`, { defaultValue: code })} ({t("payroll:previewDetails.employeeCount", { count })})
+        </li>
+      ))}
+    </ul>
   );
 }

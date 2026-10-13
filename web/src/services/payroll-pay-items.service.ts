@@ -105,3 +105,74 @@ export async function validatePayItemFormula(request: FormulaValidationRequest):
   const { data } = await apiClient.post<FormulaValidation>(`${PAY_ITEMS_BASE}/validate-formula`, request);
   return data;
 }
+
+/**
+ * Atamalar (`api/v1/payroll/pay-item-assignments`) ve dönem kalem satırları. Optional fields are `T | null | undefined` (missing = null).
+ */
+const PAY_ITEM_ASSIGNMENTS_BASE = "/v1/payroll/pay-item-assignments";
+
+export interface PayItemAssignment {
+  id: string;
+  employeeId: string;
+  employeeName?: string | null;
+  payItemDefinitionId: string;
+  code: string;
+  name?: string | null;
+  value?: number | null;
+  fromYear: number;
+  fromMonth: number;
+  toYear?: number | null;
+  toMonth?: number | null;
+}
+
+export type PayItemAssignmentFilter = { employeeId: string; periodId?: undefined } | { periodId: string; employeeId?: undefined };
+
+export interface CreatePayItemAssignmentsInput {
+  payItemDefinitionId: string;
+  employeeIds: string[];
+  value?: number | null;
+  fromYear: number;
+  fromMonth: number;
+  toYear?: number | null;
+  toMonth?: number | null;
+}
+
+export interface UpdatePayItemAssignmentInput {
+  value?: number | null;
+  toYear?: number | null;
+  toMonth?: number | null;
+}
+
+/** One calculated pay item line of a period (latest calculation trace). */
+export interface PayItemLine {
+  employeeId: string;
+  employeeName?: string | null;
+  code: string;
+  name?: string | null;
+  amount?: number | null;
+  amountBasis?: PayItemAmountBasis | null;
+  netTarget?: number | null;
+}
+
+export async function listPayItemAssignments(filter: PayItemAssignmentFilter): Promise<PayItemAssignment[]> {
+  const { data } = await apiClient.get<PayItemAssignment[]>(PAY_ITEM_ASSIGNMENTS_BASE, { params: filter });
+  return data ?? [];
+}
+
+export async function createPayItemAssignments(input: CreatePayItemAssignmentsInput): Promise<string[]> {
+  const { data } = await apiClient.post<{ createdIds?: string[] | null }>(PAY_ITEM_ASSIGNMENTS_BASE, input);
+  return data?.createdIds ?? [];
+}
+
+export async function updatePayItemAssignment(id: string, input: UpdatePayItemAssignmentInput): Promise<void> {
+  await apiClient.put(`${PAY_ITEM_ASSIGNMENTS_BASE}/${id}`, input);
+}
+
+export async function deletePayItemAssignment(id: string): Promise<void> {
+  await apiClient.delete(`${PAY_ITEM_ASSIGNMENTS_BASE}/${id}`);
+}
+
+export async function listPeriodPayItemLines(periodId: string): Promise<PayItemLine[]> {
+  const { data } = await apiClient.get<PayItemLine[]>(`/v1/payroll/periods/${periodId}/pay-item-lines`);
+  return data ?? [];
+}
