@@ -299,5 +299,96 @@
   },
   "dirtyReasons": {
     "pay_item_changed": "Pay item (formula-based payment) changed"
+  },
+  "payItems": {
+    "title": "Pay item types",
+    "subtitle": "Define formula-based earnings (allowances, bonuses, etc.); once assigned to employees they are added to payroll.",
+    "new": "New pay item",
+    "showInactive": "Show inactive",
+    "empty": "No pay items defined yet. Start with \"New pay item\" by defining a code, a name and a formula; then you can assign it to employees.",
+    "genericError": "Pay items could not be loaded.",
+    "edit": "Edit pay item {{code}}",
+    "toggleActive": "Toggle pay item {{code}} active/inactive",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "amountBasis": "Amount type",
+      "taxFlags": "Tax / premium",
+      "status": "Status"
+    },
+    "basis": {
+      "gross": "Gross",
+      "net": "Net"
+    },
+    "direction": {
+      "earning": "Earning",
+      "deduction": "Deduction"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "flags": {
+      "sgk": "Subject to social security",
+      "incomeTax": "Subject to income tax",
+      "stampTax": "Subject to stamp tax",
+      "sgkShort": "SSI",
+      "incomeTaxShort": "IT",
+      "stampTaxShort": "ST",
+      "none": "Exempt"
+    },
+    "form": {
+      "createTitle": "New pay item",
+      "editTitle": "Edit pay item",
+      "code": "Code",
+      "codeHint": "Starts with an uppercase letter; letters, digits and underscore (2-32 characters). Cannot be changed later.",
+      "codeLocked": "The code cannot be changed after creation.",
+      "name": "Name",
+      "direction": "Direction",
+      "directionHint": "Only earnings can be defined for now; deductions are not supported yet.",
+      "amountBasis": "Amount type",
+      "taxFlags": "Tax and premium status",
+      "netFlagsLocked": "Net items are fully taxable; the flags are locked.",
+      "defaultValue": "Default value",
+      "defaultValueHint": "Used for \"deger\" in the formula when no value is entered at assignment.",
+      "validFrom": "Valid from",
+      "validTo": "Valid to",
+      "save": "Save",
+      "error": "The pay item could not be saved."
+    },
+    "formula": {
+      "label": "Formula",
+      "hint": "E.g. brut * 0.10 or eger(kidem_yili >= 5; deger; 0). Decimal separator is a dot, argument separator ; or ,.",
+      "validate": "Validate",
+      "valid": "Formula is valid",
+      "invalid": "Formula is invalid",
+      "usedVariables": "Variables used",
+      "noVariables": "none",
+      "sampleResult": "Sample result",
+      "position": "Error at character {{position}}",
+      "validateError": "The formula could not be validated."
+    },
+    "catalog": {
+      "variables": "Variables (click to insert)",
+      "functions": "Functions (click to insert)",
+      "insertVariable": "Insert variable {{name}}",
+      "insertFunction": "Insert function {{name}}"
+    },
+    "variables": {
+      "brut": "Base gross pay (prorated; excludes overtime and other items)",
+      "aylik_ucret": "Monthly gross salary",
+      "net_hedef": "Agreed net salary (0 for gross-paid staff)",
+      "gunluk_ucret": "Daily wage (monthly / 30)",
+      "saatlik_ucret": "Hourly wage (monthly / 225)",
+      "calisilan_gun": "Days worked",
+      "ucretli_gun": "Paid days",
+      "takvim_gunu": "Calendar days",
+      "eksik_gun": "Missing days",
+      "kidem_yili": "Years of service (full years from hire to period end)",
+      "asgari_ucret": "Gross minimum wage",
+      "fazla_mesai_saati": "Overtime hours",
+      "ay": "Period month (1-12)",
+      "deger": "Value entered at assignment (default value if none)"
+    }
   }
 }

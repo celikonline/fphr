@@ -55,6 +55,7 @@ import {
   Megaphone,
   GraduationCap,
   Smartphone,
+  Calculator,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -556,6 +557,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["notifications.messages.view"],
     iconColor: "cyan",
   },
+  {
+    key: "payItems",
+    labelKey: "apps.payItems",
+    path: "/app/payroll/pay-items",
+    icon: Calculator,
+    permissions: ["payroll.payitem.manage"],
+    iconColor: "navy",
+  },
 ];
 
 export interface SettingsLink {
@@ -976,6 +985,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
         requireAppItem("expensePaymentsAdmin"),
         requireAppItem("payroll"),
         requireAppItem("payslipImport"),
+        requireAppItem("payItems"),
       ],
     },
   ],

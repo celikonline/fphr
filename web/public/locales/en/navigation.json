@@ -83,7 +83,8 @@
     "monthlyMatrix": "Monthly attendance matrix",
     "punchRequests": "Punch requests",
     "terminals": "Time clock terminals",
-    "payslipImport": "External payslip PDF upload"
+    "payslipImport": "External payslip PDF upload",
+    "payItems": "Pay item types"
   },
   "settings": {
     "company": "Company and organization",

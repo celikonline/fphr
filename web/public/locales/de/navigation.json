@@ -83,7 +83,8 @@
     "monthlyMatrix": "Monatliche Anwesenheitsmatrix",
     "punchRequests": "Stempelanträge",
     "terminals": "Zeiterfassungsterminals",
-    "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen"
+    "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen",
+    "payItems": "Zahlungsarten"
   },
   "settings": {
     "company": "Unternehmen und Organisation",

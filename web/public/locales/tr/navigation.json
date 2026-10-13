@@ -83,7 +83,8 @@
     "monthlyMatrix": "Aylık puantaj matrisi",
     "punchRequests": "Kayıt talepleri",
     "terminals": "PDKS terminalleri",
-    "payslipImport": "Dış bordro PDF yükleme"
+    "payslipImport": "Dış bordro PDF yükleme",
+    "payItems": "Ödeme türleri"
   },
   "settings": {
     "company": "Şirket ve organizasyon",

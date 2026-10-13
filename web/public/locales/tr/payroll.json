@@ -299,5 +299,96 @@
   },
   "dirtyReasons": {
     "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti"
+  },
+  "payItems": {
+    "title": "Ödeme türleri",
+    "subtitle": "Formülle hesaplanan kazanç kalemlerini (yan ödeme, ikramiye vb.) tanımlayın; çalışanlara atanınca bordroya eklenir.",
+    "new": "Yeni ödeme türü",
+    "showInactive": "Pasif olanları da göster",
+    "empty": "Henüz tanımlı bir ödeme türü yok. \"Yeni ödeme türü\" ile bir kod, ad ve formül tanımlayarak başlayın; sonra çalışanlara atayabilirsiniz.",
+    "genericError": "Ödeme türleri yüklenemedi.",
+    "edit": "{{code}} kodlu ödeme türünü düzenle",
+    "toggleActive": "{{code}} kodlu ödeme türünü aktif/pasif yap",
+    "columns": {
+      "code": "Kod",
+      "name": "Ad",
+      "amountBasis": "Tutar türü",
+      "taxFlags": "Vergi/prim",
+      "status": "Durum"
+    },
+    "basis": {
+      "gross": "Brüt",
+      "net": "Net"
+    },
+    "direction": {
+      "earning": "Kazanç",
+      "deduction": "Kesinti"
+    },
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif"
+    },
+    "flags": {
+      "sgk": "SGK primine tabi",
+      "incomeTax": "Gelir vergisine tabi",
+      "stampTax": "Damga vergisine tabi",
+      "sgkShort": "SGK",
+      "incomeTaxShort": "GV",
+      "stampTaxShort": "DV",
+      "none": "Muaf"
+    },
+    "form": {
+      "createTitle": "Yeni ödeme türü",
+      "editTitle": "Ödeme türünü düzenle",
+      "code": "Kod",
+      "codeHint": "Büyük harfle başlar; harf, rakam ve alt çizgi (2-32 karakter). Sonradan değiştirilemez.",
+      "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+      "name": "Ad",
+      "direction": "Yön",
+      "directionHint": "Şimdilik yalnız kazanç tanımlanabilir; kesinti desteği sonraki sürümde.",
+      "amountBasis": "Tutar türü",
+      "taxFlags": "Vergi ve prim durumu",
+      "netFlagsLocked": "Net tutarlı kalemler tam vergiye tabidir; bayraklar kilitlidir.",
+      "defaultValue": "Varsayılan değer",
+      "defaultValueHint": "Formüldeki \"deger\" için atamada değer girilmezse kullanılır.",
+      "validFrom": "Geçerlilik başlangıcı",
+      "validTo": "Geçerlilik bitişi",
+      "save": "Kaydet",
+      "error": "Ödeme türü kaydedilemedi."
+    },
+    "formula": {
+      "label": "Formül",
+      "hint": "Örn. brut * 0.10 veya eger(kidem_yili >= 5; deger; 0). Ondalık ayırıcı nokta, argüman ayırıcı ; veya ,.",
+      "validate": "Doğrula",
+      "valid": "Formül geçerli",
+      "invalid": "Formül geçersiz",
+      "usedVariables": "Kullanılan değişkenler",
+      "noVariables": "yok",
+      "sampleResult": "Örnek sonuç",
+      "position": "Hata konumu: {{position}}. karakter",
+      "validateError": "Formül doğrulanamadı."
+    },
+    "catalog": {
+      "variables": "Değişkenler (tıklayınca eklenir)",
+      "functions": "Fonksiyonlar (tıklayınca eklenir)",
+      "insertVariable": "{{name}} değişkenini ekle",
+      "insertFunction": "{{name}} fonksiyonunu ekle"
+    },
+    "variables": {
+      "brut": "Esas brüt ücret (kıst/oranlama uygulanmış; fazla mesai ve diğer kalemler hariç)",
+      "aylik_ucret": "Aylık brüt ücret",
+      "net_hedef": "Anlaşılan net ücret (brüt ücretlide 0)",
+      "gunluk_ucret": "Günlük ücret (aylık / 30)",
+      "saatlik_ucret": "Saatlik ücret (aylık / 225)",
+      "calisilan_gun": "Çalışılan gün",
+      "ucretli_gun": "Ücretli gün",
+      "takvim_gunu": "Takvim günü sayısı",
+      "eksik_gun": "Eksik gün",
+      "kidem_yili": "Kıdem yılı (işe girişten dönem sonuna tam yıl)",
+      "asgari_ucret": "Brüt asgari ücret",
+      "fazla_mesai_saati": "Fazla mesai saati",
+      "ay": "Dönem ayı (1-12)",
+      "deger": "Çalışana atanırken girilen değer (yoksa varsayılan değer)"
+    }
   }
 }

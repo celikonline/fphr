@@ -110,6 +110,7 @@ const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
 const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
 const PlatformTenantsPage = lazy(() => import("@/pages/platform/tenants"));
 const SetupWizardPage = lazy(() => import("@/pages/setup/setup-wizard"));
+const PayItemsPage = lazy(() => import("@/pages/payroll/pay-items"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -272,6 +273,8 @@ export default function App() {
 
             {/* İlk kurulum sihirbazı: SetupGuard (app-layout) kurulumu bitmemiş Owner'ı buraya yönlendirir */}
             <Route path="setup" element={<SetupWizardPage />} />
+
+            <Route path="payroll/pay-items" element={<PayItemsPage />} />
 
             {/* Old paths (pre settings IA) */}
             <Route path="organization" element={<Navigate to={STRUCTURE_PATH} replace />} />

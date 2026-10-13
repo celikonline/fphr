@@ -299,5 +299,96 @@
   },
   "dirtyReasons": {
     "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert"
+  },
+  "payItems": {
+    "title": "Zahlungsarten",
+    "subtitle": "Formelbasierte Bezüge (Zulagen, Prämien usw.) definieren; nach der Zuweisung an Mitarbeiter fließen sie in die Abrechnung ein.",
+    "new": "Neue Zahlungsart",
+    "showInactive": "Inaktive anzeigen",
+    "empty": "Noch keine Zahlungsart definiert. Beginnen Sie mit \"Neue Zahlungsart\" und legen Sie Code, Name und Formel fest; danach können Sie sie Mitarbeitern zuweisen.",
+    "genericError": "Zahlungsarten konnten nicht geladen werden.",
+    "edit": "Zahlungsart {{code}} bearbeiten",
+    "toggleActive": "Zahlungsart {{code}} aktivieren/deaktivieren",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "amountBasis": "Betragsart",
+      "taxFlags": "Steuer / Beitrag",
+      "status": "Status"
+    },
+    "basis": {
+      "gross": "Brutto",
+      "net": "Netto"
+    },
+    "direction": {
+      "earning": "Bezug",
+      "deduction": "Abzug"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "flags": {
+      "sgk": "Sozialversicherungspflichtig",
+      "incomeTax": "Einkommensteuerpflichtig",
+      "stampTax": "Stempelsteuerpflichtig",
+      "sgkShort": "SV",
+      "incomeTaxShort": "ESt",
+      "stampTaxShort": "StSt",
+      "none": "Befreit"
+    },
+    "form": {
+      "createTitle": "Neue Zahlungsart",
+      "editTitle": "Zahlungsart bearbeiten",
+      "code": "Code",
+      "codeHint": "Beginnt mit einem Großbuchstaben; Buchstaben, Ziffern und Unterstrich (2-32 Zeichen). Später nicht änderbar.",
+      "codeLocked": "Der Code kann nach dem Anlegen nicht geändert werden.",
+      "name": "Name",
+      "direction": "Richtung",
+      "directionHint": "Derzeit können nur Bezüge definiert werden; Abzüge werden noch nicht unterstützt.",
+      "amountBasis": "Betragsart",
+      "taxFlags": "Steuer- und Beitragsstatus",
+      "netFlagsLocked": "Netto-Positionen sind voll steuerpflichtig; die Kennzeichen sind gesperrt.",
+      "defaultValue": "Standardwert",
+      "defaultValueHint": "Wird für \"deger\" in der Formel verwendet, wenn bei der Zuweisung kein Wert eingegeben wird.",
+      "validFrom": "Gültig ab",
+      "validTo": "Gültig bis",
+      "save": "Speichern",
+      "error": "Die Zahlungsart konnte nicht gespeichert werden."
+    },
+    "formula": {
+      "label": "Formel",
+      "hint": "Z. B. brut * 0.10 oder eger(kidem_yili >= 5; deger; 0). Dezimaltrenner ist der Punkt, Argumenttrenner ; oder ,.",
+      "validate": "Prüfen",
+      "valid": "Formel ist gültig",
+      "invalid": "Formel ist ungültig",
+      "usedVariables": "Verwendete Variablen",
+      "noVariables": "keine",
+      "sampleResult": "Beispielergebnis",
+      "position": "Fehler bei Zeichen {{position}}",
+      "validateError": "Die Formel konnte nicht geprüft werden."
+    },
+    "catalog": {
+      "variables": "Variablen (Klick zum Einfügen)",
+      "functions": "Funktionen (Klick zum Einfügen)",
+      "insertVariable": "Variable {{name}} einfügen",
+      "insertFunction": "Funktion {{name}} einfügen"
+    },
+    "variables": {
+      "brut": "Basis-Bruttolohn (anteilig; ohne Überstunden und andere Positionen)",
+      "aylik_ucret": "Monatliches Bruttogehalt",
+      "net_hedef": "Vereinbartes Nettogehalt (0 bei Bruttolohn)",
+      "gunluk_ucret": "Tageslohn (monatlich / 30)",
+      "saatlik_ucret": "Stundenlohn (monatlich / 225)",
+      "calisilan_gun": "Gearbeitete Tage",
+      "ucretli_gun": "Bezahlte Tage",
+      "takvim_gunu": "Kalendertage",
+      "eksik_gun": "Fehltage",
+      "kidem_yili": "Dienstjahre (volle Jahre vom Eintritt bis Periodenende)",
+      "asgari_ucret": "Brutto-Mindestlohn",
+      "fazla_mesai_saati": "Überstunden",
+      "ay": "Periodenmonat (1-12)",
+      "deger": "Bei der Zuweisung eingegebener Wert (sonst Standardwert)"
+    }
   }
 }
