@@ -302,7 +302,8 @@
     "incentive_profile_code_ignored": "Der Mitarbeitende hat eine SGK-Förderungszuweisung; der Förderungsgesetzescode im Profil wurde ignoriert"
   },
   "dirtyReasons": {
-    "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert"
+    "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert",
+    "incentive_changed": "Förderungszuweisung oder -definition geändert"
   },
   "payItems": {
     "title": "Zahlungsarten",
@@ -572,6 +573,91 @@
       "addError": "Die Vorlage konnte nicht hinzugefügt werden.",
       "loadError": "Die Vorlagen konnten nicht geladen werden.",
       "validFromNote": "Die hinzugefügte Definition gilt ab heute; bearbeiten Sie das Startdatum, wenn Sie sie früheren Monaten zuweisen."
+    }
+  },
+  "incentiveAssignments": {
+    "employeeTitle": "Förderungszuweisungen",
+    "add": "Förderung zuweisen",
+    "employeeEmpty": "Diesem Mitarbeitenden ist keine Förderung zugewiesen.",
+    "loadError": "Förderungszuweisungen konnten nicht geladen werden.",
+    "openEnded": "unbefristet",
+    "columns": {
+      "incentive": "Förderung",
+      "declarationCode": "Meldecode",
+      "kind": "Art",
+      "approval": "Genehmigung",
+      "range": "Zeitraum",
+      "note": "Notiz"
+    },
+    "unapprovedHint": "Fließt nicht in die Berechnung ein; es wird nur der Meldecode geschrieben.",
+    "legacyProfileHint": "Altes Feld, wird in der Berechnung nicht verwendet (eine SGK-Förderungszuweisung besteht).",
+    "edit": "Endmonat der Zuweisung {{code}} bearbeiten",
+    "removeLabel": "Zuweisung {{code}} löschen",
+    "editTitle": "Förderungszuweisung bearbeiten",
+    "removeConfirmTitle": "Förderungszuweisung löschen",
+    "removeConfirm": "Förderungszuweisung {{code}} von {{employee}} löschen? Wurde sie in einem geschlossenen Zeitraum verwendet, ist das nicht möglich; geben Sie stattdessen einen Endmonat an.",
+    "remove": "Löschen",
+    "error": "Die Förderungszuweisung konnte nicht gespeichert werden.",
+    "modal": {
+      "title": "Förderung zuweisen",
+      "definition": "Förderungsdefinition",
+      "definitionPlaceholder": "Definition wählen",
+      "noActiveDefinitions": "Keine aktive Förderungsdefinition",
+      "addEmployee": "Mitarbeitende hinzufügen",
+      "noEmployees": "Noch niemand ausgewählt.",
+      "selectedCount": "{{count}} / {{max}} Mitarbeitende ausgewählt",
+      "removeEmployee": "{{name}} entfernen",
+      "tooMany": "Es können höchstens {{max}} Mitarbeitende ausgewählt werden.",
+      "fromMonth": "Startmonat",
+      "toMonth": "Endmonat",
+      "toMonthHint": "Leer lassen für eine unbefristete Zuweisung.",
+      "toMonthRequired": "Diese Definition gilt höchstens {{count}} Monate; der Endmonat ist erforderlich.",
+      "note": "Notiz",
+      "noteHint": "Optional; zur Nachverfolgung der Anspruchsvoraussetzungen (max. 500 Zeichen).",
+      "unapprovedWarning": "Diese Definition ist nicht vom Steuerberater (SMMM) genehmigt: Sie kann zugewiesen werden, fließt aber nicht in die Berechnung ein; es wird nur der Meldecode geschrieben.",
+      "validFromWarning": "Die Definition gilt ab {{date}}; in früheren Monaten ist die Zuweisung nicht wirksam. Passen Sie ggf. das Startdatum der Definition an.",
+      "save": "Speichern"
+    }
+  },
+  "incentiveLegacy": {
+    "tab": "Alte Profilcodes",
+    "definitionsTab": "Förderungsdefinitionen",
+    "title": "Alte Förderungscodes im Profil in Zuweisungen umwandeln",
+    "intro": "Die Freitext-Förderungscodes in den Lohnprofilen werden hier gruppiert und in Zuweisungen der passenden Förderungsdefinition umgewandelt. Der Profilcode selbst wird nicht gelöscht; er wird in der Berechnung nicht verwendet, solange eine Zuweisung besteht.",
+    "groupingNote": "Die Liste gruppiert Codes wie eingegeben (\"5510\" und \"05510\" sind getrennte Zeilen), die Umwandlung wählt aber nach dem auf 5 Stellen aufgefüllten Code: eine Umwandlung wandelt alle Mitarbeitenden mit \"5510\" oder \"05510\" gemeinsam um.",
+    "columns": {
+      "code": "Profilcode",
+      "normalizedCode": "Normalisierter Code",
+      "employeeCount": "Mitarbeitende",
+      "suggested": "Vorgeschlagene Definition",
+      "effect": "Wirkung auf die Berechnung"
+    },
+    "sharedNormalized": "Wird gemeinsam als \"{{code}}\" umgewandelt",
+    "noSuggestion": "Keine passende Definition",
+    "calculationChanges": "Berechnung ändert sich: der 5-Punkte-Nachlass entfällt/ändert sich",
+    "calculationSame": "Berechnung unverändert",
+    "convert": "Umwandeln",
+    "empty": "Keine Förderungscodes im Profil zum Umwandeln.",
+    "loadError": "Alte Profilcodes konnten nicht geladen werden.",
+    "modal": {
+      "title": "Code {{code}} umwandeln",
+      "scope": "Es werden Zuweisungen für {{count}} Mitarbeitende (Code: {{code}}) erstellt.",
+      "profileUntouched": "Der Code im Profil bleibt unverändert. Mitarbeitende mit einer überschneidenden SGK-Förderungszuweisung werden übersprungen.",
+      "definition": "Förderungsdefinition",
+      "definitionPlaceholder": "Definition wählen",
+      "noDefinitions": "Keine geeignete aktive Definition",
+      "dangerTitle": "Die Berechnung ändert sich",
+      "dangerText": "Die gewählte Definition ist kein genehmigter SGK-Satznachlass: der heute über den Profilcode angewandte pauschale 5-Punkte-Arbeitgebernachlass entfällt/ändert sich, und die Arbeitgeberkosten dieser Mitarbeitenden können steigen.",
+      "confirm": "Ich verstehe, dass sich die Berechnung ändert",
+      "fromMonth": "Startmonat",
+      "fromMonthHint": "Vorschlag: erster offener Zeitraum (geschlossene Monate werden abgelehnt).",
+      "toMonth": "Endmonat",
+      "submit": "Umwandeln",
+      "error": "Umwandlung nicht möglich."
+    },
+    "result": {
+      "title": "Umwandlung abgeschlossen",
+      "summary": "{{created}} Zuweisungen erstellt, {{skipped}} Mitarbeitende übersprungen (überschneidende SGK-Zuweisung)."
     }
   }
 }

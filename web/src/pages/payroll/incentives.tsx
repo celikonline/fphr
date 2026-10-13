@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, FilePlus2, Pencil, Plus, Undo2 } from "lucide-react";
-import { ActionIcon, Badge, Button, Card, Checkbox, Group, Skeleton, Stack, Switch, Table, Text, Title, Tooltip } from "@mantine/core";
+import { BadgeCheck, FilePlus2, Pencil, Plus, Undo2, UserPlus } from "lucide-react";
+import { ActionIcon, Badge, Button, Card, Checkbox, Group, Skeleton, Stack, Switch, Table, Tabs, Text, Title, Tooltip } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { listIncentiveDefinitions, setIncentiveDefinitionActive, type IncentiveDefinition } from "@/services/payroll-incentives.service";
+import { IncentiveAssignModal } from "./incentive-assign-modal";
+import { IncentiveLegacyConvert } from "./incentive-legacy-convert";
 import { IncentiveApproveModal, type IncentiveApprovalMode } from "./incentive-approve-modal";
 import { INCENTIVES_QUERY_KEY, IncentiveForm } from "./incentive-form";
 import { IncentiveTemplateModal } from "./incentive-template-modal";
@@ -21,7 +23,34 @@ export default function IncentivesPage() {
   const canManage = usePermission("payroll.incentive.manage");
   const canApprove = usePermission("payroll.incentive.approve");
   if (!canView && !canManage) return <NoAccess />;
-  return <IncentivesList canManage={canManage} canApprove={canApprove} />;
+  return <IncentivesPageBody canManage={canManage} canApprove={canApprove} />;
+}
+
+/** The definitions list, plus (with `payroll.incentive.manage`) the "Eski profil kodları" migration tab. */
+function IncentivesPageBody({ canManage, canApprove }: { canManage: boolean; canApprove: boolean }) {
+  const { t } = useTranslation(["payroll"]);
+  if (!canManage) return <IncentivesList canManage={canManage} canApprove={canApprove} />;
+  return (
+    <Tabs defaultValue="definitions" keepMounted={false}>
+      <Tabs.List px="md" pt="xs">
+        <Tabs.Tab value="definitions">{t("payroll:incentiveLegacy.definitionsTab")}</Tabs.Tab>
+        <Tabs.Tab value="legacy">{t("payroll:incentiveLegacy.tab")}</Tabs.Tab>
+      </Tabs.List>
+      <Tabs.Panel value="definitions">
+        <IncentivesList canManage={canManage} canApprove={canApprove} />
+      </Tabs.Panel>
+      <Tabs.Panel value="legacy">
+        <div className="w-full space-y-6 p-6 md:p-10">
+          <Title order={2} size="h3">
+            {t("payroll:incentiveLegacy.title")}
+          </Title>
+          <Card withBorder padding="lg">
+            <IncentiveLegacyConvert />
+          </Card>
+        </div>
+      </Tabs.Panel>
+    </Tabs>
+  );
 }
 
 function IncentivesList({ canManage, canApprove }: { canManage: boolean; canApprove: boolean }) {
@@ -31,6 +60,7 @@ function IncentivesList({ canManage, canApprove }: { canManage: boolean; canAppr
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<IncentiveDefinition | null>(null);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
   const [approval, setApproval] = useState<{ item: IncentiveDefinition; mode: IncentiveApprovalMode } | null>(null);
 
   const query = useQuery({ queryKey: [...INCENTIVES_QUERY_KEY, { includeInactive }], queryFn: () => listIncentiveDefinitions(includeInactive) });
@@ -69,6 +99,9 @@ function IncentivesList({ canManage, canApprove }: { canManage: boolean; canAppr
         </div>
         {canManage && (
           <Group gap="xs">
+            <Button variant="default" leftSection={<UserPlus size={16} />} onClick={() => setAssignOpen(true)}>
+              {t("payroll:incentiveAssignments.add")}
+            </Button>
             <Button variant="default" leftSection={<FilePlus2 size={16} />} onClick={() => setTemplatesOpen(true)}>
               {t("payroll:incentives.fromTemplate")}
             </Button>
@@ -211,6 +244,7 @@ function IncentivesList({ canManage, canApprove }: { canManage: boolean; canAppr
       </Card>
 
       {canManage && <IncentiveForm opened={formOpen} onClose={() => setFormOpen(false)} item={editing} />}
+      {canManage && <IncentiveAssignModal opened={assignOpen} onClose={() => setAssignOpen(false)} defaultYear={new Date().getFullYear()} defaultMonth={new Date().getMonth() + 1} />}
       {canManage && <IncentiveTemplateModal opened={templatesOpen} onClose={() => setTemplatesOpen(false)} />}
       {canApprove && <IncentiveApproveModal opened={approval !== null} onClose={() => setApproval(null)} mode={approval?.mode ?? "approve"} item={approval?.item ?? null} />}
     </div>

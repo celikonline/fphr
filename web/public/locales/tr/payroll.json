@@ -302,7 +302,8 @@
     "incentive_profile_code_ignored": "Çalışanın SGK teşvik ataması var; profildeki teşvik kanunu kodu yok sayıldı"
   },
   "dirtyReasons": {
-    "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti"
+    "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti",
+    "incentive_changed": "Teşvik ataması veya tanımı değişti"
   },
   "payItems": {
     "title": "Ödeme türleri",
@@ -572,6 +573,91 @@
       "addError": "Şablon eklenemedi.",
       "loadError": "Şablonlar yüklenemedi.",
       "validFromNote": "Eklenen tanımın geçerlilik başlangıcı bugündür; önceki aylara atama yapacaksanız tanımın başlangıç tarihini düzenleyin."
+    }
+  },
+  "incentiveAssignments": {
+    "employeeTitle": "Teşvik atamaları",
+    "add": "Teşvik ata",
+    "employeeEmpty": "Bu çalışana atanmış teşvik yok.",
+    "loadError": "Teşvik atamaları yüklenemedi.",
+    "openEnded": "süresiz",
+    "columns": {
+      "incentive": "Teşvik",
+      "declarationCode": "Bildirge kodu",
+      "kind": "Tür",
+      "approval": "Onay",
+      "range": "Dönem",
+      "note": "Not"
+    },
+    "unapprovedHint": "Hesaba dahil edilmez, yalnız bildirge kodu yazılır.",
+    "legacyProfileHint": "Eski alan, hesapta kullanılmıyor (SGK teşvik ataması var).",
+    "edit": "{{code}} atamasının bitiş ayını düzenle",
+    "removeLabel": "{{code}} atamasını sil",
+    "editTitle": "Teşvik atamasını düzenle",
+    "removeConfirmTitle": "Teşvik atamasını sil",
+    "removeConfirm": "{{employee}} için {{code}} teşvik ataması silinsin mi? Kapalı bir dönemde kullanılmışsa silinemez; bitiş ayı verin.",
+    "remove": "Sil",
+    "error": "Teşvik ataması kaydedilemedi.",
+    "modal": {
+      "title": "Teşvik ata",
+      "definition": "Teşvik tanımı",
+      "definitionPlaceholder": "Tanım seçin",
+      "noActiveDefinitions": "Aktif teşvik tanımı yok",
+      "addEmployee": "Çalışan ekle",
+      "noEmployees": "Henüz çalışan seçilmedi.",
+      "selectedCount": "{{count}} / {{max}} çalışan seçildi",
+      "removeEmployee": "{{name}} çalışanını çıkar",
+      "tooMany": "En fazla {{max}} çalışan seçilebilir.",
+      "fromMonth": "Başlangıç ayı",
+      "toMonth": "Bitiş ayı",
+      "toMonthHint": "Boş bırakırsanız atama süresiz olur.",
+      "toMonthRequired": "Bu tanım en çok {{count}} ay uygulanır; bitiş ayı zorunludur.",
+      "note": "Not",
+      "noteHint": "İsteğe bağlı; uygunluk koşullarının takibi için kullanabilirsiniz (en çok 500 karakter).",
+      "unapprovedWarning": "Bu tanım SMMM onaylı değil: atama yapılabilir, ancak hesaba dahil edilmez; yalnız bildirge kodu yazılır.",
+      "validFromWarning": "Tanımın geçerlilik başlangıcı {{date}}; bu tarihten önceki aylarda atama etkin sayılmaz. Gerekirse tanımın başlangıç tarihini düzenleyin.",
+      "save": "Kaydet"
+    }
+  },
+  "incentiveLegacy": {
+    "tab": "Eski profil kodları",
+    "definitionsTab": "Teşvik tanımları",
+    "title": "Eski profil teşvik kodlarını atamaya dönüştür",
+    "intro": "Çalışanların bordro profilindeki serbest metin teşvik kodları burada gruplanır ve eşleşen teşvik tanımına atama olarak dönüştürülür. Profil kodunun kendisi silinmez; atama varken hesapta kullanılmaz.",
+    "groupingNote": "Liste yazıldığı gibi gruplar (\"5510\" ve \"05510\" ayrı satırlardır) ancak dönüştürme kodu 5 haneye tamamlayarak seçer: tek dönüştürmede \"5510\" ve \"05510\" taşıyan tüm çalışanlar birlikte dönüştürülür.",
+    "columns": {
+      "code": "Profil kodu",
+      "normalizedCode": "Normalleşmiş kod",
+      "employeeCount": "Çalışan",
+      "suggested": "Önerilen tanım",
+      "effect": "Hesaba etkisi"
+    },
+    "sharedNormalized": "\"{{code}}\" olarak birlikte dönüşür",
+    "noSuggestion": "Eşleşen tanım yok",
+    "calculationChanges": "Hesap değişir: 5 puanlık indirim kaybolur/değişir",
+    "calculationSame": "Hesap değişmez",
+    "convert": "Dönüştür",
+    "empty": "Dönüştürülecek profil teşvik kodu yok.",
+    "loadError": "Eski profil kodları yüklenemedi.",
+    "modal": {
+      "title": "{{code}} kodunu dönüştür",
+      "scope": "{{count}} çalışan (kod: {{code}}) için atama oluşturulur.",
+      "profileUntouched": "Çalışanların profilindeki kod değişmez. Zaten çakışan SGK teşvik ataması olan çalışanlar atlanır.",
+      "definition": "Teşvik tanımı",
+      "definitionPlaceholder": "Tanım seçin",
+      "noDefinitions": "Uygun aktif tanım yok",
+      "dangerTitle": "Hesap değişecek",
+      "dangerText": "Seçilen tanım onaylı bir SGK oran indirimi değil: bugün profil koduyla uygulanan 5 puanlık işveren indirimi kaybolacak/değişecek ve bu çalışanların işveren maliyeti artabilir.",
+      "confirm": "Hesabın değişeceğini anladım",
+      "fromMonth": "Başlangıç ayı",
+      "fromMonthHint": "Önerilen: ilk açık dönem (kapalı aylar reddedilir).",
+      "toMonth": "Bitiş ayı",
+      "submit": "Dönüştür",
+      "error": "Dönüştürme yapılamadı."
+    },
+    "result": {
+      "title": "Dönüştürme tamamlandı",
+      "summary": "{{created}} atama oluşturuldu, {{skipped}} çalışan atlandı (çakışan SGK ataması)."
     }
   }
 }

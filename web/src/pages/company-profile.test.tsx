@@ -9,6 +9,7 @@ import trCompany from "../../public/locales/tr/company.json";
 import trCommon from "../../public/locales/tr/common.json";
 import CompanyProfilePage from "./company-profile";
 import type { CompanyProfile } from "@/services/company.service";
+import { getActiveIncentiveSummary } from "@/services/payroll.service";
 
 // TK-007: company-profile.tsx artık localStorage yerine gerçek Organization API'sine
 // (GET/PUT /v1/organization/companies/profile) bağlı; bu test onu doğrular.
@@ -137,5 +138,22 @@ describe("CompanyProfilePage", () => {
         workingDays: baseProfile.workingDays,
       })
     );
+  });
+
+  it("marks assignment-sourced incentives whose definition is not SMMM approved", async () => {
+    permissions.granted.add("payroll.profile.manage");
+    vi.mocked(getActiveIncentiveSummary).mockResolvedValueOnce([
+      { code: "05510", employeeCount: 3, name: "5510 md.81", source: "assignment", isSmmmApproved: true },
+      { code: "06111", employeeCount: 2, name: "6111 taslak", source: "assignment", isSmmmApproved: false },
+      { code: "5510", employeeCount: 1, source: "profile" },
+    ]);
+
+    renderPage();
+
+    const unapproved = (await screen.findByText(/06111 · 2 çalışan/)).closest(".mantine-Badge-root") as HTMLElement;
+    expect(unapproved).toHaveTextContent("onaysız");
+    expect(screen.getByText(/05510 · 3 çalışan/).closest(".mantine-Badge-root")).not.toHaveTextContent("onaysız");
+    expect(screen.getByText(/^5510 · 1 çalışan/).closest(".mantine-Badge-root")).not.toHaveTextContent("onaysız");
+    permissions.granted.delete("payroll.profile.manage");
   });
 });

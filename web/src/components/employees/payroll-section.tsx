@@ -13,6 +13,7 @@ import {
 import type { EmployeeDetail } from "@/services/employees.service";
 import { EmployeePayslipsCard } from "./employee-payslips-card";
 import { EmployeePayItemsCard } from "./employee-pay-items-card";
+import { EmployeeIncentivesCard, hasEffectiveSgkAssignment, useEmployeeIncentiveAssignments } from "./employee-incentives-card";
 import { ExitSettlementSection } from "./exit-settlement-section";
 
 /** "Bordro" tab: visible with either read gate; each card then checks its own permission. */
@@ -29,6 +30,7 @@ export function PayrollSection({ employee }: { employee: EmployeeDetail }) {
       {canViewPayslips && <EmployeePayslipsCard employeeId={employee.id} />}
       {canViewPayslips && <GarnishmentsCard employeeId={employee.id} />}
       {canViewPayslips && <EmployeePayItemsCard employee={employee} />}
+      {canViewPayslips && <EmployeeIncentivesCard employee={employee} />}
       <ExitSettlementSection employee={employee} />
     </Stack>
   );
@@ -49,11 +51,13 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function PayrollProfileCard({ employeeId }: { employeeId: string }) {
   const { t, i18n } = useTranslation(["employees"]);
+  const canViewAssignments = usePermission("payroll.trace.view");
   const { data, isLoading } = useQuery({
     queryKey: ["employee-payroll-profile", employeeId],
     queryFn: () => getEmployeePayrollProfile(employeeId),
     retry: false,
   });
+  const assignments = useEmployeeIncentiveAssignments(employeeId, canViewAssignments);
 
   return (
     <Card withBorder padding="lg">
@@ -67,7 +71,7 @@ function PayrollProfileCard({ employeeId }: { employeeId: string }) {
           {t("employees:payrollTab.profile.empty")}
         </Text>
       ) : (
-        <ProfileFields profile={data} language={i18n.language} />
+        <ProfileFields profile={data} language={i18n.language} incentiveFieldUnused={hasEffectiveSgkAssignment(assignments.data, new Date())} />
       )}
     </Card>
   );
@@ -76,11 +80,14 @@ function PayrollProfileCard({ employeeId }: { employeeId: string }) {
 function ProfileFields({
   profile,
   language,
+  incentiveFieldUnused,
 }: {
   profile: EmployeePayrollProfile;
   language: string;
+  /** An SGK incentive assignment covers this month: the profile's law code is ignored by the calculation. */
+  incentiveFieldUnused: boolean;
 }) {
-  const { t } = useTranslation(["employees"]);
+  const { t } = useTranslation(["employees", "payroll"]);
   const yesNo = (value: boolean) =>
     t(value ? "employees:payrollTab.profile.yes" : "employees:payrollTab.profile.no");
   const meal =
@@ -106,6 +113,11 @@ function ProfileFields({
       </Field>
       <Field label={t("employees:payrollTab.profile.incentive")}>
         {profile.incentiveLawCode || "—"}
+        {profile.incentiveLawCode && incentiveFieldUnused && (
+          <Text span size="xs" c="orange" ml={6} data-testid="incentive-legacy-field-hint">
+            {t("payroll:incentiveAssignments.legacyProfileHint")}
+          </Text>
+        )}
       </Field>
       <Field label={t("employees:payrollTab.profile.meal")}>{meal}</Field>
       <Field label={t("employees:payrollTab.profile.transport")}>

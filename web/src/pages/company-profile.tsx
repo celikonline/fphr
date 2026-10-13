@@ -289,8 +289,13 @@ export default function CompanyProfilePage() {
           {incentiveSummary && incentiveSummary.length > 0 ? (
             <Group gap="xs">
               {incentiveSummary.map((item) => (
-                <Badge key={item.code} variant="light" size="lg">
+                <Badge key={`${item.source ?? "profile"}-${item.code}`} variant="light" size="lg">
                   {t("company:incentiveBadge", { code: item.code, count: item.employeeCount })}
+                  {item.source === "assignment" && item.isSmmmApproved === false && (
+                    <Text span inherit c="orange" ml={6}>
+                      {t("company:incentiveUnapproved")}
+                    </Text>
+                  )}
                 </Badge>
               ))}
             </Group>

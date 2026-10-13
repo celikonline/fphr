@@ -140,3 +140,109 @@ export async function approveIncentiveDefinition(id: string, note?: string | nul
 export async function revokeIncentiveApproval(id: string, note?: string | null): Promise<void> {
   await apiClient.post(`${INCENTIVE_DEFINITIONS_BASE}/${id}/revoke-approval`, { note: note || null });
 }
+
+/*
+ * Teşvik atamaları ve eski profil kodu geçişi (PAY-INCENTIVE-5): mirrors `IncentiveAssignmentsController.cs`
+ * (`api/v1/payroll/incentive-assignments`, `IncentiveAssignmentFeatures.cs`) and `IncentivesController.cs`
+ * (`legacy-profile-codes`, `LegacyIncentiveCodeFeatures.cs`).
+ */
+const INCENTIVE_ASSIGNMENTS_BASE = "/v1/payroll/incentive-assignments";
+const INCENTIVES_BASE = "/v1/payroll/incentives";
+
+/** `IncentiveAssignmentDto`. */
+export interface IncentiveAssignment {
+  id: string;
+  employeeId: string;
+  employeeName?: string | null;
+  incentiveDefinitionId: string;
+  code: string;
+  name?: string | null;
+  declarationCode?: string | null;
+  kind: IncentiveKind;
+  isSmmmApproved?: boolean | null;
+  fromYear: number;
+  fromMonth: number;
+  toYear?: number | null;
+  toMonth?: number | null;
+  note?: string | null;
+}
+
+/** Exactly one of `employeeId` / `periodId` is required by the server. */
+export type IncentiveAssignmentFilter = { employeeId: string; periodId?: undefined } | { periodId: string; employeeId?: undefined };
+
+/** `POST /incentive-assignments`: 1..500 employees, all-or-nothing. */
+export interface CreateIncentiveAssignmentsInput {
+  incentiveDefinitionId: string;
+  employeeIds: string[];
+  fromYear: number;
+  fromMonth: number;
+  toYear?: number | null;
+  toMonth?: number | null;
+  note?: string | null;
+}
+
+/** `PUT /incentive-assignments/{id}`: the server overwrites the note, so send the existing one to keep it. */
+export interface UpdateIncentiveAssignmentInput {
+  toYear?: number | null;
+  toMonth?: number | null;
+  note?: string | null;
+}
+
+/** `LegacyIncentiveCodeDto`: one distinct profile incentive code (raw, grouped as typed) with the matching definition. */
+export interface LegacyProfileCode {
+  code: string;
+  /** Digits only, left-padded with zeros to 5 ("5510" -> "05510"). */
+  normalizedCode: string;
+  employeeCount: number;
+  suggestedDefinitionId?: string | null;
+  suggestedDefinitionCode?: string | null;
+  suggestedIsApproved?: boolean | null;
+  /** True when converting to the suggested definition would change the calculation (the flat 5 points is lost). */
+  calculationChanges?: boolean | null;
+}
+
+export interface ConvertLegacyProfileCodeInput {
+  code: string;
+  incentiveDefinitionId: string;
+  fromYear: number;
+  fromMonth: number;
+  toYear?: number | null;
+  toMonth?: number | null;
+}
+
+export interface ConvertLegacyProfileCodeResult {
+  createdIds: string[];
+  skippedEmployeeIds: string[];
+}
+
+export async function listIncentiveAssignments(filter: IncentiveAssignmentFilter): Promise<IncentiveAssignment[]> {
+  const { data } = await apiClient.get<IncentiveAssignment[]>(INCENTIVE_ASSIGNMENTS_BASE, { params: filter });
+  return data ?? [];
+}
+
+export async function createIncentiveAssignments(input: CreateIncentiveAssignmentsInput): Promise<string[]> {
+  const { data } = await apiClient.post<{ createdIds?: string[] | null }>(INCENTIVE_ASSIGNMENTS_BASE, input);
+  return data?.createdIds ?? [];
+}
+
+export async function updateIncentiveAssignment(id: string, input: UpdateIncentiveAssignmentInput): Promise<void> {
+  await apiClient.put(`${INCENTIVE_ASSIGNMENTS_BASE}/${id}`, input);
+}
+
+export async function deleteIncentiveAssignment(id: string): Promise<void> {
+  await apiClient.delete(`${INCENTIVE_ASSIGNMENTS_BASE}/${id}`);
+}
+
+/** Migration preview (`payroll.incentive.manage`); `asOf` is YYYY-MM-DD (server default: today). */
+export async function listLegacyProfileCodes(asOf?: string): Promise<LegacyProfileCode[]> {
+  const { data } = await apiClient.get<LegacyProfileCode[]>(`${INCENTIVES_BASE}/legacy-profile-codes`, { params: asOf ? { asOf } : undefined });
+  return data ?? [];
+}
+
+export async function convertLegacyProfileCode(input: ConvertLegacyProfileCodeInput): Promise<ConvertLegacyProfileCodeResult> {
+  const { data } = await apiClient.post<{ createdIds?: string[] | null; skippedEmployeeIds?: string[] | null }>(
+    `${INCENTIVES_BASE}/legacy-profile-codes/convert`,
+    input,
+  );
+  return { createdIds: data?.createdIds ?? [], skippedEmployeeIds: data?.skippedEmployeeIds ?? [] };
+}

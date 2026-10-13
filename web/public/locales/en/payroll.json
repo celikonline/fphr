@@ -302,7 +302,8 @@
     "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored"
   },
   "dirtyReasons": {
-    "pay_item_changed": "Pay item (formula-based payment) changed"
+    "pay_item_changed": "Pay item (formula-based payment) changed",
+    "incentive_changed": "Incentive assignment or definition changed"
   },
   "payItems": {
     "title": "Pay item types",
@@ -572,6 +573,91 @@
       "addError": "The template could not be added.",
       "loadError": "Templates could not be loaded.",
       "validFromNote": "The added definition is valid from today; edit its start date if you will assign it to earlier months."
+    }
+  },
+  "incentiveAssignments": {
+    "employeeTitle": "Incentive assignments",
+    "add": "Assign incentive",
+    "employeeEmpty": "No incentive is assigned to this employee.",
+    "loadError": "Could not load incentive assignments.",
+    "openEnded": "open-ended",
+    "columns": {
+      "incentive": "Incentive",
+      "declarationCode": "Declaration code",
+      "kind": "Type",
+      "approval": "Approval",
+      "range": "Period",
+      "note": "Note"
+    },
+    "unapprovedHint": "Not included in the calculation; only the declaration code is written.",
+    "legacyProfileHint": "Legacy field, not used in the calculation (an SGK incentive assignment exists).",
+    "edit": "Edit end month of {{code}} assignment",
+    "removeLabel": "Delete {{code}} assignment",
+    "editTitle": "Edit incentive assignment",
+    "removeConfirmTitle": "Delete incentive assignment",
+    "removeConfirm": "Delete the {{code}} incentive assignment of {{employee}}? It cannot be deleted once a closed period used it; set an end month instead.",
+    "remove": "Delete",
+    "error": "Could not save the incentive assignment.",
+    "modal": {
+      "title": "Assign incentive",
+      "definition": "Incentive definition",
+      "definitionPlaceholder": "Select a definition",
+      "noActiveDefinitions": "No active incentive definition",
+      "addEmployee": "Add employee",
+      "noEmployees": "No employee selected yet.",
+      "selectedCount": "{{count}} / {{max}} employees selected",
+      "removeEmployee": "Remove {{name}}",
+      "tooMany": "At most {{max}} employees can be selected.",
+      "fromMonth": "Start month",
+      "toMonth": "End month",
+      "toMonthHint": "Leave empty for an open-ended assignment.",
+      "toMonthRequired": "This definition applies for at most {{count}} months; the end month is required.",
+      "note": "Note",
+      "noteHint": "Optional; use it to track eligibility conditions (max 500 characters).",
+      "unapprovedWarning": "This definition is not SMMM approved: it can be assigned but is not included in the calculation; only the declaration code is written.",
+      "validFromWarning": "The definition is valid from {{date}}; the assignment is not effective in earlier months. Edit the definition's start date if needed.",
+      "save": "Save"
+    }
+  },
+  "incentiveLegacy": {
+    "tab": "Legacy profile codes",
+    "definitionsTab": "Incentive definitions",
+    "title": "Convert legacy profile incentive codes into assignments",
+    "intro": "The free-text incentive codes on employees' payroll profiles are grouped here and converted into assignments of the matching incentive definition. The profile code itself is not deleted; it is not used in the calculation while an assignment exists.",
+    "groupingNote": "The list groups codes as typed (\"5510\" and \"05510\" are separate rows) but the conversion selects by the code padded to 5 digits: one conversion converts every employee carrying \"5510\" or \"05510\" together.",
+    "columns": {
+      "code": "Profile code",
+      "normalizedCode": "Normalized code",
+      "employeeCount": "Employees",
+      "suggested": "Suggested definition",
+      "effect": "Effect on calculation"
+    },
+    "sharedNormalized": "Converted together as \"{{code}}\"",
+    "noSuggestion": "No matching definition",
+    "calculationChanges": "Calculation changes: the 5-point discount is lost/changed",
+    "calculationSame": "Calculation unchanged",
+    "convert": "Convert",
+    "empty": "No profile incentive codes to convert.",
+    "loadError": "Could not load legacy profile codes.",
+    "modal": {
+      "title": "Convert code {{code}}",
+      "scope": "Assignments are created for {{count}} employees (code: {{code}}).",
+      "profileUntouched": "The code on the employees' profiles stays unchanged. Employees who already have an overlapping SGK incentive assignment are skipped.",
+      "definition": "Incentive definition",
+      "definitionPlaceholder": "Select a definition",
+      "noDefinitions": "No suitable active definition",
+      "dangerTitle": "The calculation will change",
+      "dangerText": "The selected definition is not an approved SGK rate discount: the flat 5-point employer discount applied today through the profile code will be lost/changed and the employer cost of these employees may increase.",
+      "confirm": "I understand the calculation will change",
+      "fromMonth": "Start month",
+      "fromMonthHint": "Suggested: first open period (closed months are rejected).",
+      "toMonth": "End month",
+      "submit": "Convert",
+      "error": "Could not convert."
+    },
+    "result": {
+      "title": "Conversion completed",
+      "summary": "{{created}} assignments created, {{skipped}} employees skipped (overlapping SGK assignment)."
     }
   }
 }

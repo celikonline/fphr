@@ -55,6 +55,12 @@ export interface DownloadedPayrollFile {
 export interface IncentiveSummaryItem {
   code: string;
   employeeCount: number;
+  /** PAY-INCENTIVE-3: definition name; missing for profile-sourced rows. */
+  name?: string | null;
+  /** "profile" (legacy profile code) or "assignment" (incentive definition assignment). */
+  source?: "profile" | "assignment" | null;
+  /** Assignment rows only: whether the definition is SMMM approved (false = declared, not calculated). */
+  isSmmmApproved?: boolean | null;
 }
 
 /** Tenant-wide "aktif teşvik türleri" summary as of today (`payroll.profile.manage`). */

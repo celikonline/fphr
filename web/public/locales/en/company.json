@@ -36,5 +36,6 @@
     "fri": "Fri",
     "sat": "Sat",
     "sun": "Sun"
-  }
+  },
+  "incentiveUnapproved": "unapproved"
 }
