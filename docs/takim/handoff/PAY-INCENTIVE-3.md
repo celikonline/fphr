@@ -37,3 +37,8 @@ Para / bordro hesabı (insan onayı): `PayrollCalculator`, `PayrollPeriodCalcula
 - Kapı çıktısı `takim.json` sayımını değiştirebilir (bilinen); dosyaya dokunulmadı.
 - Test projesine gömülü kaynak eklendi (`Sense.Modules.Payroll.Tests.csproj` `EmbeddedResource Include="Incentives/Fixtures/*.json"`).
 - Tanım düzenleme/atama dirty-flag ve geçiş uçları dilim 2'dedir; web dilim 4/5.
+
+## ONAY sonrası üç ek (COMMIT YOK)
+1. (a) `EMPLOYER_DISCOUNT` = `min(işveren SGK, Round(sgkBase x oran))` (`IncentiveSteps.EmployerDiscount` artık `employerSgk` alır). Meşru oranda sonuç ve iz değişmez (fixture'lar yeniden kaydedilmedi, git'te değişmedi); yalnız sınırlama devreye girince girdiye `employerSgk` + `cappedAtEmployerSgk=1` ve formül metni eklenir. Test `ARateDiscountAboveTheEmployerSgkShare_IsCappedAtIt_SoNothingGoesNegative` (50.000 brüt, oran 0,5 -> indirim 10.250, maliyet 51.000, APHB IsverenPayi = 1.000 >= 0) ve `ALegitimateRate_IsNotCapped_...`. Önceki "basitleştirme 2" (sınırsız) kalktı.
+2. `IncentiveCalculation`: etkin SGK ataması + dolu profil kodu + atamanın hesaba etkisi yok ((d) ya da onaysız) -> kodlar aynı olsa bile `incentive_profile_code_ignored` (Details = profil kodu). Test `ASgkAssignmentWithNoEffect_WarnsThatTheProfileCodeIsIgnored_...` (d ve onaysız).
+3. Servis sınır testleri (`IncentiveServiceTests`): tanım ValidTo 28 Şub (etkin değil), 1 Mart ve 15 Mart (etkin: ay içinde bitiş ay için geçerli), ValidFrom 31 Mart (etkin) / 1 Nisan (değil); atama bitiş ayı Şubat (kapsamaz) / Mart (kapsar), başlangıç Mart (kapsar) / Nisan (kapsamaz). Mevcut domain kuralı `IsEffectiveInMonth` (ValidTo >= ay başı) gereği "ay ortasında biten tanım o ay etkin"dir; test bunu belgeler.

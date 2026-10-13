@@ -11,20 +11,31 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 internal static class IncentiveSteps
 {
     /// <summary>(a) EMPLOYER_DISCOUNT: <c>Round(sgkBase x rate)</c>, replaces the legacy 5-point rule for this employee.</summary>
-    public static (decimal Amount, TraceStep Step) EmployerDiscount(int order, IncentiveEffectInput effect, decimal sgkBase, PayrollLegislationSnapshot p)
+    public static (decimal Amount, TraceStep Step) EmployerDiscount(int order, IncentiveEffectInput effect, decimal sgkBase, decimal employerSgk, PayrollLegislationSnapshot p)
     {
         var rate = RequireRate(effect);
-        var amount = PayrollCalculator.Round(sgkBase * rate.Value);
+        var requested = PayrollCalculator.Round(sgkBase * rate.Value);
+        var capped = requested > employerSgk; // a wrong, too large rate cannot push the employer SGK premium below zero
+        var amount = capped ? employerSgk : requested;
+        var inputs = new Dictionary<string, string>
+        {
+            ["sgkBase"] = PayrollCalculator.Format(sgkBase),
+            ["discountRate"] = PayrollCalculator.Format(rate.Value),
+            ["incentiveEligible"] = "1",
+            ["incentiveCode"] = effect.Code,
+        };
+        if (capped)
+        {
+            inputs["employerSgk"] = PayrollCalculator.Format(employerSgk);
+            inputs["cappedAtEmployerSgk"] = "1";
+        }
+
         var step = new TraceStep(
             order, PayrollTraceStepCodes.EmployerDiscount, "payroll.trace.step.employer_discount",
-            new Dictionary<string, string>
-            {
-                ["sgkBase"] = PayrollCalculator.Format(sgkBase),
-                ["discountRate"] = PayrollCalculator.Format(rate.Value),
-                ["incentiveEligible"] = "1",
-                ["incentiveCode"] = effect.Code,
-            },
-            $"sgkBase * teşvik indirim oranı ({effect.Code})",
+            inputs,
+            capped
+                ? $"min(EMPLOYER_SGK, sgkBase * teşvik indirim oranı) ({effect.Code}) - oran işveren SGK payını aştığı için işveren SGK payıyla sınırlandı"
+                : $"sgkBase * teşvik indirim oranı ({effect.Code})",
             amount,
             [PayrollCalculator.Ref(rate.ParameterKey, rate.Value, p)]);
         return (amount, step);

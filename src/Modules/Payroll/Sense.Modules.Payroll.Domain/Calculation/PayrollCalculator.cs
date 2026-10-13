@@ -321,7 +321,7 @@ public static class PayrollCalculator
         decimal employerDiscount;
         if (discountEffect is not null)
         {
-            var (amount, discountStep) = IncentiveSteps.EmployerDiscount(order++, discountEffect, sgkBase, p);
+            var (amount, discountStep) = IncentiveSteps.EmployerDiscount(order++, discountEffect, sgkBase, employerSgk, p);
             employerDiscount = amount;
             steps.Add(discountStep);
         }

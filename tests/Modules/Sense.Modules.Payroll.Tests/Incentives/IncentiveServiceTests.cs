@@ -45,10 +45,10 @@ public sealed class IncentiveServiceTests
     }
 
     /// <summary>Assigns without the overlap check, so a test can also build the (concurrent-request) overlap the run must tolerate.</summary>
-    private static EmployeeIncentiveAssignment Assign(IncentiveServiceHarness harness, IncentiveDefinition definition, Guid employeeId, DateOnly? from = null)
+    private static EmployeeIncentiveAssignment Assign(IncentiveServiceHarness harness, IncentiveDefinition definition, Guid employeeId, DateOnly? from = null, DateOnly? to = null)
     {
         var assignment = EmployeeIncentiveAssignment.Create(
-            TenantId, employeeId, definition, from ?? March, null, null, new HashSet<DateOnly>(), [], _ => definition.Category).Value;
+            TenantId, employeeId, definition, from ?? March, to, null, new HashSet<DateOnly>(), [], _ => definition.Category).Value;
         harness.Assignments.Add(assignment);
         return assignment;
     }
@@ -341,5 +341,91 @@ public sealed class IncentiveServiceTests
         harness.OutputOf(coded, "EMPLOYER_DISCOUNT").ShouldBe(2_500m);
         harness.HasStep(coded, "EMPLOYER_INCENTIVE").ShouldBeFalse();
         harness.HasStep(coded, "INCOME_TAX_RELIEF").ShouldBeFalse();
+    }
+
+    // ---- review follow-ups ----
+
+    [Fact]
+    public async Task ARateDiscountAboveTheEmployerSgkShare_IsCappedAtIt_SoNothingGoesNegative()
+    {
+        // 50.000 brüt: işveren SGK 10.250. Oran 0,5 -> 25.000 isteği 10.250'ye iner; maliyet 50.000 + 10.250 - 10.250 + 1.000 = 51.000.
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee();
+        Assign(harness, Define(harness, "SGK_HATALI", IncentiveKind.EmployerSgkRateDiscount, RateParameters(0.5m), "06111"), employee);
+
+        await harness.RunAsync(employee);
+
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(10_250m);
+        harness.PayslipOf(employee).EmployerCost.ShouldBe(51_000m);
+        harness.StepOf(employee, "EMPLOYER_DISCOUNT").GetProperty("inputs").GetProperty("cappedAtEmployerSgk").GetString().ShouldBe("1");
+        // APHB IsverenPayi = EMPLOYER_SGK - EMPLOYER_DISCOUNT + EMPLOYER_UNEMP = 0 + 1.000, never negative.
+        (harness.OutputOf(employee, "EMPLOYER_SGK") - harness.OutputOf(employee, "EMPLOYER_DISCOUNT") + harness.OutputOf(employee, "EMPLOYER_UNEMP")).ShouldBe(1_000m);
+    }
+
+    [Fact]
+    public async Task ALegitimateRate_IsNotCapped_AndTheTraceCarriesNoCapInput()
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee();
+        Assign(harness, Define(harness, "SGK_5510_MD81", IncentiveKind.EmployerSgkRateDiscount, KeyParameters(DiscountKey), "05510"), employee);
+
+        await harness.RunAsync(employee);
+
+        harness.StepOf(employee, "EMPLOYER_DISCOUNT").GetProperty("inputs").TryGetProperty("cappedAtEmployerSgk", out _).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ASgkAssignmentWithNoEffect_WarnsThatTheProfileCodeIsIgnored_EvenWithTheSameDeclarationCode(bool declarationOnly)
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee("05510");
+        var definition = declarationOnly
+            ? Define(harness, "BEYAN_5510", IncentiveKind.DeclarationOnly, IncentiveParameters.Empty, "05510")
+            : Define(harness, "SGK_5510_MD81", IncentiveKind.EmployerSgkRateDiscount, KeyParameters(DiscountKey), "05510", approved: false);
+        Assign(harness, definition, employee);
+
+        var summary = await harness.RunAsync(employee);
+
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(0m); // the 5 points are gone
+        WarningsOf(summary, "incentive_profile_code_ignored").ShouldHaveSingleItem().Details.ShouldBe("05510");
+    }
+
+    [Theory]
+    [InlineData("2026-02-28", null, false)] // definition ended the month before
+    [InlineData("2026-03-01", null, true)] // ends on the first day of the month: still usable in it
+    [InlineData("2026-03-15", null, true)] // ends mid-month
+    [InlineData(null, "2026-03-31", true)] // starts on the last day of the month
+    [InlineData(null, "2026-04-01", false)] // starts the month after
+    public async Task TheDefinitionsDateRange_DecidesWhetherItIsEffectiveInTheMonth(string? validTo, string? validFrom, bool effective)
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee();
+        var definition = Define(
+            harness, "SGK_TARIH", IncentiveKind.EmployerSgkRateDiscount, RateParameters(0.10m), "06111",
+            validFrom: validFrom is null ? null : DateOnly.Parse(validFrom), validTo: validTo is null ? null : DateOnly.Parse(validTo));
+        Assign(harness, definition, employee);
+
+        await harness.RunAsync(employee);
+
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(effective ? 5_000m : 0m);
+    }
+
+    [Theory]
+    [InlineData("2026-01-01", "2026-02-01", false)] // ended in the previous month
+    [InlineData("2026-01-01", "2026-03-01", true)] // the last month is the run's month
+    [InlineData("2026-03-01", null, true)] // starts with the month
+    [InlineData("2026-04-01", null, false)] // starts the month after
+    public async Task TheAssignmentsMonthRange_DecidesWhetherItCoversTheMonth(string from, string? to, bool covers)
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee();
+        var definition = Define(harness, "SGK_ATAMA", IncentiveKind.EmployerSgkRateDiscount, RateParameters(0.10m), "06111");
+        Assign(harness, definition, employee, DateOnly.Parse(from), to is null ? null : DateOnly.Parse(to));
+
+        await harness.RunAsync(employee);
+
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(covers ? 5_000m : 0m);
     }
 }

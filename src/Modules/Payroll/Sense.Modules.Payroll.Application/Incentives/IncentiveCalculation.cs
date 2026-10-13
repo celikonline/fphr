@@ -64,7 +64,10 @@ public sealed class IncentiveCalculation
         var sgk = Select(employeeId, effective, IncentiveCategory.Sgk, warnings);
         var tax = Select(employeeId, effective, IncentiveCategory.Tax, warnings);
 
-        if (sgk is not null && profileCodeFilled && !SameDeclarationCode(profileLawCode, sgk.Definition.DeclarationCode))
+        // The assignment replaces the profile's flat 5 points. Warn when the codes differ, or when the assignment itself changes no
+        // calculation ((d) declaration-only or unapproved), so the employee silently loses the 5 points.
+        var assignmentHasNoEffect = sgk is not null && (sgk.Definition.Kind == IncentiveKind.DeclarationOnly || !sgk.Definition.IsSmmmApproved);
+        if (sgk is not null && profileCodeFilled && (assignmentHasNoEffect || !SameDeclarationCode(profileLawCode, sgk.Definition.DeclarationCode)))
         {
             warnings.Add(new PayrollWarning(employeeId, PayrollWarningCodes.IncentiveProfileCodeIgnored, profileLawCode!.Trim()));
         }
