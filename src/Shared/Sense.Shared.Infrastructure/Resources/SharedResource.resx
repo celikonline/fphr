@@ -2032,7 +2032,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.incentive_name_invalid" xml:space="preserve"><value>Teşvik adı 1-100 karakter, kanun dayanağı en çok 200 karakter olmalı.</value></data>
   <data name="payroll.errors.incentive_parameters_invalid" xml:space="preserve"><value>Teşvik parametresi geçersiz: {field}.</value></data>
   <data name="payroll.errors.incentive_parameters_incomplete" xml:space="preserve"><value>Teşvik onaylanamaz; eksik parametre: {field}.</value></data>
-  <data name="payroll.errors.incentive_legislation_key_invalid" xml:space="preserve"><value>Mevzuat parametre anahtarı 'Payroll.' ile başlamalı ve en çok 100 karakter olmalı ({field}).</value></data>
+  <data name="payroll.errors.incentive_legislation_key_invalid" xml:space="preserve"><value>Mevzuat parametre anahtarı geçersiz veya bulunamadı: 'Payroll.' ile başlamalı, en çok 100 karakter olmalı ve tanımlı bir parametreye karşılık gelmeli ({field}).</value></data>
   <data name="payroll.errors.incentive_declaration_code_invalid" xml:space="preserve"><value>Bildirge kodu yalnız rakamlardan oluşmalı (1-10 hane).</value></data>
   <data name="payroll.errors.incentive_declaration_code_required" xml:space="preserve"><value>SGK kategorisindeki teşvik için bildirge kodu zorunludur.</value></data>
   <data name="payroll.errors.incentive_date_range_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
@@ -2045,6 +2045,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.incentive_assignment_overlap" xml:space="preserve"><value>Bu çalışanın aynı kategoride tarihleri çakışan bir teşvik ataması zaten var.</value></data>
   <data name="payroll.errors.incentive_assignment_exceeds_max_months" xml:space="preserve"><value>Atama, bu teşvikin çalışan başına en çok süresini ({maxMonths} ay) aşıyor.</value></data>
   <data name="payroll.errors.incentive_assignment_end_required" xml:space="preserve"><value>Süre sınırı olan teşvikte atamaya bitiş ayı girilmelidir.</value></data>
+  <data name="payroll.errors.incentive_kind_category_locked" xml:space="preserve"><value>Atamaları olan teşvik tanımının türü SGK ve gelir vergisi kategorileri arasında değiştirilemez.</value></data>
   <data name="payroll.incentive.manage" xml:space="preserve"><value>Teşvik modellerini tanımlama, çalışanlara atama ve eski profil kodlarını dönüştürme</value></data>
   <data name="payroll.incentive.approve" xml:space="preserve"><value>Teşvik tanımını onaylama ve onayı geri alma</value></data>
   <data name="payroll.dirty.reason.incentive_changed" xml:space="preserve"><value>Teşvik ataması veya tanımı değişti</value></data>

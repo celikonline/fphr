@@ -135,6 +135,7 @@ public static class PayrollDomainErrors
     public const string IncentiveAssignmentOverlap = "payroll.errors.incentive_assignment_overlap";
     public const string IncentiveAssignmentExceedsMaxMonths = "payroll.errors.incentive_assignment_exceeds_max_months";
     public const string IncentiveAssignmentEndRequired = "payroll.errors.incentive_assignment_end_required";
+    public const string IncentiveKindCategoryLocked = "payroll.errors.incentive_kind_category_locked";
 }
 
 /// <summary>Domain limits.</summary>

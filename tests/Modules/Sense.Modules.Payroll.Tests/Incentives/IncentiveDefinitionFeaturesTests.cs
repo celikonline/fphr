@@ -349,7 +349,7 @@ public sealed class IncentiveDefinitionFeaturesTests
     {
         var definition = Stored();
         definition.Approve(UserId, Now, "ok");
-        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _flagger);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
 
         var changedRate = new IncentiveParametersDto(new IncentiveRateDto(0.10m, null), null, null, null, false, false, false, false);
         var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(parameters: changedRate)), CancellationToken.None);
@@ -364,7 +364,7 @@ public sealed class IncentiveDefinitionFeaturesTests
     {
         var definition = Stored();
         definition.Approve(UserId, Now, "ok");
-        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _flagger);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
 
         var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(name: "Yeni ad")), CancellationToken.None);
 
@@ -381,7 +381,7 @@ public sealed class IncentiveDefinitionFeaturesTests
         var employeeB = Guid.NewGuid();
         Assigned(definition, EmployeeA, new DateOnly(2026, 1, 1), null);
         Assigned(definition, employeeB, new DateOnly(2026, 1, 1), new DateOnly(2026, 3, 1));
-        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _flagger);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
 
         await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(name: "Yeni ad")), CancellationToken.None);
 
@@ -390,9 +390,62 @@ public sealed class IncentiveDefinitionFeaturesTests
     }
 
     [Fact]
+    public async Task Update_ChangingTheCategoryOfAnAssignedDefinition_IsAConflict()
+    {
+        var definition = Stored();
+        Assigned(definition, EmployeeA, new DateOnly(2026, 1, 1), null);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
+
+        var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(IncentiveKind.IncomeTaxWithholdingRelief)), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.IncentiveKindCategoryLocked);
+        result.Error.Type.ShouldBe(ErrorType.Conflict);
+        definition.Kind.ShouldBe(IncentiveKind.EmployerSgkRateDiscount);
+    }
+
+    [Fact]
+    public async Task Update_RemovingTheDeclarationCodeOfAnAssignedSgkDefinition_IsRefused()
+    {
+        var definition = Stored();
+        Assigned(definition, EmployeeA, new DateOnly(2026, 1, 1), null);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
+
+        var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(declarationCode: " ")), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.IncentiveDeclarationCodeRequired);
+        definition.DeclarationCode.ShouldBe("06111");
+    }
+
+    [Fact]
+    public async Task Update_ChangingKindWithinTheCategoryOfAnAssignedDefinition_IsAllowed()
+    {
+        var definition = Stored();
+        Assigned(definition, EmployeeA, new DateOnly(2026, 1, 1), null);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
+
+        var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(IncentiveKind.EmployerShareCoverage)), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        definition.Kind.ShouldBe(IncentiveKind.EmployerShareCoverage);
+    }
+
+    [Fact]
+    public async Task Update_OfADefinitionWithoutAssignments_MayChangeCategoryAndDropTheCode()
+    {
+        var definition = Stored();
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
+
+        var result = await handler.Handle(new UpdateIncentiveDefinitionCommand(definition.Id, Input(IncentiveKind.IncomeTaxWithholdingRelief, declarationCode: null)), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        definition.Category.ShouldBe(IncentiveCategory.Tax);
+        definition.DeclarationCode.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Update_OfAnUnknownDefinition_IsNotFound()
     {
-        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _flagger);
+        var handler = new UpdateIncentiveDefinitionHandler(_definitions, _assignments, _flagger);
 
         (await handler.Handle(new UpdateIncentiveDefinitionCommand(Guid.NewGuid(), Input()), CancellationToken.None)).Error.Code
             .ShouldBe(PayrollDomainErrors.IncentiveNotFound);

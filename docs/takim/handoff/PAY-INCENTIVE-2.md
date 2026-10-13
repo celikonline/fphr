@@ -31,7 +31,15 @@ Plan: `PAY-INCENTIVE-PLAN.md` ("Sözleşmeler", "Profil ilişkisi ve geçiş"). 
 - Çalışan yok/yabancı: mevcut `employee.not_found` (PayItemEmployeeNotFound) yeniden kullanıldı.
 - Çalıştırma uyarı/atlama kodları (`incentive_not_approved` vb.) dilim 3'te (hesap tarafı).
 
+## Gözden geçirme düzeltmeleri (RET sonrası)
+- `UpdateIncentiveDefinitionHandler` artık `IEmployeeIncentiveAssignmentRepository` alır: tanımın ataması varsa (`ListByDefinitionAsync(id, DateOnly.MinValue)`) (a) Sgk<->Tax kategori değişimi `incentive_kind_category_locked` (Conflict; yeni hata kodu PayrollDomainErrors + resx tr/en sona), (b) Sgk kategorisinde DeclarationCode silinmesi `declaration_code_required`. Kategori içi a<->b<->d serbest; atamasız tanımda serbest. Testler: 4 birim + 1 Postgres.
+- `incentive_legislation_key_invalid` resx metni tr/en "geçersiz veya bulunamadı" anlamına genişletildi.
+
+## UI (dilim 5) için bilgi notları
+- Geçiş önizlemesi HAM koda göre gruplar ("5510" ve "05510" ayrı satır), ama convert NORMALİZE koda göre seçer: tek convert çağrısında "5510" ve "05510" taşıyan çalışanların hepsi birlikte dönüşür. UI bunu göstermeli.
+- `PUT /incentive-definitions/{id}`'de `validTo` gönderilmezse silinir (ve takvim alanı değiştiği için onay düşer); validFrom gönderilmezse mevcut değer korunur.
+- Şablondan eklenen tanımın `ValidFrom`'u bugündür; önceki açık aya dönüştürülen/atanan atama o ayda etkin sayılmaz (`IsEffectiveInMonth`). UI ValidFrom'u düzenletmeli veya uyarmalı.
+
 ## Açık konular (kapsam dışı, dilim 3+ veya karar)
-- Tanım `Kind` güncellemesiyle kategori değişirse (Sgk<->Tax) mevcut atamaların aynı-kategori çakışmazlığı yeniden denetlenmez; plan bunu istemiyor, gerekirse Update'te atamalı tanımda kategori değişimini reddetmek eklenebilir.
 - Tanım değişiminde işaretleme çalışan başına `FlagAsync` sorgusu yapar (PAY-FORMULA ile aynı); büyük kiracıda toplu işaretleme düşünülebilir.
 - Riskli alan: `Sense.Modules.Payroll.Infrastructure/Persistence/Migrations/**` (yeni `AddIncentives` + snapshot); insan onayı gerekir.

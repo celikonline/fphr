@@ -311,7 +311,8 @@ public sealed class UpdateIncentiveDefinitionValidator : AbstractValidator<Updat
     public UpdateIncentiveDefinitionValidator() => RuleFor(x => x.Input).NotNull();
 }
 
-public sealed class UpdateIncentiveDefinitionHandler(IIncentiveDefinitionRepository definitions, IncentiveChangeFlagger flagger)
+public sealed class UpdateIncentiveDefinitionHandler(
+    IIncentiveDefinitionRepository definitions, IEmployeeIncentiveAssignmentRepository assignments, IncentiveChangeFlagger flagger)
     : ICommandHandler<UpdateIncentiveDefinitionCommand>
 {
     public async Task<Result> Handle(UpdateIncentiveDefinitionCommand command, CancellationToken cancellationToken)
@@ -322,7 +323,23 @@ public sealed class UpdateIncentiveDefinitionHandler(IIncentiveDefinitionReposit
             return Error.NotFound(PayrollDomainErrors.IncentiveNotFound);
         }
 
-        var updated = definition.Update(command.Input.ToData(definition.ValidFrom));
+        var data = command.Input.ToData(definition.ValidFrom);
+
+        // Assignments rely on the category (overlap rule) and, in the SGK category, on the declaration code.
+        if (await assignments.ListByDefinitionAsync(definition.Id, DateOnly.MinValue, cancellationToken) is { Count: > 0 })
+        {
+            if (Enum.IsDefined(data.Kind) && IncentiveDefinition.CategoryOf(data.Kind) != definition.Category)
+            {
+                return Error.Conflict(PayrollDomainErrors.IncentiveKindCategoryLocked);
+            }
+
+            if (definition.Category == IncentiveCategory.Sgk && string.IsNullOrWhiteSpace(data.DeclarationCode))
+            {
+                return Error.Validation(PayrollDomainErrors.IncentiveDeclarationCodeRequired);
+            }
+        }
+
+        var updated = definition.Update(data);
         if (updated.IsFailure)
         {
             return updated;

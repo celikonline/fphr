@@ -333,6 +333,34 @@ public sealed class IncentiveIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task UpdateHandler_RefusesCategoryChangeAndCodeRemoval_ForAssignedDefinitions_OverRealRepositories()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var assignedId = await CreateDefinitionAsync(tenantId, "SGK_A");
+        var freeId = await CreateDefinitionAsync(tenantId, "SGK_B", declarationCode: "07103");
+        (await AssignAsync(assignedId, [EmployeeA], 6, null)).IsSuccess.ShouldBeTrue();
+
+        async Task<Sense.Shared.Kernel.Results.Result> UpdateAsync(Guid id, IncentiveKind kind, string? declarationCode)
+        {
+            using var scope = ServiceProvider!.CreateScope();
+            var sp = scope.ServiceProvider;
+            var handler = new UpdateIncentiveDefinitionHandler(
+                sp.GetRequiredService<IIncentiveDefinitionRepository>(), sp.GetRequiredService<IEmployeeIncentiveAssignmentRepository>(), sp.GetRequiredService<IncentiveChangeFlagger>());
+            var parameters = new IncentiveParametersDto(new IncentiveRateDto(0.05m, null), null, null, null, false, false, false, false);
+            var result = await handler.Handle(
+                new UpdateIncentiveDefinitionCommand(id, new IncentiveDefinitionInput("Test teşviki", null, declarationCode, kind, parameters, null, null, null)), CancellationToken.None);
+            await sp.GetRequiredService<PayrollDbContext>().SaveChangesAsync();
+            return result;
+        }
+
+        (await UpdateAsync(assignedId, IncentiveKind.IncomeTaxWithholdingRelief, "06111")).Error.Code.ShouldBe(PayrollDomainErrors.IncentiveKindCategoryLocked);
+        (await UpdateAsync(assignedId, IncentiveKind.EmployerSgkRateDiscount, null)).Error.Code.ShouldBe(PayrollDomainErrors.IncentiveDeclarationCodeRequired);
+        (await UpdateAsync(assignedId, IncentiveKind.EmployerShareCoverage, "06111")).IsSuccess.ShouldBeTrue();
+        (await UpdateAsync(freeId, IncentiveKind.IncomeTaxWithholdingRelief, null)).IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task TemplateHandler_PersistsThe5510TemplateApprovedBySystem()
     {
         var tenantId = Guid.NewGuid();
