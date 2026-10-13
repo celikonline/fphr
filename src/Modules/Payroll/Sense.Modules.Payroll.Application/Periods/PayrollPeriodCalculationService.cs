@@ -53,7 +53,7 @@ public static class PayrollWarningCodes
     /// <summary>The same pay item was assigned twice for the month (concurrent requests); only the latest-starting assignment is paid. Details = pay item code.</summary>
     public const string PayItemDuplicateAssignment = "pay_item_duplicate_assignment";
 
-    /// <summary>The formula deductions exceeded the net that was left after icra/nafaka and avans; the excess was not taken (net never goes negative). Details = the first capped pay item code.</summary>
+    /// <summary>The formula deductions exceeded the net that was left after icra/nafaka, avans and the union dues (union dues are never reduced); the excess was not taken (net never goes negative). Details = the first capped pay item code.</summary>
     public const string PayItemDeductionCapped = "pay_item_deduction_capped";
 
     /// <summary>The employee has an incentive assignment whose definition is not SMMM-approved: it does not enter the calculation (its declaration code is still declared). Details = incentive code.</summary>

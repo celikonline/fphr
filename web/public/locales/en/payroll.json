@@ -351,7 +351,7 @@
       "codeLocked": "The code cannot be changed after creation.",
       "name": "Name",
       "direction": "Direction",
-      "directionHint": "Only earnings can be defined for now; deductions are not supported yet.",
+      "directionHint": "Earnings are added to gross pay; deductions are taken from net pay.",
       "amountBasis": "Amount type",
       "taxFlags": "Tax and premium status",
       "netFlagsLocked": "Net items are fully taxable; the flags are locked.",
@@ -395,7 +395,11 @@
       "fazla_mesai_saati": "Overtime hours",
       "ay": "Period month (1-12)",
       "deger": "Value entered at assignment (default value if none)"
-    }
+    },
+    "directionLockedHint": "The direction cannot be changed once the item is assigned to an employee.",
+    "deductionNote": "A deduction is taken from net pay and does not affect tax bases; the amount type is fixed to gross.",
+    "deductionAssignHint": "This is a deduction: the calculated amount is taken from the employee's net pay.",
+    "directionColumn": "Direction"
   },
   "assignments": {
     "title": "Pay item assignments",

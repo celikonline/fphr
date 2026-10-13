@@ -110,6 +110,22 @@ describe("EmployeePayItemsCard", () => {
     await waitFor(() => expect(createPayItemAssignments).toHaveBeenCalledWith(expect.objectContaining({ payItemDefinitionId: "d1", employeeIds: ["e1"] })));
   });
 
+  it("shows the definition direction badge (deduction via the definition list)", async () => {
+    vi.mocked(listPayItemAssignments).mockResolvedValue([
+      { id: "a1", employeeId: "e1", payItemDefinitionId: "d1", code: "YEMEK", name: "Yemek yardımı", fromYear: 2026, fromMonth: 1 },
+      { id: "a2", employeeId: "e1", payItemDefinitionId: "d2", code: "KANTIN", name: "Kantin", fromYear: 2026, fromMonth: 1 },
+    ]);
+    vi.mocked(listPayItems).mockResolvedValue([
+      { id: "d1", code: "YEMEK", name: "Yemek yardımı", direction: "earning", amountBasis: "gross", isActive: true },
+      { id: "d2", code: "KANTIN", name: "Kantin", direction: "deduction", amountBasis: "gross", isActive: true },
+    ]);
+    renderCard();
+
+    const kantin = (await screen.findByText("KANTIN - Kantin")).closest("tr")!;
+    await waitFor(() => expect(within(kantin).getByText("Kesinti")).toBeInTheDocument());
+    expect(within(screen.getByText("YEMEK - Yemek yardımı").closest("tr")!).getByText("Kazanç")).toBeInTheDocument();
+  });
+
   it("shows an empty state", async () => {
     vi.mocked(listPayItemAssignments).mockResolvedValue([]);
     renderCard();

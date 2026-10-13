@@ -351,7 +351,7 @@
       "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
       "name": "Ad",
       "direction": "Yön",
-      "directionHint": "Şimdilik yalnız kazanç tanımlanabilir; kesinti desteği sonraki sürümde.",
+      "directionHint": "Kazanç brüte eklenir; kesinti netten düşülür.",
       "amountBasis": "Tutar türü",
       "taxFlags": "Vergi ve prim durumu",
       "netFlagsLocked": "Net tutarlı kalemler tam vergiye tabidir; bayraklar kilitlidir.",
@@ -395,7 +395,11 @@
       "fazla_mesai_saati": "Fazla mesai saati",
       "ay": "Dönem ayı (1-12)",
       "deger": "Çalışana atanırken girilen değer (yoksa varsayılan değer)"
-    }
+    },
+    "directionLockedHint": "Kalem bir çalışana atanmışsa yön değiştirilemez.",
+    "deductionNote": "Kesinti netten düşülür, vergi matrahlarını etkilemez; tutar türü brüt olarak sabittir.",
+    "deductionAssignHint": "Bu bir kesintidir: hesaplanan tutar çalışanın netinden düşülür.",
+    "directionColumn": "Yön"
   },
   "assignments": {
     "title": "Ödeme türü atamaları",

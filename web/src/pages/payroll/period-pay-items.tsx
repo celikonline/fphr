@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
+import { DirectionBadge, usePayItemDirections } from "./pay-item-direction";
 import type { PayrollPeriod } from "@/services/payroll.service";
 import {
   listPayItemAssignments,
@@ -50,6 +51,7 @@ function AssignmentsCard({ period }: { period: PayrollPeriod }) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<PayItemAssignment | null>(null);
   const [removing, setRemoving] = useState<PayItemAssignment | null>(null);
+  const directionOf = usePayItemDirections();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [...PAY_ITEM_ASSIGNMENTS_QUERY_KEY, "period", period.id],
@@ -92,6 +94,7 @@ function AssignmentsCard({ period }: { period: PayrollPeriod }) {
               <Table.Tr>
                 <Table.Th>{t("payroll:assignments.employee")}</Table.Th>
                 <Table.Th>{t("payroll:assignments.payItem")}</Table.Th>
+                <Table.Th>{t("payroll:payItems.directionColumn")}</Table.Th>
                 <Table.Th ta="right">{t("payroll:assignments.value")}</Table.Th>
                 <Table.Th>{t("payroll:assignments.range")}</Table.Th>
                 <Table.Th />
@@ -104,6 +107,9 @@ function AssignmentsCard({ period }: { period: PayrollPeriod }) {
                   <Table.Td>
                     {item.code}
                     {item.name ? ` - ${item.name}` : ""}
+                  </Table.Td>
+                  <Table.Td>
+                    <DirectionBadge direction={directionOf(item.payItemDefinitionId, item.direction)} />
                   </Table.Td>
                   <Table.Td ta="right">{item.value != null ? new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 4 }).format(item.value) : t("payroll:assignments.defaultValue")}</Table.Td>
                   <Table.Td>{formatAssignmentRange(item, t("payroll:assignments.openEnded"))}</Table.Td>
@@ -234,22 +240,31 @@ function PayItemLinesCard({ periodId }: { periodId: string }) {
               <Table.Tr>
                 <Table.Th>{t("payroll:payItemLines.employee")}</Table.Th>
                 <Table.Th>{t("payroll:payItemLines.payItem")}</Table.Th>
+                <Table.Th>{t("payroll:payItems.directionColumn")}</Table.Th>
                 <Table.Th ta="right">{t("payroll:payItemLines.amount")}</Table.Th>
                 <Table.Th ta="right">{t("payroll:payItemLines.netTarget")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {data.map((line, index) => (
+              {data.map((line, index) => {
+                const deduction = line.direction === "deduction";
+                return (
                 <Table.Tr key={`${line.employeeId}-${line.code}-${index}`}>
                   <Table.Td>{line.employeeName ?? "—"}</Table.Td>
                   <Table.Td>
                     {line.code}
                     {line.name ? ` - ${line.name}` : ""}
                   </Table.Td>
-                  <Table.Td ta="right">{line.amount != null ? money(line.amount) : "—"}</Table.Td>
+                  <Table.Td>
+                    <DirectionBadge direction={deduction ? "deduction" : "earning"} />
+                  </Table.Td>
+                  <Table.Td ta="right" c={deduction ? "red" : undefined} data-testid={deduction ? "deduction-amount" : undefined}>
+                    {line.amount != null ? (deduction ? `−${money(Math.abs(line.amount))}` : money(line.amount)) : "—"}
+                  </Table.Td>
                   <Table.Td ta="right">{line.netTarget != null ? money(line.netTarget) : "—"}</Table.Td>
                 </Table.Tr>
-              ))}
+                );
+              })}
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>

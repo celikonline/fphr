@@ -5,6 +5,7 @@ import { ActionIcon, Button, Card, Group, Skeleton, Table, Text, Title } from "@
 import { Plus, Trash2 } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { formatAssignmentRange } from "@/pages/payroll/period-pay-items";
+import { DirectionBadge, usePayItemDirections } from "@/pages/payroll/pay-item-direction";
 import { PAY_ITEM_ASSIGNMENTS_QUERY_KEY, PayItemAssignModal, PayItemAssignmentDeleteConfirm } from "@/pages/payroll/pay-item-assign-modal";
 import { listPayItemAssignments, type PayItemAssignment } from "@/services/payroll-pay-items.service";
 import type { EmployeeDetail } from "@/services/employees.service";
@@ -20,6 +21,7 @@ export function EmployeePayItemsCard({ employee }: { employee: Pick<EmployeeDeta
     queryFn: () => listPayItemAssignments({ employeeId: employee.id }),
     retry: false,
   });
+  const directionOf = usePayItemDirections();
   const now = new Date();
 
   return (
@@ -48,6 +50,7 @@ export function EmployeePayItemsCard({ employee }: { employee: Pick<EmployeeDeta
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>{t("payroll:assignments.payItem")}</Table.Th>
+                <Table.Th>{t("payroll:payItems.directionColumn")}</Table.Th>
                 <Table.Th ta="right">{t("payroll:assignments.value")}</Table.Th>
                 <Table.Th>{t("payroll:assignments.range")}</Table.Th>
                 <Table.Th />
@@ -59,6 +62,9 @@ export function EmployeePayItemsCard({ employee }: { employee: Pick<EmployeeDeta
                   <Table.Td>
                     {item.code}
                     {item.name ? ` - ${item.name}` : ""}
+                  </Table.Td>
+                  <Table.Td>
+                    <DirectionBadge direction={directionOf(item.payItemDefinitionId, item.direction)} />
                   </Table.Td>
                   <Table.Td ta="right">{item.value != null ? new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 4 }).format(item.value) : t("payroll:assignments.defaultValue")}</Table.Td>
                   <Table.Td>{formatAssignmentRange(item, t("payroll:assignments.openEnded"))}</Table.Td>

@@ -123,6 +123,8 @@ export interface PayItemAssignment {
   fromMonth: number;
   toYear?: number | null;
   toMonth?: number | null;
+  /** Definition direction; older servers omit it (derive from the definition list, default earning). */
+  direction?: PayItemDirection | null;
 }
 
 export type PayItemAssignmentFilter = { employeeId: string; periodId?: undefined } | { periodId: string; employeeId?: undefined };
@@ -152,6 +154,8 @@ export interface PayItemLine {
   amount?: number | null;
   amountBasis?: PayItemAmountBasis | null;
   netTarget?: number | null;
+  /** For a deduction line `amount` is the amount actually deducted. Missing = earning. */
+  direction?: PayItemDirection | null;
 }
 
 export async function listPayItemAssignments(filter: PayItemAssignmentFilter): Promise<PayItemAssignment[]> {

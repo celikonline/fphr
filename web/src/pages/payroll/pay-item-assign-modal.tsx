@@ -77,7 +77,7 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
   const [error, setError] = useState<string | null>(null);
 
   const items = useQuery({ queryKey: ["payroll", "pay-items", "active"], queryFn: () => listPayItems(false) });
-  const activeItems = (items.data ?? []).filter((item) => item.isActive !== false && item.direction === "earning");
+  const activeItems = (items.data ?? []).filter((item) => item.isActive !== false);
   const selected = activeItems.find((item) => item.id === itemId);
 
   const from = parseMonthValue(fromMonth);
@@ -123,12 +123,17 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
           label={t("payroll:assignments.modal.payItem")}
           placeholder={t("payroll:assignments.modal.payItemPlaceholder")}
           nothingFoundMessage={t("payroll:assignments.modal.noActiveItems")}
-          data={activeItems.map((item) => ({ value: item.id, label: `${item.code} - ${item.name}` }))}
+          data={activeItems.map((item) => ({ value: item.id, label: `${item.code} - ${item.name}${item.direction === "deduction" ? ` (${t("payroll:payItems.direction.deduction")})` : ""}` }))}
           value={itemId}
           onChange={setItemId}
           searchable
           required
         />
+        {selected?.direction === "deduction" && (
+          <Alert color="red" variant="light" data-testid="deduction-assign-hint">
+            {t("payroll:payItems.deductionAssignHint")}
+          </Alert>
+        )}
         {fixedEmployee ? (
           <Text size="sm">{fixedEmployee.displayName}</Text>
         ) : (

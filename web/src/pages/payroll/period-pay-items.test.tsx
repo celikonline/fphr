@@ -96,6 +96,54 @@ beforeEach(() => {
     .mockResolvedValue([{ id: "d1", code: "YEMEK", name: "Yemek yardımı", direction: "earning", amountBasis: "gross", isActive: true, defaultValue: 100 }]);
 });
 
+describe("PeriodPayItems directions", () => {
+  it("shows the definition direction on assignments, falling back to the definition list", async () => {
+    vi.mocked(listPayItemAssignments).mockResolvedValue([
+      ASSIGNMENT,
+      { ...ASSIGNMENT, id: "a2", payItemDefinitionId: "d2", code: "KANTIN", name: "Kantin" },
+      { ...ASSIGNMENT, id: "a3", payItemDefinitionId: "dX", code: "ESKI", name: "Eski", direction: "deduction" },
+    ]);
+    vi.mocked(listPayItems).mockResolvedValue([
+      { id: "d1", code: "YEMEK", name: "Yemek yardımı", direction: "earning", amountBasis: "gross", isActive: true },
+      { id: "d2", code: "KANTIN", name: "Kantin", direction: "deduction", amountBasis: "gross", isActive: true },
+    ]);
+    renderCard();
+
+    const kantin = (await screen.findByText("KANTIN - Kantin")).closest("tr")!;
+    await waitFor(() => expect(within(kantin).getByText("Kesinti")).toBeInTheDocument());
+    expect(within(screen.getByText("YEMEK - Yemek yardımı").closest("tr")!).getByText("Kazanç")).toBeInTheDocument();
+    expect(within(screen.getByText("ESKI - Eski").closest("tr")!).getByText("Kesinti")).toBeInTheDocument();
+  });
+
+  it("renders deduction lines separately and treats a missing direction as earning", async () => {
+    vi.mocked(listPeriodPayItemLines).mockResolvedValue([
+      { employeeId: "e1", employeeName: "Ayşe Yılmaz", code: "YEMEK", name: "Yemek", amount: 1500 },
+      { employeeId: "e1", employeeName: "Ayşe Yılmaz", code: "KANTIN", name: "Kantin", amount: 250, direction: "deduction" },
+    ]);
+    renderCard();
+
+    const earning = (await screen.findByText("YEMEK - Yemek")).closest("tr")!;
+    expect(within(earning).getByText("Kazanç")).toBeInTheDocument();
+    expect(within(earning).queryByTestId("deduction-amount")).not.toBeInTheDocument();
+
+    const deduction = screen.getByText("KANTIN - Kantin").closest("tr")!;
+    expect(within(deduction).getByText("Kesinti")).toBeInTheDocument();
+    expect(within(deduction).getByTestId("deduction-amount")).toHaveTextContent(/^−.*250/);
+  });
+
+  it("shows a hint when a deduction definition is picked in the assign modal", async () => {
+    vi.mocked(listPayItems).mockResolvedValue([{ id: "d2", code: "KANTIN", name: "Kantin", direction: "deduction", amountBasis: "gross", isActive: true }]);
+    const user = userEvent.setup();
+    renderCard();
+
+    await user.click(await screen.findByRole("button", { name: "Ödeme türü ata" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("combobox", { name: /Ödeme türü/ }));
+    await user.click(await screen.findByRole("option", { name: /KANTIN - Kantin/, hidden: true }));
+    expect(within(dialog).getByTestId("deduction-assign-hint")).toHaveTextContent(/netinden düşülür/);
+  });
+});
+
 function renderCard(period: PayrollPeriod = OPEN) {
   const instance = i18next.createInstance();
   void instance.init({

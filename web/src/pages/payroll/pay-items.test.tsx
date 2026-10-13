@@ -194,14 +194,81 @@ describe("PayItemsPage", () => {
     }
   });
 
-  it("only offers the earning direction", async () => {
+  it("offers earning and deduction directions on create", async () => {
     vi.mocked(listPayItems).mockResolvedValue([]);
     renderPage();
     const user = userEvent.setup();
 
     await user.click((await screen.findAllByRole("button", { name: "Yeni ödeme türü" }))[0]);
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText(/Şimdilik yalnız kazanç tanımlanabilir/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/kesinti netten düşülür/i)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("combobox", { name: "Yön" }));
+    expect(await screen.findByRole("option", { name: "Kesinti", hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Kazanç", hidden: true })).toBeInTheDocument();
+  });
+
+  it("locks basis and tax flags when Deduction is chosen and submits normalized flags", async () => {
+    vi.mocked(listPayItems).mockResolvedValue([]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click((await screen.findAllByRole("button", { name: "Yeni ödeme türü" }))[0]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("combobox", { name: "Yön" }));
+    await user.click(await screen.findByRole("option", { name: "Kesinti", hidden: true }));
+
+    expect(within(dialog).getByTestId("deduction-note")).toHaveTextContent(/vergi matrahlarını etkilemez/);
+    expect(within(dialog).queryByLabelText("SGK primine tabi")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Net")).not.toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText(/^Kod/), "avans2");
+    await user.type(within(dialog).getByLabelText(/^Ad/), "Kantin");
+    await user.type(within(dialog).getByLabelText(/^Formül/), "brut * 0.01");
+    await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
+
+    await waitFor(() => expect(createPayItem).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(createPayItem).mock.calls[0][0]).toMatchObject({
+      code: "AVANS2",
+      direction: "deduction",
+      amountBasis: "gross",
+      isSgkSubject: false,
+      isIncomeTaxSubject: false,
+      isStampTaxSubject: false,
+    });
+  });
+
+  it("keeps and sends the direction of an existing deduction when editing", async () => {
+    vi.mocked(listPayItems).mockResolvedValue([{ id: "k1", code: "KANTIN", name: "Kantin kesintisi", direction: "deduction", amountBasis: "gross", isSgkSubject: false, isIncomeTaxSubject: false, isStampTaxSubject: false, formula: "brut * 0.01", isActive: true }]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText("KANTIN");
+    await user.click(screen.getByRole("button", { name: "KANTIN kodlu ödeme türünü düzenle" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("combobox", { name: "Yön" })).toHaveValue("Kesinti");
+    expect(within(dialog).getByText(/atanmışsa/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
+
+    await waitFor(() => expect(updatePayItem).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(updatePayItem).mock.calls[0][1]).toMatchObject({
+      direction: "deduction",
+      amountBasis: "gross",
+      isSgkSubject: false,
+      isIncomeTaxSubject: false,
+      isStampTaxSubject: false,
+    });
+  });
+
+  it("shows a direction badge and dashes for the tax flags of a deduction", async () => {
+    vi.mocked(listPayItems).mockResolvedValue([FULL, { id: "k1", code: "KANTIN", name: "Kantin kesintisi", direction: "deduction", amountBasis: "gross", isSgkSubject: false, isIncomeTaxSubject: false, isStampTaxSubject: false, isActive: true }]);
+    renderPage();
+
+    const earningRow = (await screen.findByText("YEMEK")).closest("tr")!;
+    expect(within(earningRow).getByText("Kazanç")).toBeInTheDocument();
+    expect(within(earningRow).getByText("GV · DV")).toBeInTheDocument();
+    const deductionRow = screen.getByText("KANTIN").closest("tr")!;
+    expect(within(deductionRow).getByText("Kesinti")).toBeInTheDocument();
+    expect(within(deductionRow).getByText("—")).toBeInTheDocument();
   });
 
   it("toggles active state", async () => {

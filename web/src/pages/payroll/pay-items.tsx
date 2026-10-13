@@ -8,6 +8,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { listPayItems, setPayItemActive, type PayItemDefinition } from "@/services/payroll-pay-items.service";
+import { DirectionBadge } from "./pay-item-direction";
 import { PAY_ITEMS_QUERY_KEY, PayItemForm } from "./pay-item-form";
 
 /**
@@ -47,6 +48,7 @@ function PayItemsList({ canManage }: { canManage: boolean }) {
   };
 
   const flags = (item: PayItemDefinition) => {
+    if (item.direction === "deduction") return "—"; // a deduction never touches the tax bases
     const labels: string[] = [];
     if (item.isSgkSubject ?? true) labels.push(t("payroll:payItems.flags.sgkShort"));
     if (item.isIncomeTaxSubject ?? true) labels.push(t("payroll:payItems.flags.incomeTaxShort"));
@@ -102,6 +104,7 @@ function PayItemsList({ canManage }: { canManage: boolean }) {
                 <Table.Tr>
                   <Table.Th>{t("payroll:payItems.columns.code")}</Table.Th>
                   <Table.Th>{t("payroll:payItems.columns.name")}</Table.Th>
+                  <Table.Th>{t("payroll:payItems.directionColumn")}</Table.Th>
                   <Table.Th>{t("payroll:payItems.columns.amountBasis")}</Table.Th>
                   <Table.Th>{t("payroll:payItems.columns.taxFlags")}</Table.Th>
                   <Table.Th>{t("payroll:payItems.columns.status")}</Table.Th>
@@ -119,6 +122,9 @@ function PayItemsList({ canManage }: { canManage: boolean }) {
                         </Text>
                       </Table.Td>
                       <Table.Td>{item.name}</Table.Td>
+                      <Table.Td>
+                        <DirectionBadge direction={item.direction ?? "earning"} />
+                      </Table.Td>
                       <Table.Td>{t(`payroll:payItems.basis.${item.amountBasis}`, { defaultValue: item.amountBasis })}</Table.Td>
                       <Table.Td>{flags(item)}</Table.Td>
                       <Table.Td>

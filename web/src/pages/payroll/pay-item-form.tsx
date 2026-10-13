@@ -44,7 +44,7 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
 
   const [code, setCode] = useState(item?.code ?? "");
   const [name, setName] = useState(item?.name ?? "");
-  const [direction] = useState<PayItemDirection>("earning");
+  const [direction, setDirection] = useState<PayItemDirection>(item?.direction ?? "earning");
   const [amountBasis, setAmountBasis] = useState<PayItemAmountBasis>(item?.amountBasis ?? "gross");
   const [sgk, setSgk] = useState(item?.isSgkSubject ?? true);
   const [incomeTax, setIncomeTax] = useState(item?.isIncomeTaxSubject ?? true);
@@ -55,17 +55,20 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
   const [validTo, setValidTo] = useState(item?.validTo ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  const isNet = amountBasis === "net";
+  const isDeduction = direction === "deduction";
+  // A deduction is taken from net pay: always gross-basis with no tax flags (the server normalizes them too).
+  const effectiveBasis: PayItemAmountBasis = isDeduction ? "gross" : amountBasis;
+  const isNet = effectiveBasis === "net";
 
   const save = useMutation({
     mutationFn: () => {
       const input: PayItemInput = {
         name: name.trim(),
         direction,
-        amountBasis,
-        isSgkSubject: isNet ? true : sgk,
-        isIncomeTaxSubject: isNet ? true : incomeTax,
-        isStampTaxSubject: isNet ? true : stampTax,
+        amountBasis: effectiveBasis,
+        isSgkSubject: isDeduction ? false : isNet ? true : sgk,
+        isIncomeTaxSubject: isDeduction ? false : isNet ? true : incomeTax,
+        isStampTaxSubject: isDeduction ? false : isNet ? true : stampTax,
         formula: formula.trim(),
         defaultValue: defaultValue === "" ? null : Number(defaultValue),
         validFrom: validFrom || null,
@@ -104,57 +107,65 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
 
         <Select
           label={t("payroll:payItems.form.direction")}
-          description={t("payroll:payItems.form.directionHint")}
+          description={editing ? t("payroll:payItems.directionLockedHint") : t("payroll:payItems.form.directionHint")}
           data={[
             { value: "earning", label: t("payroll:payItems.direction.earning") },
-            { value: "deduction", label: t("payroll:payItems.direction.deduction"), disabled: true },
+            { value: "deduction", label: t("payroll:payItems.direction.deduction") },
           ]}
           value={direction}
+          onChange={(value) => setDirection(value === "deduction" ? "deduction" : "earning")}
           allowDeselect={false}
-          readOnly
         />
 
-        <div>
-          <Text size="sm" fw={500} mb={4}>
-            {t("payroll:payItems.form.amountBasis")}
+        {isDeduction ? (
+          <Text size="sm" c="dimmed" data-testid="deduction-note">
+            {t("payroll:payItems.deductionNote")}
           </Text>
-          <SegmentedControl
-            value={amountBasis}
-            onChange={(value) => setAmountBasis(value as PayItemAmountBasis)}
-            data={[
-              { value: "gross", label: t("payroll:payItems.basis.gross") },
-              { value: "net", label: t("payroll:payItems.basis.net") },
-            ]}
-          />
-        </div>
+        ) : (
+          <>
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                {t("payroll:payItems.form.amountBasis")}
+              </Text>
+              <SegmentedControl
+                value={amountBasis}
+                onChange={(value) => setAmountBasis(value as PayItemAmountBasis)}
+                data={[
+                  { value: "gross", label: t("payroll:payItems.basis.gross") },
+                  { value: "net", label: t("payroll:payItems.basis.net") },
+                ]}
+              />
+            </div>
 
-        <div>
-          <Text size="sm" fw={500} mb={4}>
-            {t("payroll:payItems.form.taxFlags")}
-          </Text>
-          <Group gap="lg">
-            <Checkbox label={t("payroll:payItems.flags.sgk")} checked={isNet || sgk} disabled={isNet} onChange={(event) => setSgk(event.currentTarget.checked)} />
-            <Checkbox
-              label={t("payroll:payItems.flags.incomeTax")}
-              checked={isNet || incomeTax}
-              disabled={isNet}
-              onChange={(event) => setIncomeTax(event.currentTarget.checked)}
-            />
-            <Checkbox
-              label={t("payroll:payItems.flags.stampTax")}
-              checked={isNet || stampTax}
-              disabled={isNet}
-              onChange={(event) => setStampTax(event.currentTarget.checked)}
-            />
-          </Group>
-          {isNet && (
-            <Text size="xs" c="dimmed" mt={4}>
-              {t("payroll:payItems.form.netFlagsLocked")}
-            </Text>
-          )}
-        </div>
+            <div>
+              <Text size="sm" fw={500} mb={4}>
+                {t("payroll:payItems.form.taxFlags")}
+              </Text>
+              <Group gap="lg">
+                <Checkbox label={t("payroll:payItems.flags.sgk")} checked={isNet || sgk} disabled={isNet} onChange={(event) => setSgk(event.currentTarget.checked)} />
+                <Checkbox
+                  label={t("payroll:payItems.flags.incomeTax")}
+                  checked={isNet || incomeTax}
+                  disabled={isNet}
+                  onChange={(event) => setIncomeTax(event.currentTarget.checked)}
+                />
+                <Checkbox
+                  label={t("payroll:payItems.flags.stampTax")}
+                  checked={isNet || stampTax}
+                  disabled={isNet}
+                  onChange={(event) => setStampTax(event.currentTarget.checked)}
+                />
+              </Group>
+              {isNet && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t("payroll:payItems.form.netFlagsLocked")}
+                </Text>
+              )}
+            </div>
+          </>
+        )}
 
-        <FormulaEditor value={formula} onChange={setFormula} amountBasis={amountBasis} />
+        <FormulaEditor value={formula} onChange={setFormula} amountBasis={effectiveBasis} />
 
         <NumberInput
           label={t("payroll:payItems.form.defaultValue")}

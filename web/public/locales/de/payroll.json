@@ -351,7 +351,7 @@
       "codeLocked": "Der Code kann nach dem Anlegen nicht geändert werden.",
       "name": "Name",
       "direction": "Richtung",
-      "directionHint": "Derzeit können nur Bezüge definiert werden; Abzüge werden noch nicht unterstützt.",
+      "directionHint": "Bezüge werden zum Brutto addiert; Abzüge werden vom Netto abgezogen.",
       "amountBasis": "Betragsart",
       "taxFlags": "Steuer- und Beitragsstatus",
       "netFlagsLocked": "Netto-Positionen sind voll steuerpflichtig; die Kennzeichen sind gesperrt.",
@@ -395,7 +395,11 @@
       "fazla_mesai_saati": "Überstunden",
       "ay": "Periodenmonat (1-12)",
       "deger": "Bei der Zuweisung eingegebener Wert (sonst Standardwert)"
-    }
+    },
+    "directionLockedHint": "Die Richtung kann nicht geändert werden, sobald die Position einem Mitarbeiter zugewiesen ist.",
+    "deductionNote": "Ein Abzug wird vom Netto abgezogen und beeinflusst die Steuerbemessungsgrundlagen nicht; die Betragsart ist fest auf Brutto gesetzt.",
+    "deductionAssignHint": "Dies ist ein Abzug: Der berechnete Betrag wird vom Nettolohn des Mitarbeiters abgezogen.",
+    "directionColumn": "Richtung"
   },
   "assignments": {
     "title": "Zuweisungen von Zahlungsarten",
