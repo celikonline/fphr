@@ -4,6 +4,7 @@ using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.Incentives;
 using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -274,5 +275,62 @@ public sealed class EmployeePayItemAssignmentRepository(PayrollDbContext context
     public async Task<IReadOnlyList<EmployeePayItemAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default) =>
         await context.PayItemAssignments
             .Where(a => a.PayItemDefinitionId == definitionId && (a.ValidToMonth == null || a.ValidToMonth >= notEndedBefore))
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class IncentiveDefinitionRepository(PayrollDbContext context) : IIncentiveDefinitionRepository
+{
+    public void Add(IncentiveDefinition definition) => context.IncentiveDefinitions.Add(definition);
+
+    public async Task<IncentiveDefinition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.IncentiveDefinitions.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default) =>
+        await context.IncentiveDefinitions.AnyAsync(d => d.Code == code, cancellationToken);
+
+    public async Task<bool> TemplateExistsAsync(string templateKey, CancellationToken cancellationToken = default) =>
+        await context.IncentiveDefinitions.AnyAsync(d => d.TemplateKey == templateKey, cancellationToken);
+
+    public async Task<IReadOnlyList<IncentiveDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default) =>
+        await context.IncentiveDefinitions.Where(d => includeInactive || d.IsActive).OrderBy(d => d.Code).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<IncentiveDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var list = ids.ToList();
+        return await context.IncentiveDefinitions.Where(d => list.Contains(d.Id)).ToListAsync(cancellationToken);
+    }
+}
+
+public sealed class EmployeeIncentiveAssignmentRepository(PayrollDbContext context) : IEmployeeIncentiveAssignmentRepository
+{
+    public void Add(EmployeeIncentiveAssignment assignment) => context.IncentiveAssignments.Add(assignment);
+
+    public void Remove(EmployeeIncentiveAssignment assignment) => context.IncentiveAssignments.Remove(assignment);
+
+    public async Task<EmployeeIncentiveAssignment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.IncentiveAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.IncentiveAssignments
+            .Where(a => a.EmployeeId == employeeId)
+            .OrderByDescending(a => a.ValidFromMonth)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
+    {
+        var ids = employeeIds.ToList();
+        return await context.IncentiveAssignments.Where(a => ids.Contains(a.EmployeeId)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListCoveringMonthAsync(DateOnly monthStart, CancellationToken cancellationToken = default) =>
+        await context.IncentiveAssignments
+            .Where(a => a.ValidFromMonth <= monthStart && (a.ValidToMonth == null || a.ValidToMonth >= monthStart))
+            .OrderBy(a => a.EmployeeId)
+            .ThenBy(a => a.ValidFromMonth)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default) =>
+        await context.IncentiveAssignments
+            .Where(a => a.IncentiveDefinitionId == definitionId && (a.ValidToMonth == null || a.ValidToMonth >= notEndedBefore))
             .ToListAsync(cancellationToken);
 }

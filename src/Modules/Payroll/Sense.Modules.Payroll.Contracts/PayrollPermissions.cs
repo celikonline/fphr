@@ -75,5 +75,13 @@ public static class PayrollPermissions
     public static readonly Permission PayItemManage = new(
         "payroll.payitem.manage", Module, "payroll.payitem.manage", Group, "Define formula-based pay items and assign them to employees");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, PayslipImport, MyPayslip, MyPayslips, PayItemManage];
+    /// <summary>PAY-INCENTIVE: define incentive (teşvik) models, assign them to employees and run the profile-code conversion.</summary>
+    public static readonly Permission IncentiveManage = new(
+        "payroll.incentive.manage", Module, "payroll.incentive.manage", Group, "Define incentive models, assign them to employees and convert legacy profile incentive codes");
+
+    /// <summary>PAY-INCENTIVE: SMMM approval of an incentive definition (only an approved definition influences the calculation).</summary>
+    public static readonly Permission IncentiveApprove = new(
+        "payroll.incentive.approve", Module, "payroll.incentive.approve", Group, "Approve or revoke the approval of an incentive definition");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage, PayslipImport, MyPayslip, MyPayslips, PayItemManage, IncentiveManage, IncentiveApprove];
 }

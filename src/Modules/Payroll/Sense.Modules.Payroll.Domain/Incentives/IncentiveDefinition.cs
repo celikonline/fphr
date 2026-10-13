@@ -208,7 +208,7 @@ public sealed partial class IncentiveDefinition : TenantAggregateRoot<Guid>
         Name = data.Name.Trim(),
         LawReference = string.IsNullOrWhiteSpace(data.LawReference) ? null : data.LawReference.Trim(),
         DeclarationCode = string.IsNullOrWhiteSpace(data.DeclarationCode) ? null : data.DeclarationCode.Trim(),
-        Parameters = data.Parameters ?? IncentiveParameters.Empty,
+        Parameters = (data.Parameters ?? IncentiveParameters.Empty).Copy(),
     };
 
     private static Result Validate(IncentiveDefinitionData data)

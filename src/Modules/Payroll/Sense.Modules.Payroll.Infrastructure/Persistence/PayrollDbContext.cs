@@ -3,12 +3,14 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.Incentives;
 using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -58,6 +60,10 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<EmployeePayItemAssignment> PayItemAssignments => Set<EmployeePayItemAssignment>();
 
+    public DbSet<IncentiveDefinition> IncentiveDefinitions => Set<IncentiveDefinition>();
+
+    public DbSet<EmployeeIncentiveAssignment> IncentiveAssignments => Set<EmployeeIncentiveAssignment>();
+
     /// <summary>payroll.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -87,6 +93,8 @@ internal static class PayrollTables
     public const string Adjustments = "payroll_adjustments";
     public const string PayItemDefinitions = "payroll_pay_item_definitions";
     public const string PayItemAssignments = "payroll_pay_item_assignments";
+    public const string IncentiveDefinitions = "payroll_incentive_definitions";
+    public const string IncentiveAssignments = "payroll_incentive_assignments";
     public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
@@ -379,6 +387,74 @@ public sealed class EmployeePayItemAssignmentConfiguration : IEntityTypeConfigur
         b.HasOne<PayItemDefinition>().WithMany().HasForeignKey(x => x.PayItemDefinitionId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFromMonth });
         b.HasIndex(x => x.PayItemDefinitionId);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class IncentiveDefinitionConfiguration : IEntityTypeConfiguration<IncentiveDefinition>
+{
+    private const string ParametersColumn = "parameters";
+
+    private static readonly ValueConverter<IncentiveCoverageBase, string> CoverageBaseConverter = new(
+        v => char.ToLowerInvariant(v.ToString()[0]) + v.ToString().Substring(1),
+        v => Enum.Parse<IncentiveCoverageBase>(v, true));
+
+    public void Configure(EntityTypeBuilder<IncentiveDefinition> b)
+    {
+        b.ToTable(PayrollTables.IncentiveDefinitions);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Code).HasMaxLength(32).IsRequired();
+        b.Property(x => x.Name).HasMaxLength(IncentiveDefinition.NameMaxLength).IsRequired();
+        b.Property(x => x.LawReference).HasMaxLength(IncentiveDefinition.LawReferenceMaxLength);
+        b.Property(x => x.DeclarationCode).HasMaxLength(IncentiveDefinition.DeclarationCodeMaxLength);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.ApprovalNote).HasMaxLength(IncentiveDefinition.ApprovalNoteMaxLength);
+        b.Property(x => x.TemplateKey).HasMaxLength(PayrollTables.EnumCodeLength);
+
+        // Kind-specific parameters: one jsonb column in the same shape as the API (camelCase names, camelCase enum text).
+        b.OwnsOne(x => x.Parameters, p =>
+        {
+            p.ToJson(ParametersColumn);
+            p.Property(x => x.CoverageBase).HasConversion(CoverageBaseConverter).HasJsonPropertyName("coverageBase");
+            p.Property(x => x.CapMultiplier).HasJsonPropertyName("capMultiplier");
+            p.Property(x => x.CoversEmployerSgk).HasJsonPropertyName("coversEmployerSgk");
+            p.Property(x => x.CoversEmployerUnemployment).HasJsonPropertyName("coversEmployerUnemployment");
+            p.Property(x => x.CoversEmployeeSgk).HasJsonPropertyName("coversEmployeeSgk");
+            p.Property(x => x.CoversEmployeeUnemployment).HasJsonPropertyName("coversEmployeeUnemployment");
+            p.OwnsOne(x => x.Rate, ConfigureRate("rate"));
+            p.OwnsOne(x => x.EmployerSgkRate, ConfigureRate("employerSgkRate"));
+        });
+
+        b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        b.HasIndex(x => new { x.TenantId, x.TemplateKey }).IsUnique().HasFilter("template_key IS NOT NULL");
+        b.Ignore(x => x.Category);
+        b.Ignore(x => x.IsComplete);
+        b.Ignore(x => x.DomainEvents);
+    }
+
+    private static Action<OwnedNavigationBuilder<IncentiveParameters, IncentiveRate>> ConfigureRate(string jsonName) =>
+        r =>
+        {
+            r.HasJsonPropertyName(jsonName);
+            r.Property(x => x.Value).HasJsonPropertyName("value");
+            r.Property(x => x.LegislationKey).HasJsonPropertyName("legislationKey");
+            r.Ignore(x => x.IsResolvable);
+        };
+}
+
+public sealed class EmployeeIncentiveAssignmentConfiguration : IEntityTypeConfiguration<EmployeeIncentiveAssignment>
+{
+    public void Configure(EntityTypeBuilder<EmployeeIncentiveAssignment> b)
+    {
+        b.ToTable(PayrollTables.IncentiveAssignments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Note).HasMaxLength(EmployeeIncentiveAssignment.NoteMaxLength);
+        b.HasOne<IncentiveDefinition>().WithMany().HasForeignKey(x => x.IncentiveDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFromMonth });
+        b.HasIndex(x => x.IncentiveDefinitionId);
+        b.Ignore(x => x.MonthCount);
         b.Ignore(x => x.DomainEvents);
     }
 }

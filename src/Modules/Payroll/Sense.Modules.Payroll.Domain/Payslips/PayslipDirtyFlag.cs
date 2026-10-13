@@ -33,6 +33,9 @@ public static class PayslipDirtyFlagReasons
 
     /// <summary>A formula pay item (ödeme türü) was assigned, changed or removed, or its definition changed (PAY-FORMULA).</summary>
     public const string PayItemChanged = "pay_item_changed";
+
+    /// <summary>An incentive (teşvik) assignment was added, changed or removed, or an assigned definition changed (PAY-INCENTIVE).</summary>
+    public const string IncentiveChanged = "incentive_changed";
 }
 
 /// <summary>

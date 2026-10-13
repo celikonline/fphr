@@ -2036,4 +2036,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.incentive_assignment_overlap" xml:space="preserve"><value>The employee already has an incentive assignment of the same category for an overlapping period.</value></data>
   <data name="payroll.errors.incentive_assignment_exceeds_max_months" xml:space="preserve"><value>The assignment exceeds the incentive's maximum duration per employee ({maxMonths} months).</value></data>
   <data name="payroll.errors.incentive_assignment_end_required" xml:space="preserve"><value>An incentive with a maximum duration needs an end month on the assignment.</value></data>
+  <data name="payroll.incentive.manage" xml:space="preserve"><value>Define incentive models, assign them to employees and convert legacy profile codes</value></data>
+  <data name="payroll.incentive.approve" xml:space="preserve"><value>Approve or revoke the approval of an incentive definition</value></data>
+  <data name="payroll.dirty.reason.incentive_changed" xml:space="preserve"><value>Incentive assignment or definition changed</value></data>
 </root>

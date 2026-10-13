@@ -9,6 +9,8 @@
     <!-- Cross-module read contracts only, per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <!-- PAY-INCENTIVE: approver display name via Identity.Contracts.IUserProfileLookup (Contracts only). -->
+    <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
     <!-- P3 "Değişti" mechanism: consumes Leave.Contracts.Events.LeaveCancelled (the only Leave.Leave* event that exists today). -->
     <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <!-- E2 bordro itirazı: starts the "PayslipObjection" approval (IWorkflowService) and consumes ApprovalCompleted/Rejected. -->

@@ -7,6 +7,7 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Closing;
+using Sense.Modules.Payroll.Application.Incentives;
 using Sense.Modules.Payroll.Application.PayItems;
 using Sense.Modules.Payroll.Application.Payslips;
 using Sense.Modules.Payroll.Application.Periods;
@@ -47,6 +48,11 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IPayItemDefinitionRepository, PayItemDefinitionRepository>();
         services.AddScoped<IEmployeePayItemAssignmentRepository, EmployeePayItemAssignmentRepository>();
         services.AddScoped<PayItemChangeFlagger>();
+
+        // PAY-INCENTIVE: teşvik tanımları (kiracıya özel) ve çalışana atamaları.
+        services.AddScoped<IIncentiveDefinitionRepository, IncentiveDefinitionRepository>();
+        services.AddScoped<IEmployeeIncentiveAssignmentRepository, EmployeeIncentiveAssignmentRepository>();
+        services.AddScoped<IncentiveChangeFlagger>();
 
         // senseik-010/F-03: Documents' DocumentRequirementMaterializationService reads this to materialize
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.

@@ -55,6 +55,10 @@ public sealed record IncentiveParameters
     public IReadOnlyList<string> LegislationKeys =>
         new[] { Rate?.LegislationKey, EmployerSgkRate?.LegislationKey }.OfType<string>().ToList();
 
+    /// <summary>A deep copy: the definition owns its parameter objects (persisted as owned JSON), so shared instances such as
+    /// <see cref="Empty"/> or a template's parameters must never be attached to two owners.</summary>
+    public IncentiveParameters Copy() => this with { Rate = Rate is null ? null : Rate with { }, EmployerSgkRate = EmployerSgkRate is null ? null : EmployerSgkRate with { } };
+
     /// <summary>Field-format validation for saving a draft of the given kind.</summary>
     public Result Validate(IncentiveKind kind)
     {

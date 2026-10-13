@@ -476,6 +476,178 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.ToTable("garnishment_orders", "payroll");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Incentives.EmployeeIncentiveAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<Guid>("IncentiveDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("incentive_definition_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("ValidFromMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from_month");
+
+                    b.Property<DateOnly?>("ValidToMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to_month");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_incentive_assignments");
+
+                    b.HasIndex("IncentiveDefinitionId")
+                        .HasDatabaseName("ix_payroll_incentive_assignments_incentive_definition_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_payroll_incentive_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "ValidFromMonth")
+                        .HasDatabaseName("ix_payroll_incentive_assignments_tenant_id_employee_id_valid_f");
+
+                    b.ToTable("payroll_incentive_assignments", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Incentives.IncentiveDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ApprovalNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("approval_note");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by_user_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DeclarationCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("declaration_code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsSmmmApproved")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_smmm_approved");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("LawReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("law_reference");
+
+                    b.Property<int?>("MaxMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_months");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("TemplateKey")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("template_key");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_incentive_definitions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_payroll_incentive_definitions_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payroll_incentive_definitions_tenant_id_code");
+
+                    b.HasIndex("TenantId", "TemplateKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payroll_incentive_definitions_tenant_id_template_key")
+                        .HasFilter("template_key IS NOT NULL");
+
+                    b.ToTable("payroll_incentive_definitions", "payroll");
+                });
+
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1559,6 +1731,110 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_exit_settlement_lines_exit_settlements_exit_settlement_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Incentives.EmployeeIncentiveAssignment", b =>
+                {
+                    b.HasOne("Sense.Modules.Payroll.Domain.Incentives.IncentiveDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("IncentiveDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payroll_incentive_assignments_incentive_definitions_incenti");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Incentives.IncentiveDefinition", b =>
+                {
+                    b.OwnsOne("Sense.Modules.Payroll.Domain.Incentives.IncentiveParameters", "Parameters", b1 =>
+                        {
+                            b1.Property<Guid>("IncentiveDefinitionId");
+
+                            b1.Property<decimal?>("CapMultiplier")
+                                .HasPrecision(18, 4)
+                                .HasJsonPropertyName("capMultiplier");
+
+                            b1.Property<string>("CoverageBase")
+                                .HasJsonPropertyName("coverageBase");
+
+                            b1.Property<bool>("CoversEmployeeSgk")
+                                .HasJsonPropertyName("coversEmployeeSgk");
+
+                            b1.Property<bool>("CoversEmployeeUnemployment")
+                                .HasJsonPropertyName("coversEmployeeUnemployment");
+
+                            b1.Property<bool>("CoversEmployerSgk")
+                                .HasJsonPropertyName("coversEmployerSgk");
+
+                            b1.Property<bool>("CoversEmployerUnemployment")
+                                .HasJsonPropertyName("coversEmployerUnemployment");
+
+                            b1.HasKey("IncentiveDefinitionId");
+
+                            b1.ToTable("payroll_incentive_definitions", "payroll");
+
+                            b1
+                                .ToJson("parameters")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("IncentiveDefinitionId")
+                                .HasConstraintName("fk_payroll_incentive_definitions_payroll_incentive_definitions");
+
+                            b1.OwnsOne("Sense.Modules.Payroll.Domain.Incentives.IncentiveRate", "EmployerSgkRate", b2 =>
+                                {
+                                    b2.Property<Guid>("IncentiveParametersIncentiveDefinitionId");
+
+                                    b2.Property<string>("LegislationKey")
+                                        .HasMaxLength(500)
+                                        .HasJsonPropertyName("legislationKey");
+
+                                    b2.Property<decimal?>("Value")
+                                        .HasPrecision(18, 4)
+                                        .HasJsonPropertyName("value");
+
+                                    b2.HasKey("IncentiveParametersIncentiveDefinitionId")
+                                        .HasName("pk_payroll_incentive_definitions");
+
+                                    b2.ToTable("payroll_incentive_definitions", "payroll");
+
+                                    b2.HasJsonPropertyName("employerSgkRate");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("IncentiveParametersIncentiveDefinitionId")
+                                        .HasConstraintName("fk_payroll_incentive_definitions_payroll_incentive_definitions");
+                                });
+
+                            b1.OwnsOne("Sense.Modules.Payroll.Domain.Incentives.IncentiveRate", "Rate", b2 =>
+                                {
+                                    b2.Property<Guid>("IncentiveParametersIncentiveDefinitionId");
+
+                                    b2.Property<string>("LegislationKey")
+                                        .HasMaxLength(500)
+                                        .HasJsonPropertyName("legislationKey");
+
+                                    b2.Property<decimal?>("Value")
+                                        .HasPrecision(18, 4)
+                                        .HasJsonPropertyName("value");
+
+                                    b2.HasKey("IncentiveParametersIncentiveDefinitionId")
+                                        .HasName("pk_payroll_incentive_definitions");
+
+                                    b2.ToTable("payroll_incentive_definitions", "payroll");
+
+                                    b2.HasJsonPropertyName("rate");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("IncentiveParametersIncentiveDefinitionId")
+                                        .HasConstraintName("fk_payroll_incentive_definitions_payroll_incentive_definitions");
+                                });
+
+                            b1.Navigation("EmployerSgkRate");
+
+                            b1.Navigation("Rate");
+                        });
+
+                    b.Navigation("Parameters")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.PayItems.EmployeePayItemAssignment", b =>
