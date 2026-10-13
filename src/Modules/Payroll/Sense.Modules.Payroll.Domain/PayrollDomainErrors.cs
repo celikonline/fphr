@@ -115,6 +115,26 @@ public static class PayrollDomainErrors
 
     /// <summary>Reuses the shared Employee.Contracts "employee.not_found" message for an unknown/other-tenant employee id.</summary>
     public const string PayItemEmployeeNotFound = "employee.not_found";
+
+    // PAY-INCENTIVE-1: incentive definitions and assignments.
+    public const string IncentiveCodeInvalid = "payroll.errors.incentive_code_invalid";
+    public const string IncentiveCodeTaken = "payroll.errors.incentive_code_taken";
+    public const string IncentiveNameInvalid = "payroll.errors.incentive_name_invalid";
+    public const string IncentiveParametersInvalid = "payroll.errors.incentive_parameters_invalid";
+    public const string IncentiveParametersIncomplete = "payroll.errors.incentive_parameters_incomplete";
+    public const string IncentiveLegislationKeyInvalid = "payroll.errors.incentive_legislation_key_invalid";
+    public const string IncentiveDeclarationCodeInvalid = "payroll.errors.incentive_declaration_code_invalid";
+    public const string IncentiveDeclarationCodeRequired = "payroll.errors.incentive_declaration_code_required";
+    public const string IncentiveDateRangeInvalid = "payroll.errors.incentive_date_range_invalid";
+    public const string IncentiveNotFound = "payroll.errors.incentive_not_found";
+    public const string IncentiveInactive = "payroll.errors.incentive_inactive";
+    public const string IncentiveTemplateNotFound = "payroll.errors.incentive_template_not_found";
+    public const string IncentiveTemplateAlreadyAdded = "payroll.errors.incentive_template_already_added";
+    public const string IncentiveAssignmentNotFound = "payroll.errors.incentive_assignment_not_found";
+    public const string IncentiveAssignmentPeriodClosed = "payroll.errors.incentive_assignment_period_closed";
+    public const string IncentiveAssignmentOverlap = "payroll.errors.incentive_assignment_overlap";
+    public const string IncentiveAssignmentExceedsMaxMonths = "payroll.errors.incentive_assignment_exceeds_max_months";
+    public const string IncentiveAssignmentEndRequired = "payroll.errors.incentive_assignment_end_required";
 }
 
 /// <summary>Domain limits.</summary>

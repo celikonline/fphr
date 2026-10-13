@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-tesvik-modelleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
+  "id": "PAY-INCENTIVE-2",
+  "baslik": "Teşvik tanım/atama Application, API, persistence, izin, geçiş (migration)",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": true,
+  "kabul": [
+    "PAY-INCENTIVE-PLAN.md \"Sözleşmeler\" bölümündeki uçlar, DTO'lar, hata kodları ve izinler (payroll.incentive.manage, payroll.incentive.approve, okuma trace.view) birebir uygulanmış.",
+    "Şablondan ekleme iki kez yapılamaz (409); onay/geri alma onaylayanı, zamanı ve notu kaydeder; hesap alanı düzenleme onayı düşürür.",
+    "Dirty flag (incentive_changed) atama ve tanım değişimlerinde doğru çalışanları işaretler.",
+    "Geçiş önizlemesi \"5510\"→\"05510\" eşler, calculationChanges doğru; dönüştürme kapalı aya yapılmaz, çakışan SGK atamalı çalışanlar skippedEmployeeIds ile döner, profil koduna dokunulmaz.",
+    "IncentiveMonthPlan ayın etkin atamalarını ve tanımlarını tek yüklemeyle verir.",
+    "Migration dotnet-ef ile üretilmiş (elle yazılmamış), tablolar/indeksler/jsonb plana uygun; PendingModelChangesWarning yok.",
+    "403 olumsuz izin testleri, kiracı yalıtımı, jsonb gidiş-dönüş entegrasyon testi; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-INCENTIVE-2.md"
+}

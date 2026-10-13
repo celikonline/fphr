@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-tesvik-modelleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
+  "id": "PAY-INCENTIVE-3",
+  "baslik": "Teşvik hesabı, hesap izi, bildirge ve okuma modelleri",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": true,
+  "kabul": [
+    "Karakterizasyon fixture'ları kod değişmeden ÖNCE kaydedilmiş; Incentives=null/teşviksiz çalışanda hesap ve iz bire bir aynı; mevcut altın set ve servis testleri değişmeden yeşil (tek istisna constructor kurulum satırı).",
+    "Teşvik (a), (b), (c), (d) hesapları plana göre; PLAN \"Test planı\"ndaki elle hesaplanmış senaryolar geçer (asgari ücret değeri snapshot'taki gerçek değerle yeniden hesaplanır).",
+    "Onaysız tanım hesaba girmez + incentive_not_approved uyarısı; SGK ataması + farklı profil kodu → eski 5 puan uygulanmaz + incentive_profile_code_ignored; yalnız vergi ataması + profil kodu → 5 puan korunur; eksik legislation anahtarı → incentive_parameter_missing atlama; çift atama → biri seçilir + uyarı.",
+    "Çalışanın neti hiçbir teşvik türünde değişmez; net ücretli çalışan net hedefe eşit.",
+    "EMPLOYER_INCENTIVE / INCOME_TAX_RELIEF iz adımları yalnız ilgili teşvik varken eklenir; EMPLOYER_COST formülü plana uygun.",
+    "APHB kanun kodu, AphbPrefill, IncentiveSummary (iki kaynak, çift sayım yok) ve EmployeeIncentiveLookup plana göre; IncentiveDocumentRequirementTests ve APHB başlığı değişmeden yeşil.",
+    "faz3-durum-takibi.md'ye koda göre doğrulanmış not; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-INCENTIVE-3.md"
+}

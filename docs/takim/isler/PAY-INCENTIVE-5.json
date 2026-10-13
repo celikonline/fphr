@@ -1,0 +1,18 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-tesvik-modelleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
+  "id": "PAY-INCENTIVE-5",
+  "baslik": "Web: teşvik ataması, geçiş sihirbazı, uyarı etiketleri",
+  "sahip": "takim-gelistirici-node",
+  "riskli_alan": false,
+  "kabul": [
+    "employee-incentives-card.tsx (çalışan payroll-section.tsx'e), incentive-assign-modal.tsx, incentive-legacy-convert.tsx (incentives sayfasında sekme), company-profile özetinde onaysız rozeti.",
+    "Toplu atamada 500 sınırı ve hata kodları gösterilir; SGK ataması varsa profil alanında \"eski alan, hesapta kullanılmıyor\" ipucu; geçiş sihirbazı calculationChanges durumunda kırmızı uyarı ve onay ister.",
+    "Dönem önizlemesinde yeni uyarı/atlama kodları (incentive_not_approved, incentive_duplicate_assignment, incentive_profile_code_ignored, incentive_parameter_missing) etiketli görünür; incentive_changed etiketi mevcut dirty reason yapısına.",
+    "Testler, tsc, eslint, vite build, i18n eşlik testleri; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-INCENTIVE-5.md"
+}

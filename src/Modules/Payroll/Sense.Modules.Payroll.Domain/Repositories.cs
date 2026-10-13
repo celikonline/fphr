@@ -2,6 +2,7 @@ using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
+using Sense.Modules.Payroll.Domain.Incentives;
 using Sense.Modules.Payroll.Domain.PayItems;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -220,4 +221,43 @@ public interface IEmployeePayItemAssignmentRepository
 
     /// <summary>Every assignment of one definition that has not ended before <paramref name="notEndedBefore"/>.</summary>
     Task<IReadOnlyList<EmployeePayItemAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default);
+}
+
+/// <summary>PAY-INCENTIVE: tenant-wide incentive definitions.</summary>
+public interface IIncentiveDefinitionRepository
+{
+    void Add(IncentiveDefinition definition);
+
+    Task<IncentiveDefinition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
+
+    Task<bool> TemplateExistsAsync(string templateKey, CancellationToken cancellationToken = default);
+
+    /// <summary>Definitions ordered by code; inactive ones only when <paramref name="includeInactive"/>.</summary>
+    Task<IReadOnlyList<IncentiveDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<IncentiveDefinition>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
+}
+
+/// <summary>PAY-INCENTIVE: incentive assignments to employees.</summary>
+public interface IEmployeeIncentiveAssignmentRepository
+{
+    void Add(EmployeeIncentiveAssignment assignment);
+
+    void Remove(EmployeeIncentiveAssignment assignment);
+
+    Task<EmployeeIncentiveAssignment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every assignment of one employee, newest start first.</summary>
+    Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Assignments of the given employees (overlap and max-months checks), any range.</summary>
+    Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Assignments covering the month starting <paramref name="monthStart"/>, all employees.</summary>
+    Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListCoveringMonthAsync(DateOnly monthStart, CancellationToken cancellationToken = default);
+
+    /// <summary>Every assignment of one definition that has not ended before <paramref name="notEndedBefore"/>.</summary>
+    Task<IReadOnlyList<EmployeeIncentiveAssignment>> ListByDefinitionAsync(Guid definitionId, DateOnly notEndedBefore, CancellationToken cancellationToken = default);
 }

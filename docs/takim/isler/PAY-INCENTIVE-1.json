@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-tesvik-modelleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
+  "id": "PAY-INCENTIVE-1",
+  "baslik": "Teşvik tanımı ve atama domain modeli (saf)",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": false,
+  "kabul": [
+    "PAY-INCENTIVE-PLAN.md \"Tasarım\" bölümündeki IncentiveDefinition, IncentiveParameters, EmployeeIncentiveAssignment, IncentiveEnums ve IncentiveTemplates uygulanmış (Payroll.Domain/Incentives/); PayItem kalıbı izlenmiş.",
+    "Kind a/b/c/d için parametre biçimi doğrulaması ve onay anındaki tamlık kontrolü; rate value XOR legislationKey; Payroll. önek kuralı.",
+    "Hesap alanları (Kind, Parameters, DeclarationCode, MaxMonths, tarihler) değişince onay otomatik düşer; yalnız Name/LawReference değişince düşmez; tamlık yoksa onaylanamaz.",
+    "Atama: kapsanan herhangi bir kapalı ay reddi, aynı kategoride tarih çakışması reddi, MaxMonths ve bitiş zorunluluğu, Sgk kategorisinde DeclarationCode zorunluluğu, onaysız tanıma atama serbest.",
+    "Şablon kataloğu: 5510 şablonu yalnız legislation key kullanır, onaylı; diğer şablonlarda rate/employerSgkRate/declarationCode null ve preApproved=false (test ile sabit).",
+    "Hata kodları PayrollDomainErrors + SharedResource{,.en}.resx sona eklenmiş; repository arayüzleri Domain/Repositories.cs sonuna.",
+    "Domain testleri (kural başına en az bir test); test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-INCENTIVE-1.md"
+}

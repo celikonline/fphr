@@ -2027,4 +2027,22 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.pay_item_assignment_overlap" xml:space="preserve"><value>Bu çalışanın bu ödeme türü için tarihleri çakışan bir ataması zaten var.</value></data>
   <data name="payroll.skip.pay_item_formula_failed" xml:space="preserve"><value>Bir ödeme türünün formülü bu çalışan için hesaplanamadı (örn. sıfıra bölme); çalışan hesaplanmadı. Formülü ve atama değerini kontrol edin.</value></data>
   <data name="payroll.warning.pay_item_duplicate_assignment" xml:space="preserve"><value>Aynı ödeme türü bu çalışana aynı ay için birden fazla atanmış; yalnız en son başlayan atama ödendi. Yinelenen atamayı kaldırın.</value></data>
+  <data name="payroll.errors.incentive_code_invalid" xml:space="preserve"><value>Teşvik kodu büyük harf ile başlamalı; yalnız büyük harf, rakam ve alt çizgi içermeli (2-32 karakter).</value></data>
+  <data name="payroll.errors.incentive_code_taken" xml:space="preserve"><value>Bu teşvik kodu zaten kullanılıyor.</value></data>
+  <data name="payroll.errors.incentive_name_invalid" xml:space="preserve"><value>Teşvik adı 1-100 karakter, kanun dayanağı en çok 200 karakter olmalı.</value></data>
+  <data name="payroll.errors.incentive_parameters_invalid" xml:space="preserve"><value>Teşvik parametresi geçersiz: {field}.</value></data>
+  <data name="payroll.errors.incentive_parameters_incomplete" xml:space="preserve"><value>Teşvik onaylanamaz; eksik parametre: {field}.</value></data>
+  <data name="payroll.errors.incentive_legislation_key_invalid" xml:space="preserve"><value>Mevzuat parametre anahtarı 'Payroll.' ile başlamalı ve en çok 100 karakter olmalı ({field}).</value></data>
+  <data name="payroll.errors.incentive_declaration_code_invalid" xml:space="preserve"><value>Bildirge kodu yalnız rakamlardan oluşmalı (1-10 hane).</value></data>
+  <data name="payroll.errors.incentive_declaration_code_required" xml:space="preserve"><value>SGK kategorisindeki teşvik için bildirge kodu zorunludur.</value></data>
+  <data name="payroll.errors.incentive_date_range_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="payroll.errors.incentive_not_found" xml:space="preserve"><value>Teşvik tanımı bulunamadı.</value></data>
+  <data name="payroll.errors.incentive_inactive" xml:space="preserve"><value>Teşvik tanımı pasif; atama yapılamaz.</value></data>
+  <data name="payroll.errors.incentive_template_not_found" xml:space="preserve"><value>Teşvik şablonu bulunamadı.</value></data>
+  <data name="payroll.errors.incentive_template_already_added" xml:space="preserve"><value>Bu şablondan oluşturulmuş bir teşvik tanımı zaten var.</value></data>
+  <data name="payroll.errors.incentive_assignment_not_found" xml:space="preserve"><value>Teşvik ataması bulunamadı.</value></data>
+  <data name="payroll.errors.incentive_assignment_period_closed" xml:space="preserve"><value>Kapanmış bir bordro dönemi değiştirilemez; atamayı bitiş ayı vererek kapatın.</value></data>
+  <data name="payroll.errors.incentive_assignment_overlap" xml:space="preserve"><value>Bu çalışanın aynı kategoride tarihleri çakışan bir teşvik ataması zaten var.</value></data>
+  <data name="payroll.errors.incentive_assignment_exceeds_max_months" xml:space="preserve"><value>Atama, bu teşvikin çalışan başına en çok süresini ({maxMonths} ay) aşıyor.</value></data>
+  <data name="payroll.errors.incentive_assignment_end_required" xml:space="preserve"><value>Süre sınırı olan teşvikte atamaya bitiş ayı girilmelidir.</value></data>
 </root>

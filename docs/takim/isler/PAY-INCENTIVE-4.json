@@ -1,0 +1,17 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-tesvik-modelleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
+  "id": "PAY-INCENTIVE-4",
+  "baslik": "Web: teşvik tanımları ekranı",
+  "sahip": "takim-gelistirici-node",
+  "riskli_alan": false,
+  "kabul": [
+    "payroll-incentives.service.ts, pages/payroll/{incentives,incentive-form,incentive-approve-modal,incentive-template-modal}.tsx, rota ve menü (sona ekleme), i18n tr/en/de.",
+    "Liste \"SMMM onaylı\"/\"Onay bekliyor\" rozetiyle; form kind'a göre alan açar; oran literal % veya parameter-catalog anahtarı; hesap alanı düzenlenince \"onay düşecek\" uyarısı; onay modalı notlu ve payroll.incentive.approve yoksa gizli; şablondan ekleme; eksik alan null toleransı.",
+    "Servis tipleri backend DTO'larıyla birebir; testler, tsc, eslint, vite build, i18n eşlik testleri yeşil; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-INCENTIVE-4.md"
+}

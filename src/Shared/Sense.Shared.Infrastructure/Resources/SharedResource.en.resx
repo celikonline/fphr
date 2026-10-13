@@ -2018,4 +2018,22 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.pay_item_assignment_overlap" xml:space="preserve"><value>The employee already has an assignment of this pay item for an overlapping period.</value></data>
   <data name="payroll.skip.pay_item_formula_failed" xml:space="preserve"><value>A pay item formula could not be evaluated for this employee (for example a division by zero); the employee was not calculated. Check the formula and the assigned value.</value></data>
   <data name="payroll.warning.pay_item_duplicate_assignment" xml:space="preserve"><value>The same pay item is assigned more than once to this employee for the month; only the latest-starting assignment was paid. Remove the duplicate assignment.</value></data>
+  <data name="payroll.errors.incentive_code_invalid" xml:space="preserve"><value>The incentive code must start with an uppercase letter and contain only uppercase letters, digits and underscores (2-32 characters).</value></data>
+  <data name="payroll.errors.incentive_code_taken" xml:space="preserve"><value>This incentive code is already in use.</value></data>
+  <data name="payroll.errors.incentive_name_invalid" xml:space="preserve"><value>The incentive name must be 1-100 characters and the law reference at most 200.</value></data>
+  <data name="payroll.errors.incentive_parameters_invalid" xml:space="preserve"><value>Invalid incentive parameter: {field}.</value></data>
+  <data name="payroll.errors.incentive_parameters_incomplete" xml:space="preserve"><value>The incentive cannot be approved; missing parameter: {field}.</value></data>
+  <data name="payroll.errors.incentive_legislation_key_invalid" xml:space="preserve"><value>The legislation parameter key must start with 'Payroll.' and be at most 100 characters ({field}).</value></data>
+  <data name="payroll.errors.incentive_declaration_code_invalid" xml:space="preserve"><value>The declaration code must contain digits only (1-10 digits).</value></data>
+  <data name="payroll.errors.incentive_declaration_code_required" xml:space="preserve"><value>A declaration code is required for an SGK-category incentive.</value></data>
+  <data name="payroll.errors.incentive_date_range_invalid" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="payroll.errors.incentive_not_found" xml:space="preserve"><value>Incentive definition not found.</value></data>
+  <data name="payroll.errors.incentive_inactive" xml:space="preserve"><value>The incentive definition is inactive and cannot be assigned.</value></data>
+  <data name="payroll.errors.incentive_template_not_found" xml:space="preserve"><value>Incentive template not found.</value></data>
+  <data name="payroll.errors.incentive_template_already_added" xml:space="preserve"><value>An incentive definition created from this template already exists.</value></data>
+  <data name="payroll.errors.incentive_assignment_not_found" xml:space="preserve"><value>Incentive assignment not found.</value></data>
+  <data name="payroll.errors.incentive_assignment_period_closed" xml:space="preserve"><value>A closed payroll period cannot be changed; end the assignment by giving it an end month.</value></data>
+  <data name="payroll.errors.incentive_assignment_overlap" xml:space="preserve"><value>The employee already has an incentive assignment of the same category for an overlapping period.</value></data>
+  <data name="payroll.errors.incentive_assignment_exceeds_max_months" xml:space="preserve"><value>The assignment exceeds the incentive's maximum duration per employee ({maxMonths} months).</value></data>
+  <data name="payroll.errors.incentive_assignment_end_required" xml:space="preserve"><value>An incentive with a maximum duration needs an end month on the assignment.</value></data>
 </root>
