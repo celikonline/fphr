@@ -15,7 +15,9 @@ namespace Sense.Modules.Payroll.Application.PayItems;
 /// <summary>One pay item line of an employee's latest calculation in a period (read from the PAY_ITEM trace steps).</summary>
 /// <param name="AmountBasis">"gross" or "net".</param>
 /// <param name="NetTarget">The net amount the employee keeps; only for net items.</param>
-public sealed record PayItemLineDto(Guid EmployeeId, string EmployeeName, string Code, string Name, decimal Amount, string AmountBasis, decimal? NetTarget = null);
+/// <param name="Direction">"earning" or "deduction" (always set). For a deduction <c>Amount</c> is the amount actually taken off the net (after the remaining-net cap).</param>
+public sealed record PayItemLineDto(
+    Guid EmployeeId, string EmployeeName, string Code, string Name, decimal Amount, string AmountBasis, decimal? NetTarget = null, string Direction = "earning");
 
 /// <summary>The pay-item lines of every payslip in the period, from each payslip's latest calculation trace ("Dönem dökümü").</summary>
 [RequiresPermission("payroll.trace.view")]
@@ -64,6 +66,7 @@ public sealed class ListPeriodPayItemLinesHandler(
         var name = step.Inputs.GetValueOrDefault("name") ?? code;
         var basis = step.Inputs.GetValueOrDefault("amountBasis") ?? "gross";
         decimal? netTarget = step.Inputs.TryGetValue("netTarget", out var raw) && decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out var net) ? net : null;
-        return new PayItemLineDto(employeeId, employeeName, code, name, step.Output, basis, netTarget);
+        var direction = step.Inputs.GetValueOrDefault("direction") == "deduction" ? "deduction" : "earning";
+        return new PayItemLineDto(employeeId, employeeName, code, name, step.Output, basis, netTarget, direction);
     }
 }

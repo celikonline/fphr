@@ -53,6 +53,9 @@ public static class PayrollWarningCodes
     /// <summary>The same pay item was assigned twice for the month (concurrent requests); only the latest-starting assignment is paid. Details = pay item code.</summary>
     public const string PayItemDuplicateAssignment = "pay_item_duplicate_assignment";
 
+    /// <summary>The formula deductions exceeded the net that was left after icra/nafaka and avans; the excess was not taken (net never goes negative). Details = the first capped pay item code.</summary>
+    public const string PayItemDeductionCapped = "pay_item_deduction_capped";
+
     /// <summary>The employee has an incentive assignment whose definition is not SMMM-approved: it does not enter the calculation (its declaration code is still declared). Details = incentive code.</summary>
     public const string IncentiveNotApproved = "incentive_not_approved";
 
@@ -372,7 +375,7 @@ public sealed class PayrollPeriodCalculationService(
         // Nakit yol yardımı: ayni (kart, servis) çalışana para ödemez; nakit olan çalıştığı gün kadar vergiye ve SGK ya tabi ek kazançtır.
         var transportPay = profile.TransportVariant == TransportVariant.Cash ? profile.TransportDailyAmount * workedDays : 0m;
 
-        PayrollCalculationInput BuildInput(decimal extraGross, IReadOnlyList<PayItemEarning>? payItemEarnings = null) => new(
+        PayrollCalculationInput BuildInput(decimal extraGross, IReadOnlyList<PayItemEarning>? payItemEarnings = null, IReadOnlyList<PayItemDeduction>? payItemDeductions = null) => new(
             GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
@@ -390,6 +393,7 @@ public sealed class PayrollPeriodCalculationService(
             ProratedPaidDays: ProratedDays(),
             Wage: periodWage,
             PayItems: payItemEarnings is { Count: > 0 } ? payItemEarnings : null,
+            PayItemDeductions: payItemDeductions is { Count: > 0 } ? payItemDeductions : null,
             Incentives: incentive.Effects.Count > 0 ? incentive.Effects : null);
 
         // SGK taban/tavan ve asgari ücret istisnaları kısmi ayda kıst gün, günlük/saatlikte eksik gün düşülmüş ücretli gün kadar ölçeklenir.
@@ -401,6 +405,7 @@ public sealed class PayrollPeriodCalculationService(
 
         // Formüllü ödeme türleri (PAY-FORMULA-3): değişkenler kalemler eklenmeden önceki girdiden okunur; atama yoksa bu blok hiç çalışmaz.
         IReadOnlyList<EvaluatedPayItem> evaluatedItems = [];
+        IReadOnlyList<EvaluatedPayItem> evaluatedDeductions = [];
         if (payItemPlan.TryGetValue(employeeId, out var assignedItems) && assignedItems.Count > 0)
         {
             var baseInput = BuildInput(0m);
@@ -418,7 +423,8 @@ public sealed class PayrollPeriodCalculationService(
             }
 
             warnings.AddRange(evaluation.NegativeCodes.Select(code => new PayrollWarning(employeeId, PayrollWarningCodes.PayItemNegativeResult, code)));
-            evaluatedItems = evaluation.Items;
+            evaluatedItems = evaluation.Earnings;
+            evaluatedDeductions = evaluation.Deductions;
         }
 
         warnings.AddRange(incentive.Warnings);
@@ -446,9 +452,15 @@ public sealed class PayrollPeriodCalculationService(
             payItemEarnings.Add(item.IsNet ? ToEarning(item, netItemGross[netIndex++], item.Amount) : ToEarning(item, item.Amount, null));
         }
 
-        var input = BuildInput(adjustmentGross, payItemEarnings);
+        // Formüllü kesintiler net-kesintidir: brüt ve vergi matrahlarına girmez, net→brüt çözücüye (yukarıdaki SolveExtra) de girmez; yalnız son hesaba eklenir.
+        var payItemDeductions = evaluatedDeductions.Select(d => new PayItemDeduction(d.Code, d.Name, d.Amount, d.Formula, d.UsedVariables)).ToList();
+        var input = BuildInput(adjustmentGross, payItemEarnings, payItemDeductions);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
+        if (result.CappedPayItemDeductionCodes is { Count: > 0 } cappedCodes)
+        {
+            warnings.Add(new PayrollWarning(employeeId, PayrollWarningCodes.PayItemDeductionCapped, cappedCodes[0]));
+        }
 
         if (preview is not null)
         {

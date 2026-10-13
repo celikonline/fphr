@@ -101,12 +101,12 @@ public sealed class PayItemFeaturesTests
     }
 
     [Fact]
-    public async Task Create_RejectsADeduction_AndABadFormula()
+    public async Task Create_RejectsADeductionWithNetBasis_AndABadFormula()
     {
         var handler = new CreatePayItemHandler(_tenant, _definitions, TimeProvider.System);
 
-        (await handler.Handle(new CreatePayItemCommand("KESINTI", Input(direction: PayItemDirection.Deduction)), CancellationToken.None))
-            .Error.Code.ShouldBe(PayrollDomainErrors.PayItemDirectionNotSupported);
+        (await handler.Handle(new CreatePayItemCommand("KESINTI", Input(direction: PayItemDirection.Deduction) with { AmountBasis = PayItemAmountBasis.Net }), CancellationToken.None))
+            .Error.Code.ShouldBe(PayrollDomainErrors.PayItemDeductionBasisInvalid);
         (await handler.Handle(new CreatePayItemCommand("YEMEK", Input(formula: "deger +")), CancellationToken.None))
             .Error.Code.ShouldBe(PayrollDomainErrors.FormulaSyntax);
         _definitions.DidNotReceive().Add(Arg.Any<PayItemDefinition>());
@@ -115,7 +115,7 @@ public sealed class PayItemFeaturesTests
     [Fact]
     public async Task Update_OfAnUnknownItem_IsNotFound()
     {
-        var handler = new UpdatePayItemHandler(_definitions, _flagger);
+        var handler = new UpdatePayItemHandler(_definitions, _assignments, _flagger);
 
         (await handler.Handle(new UpdatePayItemCommand(Guid.NewGuid(), Input()), CancellationToken.None)).Error.Code.ShouldBe(PayrollDomainErrors.PayItemNotFound);
     }
@@ -129,7 +129,7 @@ public sealed class PayItemFeaturesTests
         var current = EmployeePayItemAssignment.Create(TenantId, EmployeeA, definition, 10m, new DateOnly(2026, 1, 1), null, new HashSet<DateOnly>()).Value;
         _assignments.ListByDefinitionAsync(definition.Id, new DateOnly(2026, 6, 1), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<IReadOnlyList<EmployeePayItemAssignment>>([current]));
-        var handler = new UpdatePayItemHandler(_definitions, _flagger);
+        var handler = new UpdatePayItemHandler(_definitions, _assignments, _flagger);
 
         var result = await handler.Handle(new UpdatePayItemCommand(definition.Id, Input("deger * 2")), CancellationToken.None);
 
@@ -143,7 +143,7 @@ public sealed class PayItemFeaturesTests
     public async Task Update_WhenNoPeriodIsOpen_FlagsNobody()
     {
         var definition = Stored();
-        var handler = new UpdatePayItemHandler(_definitions, _flagger);
+        var handler = new UpdatePayItemHandler(_definitions, _assignments, _flagger);
 
         (await handler.Handle(new UpdatePayItemCommand(definition.Id, Input("deger * 3")), CancellationToken.None)).IsSuccess.ShouldBeTrue();
 

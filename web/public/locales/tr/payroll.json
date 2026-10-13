@@ -299,7 +299,8 @@
     "pay_item_duplicate_assignment": "Aynı ödeme türü aynı ay için birden fazla atanmış; yalnız en son başlayan atama ödendi",
     "incentive_not_approved": "Çalışana atanan teşvik tanımı SMMM onaylı değil; hesaba katılmadı",
     "incentive_duplicate_assignment": "Aynı kategoride birden fazla teşvik ataması aynı aya denk geliyor; yalnız en son başlayan atama kullanıldı",
-    "incentive_profile_code_ignored": "Çalışanın SGK teşvik ataması var; profildeki teşvik kanunu kodu yok sayıldı"
+    "incentive_profile_code_ignored": "Çalışanın SGK teşvik ataması var; profildeki teşvik kanunu kodu yok sayıldı",
+    "pay_item_deduction_capped": "Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi"
   },
   "dirtyReasons": {
     "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti",

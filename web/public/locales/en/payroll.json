@@ -299,7 +299,8 @@
     "pay_item_duplicate_assignment": "The same pay item is assigned more than once for the month; only the latest-starting assignment was paid",
     "incentive_not_approved": "The incentive definition assigned to the employee is not approved by the SMMM; it was left out of the calculation",
     "incentive_duplicate_assignment": "More than one incentive assignment of the same category overlaps the month; only the latest-starting one was used",
-    "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored"
+    "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored",
+    "pay_item_deduction_capped": "The formula deductions exceeded the remaining net; the excess was not taken"
   },
   "dirtyReasons": {
     "pay_item_changed": "Pay item (formula-based payment) changed",

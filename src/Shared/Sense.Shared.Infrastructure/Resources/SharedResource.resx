@@ -2053,4 +2053,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.warning.incentive_not_approved" xml:space="preserve"><value>Çalışana atanan teşvik tanımı SMMM onaylı değil; hesaba katılmadı (bildirge kodu yine yazılır). Tanımı onaylayın.</value></data>
   <data name="payroll.warning.incentive_duplicate_assignment" xml:space="preserve"><value>Aynı kategoride birden fazla teşvik ataması aynı aya denk geliyor; yalnız en son başlayan atama kullanıldı. Yinelenen atamayı kaldırın.</value></data>
   <data name="payroll.warning.incentive_profile_code_ignored" xml:space="preserve"><value>Çalışanın SGK teşvik ataması var; bordro profilindeki teşvik kanunu kodu yok sayıldı (eski 5 puanlık indirim uygulanmadı).</value></data>
+  <data name="payroll.errors.pay_item_deduction_basis_invalid" xml:space="preserve"><value>Kesinti türünde tutar türü 'net' olamaz; kesinti vergilerden sonra netten düşülür.</value></data>
+  <data name="payroll.errors.pay_item_direction_locked" xml:space="preserve"><value>Çalışanlara atanmış bir ödeme türünün yönü (kazanç/kesinti) değiştirilemez; yeni bir ödeme türü oluşturun.</value></data>
+  <data name="payroll.warning.pay_item_deduction_capped" xml:space="preserve"><value>Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi (net negatif olmaz). Kesinti tanımlarını ve atama değerlerini kontrol edin.</value></data>
 </root>

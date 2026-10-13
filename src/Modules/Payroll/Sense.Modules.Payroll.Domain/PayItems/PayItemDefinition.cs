@@ -22,8 +22,9 @@ public sealed record PayItemDefinitionData(
 /// <summary>
 /// A tenant-wide "ödeme türü" whose amount is computed from a formula (PAY-FORMULA-PLAN "PayItemDefinition"). The
 /// code is unique per tenant (Application layer + unique index) and never changes. A fixed amount is also a formula
-/// (<c>deger</c>). Validation: code pattern, name length, earning only, net items must be fully taxable, formula must
-/// parse (PAY-FORMULA-1), date range.
+/// (<c>deger</c>). Validation: code pattern, name length, earning or deduction, net items must be fully taxable, formula must
+/// parse (PAY-FORMULA-1), date range. A <see cref="PayItemDirection.Deduction"/> is a net deduction: its
+/// three tax flags are normalized to false (whatever the caller sent) and a net amount basis is rejected.
 /// </summary>
 public sealed partial class PayItemDefinition : TenantAggregateRoot<Guid>
 {
@@ -108,7 +109,10 @@ public sealed partial class PayItemDefinition : TenantAggregateRoot<Guid>
 
     private PayrollFormula ParsedFormula() => PayrollFormula.Parse(Formula).Value;
 
-    private static PayItemDefinitionData Normalize(PayItemDefinitionData data) => data with { Name = data.Name.Trim() };
+    private static PayItemDefinitionData Normalize(PayItemDefinitionData data) =>
+        data.Direction == PayItemDirection.Deduction
+            ? data with { Name = data.Name.Trim(), IsSgkSubject = false, IsIncomeTaxSubject = false, IsStampTaxSubject = false }
+            : data with { Name = data.Name.Trim() };
 
     private static Result Validate(PayItemDefinitionData data)
     {
@@ -118,12 +122,18 @@ public sealed partial class PayItemDefinition : TenantAggregateRoot<Guid>
             return Error.Validation(PayrollDomainErrors.PayItemNameInvalid);
         }
 
-        if (data.Direction != PayItemDirection.Earning)
+        if (!Enum.IsDefined(data.Direction))
         {
             return Error.Validation(PayrollDomainErrors.PayItemDirectionNotSupported);
         }
 
-        if (data.AmountBasis == PayItemAmountBasis.Net && !(data.IsSgkSubject && data.IsIncomeTaxSubject && data.IsStampTaxSubject))
+        // A deduction comes off the net after the taxes: the "net" basis (gross-up) is meaningless for it; the tax flags are normalized away.
+        if (data.Direction == PayItemDirection.Deduction && data.AmountBasis == PayItemAmountBasis.Net)
+        {
+            return Error.Validation(PayrollDomainErrors.PayItemDeductionBasisInvalid);
+        }
+
+        if (data.Direction == PayItemDirection.Earning && data.AmountBasis == PayItemAmountBasis.Net && !(data.IsSgkSubject && data.IsIncomeTaxSubject && data.IsStampTaxSubject))
         {
             return Error.Validation(PayrollDomainErrors.PayItemNetRequiresFullyTaxable);
         }

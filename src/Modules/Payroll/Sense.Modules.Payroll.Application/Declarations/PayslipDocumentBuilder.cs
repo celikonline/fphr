@@ -81,7 +81,7 @@ public static class PayslipDocumentBuilder
     /// </summary>
     private static IReadOnlyList<(string Label, decimal Amount)> Earnings(IReadOnlyList<TraceStep> steps, decimal grossAmount)
     {
-        var payItems = steps.Where(s => s.Code == PayrollTraceStepCodes.PayItem).ToList();
+        var payItems = steps.Where(s => s.Code == PayrollTraceStepCodes.PayItem && !IsDeduction(s)).ToList();
         if (payItems.Count == 0)
         {
             return [(GrossLabel, grossAmount)];
@@ -105,14 +105,23 @@ public static class PayslipDocumentBuilder
     /// Every deduction with its reason. Gelir/damga vergisi trace adımlarının Output'u istisna TUTARIdır, ödenen tutar
     /// değil - bu yüzden vergi - istisna farkını gösterir (ExportPayrollPeriodHandler.ExtractFigures ile aynı yorum).
     /// </summary>
-    private static IReadOnlyList<(string Label, decimal Amount)> Deductions(IReadOnlyList<TraceStep> steps) =>
-    [
-        ("SGK İşçi Payı", Output(steps, PayrollTraceStepCodes.SgkEmployee)),
-        ("İşsizlik Sigortası İşçi Payı", Output(steps, PayrollTraceStepCodes.UnempEmployee)),
-        ("Gelir Vergisi (asgari ücret istisnası sonrası)", AfterExemption(steps, PayrollTraceStepCodes.IncomeTax, PayrollTraceStepCodes.MinWageExemptionGv)),
-        ("Damga Vergisi (asgari ücret istisnası sonrası)", AfterExemption(steps, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.MinWageExemptionDv)),
-        ("İcra/Nafaka/Avans Kesintileri", Output(steps, PayrollTraceStepCodes.Deductions)),
-    ];
+    private static IReadOnlyList<(string Label, decimal Amount)> Deductions(IReadOnlyList<TraceStep> steps)
+    {
+        // Formüllü kesintiler (PAY-DEDUCTION) DEDUCTIONS toplamının içindedir; kendi satırlarına ayrılır, toplu satır geri kalanı gösterir.
+        var payItemDeductions = steps.Where(s => s.Code == PayrollTraceStepCodes.PayItem && IsDeduction(s)).ToList();
+        List<(string Label, decimal Amount)> rows =
+        [
+            ("SGK İşçi Payı", Output(steps, PayrollTraceStepCodes.SgkEmployee)),
+            ("İşsizlik Sigortası İşçi Payı", Output(steps, PayrollTraceStepCodes.UnempEmployee)),
+            ("Gelir Vergisi (asgari ücret istisnası sonrası)", AfterExemption(steps, PayrollTraceStepCodes.IncomeTax, PayrollTraceStepCodes.MinWageExemptionGv)),
+            ("Damga Vergisi (asgari ücret istisnası sonrası)", AfterExemption(steps, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.MinWageExemptionDv)),
+            ("İcra/Nafaka/Avans Kesintileri", Output(steps, PayrollTraceStepCodes.Deductions) - payItemDeductions.Sum(s => s.Output)),
+        ];
+        rows.AddRange(payItemDeductions.Select(s => (s.Inputs.GetValueOrDefault("name") ?? s.PayItem ?? string.Empty, s.Output)));
+        return rows;
+    }
+
+    private static bool IsDeduction(TraceStep step) => step.Inputs.GetValueOrDefault("direction") == "deduction";
 
     private static string? WorkedDays(IReadOnlyList<TraceStep> steps)
     {

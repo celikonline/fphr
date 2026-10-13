@@ -77,10 +77,43 @@ public sealed class PayItemDomainTests
     }
 
     [Fact]
-    public void Deduction_IsRejected()
+    public void Deduction_IsAccepted_AndTaxFlagsAreNormalized()
     {
-        PayItemDefinition.Create(TenantId, "KESINTI", Data(direction: PayItemDirection.Deduction)).Error.Code
-            .ShouldBe(PayrollDomainErrors.PayItemDirectionNotSupported);
+        // PAY-DEDUCTION: the deduction is accepted; whatever tax flags arrive are stored as false (a deduction is never a taxable earning).
+        var created = PayItemDefinition.Create(TenantId, "KESINTI", Data(direction: PayItemDirection.Deduction, sgk: true, incomeTax: true, stampTax: true));
+
+        created.IsSuccess.ShouldBeTrue();
+        created.Value.Direction.ShouldBe(PayItemDirection.Deduction);
+        created.Value.IsSgkSubject.ShouldBeFalse();
+        created.Value.IsIncomeTaxSubject.ShouldBeFalse();
+        created.Value.IsStampTaxSubject.ShouldBeFalse();
+        created.Value.AmountBasis.ShouldBe(PayItemAmountBasis.Gross);
+    }
+
+    [Fact]
+    public void Deduction_WithNetBasis_IsRejected_EvenWhenTheFlagsAreFalse()
+    {
+        var result = PayItemDefinition.Create(TenantId, "KESINTI", Data(direction: PayItemDirection.Deduction, basis: PayItemAmountBasis.Net, sgk: false, incomeTax: false, stampTax: false));
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PayItemDeductionBasisInvalid);
+        result.Error.Type.ShouldBe(ErrorType.Validation);
+    }
+
+    [Fact]
+    public void Deduction_UpdateNormalizesTheFlagsToo_AndStillValidatesTheFormula()
+    {
+        var definition = PayItemDefinition.Create(TenantId, "KESINTI", Data(direction: PayItemDirection.Deduction)).Value;
+
+        definition.Update(Data(direction: PayItemDirection.Deduction, formula: "brut * 0.01", sgk: true, incomeTax: true, stampTax: true)).IsSuccess.ShouldBeTrue();
+        definition.IsSgkSubject.ShouldBeFalse();
+        definition.Update(Data(direction: PayItemDirection.Deduction, formula: "brut *")).IsFailure.ShouldBeTrue();
+        definition.Formula.ShouldBe("brut * 0.01");
+    }
+
+    [Fact]
+    public void Direction_OutsideTheEnum_IsStillNotSupported()
+    {
+        PayItemDefinition.Create(TenantId, "KESINTI", Data(direction: (PayItemDirection)7)).Error.Code.ShouldBe(PayrollDomainErrors.PayItemDirectionNotSupported);
     }
 
     [Theory]
@@ -138,7 +171,7 @@ public sealed class PayItemDomainTests
         definition.Name.ShouldBe("Yeni ad");
         definition.Formula.ShouldBe("brut * 0.1");
 
-        definition.Update(Data(direction: PayItemDirection.Deduction)).IsFailure.ShouldBeTrue();
+        definition.Update(Data(direction: PayItemDirection.Deduction, basis: PayItemAmountBasis.Net)).IsFailure.ShouldBeTrue();
         definition.Formula.ShouldBe("brut * 0.1");
     }
 

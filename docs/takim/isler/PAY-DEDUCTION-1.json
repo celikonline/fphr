@@ -1,0 +1,21 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-kesinti-formulleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-DEDUCTION-PLAN.md",
+  "id": "PAY-DEDUCTION-1",
+  "baslik": "Formüllü kesinti (Direction=Deduction): tanım, hesap, iz, pusula",
+  "sahip": "takim-gelistirici-dotnet",
+  "riskli_alan": true,
+  "kabul": [
+    "PAY-DEDUCTION-PLAN.md'deki tasarım uygulanmış: kesinti tanımı kabul edilir (bayraklar normalize, Net basis reddi), atamalı tanımda Direction kilidi (Conflict).",
+    "Kesintisiz çalışan: tüm mevcut testler, altın set ve karakterizasyon fixture'ları (Incentives/Fixtures dahil) DEĞİŞMEDEN yeşil; hesap izi bire bir aynı.",
+    "Kesinti brüt/SGK/GV/damga matrahlarını değiştirmez, netten düşülür; sıra icra→avans→formüllü kesintiler (kod sırası)→sendika; toplam kalan neti aşamaz, kırpma deterministik + pay_item_deduction_capped uyarısı; net asla negatif değil.",
+    "Negatif formül sonucu 0 + uyarı; formül hatası çalışanı pay_item_formula_failed ile atlatır (mevcut davranış).",
+    "PAY_ITEM trace (direction=deduction), DEDUCTIONS adımında payItemDeductionsTotal yalnız kesinti varken; pusulada Kesintiler satırları (PDF+düz metin), kesintisiz pusula aynı; pay-item-lines direction alanı.",
+    "Önizleme kesintiyi içerir; elle hesaplı testler; hata kodları resx tr/en sona; web payroll.json warnings etiketi tr/en/de.",
+    "Test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-DEDUCTION-1.md"
+}

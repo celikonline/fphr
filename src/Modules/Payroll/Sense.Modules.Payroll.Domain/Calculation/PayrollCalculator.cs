@@ -35,6 +35,8 @@ public static class PayrollCalculator
         Guard.Against(input.AdvanceDeductionTotal < 0m, "AdvanceDeductionTotal cannot be negative.");
         var payItems = input.PayItems ?? [];
         Guard.Against(payItems.Any(i => i.GrossAmount < 0m), "Pay item amounts cannot be negative.");
+        var payItemDeductions = (input.PayItemDeductions ?? []).OrderBy(d => d.Code, StringComparer.Ordinal).ToList();
+        Guard.Against(payItemDeductions.Any(d => d.Amount < 0m), "Pay item deduction amounts cannot be negative.");
         var incentives = input.Incentives ?? [];
         var discountEffect = incentives.SingleOrDefault(i => i.Kind == IncentiveKind.EmployerSgkRateDiscount);
         var coverageEffect = incentives.SingleOrDefault(i => i.Kind == IncentiveKind.EmployerShareCoverage);
@@ -290,11 +292,29 @@ public static class PayrollCalculator
         var garnishmentResult = GarnishmentCalculator.Calculate(netBeforeDeductions, garnishmentOrders);
         var advanceDeduction = Math.Min(Math.Max(0m, netBeforeDeductions - garnishmentResult.TotalDeduction), input.AdvanceDeductionTotal);
         var unionDues = input.UnionDuesAmount;
-        var deductionsTotal = Round(garnishmentResult.TotalDeduction + advanceDeduction + unionDues);
+
+        // PAY-DEDUCTION: formula deductions come after icra and avans, before sendika; they cannot exceed the net that is left after icra, avans AND the (uncapped, prioritised) sendika aidatı, so the net never goes negative (not subject to İİK m.83).
+        var (appliedDeductions, cappedDeductionCodes) = PayItemDeductionCap.Apply(
+            payItemDeductions, netBeforeDeductions - garnishmentResult.TotalDeduction - advanceDeduction - unionDues);
+        for (var i = 0; i < payItemDeductions.Count; i++)
+        {
+            steps.Add(PayItemDeductionStep(order++, payItemDeductions[i], appliedDeductions[i], cappedDeductionCodes.Contains(payItemDeductions[i].Code), p));
+        }
+
+        var payItemDeductionsTotal = Round(appliedDeductions.Sum());
+        var deductionsTotal = Round(garnishmentResult.TotalDeduction + advanceDeduction + payItemDeductionsTotal + unionDues);
+        var deductionsInputs = Map(("netBeforeDeductions", netBeforeDeductions), ("garnishmentDeductionTotal", garnishmentResult.TotalDeduction), ("advanceDeductionTotal", advanceDeduction), ("unionDues", unionDues));
+        if (payItemDeductions.Count > 0)
+        {
+            deductionsInputs["payItemDeductionsTotal"] = Format(payItemDeductionsTotal);
+        }
+
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Deductions, "payroll.trace.step.deductions",
-            Map(("netBeforeDeductions", netBeforeDeductions), ("garnishmentDeductionTotal", garnishmentResult.TotalDeduction), ("advanceDeductionTotal", advanceDeduction), ("unionDues", unionDues)),
-            "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) + sendika/dayanışma aidatı - BES kapsam dışı (P6+)",
+            deductionsInputs,
+            payItemDeductions.Count > 0
+                ? "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) + formüllü kesintiler (kalan nete kadar, kod sırası) + sendika/dayanışma aidatı - BES kapsam dışı (P6+)"
+                : "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) + sendika/dayanışma aidatı - BES kapsam dışı (P6+)",
             deductionsTotal, []));
 
         // NET
@@ -305,7 +325,9 @@ public static class PayrollCalculator
                 ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption),
                 ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement),
                 ("deductionsTotal", deductionsTotal)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/sendika aidatı)",
+            payItemDeductions.Count > 0
+                ? "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/formüllü kesintiler/sendika aidatı)"
+                : "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/sendika aidatı)",
             net, []));
 
         // EMPLOYER_SGK
@@ -392,7 +414,7 @@ public static class PayrollCalculator
             employerCostFormula,
             employerCost, []));
 
-        return new PayrollCalculationResult(steps, Round(gross), net, employerCost, garnishmentResult.AppliedAmounts);
+        return new PayrollCalculationResult(steps, Round(gross), net, employerCost, garnishmentResult.AppliedAmounts, cappedDeductionCodes);
     }
 
     /// <summary>
@@ -436,6 +458,35 @@ public static class PayrollCalculator
             ? [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]
             : [];
         return new TraceStep(order, PayrollTraceStepCodes.PayItem, "payroll.trace.step.pay_item", inputs, item.Formula, item.GrossAmount, refs, item.Code);
+    }
+
+    /// <summary>
+    /// PAY_ITEM step of a formula deduction (<c>direction=deduction</c>), written just before DEDUCTIONS: Output is the amount actually
+    /// taken (after the cap), <c>deductionAmount</c> the formula's amount, <c>capped=1</c> only when the cap reduced it.
+    /// </summary>
+    private static TraceStep PayItemDeductionStep(int order, PayItemDeduction item, decimal applied, bool capped, PayrollLegislationSnapshot p)
+    {
+        var inputs = new Dictionary<string, string>
+        {
+            ["code"] = item.Code,
+            ["name"] = item.Name,
+            ["direction"] = "deduction",
+            ["deductionAmount"] = Format(item.Amount),
+        };
+        foreach (var (name, value) in item.UsedVariables.OrderBy(v => v.Key, StringComparer.Ordinal))
+        {
+            inputs[$"variable.{name}"] = Format(value);
+        }
+
+        if (capped)
+        {
+            inputs["capped"] = "1";
+        }
+
+        IReadOnlyList<TraceParameterRef> refs = item.UsedVariables.ContainsKey("asgari_ucret")
+            ? [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]
+            : [];
+        return new TraceStep(order, PayrollTraceStepCodes.PayItem, "payroll.trace.step.pay_item", inputs, item.Formula, applied, refs, item.Code);
     }
 
     internal static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);

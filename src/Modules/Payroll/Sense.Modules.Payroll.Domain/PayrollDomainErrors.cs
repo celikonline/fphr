@@ -136,6 +136,10 @@ public static class PayrollDomainErrors
     public const string IncentiveAssignmentExceedsMaxMonths = "payroll.errors.incentive_assignment_exceeds_max_months";
     public const string IncentiveAssignmentEndRequired = "payroll.errors.incentive_assignment_end_required";
     public const string IncentiveKindCategoryLocked = "payroll.errors.incentive_kind_category_locked";
+
+    // PAY-DEDUCTION-1: formula deductions (Direction = Deduction).
+    public const string PayItemDeductionBasisInvalid = "payroll.errors.pay_item_deduction_basis_invalid";
+    public const string PayItemDirectionLocked = "payroll.errors.pay_item_direction_locked";
 }
 
 /// <summary>Domain limits.</summary>

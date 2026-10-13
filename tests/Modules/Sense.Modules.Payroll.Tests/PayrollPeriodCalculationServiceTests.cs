@@ -22,7 +22,7 @@ namespace Sense.Modules.Payroll.Tests;
 /// and cross-module ports are NSubstitute fakes (mirrors Sense.Modules.Documents.Tests' handler-level tests), no DB -
 /// the orchestration logic (which employees get calculated, dirty-flag clearing) is what's under test, not persistence.
 /// </summary>
-public sealed class PayrollPeriodCalculationServiceTests
+public sealed partial class PayrollPeriodCalculationServiceTests
 {
     private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid SgkWorkplaceCompanyId = Guid.NewGuid();

@@ -77,6 +77,11 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// <paramref name="IncentiveEligible"/> rule (the caller passes <c>IncentiveEligible = false</c> then); a (b) coverage adds the
 /// EMPLOYER_INCENTIVE step; a (c) relief adds INCOME_TAX_RELIEF. Incentives only lower the employer cost, never the employee's net.
 /// </param>
+/// <param name="PayItemDeductions">
+/// PAY-DEDUCTION: already-evaluated formula deductions (<see cref="PayItemDeduction"/>). Taken off the net after icra/nafaka and avans,
+/// before the sendika aidatı, capped at the net that is left; they never enter the gross or any tax base. Null or empty = no
+/// deduction, the pre-existing behaviour and trace exactly.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -95,4 +100,5 @@ public sealed record PayrollCalculationInput(
     int? ProratedPaidDays = null,
     PeriodWage? Wage = null,
     IReadOnlyList<PayItemEarning>? PayItems = null,
-    IReadOnlyList<IncentiveEffectInput>? Incentives = null);
+    IReadOnlyList<IncentiveEffectInput>? Incentives = null,
+    IReadOnlyList<PayItemDeduction>? PayItemDeductions = null);

@@ -1,0 +1,17 @@
+{
+  "durum": "backlog",
+  "dal": "takim/bordro-kesinti-formulleri",
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
+  "kanit": null,
+  "plan": "docs/takim/handoff/PAY-DEDUCTION-PLAN.md",
+  "id": "PAY-DEDUCTION-2",
+  "baslik": "Web: kesinti yönü (tanım formu, rozetler, dönem kalemleri)",
+  "sahip": "takim-gelistirici-node",
+  "riskli_alan": false,
+  "kabul": [
+    "pay-item-form.tsx yön seçimi (kazanç/kesinti); kesintide vergi bayrakları ve tutar türü kilitli/gizli + açıklama; mevcut kazanç davranışı aynı.",
+    "Liste, atama kartı ve dönem kalemleri tablosunda yön rozeti; kesinti satırı ayrı biçimde; servis tipleri backend DTO'sunda direction ile birebir.",
+    "i18n tr/en/de, testler, tsc, eslint, vite build, i18n eşlik testleri yeşil; test kapısı yeşil."
+  ],
+  "handoff": "docs/takim/handoff/PAY-DEDUCTION-2.md"
+}

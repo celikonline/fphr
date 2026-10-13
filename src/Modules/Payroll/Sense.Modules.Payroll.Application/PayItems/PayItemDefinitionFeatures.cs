@@ -100,7 +100,7 @@ public sealed class CreatePayItemHandler(ITenantContext tenant, IPayItemDefiniti
     }
 }
 
-/// <summary>Edits everything except the code. A formula change only affects open/future periods (closed payslips keep the formula text in their trace); payslips of employees assigned this item in open periods are flagged changed.</summary>
+/// <summary>Edits everything except the code (and, once the item is assigned, its direction). A formula change only affects open/future periods (closed payslips keep the formula text in their trace); payslips of employees assigned this item in open periods are flagged changed.</summary>
 [RequiresPermission("payroll.payitem.manage")]
 public sealed record UpdatePayItemCommand(Guid Id, PayItemDefinitionInput Input) : ICommand;
 
@@ -109,7 +109,8 @@ public sealed class UpdatePayItemValidator : AbstractValidator<UpdatePayItemComm
     public UpdatePayItemValidator() => RuleFor(x => x.Input).NotNull();
 }
 
-public sealed class UpdatePayItemHandler(IPayItemDefinitionRepository definitions, PayItemChangeFlagger flagger)
+public sealed class UpdatePayItemHandler(
+    IPayItemDefinitionRepository definitions, IEmployeePayItemAssignmentRepository assignments, PayItemChangeFlagger flagger)
     : ICommandHandler<UpdatePayItemCommand>
 {
     public async Task<Result> Handle(UpdatePayItemCommand command, CancellationToken cancellationToken)
@@ -120,7 +121,16 @@ public sealed class UpdatePayItemHandler(IPayItemDefinitionRepository definition
             return Error.NotFound(PayrollDomainErrors.PayItemNotFound);
         }
 
-        var updated = definition.Update(command.Input.ToData(definition.ValidFrom));
+        var data = command.Input.ToData(definition.ValidFrom);
+
+        // Earning <-> deduction would make the payslips already calculated with this definition meaningless: locked once it is assigned.
+        if (data.Direction != definition.Direction
+            && await assignments.ListByDefinitionAsync(definition.Id, DateOnly.MinValue, cancellationToken) is { Count: > 0 })
+        {
+            return Error.Conflict(PayrollDomainErrors.PayItemDirectionLocked);
+        }
+
+        var updated = definition.Update(data);
         if (updated.IsFailure)
         {
             return updated;

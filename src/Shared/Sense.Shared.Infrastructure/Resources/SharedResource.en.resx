@@ -2044,4 +2044,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.warning.incentive_not_approved" xml:space="preserve"><value>The incentive definition assigned to the employee is not approved by the SMMM; it was left out of the calculation (its declaration code is still written). Approve the definition.</value></data>
   <data name="payroll.warning.incentive_duplicate_assignment" xml:space="preserve"><value>More than one incentive assignment of the same category overlaps the month; only the latest-starting one was used. Remove the duplicate assignment.</value></data>
   <data name="payroll.warning.incentive_profile_code_ignored" xml:space="preserve"><value>The employee has an SGK incentive assignment; the incentive law code on the payroll profile was ignored (the legacy 5-point discount was not applied).</value></data>
+  <data name="payroll.errors.pay_item_deduction_basis_invalid" xml:space="preserve"><value>A deduction cannot have the 'net' amount basis; a deduction is taken off the net after the taxes.</value></data>
+  <data name="payroll.errors.pay_item_direction_locked" xml:space="preserve"><value>The direction (earning/deduction) of a pay item that is assigned to employees cannot be changed; create a new pay item.</value></data>
+  <data name="payroll.warning.pay_item_deduction_capped" xml:space="preserve"><value>The formula deductions exceeded the net that was left; the excess was not taken (the net never goes negative). Check the deduction definitions and the assigned values.</value></data>
 </root>

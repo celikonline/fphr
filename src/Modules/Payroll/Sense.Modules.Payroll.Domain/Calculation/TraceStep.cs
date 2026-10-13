@@ -31,12 +31,14 @@ public sealed record TraceStep(
 /// <param name="GarnishmentApplied">senseik-019 2c: per-order amount <see cref="GarnishmentCalculator"/> applied this
 /// month, so the caller can post it to each <see cref="Garnishments.GarnishmentOrder"/>'s balance. Empty when the
 /// input had no active orders.</param>
+/// <param name="CappedPayItemDeductionCodes">PAY-DEDUCTION: codes of the formula deductions the remaining-net cap reduced, in the order they were cut - last code first (empty/null when none).</param>
 public sealed record PayrollCalculationResult(
     IReadOnlyList<TraceStep> Steps,
     decimal GrossAmount,
     decimal NetAmount,
     decimal EmployerCost,
-    IReadOnlyList<GarnishmentAppliedAmount> GarnishmentApplied)
+    IReadOnlyList<GarnishmentAppliedAmount> GarnishmentApplied,
+    IReadOnlyList<string>? CappedPayItemDeductionCodes = null)
 {
     public TraceStep Step(string code) => Steps.Single(s => s.Code == code);
 }

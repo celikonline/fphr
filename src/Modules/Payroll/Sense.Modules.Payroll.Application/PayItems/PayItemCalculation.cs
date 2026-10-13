@@ -3,7 +3,10 @@ using Sense.Modules.Payroll.Domain.PayItems.Formulas;
 
 namespace Sense.Modules.Payroll.Application.PayItems;
 
-/// <summary>One pay item whose formula has been evaluated for an employee-month (amount rounded to 2 decimals, never negative).</summary>
+/// <summary>
+/// One pay item whose formula has been evaluated for an employee-month (amount rounded to 2 decimals, never negative).
+/// <paramref name="IsDeduction"/> marks a net deduction (PAY-DEDUCTION): its tax flags are false and it never joins the gross.
+/// </summary>
 public sealed record EvaluatedPayItem(
     string Code,
     string Name,
@@ -13,7 +16,8 @@ public sealed record EvaluatedPayItem(
     bool IncomeTaxSubject,
     bool StampTaxSubject,
     string Formula,
-    IReadOnlyDictionary<string, decimal> UsedVariables);
+    IReadOnlyDictionary<string, decimal> UsedVariables,
+    bool IsDeduction = false);
 
 /// <summary>
 /// Outcome of evaluating one employee-month's pay items. <see cref="FailedCode"/> is the code of the first pay item whose formula
@@ -23,6 +27,12 @@ public sealed record EvaluatedPayItem(
 public sealed record PayItemEvaluation(IReadOnlyList<EvaluatedPayItem> Items, IReadOnlyList<string> NegativeCodes, string? FailedCode)
 {
     public bool Succeeded => FailedCode is null;
+
+    /// <summary>The earning items (code order).</summary>
+    public IReadOnlyList<EvaluatedPayItem> Earnings => Items.Where(i => !i.IsDeduction).ToList();
+
+    /// <summary>The deduction items (code order); they come off the net and never enter the net-to-gross solver.</summary>
+    public IReadOnlyList<EvaluatedPayItem> Deductions => Items.Where(i => i.IsDeduction).ToList();
 }
 
 /// <summary>Evaluates the assignments in force for one employee-month (the engine itself never sees formulas).</summary>
@@ -65,7 +75,8 @@ public static class PayItemEvaluator
             var used = parsed.Value.UsedVariables.Where(variables.ContainsKey).ToDictionary(name => name, name => variables[name], StringComparer.Ordinal);
             items.Add(new EvaluatedPayItem(
                 definition.Code, definition.Name, definition.AmountBasis == PayItemAmountBasis.Net, amount,
-                definition.IsSgkSubject, definition.IsIncomeTaxSubject, definition.IsStampTaxSubject, definition.Formula, used));
+                definition.IsSgkSubject, definition.IsIncomeTaxSubject, definition.IsStampTaxSubject, definition.Formula, used,
+                definition.Direction == PayItemDirection.Deduction));
         }
 
         return new PayItemEvaluation(items, negative, null);
