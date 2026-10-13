@@ -1279,4 +1279,49 @@ public sealed class PayrollPeriodCalculationServiceTests
         payslips.DidNotReceive().Add(Arg.Any<Payslip>());
         traces.DidNotReceive().Add(Arg.Any<PayslipCalculationTrace>());
     }
+
+    [Fact]
+    public async Task PayItems_TwoOverlappingAssignmentsOfTheSameItem_PayOnlyTheLatestStartingOneWithAWarning()
+    {
+        var employeeId = Guid.NewGuid();
+        var yemek = NewPayItem("YEMEK", "deger");
+        var yol = NewPayItem("YOL", "deger");
+        var older = NewAssignment(employeeId, yemek, 1_000m, from: new DateOnly(2026, 7, 1));
+        var newer = NewAssignment(employeeId, yemek, 2_000m, from: new DateOnly(2026, 8, 1));
+        var other = NewAssignment(employeeId, yol, 300m);
+        var (assignmentRepository, definitionRepository) = PayItemRepositories([older, newer, other], [yemek, yol]);
+        var service = BuildService(
+            out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(50_000m));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        CapturedGross(payslips).ShouldBe(52_300m); // 50,000 + 2,000 (yalnız yeni atama) + 300 (farklı tanım etkilenmez)
+        var items = CapturedSteps(traces).Where(x => x.Code == PayrollTraceStepCodes.PayItem).ToList();
+        items.Select(x => x.PayItem).ShouldBe(["YEMEK", "YOL"]);
+        var warning = summary.Warnings.Where(w => w.Code == "pay_item_duplicate_assignment").ShouldHaveSingleItem();
+        warning.Details.ShouldBe("YEMEK");
+        warning.EmployeeId.ShouldBe(employeeId);
+    }
+
+    [Fact]
+    public async Task PayItems_DuplicateAssignmentsStartingTogether_PickTheGreatestIdDeterministically()
+    {
+        var employeeId = Guid.NewGuid();
+        var yemek = NewPayItem("YEMEK", "deger");
+        var a = NewAssignment(employeeId, yemek, 1_000m);
+        var b = NewAssignment(employeeId, yemek, 2_000m);
+        var expected = a.Id.CompareTo(b.Id) > 0 ? 1_000m : 2_000m;
+        var (assignmentRepository, definitionRepository) = PayItemRepositories([a, b], [yemek]);
+        var service = BuildService(
+            out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _,
+            payItemAssignmentsOverride: assignmentRepository, payItemDefinitionsOverride: definitionRepository);
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(50_000m));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedGross(payslips).ShouldBe(50_000m + expected);
+    }
 }

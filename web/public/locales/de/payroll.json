@@ -294,7 +294,8 @@
     }
   },
   "warnings": {
-    "pay_item_negative_result": "Die Formel einer Zahlungsart ergab einen negativen Wert und wurde auf 0 gesetzt"
+    "pay_item_negative_result": "Die Formel einer Zahlungsart ergab einen negativen Wert und wurde auf 0 gesetzt",
+    "pay_item_duplicate_assignment": "Dieselbe Zahlungsart ist für den Monat mehrfach zugewiesen; nur die zuletzt beginnende Zuweisung wurde gezahlt"
   },
   "dirtyReasons": {
     "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert"

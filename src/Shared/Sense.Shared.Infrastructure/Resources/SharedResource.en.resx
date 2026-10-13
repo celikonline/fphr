@@ -2017,4 +2017,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.pay_item_assignment_value_required" xml:space="preserve"><value>The formula uses 'deger'; enter a value on the assignment or set a default value on the definition.</value></data>
   <data name="payroll.errors.pay_item_assignment_overlap" xml:space="preserve"><value>The employee already has an assignment of this pay item for an overlapping period.</value></data>
   <data name="payroll.skip.pay_item_formula_failed" xml:space="preserve"><value>A pay item formula could not be evaluated for this employee (for example a division by zero); the employee was not calculated. Check the formula and the assigned value.</value></data>
+  <data name="payroll.warning.pay_item_duplicate_assignment" xml:space="preserve"><value>The same pay item is assigned more than once to this employee for the month; only the latest-starting assignment was paid. Remove the duplicate assignment.</value></data>
 </root>

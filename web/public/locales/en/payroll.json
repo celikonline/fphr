@@ -294,7 +294,8 @@
     }
   },
   "warnings": {
-    "pay_item_negative_result": "A pay item formula came out negative and was set to 0"
+    "pay_item_negative_result": "A pay item formula came out negative and was set to 0",
+    "pay_item_duplicate_assignment": "The same pay item is assigned more than once for the month; only the latest-starting assignment was paid"
   },
   "dirtyReasons": {
     "pay_item_changed": "Pay item (formula-based payment) changed"

@@ -45,6 +45,9 @@ public static class PayrollWarningCodes
 {
     /// <summary>A pay item's formula came out negative and was set to 0; <see cref="PayrollWarning.Details"/> is the pay item code.</summary>
     public const string PayItemNegativeResult = "pay_item_negative_result";
+
+    /// <summary>The same pay item was assigned twice for the month (concurrent requests); only the latest-starting assignment is paid. Details = pay item code.</summary>
+    public const string PayItemDuplicateAssignment = "pay_item_duplicate_assignment";
 }
 
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
@@ -118,13 +121,23 @@ public sealed class PayrollPeriodCalculationService(
         var periodStart = new DateOnly(period.Year, period.Month, 1);
         var calendarDays = DateTime.DaysInMonth(period.Year, period.Month);
         var snapshot = await PayrollLegislationSnapshotResolver.ResolveAsync(legislationReader, periodStart, cancellationToken);
-        var payItemPlan = await LoadPayItemPlanAsync(periodStart, cancellationToken);
+        var (payItemPlan, duplicatePayItems) = await LoadPayItemPlanAsync(periodStart, cancellationToken);
 
         var calculated = 0;
         var skipped = new List<PayrollSkippedEmployee>();
         var warnings = new List<PayrollWarning>();
         foreach (var employeeId in employeeIds)
         {
+            if (duplicatePayItems.TryGetValue(employeeId, out var duplicateCodes))
+            {
+                foreach (var code in duplicateCodes)
+                {
+                    // Eşzamanlı isteklerle aynı tanım iki kez atanmış olabilir: yalnız biri ödenir. Logda tutar yok.
+                    logger.LogWarning("Payroll period {Year}-{Month}: employee {EmployeeId} has more than one assignment of pay item {PayItemCode}; only one is used.", period.Year, period.Month, employeeId, code);
+                    warnings.Add(new PayrollWarning(employeeId, PayrollWarningCodes.PayItemDuplicateAssignment, code));
+                }
+            }
+
             string? skipReason;
             try
             {
@@ -454,14 +467,15 @@ public sealed class PayrollPeriodCalculationService(
     /// Loads, once per run, the pay item assignments in force in the month (assignment range covers the month, definition active and
     /// date-overlapping) grouped by employee. Passive definitions and out-of-range assignments never reach the calculation.
     /// </summary>
-    private async Task<IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>>> LoadPayItemPlanAsync(
+    private async Task<(IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>> Plan, IReadOnlyDictionary<Guid, List<string>> Duplicates)> LoadPayItemPlanAsync(
         DateOnly periodStart, CancellationToken cancellationToken)
     {
         var plan = new Dictionary<Guid, List<(EmployeePayItemAssignment, PayItemDefinition)>>();
+        var duplicates = new Dictionary<Guid, List<string>>();
         var covering = (await payItemAssignments.ListCoveringMonthAsync(periodStart, cancellationToken))?.Where(a => a.IsCovered(periodStart)).ToList() ?? [];
         if (covering.Count == 0)
         {
-            return plan;
+            return (plan, duplicates);
         }
 
         var definitions = ((await payItemDefinitions.ListByIdsAsync(covering.Select(a => a.PayItemDefinitionId).Distinct().ToList(), cancellationToken)) ?? [])
@@ -482,7 +496,21 @@ public sealed class PayrollPeriodCalculationService(
             list.Add((assignment, definition));
         }
 
-        return plan;
+        // Tek çalışan x tanım x ay için en fazla bir atama ödenir (deterministik: ValidFromMonth en geç, eşitse en büyük Id).
+        foreach (var (employeeId, list) in plan.ToList())
+        {
+            var groups = list.GroupBy(i => i.Item2.Id).Where(g => g.Count() > 1).ToList();
+            if (groups.Count == 0)
+            {
+                continue;
+            }
+
+            var dropped = groups.SelectMany(g => g.OrderByDescending(i => i.Item1.ValidFromMonth).ThenByDescending(i => i.Item1.Id).Skip(1)).ToHashSet();
+            plan[employeeId] = list.Where(i => !dropped.Contains(i)).ToList();
+            duplicates[employeeId] = groups.Select(g => g.First().Item2.Code).Order(StringComparer.Ordinal).ToList();
+        }
+
+        return (plan, duplicates);
     }
 
     private static PayItemEarning ToEarning(EvaluatedPayItem item, decimal grossAmount, decimal? netTarget) => new(
