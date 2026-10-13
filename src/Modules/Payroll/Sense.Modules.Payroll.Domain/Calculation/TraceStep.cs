@@ -63,4 +63,10 @@ public static class PayrollTraceStepCodes
     public const string EmployerDiscount = "EMPLOYER_DISCOUNT";
     public const string EmployerUnemp = "EMPLOYER_UNEMP";
     public const string EmployerCost = "EMPLOYER_COST";
+
+    /// <summary>PAY-INCENTIVE (b): premiums covered by the state; present only when such an incentive is in force.</summary>
+    public const string EmployerIncentive = "EMPLOYER_INCENTIVE";
+
+    /// <summary>PAY-INCENTIVE (c): income tax relief (terkin); present only when such an incentive is in force.</summary>
+    public const string IncomeTaxRelief = "INCOME_TAX_RELIEF";
 }

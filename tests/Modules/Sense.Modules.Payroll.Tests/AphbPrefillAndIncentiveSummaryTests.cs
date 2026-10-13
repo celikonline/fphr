@@ -41,6 +41,10 @@ public sealed class AphbPrefillAndIncentiveSummaryTests
         return tenant;
     }
 
+    private static IEmployeeIncentiveAssignmentRepository NoAssignments() => Substitute.For<IEmployeeIncentiveAssignmentRepository>();
+
+    private static IIncentiveDefinitionRepository NoDefinitions() => Substitute.For<IIncentiveDefinitionRepository>();
+
     [Fact]
     public async Task GetAphbPrefillDataHandler_ComposesAllThreeFields_WhenProfileHasWorkplaceAndIncentive()
     {
@@ -55,7 +59,7 @@ public sealed class AphbPrefillAndIncentiveSummaryTests
         var employees = Substitute.For<IEmployeeLookup>();
         employees.GetSgkOccupationCodeAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns("3121.03");
 
-        var handler = new GetAphbPrefillDataHandler(Tenant(), profiles, locations, employees);
+        var handler = new GetAphbPrefillDataHandler(Tenant(), profiles, locations, employees, NoAssignments(), NoDefinitions());
         var result = await handler.Handle(new GetAphbPrefillDataQuery(EmployeeId, AsOf), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
@@ -74,7 +78,7 @@ public sealed class AphbPrefillAndIncentiveSummaryTests
         var employees = Substitute.For<IEmployeeLookup>();
         employees.GetSgkOccupationCodeAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns((string?)null);
 
-        var handler = new GetAphbPrefillDataHandler(Tenant(), profiles, locations, employees);
+        var handler = new GetAphbPrefillDataHandler(Tenant(), profiles, locations, employees, NoAssignments(), NoDefinitions());
         var result = await handler.Handle(new GetAphbPrefillDataQuery(EmployeeId, AsOf), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
@@ -99,7 +103,7 @@ public sealed class AphbPrefillAndIncentiveSummaryTests
         profiles.ListActiveAsOfAsync(AsOf, Arg.Any<CancellationToken>())
             .Returns(new List<EmployeePayrollProfile> { withIncentiveA, withIncentiveB, withIncentiveC, withoutIncentive });
 
-        var handler = new GetActiveIncentiveSummaryHandler(profiles);
+        var handler = new GetActiveIncentiveSummaryHandler(profiles, NoAssignments(), NoDefinitions());
         var result = await handler.Handle(new GetActiveIncentiveSummaryQuery(AsOf), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();

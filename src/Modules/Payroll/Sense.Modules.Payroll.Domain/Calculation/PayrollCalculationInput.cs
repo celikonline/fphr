@@ -71,6 +71,12 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// PAY-FORMULA: already-evaluated formula pay items (<see cref="PayItemEarning"/>). Each amount is added to the gross; the
 /// SGK/GV/damga flags decide which bases it joins. Null or empty = no pay items, the pre-existing behaviour and trace exactly.
 /// </param>
+/// <param name="Incentives">
+/// PAY-INCENTIVE: the approved, in-force incentive models (<see cref="IncentiveEffectInput"/>) resolved by the Application layer.
+/// Null or empty = no incentive model, the pre-existing behaviour and trace exactly. A (a) rate discount replaces the legacy
+/// <paramref name="IncentiveEligible"/> rule (the caller passes <c>IncentiveEligible = false</c> then); a (b) coverage adds the
+/// EMPLOYER_INCENTIVE step; a (c) relief adds INCOME_TAX_RELIEF. Incentives only lower the employer cost, never the employee's net.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -88,4 +94,5 @@ public sealed record PayrollCalculationInput(
     decimal UnionDuesAmount = 0m,
     int? ProratedPaidDays = null,
     PeriodWage? Wage = null,
-    IReadOnlyList<PayItemEarning>? PayItems = null);
+    IReadOnlyList<PayItemEarning>? PayItems = null,
+    IReadOnlyList<IncentiveEffectInput>? Incentives = null);

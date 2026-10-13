@@ -51,9 +51,12 @@ public sealed class IncentiveMonthPlan
         return new IncentiveMonthPlan(month, byId, pairs.ToLookup(p => p.Assignment.EmployeeId));
     }
 
-    /// <summary>Every assignment of the employee covering the month, oldest start first (the definition may be inactive or out of its date range).</summary>
+    /// <summary>The employees that have at least one assignment covering the month.</summary>
+    public IEnumerable<Guid> EmployeeIds => _byEmployee.Select(g => g.Key);
+
+    /// <summary>Every assignment of the employee covering the month, oldest start first, ties by id (the definition may be inactive or out of its date range).</summary>
     public IReadOnlyList<IncentiveAssignmentInMonth> ForEmployee(Guid employeeId) =>
-        _byEmployee[employeeId].OrderBy(p => p.Assignment.ValidFromMonth).ToList();
+        _byEmployee[employeeId].OrderBy(p => p.Assignment.ValidFromMonth).ThenBy(p => p.Assignment.Id).ToList();
 
     /// <summary>The employee's assignments whose definition is usable in the month (active and inside its date range).</summary>
     public IReadOnlyList<IncentiveAssignmentInMonth> EffectiveForEmployee(Guid employeeId) =>

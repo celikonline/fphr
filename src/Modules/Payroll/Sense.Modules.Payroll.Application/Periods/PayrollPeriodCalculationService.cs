@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
+using Sense.Modules.Payroll.Application.Incentives;
 using Sense.Modules.Payroll.Application.PayItems;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
@@ -35,6 +36,9 @@ public static class PayrollSkipReasons
 
     /// <summary>A pay item's formula could not be evaluated for this employee (division by zero, overflow, ...); the log names only the pay item code.</summary>
     public const string PayItemFormulaFailed = "pay_item_formula_failed";
+
+    /// <summary>An approved incentive references a legislation parameter that does not resolve for the period (or resolves to an impossible rate); calculating without it would silently misstate the employer cost.</summary>
+    public const string IncentiveParameterMissing = "incentive_parameter_missing";
 }
 
 /// <summary>senseik-019 2a: non-blocking warning from payroll run (e.g. cumulative GV_BASE unavailable for mid-year employee).</summary>
@@ -48,6 +52,15 @@ public static class PayrollWarningCodes
 
     /// <summary>The same pay item was assigned twice for the month (concurrent requests); only the latest-starting assignment is paid. Details = pay item code.</summary>
     public const string PayItemDuplicateAssignment = "pay_item_duplicate_assignment";
+
+    /// <summary>The employee has an incentive assignment whose definition is not SMMM-approved: it does not enter the calculation (its declaration code is still declared). Details = incentive code.</summary>
+    public const string IncentiveNotApproved = "incentive_not_approved";
+
+    /// <summary>Several incentive assignments of the same category overlap in the month (concurrent requests); only the latest-starting one is used. Details = incentive code.</summary>
+    public const string IncentiveDuplicateAssignment = "incentive_duplicate_assignment";
+
+    /// <summary>An SGK-category incentive assignment replaces the payroll profile's incentive law code, which differs from the assignment's declaration code and is ignored. Details = the profile's code.</summary>
+    public const string IncentiveProfileCodeIgnored = "incentive_profile_code_ignored";
 }
 
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
@@ -95,6 +108,8 @@ public sealed class PayrollPeriodCalculationService(
     IPayrollAdjustmentRepository adjustmentRepository,
     IEmployeePayItemAssignmentRepository payItemAssignments,
     IPayItemDefinitionRepository payItemDefinitions,
+    IEmployeeIncentiveAssignmentRepository incentiveAssignments,
+    IIncentiveDefinitionRepository incentiveDefinitions,
     ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -122,6 +137,7 @@ public sealed class PayrollPeriodCalculationService(
         var calendarDays = DateTime.DaysInMonth(period.Year, period.Month);
         var snapshot = await PayrollLegislationSnapshotResolver.ResolveAsync(legislationReader, periodStart, cancellationToken);
         var (payItemPlan, duplicatePayItems) = await LoadPayItemPlanAsync(periodStart, cancellationToken);
+        var incentives = await IncentiveCalculation.LoadAsync(periodStart, incentiveAssignments, incentiveDefinitions, legislationReader, cancellationToken);
 
         var calculated = 0;
         var skipped = new List<PayrollSkippedEmployee>();
@@ -141,7 +157,7 @@ public sealed class PayrollPeriodCalculationService(
             string? skipReason;
             try
             {
-                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, payItemPlan, cancellationToken);
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, payItemPlan, incentives, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -174,7 +190,8 @@ public sealed class PayrollPeriodCalculationService(
     /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code. Accumulates warnings in the provided list.</summary>
     private async Task<string?> CalculateOneAsync(
         PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, List<PayrollPreviewLine>? preview,
-        IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>> payItemPlan, CancellationToken cancellationToken)
+        IReadOnlyDictionary<Guid, List<(EmployeePayItemAssignment Assignment, PayItemDefinition Definition)>> payItemPlan,
+        IncentiveCalculation incentives, CancellationToken cancellationToken)
     {
         var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
 
@@ -289,9 +306,18 @@ public sealed class PayrollPeriodCalculationService(
             warnings.Add(new PayrollWarning(employeeId, "missing_prior_cumulative_gv_base", $"Month {period.Month}: no prior payslip found"));
         }
 
-        // senseik-019 2a: BASİTLEŞTİRME - gerçek teşvik uygunluk kontrolü (SGK'nın güncel kanun kodu listesiyle
-        // eşleşme, işyeri bazlı başvuru durumu) bu sürümde yapılmıyor, bkz. PayrollCalculationInput.IncentiveEligible.
-        var incentiveEligible = !string.IsNullOrWhiteSpace(profile.IncentiveLawCode);
+        // Teşvik modelleri (PAY-INCENTIVE): onaylı ve bu ay etkin atamalar hesaba girer; etkin bir SGK ataması varsa profildeki kanun kodu yok sayılır
+        // (IncentiveEligible = SGK ataması yok && profil kodu dolu; vergi ataması profil kodunu etkilemez). senseik-019 2a: BASİTLEŞTİRME - gerçek teşvik
+        // uygunluk kontrolü (SGK'nın güncel kanun kodu listesiyle eşleşme, işyeri bazlı başvuru durumu) yapılmıyor, bkz. PayrollCalculationInput.IncentiveEligible.
+        var incentive = await incentives.ResolveAsync(employeeId, profile.IncentiveLawCode, cancellationToken);
+        if (incentive.MissingParameter is { } missingParameter)
+        {
+            // Parametre anahtarı loga yazılır; tutar yazılmaz.
+            logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: an incentive references the unresolved parameter {Parameter}.", employeeId, period.Year, period.Month, missingParameter);
+            return PayrollSkipReasons.IncentiveParameterMissing;
+        }
+
+        var incentiveEligible = incentive.LegacyProfileRule;
 
         // senseik-019 2b: GVK md.31 engelli çalışan gelir vergisi matrah indirimi derecesi.
         var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenant.TenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
@@ -363,7 +389,8 @@ public sealed class PayrollPeriodCalculationService(
             AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + holidayPay + extraGross,
             ProratedPaidDays: ProratedDays(),
             Wage: periodWage,
-            PayItems: payItemEarnings is { Count: > 0 } ? payItemEarnings : null);
+            PayItems: payItemEarnings is { Count: > 0 } ? payItemEarnings : null,
+            Incentives: incentive.Effects.Count > 0 ? incentive.Effects : null);
 
         // SGK taban/tavan ve asgari ücret istisnaları kısmi ayda kıst gün, günlük/saatlikte eksik gün düşülmüş ücretli gün kadar ölçeklenir.
         int? ProratedDays()
@@ -393,6 +420,8 @@ public sealed class PayrollPeriodCalculationService(
             warnings.AddRange(evaluation.NegativeCodes.Select(code => new PayrollWarning(employeeId, PayrollWarningCodes.PayItemNegativeResult, code)));
             evaluatedItems = evaluation.Items;
         }
+
+        warnings.AddRange(incentive.Warnings);
 
         // Brüt kalemler olduğu gibi girer; net kalemler (yalnız tam vergiye tabi) net primlerle TEK çözümde brütleştirilir.
         var grossEarnings = evaluatedItems.Where(i => !i.IsNet).Select(i => ToEarning(i, i.Amount, null)).ToList();

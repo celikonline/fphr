@@ -2049,4 +2049,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.incentive.manage" xml:space="preserve"><value>Teşvik modellerini tanımlama, çalışanlara atama ve eski profil kodlarını dönüştürme</value></data>
   <data name="payroll.incentive.approve" xml:space="preserve"><value>Teşvik tanımını onaylama ve onayı geri alma</value></data>
   <data name="payroll.dirty.reason.incentive_changed" xml:space="preserve"><value>Teşvik ataması veya tanımı değişti</value></data>
+  <data name="payroll.skip.incentive_parameter_missing" xml:space="preserve"><value>Bir teşvik tanımının başvurduğu mevzuat parametresi bu dönem için bulunamadı (ya da geçerli bir oran değil); çalışan hesaplanmadı. Teşvik tanımını ve mevzuat parametrelerini kontrol edin.</value></data>
+  <data name="payroll.warning.incentive_not_approved" xml:space="preserve"><value>Çalışana atanan teşvik tanımı SMMM onaylı değil; hesaba katılmadı (bildirge kodu yine yazılır). Tanımı onaylayın.</value></data>
+  <data name="payroll.warning.incentive_duplicate_assignment" xml:space="preserve"><value>Aynı kategoride birden fazla teşvik ataması aynı aya denk geliyor; yalnız en son başlayan atama kullanıldı. Yinelenen atamayı kaldırın.</value></data>
+  <data name="payroll.warning.incentive_profile_code_ignored" xml:space="preserve"><value>Çalışanın SGK teşvik ataması var; bordro profilindeki teşvik kanunu kodu yok sayıldı (eski 5 puanlık indirim uygulanmadı).</value></data>
 </root>

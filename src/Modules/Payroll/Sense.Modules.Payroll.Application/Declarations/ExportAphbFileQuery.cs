@@ -1,5 +1,6 @@
 using System.Text;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Application.Incentives;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
@@ -22,7 +23,9 @@ public sealed class ExportAphbFileHandler(
     IPayslipCalculationTraceRepository traces,
     IEmployeePayrollProfileRepository profiles,
     IEmployeeDirectory employeeDirectory,
-    ITenantContext tenant) : IQueryHandler<ExportAphbFileQuery, ExportFileResult>
+    ITenantContext tenant,
+    IEmployeeIncentiveAssignmentRepository incentiveAssignments,
+    IIncentiveDefinitionRepository incentiveDefinitions) : IQueryHandler<ExportAphbFileQuery, ExportFileResult>
 {
     public async Task<Result<ExportFileResult>> Handle(ExportAphbFileQuery query, CancellationToken cancellationToken)
     {
@@ -37,6 +40,7 @@ public sealed class ExportAphbFileHandler(
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId);
 
+        var incentivePlan = await IncentiveMonthPlan.LoadAsync(periodStart, incentiveAssignments, incentiveDefinitions, cancellationToken);
         var lines = new List<AphbLine>();
         foreach (var payslip in periodPayslips)
         {
@@ -55,7 +59,7 @@ public sealed class ExportAphbFileHandler(
                 PrimeEsasKazanc: figures.SgkBase,
                 SigortaliPayi: figures.SigortaliPayi,
                 IsverenPayi: figures.IsverenPayi,
-                IncentiveLawCode: profile?.IncentiveLawCode));
+                IncentiveLawCode: IncentiveDeclaration.CodeFor(incentivePlan, payslip.EmployeeId, profile?.IncentiveLawCode)));
         }
 
         var content = AphbFileBuilder.BuildContent(period.Year, period.Month, lines);

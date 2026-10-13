@@ -1,4 +1,5 @@
 using System.Globalization;
+using Sense.Modules.Payroll.Domain.Incentives;
 using Sense.Shared.Kernel;
 
 namespace Sense.Modules.Payroll.Domain.Calculation;
@@ -34,6 +35,11 @@ public static class PayrollCalculator
         Guard.Against(input.AdvanceDeductionTotal < 0m, "AdvanceDeductionTotal cannot be negative.");
         var payItems = input.PayItems ?? [];
         Guard.Against(payItems.Any(i => i.GrossAmount < 0m), "Pay item amounts cannot be negative.");
+        var incentives = input.Incentives ?? [];
+        var discountEffect = incentives.SingleOrDefault(i => i.Kind == IncentiveKind.EmployerSgkRateDiscount);
+        var coverageEffect = incentives.SingleOrDefault(i => i.Kind == IncentiveKind.EmployerShareCoverage);
+        var reliefEffect = incentives.SingleOrDefault(i => i.Kind == IncentiveKind.IncomeTaxWithholdingRelief);
+        Guard.Against(discountEffect is not null && coverageEffect is not null, "At most one SGK-category incentive can apply in a month.");
         if (!Enum.IsDefined(input.MealVariant))
         {
             throw new NotSupportedException($"Meal benefit variant '{input.MealVariant}' is not a known value.");
@@ -310,21 +316,32 @@ public static class PayrollCalculator
             "sgkBase * SGK işveren oranı",
             employerSgk, [Ref("Payroll.Sgk.EmployerRate", p.SgkEmployerRate, p)]));
 
-        // EMPLOYER_DISCOUNT (senseik-019 2a: 5510 md.81 5 puanlık teşvik, profildeki IncentiveLawCode doluysa uygulanır - bkz. PayrollCalculationInput.IncentiveEligible doc)
-        var employerDiscount = input.IncentiveEligible ? Round(sgkBase * p.SgkEmployerDiscountRate) : 0m;
-        steps.Add(new TraceStep(
-            order++, PayrollTraceStepCodes.EmployerDiscount, "payroll.trace.step.employer_discount",
-            new Dictionary<string, string>
-            {
-                ["sgkBase"] = Format(sgkBase),
-                ["discountRate"] = Format(p.SgkEmployerDiscountRate),
-                ["incentiveEligible"] = input.IncentiveEligible ? "1" : "0",
-            },
-            input.IncentiveEligible
-                ? "sgkBase * 5 puanlık SGK işveren teşvik oranı"
-                : "teşvike uygun değil (IncentiveLawCode boş) - Output=0",
-            employerDiscount,
-            input.IncentiveEligible ? [Ref("Payroll.Sgk.EmployerDiscountRate", p.SgkEmployerDiscountRate, p)] : []));
+        // EMPLOYER_DISCOUNT: (a) an approved rate-discount incentive replaces the legacy rule (senseik-019 2a: 5510 md.81 5 puanlık teşvik,
+        // profildeki IncentiveLawCode doluysa uygulanır - bkz. PayrollCalculationInput.IncentiveEligible doc). Without an (a) effect this is the legacy step, unchanged.
+        decimal employerDiscount;
+        if (discountEffect is not null)
+        {
+            var (amount, discountStep) = IncentiveSteps.EmployerDiscount(order++, discountEffect, sgkBase, p);
+            employerDiscount = amount;
+            steps.Add(discountStep);
+        }
+        else
+        {
+            employerDiscount = input.IncentiveEligible ? Round(sgkBase * p.SgkEmployerDiscountRate) : 0m;
+            steps.Add(new TraceStep(
+                order++, PayrollTraceStepCodes.EmployerDiscount, "payroll.trace.step.employer_discount",
+                new Dictionary<string, string>
+                {
+                    ["sgkBase"] = Format(sgkBase),
+                    ["discountRate"] = Format(p.SgkEmployerDiscountRate),
+                    ["incentiveEligible"] = input.IncentiveEligible ? "1" : "0",
+                },
+                input.IncentiveEligible
+                    ? "sgkBase * 5 puanlık SGK işveren teşvik oranı"
+                    : "teşvike uygun değil (IncentiveLawCode boş) - Output=0",
+                employerDiscount,
+                input.IncentiveEligible ? [Ref("Payroll.Sgk.EmployerDiscountRate", p.SgkEmployerDiscountRate, p)] : []));
+        }
 
         // EMPLOYER_UNEMP
         var employerUnemp = Round(sgkBase * p.UnemploymentEmployerRate);
@@ -334,12 +351,45 @@ public static class PayrollCalculator
             "sgkBase * işsizlik sigortası işveren oranı",
             employerUnemp, [Ref("Payroll.Unemployment.EmployerRate", p.UnemploymentEmployerRate, p)]));
 
+        // EMPLOYER_INCENTIVE (b): premiums the state covers; only when such an incentive is in force, so the trace is otherwise unchanged.
+        var employerIncentive = 0m;
+        if (coverageEffect is not null)
+        {
+            var figures = new PremiumFigures(sgkBase, employerSgk, employerDiscount, employerUnemp, sgkEmployee, unempEmployee);
+            var (amount, incentiveStep) = IncentiveSteps.EmployerIncentive(order++, coverageEffect, figures, proration, p);
+            employerIncentive = amount;
+            steps.Add(incentiveStep);
+        }
+
+        // INCOME_TAX_RELIEF (c): share of the income tax withheld that the state remits (terkin); the employee's net is not touched.
+        var incomeTaxRelief = 0m;
+        if (reliefEffect is not null)
+        {
+            var (amount, reliefStep) = IncentiveSteps.IncomeTaxRelief(order++, reliefEffect, incomeTaxAfterExemption, p);
+            incomeTaxRelief = amount;
+            steps.Add(reliefStep);
+        }
+
         // EMPLOYER_COST
-        var employerCost = Round(gross + employerSgk - employerDiscount + employerUnemp);
+        var employerCost = Round(gross + employerSgk - employerDiscount + employerUnemp - employerIncentive - incomeTaxRelief);
+        var employerCostInputs = Map(("gross", gross), ("employerSgk", employerSgk), ("employerDiscount", employerDiscount), ("employerUnemp", employerUnemp));
+        var employerCostFormula = "gross + EMPLOYER_SGK - EMPLOYER_DISCOUNT + EMPLOYER_UNEMP";
+        if (coverageEffect is not null)
+        {
+            employerCostInputs["employerIncentive"] = Format(employerIncentive);
+            employerCostFormula += " - EMPLOYER_INCENTIVE";
+        }
+
+        if (reliefEffect is not null)
+        {
+            employerCostInputs["incomeTaxRelief"] = Format(incomeTaxRelief);
+            employerCostFormula += " - INCOME_TAX_RELIEF";
+        }
+
         steps.Add(new TraceStep(
             order, PayrollTraceStepCodes.EmployerCost, "payroll.trace.step.employer_cost",
-            Map(("gross", gross), ("employerSgk", employerSgk), ("employerDiscount", employerDiscount), ("employerUnemp", employerUnemp)),
-            "gross + EMPLOYER_SGK - EMPLOYER_DISCOUNT + EMPLOYER_UNEMP",
+            employerCostInputs,
+            employerCostFormula,
             employerCost, []));
 
         return new PayrollCalculationResult(steps, Round(gross), net, employerCost, garnishmentResult.AppliedAmounts);
@@ -388,9 +438,9 @@ public static class PayrollCalculator
         return new TraceStep(order, PayrollTraceStepCodes.PayItem, "payroll.trace.step.pay_item", inputs, item.Formula, item.GrossAmount, refs, item.Code);
     }
 
-    private static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);
+    internal static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);
 
-    private static string Format(decimal value) => value.ToString("0.####", CultureInfo.InvariantCulture);
+    internal static string Format(decimal value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 
     private static Dictionary<string, string> Map(params (string Key, decimal Value)[] pairs) =>
         pairs.ToDictionary(p => p.Key, p => Format(p.Value));
@@ -398,5 +448,5 @@ public static class PayrollCalculator
     private static Dictionary<string, string> Map(params (string Key, int Value)[] pairs) =>
         pairs.ToDictionary(p => p.Key, p => p.Value.ToString(CultureInfo.InvariantCulture));
 
-    private static TraceParameterRef Ref(string key, decimal value, PayrollLegislationSnapshot p) => new(key, value, p.AsOf);
+    internal static TraceParameterRef Ref(string key, decimal value, PayrollLegislationSnapshot p) => new(key, value, p.AsOf);
 }

@@ -1,0 +1,309 @@
+{
+  "grossAmount": 49709.72,
+  "netAmount": 40000.00,
+  "employerCost": 60894.40,
+  "steps": [
+    {
+      "order": 1,
+      "code": "DAYS",
+      "titleKey": "payroll.trace.step.days",
+      "inputs": {
+        "workedDays": "31",
+        "calendarDaysInMonth": "31"
+      },
+      "formula": "workedDays (Attendance eksik g\u00FCn girdisi yok - tam ay varsay\u0131m\u0131, TODO roadmap #23)",
+      "output": 31,
+      "parameterRefs": []
+    },
+    {
+      "order": 2,
+      "code": "EARNINGS",
+      "titleKey": "payroll.trace.step.earnings",
+      "inputs": {
+        "baseSalary": "49709.72",
+        "additionalTaxableEarnings": "0",
+        "grossTotal": "49709.72"
+      },
+      "formula": "maktu ayl\u0131k \u00FCcret \u002B fazla mesai/hafta tatili/resm\u00EE tatil gibi ek vergiye tabi kazan\u00E7lar (varsa)",
+      "output": 49709.72,
+      "parameterRefs": []
+    },
+    {
+      "order": 3,
+      "code": "SGK_BASE",
+      "titleKey": "payroll.trace.step.sgk_base",
+      "inputs": {
+        "gross": "49709.72",
+        "mealSgkExcess": "0",
+        "sgkFloor": "33030",
+        "sgkCeiling": "247725"
+      },
+      "formula": "clamp(gross \u002B yemek SGK istisna a\u015F\u0131m\u0131, taban, tavan)",
+      "output": 49709.72,
+      "parameterRefs": [
+        {
+          "key": "Payroll.Sgk.Floor",
+          "value": 33030,
+          "validFrom": "2026-03-01"
+        },
+        {
+          "key": "Payroll.Sgk.Ceiling",
+          "value": 247725,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "code": "SGK_EMPLOYEE",
+      "titleKey": "payroll.trace.step.sgk_employee",
+      "inputs": {
+        "sgkBase": "49709.72",
+        "rate": "0.14"
+      },
+      "formula": "sgkBase * SGK i\u015F\u00E7i oran\u0131",
+      "output": 6959.36,
+      "parameterRefs": [
+        {
+          "key": "Payroll.Sgk.EmployeeRate",
+          "value": 0.14,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "code": "UNEMP_EMPLOYEE",
+      "titleKey": "payroll.trace.step.unemp_employee",
+      "inputs": {
+        "sgkBase": "49709.72",
+        "rate": "0.01"
+      },
+      "formula": "sgkBase * i\u015Fsizlik sigortas\u0131 i\u015F\u00E7i oran\u0131",
+      "output": 497.10,
+      "parameterRefs": [
+        {
+          "key": "Payroll.Unemployment.EmployeeRate",
+          "value": 0.01,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "code": "GV_BASE",
+      "titleKey": "payroll.trace.step.gv_base",
+      "inputs": {
+        "gross": "49709.72",
+        "mealGvExcess": "0",
+        "sgkEmployee": "6959.36",
+        "unempEmployee": "497.1"
+      },
+      "formula": "gross \u002B yemek GV istisna a\u015F\u0131m\u0131 - SGK_EMPLOYEE - UNEMP_EMPLOYEE",
+      "output": 42253.26,
+      "parameterRefs": []
+    },
+    {
+      "order": 7,
+      "code": "DISABILITY_REDUCTION",
+      "titleKey": "payroll.trace.step.disability_reduction",
+      "inputs": {
+        "gvBase": "42253.26",
+        "disabilityDegree": "0",
+        "disabilityMonthlyReduction": "0"
+      },
+      "formula": "GVK md.31 engelli \u00E7al\u0131\u015Fan gelir vergisi matrah indirimi (varsa derece bazl\u0131 ayl\u0131k tutar), matrah 0\u0027\u0131n alt\u0131na inmez",
+      "output": 0.00,
+      "parameterRefs": []
+    },
+    {
+      "order": 8,
+      "code": "CUMULATIVE_BASE",
+      "titleKey": "payroll.trace.step.cumulative_base",
+      "inputs": {
+        "priorCumulativeGvBase": "0",
+        "gvBaseAfterDisability": "42253.26"
+      },
+      "formula": "\u00F6nceki aylar k\u00FCm\u00FClatif matrah\u0131 \u002B bu ay\u0131n (engelli indirimi sonras\u0131) GV_BASE",
+      "output": 42253.26,
+      "parameterRefs": []
+    },
+    {
+      "order": 9,
+      "code": "INCOME_TAX",
+      "titleKey": "payroll.trace.step.income_tax",
+      "inputs": {
+        "priorCumulativeGvBase": "0",
+        "cumulativeBase": "42253.26",
+        "bracket1.amount": "42253.26",
+        "bracket1.rate": "0.15"
+      },
+      "formula": "TaxUpTo(cumulativeBase) - TaxUpTo(priorCumulativeBase) = 42253.26*0.15",
+      "output": 6337.99,
+      "parameterRefs": [
+        {
+          "key": "Payroll.IncomeTax.Brackets[0]",
+          "value": 0.15,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 10,
+      "code": "MINWAGE_EXEMPTION_GV",
+      "titleKey": "payroll.trace.step.minwage_exemption_gv",
+      "inputs": {
+        "minimumWageGross": "33030",
+        "minWageGvBase": "28075.5",
+        "firstBracketRate": "0.15",
+        "incomeTaxBeforeExemption": "6337.99"
+      },
+      "formula": "min(incomeTax, asgari \u00FCcret GV matrah\u0131 * ilk dilim oran\u0131)",
+      "output": 4211.33,
+      "parameterRefs": [
+        {
+          "key": "Payroll.MinimumWage.Gross",
+          "value": 33030,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 11,
+      "code": "STAMP_TAX",
+      "titleKey": "payroll.trace.step.stamp_tax",
+      "inputs": {
+        "gross": "49709.72",
+        "rate": "0.0076"
+      },
+      "formula": "gross * damga vergisi oran\u0131",
+      "output": 377.30,
+      "parameterRefs": [
+        {
+          "key": "Payroll.StampTax.Rate",
+          "value": 0.00759,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 12,
+      "code": "MINWAGE_EXEMPTION_DV",
+      "titleKey": "payroll.trace.step.minwage_exemption_dv",
+      "inputs": {
+        "minimumWageGross": "33030",
+        "rate": "0.0076",
+        "stampTaxBeforeExemption": "377.3"
+      },
+      "formula": "min(stampTax, asgari \u00FCcret * damga vergisi oran\u0131)",
+      "output": 250.70,
+      "parameterRefs": [
+        {
+          "key": "Payroll.MinimumWage.Gross",
+          "value": 33030,
+          "validFrom": "2026-03-01"
+        },
+        {
+          "key": "Payroll.StampTax.Rate",
+          "value": 0.00759,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 13,
+      "code": "DEDUCTIONS",
+      "titleKey": "payroll.trace.step.deductions",
+      "inputs": {
+        "netBeforeDeductions": "40000",
+        "garnishmentDeductionTotal": "0",
+        "advanceDeductionTotal": "0",
+        "unionDues": "0"
+      },
+      "formula": "icra/nafaka (\u0130\u0130K m.83, GarnishmentCalculator) \u002B avans mahsubu (kalan nete kadar) \u002B sendika/dayan\u0131\u015Fma aidat\u0131 - BES kapsam d\u0131\u015F\u0131 (P6\u002B)",
+      "output": 0,
+      "parameterRefs": []
+    },
+    {
+      "order": 14,
+      "code": "NET",
+      "titleKey": "payroll.trace.step.net",
+      "inputs": {
+        "gross": "49709.72",
+        "sgkEmployee": "6959.36",
+        "unempEmployee": "497.1",
+        "incomeTaxAfterExemption": "2126.66",
+        "stampTaxAfterExemption": "126.6",
+        "mealNetAddition": "0",
+        "expenseReimbursement": "0",
+        "deductionsTotal": "0"
+      },
+      "formula": "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonras\u0131) - STAMP_TAX(istisna sonras\u0131) \u002B nakit \u00F6denen yemek (ayni hari\u00E7) \u002B masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/sendika aidat\u0131)",
+      "output": 40000.00,
+      "parameterRefs": []
+    },
+    {
+      "order": 15,
+      "code": "EMPLOYER_SGK",
+      "titleKey": "payroll.trace.step.employer_sgk",
+      "inputs": {
+        "sgkBase": "49709.72",
+        "rate": "0.205"
+      },
+      "formula": "sgkBase * SGK i\u015Fveren oran\u0131",
+      "output": 10190.49,
+      "parameterRefs": [
+        {
+          "key": "Payroll.Sgk.EmployerRate",
+          "value": 0.205,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 16,
+      "code": "EMPLOYER_DISCOUNT",
+      "titleKey": "payroll.trace.step.employer_discount",
+      "inputs": {
+        "sgkBase": "49709.72",
+        "discountRate": "0.05",
+        "incentiveEligible": "0"
+      },
+      "formula": "te\u015Fvike uygun de\u011Fil (IncentiveLawCode bo\u015F) - Output=0",
+      "output": 0,
+      "parameterRefs": []
+    },
+    {
+      "order": 17,
+      "code": "EMPLOYER_UNEMP",
+      "titleKey": "payroll.trace.step.employer_unemp",
+      "inputs": {
+        "sgkBase": "49709.72",
+        "rate": "0.02"
+      },
+      "formula": "sgkBase * i\u015Fsizlik sigortas\u0131 i\u015Fveren oran\u0131",
+      "output": 994.19,
+      "parameterRefs": [
+        {
+          "key": "Payroll.Unemployment.EmployerRate",
+          "value": 0.02,
+          "validFrom": "2026-03-01"
+        }
+      ]
+    },
+    {
+      "order": 18,
+      "code": "EMPLOYER_COST",
+      "titleKey": "payroll.trace.step.employer_cost",
+      "inputs": {
+        "gross": "49709.72",
+        "employerSgk": "10190.49",
+        "employerDiscount": "0",
+        "employerUnemp": "994.19"
+      },
+      "formula": "gross \u002B EMPLOYER_SGK - EMPLOYER_DISCOUNT \u002B EMPLOYER_UNEMP",
+      "output": 60894.40,
+      "parameterRefs": []
+    }
+  ]
+}

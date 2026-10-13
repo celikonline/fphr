@@ -2040,4 +2040,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.incentive.manage" xml:space="preserve"><value>Define incentive models, assign them to employees and convert legacy profile codes</value></data>
   <data name="payroll.incentive.approve" xml:space="preserve"><value>Approve or revoke the approval of an incentive definition</value></data>
   <data name="payroll.dirty.reason.incentive_changed" xml:space="preserve"><value>Incentive assignment or definition changed</value></data>
+  <data name="payroll.skip.incentive_parameter_missing" xml:space="preserve"><value>A legislation parameter an incentive definition refers to could not be found for this period (or is not a valid rate); the employee was not calculated. Check the incentive definition and the legislation parameters.</value></data>
+  <data name="payroll.warning.incentive_not_approved" xml:space="preserve"><value>The incentive definition assigned to the employee is not approved by the SMMM; it was left out of the calculation (its declaration code is still written). Approve the definition.</value></data>
+  <data name="payroll.warning.incentive_duplicate_assignment" xml:space="preserve"><value>More than one incentive assignment of the same category overlaps the month; only the latest-starting one was used. Remove the duplicate assignment.</value></data>
+  <data name="payroll.warning.incentive_profile_code_ignored" xml:space="preserve"><value>The employee has an SGK incentive assignment; the incentive law code on the payroll profile was ignored (the legacy 5-point discount was not applied).</value></data>
 </root>

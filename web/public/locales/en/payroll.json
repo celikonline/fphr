@@ -63,7 +63,8 @@
     "skipReasons": {
       "wage_basis_mismatch": "The payroll profile wage basis does not match the salary record pay frequency",
       "net_wage_basis_unsupported": "Daily/hourly employees with a net wage cannot be calculated yet; enter a gross wage",
-      "pay_item_formula_failed": "A pay item formula could not be evaluated (for example a division by zero); check the formula and the assigned value"
+      "pay_item_formula_failed": "A pay item formula could not be evaluated (for example a division by zero); check the formula and the assigned value",
+      "incentive_parameter_missing": "A legislation parameter an incentive definition refers to could not be found (or is not a valid rate); check the incentive definition and the legislation parameters"
     },
     "employee": "Employee",
     "gross": "Gross",
@@ -295,7 +296,10 @@
   },
   "warnings": {
     "pay_item_negative_result": "A pay item formula came out negative and was set to 0",
-    "pay_item_duplicate_assignment": "The same pay item is assigned more than once for the month; only the latest-starting assignment was paid"
+    "pay_item_duplicate_assignment": "The same pay item is assigned more than once for the month; only the latest-starting assignment was paid",
+    "incentive_not_approved": "The incentive definition assigned to the employee is not approved by the SMMM; it was left out of the calculation",
+    "incentive_duplicate_assignment": "More than one incentive assignment of the same category overlaps the month; only the latest-starting one was used",
+    "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored"
   },
   "dirtyReasons": {
     "pay_item_changed": "Pay item (formula-based payment) changed"

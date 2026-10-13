@@ -63,7 +63,8 @@
     "skipReasons": {
       "wage_basis_mismatch": "Die Lohnbasis im Abrechnungsprofil passt nicht zum Zahlungsrhythmus des Gehaltsdatensatzes",
       "net_wage_basis_unsupported": "Tages-/Stundenlöhner mit Nettolohn können noch nicht berechnet werden; bitte Bruttolohn erfassen",
-      "pay_item_formula_failed": "Die Formel einer Zahlungsart konnte nicht berechnet werden (z. B. Division durch null); bitte Formel und zugewiesenen Wert prüfen"
+      "pay_item_formula_failed": "Die Formel einer Zahlungsart konnte nicht berechnet werden (z. B. Division durch null); bitte Formel und zugewiesenen Wert prüfen",
+      "incentive_parameter_missing": "Ein Gesetzesparameter, auf den eine Förderungsdefinition verweist, wurde nicht gefunden (oder ist kein gültiger Satz); bitte Förderungsdefinition und Gesetzesparameter prüfen"
     },
     "employee": "Mitarbeitende",
     "gross": "Brutto",
@@ -295,7 +296,10 @@
   },
   "warnings": {
     "pay_item_negative_result": "Die Formel einer Zahlungsart ergab einen negativen Wert und wurde auf 0 gesetzt",
-    "pay_item_duplicate_assignment": "Dieselbe Zahlungsart ist für den Monat mehrfach zugewiesen; nur die zuletzt beginnende Zuweisung wurde gezahlt"
+    "pay_item_duplicate_assignment": "Dieselbe Zahlungsart ist für den Monat mehrfach zugewiesen; nur die zuletzt beginnende Zuweisung wurde gezahlt",
+    "incentive_not_approved": "Die dem Mitarbeitenden zugewiesene Förderungsdefinition ist nicht vom Steuerberater (SMMM) genehmigt; sie wurde nicht berücksichtigt",
+    "incentive_duplicate_assignment": "Mehrere Förderungszuweisungen derselben Kategorie überschneiden sich im Monat; nur die zuletzt beginnende wurde verwendet",
+    "incentive_profile_code_ignored": "Der Mitarbeitende hat eine SGK-Förderungszuweisung; der Förderungsgesetzescode im Profil wurde ignoriert"
   },
   "dirtyReasons": {
     "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert"

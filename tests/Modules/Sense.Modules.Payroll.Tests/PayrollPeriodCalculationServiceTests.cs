@@ -167,6 +167,7 @@ public sealed class PayrollPeriodCalculationServiceTests
             overtimeReader, adjustmentsOverride ?? Substitute.For<IPayrollAdjustmentRepository>(),
             payItemAssignmentsOverride ?? Substitute.For<Sense.Modules.Payroll.Domain.IEmployeePayItemAssignmentRepository>(),
             payItemDefinitionsOverride ?? Substitute.For<Sense.Modules.Payroll.Domain.IPayItemDefinitionRepository>(),
+            Substitute.For<Sense.Modules.Payroll.Domain.IEmployeeIncentiveAssignmentRepository>(), Substitute.For<Sense.Modules.Payroll.Domain.IIncentiveDefinitionRepository>(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
     }
 
