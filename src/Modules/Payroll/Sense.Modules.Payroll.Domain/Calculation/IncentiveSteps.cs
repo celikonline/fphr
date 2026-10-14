@@ -70,7 +70,12 @@ internal static class IncentiveSteps
         var employeeUnempCovered = effect.CoversEmployeeUnemployment
             ? Math.Min(figures.UnempEmployee, PayrollCalculator.Round(coverageBase * p.UnemploymentEmployeeRate * share.Value))
             : 0m;
-        var amount = PayrollCalculator.Round(employerSgkCovered + employerUnempCovered + employeeSgkCovered + employeeUnempCovered);
+        var requestedSupport = PayrollCalculator.Round(employerSgkCovered + employerUnempCovered + employeeSgkCovered + employeeUnempCovered);
+        Guard.Against(effect.MaxSupportMultiplier is <= 0m, "A support cap multiplier must be positive.");
+        var supportCap = effect.MaxSupportMultiplier is { } multiplier
+            ? PayrollCalculator.Round(p.MinimumWageGross * multiplier * proration)
+            : (decimal?)null;
+        var amount = supportCap is { } maximum ? Math.Min(requestedSupport, maximum) : requestedSupport;
 
         var inputs = new Dictionary<string, string>
         {
@@ -86,6 +91,19 @@ internal static class IncentiveSteps
             inputs["proration"] = PayrollCalculator.Format(proration);
             inputs["minimumWageCap"] = PayrollCalculator.Format(minimumWageCap);
             refs.Add(PayrollCalculator.Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p));
+        }
+
+        if (supportCap is { } limit)
+        {
+            inputs["maxSupportMultiplier"] = PayrollCalculator.Format(effect.MaxSupportMultiplier!.Value);
+            inputs["proration"] = PayrollCalculator.Format(proration);
+            inputs["requestedSupport"] = PayrollCalculator.Format(requestedSupport);
+            inputs["supportCap"] = PayrollCalculator.Format(limit);
+            inputs["cappedAtSupportCap"] = requestedSupport > limit ? "1" : "0";
+            if (!usesMinimumWage)
+            {
+                refs.Add(PayrollCalculator.Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p));
+            }
         }
 
         inputs["premiumBase"] = PayrollCalculator.Format(coverageBase);
@@ -117,7 +135,8 @@ internal static class IncentiveSteps
         var step = new TraceStep(
             order, PayrollTraceStepCodes.EmployerIncentive, "payroll.trace.step.employer_incentive",
             inputs,
-            $"devletçe karşılanan prim toplamı ({effect.Code}): her prim için min(prim tutarı, prim tabanı * oran * karşılama payı)",
+            $"devletçe karşılanan prim toplamı ({effect.Code}): her prim için min(prim tutarı, prim tabanı * oran * karşılama payı)"
+                + (supportCap is null ? string.Empty : "; toplam destek min(prim toplamı, asgari ücret * tavan çarpanı * oranlama)"),
             amount, refs);
         return (amount, step);
     }

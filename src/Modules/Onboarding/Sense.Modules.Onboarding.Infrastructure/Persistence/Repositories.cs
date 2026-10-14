@@ -64,6 +64,14 @@ public sealed class EmployeeOnboardingTaskRepository(OnboardingDbContext context
             .ToListAsync(cancellationToken);
 }
 
+public sealed class OnboardingBuddyAssignmentRepository(OnboardingDbContext context) : IOnboardingBuddyAssignmentRepository
+{
+    public Task<OnboardingBuddyAssignment?> GetByEmployeeIdAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        context.BuddyAssignments.FirstOrDefaultAsync(x => x.EmployeeId == employeeId, cancellationToken);
+
+    public void Add(OnboardingBuddyAssignment assignment) => context.BuddyAssignments.Add(assignment);
+}
+
 /// <summary>EF Core onboarding category repository.</summary>
 public sealed class OnboardingCategoryRepository(OnboardingDbContext context) : IOnboardingCategoryRepository
 {

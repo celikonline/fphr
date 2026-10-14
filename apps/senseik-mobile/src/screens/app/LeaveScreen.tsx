@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
@@ -23,7 +23,7 @@ import { LeaveBalanceCard } from "@/components/leave/LeaveBalanceCard";
 import { LeaveRequestListItem } from "@/components/leave/LeaveRequestListItem";
 import { getApiErrorMessage } from "@/lib/apiError";
 import i18n from "@/lib/i18n";
-import { palette, text } from "@/theme/theme";
+import { palette } from "@/theme/theme";
 import type { AppStackParamList } from "@/types/navigation";
 import { BalanceCarousel } from "./home/BalanceCarousel";
 
@@ -75,7 +75,6 @@ export default function LeaveScreen() {
   const [balanceDetail, setBalanceDetail] = useState<LeaveBalanceItem | null>(null);
 
   const loadAll = useCallback(async () => {
-    setError(null);
     try {
       const [balancesResult, requestsResult, typesResult] = await Promise.all([
         leaveService.getMyBalances(),
@@ -85,6 +84,7 @@ export default function LeaveScreen() {
       setBalances(sortBalancesAnnualFirst(balancesResult.balances));
       setRequests(requestsResult);
       setRequestableTypes(typesResult);
+      setError(null);
     } catch {
       setError(i18n.t("leave:loadError"));
     }
@@ -138,15 +138,27 @@ export default function LeaveScreen() {
     );
   }
 
+  if (error) {
+    return (
+      <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
+        <ErrorBanner message={error} onRetry={() => void onRefresh()} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
-      {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
-
       <SectionHeader title={t("home:sections.balances")} />
       {balances.length > 0 ? (
         <BalanceCarousel items={balances} onPressItem={setBalanceDetail} />
       ) : (
-        <Text style={styles.emptyText}>{t("balancesEmpty")}</Text>
+        <EmptyState
+          icon="wallet-outline"
+          title={t("balancesEmpty")}
+          message={t("balancesGuide")}
+          actionLabel={t("getHelp")}
+          onAction={() => navigation.navigate("Support")}
+        />
       )}
 
       <View style={styles.newRequest}>
@@ -159,7 +171,11 @@ export default function LeaveScreen() {
 
       <SectionHeader title={t("myRequests")} />
       {requests.length === 0 ? (
-        <EmptyState icon="sunny-outline" title={t("requestsEmpty")} />
+        <EmptyState
+          icon="sunny-outline"
+          title={t("requestsEmpty")}
+          message={t("requestsGuide")}
+        />
       ) : (
         requests.map((request) => (
           <LeaveRequestListItem
@@ -190,10 +206,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  emptyText: {
-    ...text.bodyMuted,
-    paddingHorizontal: 20,
   },
   newRequest: {
     paddingHorizontal: 20,

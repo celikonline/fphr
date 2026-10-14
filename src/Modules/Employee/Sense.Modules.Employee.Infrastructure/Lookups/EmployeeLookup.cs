@@ -39,6 +39,15 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
             .Select(e => e.OrgUnitId)
             .FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyDictionary<Guid, Guid>> GetOrgUnitIdsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
+    {
+        if (employeeIds.Count == 0) return new Dictionary<Guid, Guid>();
+        return await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && employeeIds.Contains(e.Id) && e.OrgUnitId != null)
+            .Select(e => new { e.Id, OrgUnitId = e.OrgUnitId!.Value })
+            .ToDictionaryAsync(e => e.Id, e => e.OrgUnitId, cancellationToken);
+    }
+
     public async Task<Guid?> GetManagerEmployeeIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AsNoTracking()
             .Where(e => e.TenantId == tenantId && e.Id == employeeId)

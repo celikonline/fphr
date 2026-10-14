@@ -19,7 +19,7 @@ public sealed class PayDeductionCalculationTests
 
     private static readonly PayrollLegislationSnapshot Snapshot = new(
         [new TaxBracket(158_000m, 0.15m), new TaxBracket(330_000m, 0.20m), new TaxBracket(1_200_000m, 0.27m), new TaxBracket(4_300_000m, 0.35m), new TaxBracket(null, 0.40m)],
-        30_000m, 225_000m, 0.14m, 0.01m, 0.205m, 0.02m, 0.05m, 0.00759m, 30_000m, 240m, 0.2365m, false, 6900m, 4000m, 1700m, AsOf);
+        30_000m, 225_000m, 0.14m, 0.01m, 0.205m, 0.02m, 0.05m, 0.00759m, 30_000m, 300m, 158m, false, 12000m, 7000m, 3000m, AsOf);
 
     private static PayrollCalculationInput Input(
         IReadOnlyList<PayItemDeduction>? deductions = null, decimal advance = 0m, decimal union = 0m,

@@ -8,12 +8,13 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
+import type { PayrollPeriod } from "@/services/payroll.service";
+import { PayItemAssignModal } from "./pay-item-assign-modal";
 import {
   addPayrollAdjustment,
   listPayrollAdjustments,
   removePayrollAdjustment,
   type PayrollAdjustmentKind,
-  type PayrollPeriodStatus,
 } from "@/services/payroll.service";
 
 const KINDS: PayrollAdjustmentKind[] = ["bonus", "commission", "performance", "other"];
@@ -22,12 +23,14 @@ const KINDS: PayrollAdjustmentKind[] = ["bonus", "commission", "performance", "o
  * "Ek kazançlar": one-off gross earnings (prim, komisyon, performans) added to employees in this period. They are taxable like the
  * salary and only change while the period is open; adding or removing one marks that payslip changed so it is recalculated.
  */
-export function PeriodAdjustments({ periodId, status }: { periodId: string; status: PayrollPeriodStatus }) {
+export function PeriodAdjustments({ period }: { period: PayrollPeriod }) {
   const { t, i18n } = useTranslation(["payroll", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("payroll.adjustment.manage");
-  const isOpen = status === "open";
+  const canManagePayItems = usePermission("payroll.payitem.manage");
+  const isOpen = period.status === "open";
   const [adding, setAdding] = useState(false);
+  const [addingFormulaItem, setAddingFormulaItem] = useState(false);
   const [employee, setEmployee] = useState<PickedEmployee | null>(null);
   const [kind, setKind] = useState<PayrollAdjustmentKind>("bonus");
   const [label, setLabel] = useState("");
@@ -35,8 +38,8 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
   const [isNet, setIsNet] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const queryKey = ["payroll", "periods", periodId, "adjustments"];
-  const { data, isLoading } = useQuery({ queryKey, queryFn: () => listPayrollAdjustments(periodId) });
+  const queryKey = ["payroll", "periods", period.id, "adjustments"];
+  const { data, isLoading } = useQuery({ queryKey, queryFn: () => listPayrollAdjustments(period.id) });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["payroll", "periods"] });
 
   const closeDialog = () => {
@@ -50,7 +53,7 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
   };
 
   const add = useMutation({
-    mutationFn: () => addPayrollAdjustment(periodId, { employeeId: employee!.id, kind, label: label.trim(), grossAmount: Number(amount), isNet }),
+    mutationFn: () => addPayrollAdjustment(period.id, { employeeId: employee!.id, kind, label: label.trim(), grossAmount: Number(amount), isNet }),
     onSuccess: async () => {
       await refresh();
       closeDialog();
@@ -79,10 +82,19 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
             {t("payroll:adjustments.subtitle")}
           </Text>
         </div>
-        {canManage && isOpen && (
-          <Button size="xs" leftSection={<Plus size={14} />} onClick={() => setAdding(true)}>
-            {t("payroll:adjustments.add")}
-          </Button>
+        {isOpen && (canManage || canManagePayItems) && (
+          <Group gap="xs">
+            {canManage && (
+              <Button size="xs" leftSection={<Plus size={14} />} onClick={() => setAdding(true)}>
+                {t("payroll:adjustments.add")}
+              </Button>
+            )}
+            {canManagePayItems && (
+              <Button size="xs" variant="light" leftSection={<Plus size={14} />} onClick={() => setAddingFormulaItem(true)}>
+                {t("payroll:adjustments.addFormulaItem", { defaultValue: "Formüllü kazanç/kesinti ekle" })}
+              </Button>
+            )}
+          </Group>
         )}
       </Group>
 
@@ -172,6 +184,13 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
           </Group>
         </form>
       </Modal>
+      <PayItemAssignModal
+        opened={addingFormulaItem}
+        onClose={() => setAddingFormulaItem(false)}
+        defaultYear={period.year}
+        defaultMonth={period.month}
+        singleMonth
+      />
     </Card>
   );
 }

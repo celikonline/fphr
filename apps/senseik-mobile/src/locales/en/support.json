@@ -34,12 +34,15 @@
   },
   "tickets": {
     "empty": "You have no support tickets yet.",
+    "emptyGuide": "Use the button below to create a support ticket.",
+    "create": "Create a support ticket",
     "resolution": "Answer: {{resolution}}"
   },
   "help": {
     "backToList": "Back to list",
     "search": "Search",
     "searchPlaceholder": "What are you looking for? e.g. data transfer",
-    "empty": "No articles match this search."
+    "empty": "No articles match this search.",
+    "clearSearch": "Clear search"
   }
 }

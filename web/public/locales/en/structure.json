@@ -3,6 +3,15 @@
   "subtitle": "Arrange hierarchy levels and manage the units of each level.",
   "holidayCalendarsTitle": "Holiday calendars",
   "locationsLink": "Locations",
+  "costCenterAssignment": {
+    "title": "Cost center",
+    "override": "Employee cost center",
+    "hint": "This defaults to the employee's organization unit. Select another center to override it. The change is used on the next payroll calculation; already calculated payslips keep their saved value.",
+    "effective": "Cost center used for payroll",
+    "none": "Unassigned",
+    "saveFailed": "The cost center could not be updated.",
+    "loadFailed": "The cost center assignment could not be loaded."
+  },
   "clearSelection": "Clear selection",
   "searchPerson": "Search by name or email...",
   "levels": {
@@ -42,6 +51,10 @@
     "noLocation": "No location",
     "locationHint": "Optional. The branch's physical location (address and country live on the Locations screen).",
     "unknownLocation": "Inactive location",
+    "costCenter": "Cost center",
+    "costCenterHint": "Employees inherit the nearest ancestor unit's cost center by default. If this unit has none, the hierarchy is checked upward.",
+    "inheritCostCenter": "Inherit from parent unit",
+    "inactiveCostCenter": "Inactive",
     "count_one": "{{count}} unit",
     "count_other": "{{count}} units",
     "searchPlaceholder": "Search units...",

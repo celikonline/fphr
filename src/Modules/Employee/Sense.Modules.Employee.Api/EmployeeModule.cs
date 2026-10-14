@@ -68,6 +68,7 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.CareerCardPdfSection>();
         services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.EmployeePaymentsCardPdfSection>();
         services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.AccountCardPdfSection>();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.EmployeeNotesCardPdfSection>();
         services.AddScoped<EmployeeReferenceValidator>();
         services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();

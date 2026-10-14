@@ -11,6 +11,8 @@
   },
   "title": "My payroll",
   "empty": "You have no payslips to view yet.",
+  "emptyGuide": "Check again after your payslip is published. Contact support if an expected payslip is missing.",
+  "getHelp": "Get help",
   "errors": {
     "load": "Payslips could not be loaded. Please try again.",
     "open": "The payslip could not be opened. Please try again.",

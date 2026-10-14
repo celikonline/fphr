@@ -22,6 +22,7 @@
 
 **Query Parametresi:**
 - `costCenterId` (opsiyonel): dönem payslip'lerini belirtilen maliyet merkezine filtreler
+  - Yeni bordro hesaplamalarında filtre, `Payslip` üzerindeki maliyet merkezi anlık görüntüsünü kullanır; eski kayıtlarda geriye uyumlu olarak güncel atama çözülür.
 
 ---
 

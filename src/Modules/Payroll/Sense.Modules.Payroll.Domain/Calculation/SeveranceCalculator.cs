@@ -44,9 +44,10 @@ public sealed record SeveranceLegislationSnapshot(decimal CeilingGross, IReadOnl
 /// </summary>
 /// <param name="SeniorityDays">Kıdem tazminatı kıdemi ("severance-purpose" counted days - severance-paid prior periods excluded); both ends inclusive.</param>
 /// <param name="CauseCategory">Which entitlement rule applies (see <see cref="SeveranceCauseCategory"/>).</param>
-/// <param name="DailyGrossWage">Son brüt günlük ücret; the basis for every amount below (TODO: net salary records are used as-is this slice, no net-to-gross conversion - see GetSeveranceEstimateHandler).</param>
+/// <param name="DailyGrossWage">Exit-date gross daily wage, resolved by Application (including gross-up for net salary records).</param>
 /// <param name="UnusedAnnualLeaveDays">Kullanılmamış yıllık izin günü (İş K. m.59); paid regardless of <paramref name="CauseCategory"/> - earned leave is never forfeited by the reason for exit.</param>
-public sealed record SeveranceInput(int SeniorityDays, SeveranceCauseCategory CauseCategory, decimal DailyGrossWage, decimal UnusedAnnualLeaveDays);
+public sealed record SeveranceInput(int SeniorityDays, SeveranceCauseCategory CauseCategory, decimal DailyGrossWage, decimal UnusedAnnualLeaveDays,
+    decimal RegularBenefitsMonthlyGross = 0m);
 
 /// <summary>Result of <see cref="SeveranceCalculator.Calculate"/>: the full step trace plus the headline amounts the estimate endpoint returns.</summary>
 public sealed record SeveranceCalculationResult(
@@ -88,6 +89,7 @@ public static class SeveranceCalculator
         Guard.Against(input.SeniorityDays < 0, "SeniorityDays must not be negative.");
         Guard.Against(input.DailyGrossWage < 0m, "DailyGrossWage must not be negative.");
         Guard.Against(input.UnusedAnnualLeaveDays < 0m, "UnusedAnnualLeaveDays must not be negative.");
+        Guard.Against(input.RegularBenefitsMonthlyGross < 0m, "RegularBenefitsMonthlyGross must not be negative.");
         if (!Enum.IsDefined(input.CauseCategory))
         {
             throw new NotSupportedException($"Severance cause category '{input.CauseCategory}' is not a known value.");
@@ -115,12 +117,14 @@ public static class SeveranceCalculator
             "fesih türü ve en az 1 yıllık kıdem şartına göre kıdem/ihbar hak edişi (İş K. m.14/17/24/25)",
             severanceEligible && meetsMinSeniority ? 1m : 0m, []));
 
-        var thirtyDayAmount = input.DailyGrossWage * SeveranceDaysPerYear;
+        var dressedDailyGrossWage = input.DailyGrossWage + input.RegularBenefitsMonthlyGross / SeveranceDaysPerYear;
+        var thirtyDayAmount = input.DailyGrossWage * SeveranceDaysPerYear + input.RegularBenefitsMonthlyGross;
         var severancePerYear = Math.Min(thirtyDayAmount, p.CeilingGross);
         steps.Add(new TraceStep(
             order++, SeveranceTraceStepCodes.SeverancePerYear, "payroll.severance.trace.per_year",
-            Map(("dailyGrossWage", input.DailyGrossWage), ("thirtyDayAmount", thirtyDayAmount), ("ceilingGross", p.CeilingGross)),
-            "min(dailyGrossWage * 30, Severance.CeilingGross)",
+            Map(("dailyGrossWage", input.DailyGrossWage), ("regularBenefitsMonthlyGross", input.RegularBenefitsMonthlyGross),
+                ("thirtyDayAmount", thirtyDayAmount), ("ceilingGross", p.CeilingGross)),
+            "min(dailyGrossWage * 30 + regularBenefitsMonthlyGross, Severance.CeilingGross)",
             Round(severancePerYear), [Ref("Severance.CeilingGross", p.CeilingGross, p)]));
 
         var severanceAmount = severanceEligible && meetsMinSeniority ? Round(severancePerYear * years) : 0m;
@@ -137,11 +141,11 @@ public static class SeveranceCalculator
             "kıdem gününe göre ihbar önel tablosu (İş K. m.17, Notice.WeeksBySeniorityTiers)",
             noticeWeeks, []));
 
-        var noticeAmount = noticeEligible ? Round(input.DailyGrossWage * noticeWeeks * DaysPerWeek) : 0m;
+        var noticeAmount = noticeEligible ? Round(dressedDailyGrossWage * noticeWeeks * DaysPerWeek) : 0m;
         steps.Add(new TraceStep(
             order++, SeveranceTraceStepCodes.NoticeAmount, "payroll.severance.trace.notice_amount",
-            Map(("dailyGrossWage", input.DailyGrossWage), ("noticeWeeks", noticeWeeks)),
-            "hak ediş varsa: dailyGrossWage * noticeWeeks * 7, aksi halde 0",
+            Map(("dailyGrossWage", input.DailyGrossWage), ("dressedDailyGrossWage", dressedDailyGrossWage), ("noticeWeeks", noticeWeeks)),
+            "hak ediş varsa: dressedDailyGrossWage * noticeWeeks * 7, aksi halde 0",
             noticeAmount, []));
 
         // Unused annual leave pay (İş K. m.59): always computed, independent of CauseCategory - earned leave is

@@ -51,5 +51,10 @@
   },
   "shiftsRequired": "Select a shift for every work step.",
   "endBeforeStart": "The end date cannot be before the start date.",
-  "offsetTooLarge": "The offset must be smaller than the cycle length."
+  "offsetTooLarge": "The offset must be smaller than the cycle length.",
+  "noPatternsGuide": "Create a rotation pattern before assigning rotating shifts to employees.",
+  "assignNoPatterns": "Create a shift pattern before making an assignment.",
+  "assignNoPatternsGuide": "Open the pattern setup to define work and off days.",
+  "createPatternFirst": "Open pattern setup",
+  "contactSupport": "Get help"
 }

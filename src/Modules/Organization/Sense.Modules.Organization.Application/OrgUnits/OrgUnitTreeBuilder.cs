@@ -48,7 +48,8 @@ public static class OrgUnitTreeBuilder
                 unit.LocationId,
                 unit.SortOrder,
                 unit.IsActive,
-                BuildLevel(unit.Id, byParent, visited)));
+                BuildLevel(unit.Id, byParent, visited),
+                unit.CostCenterId));
         }
 
         return result;

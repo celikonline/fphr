@@ -22,7 +22,10 @@
     "active": "Aktif",
     "inactive": "Pasif",
     "empty": "Henüz vardiya tanımı yok.",
-    "flexHours": "{{minutes}} dk (esnek)"
+    "flexHours": "{{minutes}} dk (esnek)",
+    "emptyGuide": "Çalışanlara vardiya planı atamak için önce bir vardiya tanımı oluşturun.",
+    "createFirst": "İlk vardiyayı oluştur",
+    "contactSupport": "Yardım için destek al"
   },
   "form": {
     "code": "Kod",

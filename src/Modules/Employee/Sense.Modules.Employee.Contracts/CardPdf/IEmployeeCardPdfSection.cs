@@ -17,9 +17,11 @@ public static class EmployeeCardPdfSectionKeys
     public const string Leave = "leave";
     public const string Overtime = "overtime";
     public const string Account = "account";
+    public const string Notes = "notes";
+    public const string Onboarding = "onboarding";
 
     public static readonly IReadOnlyList<string> All =
-        [General, Personal, CustomFields, Career, Payments, Payroll, Documents, Assets, Leave, Overtime, Account];
+        [General, Personal, CustomFields, Career, Payments, Payroll, Documents, Assets, Leave, Overtime, Account, Notes, Onboarding];
 
     /// <summary>Turkish section title printed on the section band.</summary>
     public static string Title(string key) => key switch
@@ -35,6 +37,8 @@ public static class EmployeeCardPdfSectionKeys
         Leave => "İzinler",
         Overtime => "Fazla Mesai",
         Account => "Hesap",
+        Notes => "Notlar",
+        Onboarding => "İşe alış",
         _ => key,
     };
 }

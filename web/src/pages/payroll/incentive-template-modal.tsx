@@ -46,6 +46,9 @@ function TemplateList({ onClose }: { onClose: () => void }) {
       <Text size="sm" c="dimmed">
         {t("payroll:incentives.templates.intro")}
       </Text>
+      <Alert color="yellow" title={t("payroll:incentives.templates.reviewTitle")}>
+        {t("payroll:incentives.templates.reviewRequired")}
+      </Alert>
       {query.isError ? (
         <Text size="sm" c="red">
           {getApiErrorMessage(query.error, t("payroll:incentives.templates.loadError"))}
@@ -55,6 +58,7 @@ function TemplateList({ onClose }: { onClose: () => void }) {
       ) : (
         templates.map((template) => {
           const added = template.alreadyAdded ?? false;
+          const historical = template.validTo != null && new Date(`${template.validTo}T23:59:59`) < new Date();
           return (
             <Group key={template.templateKey} justify="space-between" wrap="nowrap" align="flex-start" data-testid={`incentive-template-${template.templateKey}`}>
               <div>
@@ -73,12 +77,14 @@ function TemplateList({ onClose }: { onClose: () => void }) {
                       {t("payroll:incentives.templates.alreadyAdded")}
                     </Badge>
                   )}
+                  {historical && <Badge color="gray" variant="outline">{t("payroll:incentives.templates.historical")}</Badge>}
                 </Group>
                 <Text size="xs" c="dimmed">
                   {t(`payroll:incentives.kind.${template.kind}`, { defaultValue: template.kind })}
                   {template.lawReference ? ` · ${template.lawReference}` : ""}
                   {template.declarationCode ? ` · ${t("payroll:incentives.columns.declarationCode")}: ${template.declarationCode}` : ""}
                 </Text>
+                {template.validTo && <Text size="xs" c="dimmed">{t("payroll:incentives.templates.validUntil", { date: template.validTo })}</Text>}
               </div>
               <Button
                 size="xs"

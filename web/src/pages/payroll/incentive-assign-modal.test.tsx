@@ -107,6 +107,18 @@ async function pickDefinition(user: ReturnType<typeof userEvent.setup>, label: s
 }
 
 describe("IncentiveAssignModal", () => {
+  it("blocks an expired 7103 model in a current period", async () => {
+    vi.mocked(listIncentiveDefinitions).mockResolvedValue([{ id: "historic", code: "SGK_17103", name: "7103 imalat", kind: "employerShareCoverage", isActive: true, isSmmmApproved: true, validFrom: "2018-01-01", validTo: "2022-12-31" }]);
+    const user = userEvent.setup();
+    renderModal();
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("combobox", { name: /Teşvik/ }));
+    await user.click(await screen.findByRole("option", { name: /SGK_17103/, hidden: true }));
+    await user.click(within(dialog).getByRole("button", { name: "pick-employee" }));
+    expect(within(dialog).getByTestId("incentive-validto-warning")).toHaveTextContent("2022-12-31");
+    expect(within(dialog).getByRole("button", { name: "Kaydet" })).toBeDisabled();
+    expect(createIncentiveAssignments).not.toHaveBeenCalled();
+  });
   it("assigns one definition to several employees at once", async () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();

@@ -12,6 +12,7 @@ import {
   type PayItemInput,
 } from "@/services/payroll-pay-items.service";
 import { FormulaEditor } from "./formula-editor";
+import { PAY_ITEM_TEMPLATES, type PayItemTemplateId } from "./pay-item-templates";
 
 export const PAY_ITEMS_QUERY_KEY = ["payroll", "pay-items"] as const;
 
@@ -20,14 +21,18 @@ interface PayItemFormProps {
   onClose: () => void;
   /** Present when editing; absent when creating. */
   item?: PayItemDefinition | null;
+  /** Select the newly created definition in the calling assignment flow. */
+  onCreated?: (id: string) => void;
+  /** When creating from an assignment, start validity in its first month. */
+  defaultValidFrom?: string;
 }
 
 /** Create/edit modal. The code is chosen once and locked afterwards; a net item is always fully taxable (flags forced on). */
-export function PayItemForm({ opened, onClose, item }: PayItemFormProps) {
+export function PayItemForm({ opened, onClose, item, onCreated, defaultValidFrom }: PayItemFormProps) {
   // Remount per open/item so the local form state always starts from the right values.
   return (
     <Modal opened={opened} onClose={onClose} size="42rem" title={<FormTitle editing={Boolean(item)} />}>
-      {opened && <PayItemFormBody key={item?.id ?? "new"} item={item ?? null} onClose={onClose} />}
+      {opened && <PayItemFormBody key={item?.id ?? "new"} item={item ?? null} onClose={onClose} onCreated={onCreated} defaultValidFrom={defaultValidFrom} />}
     </Modal>
   );
 }
@@ -37,7 +42,7 @@ function FormTitle({ editing }: { editing: boolean }) {
   return <>{editing ? t("payroll:payItems.form.editTitle") : t("payroll:payItems.form.createTitle")}</>;
 }
 
-function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; onClose: () => void }) {
+function PayItemFormBody({ item, onClose, onCreated, defaultValidFrom }: { item: PayItemDefinition | null; onClose: () => void; onCreated?: (id: string) => void; defaultValidFrom?: string }) {
   const { t } = useTranslation(["payroll", "common"]);
   const queryClient = useQueryClient();
   const editing = item !== null;
@@ -51,9 +56,26 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
   const [stampTax, setStampTax] = useState(item?.isStampTaxSubject ?? true);
   const [formula, setFormula] = useState(item?.formula ?? "");
   const [defaultValue, setDefaultValue] = useState<number | string>(item?.defaultValue ?? "");
-  const [validFrom, setValidFrom] = useState(item?.validFrom ?? "");
+  const [validFrom, setValidFrom] = useState(item?.validFrom ?? defaultValidFrom ?? "");
   const [validTo, setValidTo] = useState(item?.validTo ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState<PayItemTemplateId | "custom">("custom");
+
+  const applyTemplate = (id: string | null) => {
+    const template = PAY_ITEM_TEMPLATES.find((entry) => entry.id === id);
+    setTemplateId(template?.id ?? "custom");
+    if (!template) return;
+    setCode(template.code);
+    setName(t(`payroll:payItems.templates.${template.id}.name`));
+    setFormula(template.formula);
+    setDefaultValue("");
+    setDirection("earning");
+    setAmountBasis("gross");
+    setSgk(true);
+    setIncomeTax(true);
+    setStampTax(true);
+    setError(null);
+  };
 
   const isDeduction = direction === "deduction";
   // A deduction is taken from net pay: always gross-basis with no tax flags (the server normalizes them too).
@@ -61,7 +83,7 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
   const isNet = effectiveBasis === "net";
 
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async (): Promise<string | undefined> => {
       const input: PayItemInput = {
         name: name.trim(),
         direction,
@@ -74,10 +96,15 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
         validFrom: validFrom || null,
         validTo: validTo || null,
       };
-      return item ? updatePayItem(item.id, input) : createPayItem({ ...input, code: code.trim() }).then(() => undefined);
+      if (item) {
+        await updatePayItem(item.id, input);
+        return undefined;
+      }
+      return createPayItem({ ...input, code: code.trim() });
     },
-    onSuccess: async () => {
+    onSuccess: async (id) => {
       await queryClient.invalidateQueries({ queryKey: PAY_ITEMS_QUERY_KEY });
+      if (id) onCreated?.(id);
       onClose();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("payroll:payItems.form.error"))),
@@ -94,6 +121,19 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
       }}
     >
       <Stack gap="sm">
+        {!editing && (
+          <Select
+            label={t("payroll:payItems.templates.label")}
+            description={t("payroll:payItems.templates.hint")}
+            value={templateId}
+            onChange={applyTemplate}
+            allowDeselect={false}
+            data={[
+              { value: "custom", label: t("payroll:payItems.templates.custom") },
+              ...PAY_ITEM_TEMPLATES.map((template) => ({ value: template.id, label: t(`payroll:payItems.templates.${template.id}.name`) })),
+            ]}
+          />
+        )}
         <TextInput
           label={t("payroll:payItems.form.code")}
           description={editing ? t("payroll:payItems.form.codeLocked") : t("payroll:payItems.form.codeHint")}
@@ -169,7 +209,7 @@ function PayItemFormBody({ item, onClose }: { item: PayItemDefinition | null; on
 
         <NumberInput
           label={t("payroll:payItems.form.defaultValue")}
-          description={t("payroll:payItems.form.defaultValueHint")}
+          description={templateId === "custom" ? t("payroll:payItems.form.defaultValueHint") : `${t(`payroll:payItems.templates.${templateId}.valueHint`)} ${t("payroll:payItems.form.defaultValueHint")}`}
           value={defaultValue}
           onChange={setDefaultValue}
           decimalScale={4}

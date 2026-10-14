@@ -17,6 +17,14 @@ export interface CostCenter {
   isActive: boolean;
 }
 
+export interface EmployeeCostCenterAssignment {
+  employeeId: string;
+  orgUnitCostCenterId: string | null;
+  employeeOverrideCostCenterId: string | null;
+  effectiveCostCenterId: string | null;
+  source: "employee" | "orgUnit" | "unassigned";
+}
+
 export async function getCostCenters(includeInactive = false): Promise<CostCenter[]> {
   const { data } = await apiClient.get<CostCenter[]>(COST_CENTERS, { params: { includeInactive } });
   return data;
@@ -34,4 +42,14 @@ export async function renameCostCenter(costCenterId: string, name: string): Prom
 
 export async function setCostCenterActive(costCenterId: string, isActive: boolean): Promise<void> {
   await apiClient.put(`${COST_CENTERS}/${costCenterId}/active`, { isActive });
+}
+
+export async function getEmployeeCostCenterAssignment(employeeId: string): Promise<EmployeeCostCenterAssignment> {
+  const { data } = await apiClient.get<EmployeeCostCenterAssignment>(`${COST_CENTERS}/employees/${employeeId}/assignment`);
+  return data;
+}
+
+export async function setEmployeeCostCenterOverride(employeeId: string, costCenterId: string | null): Promise<EmployeeCostCenterAssignment> {
+  const { data } = await apiClient.put<EmployeeCostCenterAssignment>(`${COST_CENTERS}/employees/${employeeId}/assignment`, { costCenterId });
+  return data;
 }

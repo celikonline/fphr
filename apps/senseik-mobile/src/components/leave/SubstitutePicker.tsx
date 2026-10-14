@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
-import { ErrorBanner, IconCircleButton } from "@/components/ui";
+import { EmptyState, ErrorBanner, IconCircleButton } from "@/components/ui";
 import { fontFor, palette, radius, text } from "@/theme/theme";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
 
@@ -132,7 +132,15 @@ export function SubstitutePicker({ visible, onClose, onSelect, excludeEmployeeId
                 )}
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={styles.emptyText}>{t("substitute.empty")}</Text>}
+            ListEmptyComponent={
+              <EmptyState
+                icon="people-outline"
+                title={t("substitute.empty")}
+                message={t("substitute.emptyGuide")}
+                actionLabel={t(query.trim() ? "substitute.clearSearch" : "substitute.close")}
+                onAction={() => (query.trim() ? setQuery("") : onClose())}
+              />
+            }
           />
         )}
       </View>

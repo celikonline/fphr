@@ -3,6 +3,15 @@
   "subtitle": "Ordnen Sie die Hierarchieebenen an und verwalten Sie die Einheiten jeder Ebene.",
   "holidayCalendarsTitle": "Feiertagskalender",
   "locationsLink": "Standorte",
+  "costCenterAssignment": {
+    "title": "Kostenstelle",
+    "override": "Kostenstelle der Mitarbeitenden",
+    "hint": "Standardmäßig wird die Kostenstelle der Organisationseinheit übernommen. Hier können Sie eine andere Kostenstelle festlegen. Die Änderung gilt bei der nächsten Gehaltsabrechnung; bereits berechnete Abrechnungen behalten ihren gespeicherten Wert.",
+    "effective": "Für die Gehaltsabrechnung verwendete Kostenstelle",
+    "none": "Nicht zugewiesen",
+    "saveFailed": "Die Kostenstelle konnte nicht aktualisiert werden.",
+    "loadFailed": "Die Kostenstellenzuweisung konnte nicht geladen werden."
+  },
   "clearSelection": "Auswahl aufheben",
   "searchPerson": "Nach Name oder E-Mail suchen...",
   "levels": {
@@ -42,6 +51,10 @@
     "noLocation": "Kein Standort",
     "locationHint": "Optional. Der physische Standort der Niederlassung (Adresse und Land werden im Bildschirm „Standorte“ gepflegt).",
     "unknownLocation": "Inaktiver Standort",
+    "costCenter": "Kostenstelle",
+    "costCenterHint": "Mitarbeitende übernehmen standardmäßig die Kostenstelle der nächstgelegenen übergeordneten Einheit. Falls diese keine hat, wird die Hierarchie nach oben geprüft.",
+    "inheritCostCenter": "Von übergeordneter Einheit übernehmen",
+    "inactiveCostCenter": "Inaktiv",
     "count_one": "{{count}} Einheit",
     "count_other": "{{count}} Einheiten",
     "searchPlaceholder": "Einheiten durchsuchen...",

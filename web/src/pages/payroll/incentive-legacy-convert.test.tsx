@@ -77,7 +77,7 @@ beforeEach(() => {
   vi.mocked(listIncentiveDefinitions)
     .mockReset()
     .mockResolvedValue([
-      { id: "d1", code: "SGK_5510_MD81", name: "5510 md.81", kind: "employerSgkRateDiscount", isActive: true, isSmmmApproved: true, validFrom: "2026-01-01" },
+      { id: "d1", code: "SGK_5510_MD81", name: "5510 md.81", kind: "employerSgkRateDiscount", declarationCode: "05510", parameters: { rate: { legislationKey: "Payroll.Sgk.EmployerDiscountRate" } }, isActive: true, isSmmmApproved: true, validFrom: "2026-01-01" },
       { id: "d2", code: "SGK_6111_TASLAK", name: "6111 taslak", kind: "employerShareCoverage", isActive: true, isSmmmApproved: false, validFrom: "2026-01-01" },
       { id: "d4", code: "ARGE", name: "Ar-Ge", kind: "incomeTaxWithholdingRelief", isActive: true, isSmmmApproved: true },
     ]);
@@ -122,7 +122,7 @@ describe("IncentiveLegacyConvert", () => {
     expect(within(safe).getByText("SGK_5510_MD81")).toBeInTheDocument();
     expect(within(safe).getByText("Hesap değişmez")).toBeInTheDocument();
     const risky = screen.getByTestId("legacy-row-6111");
-    expect(within(risky).getByText("Hesap değişir: 5 puanlık indirim kaybolur/değişir")).toBeInTheDocument();
+    expect(within(risky).getByText(trPayroll.incentiveLegacy.calculationChanges)).toBeInTheDocument();
     expect(within(screen.getByTestId("legacy-row-XYZ")).getByText("Eşleşen tanım yok")).toBeInTheDocument();
   });
 
@@ -163,7 +163,7 @@ describe("IncentiveLegacyConvert", () => {
 
     const dialog = await openConvert(user, "6111");
     const warning = await within(dialog).findByTestId("legacy-calculation-warning");
-    expect(warning).toHaveTextContent("5 puanlık işveren indirimi kaybolacak/değişecek");
+    expect(warning).toHaveTextContent("Seçilen model işveren maliyetini değiştirir");
     const submit = within(dialog).getByRole("button", { name: "Dönüştür" });
     await waitFor(() => expect(within(dialog).getByLabelText(/Başlangıç ayı/)).toHaveValue("2026-09"));
     expect(submit).toBeDisabled();
@@ -188,7 +188,8 @@ describe("IncentiveLegacyConvert", () => {
     const now = new Date();
     const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     await waitFor(() => expect(within(dialog).getByLabelText(/Başlangıç ayı/)).toHaveValue(expected));
-    expect(within(dialog).queryByTestId("legacy-calculation-warning")).not.toBeInTheDocument();
+    expect(within(dialog).getByTestId("legacy-calculation-warning")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Dönüştür" })).toBeDisabled();
   });
 
   it("shows an empty state", async () => {

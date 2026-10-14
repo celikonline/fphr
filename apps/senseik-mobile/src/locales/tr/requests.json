@@ -161,6 +161,7 @@
     "unknownAuthor": "Bilinmiyor",
     "commentsTitle": "Yorumlar",
     "commentsEmpty": "Henüz yorum yok.",
+    "commentsEmptyGuide": "İlk yorumu eklemek için aşağıdaki yazma alanını kullanın.",
     "commentsClosed": "Bu talep iptal edildiği için yorum yapılamaz.",
     "commentPlaceholder": "Yorum yaz…",
     "commentSend": "Gönder",

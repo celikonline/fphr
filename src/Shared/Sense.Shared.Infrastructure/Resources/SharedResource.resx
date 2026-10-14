@@ -352,6 +352,7 @@
   <data name="organization.approval_assignment.policy_id_required" xml:space="preserve"><value>Onay süreci seçilmelidir.</value></data>
   <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>Pasif bir birime onay süreci atanamaz.</value></data>
   <data name="organization.cost_center.not_found" xml:space="preserve"><value>Maliyet merkezi bulunamadı.</value></data>
+  <data name="organization.cost_center.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı veya aktif değil.</value></data>
   <data name="organization.cost_center.code_required" xml:space="preserve"><value>Maliyet merkezi kodu zorunludur.</value></data>
   <data name="organization.cost_center.code_too_long" xml:space="preserve"><value>Maliyet merkezi kodu en fazla 30 karakter olabilir.</value></data>
   <data name="organization.cost_center.name_required" xml:space="preserve"><value>Maliyet merkezi adı zorunludur.</value></data>
@@ -390,6 +391,18 @@
   <data name="roles.superadmin.name" xml:space="preserve"><value>Süper Admin</value></data>
   <data name="roles.superadmin.description" xml:space="preserve"><value>Platform yöneticisi: yeni şirket (kiracı) oluşturur. Yalnız platform hesabında bulunur.</value></data>
   <data name="platform.tenants.manage" xml:space="preserve"><value>Şirket oluşturma ve şirket listesi (platform)</value></data>
+  <data name="platform.operations.view" xml:space="preserve"><value>Platform sağlık ve görev durumunu görüntüleme</value></data>
+  <data name="platform.backups.view" xml:space="preserve"><value>Platform yedekleme kayıtlarını görüntüleme</value></data>
+  <data name="platform.backups.run" xml:space="preserve"><value>Platform yedeği başlatma</value></data>
+  <data name="platform.backups.restore" xml:space="preserve"><value>Platform yedeğini geri yükleme</value></data>
+  <data name="platform.jobs.view" xml:space="preserve"><value>Platform zamanlanmış görevlerini görüntüleme</value></data>
+  <data name="platform.jobs.trigger" xml:space="preserve"><value>Platform zamanlanmış görevini çalıştırma</value></data>
+  <data name="platform.jobs.manage" xml:space="preserve"><value>Platform görev planlarını yönetme</value></data>
+  <data name="platform.maintenance.view" xml:space="preserve"><value>Platform bakım pencerelerini görüntüleme</value></data>
+  <data name="platform.maintenance.manage" xml:space="preserve"><value>Platform bakım pencerelerini yönetme</value></data>
+  <data name="platform.diagnostics.view" xml:space="preserve"><value>Platform tanılama bilgilerini görüntüleme</value></data>
+  <data name="platform.audit.view" xml:space="preserve"><value>Platform denetim kayıtlarını görüntüleme</value></data>
+  <data name="platform.audit.export" xml:space="preserve"><value>Platform denetim kayıtlarını dışa aktarma</value></data>
   <data name="identity.group.platform" xml:space="preserve"><value>Platform yönetimi</value></data>
   <data name="platform.staff_required" xml:space="preserve"><value>Bu işlem yalnız platform (süper admin) hesabıyla yapılabilir.</value></data>
   <data name="tenant.owner_password_required" xml:space="preserve"><value>Parola ile oluşturmada Owner parolası zorunludur.</value></data>
@@ -913,7 +926,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Ek kazanç yalnızca açık bir bordro döneminde eklenebilir veya silinebilir.</value></data>
   <data name="payroll.errors.profile_transport_amount_invalid" xml:space="preserve"><value>Nakit yol yardımı için günlük tutar sıfırdan büyük olmalıdır.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
-  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Çıkış tarihinde geçerli bir maaş kaydı bulunamadı.</value></data>
+  <data name="payroll.errors.severance_estimate_salary_unsupported" xml:space="preserve"><value>Çıkış hesabı için geçerli, sıfırdan büyük tutarlı TRY maaş kaydı gerekir.</value></data>
+  <data name="payroll.errors.severance_estimate_cause_invalid" xml:space="preserve"><value>Geçerli bir çıkış nedeni seçin.</value></data>
+  <data name="payroll.errors.profile_regular_benefits_invalid" xml:space="preserve"><value>Düzenli yan hakların aylık brüt toplamı 0 ile 999.999.999.999,99 arasında olmalıdır.</value></data>
+  <data name="payroll.errors.severance_estimate_leave_balance_missing" xml:space="preserve"><value>Çıkış tarihindeki yıllık izin bakiyesi alınamadı. İzin profilini ve kural setini kontrol edin.</value></data>
+  <data name="payroll.severance.trace.wage_basis" xml:space="preserve"><value>Çıkış tarihindeki ücret esası</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>
@@ -1798,6 +1816,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="company_event_category.in_use" xml:space="preserve"><value>Bu kategori etkinliklerde kullanıldığı için silinemez.</value></data>
   <data name="company_event_category.duplicate_name" xml:space="preserve"><value>Bu adla bir kategori zaten var.</value></data>
   <data name="onboarding.category_not_found" xml:space="preserve"><value>Kategori bulunamadı.</value></data>
+  <data name="onboarding.buddy.invalid_employee" xml:space="preserve"><value>Çalışan kendisine eşlikçi olamaz; farklı ve geçerli bir çalışan seçin.</value></data>
+  <data name="onboarding.buddy.invalid_date_range" xml:space="preserve"><value>Eşlikçi bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="onboarding.buddy.employee_not_found" xml:space="preserve"><value>Çalışan veya eşlikçi bulunamadı ya da aktif değil.</value></data>
   <data name="onboarding_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
   <data name="onboarding_category.name_too_long" xml:space="preserve"><value>Kategori adı 100 karakteri aşamaz.</value></data>
   <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Şablon seti bulunamadı.</value></data>
@@ -1887,6 +1908,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self servis</value></data>
   <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Talep</value></data>
   <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchSource.DeviceIntegration" xml:space="preserve"><value>PDKS cihaz entegrasyonu</value></data>
   <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>Giriş</value></data>
   <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Çıkış</value></data>
   <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Yönsüz</value></data>

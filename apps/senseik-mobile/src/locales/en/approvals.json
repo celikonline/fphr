@@ -2,6 +2,7 @@
   "title": "My approvals",
   "loadError": "The approval inbox could not be loaded. Please try again.",
   "empty": "No requests awaiting approval",
+  "emptyGuide": "New requests waiting for your decision will appear here. Review past decisions in your history.",
   "filters": {
     "all": "All",
     "leave": "Leave",
@@ -55,6 +56,8 @@
     "title": "History",
     "loadError": "The history could not be loaded. Please try again.",
     "empty": "You haven't decided on any requests yet",
+    "emptyGuide": "Return to your inbox to view requests waiting for a decision.",
+    "inbox": "Back to approval inbox",
     "outcome": {
       "approved": "Approved",
       "rejected": "Rejected"

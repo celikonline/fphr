@@ -51,6 +51,7 @@ interface MeResponse {
   tenant: { id: string; name: string; slug: string };
   roles: Array<{ id: string; code: string; name?: string }>;
   permissions: string[];
+  features?: { disabledModules?: string[] };
 }
 
 /**
@@ -86,6 +87,9 @@ function toUser(me: MeResponse): User {
     mfaEnabled: me.mfaEnabled,
     roles: me.roles.map((role) => role.code),
     permissions: me.permissions,
+    ...(me.features?.disabledModules?.length
+      ? { disabledModules: me.features.disabledModules }
+      : {}),
     tenant: me.tenant,
   };
 }

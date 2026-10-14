@@ -57,7 +57,9 @@
   "errors": {
     "statusLoad": "Clock-in status could not be loaded.",
     "punch": "Clock-in/out could not be recorded. Please try again.",
-    "cameraDenied": "Camera permission not granted. Enable camera access in settings to scan the QR code."
+    "cameraDenied": "Camera permission not granted. Enable camera access in settings to scan the QR code.",
+    "qrLocationPermissionRequired": "Location access is required to use this QR code. Enable location access and scan again.",
+    "qrLocationUnavailable": "Could not get your location to use this QR code. Scan again when your location is available."
   },
   "banners": {
     "denied": "Location permission not granted. Enable location access in settings to clock in/out by location.",
@@ -90,6 +92,8 @@
     "submit": "Send request",
     "mine": "My requests",
     "empty": "You have no requests yet.",
+    "emptyGuide": "Use the form above to report a missing check-in or check-out.",
+    "createAnother": "Create a correction request",
     "decidedAt": "Decision: {{time}}",
     "cancel": "Cancel",
     "loadError": "Requests could not be loaded. Please try again.",

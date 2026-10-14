@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Api.Terminals;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Import;
+using Sense.Modules.Attendance.Application.Terminals;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure;
@@ -48,6 +49,11 @@ public sealed class AttendanceModule : IModule
             typeof(IWorkScheduleRepository).Assembly,
             typeof(AttendancePermissions).Assembly);
         services.AddAttendanceServices(configuration);
+
+        // Vendor payload adapters used by the authenticated PDKS event bridge endpoint.
+        services.AddSingleton<ITerminalEventAdapter, ZktecoAdmsEventAdapter>();
+        services.AddSingleton<ITerminalEventAdapter, HikvisionIsapiEventAdapter>();
+        services.AddSingleton<ITerminalEventAdapter, SupremaBioStarEventAdapter>();
 
         // PDKS Excel import template "attendance.pdks" (collected by the DataTransfer module)
         services.AddScoped<IImportTemplate, AttendanceImportTemplate>();

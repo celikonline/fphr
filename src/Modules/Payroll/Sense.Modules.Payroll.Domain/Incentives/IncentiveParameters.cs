@@ -37,6 +37,9 @@ public sealed record IncentiveParameters
 
     public decimal? CapMultiplier { get; init; }
 
+    /// <summary>Optional cap on the total support, as a multiple of the prorated minimum wage (distinct from the premium base cap).</summary>
+    public decimal? MaxSupportMultiplier { get; init; }
+
     public IncentiveRate? EmployerSgkRate { get; init; }
 
     public bool CoversEmployerSgk { get; init; }
@@ -48,7 +51,7 @@ public sealed record IncentiveParameters
     public bool CoversEmployeeUnemployment { get; init; }
 
     internal bool HasCoverageFields =>
-        CoverageBase is not null || CapMultiplier is not null || EmployerSgkRate is not null
+        CoverageBase is not null || CapMultiplier is not null || MaxSupportMultiplier is not null || EmployerSgkRate is not null
         || CoversEmployerSgk || CoversEmployerUnemployment || CoversEmployeeSgk || CoversEmployeeUnemployment;
 
     /// <summary>Every legislation key referenced (their existence is checked by the Application layer on approval).</summary>
@@ -77,6 +80,11 @@ public sealed record IncentiveParameters
         if (CapMultiplier is { } cap && (cap <= 0 || cap > MaxCapMultiplier))
         {
             return Invalid("capMultiplier");
+        }
+
+        if (MaxSupportMultiplier is { } supportCap && (supportCap <= 0 || supportCap > MaxCapMultiplier))
+        {
+            return Invalid("maxSupportMultiplier");
         }
 
         return kind switch

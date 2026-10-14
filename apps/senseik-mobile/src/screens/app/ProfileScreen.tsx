@@ -96,7 +96,13 @@ export default function ProfileScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {notFound ? (
-        <EmptyState icon="person-outline" title={t("notFound")} />
+        <EmptyState
+          icon="person-outline"
+          title={t("notFound")}
+          message={t("notFoundGuide")}
+          actionLabel={t("getHelp")}
+          onAction={() => navigation.navigate("Support")}
+        />
       ) : profile ? (
         <>
           <View style={styles.hero}>

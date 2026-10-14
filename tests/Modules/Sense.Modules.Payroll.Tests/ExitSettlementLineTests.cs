@@ -118,7 +118,7 @@ public sealed class ExitSettlementLineTests
         Decimal(LegislationParameterKeys.PayrollStampTaxRate, 0.00759m);
         Decimal(LegislationParameterKeys.PayrollMinimumWageGross, 0m);
         Decimal(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, 0m);
-        Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, 0m);
+        Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemption, 0m);
         Decimal(LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, 0m);
         Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, 0m);
         Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, 0m);

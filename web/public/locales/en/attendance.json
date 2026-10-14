@@ -42,7 +42,9 @@
       "lastPunch": "Last punch",
       "lastSeen": "Last seen",
       "never": "Never seen",
-      "empty": "No registered terminals."
+      "empty": "No registered terminals.",
+      "emptyGuide": "Register a time clock terminal to populate the live view.",
+      "openTerminals": "Add a terminal"
     },
     "lastPunch": "Last punch",
     "sources": {
@@ -52,7 +54,8 @@
       "selfService": "Self-service",
       "request": "Request",
       "terminal": "Terminal"
-    }
+    },
+    "emptyGuide": "There are no live attendance records for this scope. Import device records or review daily attendance."
   },
   "empty": "No records for this period.",
   "genericError": "Something went wrong.",
@@ -63,7 +66,11 @@
     "timesheetSubtitle": "Your recorded check-in/check-out times and monthly summary.",
     "dailyListTitle": "Daily records",
     "shiftTitle": "My Shifts",
-    "shiftSubtitle": "Your assigned shift plan."
+    "shiftSubtitle": "Your assigned shift plan.",
+    "emptyGuide": "There are no timesheet records for this period yet. Check in or out, or submit a missing-punch request.",
+    "openCheckIn": "Check in or out",
+    "openPunchRequest": "Request a missing punch",
+    "contactSupport": "Get help"
   },
   "summary": {
     "workedDays": "Days worked",
@@ -109,7 +116,9 @@
     "night": "Night shift",
     "break": "Break",
     "note": "Note",
-    "empty": "You have no shift records for this period."
+    "empty": "You have no shift records for this period.",
+    "emptyGuide": "Your shifts will appear here when a plan is published. You can share your availability with your manager.",
+    "contactSupport": "Get help"
   },
   "weekDay": {
     "monday": "Monday",
@@ -202,7 +211,8 @@
       "confirmMessage": "The timesheets of {{count}} employees awaiting approval for {{month}} will be approved. The worked-while-on-leave check is re-run before approval. Continue?",
       "done": "{{count}} timesheets approved.",
       "nothing": "There were no timesheets to approve."
-    }
+    },
+    "emptyGuide": "Check the date and unit filters. Import device records if they have not been uploaded yet."
   },
   "teamTimesheet": {
     "title": "Team timesheet",
@@ -239,7 +249,8 @@
     "breakApplied": "Break: {{m}} min",
     "nightMinutes": "Night: {{m}} min",
     "dailyLimitExceeded": "Exceeded the 11-hour daily limit (art. 63)",
-    "nightLimitExceeded": "Exceeded the 7.5-hour night-work limit (art. 69)"
+    "nightLimitExceeded": "Exceeded the 7.5-hour night-work limit (art. 69)",
+    "emptyGuide": "No attendance records were found for the selected week or unit. Start by importing device records."
   },
   "shiftLock": {
     "scheduledLockDate": "Scheduled lock date"
@@ -294,7 +305,11 @@
     "totalPeople": "{{count}} people",
     "bulkDone": "{{count}} cells updated.",
     "bulkSkipped": "{{count}} cells skipped (locked period or published shift).",
-    "lockedEditHint": "The period is locked; shifts cannot be edited."
+    "lockedEditHint": "The period is locked; shifts cannot be edited.",
+    "emptyGuide": "To build a plan, view your employees or change the unit filter.",
+    "unassignedEmptyGuide": "There are no employees without shifts for the selected week.",
+    "showAllEmployees": "Show all employees",
+    "openEmployees": "View employees"
   },
   "myAvailability": {
     "title": "My Availability",
@@ -321,7 +336,8 @@
     "noteLabel": "Note",
     "noteTooLong": "The note can be at most 500 characters.",
     "submit": "Submit",
-    "submitted": "Availability entry created."
+    "submitted": "Availability entry created.",
+    "emptyGuide": "Add an availability entry to share the days and times that work for you."
   },
   "deviceLogImport": {
     "title": "Import PDKS device log",
@@ -408,5 +424,8 @@
     "noPlan": "Unplanned punch (no shift plan for that day)",
     "nightShiftOverlap": "Night shift overlap (punch is close to both days)",
     "ambiguousShift": "Ambiguous shift (punch matches more than one shift)"
-  }
+  },
+  "openDeviceImport": "Import device records",
+  "openDailyList": "View daily attendance",
+  "contactSupport": "Get help"
 }

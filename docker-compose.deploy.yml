@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      network: host
+
+  worker:
+    build:
+      network: host
+
+  web:
+    build:
+      network: host
+
+  minio:
+    image: senseik-minio:local
+
+  minio-init:
+    image: curlimages/curl:8.10.1
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["exit 0"]

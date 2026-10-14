@@ -5,8 +5,7 @@ public sealed record CostCenterSummary(Guid Id, string Code, string Name, bool I
 
 /// <summary>
 /// Read-only cross-module lookup for CostCenter (roadmap Faz 2 item #2, S-4), mirroring <see cref="ILocationLookup"/>.
-/// Lets other modules (Payroll cost allocation, Analytics reporting - not wired yet, see TALIMAT tur 3 md.5
-/// "başka modüle bağlama") resolve a CostCenterId reference without depending on Organization's Domain or
+/// Lets other modules (Payroll cost allocation, Analytics reporting) resolve a CostCenterId reference without depending on Organization's Domain or
 /// Infrastructure. Implemented by Sense.Modules.Organization.Infrastructure and registered by
 /// OrganizationModule.AddModule.
 /// </summary>

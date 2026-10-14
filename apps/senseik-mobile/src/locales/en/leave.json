@@ -2,9 +2,12 @@
   "title": "My leave",
   "loadError": "Leave details could not be loaded. Please try again.",
   "balancesEmpty": "No balance records found.",
+  "balancesGuide": "If your leave balance is missing, contact your HR team.",
+  "getHelp": "Get help",
   "newRequest": "New leave request",
   "myRequests": "My requests",
   "requestsEmpty": "You have no leave requests yet.",
+  "requestsGuide": "Use the New leave request button above to create your first request.",
   "balanceDetail": "Balance details",
   "types": {
     "annual": "Annual leave",
@@ -121,6 +124,9 @@
     "loadError": "The employee list could not be loaded. Please try again.",
     "searchPlaceholder": "Search by name, title or department",
     "searchA11y": "Search employees",
-    "empty": "No records found."
+    "empty": "No records found.",
+    "emptyGuide": "Try another search. If no substitute is available, close this picker and choose another leave type.",
+    "clearSearch": "Clear search",
+    "close": "Close substitute picker"
   }
 }

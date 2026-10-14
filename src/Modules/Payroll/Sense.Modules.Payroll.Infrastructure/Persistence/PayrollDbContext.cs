@@ -200,6 +200,7 @@ public sealed class EmployeePayrollProfileConfiguration : IEntityTypeConfigurati
         b.Property(x => x.TransportVariant).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.Property(x => x.PaymentMethod).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.Property(x => x.IncentiveLawCode).HasMaxLength(PayrollLimits.IncentiveLawCodeMaxLength);
+        b.Property(x => x.RegularBenefitsMonthlyGross).HasPrecision(14, 2).HasDefaultValue(0m);
         b.Property(x => x.ExternalPayrollCode).HasMaxLength(PayrollLimits.ExternalPayrollCodeMaxLength);
         b.Property(x => x.Notes).HasMaxLength(PayrollLimits.NotesMaxLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFrom });
@@ -418,6 +419,7 @@ public sealed class IncentiveDefinitionConfiguration : IEntityTypeConfiguration<
             p.ToJson(ParametersColumn);
             p.Property(x => x.CoverageBase).HasConversion(CoverageBaseConverter).HasJsonPropertyName("coverageBase");
             p.Property(x => x.CapMultiplier).HasJsonPropertyName("capMultiplier");
+            p.Property(x => x.MaxSupportMultiplier).HasJsonPropertyName("maxSupportMultiplier");
             p.Property(x => x.CoversEmployerSgk).HasJsonPropertyName("coversEmployerSgk");
             p.Property(x => x.CoversEmployerUnemployment).HasJsonPropertyName("coversEmployerUnemployment");
             p.Property(x => x.CoversEmployeeSgk).HasJsonPropertyName("coversEmployeeSgk");

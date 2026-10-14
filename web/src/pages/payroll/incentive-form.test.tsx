@@ -12,6 +12,7 @@ import { IncentiveForm } from "./incentive-form";
 import {
   createIncentiveDefinition,
   getIncentiveParameterCatalog,
+  listIncentiveTemplates,
   updateIncentiveDefinition,
   type IncentiveDefinition,
 } from "@/services/payroll-incentives.service";
@@ -20,6 +21,7 @@ vi.mock("@/services/payroll-incentives.service", () => ({
   createIncentiveDefinition: vi.fn(async () => "new-id"),
   updateIncentiveDefinition: vi.fn(async () => undefined),
   getIncentiveParameterCatalog: vi.fn(),
+  listIncentiveTemplates: vi.fn(),
 }));
 
 const APPROVED: IncentiveDefinition = {
@@ -62,6 +64,7 @@ beforeAll(() => {
 beforeEach(() => {
   vi.mocked(createIncentiveDefinition).mockReset().mockResolvedValue("new-id");
   vi.mocked(updateIncentiveDefinition).mockReset().mockResolvedValue(undefined);
+  vi.mocked(listIncentiveTemplates).mockReset().mockResolvedValue([]);
   vi.mocked(getIncentiveParameterCatalog)
     .mockReset()
     .mockResolvedValue({
@@ -103,6 +106,36 @@ async function chooseKind(user: ReturnType<typeof userEvent.setup>, dialog: HTML
 }
 
 describe("IncentiveForm", () => {
+  it("fills an existing empty 6111 template with the ready model while keeping its code", async () => {
+    vi.mocked(listIncentiveTemplates).mockResolvedValue([{
+      templateKey: "TR_6111", code: "SGK_6111", name: "6111", kind: "employerShareCoverage", declarationCode: "06111", maxMonths: 54,
+      parameters: { rate: { value: 1 }, coverageBase: "actualSgkBase", employerSgkRate: { legislationKey: "Payroll.Sgk.EmployerRate" }, coversEmployerSgk: true },
+    }]);
+    renderForm({ ...APPROVED, code: "SGK_6111_TASLAK", templateKey: "TR_6111", kind: "employerShareCoverage", declarationCode: null, parameters: null, isSmmmApproved: false });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Hazır model parametrelerini uygula" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByLabelText(/^Kod/)).toHaveValue("SGK_6111_TASLAK");
+    await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
+    await waitFor(() => expect(updateIncentiveDefinition).toHaveBeenCalledWith("d1", expect.objectContaining({
+      declarationCode: "06111", maxMonths: 54,
+      parameters: expect.objectContaining({ rate: { value: 1 }, coverageBase: "actualSgkBase", employerSgkRate: { legislationKey: "Payroll.Sgk.EmployerRate" }, coversEmployerSgk: true }),
+    })));
+  });
+
+  it("preserves a total support cap and warns before changing an approved calculation", async () => {
+    renderForm({ ...APPROVED, kind: "employerShareCoverage", parameters: { rate: { value: 1 }, coverageBase: "actualSgkBase", employerSgkRate: { value: 0.205 }, coversEmployerSgk: true, maxSupportMultiplier: 1 } });
+    const user = userEvent.setup();
+    const dialog = screen.getByRole("dialog");
+    const cap = within(dialog).getByLabelText("Toplam destek tavanı çarpanı");
+    expect(cap).toHaveValue("1");
+    await user.clear(cap);
+    await user.type(cap, "2");
+    expect(within(dialog).getByTestId("incentive-approval-drop-warning")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
+    await waitFor(() => expect(updateIncentiveDefinition).toHaveBeenCalledWith("d1", expect.objectContaining({ parameters: expect.objectContaining({ maxSupportMultiplier: 2 }) })));
+  });
+
   it("opens the fields of the chosen kind", async () => {
     renderForm();
     const user = userEvent.setup();

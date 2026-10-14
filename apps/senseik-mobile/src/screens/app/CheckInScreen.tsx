@@ -28,7 +28,7 @@ import {
 } from "@/services/AttendanceService";
 import { palette, radius, text, tones } from "@/theme/theme";
 import { ClockCard } from "./checkin/ClockCard";
-import { nearestLocation, punchLocationId } from "./checkin/geofence";
+import { nearestLocation, punchLocationId, toGeofence } from "./checkin/geofence";
 import { MapHeader, type Coordinates } from "./checkin/MapHeader";
 import { PunchTiles } from "./checkin/PunchTiles";
 import { useDeviceLocation, type DeviceLocation } from "./checkin/useDeviceLocation";
@@ -88,6 +88,7 @@ export default function CheckInScreen() {
   const [lastResult, setLastResult] = useState<SelfCheckInResult | null>(null);
   // FG-005: the caller's check-in location(s); `[]` (roaming, or not loaded) keeps today's behavior.
   const [locations, setLocations] = useState<CheckInLocation[]>([]);
+  const [locationsLoaded, setLocationsLoaded] = useState(false);
   // This session's punch times, keyed by attendance day so an overnight-open app never shows
   // yesterday's break on today's tiles.
   const [session, setSession] = useState<{
@@ -95,6 +96,7 @@ export default function CheckInScreen() {
     times: Partial<Record<PunchAction, string>>;
   }>({ date: "", times: {} });
   const inFlightRef = useRef(false);
+  const scanHandlingRef = useRef(false);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -108,6 +110,7 @@ export default function CheckInScreen() {
   const loadLocations = useCallback(async () => {
     try {
       setLocations(await attendanceService.getCheckInLocations());
+      setLocationsLoaded(true);
     } catch {
       // Not blocking: without a location the punch goes without `locationId`, as before FG-005.
     }
@@ -183,14 +186,39 @@ export default function CheckInScreen() {
     setScanning(true);
   }
 
-  function onScanned({ data }: BarcodeScanningResult, direction: PunchAction) {
-    if (inFlightRef.current) return;
+  async function onScanned({ data }: BarcodeScanningResult, direction: PunchAction) {
+    if (inFlightRef.current || scanHandlingRef.current) return;
+    scanHandlingRef.current = true;
     setScanning(false);
-    // Geofence'siz lokasyonda konum zorunlu değil: konum yoksa QR yine de denenir, sunucu karar verir.
-    const coords = location.coords ?? {};
-    void submit("qr", () =>
-      attendanceService.qrCheckIn({ code: data.trim().toUpperCase(), direction, ...coords })
-    );
+    try {
+      let checkInLocations = locations;
+      if (!locationsLoaded) {
+        try {
+          checkInLocations = await attendanceService.getCheckInLocations();
+          setLocations(checkInLocations);
+          setLocationsLoaded(true);
+        } catch {
+          // The server will return the authoritative requirement if location metadata is unavailable.
+        }
+      }
+      // A geofenced QR requires coordinates. Catch this before sending so the user can fix location
+      // access instead of receiving a server validation error after scanning.
+      if (!location.coords && checkInLocations.some((item) => toGeofence(item) !== null)) {
+        setError(
+          location.status === "denied" || location.status === "servicesOff"
+            ? t("errors.qrLocationPermissionRequired")
+            : t("errors.qrLocationUnavailable")
+        );
+        return;
+      }
+      // Geofence'siz lokasyonda konum zorunlu değil: konum yoksa QR yine de denenir.
+      const coords = location.coords ?? {};
+      await submit("qr", () =>
+        attendanceService.qrCheckIn({ code: data.trim().toUpperCase(), direction, ...coords })
+      );
+    } finally {
+      scanHandlingRef.current = false;
+    }
   }
 
   async function onRefresh() {

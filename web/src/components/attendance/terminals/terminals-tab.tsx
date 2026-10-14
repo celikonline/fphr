@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Badge, Button, Card, Group, Modal, Skeleton, Table, Text } from "@mantine/core";
-import { KeyRound, Pencil, Plus } from "lucide-react";
+import { KeyRound, LifeBuoy, Pencil, Plus } from "lucide-react";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import ApiKeyDialog from "@/components/attendance/terminals/api-key-dialog";
@@ -84,7 +86,7 @@ export default function TerminalsTab({ canManage }: { canManage: boolean }) {
 
   return (
     <div className="space-y-4">
-      {canManage && (
+      {canManage && terminals.data.length > 0 && (
         <Group justify="flex-end">
           <Button leftSection={<Plus size={16} />} onClick={() => setEditing(null)}>
             {t("terminals:terminal.new")}
@@ -93,9 +95,17 @@ export default function TerminalsTab({ canManage }: { canManage: boolean }) {
       )}
       {terminals.data.length === 0 ? (
         <Card withBorder padding="xl">
-          <Text c="dimmed" ta="center">
-            {t("terminals:terminal.empty")}
-          </Text>
+          <AttendanceEmptyState
+            title={t("terminals:terminal.empty")}
+            description={t("terminals:terminal.emptyGuide")}
+            action={canManage ? (
+              <Button leftSection={<Plus size={16} />} onClick={() => setEditing(null)}>{t("terminals:terminal.new")}</Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("terminals:contactSupport")}
+              </Button>
+            )}
+          />
         </Card>
       ) : (
         <Table.ScrollContainer minWidth={720}>

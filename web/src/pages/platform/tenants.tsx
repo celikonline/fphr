@@ -355,7 +355,10 @@ function CreateTenantDialog({ onClose }: { onClose: () => void }) {
         title: t("common:success"),
         description: result.invitationSent
           ? t("platform:created.invited")
-          : t("platform:created.withPassword"),
+          : result.invitationUrl
+            ? t("platform:created.invitationManual", { url: result.invitationUrl })
+            : t("platform:created.withPassword"),
+        duration: result.invitationUrl && !result.invitationSent ? false : undefined,
       });
       onClose();
     },

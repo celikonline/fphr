@@ -4,6 +4,10 @@
   "search": "Search",
   "searchPlaceholder": "Search by name, title or department",
   "empty": "No records found.",
+  "emptyGuide": "There are no employee records available to you. Contact support if you need help with access.",
+  "searchEmptyGuide": "No people match this search. Try another name or department.",
+  "clearSearch": "Clear search",
+  "getHelp": "Get help",
   "callA11y": "{{name}} - call",
   "emailA11y": "{{name}} - send an email"
 }

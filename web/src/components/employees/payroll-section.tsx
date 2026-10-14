@@ -1,13 +1,15 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { Badge, Card, Skeleton, Stack, Table, Text, Title } from "@mantine/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, Badge, Button, Card, Group, Modal, NumberInput, Skeleton, Stack, Table, Text, Title } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import { usePermission } from "@/components/permission-guard";
-import { formatDateOnly } from "@/lib/dates";
+import { formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import {
   getEmployeePayrollProfile,
   listGarnishmentOrders,
+  updateEmployeeRegularBenefits,
   type EmployeePayrollProfile,
 } from "@/services/payroll.service";
 import type { EmployeeDetail } from "@/services/employees.service";
@@ -15,6 +17,7 @@ import { EmployeePayslipsCard } from "./employee-payslips-card";
 import { EmployeePayItemsCard } from "./employee-pay-items-card";
 import { EmployeeIncentivesCard, hasEffectiveSgkAssignment, useEmployeeIncentiveAssignments } from "./employee-incentives-card";
 import { ExitSettlementSection } from "./exit-settlement-section";
+import { getApiErrorMessage } from "@/lib/api-error";
 
 /** "Bordro" tab: visible with either read gate; each card then checks its own permission. */
 export const PAYROLL_CARD_TAB_PERMISSIONS = ["payroll.trace.view", "payroll.profile.manage"];
@@ -51,19 +54,26 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function PayrollProfileCard({ employeeId }: { employeeId: string }) {
   const { t, i18n } = useTranslation(["employees"]);
+  const [editingBenefits, setEditingBenefits] = useState(false);
+  const [profileDate, setProfileDate] = useState(() => toDateOnly(new Date()));
   const canViewAssignments = usePermission("payroll.trace.view");
   const { data, isLoading } = useQuery({
-    queryKey: ["employee-payroll-profile", employeeId],
-    queryFn: () => getEmployeePayrollProfile(employeeId),
+    queryKey: ["employee-payroll-profile", employeeId, profileDate],
+    queryFn: () => getEmployeePayrollProfile(employeeId, profileDate),
     retry: false,
   });
   const assignments = useEmployeeIncentiveAssignments(employeeId, canViewAssignments);
 
   return (
     <Card withBorder padding="lg">
-      <Title order={4} mb="md">
-        {t("employees:payrollTab.profile.title")}
-      </Title>
+      <Group justify="space-between" mb="md">
+        <Title order={4}>{t("employees:payrollTab.profile.title")}</Title>
+        {data && <Button variant="light" size="xs" onClick={() => setEditingBenefits(true)}>
+          {t("employees:payrollTab.profile.editBenefits")}
+        </Button>}
+      </Group>
+      <DateInput label={t("employees:payrollTab.profile.asOfDate")} value={profileDate}
+        onChange={(value) => setProfileDate(value ?? toDateOnly(new Date()))} mb="md" maw={260} />
       {isLoading ? (
         <Skeleton h={96} />
       ) : !data ? (
@@ -71,9 +81,41 @@ function PayrollProfileCard({ employeeId }: { employeeId: string }) {
           {t("employees:payrollTab.profile.empty")}
         </Text>
       ) : (
-        <ProfileFields profile={data} language={i18n.language} incentiveFieldUnused={hasEffectiveSgkAssignment(assignments.data, new Date())} />
+        <ProfileFields profile={data} language={i18n.language} incentiveFieldUnused={hasEffectiveSgkAssignment(assignments.data, parseDateOnly(profileDate))} />
       )}
+      {editingBenefits && data && <RegularBenefitsDialog employeeId={employeeId} profile={data} onClose={() => setEditingBenefits(false)} />}
     </Card>
+  );
+}
+
+function RegularBenefitsDialog({ employeeId, profile, onClose }: { employeeId: string; profile: EmployeePayrollProfile; onClose: () => void }) {
+  const { t, i18n } = useTranslation(["employees", "common"]);
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState(profile.regularBenefitsMonthlyGross ?? 0);
+  const save = useMutation({
+    mutationFn: () => updateEmployeeRegularBenefits(employeeId, profile.id, amount),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["employee-payroll-profile", employeeId] }),
+        queryClient.invalidateQueries({ queryKey: ["severance-estimate", employeeId] }),
+      ]);
+      onClose();
+    },
+  });
+  return (
+    <Modal opened onClose={onClose} title={t("employees:payrollTab.profile.regularBenefits")}>
+      <Stack>
+        <Text size="sm" c="dimmed">{t("employees:payrollTab.profile.regularBenefitsHint")}</Text>
+        <Text size="sm">{t("employees:payrollTab.profile.validFrom")}: {formatDateOnly(profile.validFrom, i18n.language)}</Text>
+        <NumberInput label={t("employees:payrollTab.profile.regularBenefits")} value={amount} min={0} max={999_999_999_999.99} decimalScale={2}
+          suffix=" TRY" onChange={(value) => setAmount(typeof value === "number" ? value : 0)} />
+        {save.isError && <Alert color="red">{getApiErrorMessage(save.error, t("common:error"))}</Alert>}
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onClose}>{t("common:cancel")}</Button>
+          <Button onClick={() => save.mutate()} loading={save.isPending} disabled={amount < 0 || !Number.isFinite(amount)}>{t("common:save")}</Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -131,6 +173,9 @@ function ProfileFields({
       </Field>
       <Field label={t("employees:payrollTab.profile.externalCode")}>
         {profile.externalPayrollCode || "—"}
+      </Field>
+      <Field label={t("employees:payrollTab.profile.regularBenefits")}>
+        {formatMoney(profile.regularBenefitsMonthlyGross ?? 0, "TRY", language)}
       </Field>
       {profile.notes && (
         <div className="sm:col-span-2 lg:col-span-3">

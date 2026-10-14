@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Card, Group, Skeleton, Table, Text, TextInput } from "@mantine/core";
-import { Plus } from "lucide-react";
+import { LifeBuoy, Plus } from "lucide-react";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -22,6 +24,7 @@ export default function TerminalGroupsTab({ canManage }: { canManage: boolean })
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const newGroupInput = useRef<HTMLInputElement>(null);
 
   const groups = useQuery({ queryKey: GROUPS_KEY, queryFn: listTerminalGroups });
   const refresh = () => queryClient.invalidateQueries({ queryKey: GROUPS_KEY });
@@ -64,6 +67,7 @@ export default function TerminalGroupsTab({ canManage }: { canManage: boolean })
       {canManage && (
         <Group align="flex-end">
           <TextInput
+            ref={newGroupInput}
             label={t("terminals:group.name")}
             value={newName}
             maxLength={100}
@@ -81,9 +85,17 @@ export default function TerminalGroupsTab({ canManage }: { canManage: boolean })
       )}
       {groups.data.length === 0 ? (
         <Card withBorder padding="xl">
-          <Text c="dimmed" ta="center">
-            {t("terminals:group.empty")}
-          </Text>
+          <AttendanceEmptyState
+            title={t("terminals:group.empty")}
+            description={t("terminals:group.emptyGuide")}
+            action={canManage ? (
+              <Button variant="light" onClick={() => newGroupInput.current?.focus()}>{t("terminals:group.focusCreate")}</Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("terminals:contactSupport")}
+              </Button>
+            )}
+          />
         </Card>
       ) : (
         <Table verticalSpacing="sm">

@@ -15,6 +15,7 @@ import {
   listPayItems,
   setPayItemActive,
   updatePayItem,
+  validatePayItemFormula,
   type PayItemDefinition,
 } from "@/services/payroll-pay-items.service";
 
@@ -78,6 +79,7 @@ beforeEach(() => {
   permissions.manage = true;
   vi.mocked(listPayItems).mockReset().mockResolvedValue([FULL]);
   vi.mocked(createPayItem).mockClear();
+  vi.mocked(validatePayItemFormula).mockReset();
   vi.mocked(updatePayItem).mockClear();
   vi.mocked(setPayItemActive).mockClear();
   vi.mocked(getFormulaCatalog).mockReset().mockResolvedValue({ variables: [{ name: "brut", sampleValue: 20000 }], functions: [{ name: "min", aliases: [], minArgs: 2 }] });
@@ -172,6 +174,46 @@ describe("PayItemsPage", () => {
     await waitFor(() => expect(updatePayItem).toHaveBeenCalledTimes(1));
     expect(vi.mocked(updatePayItem).mock.calls[0][0]).toBe("i1");
     expect(vi.mocked(updatePayItem).mock.calls[0][1]).not.toHaveProperty("code");
+  });
+
+  it("lets the user customize a meal template and saves the edited formula", async () => {
+    renderPage();
+    const user = userEvent.setup();
+    await user.click((await screen.findAllByRole("button", { name: "Yeni ödeme türü" }))[0]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("combobox", { name: "Başlangıç şablonu" }));
+    await user.click(await screen.findByRole("option", { name: "Yemek yardımı", hidden: true }));
+
+    const formula = within(dialog).getByLabelText(/^Formül/);
+    await user.clear(formula);
+    await user.type(formula, "min(deger * calisilan_gun; 5000)");
+    await user.type(within(dialog).getByLabelText("Varsayılan değer"), "150");
+    await user.click(within(dialog).getByRole("button", { name: "Kaydet" }));
+
+    await waitFor(() => expect(createPayItem).toHaveBeenCalledWith(expect.objectContaining({
+      code: "YEMEK_FORMUL",
+      name: "Yemek yardımı",
+      direction: "earning",
+      formula: "min(deger * calisilan_gun; 5000)",
+      defaultValue: 150,
+    })));
+  });
+
+  it("clears the visible validation when a different template supplies the formula", async () => {
+    vi.mocked(validatePayItemFormula).mockResolvedValue({ isValid: true, usedVariables: ["deger", "calisilan_gun"], sampleResult: 22000 });
+    renderPage();
+    const user = userEvent.setup();
+    await user.click((await screen.findAllByRole("button", { name: "Yeni ödeme türü" }))[0]);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("combobox", { name: "Başlangıç şablonu" }));
+    await user.click(await screen.findByRole("option", { name: "Yemek yardımı", hidden: true }));
+    await user.click(within(dialog).getByRole("button", { name: "Doğrula" }));
+    await within(dialog).findByText("Formül geçerli");
+
+    await user.click(within(dialog).getByRole("combobox", { name: "Başlangıç şablonu" }));
+    await user.click(await screen.findByRole("option", { name: "Prim", hidden: true }));
+    expect(within(dialog).queryByText("Formül geçerli")).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Formül/)).toHaveValue("brut * deger / 100");
   });
 
   it("forces and locks the tax flags when Net is chosen", async () => {

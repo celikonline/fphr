@@ -1,6 +1,7 @@
 using NSubstitute;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Incentives;
 using Shouldly;
 using Xunit;
@@ -16,6 +17,37 @@ public sealed class IncentiveServiceTests
     private static readonly DateOnly March = new(2026, 3, 1);
     private static readonly Guid TenantId = IncentiveServiceHarness.TenantId;
     private const string DiscountKey = "Payroll.Sgk.EmployerDiscountRate";
+
+    [Theory]
+    [InlineData(SgkStatus.Retired, false)]
+    [InlineData(SgkStatus.Retired, true)]
+    [InlineData(SgkStatus.Intern, true)]
+    [InlineData(SgkStatus.Apprentice, true)]
+    public async Task SgkDiscounts_AreNotGrantedToRetiredOrTrainingInsuranceStatuses(SgkStatus status, bool assigned)
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee("05510", sgkStatus: status);
+        if (assigned) Assign(harness, Define(harness, "SGK_5510", IncentiveKind.EmployerSgkRateDiscount, KeyParameters(DiscountKey), "05510"), employee);
+        var summary = await harness.RunAsync(employee);
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(0m);
+        WarningsOf(summary, PayrollWarningCodes.IncentiveSgkStatusNotEligible).ShouldHaveSingleItem();
+    }
+
+    [Theory]
+    [InlineData("06111")]
+    [InlineData("17103")]
+    [InlineData("27103")]
+    [InlineData("4447")]
+    [InlineData("unknown")]
+    public async Task OtherProfileCodes_DoNotSilentlyReceiveThe5510Discount(string code)
+    {
+        var harness = IncentiveServiceHarness.Create();
+        var employee = harness.AddEmployee(code);
+        var summary = await harness.RunAsync(employee);
+        summary.CalculatedCount.ShouldBe(1);
+        harness.OutputOf(employee, "EMPLOYER_DISCOUNT").ShouldBe(0m);
+        WarningsOf(summary, PayrollWarningCodes.IncentiveProfileAssignmentRequired).ShouldHaveSingleItem().Details.ShouldBe(code);
+    }
 
     private static IncentiveParameters RateParameters(decimal literal) => new() { Rate = IncentiveRate.Literal(literal) };
 

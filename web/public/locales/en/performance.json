@@ -39,6 +39,8 @@
     "title": "Team goals",
     "subtitle": "View the goals of the employees on your team.",
     "empty": "No goals recorded for your team.",
+    "emptyGuide": "Get started by assigning a goal to a team member.",
+    "emptySupport": "Contact support for help",
     "col": {
       "employee": "Employee",
       "title": "Title",
@@ -62,6 +64,8 @@
     "title": "Review cycles",
     "subtitle": "View the review cycles you are part of.",
     "empty": "You don't have any review cycles assigned right now.",
+    "emptyAllCycles": "View all review cycles",
+    "emptySupport": "Contact HR or support",
     "dateRange": "{{start}} – {{end}}",
     "status": {
       "draft": "Draft",

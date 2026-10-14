@@ -28,7 +28,8 @@
     "loadFailed": "Terminaller yüklenemedi.",
     "codeRequired": "Kod ve ad zorunludur.",
     "statusFailed": "Durum değiştirilemedi.",
-    "suspicious": "Şüpheli PIN denemesi: {{date}}"
+    "suspicious": "Şüpheli PIN denemesi: {{date}}",
+    "emptyGuide": "Cihazlardan kayıt alabilmek için önce bir terminal tanımlayın."
   },
   "presence": {
     "online": "Çevrimiçi",
@@ -64,7 +65,9 @@
     "deleted": "Grup silindi.",
     "deleteFailed": "Grup silinemedi.",
     "loadFailed": "Gruplar yüklenemedi.",
-    "deleteYes": "Evet, sil"
+    "deleteYes": "Evet, sil",
+    "emptyGuide": "Terminalleri birlikte yönetmek için ilk terminal grubunuzu oluşturun.",
+    "focusCreate": "Grup oluşturma alanına git"
   },
   "credential": {
     "employee": "Çalışan",
@@ -90,11 +93,51 @@
     "importTitle": "Kimlikleri Excel ile içe aktar",
     "downloadTemplate": "Şablonu indir",
     "pepperMissing": "Kimlik içe aktarma bu ortamda yapılandırılmamış (sunucu anahtarı eksik). Yöneticinize başvurun.",
-    "uploadFailed": "Dosya yüklenemedi."
+    "uploadFailed": "Dosya yüklenemedi.",
+    "emptyGuide": "Çalışanın kart veya PIN bilgisini eklemek için yukarıdaki formu kullanın.",
+    "focusAdd": "Kimlik bilgisi ekleme formuna git"
   },
   "credentialKind": {
     "card": "Kart",
     "pin": "PIN",
     "externalId": "Dış kimlik"
+  },
+  "contactSupport": "Yardım için destek al",
+  "integration": {
+    "title": "PDKS cihaz entegrasyonları",
+    "subtitle": "Cihaz olaylarını güvenli biçimde İK puantaj kayıtlarına aktarın.",
+    "bridgeTitle": "Yerel bağlantı yazılımı gerekir",
+    "bridgeDescription": "Cihaz veya üretici yazılımı kendi ağında olayları okur; özgün payload'ı aşağıdaki uca HTTPS ile iletir. İsteklerde terminalin X-Terminal-Key anahtarı kullanılmalıdır. Bu ekran cihaz yönetim anahtarını tekrar göstermez.",
+    "endpoint": "Olay alım adresi",
+    "copy": "Adresi kopyala",
+    "copied": "Kopyalandı",
+    "authHint": "provider yerine zkteco, hikvision veya suprema kullanın. Her cihaz için terminal kaydında üretilen X-Terminal-Key anahtarını bağlayıcıda gizli olarak saklayın.",
+    "providers": {
+      "zkteco": {
+        "name": "ZKTeco",
+        "description": "Attendance PUSH/ADMS ATTLOG satırları. Kullanıcı kodu, cihaz zamanı ve olay durumu okunur.",
+        "format": "PIN\\t2026-10-14 08:55:00\\t0\\t1\\t0"
+      },
+      "hikvision": {
+        "name": "Hikvision",
+        "description": "ISAPI erişim olayı XML'i. employeeNoString, time ve isteğe bağlı attendanceStatus alanları gerekir.",
+        "format": "<AcsEvent><employeeNoString>0042</employeeNoString><time>…</time></AcsEvent>"
+      },
+      "suprema": {
+        "name": "Suprema BioStar 2",
+        "description": "BioStar olay/T&A JSON kayıtları. Kullanıcı, zaman ve varsa yön alanları eşleştirilir.",
+        "format": "{ records: [{ user_id, datetime, tna_key }] }"
+      }
+    },
+    "setupTitle": "Kurulum",
+    "steps": {
+      "terminal": "Terminaller sekmesinde cihazı kaydedin. Terminal kodunu cihazı ayırt edecek şekilde belirleyin ve oluşturulan API anahtarını şimdi güvenli bir yere kopyalayın.",
+      "mapping": "Çalışan kimlikleri sekmesinde cihaz kullanıcısını Harici kimlik türüyle çalışana bağlayın.",
+      "gateway": "Yerel bağlayıcıyı provider adı ve terminal API anahtarıyla yapılandırın; veri aktarımını HTTPS üzerinden yapın.",
+      "timezone": "Saat dilimi olmayan cihaz zamanları şirketin saat dilimine göre yorumlanır. Olay yönü cihaz payload'ında yoksa terminalin yön modu uygulanır."
+    },
+    "mappingLabel": "Harici kimlik biçimi:",
+    "mappingExample": "Örnek: terminal kodu ZK-LOBBY-01 ve cihaz PIN'i 0042 ise zkteco:ZK-LOBBY-01:0042 değerini çalışana atayın.",
+    "manageTerminals": "Terminalleri ve çalışan kimliklerini aç"
   }
 }

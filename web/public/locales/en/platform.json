@@ -43,6 +43,7 @@
   },
   "created": {
     "invited": "Company created. An invitation email was sent to the HR manager.",
+    "invitationManual": "Company created, but the invitation email could not be sent. Share this link with the HR manager: {{url}}",
     "withPassword": "Company created. The HR manager can sign in with the password you set."
   },
   "errors": {

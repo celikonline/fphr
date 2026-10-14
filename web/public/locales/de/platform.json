@@ -43,7 +43,8 @@
   },
   "created": {
     "invited": "Unternehmen angelegt. Eine Einladungs-E-Mail wurde an die HR-Leitung gesendet.",
-    "withPassword": "Unternehmen angelegt. Die HR-Leitung kann sich mit dem festgelegten Passwort anmelden."
+    "withPassword": "Unternehmen angelegt. Die HR-Leitung kann sich mit dem festgelegten Passwort anmelden.",
+    "invitationManual": "Unternehmen erstellt, aber die Einladungs-E-Mail konnte nicht gesendet werden. Diesen Link mit der Personalleitung teilen: {{url}}"
   },
   "errors": {
     "updateFailed": "Die Unternehmensdaten konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut.",

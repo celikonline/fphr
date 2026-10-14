@@ -117,6 +117,7 @@ internal static class LiveAttendanceBoard
         PunchSource.Device => PunchSourceDto.Device,
         PunchSource.SelfService => PunchSourceDto.SelfService,
         PunchSource.Request => PunchSourceDto.Request,
+        PunchSource.DeviceIntegration => PunchSourceDto.DeviceIntegration,
         _ => PunchSourceDto.Terminal,
     };
 }

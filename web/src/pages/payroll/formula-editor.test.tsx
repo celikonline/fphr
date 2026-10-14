@@ -152,4 +152,18 @@ describe("FormulaEditor", () => {
 
     expect(await screen.findByTestId("formula-catalog-error")).toHaveTextContent("Formül kataloğu yüklenemedi");
   });
+
+  it("does not show a late validation response after the formula changes", async () => {
+    let finish!: (value: { isValid: boolean; sampleResult: number }) => void;
+    vi.mocked(validatePayItemFormula).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    renderEditor("brut * 0.1");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Doğrula" }));
+    await user.type(screen.getByRole("textbox", { name: /^Formül/ }), " + 500");
+    finish({ isValid: true, sampleResult: 2000 });
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Doğrula" })).toBeEnabled());
+    expect(screen.queryByText("Formül geçerli")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^2\.?000$/)).not.toBeInTheDocument();
+  });
 });

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge, Button, Card, Group, NativeSelect, Skeleton, Table, Tabs, Text, Title } from "@mantine/core";
-import { Plus, Stamp } from "lucide-react";
+import { FileUp, LifeBuoy, Plus, Stamp } from "lucide-react";
+import { Link } from "react-router";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { MY_PUNCH_REQUESTS_KEY, PunchRequestForm } from "@/components/attendance/punch-request-form";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -62,17 +64,19 @@ function PunchRequests() {
           {canManage && <Tabs.Tab value="all">{t("attendance-daily:punchRequests.tabAll")}</Tabs.Tab>}
         </Tabs.List>
       </Tabs>
-      {tab === "mine" ? <RequestList scope="mine" /> : <RequestList scope="all" />}
+      {tab === "mine" ? <RequestList scope="mine" onCreate={() => setCreating(true)} /> : <RequestList scope="all" onCreate={() => setCreating(true)} />}
       <PunchRequestForm opened={creating} onClose={() => setCreating(false)} />
     </div>
   );
 }
 
-function RequestList({ scope }: { scope: "mine" | "all" }) {
-  const { t, i18n } = useTranslation(["attendance-daily", "common"]);
+function RequestList({ scope, onCreate }: { scope: "mine" | "all"; onCreate: () => void }) {
+  const { t, i18n } = useTranslation(["attendance-daily", "attendance", "common"]);
   const queryClient = useQueryClient();
   const [cancelling, setCancelling] = useState<PunchRequest | null>(null);
   const mine = scope === "mine";
+  const canCreate = usePermission("attendance.my.punchrequest");
+  const canImport = usePermission("attendance.timesheet.import");
   const [statusFilter, setStatusFilter] = useState<PunchRequestStatus | "">("");
 
   const query = useQuery({
@@ -110,7 +114,23 @@ function RequestList({ scope }: { scope: "mine" | "all" }) {
   let body;
   if (query.isLoading) body = <Skeleton height={120} />;
   else if (query.isError) body = <Text c="red">{t("attendance-daily:punchRequests.loadError")}</Text>;
-  else if (rows.length === 0) body = <Text c="dimmed">{t("attendance-daily:punchRequests.empty")}</Text>;
+  else if (rows.length === 0) body = (
+    <AttendanceEmptyState
+      title={t("attendance-daily:punchRequests.empty")}
+      description={t(mine ? "attendance-daily:punchRequests.emptyMineGuide" : "attendance-daily:punchRequests.emptyAllGuide")}
+      action={mine && canCreate ? (
+        <Button leftSection={<Plus size={16} />} onClick={onCreate}>{t("attendance-daily:punchRequests.new")}</Button>
+      ) : canImport ? (
+        <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+          {t("attendance:openDeviceImport")}
+        </Button>
+      ) : (
+        <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+          {t("attendance:contactSupport")}
+        </Button>
+      )}
+    />
+  );
   else body = (
     <Card withBorder padding="sm" radius="md">
       <Table>

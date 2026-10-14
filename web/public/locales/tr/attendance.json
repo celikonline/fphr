@@ -42,7 +42,9 @@
       "lastPunch": "Son okutma",
       "lastSeen": "Son görülme",
       "never": "Hiç görülmedi",
-      "empty": "Kayıtlı terminal yok."
+      "empty": "Kayıtlı terminal yok.",
+      "emptyGuide": "Canlı görünüm için önce bir PDKS terminali kaydedin.",
+      "openTerminals": "Terminal ekle"
     },
     "lastPunch": "Son okutma",
     "sources": {
@@ -52,7 +54,8 @@
       "selfService": "Kendi okutması",
       "request": "Talep",
       "terminal": "Terminal"
-    }
+    },
+    "emptyGuide": "Bu kapsamda canlı devam kaydı görünmüyor. Cihaz kayıtlarını içe aktarın veya günlük puantajı inceleyin."
   },
   "empty": "Bu dönemde kayıt yok.",
   "genericError": "İşlem sırasında bir hata oluştu.",
@@ -63,7 +66,11 @@
     "timesheetSubtitle": "Kayıtlı giriş-çıkış saatleriniz ve aylık özetiniz.",
     "dailyListTitle": "Günlük kayıtlar",
     "shiftTitle": "Vardiyam",
-    "shiftSubtitle": "Size atanmış vardiya planı."
+    "shiftSubtitle": "Size atanmış vardiya planı.",
+    "emptyGuide": "Bu dönemde henüz puantaj kaydı yok. Giriş/çıkış yapabilir veya eksik kayıt talebi oluşturabilirsiniz.",
+    "openCheckIn": "Giriş/çıkış yap",
+    "openPunchRequest": "Eksik kayıt talebi oluştur",
+    "contactSupport": "Yardım için destek al"
   },
   "summary": {
     "workedDays": "Çalışılan gün",
@@ -109,7 +116,9 @@
     "night": "Gece vardiyası",
     "break": "Mola",
     "note": "Not",
-    "empty": "Bu dönemde vardiya kaydınız yok."
+    "empty": "Bu dönemde vardiya kaydınız yok.",
+    "emptyGuide": "Vardiya planınız yayınlandığında burada görünür. Müsaitlik bildirerek yöneticinize bilgi verebilirsiniz.",
+    "contactSupport": "Yardım için destek al"
   },
   "weekDay": {
     "monday": "Pazartesi",
@@ -202,7 +211,8 @@
       "confirmMessage": "{{month}} ayında onay bekleyen {{count}} çalışanın puantajı onaylanacak. Onaydan önce izinli günde çalışma kontrolü yeniden yapılır. Devam edilsin mi?",
       "done": "{{count}} çalışanın puantajı onaylandı.",
       "nothing": "Onaylanacak puantaj bulunamadı."
-    }
+    },
+    "emptyGuide": "Tarih ve birim filtrelerini kontrol edin. Cihaz verileri aktarılmadıysa kayıtları içe aktarın."
   },
   "teamTimesheet": {
     "title": "Ekip puantajı",
@@ -239,7 +249,8 @@
     "breakApplied": "Mola: {{m}} dk",
     "nightMinutes": "Gece: {{m}} dk",
     "dailyLimitExceeded": "Günlük 11 saat sınırı aşıldı (m.63)",
-    "nightLimitExceeded": "Gece çalışması 7,5 saat sınırını aştı (m.69)"
+    "nightLimitExceeded": "Gece çalışması 7,5 saat sınırını aştı (m.69)",
+    "emptyGuide": "Seçilen hafta veya birimde puantaj kaydı bulunamadı. Cihaz kayıtlarını içe aktararak başlayın."
   },
   "shiftLock": {
     "scheduledLockDate": "Otomatik kilit tarihi"
@@ -294,7 +305,11 @@
     "totalPeople": "{{count}} kişi",
     "bulkDone": "{{count}} hücre güncellendi.",
     "bulkSkipped": "{{count}} hücre atlandı (kilitli dönem veya yayınlanmış vardiya).",
-    "lockedEditHint": "Dönem kilitli; vardiya düzenlenemez."
+    "lockedEditHint": "Dönem kilitli; vardiya düzenlenemez.",
+    "emptyGuide": "Plan oluşturmak için önce çalışanlarınızı görüntüleyin veya birim filtresini değiştirin.",
+    "unassignedEmptyGuide": "Seçili hafta için vardiyası olmayan çalışan yok.",
+    "showAllEmployees": "Tüm çalışanları göster",
+    "openEmployees": "Çalışanları görüntüle"
   },
   "myAvailability": {
     "title": "Müsaitliğim",
@@ -321,7 +336,8 @@
     "noteLabel": "Not",
     "noteTooLong": "Not en fazla 500 karakter olabilir.",
     "submit": "Gönder",
-    "submitted": "Müsaitlik kaydı oluşturuldu."
+    "submitted": "Müsaitlik kaydı oluşturuldu.",
+    "emptyGuide": "Müsait olduğunuz gün ve saatleri yöneticinizle paylaşmak için bildirim ekleyin."
   },
   "deviceLogImport": {
     "title": "PDKS cihaz kaydı içe aktar",
@@ -408,5 +424,8 @@
     "noPlan": "Plansız okutma (o gün için vardiya planı yok)",
     "nightShiftOverlap": "Gece vardiyası çakışması (okutma iki güne de yakın)",
     "ambiguousShift": "Belirsiz vardiya (okutma birden fazla vardiyaya uyuyor)"
-  }
+  },
+  "openDeviceImport": "Cihaz kayıtlarını içe aktar",
+  "openDailyList": "Günlük puantajı görüntüle",
+  "contactSupport": "Yardım için destek al"
 }

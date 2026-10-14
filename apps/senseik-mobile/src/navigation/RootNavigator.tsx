@@ -96,6 +96,8 @@ function AuthNavigator() {
 
 function MainTabsNavigator() {
   const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const attendanceEnabled = !user?.disabledModules?.includes("attendance");
   return (
     <Tab.Navigator
       tabBar={(props) => <NotchedTabBar {...props} />}
@@ -107,7 +109,13 @@ function MainTabsNavigator() {
       }}
     >
       <Tab.Screen name="Home" component={DashboardScreen} options={{ title: t("tabs.home") }} />
-      <Tab.Screen name="CheckIn" component={CheckInScreen} options={{ title: t("tabs.checkIn") }} />
+      {attendanceEnabled ? (
+        <Tab.Screen
+          name="CheckIn"
+          component={CheckInScreen}
+          options={{ title: t("tabs.checkIn") }}
+        />
+      ) : null}
     </Tab.Navigator>
   );
 }

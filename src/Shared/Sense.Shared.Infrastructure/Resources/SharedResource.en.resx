@@ -343,6 +343,7 @@
   <data name="organization.approval_assignment.policy_id_required" xml:space="preserve"><value>An approval process must be selected.</value></data>
   <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>An approval process cannot be assigned to an inactive unit.</value></data>
   <data name="organization.cost_center.not_found" xml:space="preserve"><value>Cost center not found.</value></data>
+  <data name="organization.cost_center.employee_not_found" xml:space="preserve"><value>Employee not found or inactive.</value></data>
   <data name="organization.cost_center.code_required" xml:space="preserve"><value>Cost center code is required.</value></data>
   <data name="organization.cost_center.code_too_long" xml:space="preserve"><value>Cost center code cannot exceed 30 characters.</value></data>
   <data name="organization.cost_center.name_required" xml:space="preserve"><value>Cost center name is required.</value></data>
@@ -381,6 +382,18 @@
   <data name="roles.superadmin.name" xml:space="preserve"><value>Super Admin</value></data>
   <data name="roles.superadmin.description" xml:space="preserve"><value>Platform administrator: creates new companies (tenants). Exists only in the platform account.</value></data>
   <data name="platform.tenants.manage" xml:space="preserve"><value>Create companies and list companies (platform)</value></data>
+  <data name="platform.operations.view" xml:space="preserve"><value>View platform health and job status</value></data>
+  <data name="platform.backups.view" xml:space="preserve"><value>View platform backup records</value></data>
+  <data name="platform.backups.run" xml:space="preserve"><value>Start a platform backup</value></data>
+  <data name="platform.backups.restore" xml:space="preserve"><value>Restore a platform backup</value></data>
+  <data name="platform.jobs.view" xml:space="preserve"><value>View platform scheduled jobs</value></data>
+  <data name="platform.jobs.trigger" xml:space="preserve"><value>Trigger a platform scheduled job</value></data>
+  <data name="platform.jobs.manage" xml:space="preserve"><value>Manage platform job schedules</value></data>
+  <data name="platform.maintenance.view" xml:space="preserve"><value>View platform maintenance windows</value></data>
+  <data name="platform.maintenance.manage" xml:space="preserve"><value>Manage platform maintenance windows</value></data>
+  <data name="platform.diagnostics.view" xml:space="preserve"><value>View platform diagnostics</value></data>
+  <data name="platform.audit.view" xml:space="preserve"><value>View platform audit records</value></data>
+  <data name="platform.audit.export" xml:space="preserve"><value>Export platform audit records</value></data>
   <data name="identity.group.platform" xml:space="preserve"><value>Platform administration</value></data>
   <data name="platform.staff_required" xml:space="preserve"><value>This action can only be performed with the platform (super admin) account.</value></data>
   <data name="tenant.owner_password_required" xml:space="preserve"><value>An owner password is required when creating with a password.</value></data>
@@ -903,7 +916,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Earnings can only be added or removed while the payroll period is open.</value></data>
   <data name="payroll.errors.profile_transport_amount_invalid" xml:space="preserve"><value>A cash transport allowance needs a daily amount above zero.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
-  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>No salary record is effective on the exit date.</value></data>
+  <data name="payroll.errors.severance_estimate_salary_unsupported" xml:space="preserve"><value>The exit calculation requires a valid TRY salary with a positive amount.</value></data>
+  <data name="payroll.errors.severance_estimate_cause_invalid" xml:space="preserve"><value>Select a valid exit cause.</value></data>
+  <data name="payroll.errors.profile_regular_benefits_invalid" xml:space="preserve"><value>The monthly gross benefits total must be between 0 and 999,999,999,999.99.</value></data>
+  <data name="payroll.errors.severance_estimate_leave_balance_missing" xml:space="preserve"><value>The annual leave balance on the exit date is unavailable. Check the leave profile and rule set.</value></data>
+  <data name="payroll.severance.trace.wage_basis" xml:space="preserve"><value>Wage basis on the exit date</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>
@@ -1789,6 +1807,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="company_event_category.in_use" xml:space="preserve"><value>This category is used by events and cannot be deleted.</value></data>
   <data name="company_event_category.duplicate_name" xml:space="preserve"><value>A category with this name already exists.</value></data>
   <data name="onboarding.category_not_found" xml:space="preserve"><value>Category not found.</value></data>
+  <data name="onboarding.buddy.invalid_employee" xml:space="preserve"><value>An employee cannot be their own buddy; select another active employee.</value></data>
+  <data name="onboarding.buddy.invalid_date_range" xml:space="preserve"><value>The buddy end date cannot be earlier than the start date.</value></data>
+  <data name="onboarding.buddy.employee_not_found" xml:space="preserve"><value>The employee or buddy was not found or is inactive.</value></data>
   <data name="onboarding_category.name_required" xml:space="preserve"><value>A category name is required.</value></data>
   <data name="onboarding_category.name_too_long" xml:space="preserve"><value>The category name cannot exceed 100 characters.</value></data>
   <data name="onboarding_template_set.not_found" xml:space="preserve"><value>Template set not found.</value></data>
@@ -1878,6 +1899,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.PunchSource.SelfService" xml:space="preserve"><value>Self service</value></data>
   <data name="report.enum.PunchSource.Request" xml:space="preserve"><value>Request</value></data>
   <data name="report.enum.PunchSource.Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="report.enum.PunchSource.DeviceIntegration" xml:space="preserve"><value>PDKS device integration</value></data>
   <data name="report.enum.PunchDirection.In" xml:space="preserve"><value>In</value></data>
   <data name="report.enum.PunchDirection.Out" xml:space="preserve"><value>Out</value></data>
   <data name="report.enum.PunchDirection.Unknown" xml:space="preserve"><value>Unknown</value></data>

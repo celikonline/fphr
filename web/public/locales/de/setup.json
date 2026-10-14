@@ -13,13 +13,15 @@
     "next": "Speichern und weiter",
     "skip": "Diesen Schritt überspringen",
     "finish": "Einrichtung abschließen",
-    "finishing": "Wird abgeschlossen..."
+    "finishing": "Wird abgeschlossen...",
+    "retry": "Einrichtung erneut versuchen"
   },
   "errors": {
     "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
     "load": "Die Informationen konnten nicht geladen werden.",
     "nameRequired": "Der Unternehmensname ist erforderlich.",
-    "finish": "Die Einrichtung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+    "finish": "Die Einrichtung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+    "loadHelp": "Die Personalleitung kann es erneut versuchen. Die Vorbereitung des Arbeitsbereichs kann sicher wiederholt werden."
   },
   "company": {
     "heading": "Unternehmensdaten",

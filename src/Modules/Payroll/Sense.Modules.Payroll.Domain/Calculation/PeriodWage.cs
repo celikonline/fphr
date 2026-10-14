@@ -2,14 +2,16 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 
 /// <summary>
 /// Günlük/saatlik ücretli (<see cref="WageBasis.Daily"/> / <see cref="WageBasis.Hourly"/>) çalışanın dönem ücreti:
-/// brüt = birim ücret x ücretli gün (saatlik için x <see cref="PeriodWageMath.DailyWorkingHours"/>). Aylık ücretlide null.
+/// brüt = birim ücret x ücretli gün/saat. Aylık ücretlide null.
 /// </summary>
 /// <param name="Basis">Yalnız Daily veya Hourly.</param>
 /// <param name="UnitRate">Günlük brüt ücret (Daily) ya da saat brütü (Hourly).</param>
 /// <param name="PaidDays">Ücretli gün (30 gün esası; kısmi ay ve eksik gün düşülmüş), 1..30.</param>
-public sealed record PeriodWage(WageBasis Basis, decimal UnitRate, int PaidDays);
+/// <param name="PaidHours">Onaylı puantajdan çözülen normal ücretli saat; null yalnız önceki hesap girdileriyle uyumluluk içindir.</param>
+/// <param name="NetUnitRate">Net ücret anlaşmasının orijinal günlük/saatlik tutarı; brütleştirme izinde gösterilir.</param>
+public sealed record PeriodWage(WageBasis Basis, decimal UnitRate, int PaidDays, decimal? PaidHours = null, decimal? NetUnitRate = null);
 
-/// <summary>Günlük/saatlik ücretin aylık karşılığı ve dönem brütü (BASİTLEŞTİRME: PDKS gerçek saati kullanılmaz, SMMM onayı gerekir).</summary>
+/// <summary>Günlük/saatlik ücretin aylık karşılığı ve dönem brütü. Saatlik ücrette onaylı puantajdan çözülen ücretli saat önceliklidir.</summary>
 public static class PeriodWageMath
 {
     /// <summary>4857 md.63 (haftalık 45 saat / 6 gün) - OvertimePayCalculator.MonthlyWorkingHoursDivisor ile aynı esas.</summary>
@@ -30,10 +32,10 @@ public static class PeriodWageMath
     };
 
     /// <summary>Dönem brütü: günlük x ücretli gün; saatlik x 7,5 x ücretli gün.</summary>
-    public static decimal PeriodGross(WageBasis basis, decimal unitRate, int paidDays) => basis switch
+    public static decimal PeriodGross(WageBasis basis, decimal unitRate, int paidDays, decimal? paidHours = null) => basis switch
     {
         WageBasis.Daily => decimal.Round(unitRate * paidDays, 2, MidpointRounding.AwayFromZero),
-        WageBasis.Hourly => decimal.Round(unitRate * DailyWorkingHours * paidDays, 2, MidpointRounding.AwayFromZero),
+        WageBasis.Hourly => decimal.Round(unitRate * (paidHours ?? DailyWorkingHours * paidDays), 2, MidpointRounding.AwayFromZero),
         _ => throw new NotSupportedException($"Wage basis '{basis}' has no daily/hourly period gross."),
     };
 }

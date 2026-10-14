@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { EmptyState, ErrorBanner, Screen, ScreenHeader } from "@/components/ui";
@@ -7,9 +9,11 @@ import { goalsService, type Goal } from "@/services/GoalsService";
 import { palette } from "@/theme/theme";
 import { GoalCard } from "./goals/GoalCard";
 import { GOAL_EDITABLE_STATUSES } from "./goals/goalStatus";
+import type { AppStackParamList } from "@/types/navigation";
 
 export default function GoalsScreen() {
   const { t } = useTranslation("goals");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +87,13 @@ export default function GoalsScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {!error && goals.length === 0 ? (
-        <EmptyState icon="flag-outline" title={t("empty")} />
+        <EmptyState
+          icon="flag-outline"
+          title={t("empty")}
+          message={t("emptyGuide")}
+          actionLabel={t("getHelp")}
+          onAction={() => navigation.navigate("Support")}
+        />
       ) : (
         goals.map((goal) => (
           <GoalCard

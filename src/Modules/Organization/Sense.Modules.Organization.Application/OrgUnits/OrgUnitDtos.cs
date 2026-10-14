@@ -9,7 +9,8 @@ public sealed record OrgUnitDto(
     Guid? ManagerEmployeeId,
     Guid? LocationId,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    Guid? CostCenterId = null);
 
 /// <summary>Nested tree node for GET /organization/units/tree - built in-memory from a flat list (see OrgUnitTreeBuilder).</summary>
 public sealed record OrgUnitTreeNodeDto(
@@ -20,4 +21,5 @@ public sealed record OrgUnitTreeNodeDto(
     Guid? LocationId,
     int SortOrder,
     bool IsActive,
-    IReadOnlyList<OrgUnitTreeNodeDto> Children);
+    IReadOnlyList<OrgUnitTreeNodeDto> Children,
+    Guid? CostCenterId = null);

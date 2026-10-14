@@ -57,6 +57,7 @@ import {
   Smartphone,
   Calculator,
   BadgeCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -232,6 +233,14 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["platform.tenants.manage"],
     iconColor: "brand",
   },
+  {
+    key: "platformMaintenance",
+    labelKey: "nav.platformMaintenance",
+    path: "/app/platform/maintenance",
+    icon: HardHat,
+    permissions: ["platform.operations.view"],
+    iconColor: "orange",
+  },
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
@@ -260,6 +269,30 @@ export const NAV_FOOTER_ITEMS: NavItem[] = [
 
 /** "Uygulamalar" launcher entries (header dropdown + /app/apps): related apps grouped, groups and items ordered by how often they are used (daily general/attendance first, admin tools last). Entries with a phase are shown disabled. */
 export const APP_LAUNCHER_ITEMS: NavItem[] = [
+  {
+    key: "pdksCenter",
+    labelKey: "apps.pdksCenter",
+    path: "/app/attendance/management",
+    icon: LayoutDashboard,
+    permissions: [
+      "attendance.my.timesheet",
+      "attendance.my.checkin",
+      "attendance.shift.self",
+      "attendance.timesheet.view",
+      "attendance.shift.view",
+      "attendance.board.view",
+      "attendance.timesheet.import",
+      "attendance.daily.view",
+      "attendance.dashboard.view",
+      "attendance.shiftdefinition.view",
+      "attendance.rotation.view",
+      "attendance.punchrequest.manage",
+      "attendance.my.punchrequest",
+      "attendance.terminal.view",
+      "attendance.terminal.manage",
+    ],
+    iconColor: "orange",
+  },
   {
     key: "workflowInbox",
     labelKey: "apps.workflowInbox",
@@ -693,6 +726,20 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     ],
   },
   {
+    key: "attendance",
+    labelKey: "settings.attendanceSection",
+    links: [
+      {
+        key: "pdksIntegrations",
+        labelKey: "settings.pdksIntegrations",
+        descriptionKey: "settings.pdksIntegrationsDesc",
+        path: "/app/settings/pdks-integrations",
+        icon: QrCode,
+        permissions: ["attendance.terminal.view", "attendance.terminal.manage"],
+      },
+    ],
+  },
+  {
     key: "people",
     labelKey: "settings.peopleSection",
     links: [
@@ -950,6 +997,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
       icon: Timer,
       iconColor: "orange",
       items: [
+        requireAppItem("pdksCenter"),
         requireAppItem("timesheet"),
         requireAppItem("selfCheckIn"),
         requireAppItem("shifts"),
@@ -1040,5 +1088,5 @@ export const NAV_SECTIONS: NavEntry[][] = [
     },
   ],
   [requireNavItem("reports"), requireNavItem("apps")],
-  [requireNavItem("settings"), requireNavItem("platformTenants")],
+  [requireNavItem("settings"), requireNavItem("platformTenants"), requireNavItem("platformMaintenance")],
 ];

@@ -51,5 +51,10 @@
   },
   "shiftsRequired": "Wählen Sie für jeden Arbeitsschritt eine Schicht.",
   "endBeforeStart": "Das Enddatum darf nicht vor dem Beginn liegen.",
-  "offsetTooLarge": "Der Versatz muss kleiner als die Zykluslänge sein."
+  "offsetTooLarge": "Der Versatz muss kleiner als die Zykluslänge sein.",
+  "noPatternsGuide": "Vor der Schichtzuweisung ein Rotationsmuster erstellen.",
+  "assignNoPatterns": "Vor der Zuweisung ein Schichtmuster erstellen.",
+  "assignNoPatternsGuide": "Die Mustereinstellungen öffnen, um Arbeits- und freie Tage festzulegen.",
+  "createPatternFirst": "Mustereinstellungen öffnen",
+  "contactSupport": "Hilfe erhalten"
 }

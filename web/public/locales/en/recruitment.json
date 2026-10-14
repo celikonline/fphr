@@ -44,6 +44,8 @@
     "closeSuccess": "Posting closed.",
     "archiveSuccess": "Posting archived.",
     "empty": "No postings yet.",
+    "emptyGuide": "Create a posting to start recruiting for an open position.",
+    "emptySupport": "Contact HR or support",
     "viewDetail": "View posting",
     "access": "Access",
     "accessHint": "Manage which users, beyond the owner and hiring manager, can access this posting.",
@@ -91,6 +93,11 @@
     "createSuccess": "Candidate added.",
     "updateSuccess": "Candidate updated.",
     "empty": "No candidates yet.",
+    "emptyGuide": "Add the first candidate to start tracking applications.",
+    "emptySearch": "No candidates match your search.",
+    "emptySearchGuide": "Try another name or e-mail address, or clear the search.",
+    "clearSearch": "Clear search",
+    "emptySupport": "Contact HR or support",
     "editCandidate": "Edit candidate",
     "tags": "Tags",
     "editTags": "Edit tags",
@@ -169,7 +176,9 @@
     "createSuccess": "Requisition created.",
     "submitSuccess": "Requisition submitted for approval.",
     "cancelSuccess": "Requisition cancelled.",
-    "empty": "No requisitions yet."
+    "empty": "No hiring requests yet.",
+    "emptyGuide": "Create a hiring request for a new or replacement position.",
+    "emptySupport": "Contact HR or support"
   },
   "formTemplates": {
     "title": "Form Templates",

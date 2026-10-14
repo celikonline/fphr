@@ -73,6 +73,9 @@ public enum AttendanceDaySource
 
     /// <summary>Kayıtlı terminalden (Z5.1) gelen okutma.</summary>
     Terminal = 5,
+
+    /// <summary>Üretici protokol adaptöründen gelen PDKS cihaz okutması.</summary>
+    DeviceIntegration = 6,
 }
 
 /// <summary>

@@ -67,7 +67,6 @@ export default function AttendanceScreen() {
   const [filterSheetVisible, setFilterSheetVisible] = useState(false);
 
   const loadAll = useCallback(async () => {
-    setError(null);
     try {
       const range = monthRange(monthDate);
       const [summaryResult, daysResult] = await Promise.all([
@@ -76,7 +75,10 @@ export default function AttendanceScreen() {
       ]);
       setSummary(summaryResult);
       setDays([...daysResult].sort((a, b) => a.date.localeCompare(b.date)));
+      setError(null);
     } catch {
+      setSummary(null);
+      setDays([]);
       setError(i18n.t("attendance:loadError"));
     }
   }, [monthDate]);
@@ -151,26 +153,35 @@ export default function AttendanceScreen() {
         />
       </View>
 
-      <GlassCard style={styles.summary}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>{t("summary.workedDays")}</Text>
-          <Text style={styles.summaryValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>{t("summary.workedTime")}</Text>
-          <Text style={styles.summaryValue}>
-            {formatDurationMinutes(summary?.workedMinutes ?? 0)}
-          </Text>
-        </View>
-      </GlassCard>
+      {error ? null : (
+        <GlassCard style={styles.summary}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>{t("summary.workedDays")}</Text>
+            <Text style={styles.summaryValue}>{formatDays(summary?.workedDays ?? 0)}</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>{t("summary.workedTime")}</Text>
+            <Text style={styles.summaryValue}>
+              {formatDurationMinutes(summary?.workedMinutes ?? 0)}
+            </Text>
+          </View>
+        </GlassCard>
+      )}
 
-      {visibleDays.length === 0 ? (
+      {!error && visibleDays.length === 0 ? (
         <EmptyState
           icon="time-outline"
           title={days.length === 0 ? t("empty.month") : t("empty.filter")}
+          message={t(days.length === 0 ? "empty.monthGuide" : "empty.filterGuide")}
+          actionLabel={t(days.length === 0 ? "empty.requestCorrection" : "empty.clearFilter")}
+          onAction={() =>
+            days.length === 0
+              ? navigation.navigate("NewRequest", { kind: "punchCorrection" })
+              : setFilter("all")
+          }
         />
-      ) : (
+      ) : !error ? (
         visibleDays.map((day) => (
           // `key`d by `date`, not `id`: leave-only rows all share the empty-guid `id`.
           <AttendanceDayCard
@@ -182,7 +193,7 @@ export default function AttendanceScreen() {
             }
           />
         ))
-      )}
+      ) : null}
 
       <OptionSheet
         visible={filterSheetVisible}

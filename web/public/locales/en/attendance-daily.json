@@ -1,8 +1,9 @@
 {
   "dailyList": {
-    "title": "Daily attendance list",
-    "subtitle": "Employees for the selected day by status",
+    "title": "Daily attendance",
+    "subtitle": "Team attendance, scheduled hours, and punch movements for the selected day",
     "status": {
+      "all": "All employees",
       "incalculable": "Incalculable",
       "arrived": "Arrived",
       "late": "Late",
@@ -18,14 +19,16 @@
     "allUnits": "All units",
     "employee": "Employee",
     "unit": "Unit",
+    "planned": "Scheduled shift",
     "checkIn": "In",
     "checkOut": "Out",
     "worked": "Worked",
     "overtime": "Overtime",
     "leave": "Leave",
     "anomalies": "Warnings",
+    "statuses": "Status",
     "actions": "Actions",
-    "empty": "No records for this status.",
+    "empty": "No employees match the selected filters.",
     "loadError": "The list could not be loaded.",
     "addPunch": "Add manual punch",
     "addPunchTitle": "Add manual in/out punch",
@@ -45,7 +48,38 @@
     "genericError": "Something went wrong.",
     "prevPage": "Previous page",
     "nextPage": "Next page",
-    "minutes": "{{count}} min"
+    "minutes": "{{count}} min",
+    "summary": {
+      "arrived": "Checked in",
+      "late": "Late",
+      "earlyLeave": "Left early",
+      "absent": "Absent",
+      "onLeave": "On leave",
+      "overtime": "Overtime"
+    },
+    "movements": "Punch movements",
+    "noMovements": "There are no punch movements for this day.",
+    "movementTime": "Time",
+    "source": "Source",
+    "deleteMovement": "Delete movement with reason",
+    "directions": {
+      "in": "Check in",
+      "out": "Check out",
+      "unknown": "Unknown direction",
+      "breakStart": "Break start",
+      "breakEnd": "Break end"
+    },
+    "sources": {
+      "manual": "Manual",
+      "import": "Import",
+      "device": "Device",
+      "selfService": "Self service",
+      "request": "Request",
+      "terminal": "Terminal"
+    },
+    "emptyGuide": "Check the filters or date. Import device records if they have not been uploaded yet.",
+    "importRecords": "Import device records",
+    "contactSupport": "Get help"
   },
   "timeDashboard": {
     "title": "Time dashboard",
@@ -86,7 +120,9 @@
       "detail": "{{worked}} / {{planned}} planned shift days"
     },
     "unit": "Unit",
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "emptyGuide": "There is no attendance data for this scope yet. Import device records or open daily attendance.",
+    "openDailyList": "Open daily attendance"
   },
   "monthlyMatrix": {
     "title": "Monthly attendance matrix",
@@ -121,7 +157,8 @@
       "publicHoliday": "Public holiday",
       "incalculable": "Incalculable",
       "none": "No data"
-    }
+    },
+    "emptyGuide": "Check the date and unit filters. Import device records if data is missing."
   },
   "punchRequests": {
     "title": "Punch requests",
@@ -159,7 +196,9 @@
     "loadError": "Could not load requests.",
     "allStatuses": "All",
     "unknownEmployee": "Unknown employee",
-    "decidedAt": "Decision: {{date}}"
+    "decidedAt": "Decision: {{date}}",
+    "emptyMineGuide": "You have no missing-punch requests yet. Create a request to get started.",
+    "emptyAllGuide": "There are no pending or visible requests. Check daily attendance if you need to review records."
   },
   "comingSoon": "This screen is coming soon."
 }

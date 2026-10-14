@@ -33,6 +33,8 @@
     "title": "Ek kazançlar",
     "subtitle": "Prim, komisyon ve performans ödemeleri brüt girilir, aynı ayın bordrosuna eklenir ve SGK ile vergiye tabidir. Yalnızca açık dönemde değişir.",
     "add": "Ek kazanç ekle",
+    "addFormulaItem": "Formüllü kazanç/kesinti ekle",
+    "formulaAssignmentHint": "Bu formüllü ödeme yalnızca seçili bordro döneminde uygulanır.",
     "empty": "Bu dönemde ek kazanç yok.",
     "employee": "Çalışan",
     "kindLabel": "Tür",
@@ -62,7 +64,10 @@
     "skipped": "{{count}} çalışan hesaplanamadı (eksik profil veya maaş).",
     "skipReasons": {
       "wage_basis_mismatch": "Bordro profilindeki ücret esası ile maaş kaydının ödeme düzeni uyuşmuyor",
-      "net_wage_basis_unsupported": "Net ücretli günlük/saatlik çalışanlar henüz hesaplanamıyor; brüt ücret girin",
+      "net_wage_basis_unsupported": "Ücret esası bu hesaplama sürümünde desteklenmiyor",
+      "hourly_attendance_missing": "Saatlik ücret için puantaj verisi eksik; aylık puantajı tamamlayın",
+      "hourly_attendance_not_approved": "Saatlik puantaj onaylı değil veya onaydan sonra değişti; kayıtları inceleyip yeniden onaylayın",
+      "hourly_attendance_invalid": "Puantajdaki ücretli saatler geçersiz; çalışma ve eksik gün kayıtlarını kontrol edin",
       "pay_item_formula_failed": "Bir ödeme türünün formülü hesaplanamadı (örn. sıfıra bölme); formülü ve atama değerini kontrol edin",
       "incentive_parameter_missing": "Bir teşvik tanımının başvurduğu mevzuat parametresi bulunamadı (ya da geçerli bir oran değil); teşvik tanımını ve mevzuat parametrelerini kontrol edin"
     },
@@ -300,9 +305,12 @@
     "incentive_not_approved": "Çalışana atanan teşvik tanımı SMMM onaylı değil; hesaba katılmadı",
     "incentive_duplicate_assignment": "Aynı kategoride birden fazla teşvik ataması aynı aya denk geliyor; yalnız en son başlayan atama kullanıldı",
     "incentive_profile_code_ignored": "Çalışanın SGK teşvik ataması var; profildeki teşvik kanunu kodu yok sayıldı",
-    "pay_item_deduction_capped": "Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi"
+    "pay_item_deduction_capped": "Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi",
+    "incentive_profile_assignment_required": "Profildeki teşvik kodu için teşvik modeli ataması gerekli; genel 5510 indirimi uygulanmadı",
+    "incentive_sgk_status_not_eligible": "Çalışanın SGK statüsü bu prim teşvikine uygun değil; teşvik uygulanmadı"
   },
   "dirtyReasons": {
+    "calculation_blocked": "Hesaplama tamamlanamadı; eksik verileri ve puantaj onayını kontrol edin",
     "pay_item_changed": "Ödeme türü (formüllü ödeme) değişti",
     "incentive_changed": "Teşvik ataması veya tanımı değişti"
   },
@@ -310,6 +318,31 @@
     "title": "Ödeme türleri",
     "subtitle": "Formülle hesaplanan kazanç kalemlerini (yan ödeme, ikramiye vb.) tanımlayın; çalışanlara atanınca bordroya eklenir.",
     "new": "Yeni ödeme türü",
+    "templates": {
+      "label": "Başlangıç şablonu",
+      "hint": "Bir örnekle başlayın veya kendi formülünüzü yazın. Bu türler bordroya ayrı ödeme kalemi olarak eklenir.",
+      "custom": "Kendi formülüm",
+      "meal": {
+        "name": "Yemek yardımı",
+        "valueHint": "\"deger\" günlük yemek tutarıdır; çalışılan günle çarpılır."
+      },
+      "transport": {
+        "name": "Yol yardımı",
+        "valueHint": "\"deger\" günlük yol tutarıdır; çalışılan günle çarpılır."
+      },
+      "bonus": {
+        "name": "Prim",
+        "valueHint": "\"deger\" esas brüt ücretin yüzdesidir (ör. 10 = %10)."
+      },
+      "commission": {
+        "name": "Komisyon",
+        "valueHint": "\"deger\" satış tutarıdır. Örnekteki %5 oranını formülde değiştirebilirsiniz."
+      },
+      "extraBonus": {
+        "name": "İkramiye",
+        "valueHint": "\"deger\" aylık brüt ücret çarpanıdır (ör. 0.5 = yarım maaş)."
+      }
+    },
     "showInactive": "Pasif olanları da göster",
     "empty": "Henüz tanımlı bir ödeme türü yok. \"Yeni ödeme türü\" ile bir kod, ad ve formül tanımlayarak başlayın; sonra çalışanlara atayabilirsiniz.",
     "genericError": "Ödeme türleri yüklenemedi.",
@@ -552,7 +585,10 @@
       "draftHint": "Eksik alanlarla taslak olarak kaydedebilirsiniz; tamlık yalnız onay sırasında aranır.",
       "approvalWillDrop": "Bu tanım SMMM onaylı. Hesabı etkileyen bir alanı (tür, parametreler, bildirge kodu, ay sayısı, tarihler) değiştirirseniz onay düşecek ve yeniden onaylanana kadar tanım hesaba girmeyecek.",
       "save": "Kaydet",
-      "error": "Teşvik kaydedilemedi."
+      "error": "Teşvik kaydedilemedi.",
+      "maxSupportMultiplier": "Toplam destek tavanı çarpanı",
+      "maxSupportMultiplierHint": "Boşsa toplam destek tavanı yoktur. 1 = prim gününe oranlanan brüt asgari ücret; prim matrahı tavanından ayrıdır.",
+      "applyTemplate": "Hazır model parametrelerini uygula"
     },
     "approveModal": {
       "approveTitle": "{{code}} teşvikini onayla",
@@ -569,7 +605,9 @@
     },
     "templates": {
       "title": "Şablondan teşvik ekle",
-      "intro": "Hazır şablonlar kiracınıza kopyalanır. Oranlar boş gelir (yalnız 5510 mevcut davranışla onaylı gelir); gerçek oranları SMMM/uzman onayıyla siz girersiniz.",
+      "intro": "5510, 6111 ve 4447 için hazır SGK modelleri; 4691, 5746 ve 4857/30 için tamamlanması gereken taslaklar ekleyebilirsiniz. Sektör, uygunluk ve çalışan süresini kontrol edin. 7103 yalnız 2018-2022 dönemleri içindir.",
+      "reviewTitle": "Şablonlar uygunluk kararı değildir",
+      "reviewRequired": "İşyeri ve çalışan koşullarını resmi SGK/İŞKUR kayıtlarında doğrulayın. Taslakların parametre, bildirge kodu ve onay bilgilerini SMMM ile tamamlamadan bordroda kullanmayın.",
       "preApproved": "Onaylı gelir",
       "alreadyAdded": "Eklendi",
       "add": "Ekle",
@@ -577,7 +615,9 @@
       "added": "{{name}} eklendi",
       "addError": "Şablon eklenemedi.",
       "loadError": "Şablonlar yüklenemedi.",
-      "validFromNote": "Eklenen tanımın geçerlilik başlangıcı bugündür; önceki aylara atama yapacaksanız tanımın başlangıç tarihini düzenleyin."
+      "validFromNote": "Eklenen tanımın geçerlilik başlangıcı bugündür; önceki aylara atama yapacaksanız tanımın başlangıç tarihini düzenleyin.",
+      "historical": "Geçmiş dönem modeli",
+      "validUntil": "Son geçerli tarih: {{date}}"
     }
   },
   "incentiveAssignments": {
@@ -621,8 +661,11 @@
       "noteHint": "İsteğe bağlı; uygunluk koşullarının takibi için kullanabilirsiniz (en çok 500 karakter).",
       "unapprovedWarning": "Bu tanım SMMM onaylı değil: atama yapılabilir, ancak hesaba dahil edilmez; yalnız bildirge kodu yazılır.",
       "validFromWarning": "Tanımın geçerlilik başlangıcı {{date}}; bu tarihten önceki aylarda atama etkin sayılmaz. Gerekirse tanımın başlangıç tarihini düzenleyin.",
-      "save": "Kaydet"
-    }
+      "save": "Kaydet",
+      "validToWarning": "Bu teşvik {{date}} tarihinde sona ermiş; seçili ayda uygulanamaz."
+    },
+    "periodSubtitle": "Seçili ayda geçerli teşvikler. Hesap modelleri onay ve geçerlilik durumuna göre işveren maliyetine yansır.",
+    "periodEmpty": "Bu dönemde teşvik ataması yok."
   },
   "incentiveLegacy": {
     "tab": "Eski profil kodları",
@@ -639,7 +682,7 @@
     },
     "sharedNormalized": "\"{{code}}\" olarak birlikte dönüşür",
     "noSuggestion": "Eşleşen tanım yok",
-    "calculationChanges": "Hesap değişir: 5 puanlık indirim kaybolur/değişir",
+    "calculationChanges": "Seçilen model işveren maliyetini değiştirir. Geçerli parametreleri ve onay durumunu kontrol edin.",
     "calculationSame": "Hesap değişmez",
     "convert": "Dönüştür",
     "empty": "Dönüştürülecek profil teşvik kodu yok.",
@@ -652,7 +695,7 @@
       "definitionPlaceholder": "Tanım seçin",
       "noDefinitions": "Uygun aktif tanım yok",
       "dangerTitle": "Hesap değişecek",
-      "dangerText": "Seçilen tanım onaylı bir SGK oran indirimi değil: bugün profil koduyla uygulanan 5 puanlık işveren indirimi kaybolacak/değişecek ve bu çalışanların işveren maliyeti artabilir.",
+      "dangerText": "Seçilen model işveren maliyetini değiştirir. Geçerli parametreleri ve onay durumunu kontrol edin.",
       "confirm": "Hesabın değişeceğini anladım",
       "fromMonth": "Başlangıç ayı",
       "fromMonthHint": "Önerilen: ilk açık dönem (kapalı aylar reddedilir).",
@@ -663,6 +706,7 @@
     "result": {
       "title": "Dönüştürme tamamlandı",
       "summary": "{{created}} atama oluşturuldu, {{skipped}} çalışan atlandı (çakışan SGK ataması)."
-    }
+    },
+    "subtitle": "Profil kodlarını teşvik modellerine bağlayın. 05510 dışındaki kodlar hesaplamaya ancak ayrı bir teşvik atamasıyla katılır."
   }
 }

@@ -27,7 +27,8 @@
     "sharedFiles": "Gemeinsame Dateien",
     "platformTenants": "Unternehmen (Plattform)",
     "comingSoon": "Demnächst",
-    "sidebarSearchPlaceholder": "Menü durchsuchen…"
+    "sidebarSearchPlaceholder": "Menü durchsuchen…",
+    "platformMaintenance": "Verwaltung und Wartung"
   },
   "navGroups": {
     "humanResources": "Personalwesen",
@@ -83,11 +84,46 @@
     "monthlyMatrix": "Monatliche Anwesenheitsmatrix",
     "punchRequests": "Stempelanträge",
     "terminals": "Zeiterfassungsterminals",
+    "pdksCenter": "PDKS-Verwaltungszentrum",
     "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen",
     "payItems": "Zahlungsarten",
     "incentives": "Förderungen"
   },
+  "pdksCenter": {
+    "eyebrow": "PDKS • ANWESENHEIT • SCHICHTEN",
+    "title": "PDKS-Verwaltungszentrum",
+    "subtitle": "Verwalten Sie Anwesenheit, Zeiterfassung, Schichtplanung und Geräteverbindungen zentral.",
+    "availableTools": "{{count}} verfügbare Aktionen",
+    "accessHint": "Die angezeigten Links richten sich nach Ihren Zugriffsrechten.",
+    "sections": {
+      "operations": "Tagesbetrieb",
+      "timesheets": "Zeiterfassung und Buchungsanträge",
+      "planning": "Schichten und Planung",
+      "devices": "Mitarbeiterfunktionen und Geräte"
+    },
+    "descriptions": {
+      "dailyList": "Tägliche Anwesenheit und Ankunftsstatus überwachen.",
+      "timeDashboard": "Übersichten zu Anwesenheit, Verspätungen und Überstunden prüfen.",
+      "liveBoard": "Aktuellen Ein- und Ausstempelstatus anzeigen.",
+      "timesheet": "Eigene Zeiterfassung und Arbeitsstunden anzeigen.",
+      "teamTimesheet": "Zeiterfassungsdaten des Teams verwalten.",
+      "monthlyTimesheet": "Monatliche Zeiterfassungen prüfen und abschließen.",
+      "monthlyMatrix": "Monatliche Anwesenheit in einer Matrix anzeigen.",
+      "punchRequests": "Korrekturen für fehlende oder falsche Buchungen beantragen.",
+      "shifts": "Eigenen Schichtkalender anzeigen.",
+      "shiftPlan": "Schichten für Mitarbeiter planen.",
+      "shiftDefinitions": "Schichtzeiten und Regeln definieren.",
+      "rotations": "Wiederkehrende Schichtzyklen konfigurieren.",
+      "selfCheckIn": "Mit unterstützten Methoden ein- oder ausstempeln.",
+      "deviceLogImport": "Datensätze aus PDKS-Geräten importieren.",
+      "terminals": "Terminals, Gruppen und Mitarbeiterzuordnungen verwalten.",
+      "pdksIntegrations": "Geräteprotokolle und Verbindungseinstellungen anzeigen."
+    }
+  },
   "settings": {
+    "attendanceSection": "Zeiterfassungsgeräte",
+    "pdksIntegrations": "PDKS-Geräteintegrationen",
+    "pdksIntegrationsDesc": "Verbindung und Mitarbeiterzuordnung für ZKTeco-, Hikvision- und Suprema-Geräte",
     "company": "Unternehmen und Organisation",
     "structure": "Unternehmensstruktur",
     "structureDesc": "Hierarchieebenen, Einheiten und Einheitsberechtigungen",
@@ -171,5 +207,50 @@
     "menu": "Menü",
     "apps": "Apps",
     "settings": "Einstellungen"
+  },
+  "platformMaintenance": {
+    "title": "Verwaltung und Wartung",
+    "subtitle": "Geplanter Betriebsbereich für Plattformwartung, Sicherungen und geplante Aufgaben.",
+    "planned": "Geplant",
+    "backupTitle": "Sicherung und Wiederherstellung",
+    "backupDesc": "PostgreSQL- und Dateispeicher-Sicherungen planen, ausführen und prüfen; Aufbewahrung überwachen. Wiederherstellungen folgen einem genehmigten Ablauf.",
+    "jobsTitle": "Geplante Aufgaben",
+    "jobsDesc": "Registrierte Aufgaben mit Cron-Plan und letzter/nächster Ausführung. Diese Version ist schreibgeschützt.",
+    "maintenanceTitle": "Wartungsfenster",
+    "maintenanceDesc": "Wartung planen, betroffene Dienste und Benutzerhinweise festlegen und Start und Ende des Wartungsmodus steuern.",
+    "supportTitle": "Support und Diagnose",
+    "supportDesc": "Dienststatus, Fehlerkennungen und bereinigte Betriebsereignisse prüfen; Supportzugriff mit Audit-Protokoll verwalten.",
+    "securityTitle": "Zugriff und Audit",
+    "securityDesc": "Plattformrollen und granulare Aktionsberechtigungen, Freigabe sensibler Aktionen und unveränderbares Protokoll von Akteur, Ziel und Ergebnis.",
+    "scopeTitle": "Umsetzungsumfang",
+    "scopeDesc": "Dienststatus und Aufgabenkatalog verwenden Live-Daten. Sicherungs-, Aufgaben- und Wartungsaktionen werden nach Abschluss der serverseitigen Sicherheitskontrollen aktiviert.",
+    "overviewTitle": "Live-Dienststatus",
+    "overviewDesc": "Abhängigkeitsstatus und Hangfire-Warteschlangenzähler; Aktualisierung alle 60 Sekunden.",
+    "jobListTitle": "Katalog geplanter Aufgaben",
+    "jobListDesc": "Wiederkehrende Aufgaben aus der Anwendungsliste. Nutzdaten und Ausnahme-Details werden ausgeblendet.",
+    "available": "Verfügbar",
+    "loadError": "Betriebsdaten konnten nicht geladen werden",
+    "loadErrorDesc": "Zugriff und API-Verbindung prüfen und es später erneut versuchen.",
+    "noJobs": "Keine wiederkehrenden Aufgaben gefunden.",
+    "counters": {
+      "servers": "Worker-Server",
+      "enqueued": "In Warteschlange",
+      "scheduled": "Geplant",
+      "processing": "In Bearbeitung",
+      "failed": "Fehlgeschlagen"
+    },
+    "columns": {
+      "job": "Aufgabe",
+      "tenant": "Mandanten-ID",
+      "cron": "Zeitplan",
+      "lastRun": "Letzte Ausführung",
+      "nextRun": "Nächste Ausführung",
+      "state": "Letzter Status"
+    },
+    "status": {
+      "healthy": "Gesund",
+      "degraded": "Eingeschränkt",
+      "unhealthy": "Ungesund"
+    }
   }
 }

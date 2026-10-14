@@ -21,7 +21,8 @@ public sealed record EmployeePayrollProfileData(
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
     string? Notes,
-    decimal TransportDailyAmount = 0m);
+    decimal TransportDailyAmount = 0m,
+    decimal RegularBenefitsMonthlyGross = 0m);
 
 /// <summary>
 /// One dated version of an employee's payroll parameters (11.3.7 "Bordro parametresi", P2): SGK workplace, wage basis,
@@ -72,6 +73,9 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
     /// <summary>Cash transport allowance per worked day (only for the Cash variant; card and shuttle are in kind and add no pay); 0 otherwise.</summary>
     public decimal TransportDailyAmount { get; private set; }
 
+    /// <summary>Declared monthly gross total of recurring benefits included in severance/notice; not a new payslip earning.</summary>
+    public decimal RegularBenefitsMonthlyGross { get; private set; }
+
     public PayrollPaymentMethod PaymentMethod { get; private set; }
 
     /// <summary>Cross-module reference to Employee.BankAccount (11.3.3); required when <see cref="PaymentMethod"/> is Bank (Application-layer check, not enforced here).</summary>
@@ -104,6 +108,15 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
         return validated.IsFailure ? validated.Error : Result.Success(Apply(data));
     }
 
+    public Result<bool> SetRegularBenefitsMonthlyGross(decimal amount)
+    {
+        if (amount is < 0m or > 999_999_999_999.99m) return Error.Validation(PayrollDomainErrors.ProfileRegularBenefitsInvalid);
+        amount = decimal.Round(amount, 2, MidpointRounding.AwayFromZero);
+        var changed = RegularBenefitsMonthlyGross != amount;
+        RegularBenefitsMonthlyGross = amount;
+        return Result.Success(changed);
+    }
+
     /// <summary>Closes the profile at <paramref name="validTo"/> (a replacing record normally starts the next day).</summary>
     public Result Close(DateOnly validTo)
     {
@@ -120,6 +133,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
     {
         var mealDailyAmount = RequiresMealAmount(data.MealBenefitVariant) ? data.MealDailyAmount : 0m;
         var transportDailyAmount = data.TransportVariant == TransportVariant.Cash ? data.TransportDailyAmount : 0m;
+        var regularBenefits = decimal.Round(data.RegularBenefitsMonthlyGross, 2, MidpointRounding.AwayFromZero);
         var incentiveLawCode = Trim(data.IncentiveLawCode);
         var externalPayrollCode = Trim(data.ExternalPayrollCode);
         var notes = Trim(data.Notes);
@@ -135,6 +149,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
                       MealDailyAmount != mealDailyAmount ||
                       TransportVariant != data.TransportVariant ||
                       TransportDailyAmount != transportDailyAmount ||
+                      RegularBenefitsMonthlyGross != regularBenefits ||
                       PaymentMethod != data.PaymentMethod ||
                       BankAccountId != data.BankAccountId ||
                       SickDaysReducePay != data.SickDaysReducePay ||
@@ -152,6 +167,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
         MealDailyAmount = mealDailyAmount;
         TransportVariant = data.TransportVariant;
         TransportDailyAmount = transportDailyAmount;
+        RegularBenefitsMonthlyGross = regularBenefits;
         PaymentMethod = data.PaymentMethod;
         BankAccountId = data.BankAccountId;
         SickDaysReducePay = data.SickDaysReducePay;
@@ -163,6 +179,11 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
     /// <summary>Content rules that do not need sibling records (overlap is checked by the caller via the repository).</summary>
     public static Result Validate(EmployeePayrollProfileData data)
     {
+        if (data.RegularBenefitsMonthlyGross is < 0m or > 999_999_999_999.99m)
+        {
+            return Error.Validation(PayrollDomainErrors.ProfileRegularBenefitsInvalid);
+        }
+
         if (data.SgkWorkplaceCompanyId == Guid.Empty)
         {
             return Error.Validation(PayrollDomainErrors.ProfileSgkWorkplaceRequired);

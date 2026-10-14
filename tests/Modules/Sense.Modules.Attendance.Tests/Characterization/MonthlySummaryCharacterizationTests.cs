@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Contracts;
+using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Shouldly;
 using Xunit;
@@ -66,10 +68,10 @@ public sealed class MonthlySummaryCharacterizationTests : AttendanceCharacteriza
         var summary = (await reader.GetAsync(tenantId, CharacterizationMonth.Year, CharacterizationMonth.Month, [employeeId], null, null, ct)).ShouldHaveSingleItem();
 
         // Gözlenen: 8 çalışılan gün (pazar dahil), 3600 dk = 60 sa (12 Ağustos için override 480), Ağustos 2026'da 21 iş günü
-        // - 8 = 13 eksik gün (pazar çalışması da eksik günden düşülüyor), fazla mesai 120 + 240 + 30 = 390 dk = 6,5 sa.
+        // 7 scheduled days were worked: 21 - 7 = 14 missing. Sunday work never offsets a scheduled absence.
         summary.ShouldBe(new AttendanceMonthlySummary(
-            employeeId, WorkedDays: 8m, WorkedHours: 60m, MissingDays: 13m, OvertimeHours: 6.5m, IsPeriodLocked: false,
-            PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1));
+            employeeId, WorkedDays: 8m, WorkedHours: 60m, MissingDays: 14m, OvertimeHours: 6.5m, IsPeriodLocked: false,
+            PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1, NormalHoursShortfall: 1.5m));
     }
 
     [Fact]
@@ -92,5 +94,42 @@ public sealed class MonthlySummaryCharacterizationTests : AttendanceCharacteriza
         summary.MissingDays.ShouldBe(2m);
         summary.OvertimeHours.ShouldBe(0.5m);
         summary.WeeklyRestDaysWorked.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(true, false, true)]
+    [InlineData(false, false, false)]
+    [InlineData(true, true, false)]
+    public async Task Payroll_hours_require_a_current_approval_and_resolved_daily_anomalies(bool resolve, bool stale, bool expectedApproved)
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var ct = TestContext.Current.CancellationToken;
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        await SeedMixedMonthAsync(tenantId, employeeId, ct);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            if (resolve)
+            {
+                var days = await db.AttendanceDays.Where(d => d.EmployeeId == employeeId).ToListAsync(ct);
+                foreach (var day in days.Where(d => d.Anomalies != AttendanceAnomaly.None && d.ResolutionState == AttendanceResolutionState.Unresolved))
+                    day.Ignore().IsSuccess.ShouldBeTrue();
+                await db.SaveChangesAsync(ct);
+            }
+
+            db.MonthlyTimesheetApprovals.Add(MonthlyTimesheetApproval.Approve(tenantId, employeeId,
+                new DateOnly(CharacterizationMonth.Year, CharacterizationMonth.Month, 1),
+                stale ? DateTime.UtcNow.AddMinutes(-1) : DateTime.UtcNow, Guid.NewGuid()));
+            await db.SaveChangesAsync(ct);
+        }
+
+        using var read = ServiceProvider!.CreateScope();
+        var summary = (await read.ServiceProvider.GetRequiredService<IAttendanceMonthlySummaryReader>()
+            .GetAsync(tenantId, CharacterizationMonth.Year, CharacterizationMonth.Month, [employeeId], cancellationToken: ct)).Single();
+        summary.IsTimesheetApproved.ShouldBe(expectedApproved);
+        summary.NormalHoursShortfall.ShouldBe(1.5m);
+        summary.MissingDays.ShouldBe(14m);
     }
 }

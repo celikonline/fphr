@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Button, Card, Group, NumberInput, Select, Stack, Text, TextInput, Badge } from "@mantine/core";
+import { Link } from "react-router";
+import { LifeBuoy } from "lucide-react";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import {
@@ -13,10 +16,11 @@ import { ROTATIONS_KEY } from "./rotation-patterns-panel";
 
 interface Props {
   canManage: boolean;
+  onCreatePattern: () => void;
 }
 
 /** Assigns a pattern to employees; shows locked-month skips from the result and overlap conflicts (409) inline. */
-export default function RotationAssignPanel({ canManage }: Props) {
+export default function RotationAssignPanel({ canManage, onCreatePattern }: Props) {
   const { t } = useTranslation(["rotations"]);
   const patterns = useQuery({ queryKey: ROTATIONS_KEY, queryFn: listRotations });
   const [patternId, setPatternId] = useState<string | null>(null);
@@ -56,6 +60,19 @@ export default function RotationAssignPanel({ canManage }: Props) {
           value={patternId}
           onChange={setPatternId}
         />
+        {patterns.isSuccess && patterns.data.length === 0 && (
+          <AttendanceEmptyState
+            title={t("rotations:assignNoPatterns")}
+            description={t("rotations:assignNoPatternsGuide")}
+            action={canManage ? (
+              <Button variant="light" onClick={onCreatePattern}>{t("rotations:createPatternFirst")}</Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("rotations:contactSupport")}
+              </Button>
+            )}
+          />
+        )}
         <div>
           <Text size="sm" fw={500} mb={4}>
             {t("rotations:employees")}

@@ -18,7 +18,7 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("org")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -240,6 +240,57 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_cost_centers_tenant_id_code");
 
                     b.ToTable("cost_centers", "org");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.CostCenters.EmployeeCostCenterOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CostCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_center_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_cost_center_overrides");
+
+                    b.HasIndex("CostCenterId")
+                        .HasDatabaseName("ix_employee_cost_center_overrides_cost_center_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employee_cost_center_overrides_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_cost_center_overrides_tenant_id_employee_id");
+
+                    b.ToTable("employee_cost_center_overrides", "org");
                 });
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendar", b =>
@@ -530,6 +581,10 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("CostCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_center_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -582,6 +637,9 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_org_units");
+
+                    b.HasIndex("CostCenterId")
+                        .HasDatabaseName("ix_org_units_cost_center_id");
 
                     b.HasIndex("LocationId")
                         .HasDatabaseName("ix_org_units_location_id");
@@ -822,6 +880,16 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_companies_org_units_org_unit_id");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.CostCenters.EmployeeCostCenterOverride", b =>
+                {
+                    b.HasOne("Sense.Modules.Organization.Domain.CostCenters.CostCenter", null)
+                        .WithMany()
+                        .HasForeignKey("CostCenterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_employee_cost_center_overrides_cost_centers_cost_center_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendarEntry", b =>
                 {
                     b.HasOne("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendar", null)
@@ -834,6 +902,12 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.OrgUnits.OrgUnit", b =>
                 {
+                    b.HasOne("Sense.Modules.Organization.Domain.CostCenters.CostCenter", null)
+                        .WithMany()
+                        .HasForeignKey("CostCenterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_org_units_cost_centers_cost_center_id");
+
                     b.HasOne("Sense.Modules.Organization.Domain.Locations.Location", null)
                         .WithMany()
                         .HasForeignKey("LocationId")

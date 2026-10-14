@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Badge, Button, Card, ColorSwatch, Group, Table, Text, Title } from "@mantine/core";
-import { Clock, Plus } from "lucide-react";
+import { Clock, LifeBuoy, Plus } from "lucide-react";
+import { Link } from "react-router";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import ShiftDefinitionForm, {
   emptyShiftDefinition,
 } from "@/components/attendance/shift-definition-form";
@@ -75,7 +77,7 @@ export default function ShiftDefinitionsPage() {
             {t("shifts:subtitle")}
           </Text>
         </div>
-        {canManage && !editing && (
+        {canManage && !editing && (query.isLoading || (query.data?.length ?? 0) > 0) && (
           <Button
             leftSection={<Plus size={16} />}
             onClick={() => setEditing(emptyShiftDefinition())}
@@ -144,9 +146,19 @@ export default function ShiftDefinitionsPage() {
             </Table.Tbody>
           </Table>
           {query.isSuccess && query.data.length === 0 && (
-            <Text c="dimmed" size="sm" ta="center" p="lg">
-              {t("shifts:list.empty")}
-            </Text>
+            <AttendanceEmptyState
+              title={t("shifts:list.empty")}
+              description={t("shifts:list.emptyGuide")}
+              action={canManage ? (
+                <Button leftSection={<Plus size={16} />} onClick={() => setEditing(emptyShiftDefinition())}>
+                  {t("shifts:list.createFirst")}
+                </Button>
+              ) : (
+                <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                  {t("shifts:list.contactSupport")}
+                </Button>
+              )}
+            />
           )}
         </Card>
       )}

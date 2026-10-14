@@ -26,4 +26,5 @@ public static class OrganizationErrors
     public const string ApprovalAssignmentRequestTypeUnknown = "organization.approval_assignment.request_type_unknown";
     public const string ApprovalAssignmentDuplicateRequestType = "organization.approval_assignment.duplicate_request_type";
     public const string ApprovalAssignmentOrgUnitInactive = "organization.approval_assignment.org_unit_inactive";
+    public const string CostCenterEmployeeNotFound = "organization.cost_center.employee_not_found";
 }

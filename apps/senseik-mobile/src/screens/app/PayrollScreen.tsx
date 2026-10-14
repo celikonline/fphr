@@ -229,7 +229,13 @@ export default function PayrollScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       {!error && payslips.length === 0 ? (
-        <EmptyState icon="wallet-outline" title={t("empty")} />
+        <EmptyState
+          icon="wallet-outline"
+          title={t("empty")}
+          message={t("emptyGuide")}
+          actionLabel={t("getHelp")}
+          onAction={() => navigation.navigate("Support")}
+        />
       ) : null}
 
       {latest ? (

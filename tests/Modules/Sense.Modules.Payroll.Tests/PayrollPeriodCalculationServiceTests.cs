@@ -66,12 +66,12 @@ public sealed partial class PayrollPeriodCalculationServiceTests
             [LegislationParameterKeys.PayrollSgkEmployerDiscountRate] = Decimal(LegislationParameterKeys.PayrollSgkEmployerDiscountRate, 0.05m),
             [LegislationParameterKeys.PayrollStampTaxRate] = Decimal(LegislationParameterKeys.PayrollStampTaxRate, 0.00759m),
             [LegislationParameterKeys.PayrollMinimumWageGross] = Decimal(LegislationParameterKeys.PayrollMinimumWageGross, 30_000m),
-            [LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption] = Decimal(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, 240m),
-            [LegislationParameterKeys.PayrollMealSgkDailyExemptionRate] = Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, 0.2365m),
+            [LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption] = Decimal(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, 300m),
+            [LegislationParameterKeys.PayrollMealSgkDailyExemption] = Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemption, 158m),
             [LegislationParameterKeys.PayrollMealMarketCardExemptionApplies] = Decimal(LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, 0m),
-            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, 6900m),
-            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, 4000m),
-            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3, 1700m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, 12000m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, 7000m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3, 3000m),
         };
 
         var reader = Substitute.For<ILegislationParameterReader>();
@@ -739,11 +739,13 @@ public sealed partial class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
-    public async Task RecalculateAllAsync_CalculatesAFullMonthHourlyWage_AsHourlyRateTimes7Point5TimesPaidDays()
+    public async Task RecalculateAllAsync_CalculatesAFullMonthHourlyWage_WithApprovedAttendance()
     {
-        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
         var employeeId = Guid.NewGuid();
         GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Hourly, WageSalary(EmployeePayFrequency.Hourly, 200m));
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 9, null, null, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(26, 0, 0m, NormalHoursShortfall: 0m, IsTimesheetApproved: true)));
 
         var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
 
@@ -788,7 +790,8 @@ public sealed partial class PayrollPeriodCalculationServiceTests
         var employeeId = Guid.NewGuid();
         GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Hourly, WageSalary(EmployeePayFrequency.Hourly, 200m));
         workedTimeReader.GetAsync(TenantId, employeeId, 2026, 9, null, null, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 26, MissingDays: 4, OvertimeHours: 0m)));
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 26, MissingDays: 4, OvertimeHours: 0m,
+                NormalHoursShortfall: 0m, IsTimesheetApproved: true)));
 
         await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
 
@@ -841,7 +844,7 @@ public sealed partial class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
-    public async Task RecalculateAllAsync_SkipsANetDailyWage_WithAnExplicitReason()
+    public async Task RecalculateAllAsync_GrossesUpANetDailyWage_ToTheAgreedPeriodNet()
     {
         var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
         var employeeId = Guid.NewGuid();
@@ -849,8 +852,10 @@ public sealed partial class PayrollPeriodCalculationServiceTests
 
         var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
 
-        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NetWageBasisUnsupported)]);
-        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+        summary.CalculatedCount.ShouldBe(1);
+        summary.Skipped.ShouldBeEmpty();
+        var payslip = (Payslip)payslips.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(IPayslipRepository.Add)).GetArguments()[0]!;
+        Math.Abs(payslip.NetAmount - 45_000m).ShouldBeLessThanOrEqualTo(0.01m);
     }
 
     [Fact]

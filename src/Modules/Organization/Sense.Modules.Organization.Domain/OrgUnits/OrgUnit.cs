@@ -44,6 +44,9 @@ public sealed class OrgUnit : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Cross-module reference to a future Location entity (different roadmap item); column reserved, no FK yet.</summary>
     public Guid? LocationId { get; private set; }
 
+    /// <summary>Default cost center inherited by employees assigned to this unit unless an employee override exists.</summary>
+    public Guid? CostCenterId { get; private set; }
+
     /// <summary>Display order among siblings under the same parent.</summary>
     public int SortOrder { get; private set; }
 
@@ -83,6 +86,8 @@ public sealed class OrgUnit : TenantAggregateRoot<Guid>, IAuditLogged
     public void AssignManager(Guid? managerEmployeeId) => ManagerEmployeeId = managerEmployeeId;
 
     public void AssignLocation(Guid? locationId) => LocationId = locationId;
+
+    public void AssignCostCenter(Guid? costCenterId) => CostCenterId = costCenterId;
 
     public void Reorder(int sortOrder) => SortOrder = sortOrder;
 

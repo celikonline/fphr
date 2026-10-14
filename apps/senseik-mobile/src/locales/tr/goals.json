@@ -2,6 +2,8 @@
   "title": "Hedeflerim",
   "loadError": "Hedefler yüklenemedi. Lütfen tekrar deneyin.",
   "empty": "Henüz bir hedefiniz yok.",
+  "emptyGuide": "Hedef ataması için yöneticinize danışabilir veya destek ekibine ulaşabilirsiniz.",
+  "getHelp": "Destek al",
   "invalidTitle": "Geçersiz değer",
   "invalidProgress": "İlerleme 0 ile 100 arasında bir tam sayı olmalı.",
   "saveError": "İlerleme güncellenemedi. Lütfen tekrar deneyin.",

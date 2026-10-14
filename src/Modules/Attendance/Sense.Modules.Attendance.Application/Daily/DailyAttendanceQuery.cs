@@ -24,13 +24,13 @@ public sealed class DailyAttendanceQuery(
     private const int MaxPageSize = 200;
 
     public async Task<PagedResult<DailyAttendanceRowDto>> ListAsync(
-        Guid tenantId, DateOnly date, DailyStatus status, Guid? orgUnitId, bool includeSubUnits, int page, int pageSize, CancellationToken ct)
+        Guid tenantId, DateOnly date, DailyStatus? status, Guid? orgUnitId, bool includeSubUnits, int page, int pageSize, CancellationToken ct)
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
 
         var day = await LoadAsync(tenantId, date, orgUnitId, includeSubUnits, ct);
-        var matching = day.Employees.Where(e => e.Statuses.Contains(status)).ToList();
+        var matching = day.Employees.Where(e => status is null || e.Statuses.Contains(status.Value)).ToList();
         if (matching.Count == 0)
         {
             return new PagedResult<DailyAttendanceRowDto>([], page, pageSize, 0);
@@ -97,7 +97,17 @@ public sealed class DailyAttendanceQuery(
         var record = e.Record;
         return new DailyAttendanceRowDto(
             e.EmployeeId, name, null, date, record?.CheckIn, record?.CheckOut, record?.WorkedMinutes ?? 0, record?.OvertimeMinutes ?? 0,
-            AnomalyNames(record?.Anomalies ?? AttendanceAnomaly.None), e.LeaveType, checkInPunch?.Id, checkOutPunch?.Id);
+            AnomalyNames(record?.Anomalies ?? AttendanceAnomaly.None), e.LeaveType, checkInPunch?.Id, checkOutPunch?.Id,
+            PlannedStart: record?.PlannedStart,
+            PlannedEnd: record?.PlannedEnd,
+            Punches: dayPunches.Select(p => new DailyPunchDto(
+                p.Id,
+                p.OccurredAtUtc,
+                char.ToLowerInvariant(p.Direction.ToString()[0]) + p.Direction.ToString()[1..],
+                char.ToLowerInvariant(p.Source.ToString()[0]) + p.Source.ToString()[1..],
+                p.IsManual,
+                p.Reason)).ToArray(),
+            Statuses: e.Statuses.OrderBy(s => s).ToArray());
     }
 
     private static string[] AnomalyNames(AttendanceAnomaly anomalies) =>

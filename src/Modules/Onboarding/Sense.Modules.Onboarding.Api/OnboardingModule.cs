@@ -6,6 +6,7 @@ using Sense.Modules.Onboarding.Contracts;
 using Sense.Modules.Onboarding.Domain.Tasks;
 using Sense.Modules.Onboarding.Infrastructure;
 using Sense.Modules.Onboarding.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts.CardPdf;
 using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -45,5 +46,6 @@ public sealed class OnboardingModule : IModule
             typeof(OnboardingPermissions).Assembly); // Contracts
         // EmployeeHired/EmployeeTerminated handlers are registered by AddModuleHandlers' scan above.
         services.AddOnboardingCoreServices();
+        services.AddScoped<IEmployeeCardPdfSection, Infrastructure.CardPdf.OnboardingCardPdfSection>();
     }
 }

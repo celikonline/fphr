@@ -1,8 +1,9 @@
 {
   "dailyList": {
-    "title": "Günlük puantaj listesi",
-    "subtitle": "Seçilen günün duruma göre çalışan listesi",
+    "title": "Günlük puantaj",
+    "subtitle": "Seçilen gün için ekip devam durumu, çalışma saatleri ve kart hareketleri",
     "status": {
+      "all": "Tüm çalışanlar",
       "incalculable": "Hesaplanamayan",
       "arrived": "Gelenler",
       "late": "Geç kalanlar",
@@ -18,14 +19,16 @@
     "allUnits": "Tüm birimler",
     "employee": "Çalışan",
     "unit": "Birim",
+    "planned": "Planlanan vardiya",
     "checkIn": "Giriş",
     "checkOut": "Çıkış",
     "worked": "Çalışılan",
     "overtime": "Fazla mesai",
     "leave": "İzin",
     "anomalies": "Uyarılar",
+    "statuses": "Durum",
     "actions": "İşlemler",
-    "empty": "Bu durumda kayıt yok.",
+    "empty": "Seçilen filtrelerde gösterilecek çalışan yok.",
     "loadError": "Liste yüklenemedi.",
     "addPunch": "Elle kayıt ekle",
     "addPunchTitle": "Elle giriş/çıkış kaydı ekle",
@@ -45,7 +48,38 @@
     "genericError": "İşlem sırasında bir hata oluştu.",
     "prevPage": "Önceki sayfa",
     "nextPage": "Sonraki sayfa",
-    "minutes": "{{count}} dk"
+    "minutes": "{{count}} dk",
+    "summary": {
+      "arrived": "Giriş yapan",
+      "late": "Geç kalan",
+      "earlyLeave": "Erken çıkan",
+      "absent": "Devamsız",
+      "onLeave": "İzinli",
+      "overtime": "Fazla mesai"
+    },
+    "movements": "Kart hareketleri",
+    "noMovements": "Bu gün için kart hareketi yok.",
+    "movementTime": "Saat",
+    "source": "Kaynak",
+    "deleteMovement": "Hareketi gerekçeyle sil",
+    "directions": {
+      "in": "Giriş",
+      "out": "Çıkış",
+      "unknown": "Yönsüz",
+      "breakStart": "Mola başlangıcı",
+      "breakEnd": "Mola bitişi"
+    },
+    "sources": {
+      "manual": "Elle",
+      "import": "İçe aktarma",
+      "device": "PDKS",
+      "selfService": "Self servis",
+      "request": "Talep",
+      "terminal": "Terminal"
+    },
+    "emptyGuide": "Filtreleri veya tarihi kontrol edin. Cihaz kayıtları henüz aktarılmadıysa içe aktarın.",
+    "importRecords": "Cihaz kayıtlarını içe aktar",
+    "contactSupport": "Yardım için destek al"
   },
   "timeDashboard": {
     "title": "Zaman panosu",
@@ -86,7 +120,9 @@
       "detail": "{{worked}} / {{planned}} planlı vardiya günü"
     },
     "unit": "Birim",
-    "unassigned": "Atanmamış"
+    "unassigned": "Atanmamış",
+    "emptyGuide": "Seçilen kapsamda henüz devam verisi yok. Cihaz kayıtlarını aktarın veya günlük puantajı açın.",
+    "openDailyList": "Günlük puantajı aç"
   },
   "monthlyMatrix": {
     "title": "Aylık puantaj matrisi",
@@ -121,7 +157,8 @@
       "publicHoliday": "Resmi tatil",
       "incalculable": "Hesaplanamaz",
       "none": "Veri yok"
-    }
+    },
+    "emptyGuide": "Tarih ve birim filtrelerini kontrol edin. Veriler aktarılmadıysa cihaz kayıtlarını içe aktarın."
   },
   "punchRequests": {
     "title": "Kayıt talepleri",
@@ -159,7 +196,9 @@
     "loadError": "Talepler yüklenemedi.",
     "allStatuses": "Tümü",
     "unknownEmployee": "Bilinmeyen çalışan",
-    "decidedAt": "Karar: {{date}}"
+    "decidedAt": "Karar: {{date}}",
+    "emptyMineGuide": "Henüz eksik kayıt talebiniz yok. Yeni bir talep oluşturarak başlayın.",
+    "emptyAllGuide": "Bekleyen veya görüntülenecek talep yok. Gerekirse günlük puantaj ekranından kayıtları kontrol edin."
   },
   "comingSoon": "Bu ekran yakında kullanıma açılacak."
 }

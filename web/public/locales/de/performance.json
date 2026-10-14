@@ -56,7 +56,9 @@
       "employee": "Mitarbeitende:r",
       "submit": "Zuweisen",
       "assigned": "Ziel zugewiesen."
-    }
+    },
+    "emptyGuide": "Beginnen Sie mit der Zuweisung eines Ziels an ein Teammitglied.",
+    "emptySupport": "Support um Hilfe bitten"
   },
   "reviewCycles": {
     "title": "Beurteilungszyklen",
@@ -97,7 +99,9 @@
       "closed": "Zyklus geschlossen.",
       "closeConfirmTitle": "Zyklus schließen",
       "closeConfirmDescription": "Möchten Sie \"{{name}}\" wirklich schließen? Das kann nicht rückgängig gemacht werden; nach dem Schließen können keine mit diesem Zyklus verknüpften Formulare mehr veröffentlicht werden."
-    }
+    },
+    "emptyAllCycles": "Alle Beurteilungszyklen anzeigen",
+    "emptySupport": "Personalabteilung oder Support kontaktieren"
   },
   "reviewForms": {
     "openButton": "Formulare",

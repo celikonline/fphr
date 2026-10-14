@@ -16,4 +16,7 @@ public interface ILeaveBalanceLookup
     /// every Annual-coded type), or null when the employee has no leave profile yet.
     /// </summary>
     Task<decimal?> GetRemainingAnnualLeaveDaysAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Read-only annual leave balance on a specific exit date; future usage and later accruals are excluded.</summary>
+    Task<decimal?> GetRemainingAnnualLeaveDaysAsOfAsync(Guid tenantId, Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
 }

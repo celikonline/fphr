@@ -25,6 +25,7 @@ public static class IdentityRoutes
     public const string Settings = ApiRoutes.VersionedBase + "/identity/settings";
     public const string UnitAuthorizations = ApiRoutes.VersionedBase + "/identity/unit-authorizations";
     public const string AuditLog = ApiRoutes.VersionedBase + "/identity/audit-log";
+    public const string PlatformOperations = ApiRoutes.VersionedBase + "/identity/platform/operations";
 }
 
 public sealed record LoginRequest(string Email, string Password, string? TenantSlug);

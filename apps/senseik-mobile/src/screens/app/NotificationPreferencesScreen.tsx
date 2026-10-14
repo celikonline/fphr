@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Switch, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { EmptyState, ErrorBanner, GlassCard, Screen, ScreenHeader } from "@/components/ui";
@@ -14,6 +16,7 @@ import {
   notificationTemplateLabel,
 } from "@/lib/notificationLabels";
 import { palette, text } from "@/theme/theme";
+import type { AppStackParamList } from "@/types/navigation";
 
 function PreferenceRow({
   preference,
@@ -50,6 +53,7 @@ function PreferenceRow({
 
 export default function NotificationPreferencesScreen() {
   const { t } = useTranslation("notifications");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -118,7 +122,13 @@ export default function NotificationPreferencesScreen() {
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
       {!error && preferences.length === 0 ? (
-        <EmptyState icon="notifications-outline" title={t("preferences.empty")} />
+        <EmptyState
+          icon="notifications-outline"
+          title={t("preferences.empty")}
+          message={t("preferences.emptyGuide")}
+          actionLabel={t("preferences.getHelp")}
+          onAction={() => navigation.navigate("Support")}
+        />
       ) : (
         preferences.map((preference) => (
           <PreferenceRow

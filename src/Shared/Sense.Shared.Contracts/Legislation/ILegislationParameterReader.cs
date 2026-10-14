@@ -104,12 +104,13 @@ public static class LegislationParameterKeys
     public const string PayrollSgkEmployerRate = "Payroll.Sgk.EmployerRate";
     public const string PayrollUnemploymentEmployerRate = "Payroll.Unemployment.EmployerRate";
 
-    /// <summary>5-point SGK employer incentive rate (5510 md.81); seeded for future use, not applied by the P1 calculator (TODO P2+).</summary>
+    /// <summary>Dated general-sector SGK employer discount (5510 md.81/ı; 2 points in 2026). Manufacturing is a separate model.</summary>
     public const string PayrollSgkEmployerDiscountRate = "Payroll.Sgk.EmployerDiscountRate";
+    public const string PayrollSgkUnemploymentBeneficiaryEmployerSupportRate = "Payroll.Sgk.UnemploymentBeneficiaryEmployerSupportRate";
     public const string PayrollStampTaxRate = "Payroll.StampTax.Rate";
     public const string PayrollMinimumWageGross = "Payroll.MinimumWage.Gross";
     public const string PayrollMealIncomeTaxDailyExemption = "Payroll.Meal.IncomeTax.DailyExemption";
-    public const string PayrollMealSgkDailyExemptionRate = "Payroll.Meal.Sgk.DailyExemptionRate";
+    public const string PayrollMealSgkDailyExemption = "Payroll.Meal.Sgk.DailyExemption";
 
     /// <summary>Faz 3 P2 (11.3.07-bordro.md "Yemek varyant kuralları"): 0/1 decimal, whether the meal+market card variant gets the Cash/MealCardOnly exemption.</summary>
     public const string PayrollMealMarketCardExemptionApplies = "Payroll.Meal.MarketCard.ExemptionApplies";

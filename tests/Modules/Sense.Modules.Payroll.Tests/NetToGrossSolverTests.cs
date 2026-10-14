@@ -12,7 +12,7 @@ public sealed class NetToGrossSolverTests
         [new TaxBracket(100_000m, 0.15m), new TaxBracket(200_000m, 0.20m), new TaxBracket(500_000m, 0.27m), new TaxBracket(null, 0.35m)],
         SgkFloor: 0m, SgkCeiling: 300_000m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m,
         SgkEmployerRate: 0.205m, UnemploymentEmployerRate: 0.02m, SgkEmployerDiscountRate: 0m, StampTaxRate: 0.00759m,
-        MinimumWageGross: 20_000m, MealIncomeTaxDailyExemption: 0m, MealSgkDailyExemptionRate: 0m, MealMarketCardExemptionApplies: false,
+        MinimumWageGross: 20_000m, MealIncomeTaxDailyExemption: 0m, MealSgkDailyExemption: 0m, MealMarketCardExemptionApplies: false,
         DisabilityMonthlyTaxReductionDegree1: 0m, DisabilityMonthlyTaxReductionDegree2: 0m, DisabilityMonthlyTaxReductionDegree3: 0m,
         AsOf: new DateOnly(2026, 8, 1));
 
@@ -49,5 +49,19 @@ public sealed class NetToGrossSolverTests
     public void Solve_RejectsANonPositiveNet()
     {
         Should.Throw<Exception>(() => NetToGrossSolver.Solve(0m, g => Run(g, 0m)));
+    }
+
+    [Fact]
+    public void Solve_ExpandsItsBracket_WhenThePremiumFloorExceedsTheInitialGrossBound()
+    {
+        var snapshot = Legislation with { SgkFloor = 30_000m };
+        PayrollCalculationResult Calculate(decimal gross) => PayrollCalculator.Calculate(new PayrollCalculationInput(
+            GrossMonthlySalary: gross, WorkedDays: 30, CalendarDaysInMonth: 30, MealVariant: MealBenefitVariant.None,
+            MealDailyAmount: 0m, PriorCumulativeGvBase: 0m, AsOfDate: new DateOnly(2026, 8, 1)), snapshot);
+
+        var gross = NetToGrossSolver.Solve(100m, Calculate);
+
+        gross.ShouldBeGreaterThan(400m);
+        Math.Abs(NetToGrossSolver.SalaryNet(Calculate(gross)) - 100m).ShouldBeLessThanOrEqualTo(0.01m);
     }
 }

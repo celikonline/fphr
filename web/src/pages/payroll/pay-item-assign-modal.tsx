@@ -5,6 +5,7 @@ import { ActionIcon, Alert, Button, Group, Modal, NumberInput, Select, Stack, Te
 import { X } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { PayItemForm } from "./pay-item-form";
 import {
   createPayItemAssignments,
   deletePayItemAssignment,
@@ -53,6 +54,8 @@ interface PayItemAssignModalProps {
   fixedEmployee?: PickedEmployee;
   defaultYear: number;
   defaultMonth: number;
+  /** Limit this assignment to the period currently open on the payroll screen. */
+  singleMonth?: boolean;
 }
 
 /** "Ödeme türü ata": one active pay item to one or many employees (single = a list of one), optional value and start/end month. */
@@ -65,7 +68,7 @@ export function PayItemAssignModal({ opened, onClose, ...rest }: PayItemAssignMo
   );
 }
 
-function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<PayItemAssignModalProps, "opened">) {
+function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth, singleMonth = false }: Omit<PayItemAssignModalProps, "opened">) {
   const { t } = useTranslation(["payroll", "common"]);
   const refresh = useRefreshAssignments();
   const [itemId, setItemId] = useState<string | null>(null);
@@ -73,8 +76,9 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
   const [picker, setPicker] = useState<PickedEmployee | null>(null);
   const [value, setValue] = useState<number | string>("");
   const [fromMonth, setFromMonth] = useState(toMonthValue(defaultYear, defaultMonth));
-  const [toMonth, setToMonth] = useState("");
+  const [toMonth, setToMonth] = useState(singleMonth ? toMonthValue(defaultYear, defaultMonth) : "");
   const [error, setError] = useState<string | null>(null);
+  const [creatingItem, setCreatingItem] = useState(false);
 
   const items = useQuery({ queryKey: ["payroll", "pay-items", "active"], queryFn: () => listPayItems(false) });
   const activeItems = (items.data ?? []).filter((item) => item.isActive !== false);
@@ -111,6 +115,7 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
   };
 
   return (
+    <>
     <form
       onSubmit={(event) => {
         event.preventDefault();
@@ -129,6 +134,16 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
           searchable
           required
         />
+        <Button type="button" size="xs" variant="subtle" onClick={() => setCreatingItem(true)}>
+          {t("payroll:payItems.new")}
+        </Button>
+        {items.isError && <Alert color="red">{t("payroll:payItems.genericError")}</Alert>}
+        {selected?.formula && (
+          <div>
+            <Text size="xs" fw={500}>{t("payroll:payItems.formula.label")}</Text>
+            <Text size="sm" ff="monospace" style={{ overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>{selected.formula}</Text>
+          </div>
+        )}
         {selected?.direction === "deduction" && (
           <Alert color="red" variant="light" data-testid="deduction-assign-hint">
             {t("payroll:payItems.deductionAssignHint")}
@@ -184,13 +199,21 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
           decimalSeparator="."
         />
         <Group grow align="flex-start">
-          <TextInput type="month" label={t("payroll:assignments.modal.fromMonth")} value={fromMonth} onChange={(event) => setFromMonth(event.currentTarget.value)} required />
+          <TextInput
+            type="month"
+            label={t("payroll:assignments.modal.fromMonth")}
+            value={fromMonth}
+            onChange={(event) => setFromMonth(event.currentTarget.value)}
+            disabled={singleMonth}
+            required
+          />
           <TextInput
             type="month"
             label={t("payroll:assignments.modal.toMonth")}
-            description={t("payroll:assignments.modal.toMonthHint")}
+            description={singleMonth ? t("payroll:adjustments.formulaAssignmentHint", { defaultValue: "Bu formüllü ödeme yalnızca seçili bordro döneminde uygulanır." }) : t("payroll:assignments.modal.toMonthHint")}
             value={toMonth}
             onChange={(event) => setToMonth(event.currentTarget.value)}
+            disabled={singleMonth}
           />
         </Group>
         {error && <Alert color="red">{error}</Alert>}
@@ -204,6 +227,19 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
         </Group>
       </Stack>
     </form>
+    {creatingItem && (
+      <PayItemForm
+        opened
+        defaultValidFrom={from ? `${fromMonth}-01` : undefined}
+        onClose={() => setCreatingItem(false)}
+        onCreated={(id) => {
+          setItemId(id);
+          setValue("");
+          setError(null);
+        }}
+      />
+    )}
+    </>
   );
 }
 

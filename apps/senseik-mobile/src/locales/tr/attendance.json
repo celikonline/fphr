@@ -42,6 +42,10 @@
   },
   "empty": {
     "month": "Bu ay için kayıtlı puantaj günü yok.",
-    "filter": "Bu filtreye uyan gün yok."
+    "monthGuide": "Eksik giriş veya çıkış için düzeltme talebi oluşturabilirsiniz.",
+    "requestCorrection": "Puantaj düzeltmesi iste",
+    "filter": "Bu filtreye uyan gün yok.",
+    "filterGuide": "Filtreyi kaldırıp ayın tüm kayıtlarını görüntüleyin.",
+    "clearFilter": "Filtreyi temizle"
   }
 }

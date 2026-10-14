@@ -1,13 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
 import SearchPicker, { type PickerOption } from "@/components/structure/search-picker";
 import ApprovalPoliciesSection, { useUnitApprovalPolicies } from "@/components/structure/approval-policies-section";
+import { usePermission } from "@/components/permission-guard";
 import { structureErrorMessage } from "@/components/structure/errors";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorStatus } from "@/lib/api-error";
 import type { Location } from "@/services/locations.service";
+import { getCostCenters } from "@/services/organization.service";
 import {
   COMPANY_TYPE_CODE,
   assignCompanyHolidayCalendar,
@@ -16,6 +18,7 @@ import {
   createUnit,
   searchEmployees,
   updateUnit,
+  setUnitCostCenter,
   type Company,
   type HolidayCalendar,
   type OrgUnit,
@@ -64,12 +67,15 @@ export default function UnitFormDialog({
   const isCompanyLevel = level.code === COMPANY_TYPE_CODE;
   const isCreate = !unit;
   const isCompanyCreate = isCreate && isCompanyLevel;
+  const canViewCostCenters = usePermission("organization.cost_centers.view");
 
   const [name, setName] = useState(unit?.name ?? "");
   const [parentId, setParentId] = useState<string>(unit?.parentId ?? NONE);
   const [manager, setManager] = useState<PickerOption | null>(initialManager);
   const [managerHidden, setManagerHidden] = useState(!canPickManager);
   const [locationId, setLocationId] = useState<string>(unit?.locationId ?? NONE);
+  const [costCenterId, setCostCenterId] = useState<string>(unit?.costCenterId ?? NONE);
+  const costCentersQuery = useQuery({ queryKey: ["organization", "cost-centers"], queryFn: () => getCostCenters(true), enabled: canViewCostCenters });
   const initialCalendar = isCreate ? defaultCalendarId : (company?.holidayCalendarId ?? null);
   const [calendarId, setCalendarId] = useState<string>(initialCalendar ?? NONE);
   const [submitted, setSubmitted] = useState(false);
@@ -119,7 +125,8 @@ export default function UnitFormDialog({
     mutationFn: async () => {
       const toId = (value: string) => (value === NONE ? null : value);
       if (isCompanyCreate) {
-        await createCompany({ name: name.trim(), holidayCalendarId: toId(calendarId) });
+        const created = await createCompany({ name: name.trim(), holidayCalendarId: toId(calendarId) });
+        if (canViewCostCenters && costCenterId !== NONE) await setUnitCostCenter(created.orgUnitId, costCenterId);
         return;
       }
       const managerEmployeeId = managerHidden ? (unit?.managerEmployeeId ?? null) : (manager?.id ?? null);
@@ -136,21 +143,25 @@ export default function UnitFormDialog({
           locationId: nextLocationId,
           sortOrder: unit.sortOrder,
         });
+        if (canViewCostCenters) await setUnitCostCenter(unit.id, costCenterId === NONE ? null : costCenterId);
         if (company && canAssignCalendar && toId(calendarId) !== (company.holidayCalendarId ?? null)) {
           await assignCompanyHolidayCalendar(company.id, toId(calendarId));
         }
       } else {
-        await createUnit({
+        const created = await createUnit({
           typeId: level.id,
           parentId: toId(parentId),
           name: name.trim(),
           managerEmployeeId,
           locationId: nextLocationId,
         });
+        if (canViewCostCenters && costCenterId !== NONE) await setUnitCostCenter(created.id, costCenterId);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["structure", "unit-approval-policies"] });
+      queryClient.invalidateQueries({ queryKey: ["organization", "employee-cost-center"] });
+      queryClient.invalidateQueries({ queryKey: ["payroll", "periods"] });
       toast({
         variant: "success",
         title: t("common:success"),
@@ -275,6 +286,27 @@ export default function UnitFormDialog({
               onChange={(value) => value !== null && setLocationId(value)}
             />
           )}
+
+          {canViewCostCenters && <Select
+              id="unit-cost-center"
+              label={t("structure:units.costCenter")}
+              description={t("structure:units.costCenterHint")}
+              inputWrapperOrder={HINT_BELOW}
+              searchable
+              nothingFoundMessage={t("common:noResults")}
+              data={[
+                { value: NONE, label: t("structure:units.inheritCostCenter") },
+                ...(costCentersQuery.data ?? []).map((center) => ({
+                  value: center.id,
+                  label: `${center.code} · ${center.name}${center.isActive ? "" : ` · ${t("structure:units.inactiveCostCenter")}`}`,
+                  disabled: !center.isActive && center.id !== unit?.costCenterId,
+                })),
+              ]}
+              value={costCenterId}
+              allowDeselect={false}
+              onChange={(value) => value !== null && setCostCenterId(value)}
+              disabled={costCentersQuery.isLoading}
+          />}
 
           {unit && (
             <ApprovalPoliciesSection state={approvalPolicies} units={units} disabled={mutation.isPending} />

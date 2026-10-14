@@ -55,6 +55,7 @@ public static class BackgroundJobServiceCollectionExtensions
         // Register background job services
         services.AddScoped<IBackgroundJobService, BackgroundJobService>();
         services.AddScoped<IBackgroundJobExecutor, BackgroundJobExecutor>();
+        services.AddSingleton<IBackgroundJobMonitor, HangfireBackgroundJobMonitor>();
 
         return services;
     }

@@ -42,6 +42,10 @@
   },
   "empty": {
     "month": "No timesheet days recorded this month.",
-    "filter": "No days match this filter."
+    "monthGuide": "You can submit a correction request for a missing check-in or check-out.",
+    "requestCorrection": "Request a correction",
+    "filter": "No days match this filter.",
+    "filterGuide": "Clear the filter to view all entries for this month.",
+    "clearFilter": "Clear filter"
   }
 }

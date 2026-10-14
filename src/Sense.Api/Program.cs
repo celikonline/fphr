@@ -2,6 +2,7 @@ using Hangfire;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Sense.Api;
+using Sense.Api.Authorization;
 using Sense.Api.HealthChecks;
 using Sense.Api.Middleware;
 using Sense.Api.Observability;
@@ -101,10 +102,10 @@ try
     // Map SignalR hubs
     app.MapHub<NotificationsHub>("/hubs/notifications");
 
-    // Map Hangfire dashboard (admin role protection would be added here)
+    // Hangfire dashboard can trigger/requeue/delete jobs: allow only direct platform SuperAdmin sessions.
     app.UseHangfireDashboard(options: new DashboardOptions
     {
-        IgnoreAntiforgeryToken = true,
+        Authorization = [new PlatformDashboardAuthorizationFilter()],
         DashboardTitle = "Sense.İK Background Jobs"
     });
 

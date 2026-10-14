@@ -43,6 +43,7 @@
   },
   "created": {
     "invited": "Şirket oluşturuldu. İK Yöneticisine davet e-postası gönderildi.",
+    "invitationManual": "Şirket oluşturuldu ancak davet e-postası gönderilemedi. Bu bağlantıyı İK Yöneticisine iletin: {{url}}",
     "withPassword": "Şirket oluşturuldu. İK Yöneticisi belirlediğiniz parolayla giriş yapabilir."
   },
   "errors": {

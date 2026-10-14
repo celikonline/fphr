@@ -80,6 +80,18 @@ public static class IdentityPermissions
         new(AccessSettingsBypass, Module, AccessSettingsBypass, Groups.AccessSettings),
         new(ModulesManage, Module, ModulesManage, Groups.Account),
         new(PlatformTenantsManage, Module, PlatformTenantsManage, Groups.Platform),
+        new(PlatformPermissions.OperationsView, Module, PlatformPermissions.OperationsView, Groups.Platform),
+        new(PlatformPermissions.BackupsView, Module, PlatformPermissions.BackupsView, Groups.Platform),
+        new(PlatformPermissions.BackupsRun, Module, PlatformPermissions.BackupsRun, Groups.Platform),
+        new(PlatformPermissions.BackupsRestore, Module, PlatformPermissions.BackupsRestore, Groups.Platform),
+        new(PlatformPermissions.JobsView, Module, PlatformPermissions.JobsView, Groups.Platform),
+        new(PlatformPermissions.JobsTrigger, Module, PlatformPermissions.JobsTrigger, Groups.Platform),
+        new(PlatformPermissions.JobsManage, Module, PlatformPermissions.JobsManage, Groups.Platform),
+        new(PlatformPermissions.MaintenanceView, Module, PlatformPermissions.MaintenanceView, Groups.Platform),
+        new(PlatformPermissions.MaintenanceManage, Module, PlatformPermissions.MaintenanceManage, Groups.Platform),
+        new(PlatformPermissions.DiagnosticsView, Module, PlatformPermissions.DiagnosticsView, Groups.Platform),
+        new(PlatformPermissions.AuditView, Module, PlatformPermissions.AuditView, Groups.Platform),
+        new(PlatformPermissions.AuditExport, Module, PlatformPermissions.AuditExport, Groups.Platform),
     ];
 }
 
@@ -94,6 +106,18 @@ public static class PlatformPermissions
     public const string Wildcard = Prefix + "*";
 
     public const string TenantsManage = "platform.tenants.manage";
+    public const string OperationsView = "platform.operations.view";
+    public const string BackupsView = "platform.backups.view";
+    public const string BackupsRun = "platform.backups.run";
+    public const string BackupsRestore = "platform.backups.restore";
+    public const string JobsView = "platform.jobs.view";
+    public const string JobsTrigger = "platform.jobs.trigger";
+    public const string JobsManage = "platform.jobs.manage";
+    public const string MaintenanceView = "platform.maintenance.view";
+    public const string MaintenanceManage = "platform.maintenance.manage";
+    public const string DiagnosticsView = "platform.diagnostics.view";
+    public const string AuditView = "platform.audit.view";
+    public const string AuditExport = "platform.audit.export";
 
     public static bool IsPlatformKey(string permissionKey) => permissionKey.StartsWith(Prefix, StringComparison.Ordinal);
 }

@@ -26,7 +26,10 @@ public sealed record IncentiveAssignmentDto(
     int FromMonth,
     int? ToYear,
     int? ToMonth,
-    string? Note);
+    string? Note,
+    bool IsDefinitionActive,
+    DateOnly DefinitionValidFrom,
+    DateOnly? DefinitionValidTo);
 
 public sealed record CreateIncentiveAssignmentsResult(IReadOnlyList<Guid> CreatedIds);
 
@@ -126,7 +129,8 @@ public sealed class ListIncentiveAssignmentsHandler(
                 var name = contact is null ? a.EmployeeId.ToString() : $"{contact.FirstName} {contact.LastName}".Trim();
                 return new IncentiveAssignmentDto(
                     a.Id, a.EmployeeId, name, a.IncentiveDefinitionId, definition.Code, definition.Name, definition.DeclarationCode, definition.Kind,
-                    definition.IsSmmmApproved, a.ValidFromMonth.Year, a.ValidFromMonth.Month, a.ValidToMonth?.Year, a.ValidToMonth?.Month, a.Note);
+                    definition.IsSmmmApproved, a.ValidFromMonth.Year, a.ValidFromMonth.Month, a.ValidToMonth?.Year, a.ValidToMonth?.Month, a.Note,
+                    definition.IsActive, definition.ValidFrom, definition.ValidTo);
             }).ToList();
         return Result.Success(dtos);
     }

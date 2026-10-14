@@ -90,7 +90,7 @@ public sealed class IncentiveIntegrationTests : TestFixture
     {
         var tenantId = Guid.NewGuid();
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
-        var id = await CreateDefinitionAsync(tenantId, "KAPSAMA", IncentiveKind.EmployerShareCoverage, CoverageParameters());
+        var id = await CreateDefinitionAsync(tenantId, "KAPSAMA", IncentiveKind.EmployerShareCoverage, CoverageParameters() with { MaxSupportMultiplier = 1m });
 
         using var scope = ServiceProvider!.CreateScope();
         var loaded = (await scope.ServiceProvider.GetRequiredService<IIncentiveDefinitionRepository>().FindByIdAsync(id))!;
@@ -101,11 +101,12 @@ public sealed class IncentiveIntegrationTests : TestFixture
         loaded.DeclarationCode.ShouldBe("06111");
         loaded.IsActive.ShouldBeTrue();
         loaded.IsSmmmApproved.ShouldBeFalse();
-        loaded.Parameters.ShouldBe(CoverageParameters());
+        loaded.Parameters.ShouldBe(CoverageParameters() with { MaxSupportMultiplier = 1m });
         loaded.Parameters.Rate!.LegislationKey.ShouldBe("Payroll.Sgk.EmployerRate");
         loaded.Parameters.Rate.Value.ShouldBeNull();
         loaded.Parameters.CoverageBase.ShouldBe(IncentiveCoverageBase.MinimumWage);
         loaded.Parameters.CapMultiplier.ShouldBe(1.5m);
+        loaded.Parameters.MaxSupportMultiplier.ShouldBe(1m);
         loaded.Parameters.EmployerSgkRate!.Value.ShouldBe(0.155m);
         (loaded.Parameters.CoversEmployerSgk, loaded.Parameters.CoversEmployerUnemployment, loaded.Parameters.CoversEmployeeSgk, loaded.Parameters.CoversEmployeeUnemployment)
             .ShouldBe((true, true, false, true));

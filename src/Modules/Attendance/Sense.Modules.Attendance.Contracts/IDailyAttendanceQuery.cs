@@ -6,7 +6,7 @@ namespace Sense.Modules.Attendance.Contracts;
 public interface IDailyAttendanceQuery
 {
     Task<PagedResult<DailyAttendanceRowDto>> ListAsync(
-        Guid tenantId, DateOnly date, DailyStatus status, Guid? orgUnitId, bool includeSubUnits, int page, int pageSize, CancellationToken ct);
+        Guid tenantId, DateOnly date, DailyStatus? status, Guid? orgUnitId, bool includeSubUnits, int page, int pageSize, CancellationToken ct);
 
     /// <summary>Per-status headcounts for the same filter (tab badges).</summary>
     Task<IReadOnlyDictionary<DailyStatus, int>> CountsAsync(

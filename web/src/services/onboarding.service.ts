@@ -145,6 +145,26 @@ export interface OnboardingTemplateSet {
   isActive: boolean;
 }
 
+export interface OnboardingBuddyAssignment {
+  employeeId: string;
+  buddyEmployeeId: string;
+  startDate: string;
+  endDate?: string | null;
+}
+
+export async function getOnboardingBuddy(employeeId: string): Promise<OnboardingBuddyAssignment | null> {
+  const { data } = await apiClient.get<OnboardingBuddyAssignment | null>(`${BASE}/employees/${employeeId}/buddy`);
+  return data;
+}
+
+export async function saveOnboardingBuddy(
+  employeeId: string,
+  input: Omit<OnboardingBuddyAssignment, "employeeId">
+): Promise<OnboardingBuddyAssignment> {
+  const { data } = await apiClient.put<OnboardingBuddyAssignment>(`${BASE}/employees/${employeeId}/buddy`, input);
+  return data;
+}
+
 export async function listOnboardingTemplateSets(): Promise<OnboardingTemplateSet[]> {
   const { data } = await apiClient.get<OnboardingTemplateSet[]>(`${BASE}/template-sets`);
   return data;

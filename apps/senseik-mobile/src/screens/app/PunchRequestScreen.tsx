@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { EmptyState } from "@/components/ui";
 import { formatDateTime } from "@/lib/formatters";
 import { palette, radius, text, tones } from "@/theme/theme";
 import {
@@ -50,6 +51,7 @@ const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxxl: 32 } as const;
 /** Eksik kayıt talebi (Z2.1): form + kendi talepleri; yalnız bekleyen talep iptal edilir. */
 export default function PunchRequestScreen() {
   const { t } = useTranslation("checkin");
+  const scrollViewRef = useRef<ScrollView>(null);
   const [requests, setRequests] = useState<PunchRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +125,7 @@ export default function PunchRequestScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView ref={scrollViewRef} style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{t("punchRequest.title")}</Text>
       {error && (
         <View style={styles.errorBanner}>
@@ -194,7 +196,13 @@ export default function PunchRequestScreen() {
 
       <Text style={styles.sectionTitle}>{t("punchRequest.mine")}</Text>
       {error ? null : requests.length === 0 ? (
-        <Text style={styles.emptyText}>{t("punchRequest.empty")}</Text>
+        <EmptyState
+          icon="time-outline"
+          title={t("punchRequest.empty")}
+          message={t("punchRequest.emptyGuide")}
+          actionLabel={t("punchRequest.createAnother")}
+          onAction={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+        />
       ) : (
         requests.map((request) => (
           <View key={request.id} style={styles.card}>
@@ -248,7 +256,6 @@ const styles = StyleSheet.create({
   },
   cardValue: { ...text.bodyMuted, color: palette.white, flexShrink: 1 },
   cardSubtext: { ...text.caption, color: palette.textFaint, marginTop: spacing.xs },
-  emptyText: { ...text.bodyMuted, color: palette.textFaint },
   errorBanner: { backgroundColor: tones.danger.bg, borderRadius: radius.button, padding: spacing.md, marginBottom: spacing.md },
   errorText: { ...text.bodyMuted, color: tones.danger.fg },
   fieldLabel: { ...text.caption, color: palette.textMuted, marginTop: spacing.md, marginBottom: spacing.xs },

@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import type { TFunction } from "i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Badge, Card, Group, Table, Text, Title } from "@mantine/core";
-import { MonitorCheck } from "lucide-react";
+import { Badge, Button, Card, Group, Table, Text, Title } from "@mantine/core";
+import { FileUp, LifeBuoy, MonitorCheck } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { getLiveAttendanceBoard, type LiveAttendanceStatus } from "@/services/attendance.service";
 import { getLiveTerminals, type LiveBoardLastPunch, type LiveTerminalStatus } from "@/services/attendance-board.service";
 
@@ -30,6 +32,8 @@ function LiveBoard() {
   });
 
   const canViewTerminals = usePermission("attendance.terminal.view");
+  const canImport = usePermission("attendance.timesheet.import");
+  const canViewDaily = usePermission("attendance.daily.view");
   const { data: terminals } = useQuery({
     queryKey: ["attendance", "live-board", "terminals"],
     queryFn: () => getLiveTerminals(),
@@ -79,9 +83,21 @@ function LiveBoard() {
             ) : rows.length === 0 ? (
               <Table.Tr>
                 <Table.Td colSpan={5}>
-                  <Text size="sm" c="dimmed" ta="center" p="lg">
-                    {t("attendance:liveBoard.empty")}
-                  </Text>
+                  <AttendanceEmptyState
+                    title={t("attendance:liveBoard.empty")}
+                    description={t("attendance:liveBoard.emptyGuide")}
+                    action={canImport ? (
+                      <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+                        {t("attendance:openDeviceImport")}
+                      </Button>
+                    ) : canViewDaily ? (
+                      <Button component={Link} to="/app/attendance/daily/all">{t("attendance:openDailyList")}</Button>
+                    ) : (
+                      <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                        {t("attendance:contactSupport")}
+                      </Button>
+                    )}
+                  />
                 </Table.Td>
               </Table.Tr>
             ) : (
@@ -122,9 +138,11 @@ function TerminalStrip({ terminals }: { terminals: LiveTerminalStatus[] }) {
         {t("attendance:liveBoard.terminals.title")}
       </Title>
       {terminals.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {t("attendance:liveBoard.terminals.empty")}
-        </Text>
+        <AttendanceEmptyState
+          title={t("attendance:liveBoard.terminals.empty")}
+          description={t("attendance:liveBoard.terminals.emptyGuide")}
+          action={<Button component={Link} to="/app/attendance/terminals">{t("attendance:liveBoard.terminals.openTerminals")}</Button>}
+        />
       ) : (
         <Group gap="sm" align="stretch">
           {terminals.map((terminal) => (

@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, Briefcase, Play, Plus, Square } from "lucide-react";
+import { Archive, Briefcase, LifeBuoy, Play, Plus, Square } from "lucide-react";
 import {
   Badge,
   Button,
@@ -308,9 +308,23 @@ function JobPostings() {
             {getApiErrorMessage(error, t("recruitment:genericError"))}
           </Text>
         ) : !data || data.length === 0 ? (
-          <Text p="md" size="sm" c="dimmed">
-            {t("recruitment:postings.empty")}
-          </Text>
+          <Stack align="center" gap="sm" py="xl" px="md">
+            <Text size="sm" c="dimmed" ta="center">
+              {t("recruitment:postings.empty")}
+            </Text>
+            <Text size="sm" c="dimmed" ta="center">
+              {t("recruitment:postings.emptyGuide")}
+            </Text>
+            {canCreate ? (
+              <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
+                {t("recruitment:postings.addPosting")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("recruitment:postings.emptySupport")}
+              </Button>
+            )}
+          </Stack>
         ) : (
           <>
             {/* Geniş ekran: tablo */}

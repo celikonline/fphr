@@ -359,6 +359,10 @@ public sealed class IncentiveAssignmentFeaturesTests
     public async Task LegacyPreview_MapsCodesToDefinitions_AndSaysWhenTheCalculationChanges()
     {
         var approvedDiscount = Stored("SGK_5510", declarationCode: "05510");
+        approvedDiscount.Update(Data(declarationCode: "05510") with
+        {
+            Parameters = new IncentiveParameters { Rate = IncentiveRate.Key(IncentiveTemplates.EmployerDiscountRateKey) },
+        }).IsSuccess.ShouldBeTrue();
         approvedDiscount.Approve(Guid.NewGuid(), Now, null);
         Stored("SGK_6111", IncentiveKind.EmployerShareCoverage, declarationCode: "06111");
         var unmatchedEmployee = Guid.NewGuid();

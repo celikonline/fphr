@@ -12,12 +12,14 @@
     "back": "Back",
     "next": "Save and continue",
     "skip": "Skip this step",
+    "retry": "Retry setup",
     "finish": "Finish setup",
     "finishing": "Finishing..."
   },
   "errors": {
     "generic": "The action could not be completed. Please try again.",
-    "load": "The information could not be loaded.",
+    "load": "Company setup could not be completed.",
+    "loadHelp": "As an HR manager, you can retry. The workspace preparation can be safely repeated.",
     "nameRequired": "Company name is required.",
     "finish": "Setup could not be completed. Please try again."
   },

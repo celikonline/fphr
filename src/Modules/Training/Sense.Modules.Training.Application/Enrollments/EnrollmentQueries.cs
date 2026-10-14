@@ -10,7 +10,7 @@ namespace Sense.Modules.Training.Application.Enrollments;
 
 /// <summary>Eğitim programı katılımcılarını listele.</summary>
 [RequiresPermission("training.enrollments.view")]
-public sealed record ListEnrollmentsQuery(Guid? TrainingProgramId = null) : IQuery<List<EnrollmentDto>>;
+public sealed record ListEnrollmentsQuery(Guid? TrainingProgramId = null, Guid? EmployeeId = null) : IQuery<List<EnrollmentDto>>;
 
 /// <summary>Katılımcı kayıtlarını listele — repository'den veri al.</summary>
 public sealed class ListEnrollmentsHandler(IEnrollmentRepository enrollments, ITenantContext tenant)
@@ -20,7 +20,9 @@ public sealed class ListEnrollmentsHandler(IEnrollmentRepository enrollments, IT
     {
         var enrollmentRecords = request.TrainingProgramId.HasValue
             ? await enrollments.GetByTrainingProgramIdAsync(tenant.TenantId, request.TrainingProgramId.Value, cancellationToken)
-            : new List<Enrollment>();
+            : request.EmployeeId.HasValue
+                ? await enrollments.GetByEmployeeIdAsync(tenant.TenantId, request.EmployeeId.Value, cancellationToken)
+                : new List<Enrollment>();
 
         var dtos = enrollmentRecords
             .Select(e => new EnrollmentDto(

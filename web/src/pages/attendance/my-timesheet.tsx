@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Badge, Card, Group, SimpleGrid, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
+import { ActionIcon, Badge, Button, Card, Group, SimpleGrid, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { CalendarClock, ChevronLeft, ChevronRight, LifeBuoy, QrCode, Stamp } from "lucide-react";
+import { Link } from "react-router";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, toDateOnly } from "@/lib/dates";
 import { IncalculableHint } from "@/components/attendance/incalculable-hint";
@@ -40,6 +42,8 @@ export default function MyTimesheetPage() {
 
 function MyTimesheet() {
   const { t, i18n } = useTranslation(["attendance", "common"]);
+  const canCheckIn = usePermission("attendance.my.checkin");
+  const canRequestPunch = usePermission("attendance.my.punchrequest");
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
 
   const from = toDateOnly(startOfMonth(month));
@@ -131,9 +135,23 @@ function MyTimesheet() {
             {getApiErrorMessage(daysQuery.error, t("attendance:genericError"))}
           </Text>
         ) : sortedDays.length === 0 ? (
-          <Text size="sm" c="dimmed">
-            {t("attendance:empty")}
-          </Text>
+          <AttendanceEmptyState
+            title={t("attendance:empty")}
+            description={t("attendance:my.emptyGuide")}
+            action={canCheckIn ? (
+              <Button component={Link} to="/app/attendance/self-check-in" leftSection={<QrCode size={16} />}>
+                {t("attendance:my.openCheckIn")}
+              </Button>
+            ) : canRequestPunch ? (
+              <Button component={Link} to="/app/attendance/punch-requests" leftSection={<Stamp size={16} />}>
+                {t("attendance:my.openPunchRequest")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("attendance:my.contactSupport")}
+              </Button>
+            )}
+          />
         ) : (
           <Stack gap="xs">
             {sortedDays.map((day) => (

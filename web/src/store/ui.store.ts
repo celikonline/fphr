@@ -36,7 +36,7 @@ interface UIStore {
 export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
-      theme: "system",
+      theme: "light",
       setTheme: (theme) => set({ theme }),
       palette: DEFAULT_PALETTE,
       setPalette: (palette) => set({ palette: resolvePalette(palette) }),
@@ -58,7 +58,17 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: "ui-store",
+      version: 1,
       partialize: (state) => ({ theme: state.theme, palette: state.palette }),
+      // "system" was the old default, so migrate that implicit choice to the new light default.
+      // Explicit light/dark selections remain untouched; future system selections are persisted normally.
+      migrate: (persisted) => {
+        const stored = (persisted ?? {}) as Partial<Pick<UIStore, "theme" | "palette">>;
+        return {
+          theme: stored.theme === "system" || stored.theme == null ? "light" : stored.theme,
+          palette: resolvePalette(stored.palette),
+        };
+      },
       // Older persisted snapshots have no palette (or a since-removed key): normalize instead of trusting storage.
       merge: (persisted, current) => {
         const stored = (persisted ?? {}) as Partial<Pick<UIStore, "theme" | "palette">>;

@@ -43,6 +43,12 @@ public interface IEmployeeOnboardingTaskRepository
     Task<IReadOnlyList<EmployeeOnboardingTask>> ListPendingAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IOnboardingBuddyAssignmentRepository
+{
+    Task<OnboardingBuddyAssignment?> GetByEmployeeIdAsync(Guid employeeId, CancellationToken cancellationToken = default);
+    void Add(OnboardingBuddyAssignment assignment);
+}
+
 /// <summary>Tenant-scoped onboarding category repository.</summary>
 public interface IOnboardingCategoryRepository
 {

@@ -41,6 +41,7 @@ export function DefinitionAdvice({ definition, fromMonth }: { definition: Incent
   const from = parseMonthValue(fromMonth);
   const validFrom = definition.validFrom ? new Date(`${definition.validFrom}T00:00:00`) : null;
   const startsLater = from !== null && validFrom !== null && validFrom > new Date(from.year, from.month - 1, 1);
+  const expired = from !== null && definition.validTo != null && `${fromMonth}-01` > definition.validTo;
   return (
     <Stack gap="xs">
       {!isDeclarationOnly(definition.kind) && definition.isSmmmApproved !== true && (
@@ -51,6 +52,11 @@ export function DefinitionAdvice({ definition, fromMonth }: { definition: Incent
       {startsLater && (
         <Alert color="yellow" data-testid="incentive-validfrom-warning">
           {t("payroll:incentiveAssignments.modal.validFromWarning", { date: validFrom.toLocaleDateString(i18n.language) })}
+        </Alert>
+      )}
+      {expired && (
+        <Alert color="red" data-testid="incentive-validto-warning">
+          {t("payroll:incentiveAssignments.modal.validToWarning", { date: definition.validTo })}
         </Alert>
       )}
     </Stack>
@@ -95,8 +101,9 @@ function AssignBody({ onClose, fixedEmployee, defaultYear, defaultMonth }: Omit<
   const to = parseMonthValue(toMonth);
   const toInvalid = toMonth !== "" && to === null;
   const endRequired = selected?.maxMonths != null && to === null;
+  const expired = selected?.validTo != null && from !== null && `${fromMonth}-01` > selected.validTo;
   const canSubmit =
-    selected !== undefined && employees.length > 0 && employees.length <= MAX_ASSIGNMENT_EMPLOYEES && from !== null && !toInvalid && !endRequired;
+    selected !== undefined && employees.length > 0 && employees.length <= MAX_ASSIGNMENT_EMPLOYEES && from !== null && !toInvalid && !endRequired && !expired;
 
   const save = useMutation({
     mutationFn: () =>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronRight, Copy, EyeOff, Mail, Phone } from "lucide-react";
 import {
   ActionIcon,
@@ -10,6 +11,7 @@ import {
   Divider,
   Group,
   Progress,
+  Select,
   Stack,
   Text,
   Title,
@@ -18,6 +20,7 @@ import { usePermission } from "@/components/permission-guard";
 import { useAuthStore } from "@/store/auth.store";
 import { formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
 import type { EmployeeDetail } from "@/services/employees.service";
+import { getCostCenters, getEmployeeCostCenterAssignment, setEmployeeCostCenterOverride } from "@/services/organization.service";
 import { AccountStatusBadge, EmployeeStatusBadge } from "./employee-badges";
 import { EmployeeAvatar } from "./employee-avatar";
 import { EmployeePhotoEditor } from "./employee-photo-editor";
@@ -26,6 +29,7 @@ import { useOrgUnits } from "./use-org-units";
 const MONTHS_PER_YEAR = 12;
 const HIGH_COMPLETION = 80;
 const MEDIUM_COMPLETION = 50;
+const INHERIT_COST_CENTER = "__inherit__";
 
 export interface Tenure {
   years: number;
@@ -328,6 +332,7 @@ export function ProfileView({
       </div>
 
       <Stack gap="lg">
+        {employee.status !== "Terminated" && <EmployeeCostCenterCard employeeId={employee.id} />}
         <InfoCard title={t("employees:card.groups.manager")}>
           {employee.managerEmployeeId && employee.managerDisplayName ? (
             <Group gap="sm" wrap="nowrap">
@@ -406,6 +411,63 @@ export function ProfileView({
         </InfoCard>
       </Stack>
     </div>
+  );
+}
+
+function EmployeeCostCenterCard({ employeeId }: { employeeId: string }) {
+  const { t } = useTranslation(["structure", "common"]);
+  const queryClient = useQueryClient();
+  const canManage = usePermission("organization.cost_centers.manage");
+  const canView = usePermission("organization.cost_centers.view");
+  const assignmentKey = ["organization", "employee-cost-center", employeeId] as const;
+  const assignmentQuery = useQuery({ queryKey: assignmentKey, queryFn: () => getEmployeeCostCenterAssignment(employeeId), enabled: canView });
+  const centersQuery = useQuery({ queryKey: ["organization", "cost-centers"], queryFn: () => getCostCenters(true), enabled: canView });
+  const mutation = useMutation({
+    mutationFn: (value: string) => setEmployeeCostCenterOverride(employeeId, value === INHERIT_COST_CENTER ? null : value),
+    onSuccess: (assignment) => {
+      queryClient.setQueryData(assignmentKey, assignment);
+      queryClient.invalidateQueries({ queryKey: ["payroll", "periods"] });
+    },
+  });
+  const selectedValue = assignmentQuery.data?.employeeOverrideCostCenterId ?? INHERIT_COST_CENTER;
+  const centerNames = new Map((centersQuery.data ?? []).map((center) => [center.id, `${center.code} · ${center.name}`]));
+  const effectiveLabel = assignmentQuery.data?.effectiveCostCenterId
+    ? centerNames.get(assignmentQuery.data.effectiveCostCenterId) ?? assignmentQuery.data.effectiveCostCenterId
+    : t("structure:costCenterAssignment.none");
+
+  if (!canView) return null;
+
+  return (
+    <InfoCard title={t("structure:costCenterAssignment.title")}>
+      <Stack gap="sm">
+        {canManage ? (
+          <Select
+            label={t("structure:costCenterAssignment.override")}
+            description={t("structure:costCenterAssignment.hint")}
+            data={[
+              { value: INHERIT_COST_CENTER, label: t("structure:units.inheritCostCenter") },
+              ...(centersQuery.data ?? []).map((center) => ({
+                value: center.id,
+                label: `${centerNames.get(center.id)!}${center.isActive ? "" : ` · ${t("structure:units.inactiveCostCenter")}`}`,
+                disabled: !center.isActive && center.id !== assignmentQuery.data?.employeeOverrideCostCenterId,
+              })),
+            ]}
+            value={selectedValue}
+            onChange={(value) => value && mutation.mutate(value)}
+            disabled={assignmentQuery.isLoading || centersQuery.isLoading || mutation.isPending}
+            searchable
+            nothingFoundMessage={t("common:noResults")}
+          />
+        ) : (
+          <Info label={t("structure:costCenterAssignment.effective")}>{effectiveLabel}</Info>
+        )}
+        {canManage && (
+          <Info label={t("structure:costCenterAssignment.effective")}>{effectiveLabel}</Info>
+        )}
+        {mutation.isError && <Text size="xs" c="red">{t("structure:costCenterAssignment.saveFailed")}</Text>}
+        {assignmentQuery.isError && <Text size="xs" c="red">{t("structure:costCenterAssignment.loadFailed")}</Text>}
+      </Stack>
+    </InfoCard>
   );
 }
 

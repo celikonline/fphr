@@ -71,7 +71,7 @@ public sealed class ClosingChecklistTests
                 LegislationParameterKeys.PayrollSgkFloor, LegislationParameterKeys.PayrollSgkCeiling, LegislationParameterKeys.PayrollSgkEmployeeRate,
                 LegislationParameterKeys.PayrollUnemploymentEmployeeRate, LegislationParameterKeys.PayrollSgkEmployerRate, LegislationParameterKeys.PayrollUnemploymentEmployerRate,
                 LegislationParameterKeys.PayrollSgkEmployerDiscountRate, LegislationParameterKeys.PayrollStampTaxRate, LegislationParameterKeys.PayrollMinimumWageGross,
-                LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, LegislationParameterKeys.PayrollMealMarketCardExemptionApplies,
+                LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, LegislationParameterKeys.PayrollMealSgkDailyExemption, LegislationParameterKeys.PayrollMealMarketCardExemptionApplies,
                 LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3,
             })
             {

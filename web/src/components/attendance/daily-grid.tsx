@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { ActionIcon, Alert, Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Textarea, Tooltip } from "@mantine/core";
@@ -21,7 +21,7 @@ type Dialog =
   | { kind: "add"; row: DailyAttendanceRow }
   | { kind: "delete"; id: string; time: string };
 
-/** Employee rows of one daily status tab, with manual punch add/delete dialogs (reason mandatory). */
+/** Daily employee rows with expandable punch detail and audited manual punch add/delete actions. */
 export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }: DailyGridProps) {
   const { t } = useTranslation(["attendance-daily", "attendance"]);
   const leaveName = useLeaveName();
@@ -32,6 +32,7 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
   const [reasonError, setReasonError] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   function open(next: Dialog) {
     setReason("");
@@ -85,19 +86,27 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
             <Table.Tr>
               <Table.Th>{t("attendance-daily:dailyList.employee")}</Table.Th>
               {showUnit && <Table.Th>{t("attendance-daily:dailyList.unit")}</Table.Th>}
+              <Table.Th>{t("attendance-daily:dailyList.planned")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.checkIn")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.checkOut")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.worked")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.overtime")}</Table.Th>
               <Table.Th>{t("attendance-daily:dailyList.anomalies")}</Table.Th>
+              <Table.Th>{t("attendance-daily:dailyList.statuses")}</Table.Th>
               {canManage && <Table.Th>{t("attendance-daily:dailyList.actions")}</Table.Th>}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {rows.map((row) => (
-              <Table.Tr key={row.employeeId}>
-                <Table.Td>{row.employeeName}</Table.Td>
+              <Fragment key={row.employeeId}>
+              <Table.Tr style={{ background: selectedEmployeeId === row.employeeId ? "var(--mantine-color-blue-light)" : undefined }}>
+                <Table.Td>
+                  <Button aria-expanded={selectedEmployeeId === row.employeeId} variant="subtle" size="compact-sm" px={0} onClick={() => setSelectedEmployeeId((id) => id === row.employeeId ? null : row.employeeId)}>
+                    {row.employeeName}
+                  </Button>
+                </Table.Td>
                 {showUnit && <Table.Td>{row.orgUnitName || "—"}</Table.Td>}
+                <Table.Td>{row.plannedStart && row.plannedEnd ? `${hhmm(row.plannedStart)}–${hhmm(row.plannedEnd)}` : "—"}</Table.Td>
                 <Table.Td>
                   <Group gap={4} wrap="nowrap">
                     {hhmm(row.checkIn)}
@@ -121,6 +130,15 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
                     ))}
                   </Group>
                 </Table.Td>
+                <Table.Td>
+                  <Group gap={4} wrap="wrap">
+                    {(row.statuses ?? []).map((status) => (
+                      <Badge key={status} variant="light" color={status === "absent" || status === "incalculable" ? "red" : status === "onLeave" ? "blue" : status === "overtime" ? "orange" : "teal"}>
+                        {t(`attendance-daily:dailyList.status.${status}`)}
+                      </Badge>
+                    ))}
+                  </Group>
+                </Table.Td>
                 {canManage && (
                   <Table.Td>
                     <Tooltip label={t("attendance-daily:dailyList.addPunch")}>
@@ -131,6 +149,44 @@ export default function DailyGrid({ rows, canManage, onAddPunch, onDeletePunch }
                   </Table.Td>
                 )}
               </Table.Tr>
+              {selectedEmployeeId === row.employeeId && (
+                <Table.Tr>
+                  <Table.Td colSpan={showUnit ? (canManage ? 10 : 9) : (canManage ? 9 : 8)} bg="var(--mantine-color-gray-light)">
+                    <Stack gap="xs" py="xs">
+                      <Group justify="space-between">
+                        <div>
+                          <Text fw={600} size="sm">{row.employeeName} · {t("attendance-daily:dailyList.movements")}</Text>
+                          <Text size="xs" c="dimmed">{row.date}</Text>
+                        </div>
+                        {canManage && <Button size="xs" leftSection={<Plus size={14} />} onClick={() => open({ kind: "add", row })}>{t("attendance-daily:dailyList.addPunch")}</Button>}
+                      </Group>
+                      {(row.punches?.length ?? 0) === 0 ? (
+                        <Text size="sm" c="dimmed">{t("attendance-daily:dailyList.noMovements")}</Text>
+                      ) : (
+                        <Table withTableBorder withColumnBorders verticalSpacing="xs" bg="var(--mantine-color-body)">
+                          <Table.Thead><Table.Tr>
+                            <Table.Th>{t("attendance-daily:dailyList.movementTime")}</Table.Th>
+                            <Table.Th>{t("attendance-daily:dailyList.direction")}</Table.Th>
+                            <Table.Th>{t("attendance-daily:dailyList.source")}</Table.Th>
+                            <Table.Th>{t("attendance-daily:dailyList.reason")}</Table.Th>
+                            {canManage && <Table.Th>{t("attendance-daily:dailyList.actions")}</Table.Th>}
+                          </Table.Tr></Table.Thead>
+                          <Table.Tbody>{row.punches?.map((punch) => (
+                            <Table.Tr key={punch.id}>
+                              <Table.Td>{new Date(punch.occurredAtUtc).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</Table.Td>
+                              <Table.Td>{t(`attendance-daily:dailyList.directions.${punch.direction}`, { defaultValue: punch.direction })}</Table.Td>
+                              <Table.Td>{t(`attendance-daily:dailyList.sources.${punch.source}`, { defaultValue: punch.source })}</Table.Td>
+                              <Table.Td>{punch.reason || "—"}</Table.Td>
+                              {canManage && <Table.Td>{deleteButton(punch.id, new Date(punch.occurredAtUtc).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }), t("attendance-daily:dailyList.deleteMovement"))}</Table.Td>}
+                            </Table.Tr>
+                          ))}</Table.Tbody>
+                        </Table>
+                      )}
+                    </Stack>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              </Fragment>
             ))}
           </Table.Tbody>
         </Table>

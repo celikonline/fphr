@@ -2,9 +2,12 @@
   "title": "İzinlerim",
   "loadError": "İzin bilgileri yüklenemedi. Lütfen tekrar deneyin.",
   "balancesEmpty": "Bakiye kaydı bulunamadı.",
+  "balancesGuide": "İzin bakiyeniz görünmüyorsa İnsan Kaynakları ekibine danışın.",
+  "getHelp": "Destek al",
   "newRequest": "Yeni izin talebi",
   "myRequests": "Taleplerim",
   "requestsEmpty": "Henüz izin talebiniz yok.",
+  "requestsGuide": "Yeni izin talebi düğmesini kullanarak ilk talebinizi oluşturabilirsiniz.",
   "balanceDetail": "Bakiye ayrıntısı",
   "types": {
     "annual": "Yıllık izin",
@@ -121,6 +124,9 @@
     "loadError": "Çalışan listesi yüklenemedi. Lütfen tekrar deneyin.",
     "searchPlaceholder": "İsim, unvan veya birim ara",
     "searchA11y": "Çalışan ara",
-    "empty": "Kayıt bulunamadı."
+    "empty": "Kayıt bulunamadı.",
+    "emptyGuide": "Farklı bir kişi arayın. Uygun vekil bulamazsanız formu kapatıp başka bir izin türü seçebilirsiniz.",
+    "clearSearch": "Aramayı temizle",
+    "close": "Vekil seçimini kapat"
   }
 }

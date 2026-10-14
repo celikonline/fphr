@@ -1,8 +1,9 @@
 namespace Sense.Modules.Organization.Contracts;
 
 /// <summary>
-/// Read-only cross-module lookup for employee-to-cost-center assignments (faz-07 tur 1 ACİL KARAR,
-/// ADR-0023). Lets Payroll and other modules filter/allocate based on employee's assigned cost center
+/// Read-only cross-module lookup for employee-to-cost-center assignments. An employee override wins;
+/// otherwise the closest assigned cost center is inherited from the employee's org-unit ancestry. Lets Payroll
+/// and other modules filter/allocate based on the employee's resolved cost center
 /// without depending on Organization's Domain or Infrastructure. Only returns employees with a
 /// cost center assignment; employees without an assignment are omitted from the result.
 /// Implemented by Sense.Modules.Organization.Infrastructure and registered by

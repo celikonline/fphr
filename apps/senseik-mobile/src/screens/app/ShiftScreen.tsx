@@ -1,23 +1,33 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import * as Sharing from "expo-sharing";
 import i18n from "@/lib/i18n";
-import { ErrorBanner, Screen, ScreenHeader, SectionHeader } from "@/components/ui";
+import {
+  EmptyState,
+  ErrorBanner,
+  PrimaryButton,
+  Screen,
+  ScreenHeader,
+  SectionHeader,
+} from "@/components/ui";
 import {
   shiftService,
   type AvailabilityKind,
   type EmployeeAvailability,
   type ShiftAssignment,
 } from "@/services/ShiftService";
+import { createShiftExport, deleteCachedShiftExport } from "@/services/ShiftExportService";
 import { toLocalDateOnly } from "@/lib/formatters";
-import { palette, text } from "@/theme/theme";
+import { formatMonthYear, shiftMonth, toDateOnly } from "@/components/form/dateRange";
+import { palette } from "@/theme/theme";
 import { PeriodStepper } from "./attendance/PeriodStepper";
 import { formatTimeOfDay } from "./attendance/attendanceStatus";
 import { AvailabilityEntryCard } from "./shift/AvailabilityEntryCard";
 import { AvailabilityForm } from "./shift/AvailabilityForm";
 import { ShiftCard } from "./shift/ShiftCard";
-import { WeekStrip } from "./shift/WeekStrip";
-import { emptyShiftTexts, formatDayLabel, formatWeekLabel, weekDays } from "./shift/shiftWeek";
+import { MonthCalendar } from "./shift/MonthCalendar";
+import { formatDayLabel } from "./shift/shiftWeek";
 
 function todayDateOnly(): string {
   return toLocalDateOnly(new Date());
@@ -33,13 +43,15 @@ function shortEmployeeLabel(employeeId: string): string {
 }
 
 /**
- * Vardiyam (spec §5): week stepper + week strip (tap a day to narrow the lists), own and team
+ * Vardiyam: monthly personal calendar (tap a day to narrow the lists), own and team
  * shifts as glass cards, and the "Müsait değilim" form with the active availability records.
  */
 export default function ShiftScreen() {
   const { t } = useTranslation("shift");
-  const [weekDate, setWeekDate] = useState(() => new Date());
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [availabilityFormOffset, setAvailabilityFormOffset] = useState(0);
+  const [monthDate, setMonthDate] = useState(() => new Date());
+  const [selectedDay, setSelectedDay] = useState<string | null>(() => todayDateOnly());
   const [myShifts, setMyShifts] = useState<ShiftAssignment[]>([]);
   const [teamShifts, setTeamShifts] = useState<ShiftAssignment[]>([]);
   const [teamShiftsVisible, setTeamShiftsVisible] = useState(true);
@@ -52,11 +64,16 @@ export default function ShiftScreen() {
   const [availabilityKind, setAvailabilityKind] = useState<AvailabilityKind>("unavailable");
   const [availabilityNote, setAvailabilityNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const loadAll = useCallback(async () => {
     setError(null);
-    const days = weekDays(weekDate);
-    const range = { from: days[0], to: days[days.length - 1] };
+    const year = monthDate.getFullYear();
+    const month0 = monthDate.getMonth();
+    const range = {
+      from: toDateOnly(year, month0, 1),
+      to: toDateOnly(year, month0, new Date(year, month0 + 1, 0).getDate()),
+    };
     try {
       const [mineResult, availabilityResult] = await Promise.all([
         shiftService.getMyShifts(range),
@@ -65,6 +82,8 @@ export default function ShiftScreen() {
       setMyShifts([...mineResult].sort((a, b) => a.date.localeCompare(b.date)));
       setMyAvailability(availabilityResult.filter((entry) => entry.status === "active"));
     } catch {
+      setMyShifts([]);
+      setMyAvailability([]);
       setError(i18n.t("shift:loadError"));
     }
 
@@ -82,7 +101,7 @@ export default function ShiftScreen() {
       setTeamShifts([]);
       setTeamShiftsVisible(false);
     }
-  }, [weekDate]);
+  }, [monthDate]);
 
   useEffect(() => {
     setLoading(true);
@@ -95,21 +114,19 @@ export default function ShiftScreen() {
     setRefreshing(false);
   }
 
-  function goToPreviousWeek() {
+  function goToPreviousMonth() {
     setSelectedDay(null);
-    setWeekDate((current) => {
-      const next = new Date(current);
-      next.setDate(current.getDate() - 7);
-      return next;
+    setMonthDate((current) => {
+      const next = shiftMonth(current.getFullYear(), current.getMonth(), -1);
+      return new Date(next.year, next.month0, 1);
     });
   }
 
-  function goToNextWeek() {
+  function goToNextMonth() {
     setSelectedDay(null);
-    setWeekDate((current) => {
-      const next = new Date(current);
-      next.setDate(current.getDate() + 7);
-      return next;
+    setMonthDate((current) => {
+      const next = shiftMonth(current.getFullYear(), current.getMonth(), 1);
+      return new Date(next.year, next.month0, 1);
     });
   }
 
@@ -145,6 +162,39 @@ export default function ShiftScreen() {
     }
   }
 
+  async function exportMonth() {
+    if (myShifts.length === 0) return;
+    setExporting(true);
+    let fileUri: string | null = null;
+    try {
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert(t("common:alerts.error"), t("export.unavailable"));
+        return;
+      }
+      fileUri = createShiftExport(myShifts, monthDate.getFullYear(), monthDate.getMonth(), {
+        date: t("export.columns.date"),
+        start: t("export.columns.start"),
+        end: t("export.columns.end"),
+        breakMinutes: t("export.columns.breakMinutes"),
+        night: t("export.columns.night"),
+        note: t("export.columns.note"),
+        sheetName: t("export.sheetName"),
+        yes: t("export.columns.yes"),
+        no: t("export.columns.no"),
+      });
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        dialogTitle: t("export.title"),
+        UTI: "org.openxmlformats.spreadsheetml.sheet",
+      });
+    } catch {
+      Alert.alert(t("common:alerts.error"), t("export.error"));
+    } finally {
+      if (fileUri) deleteCachedShiftExport(fileUri);
+      setExporting(false);
+    }
+  }
+
   // B6: irreversible action - confirm before cancelling instead of acting on the first tap.
   function confirmCancelAvailability(id: string) {
     Alert.alert(t("availability.cancelConfirmTitle"), t("availability.cancelConfirmMessage"), [
@@ -169,36 +219,65 @@ export default function ShiftScreen() {
     );
   }
 
-  const days = weekDays(weekDate);
   const onSelectedDay = (shift: ShiftAssignment) => !selectedDay || shift.date === selectedDay;
   const visibleMine = myShifts.filter(onSelectedDay);
   const visibleTeam = teamShifts.filter(onSelectedDay);
-  const emptyTexts = emptyShiftTexts(selectedDay);
 
   return (
-    <Screen header={header} refreshing={refreshing} onRefresh={() => void onRefresh()}>
+    <Screen
+      header={header}
+      refreshing={refreshing}
+      onRefresh={() => void onRefresh()}
+      scrollViewRef={scrollViewRef}
+    >
       {error ? <ErrorBanner message={error} onRetry={() => void onRefresh()} /> : null}
 
       <View style={styles.period}>
         <PeriodStepper
-          label={formatWeekLabel(days)}
-          onPrev={goToPreviousWeek}
-          onNext={goToNextWeek}
-          prevLabel={t("previousWeek")}
-          nextLabel={t("nextWeek")}
+          label={formatMonthYear(monthDate.getFullYear(), monthDate.getMonth())}
+          onPrev={goToPreviousMonth}
+          onNext={goToNextMonth}
+          prevLabel={t("previousMonth")}
+          nextLabel={t("nextMonth")}
         />
       </View>
-      <WeekStrip
-        days={days}
+      <MonthCalendar
+        year={monthDate.getFullYear()}
+        month0={monthDate.getMonth()}
         today={todayDateOnly()}
         selected={selectedDay}
         markedDays={new Set(myShifts.map((shift) => shift.date))}
+        shiftLabel={t("calendar.shift")}
         onSelect={(day) => setSelectedDay((current) => (current === day ? null : day))}
       />
 
-      <SectionHeader title={selectedDay ? formatDayLabel(selectedDay) : t("sections.myWeek")} />
+      <View style={styles.exportButton}>
+        <PrimaryButton
+          label={t("export.button")}
+          icon="download-outline"
+          onPress={() => void exportMonth()}
+          loading={exporting}
+          disabled={myShifts.length === 0}
+          variant="secondary"
+        />
+      </View>
+
+      <SectionHeader title={selectedDay ? formatDayLabel(selectedDay) : t("sections.myMonth")} />
       {visibleMine.length === 0 ? (
-        <Text style={styles.emptyText}>{emptyTexts.mine}</Text>
+        <EmptyState
+          icon="calendar-outline"
+          title={t(selectedDay ? "empty.day.mine" : "empty.month.mine")}
+          message={t("empty.mineGuide")}
+          actionLabel={t(myShifts.length > 0 ? "empty.showMonth" : "empty.goToAvailability")}
+          onAction={() => {
+            if (myShifts.length > 0) {
+              setSelectedDay(null);
+            } else {
+              setAvailabilityDate(selectedDay ?? todayDateOnly());
+              scrollViewRef.current?.scrollTo({ y: availabilityFormOffset, animated: true });
+            }
+          }}
+        />
       ) : (
         visibleMine.map((shift) => (
           <ShiftCard
@@ -215,7 +294,21 @@ export default function ShiftScreen() {
         <>
           <SectionHeader title={t("sections.team")} />
           {visibleTeam.length === 0 ? (
-            <Text style={styles.emptyText}>{emptyTexts.team}</Text>
+            <EmptyState
+              icon="people-outline"
+              title={t(selectedDay ? "empty.day.team" : "empty.month.team")}
+              message={t("empty.teamGuide")}
+              actionLabel={
+                selectedDay && teamShifts.length > 0
+                  ? t("empty.showMonth")
+                  : t("empty.changeMonth")
+              }
+              onAction={() =>
+                selectedDay && teamShifts.length > 0
+                  ? setSelectedDay(null)
+                  : scrollViewRef.current?.scrollTo({ y: 0, animated: true })
+              }
+            />
           ) : (
             visibleTeam.map((shift) => (
               <ShiftCard
@@ -230,20 +323,32 @@ export default function ShiftScreen() {
       ) : null}
 
       <SectionHeader title={t("sections.unavailable")} />
-      <AvailabilityForm
-        date={availabilityDate}
-        onDateChange={setAvailabilityDate}
-        kind={availabilityKind}
-        onKindChange={setAvailabilityKind}
-        note={availabilityNote}
-        onNoteChange={setAvailabilityNote}
-        submitting={submitting}
-        onSubmit={() => void submitAvailability()}
-      />
+      <View onLayout={(event) => setAvailabilityFormOffset(event.nativeEvent.layout.y)}>
+        <AvailabilityForm
+          date={availabilityDate}
+          onDateChange={setAvailabilityDate}
+          kind={availabilityKind}
+          onKindChange={setAvailabilityKind}
+          note={availabilityNote}
+          onNoteChange={setAvailabilityNote}
+          submitting={submitting}
+          onSubmit={() => void submitAvailability()}
+        />
+      </View>
 
-      {myAvailability.length > 0 ? (
+      <SectionHeader title={t("sections.myAvailability")} />
+      {myAvailability.length === 0 ? (
+        <EmptyState
+          icon="calendar-clear-outline"
+          title={t("availability.empty.title")}
+          message={t("availability.empty.message")}
+          actionLabel={t("availability.empty.action")}
+          onAction={() =>
+            scrollViewRef.current?.scrollTo({ y: availabilityFormOffset, animated: true })
+          }
+        />
+      ) : (
         <>
-          <SectionHeader title={t("sections.myAvailability")} />
           {myAvailability.map((entry) => (
             <AvailabilityEntryCard
               key={entry.id}
@@ -255,7 +360,7 @@ export default function ShiftScreen() {
             />
           ))}
         </>
-      ) : null}
+      )}
     </Screen>
   );
 }
@@ -271,8 +376,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
-  emptyText: {
-    ...text.bodyMuted,
+  exportButton: {
     paddingHorizontal: 20,
+    paddingTop: 14,
   },
 });

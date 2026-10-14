@@ -22,7 +22,10 @@
     "active": "Aktiv",
     "inactive": "Inaktiv",
     "empty": "Noch keine Schichtdefinitionen.",
-    "flexHours": "{{minutes}} Min. (flexibel)"
+    "flexHours": "{{minutes}} Min. (flexibel)",
+    "emptyGuide": "Vor der Mitarbeiterzuweisung eine Schichtdefinition erstellen.",
+    "createFirst": "Erste Schicht erstellen",
+    "contactSupport": "Hilfe erhalten"
   },
   "form": {
     "code": "Code",

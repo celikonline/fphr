@@ -17,17 +17,17 @@ using Shouldly;
 
 namespace Sense.Modules.Payroll.Tests.Incentives;
 
-/// <summary>Shared test data for the incentive calculation tests: the real 2026 legislation values and the recorded-fixture helper.</summary>
+/// <summary>Recorded pre-correction payroll baseline, retained to check engine compatibility; current statutory rates are tested separately.</summary>
 internal static class IncentiveTestKit
 {
     public static readonly DateOnly AsOf = new(2026, 3, 1);
 
-    /// <summary>The real seeded 2026 values (LegislationParameterSeed ids 25-36, 39, 43-45): asgari ücret 33.030, SGK tavanı 247.725, dilimler 190.000/400.000/1.500.000/5.300.000.</summary>
+    /// <summary>Historical test baseline before the 2026 SGK corrections: employer 20.5%, discount 5 points and ceiling 247,725. Fixtures intentionally keep these supplied inputs.</summary>
     public static readonly PayrollLegislationSnapshot Snapshot = new(
         [new TaxBracket(190_000m, 0.15m), new TaxBracket(400_000m, 0.20m), new TaxBracket(1_500_000m, 0.27m), new TaxBracket(5_300_000m, 0.35m), new TaxBracket(null, 0.40m)],
         SgkFloor: 33_030m, SgkCeiling: 247_725m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m, SgkEmployerRate: 0.205m,
         UnemploymentEmployerRate: 0.02m, SgkEmployerDiscountRate: 0.05m, StampTaxRate: 0.00759m, MinimumWageGross: 33_030m,
-        MealIncomeTaxDailyExemption: 240m, MealSgkDailyExemptionRate: 0.2365m, MealMarketCardExemptionApplies: false,
+        MealIncomeTaxDailyExemption: 300m, MealSgkDailyExemption:  158m, MealMarketCardExemptionApplies: false,
         DisabilityMonthlyTaxReductionDegree1: 6900m, DisabilityMonthlyTaxReductionDegree2: 4000m, DisabilityMonthlyTaxReductionDegree3: 1700m, AsOf: AsOf);
 
     public static readonly JsonSerializerOptions StepsOptions = new(JsonSerializerDefaults.Web);
@@ -106,20 +106,20 @@ internal sealed class IncentiveServiceHarness
         return harness;
     }
 
-    public static EmployeePayrollProfile Profile(Guid employeeId, string? incentiveLawCode = null, WageBasis wageBasis = WageBasis.Monthly) => EmployeePayrollProfile.Create(
+    public static EmployeePayrollProfile Profile(Guid employeeId, string? incentiveLawCode = null, WageBasis wageBasis = WageBasis.Monthly, SgkStatus sgkStatus = SgkStatus.Normal) => EmployeePayrollProfile.Create(
         TenantId, employeeId,
         new EmployeePayrollProfileData(
             WorkplaceCompanyId, null, new DateOnly(2026, 1, 1), null,
-            wageBasis, SgkStatus.Normal, incentiveLawCode,
+            wageBasis, sgkStatus, incentiveLawCode,
             MealBenefitVariant.None, 0m, TransportVariant.None, PayrollPaymentMethod.Bank, null,
             SickDaysReducePay: false, ExternalPayrollCode: null, Notes: null)).Value;
 
     /// <summary>Registers an employee with a profile and a salary.</summary>
-    public Guid AddEmployee(string? incentiveLawCode = null, decimal salary = 50_000m, EmployeeSalaryType type = EmployeeSalaryType.Gross)
+    public Guid AddEmployee(string? incentiveLawCode = null, decimal salary = 50_000m, EmployeeSalaryType type = EmployeeSalaryType.Gross, SgkStatus sgkStatus = SgkStatus.Normal)
     {
         var employeeId = Guid.NewGuid();
         Profiles.FindCurrentAsync(employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId, incentiveLawCode)));
+            .Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId, incentiveLawCode, sgkStatus: sgkStatus)));
         SalaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EmployeeCurrentSalary?>(new EmployeeCurrentSalary(salary, "TRY", type, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1))));
         return employeeId;
@@ -203,7 +203,7 @@ internal sealed class IncentiveServiceHarness
         Add(LegislationParameterKeys.PayrollStampTaxRate, s.StampTaxRate);
         Add(LegislationParameterKeys.PayrollMinimumWageGross, s.MinimumWageGross);
         Add(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, s.MealIncomeTaxDailyExemption);
-        Add(LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, s.MealSgkDailyExemptionRate);
+        Add(LegislationParameterKeys.PayrollMealSgkDailyExemption, s.MealSgkDailyExemption);
         Add(LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, 0m);
         Add(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, s.DisabilityMonthlyTaxReductionDegree1);
         Add(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, s.DisabilityMonthlyTaxReductionDegree2);

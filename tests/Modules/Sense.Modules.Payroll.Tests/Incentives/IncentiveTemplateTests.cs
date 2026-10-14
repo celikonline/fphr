@@ -48,16 +48,13 @@ public sealed class IncentiveTemplateTests
         definition.IsComplete.ShouldBeTrue();
         definition.ApprovedAt.ShouldBe(Now);
         definition.ApprovedByUserId.ShouldBeNull();
-        definition.ApprovalNote.ShouldBe("Sistem: mevcut 5 puan davranışı");
+        definition.ApprovalNote.ShouldBe(IncentiveTemplates.SystemApprovalNote);
         definition.TemplateKey.ShouldBe(IncentiveTemplates.Tr5510Md81);
         definition.IsActive.ShouldBeTrue();
     }
 
     public static TheoryData<string> DraftTemplateKeys() => new()
     {
-        IncentiveTemplates.Tr6111,
-        IncentiveTemplates.Tr7103Md17,
-        IncentiveTemplates.Tr7103Md27,
         IncentiveTemplates.Tr5746Gv,
     };
 
@@ -90,14 +87,47 @@ public sealed class IncentiveTemplateTests
     [Fact]
     public void Catalog_ContainsTheDocumentedKindsAndCodes()
     {
-        IncentiveTemplates.Find(IncentiveTemplates.Tr6111)!.Code.ShouldBe("SGK_6111_TASLAK");
+        IncentiveTemplates.Find(IncentiveTemplates.Tr6111)!.Code.ShouldBe("SGK_6111");
         IncentiveTemplates.Find(IncentiveTemplates.Tr6111)!.LawReference.ShouldBe("6111 / 4447 geç. md.10");
         IncentiveTemplates.Find(IncentiveTemplates.Tr6111)!.Kind.ShouldBe(IncentiveKind.EmployerShareCoverage);
-        IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md17)!.Code.ShouldBe("SGK_17103_TASLAK");
-        IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md27)!.Code.ShouldBe("SGK_27103_TASLAK");
+        IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md17)!.Code.ShouldBe("SGK_17103");
+        IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md27)!.Code.ShouldBe("SGK_27103");
         IncentiveTemplates.Find(IncentiveTemplates.Tr5746Gv)!.Code.ShouldBe("ARGE_5746_GV_TASLAK");
         IncentiveTemplates.Find(IncentiveTemplates.Tr5746Gv)!.Kind.ShouldBe(IncentiveKind.IncomeTaxWithholdingRelief);
-        IncentiveTemplates.All.Count.ShouldBe(5);
+        IncentiveTemplates.All.Count.ShouldBe(11);
+    }
+
+    [Theory]
+    [InlineData(IncentiveTemplates.Tr6111)]
+    [InlineData(IncentiveTemplates.Tr4447Md50)]
+    [InlineData(IncentiveTemplates.Tr5510Manufacturing)]
+    [InlineData(IncentiveTemplates.Tr7103Md17)]
+    [InlineData(IncentiveTemplates.Tr7103Md27)]
+    public void ReadyModels_AreCompleteButRequireExplicitApproval(string key)
+    {
+        var definition = IncentiveDefinition.CreateFromTemplate(IncentiveDefinitionTests.TenantId, IncentiveTemplates.Find(key)!, IncentiveDefinitionTests.Jan, Now).Value;
+        definition.IsComplete.ShouldBeTrue();
+        definition.IsSmmmApproved.ShouldBeFalse();
+        definition.Approve(Guid.NewGuid(), Now, "Uygunluk ve süre kontrol edildi").IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Historical7103Models_UseDistinctCaps_AndCannotApplyIn2026()
+    {
+        var manufacturing = IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md17)!;
+        var other = IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md27)!;
+        manufacturing.Parameters.CoverageBase.ShouldBe(IncentiveCoverageBase.ActualSgkBase);
+        manufacturing.Parameters.MaxSupportMultiplier.ShouldBe(1m);
+        other.Parameters.CoverageBase.ShouldBe(IncentiveCoverageBase.MinimumWage);
+        other.Parameters.CapMultiplier.ShouldBe(1m);
+        other.Parameters.MaxSupportMultiplier.ShouldBeNull();
+        foreach (var template in new[] { manufacturing, other })
+        {
+            var definition = IncentiveDefinition.CreateFromTemplate(IncentiveDefinitionTests.TenantId, template, IncentiveDefinitionTests.Jan, Now).Value;
+            definition.ValidTo.ShouldBe(new DateOnly(2022, 12, 31));
+            definition.IsEffectiveInMonth(new DateOnly(2022, 12, 1)).ShouldBeTrue();
+            definition.IsEffectiveInMonth(new DateOnly(2026, 1, 1)).ShouldBeFalse();
+        }
     }
 
     [Fact]

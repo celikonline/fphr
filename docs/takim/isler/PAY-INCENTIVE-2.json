@@ -1,8 +1,8 @@
 {
-  "durum": "backlog",
+  "durum": "incelemede",
   "dal": "takim/bordro-tesvik-modelleri",
   "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY (+ riskli alanda insan onayı)",
-  "kanit": null,
+  "kanit": "docs/takim/handoff/PAY-INCENTIVE-2.md — uygulama ve kabul kanıtı kayıtlı; merge kapısı, gözden geçirici onayı ve riskli alan insan onayı bekliyor.",
   "plan": "docs/takim/handoff/PAY-INCENTIVE-PLAN.md",
   "id": "PAY-INCENTIVE-2",
   "baslik": "Teşvik tanım/atama Application, API, persistence, izin, geçiş (migration)",

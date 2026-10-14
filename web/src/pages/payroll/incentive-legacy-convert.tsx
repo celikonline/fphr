@@ -15,9 +15,10 @@ import {
 import { DefinitionAdvice, INCENTIVE_LEGACY_QUERY_KEY, useRefreshIncentiveAssignments } from "./incentive-assign-modal";
 import { parseMonthValue, toMonthValue } from "./pay-item-assign-modal";
 
-/** True when an assignment of this definition would not reproduce today's flat 5 points (mirrors the server's `calculationChanges`). */
+/** For an existing 05510 profile, only its approved parameter-based model preserves the calculation. */
 export function definitionChangesCalculation(definition: IncentiveDefinition): boolean {
-  return !(definition.isSmmmApproved === true && definition.kind === "employerSgkRateDiscount");
+  return !(definition.isSmmmApproved === true && definition.kind === "employerSgkRateDiscount"
+    && definition.declarationCode === "05510" && definition.parameters?.rate?.legislationKey === "Payroll.Sgk.EmployerDiscountRate");
 }
 
 /** First open payroll period as "YYYY-MM", or the current month when none is open. */
@@ -150,9 +151,10 @@ function ConvertBody({ row, onClose }: { row: LegacyProfileCode; onClose: () => 
   const to = parseMonthValue(toMonth);
   const toInvalid = toMonth !== "" && to === null;
   const endRequired = selected?.maxMonths != null && to === null;
+  const expired = selected?.validTo != null && from !== null && `${startValue}-01` > selected.validTo;
 
-  const changes = selected !== undefined && (definitionChangesCalculation(selected) || (selected.id === row.suggestedDefinitionId && row.calculationChanges === true));
-  const canSubmit = selected !== undefined && from !== null && !toInvalid && !endRequired && (!changes || confirmed);
+  const changes = selected !== undefined && (row.normalizedCode !== "05510" || definitionChangesCalculation(selected) || (selected.id === row.suggestedDefinitionId && row.calculationChanges === true));
+  const canSubmit = selected !== undefined && from !== null && !toInvalid && !endRequired && !expired && (!changes || confirmed);
 
   const save = useMutation({
     mutationFn: () =>

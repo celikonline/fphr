@@ -2,20 +2,49 @@
   "title": "My shift",
   "loadError": "Shift details could not be loaded. Please try again.",
   "employeeLabel": "Employee #{{id}}",
-  "previousWeek": "Previous week",
-  "nextWeek": "Next week",
+  "previousMonth": "Previous month",
+  "nextMonth": "Next month",
+  "calendar": {
+    "shift": "shift scheduled"
+  },
+  "export": {
+    "button": "Export this month to Excel",
+    "title": "Share shift calendar",
+    "sheetName": "Shifts",
+    "unavailable": "File sharing is unavailable on this device.",
+    "error": "The Excel file could not be created. Please try again.",
+    "columns": {
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "breakMinutes": "Break (min)",
+      "night": "Night shift",
+      "note": "Note",
+      "yes": "Yes",
+      "no": "No"
+    }
+  },
   "night": "Night",
   "allDay": "All day",
   "sections": {
-    "myWeek": "My shifts this week",
+    "myMonth": "My shifts",
     "team": "Team shifts",
     "unavailable": "I'm unavailable",
     "myAvailability": "My availability records"
   },
   "empty": {
+    "mineGuide": "Your shifts will appear here when published. You can also submit a date when you are unavailable.",
+    "teamGuide": "There are no other published team shifts available in this view.",
+    "showMonth": "Show all shifts this month",
+    "changeMonth": "Choose another month",
+    "goToAvailability": "Submit availability",
     "week": {
       "mine": "You have no published shifts this week.",
       "team": "There are no team shifts you can view this week."
+    },
+    "month": {
+      "mine": "You have no published shifts this month.",
+      "team": "There are no team shifts you can view this month."
     },
     "day": {
       "mine": "You have no shifts on this day.",
@@ -23,6 +52,11 @@
     }
   },
   "availability": {
+    "empty": {
+      "title": "No availability records yet",
+      "message": "Use the form above to submit a day when you are unavailable.",
+      "action": "Go to availability form"
+    },
     "kinds": {
       "unavailable": "I don't want to work today",
       "weeklyRestRequest": "I want to use my weekly rest day"

@@ -281,6 +281,7 @@ public sealed class PunchRecorder(
         PunchSourceDto.SelfService => PunchSource.SelfService,
         PunchSourceDto.Request => PunchSource.Request,
         PunchSourceDto.Terminal => PunchSource.Terminal,
+        PunchSourceDto.DeviceIntegration => PunchSource.DeviceIntegration,
         _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
     };
 }

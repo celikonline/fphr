@@ -25,6 +25,7 @@ vi.mock("@/services/organization.service", () => ({ getCostCenters: vi.fn(async 
 vi.mock("./closing-checklist", () => ({ ClosingChecklist: () => null }));
 vi.mock("./period-actions", () => ({ PeriodActions: () => null }));
 vi.mock("./period-adjustments", () => ({ PeriodAdjustments: () => null }));
+vi.mock("./period-incentives", () => ({ PeriodIncentives: () => null }));
 vi.mock("./period-comparison", () => ({ PeriodComparison: () => null }));
 vi.mock("./period-preview", () => ({ PeriodPreview: () => null }));
 vi.mock("./period-receipt-matching", () => ({ PeriodReceiptMatching: () => null }));

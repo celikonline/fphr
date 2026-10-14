@@ -18,7 +18,7 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("leave")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -514,10 +514,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000027"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 247725.00m,
+                            DecimalValue = 297270.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Sgk.Ceiling",
-                            Source = "5510 s. Kanun md.82; 2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı = 247.725 TL)"
+                            Source = "5510 md.82, 7566 s.K. - 2026 SGK tavanı asgari ücretin 9 katı; 2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf"
                         },
                         new
                         {
@@ -544,10 +544,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000030"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 0.205m,
+                            DecimalValue = 0.2175m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Sgk.EmployerRate",
-                            Source = "5510 s. Kanun md.81 - SGK işveren hissesi (indirimsiz) %20,5"
+                            Source = "5510 md.81, 7566 s.K. (01.01.2026); SGK işveren prim oranları: https://www.sgk.gov.tr/Content/Post/c7812ea8-5087-413f-aeb5-d3c1d153e11a/Isveren-Prim-Oranlari-2026-01-13-04-52-38 - indirimsiz işveren SGK oranı %21,75 (işsizlik hariç)"
                         },
                         new
                         {
@@ -564,10 +564,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000032"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 0.05m,
+                            DecimalValue = 0.02m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Sgk.EmployerDiscountRate",
-                            Source = "5510 s. Kanun md.81 - 5 puanlık SGK işveren teşviki oranı (uygunluk hesabı henüz uygulanmıyor, TODO P2+)"
+                            Source = "SGK 2026/1 Genelgesi; https://sgk.gov.tr/Content/Post/c52f99f0-da6c-4029-9b9a-a0d6f96a6a42/Guncel-Sigorta-Primi-Tesvik-Destek-ve-Indirimleri-2026-08-04-10-29-55 - genel sektör 2 puan indirimi; imalat 5 puan modeli ayrı atanır"
                         },
                         new
                         {
@@ -584,20 +584,20 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000034"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 240.00m,
+                            DecimalValue = 300.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Meal.IncomeTax.DailyExemption",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - nakit/yalnız yemek kartı günlük gelir vergisi istisnası"
+                            Source = "193 s. GVK md.23/8 ve 2026 gelir vergisi tarifesi; GİB: https://usak.gib.gov.tr/vergi-konulari/1_bireysel/11_ucret_geliri/11 - nakit/yemek kartı günlük GV istisnası"
                         },
                         new
                         {
                             Id = new Guid("00000008-0000-0000-0000-000000000035"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 0.2365m,
+                            DecimalValue = 158.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
-                            Key = "Payroll.Meal.Sgk.DailyExemptionRate",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK Genelgesi yaklaşımı: günlük brüt asgari ücretin %23,65'i SGK'dan istisna"
+                            Key = "Payroll.Meal.Sgk.DailyExemption",
+                            Source = "SGK 2026 prime esas kazanç miktarları: https://www.sgk.gov.tr/Content/Post/2e0c9e1a-2cfe-4456-af10-49d3de0c58ba/Prime-Esas-Kazanc-Miktarlari-2026-01-14-10-35-39 - fiilen çalışılan gün başına SGK yemek istisnası 158 TL"
                         },
                         new
                         {
@@ -606,7 +606,7 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.IncomeTax.Brackets",
-                            Source = "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; kaynak: https://www.memurlar.net/haber/1155986/2026-gelir-vergisi-dilimlerini-gosteren-teblig-r-g-de-yayimlandi.html",
+                            Source = "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; GİB: https://gib.gov.tr/mevzuat/kanun/433/madde/6937",
                             ValueJson = "[{\"upperBound\":190000,\"rate\":0.15},{\"upperBound\":400000,\"rate\":0.20},{\"upperBound\":1500000,\"rate\":0.27},{\"upperBound\":5300000,\"rate\":0.35},{\"upperBound\":null,\"rate\":0.40}]"
                         },
                         new
@@ -637,7 +637,7 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             DecimalValue = 0m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Meal.MarketCard.ExemptionApplies",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"
+                            Source = "2026-10-14 resmi kaynak kontrolü - market harcamasına açık kartın yemek istisnası kapsamına girdiği kabul edilmez; kart türü/harcama kısıtı doğrulanmalı"
                         },
                         new
                         {
@@ -685,30 +685,40 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000043"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 6900.00m,
+                            DecimalValue = 12000.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Disability.MonthlyTaxReduction.Degree1",
-                            Source = "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                            Source = "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"
                         },
                         new
                         {
                             Id = new Guid("00000008-0000-0000-0000-000000000044"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 4000.00m,
+                            DecimalValue = 7000.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Disability.MonthlyTaxReduction.Degree2",
-                            Source = "193 s. GVK md.31 - II. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                            Source = "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"
                         },
                         new
                         {
                             Id = new Guid("00000008-0000-0000-0000-000000000045"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 1700.00m,
+                            DecimalValue = 3000.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Disability.MonthlyTaxReduction.Degree3",
-                            Source = "193 s. GVK md.31 - III. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                            Source = "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000047"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.205m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.UnemploymentBeneficiaryEmployerSupportRate",
+                            Source = "4447 md.50/5 - uzun vadeli ve GSS işveren payları (%19,5) + kısa vadeli %1; 5510 md.81, 7566 s.K. (01.01.2026); SGK işveren prim oranları: https://www.sgk.gov.tr/Content/Post/c7812ea8-5087-413f-aeb5-d3c1d153e11a/Isveren-Prim-Oranlari-2026-01-13-04-52-38"
                         });
                 });
 

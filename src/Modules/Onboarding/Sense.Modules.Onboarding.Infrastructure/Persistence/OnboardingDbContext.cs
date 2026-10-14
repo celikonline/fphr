@@ -24,6 +24,7 @@ public sealed class OnboardingDbContext(DbContextOptions<OnboardingDbContext> op
     public DbSet<OnboardingCategory> Categories => Set<OnboardingCategory>();
 
     public DbSet<OnboardingTemplateSet> TemplateSets => Set<OnboardingTemplateSet>();
+    public DbSet<OnboardingBuddyAssignment> BuddyAssignments => Set<OnboardingBuddyAssignment>();
 
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
@@ -32,6 +33,7 @@ public sealed class OnboardingDbContext(DbContextOptions<OnboardingDbContext> op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new OnboardingBuddyAssignmentConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 }
@@ -42,6 +44,7 @@ internal static class OnboardingTables
     public const string EmployeeTasks = "employee_tasks";
     public const string Categories = "categories";
     public const string TemplateSets = "template_sets";
+    public const string BuddyAssignments = "buddy_assignments";
     public const int EnumLength = 30;
 }
 
@@ -104,6 +107,18 @@ public sealed class OnboardingTemplateSetConfiguration : IEntityTypeConfiguratio
         b.Property(x => x.Name).HasMaxLength(OnboardingLimits.TemplateSetNameMaxLength).IsRequired();
         b.Property(x => x.TemplateIds).HasColumnType("uuid[]");
         b.HasIndex(x => new { x.TenantId, x.Stage });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OnboardingBuddyAssignmentConfiguration : IEntityTypeConfiguration<OnboardingBuddyAssignment>
+{
+    public void Configure(EntityTypeBuilder<OnboardingBuddyAssignment> b)
+    {
+        b.ToTable(OnboardingTables.BuddyAssignments);
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId }).IsUnique();
+        b.HasIndex(x => new { x.TenantId, x.BuddyEmployeeId });
         b.Ignore(x => x.DomainEvents);
     }
 }

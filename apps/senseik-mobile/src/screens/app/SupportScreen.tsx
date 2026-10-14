@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { EmptyState, Screen, ScreenHeader, SectionHeader } from "@/components/ui";
 import {
@@ -19,6 +19,8 @@ export { normalizeTicketStatus, supportTicketStatusTone };
 /** "Hesabım > Destek": Yardım Merkezi araması + makale görünümü + Desteğe bağlan formu + Taleplerim (11.3.13). */
 export default function SupportScreen() {
   const { t } = useTranslation("support");
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [contactFormOffset, setContactFormOffset] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   // Yardım Merkezi
@@ -123,6 +125,7 @@ export default function SupportScreen() {
       header={<ScreenHeader title={t("title")} />}
       refreshing={refreshing}
       onRefresh={() => void onRefresh()}
+      scrollViewRef={scrollViewRef}
     >
       <SectionHeader title={t("sections.help")} />
       <HelpCenterCard
@@ -138,22 +141,30 @@ export default function SupportScreen() {
       />
 
       <SectionHeader title={t("sections.contact")} />
-      <NewTicketCard
-        category={category}
-        onCategoryChange={setCategory}
-        subject={subject}
-        onSubjectChange={setSubject}
-        body={body}
-        onBodyChange={setBody}
-        submitting={submitting}
-        onSubmit={() => void submitTicket()}
-      />
+      <View onLayout={(event) => setContactFormOffset(event.nativeEvent.layout.y)}>
+        <NewTicketCard
+          category={category}
+          onCategoryChange={setCategory}
+          subject={subject}
+          onSubjectChange={setSubject}
+          body={body}
+          onBodyChange={setBody}
+          submitting={submitting}
+          onSubmit={() => void submitTicket()}
+        />
+      </View>
 
       <SectionHeader title={t("sections.tickets")} />
       {ticketsLoading ? (
         <ActivityIndicator style={styles.loading} color={palette.white} />
       ) : tickets.length === 0 ? (
-        <EmptyState icon="chatbox-ellipses-outline" title={t("tickets.empty")} />
+        <EmptyState
+          icon="chatbox-ellipses-outline"
+          title={t("tickets.empty")}
+          message={t("tickets.emptyGuide")}
+          actionLabel={t("tickets.create")}
+          onAction={() => scrollViewRef.current?.scrollTo({ y: contactFormOffset, animated: true })}
+        />
       ) : (
         tickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
       )}

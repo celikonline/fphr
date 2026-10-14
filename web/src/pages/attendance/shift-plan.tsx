@@ -16,10 +16,12 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { CalendarClock, ChevronLeft, ChevronRight, LayoutTemplate, Lock, LockOpen, Moon, Send, Trash2, X } from "lucide-react";
+import { Link } from "react-router";
+import { CalendarClock, ChevronLeft, ChevronRight, LayoutTemplate, LifeBuoy, Lock, LockOpen, Moon, Send, Trash2, X } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
-import { usePermission } from "@/components/permission-guard";
+import { useAnyPermission, usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import ShiftCalendarGrid, { cellKey, cellRange, isNonWorkDay, type CellRef } from "@/components/attendance/shift-calendar-grid";
 import ShiftTemplateDialog from "@/components/attendance/shift-template-dialog";
@@ -85,6 +87,7 @@ function ShiftPlan() {
   const canPlan = usePermission("attendance.shift.plan");
   /** B10 şablon uçları `attendance.shifttemplate.manage` ister (apply için de; veri kapsamı sunucuda ShiftPlan ile denetlenir). */
   const canManageTemplates = usePermission("attendance.shifttemplate.manage");
+  const canViewEmployees = useAnyPermission(["employee.employees.read", "employee.directory.view"]);
 
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
@@ -471,9 +474,17 @@ function ShiftPlan() {
           {getApiErrorMessage(employeesQuery.error ?? assignmentsQuery.error, t("attendance:genericError"))}
         </Text>
       ) : visibleEmployees.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {unassignedOnly && employees.length > 0 ? t("attendance:shiftPlan.unassignedEmpty") : t("attendance:shiftPlan.empty")}
-        </Text>
+        <AttendanceEmptyState
+          title={unassignedOnly && employees.length > 0 ? t("attendance:shiftPlan.unassignedEmpty") : t("attendance:shiftPlan.empty")}
+          description={unassignedOnly && employees.length > 0 ? t("attendance:shiftPlan.unassignedEmptyGuide") : t("attendance:shiftPlan.emptyGuide")}
+          action={unassignedOnly && employees.length > 0 ? (
+            <Button variant="light" onClick={() => setUnassignedOnly(false)}>{t("attendance:shiftPlan.showAllEmployees")}</Button>
+          ) : canViewEmployees ? (
+            <Button component={Link} to="/app/employees">{t("attendance:shiftPlan.openEmployees")}</Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>{t("attendance:contactSupport")}</Button>
+          )}
+        />
       ) : (
         <>
           {/* Dar viewport (≤~576px): 7 kolonlu ızgara sığmaz; gün seçici + tek günlük çalışan kart listesi. */}

@@ -10,7 +10,7 @@ namespace Sense.Modules.Payroll.Application.Incentives;
 /// What the incentive models decided for one employee in one payroll run.
 /// </summary>
 /// <param name="Effects">Approved, in-force (a)/(b)/(c) effects for the calculation engine (empty = none).</param>
-/// <param name="LegacyProfileRule">The old rule applies: no effective SGK assignment and the profile's incentive code is filled (the 5-point discount).</param>
+/// <param name="LegacyProfileRule">No effective SGK assignment, an eligible insurance status and profile code 05510: the dated general-sector discount applies.</param>
 /// <param name="Warnings">Non-blocking issues (<c>incentive_not_approved</c>, <c>incentive_duplicate_assignment</c>, <c>incentive_profile_code_ignored</c>).</param>
 /// <param name="MissingParameter">A referenced legislation key that could not be resolved for the period (or resolved to an impossible rate); the employee is skipped.</param>
 public sealed record IncentiveResolution(
@@ -50,13 +50,20 @@ public sealed class IncentiveCalculation
         return new IncentiveCalculation(plan, legislation, EmployeeIncentiveAssignment.FirstOfMonth(periodStart));
     }
 
-    public async Task<IncentiveResolution> ResolveAsync(Guid employeeId, string? profileLawCode, CancellationToken cancellationToken = default)
+    public Task<IncentiveResolution> ResolveAsync(Guid employeeId, string? profileLawCode, CancellationToken cancellationToken = default) =>
+        ResolveAsync(employeeId, profileLawCode, sgkEligible: true, cancellationToken);
+
+    public async Task<IncentiveResolution> ResolveAsync(Guid employeeId, string? profileLawCode, bool sgkEligible, CancellationToken cancellationToken = default)
     {
         var profileCodeFilled = !string.IsNullOrWhiteSpace(profileLawCode);
+        var legacyEligible = sgkEligible && LegacyIncentiveCodes.Normalize(profileLawCode) == IncentiveTemplates.Sgk5510DeclarationCode;
+        var profileWarning = sgkEligible ? PayrollWarningCodes.IncentiveProfileAssignmentRequired : PayrollWarningCodes.IncentiveSgkStatusNotEligible;
         var effective = _plan.EffectiveForEmployee(employeeId);
         if (effective.Count == 0)
         {
-            return new IncentiveResolution([], profileCodeFilled, []);
+            return new IncentiveResolution([], legacyEligible, profileCodeFilled && !legacyEligible
+                ? [new PayrollWarning(employeeId, profileWarning, profileLawCode!.Trim())]
+                : []);
         }
 
         var warnings = new List<PayrollWarning>();
@@ -64,8 +71,13 @@ public sealed class IncentiveCalculation
         var sgk = Select(employeeId, effective, IncentiveCategory.Sgk, warnings);
         var tax = Select(employeeId, effective, IncentiveCategory.Tax, warnings);
 
-        // The assignment replaces the profile's flat 5 points. Warn when the codes differ, or when the assignment itself changes no
-        // calculation ((d) declaration-only or unapproved), so the employee silently loses the 5 points.
+        if (sgk is null && profileCodeFilled && !legacyEligible)
+        {
+            warnings.Add(new PayrollWarning(employeeId, profileWarning, profileLawCode!.Trim()));
+        }
+
+        // The assignment replaces the profile's general-sector 5510 rule. Warn when the codes differ, or when the
+        // assignment is declaration-only or unapproved, so the model grants no discount.
         var assignmentHasNoEffect = sgk is not null && (sgk.Definition.Kind == IncentiveKind.DeclarationOnly || !sgk.Definition.IsSmmmApproved);
         if (sgk is not null && profileCodeFilled && (assignmentHasNoEffect || !SameDeclarationCode(profileLawCode, sgk.Definition.DeclarationCode)))
         {
@@ -78,6 +90,12 @@ public sealed class IncentiveCalculation
             if (definition.Kind == IncentiveKind.DeclarationOnly)
             {
                 continue; // (d): only the declaration code is reported, the calculation is untouched.
+            }
+
+            if (definition.Category == IncentiveCategory.Sgk && !sgkEligible)
+            {
+                warnings.Add(new PayrollWarning(employeeId, PayrollWarningCodes.IncentiveSgkStatusNotEligible, definition.Code));
+                continue;
             }
 
             if (!definition.IsSmmmApproved)
@@ -95,7 +113,7 @@ public sealed class IncentiveCalculation
             effects.Add(effect);
         }
 
-        return new IncentiveResolution(effects, sgk is null && profileCodeFilled, warnings);
+        return new IncentiveResolution(effects, sgk is null && legacyEligible, warnings);
     }
 
     /// <summary>
@@ -158,6 +176,7 @@ public sealed class IncentiveCalculation
         {
             CoverageBase = parameters.CoverageBase,
             CapMultiplier = parameters.CapMultiplier,
+            MaxSupportMultiplier = parameters.MaxSupportMultiplier,
             EmployerSgkRate = employerSgkRate,
             CoversEmployerSgk = parameters.CoversEmployerSgk,
             CoversEmployerUnemployment = parameters.CoversEmployerUnemployment,

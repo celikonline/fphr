@@ -433,7 +433,7 @@ function SeveranceEstimatePanel({
   // senseik-057: the estimate comes from Payroll; skip it when the tenant turned that module off.
   const payrollEnabled = useModuleEnabled("payroll");
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error: estimateError } = useQuery({
     queryKey: ["severance-estimate", employeeId, terminationDate, causeCategory],
     queryFn: () => getSeveranceEstimate(employeeId, terminationDate, causeCategory),
     enabled: payrollEnabled && Boolean(employeeId && terminationDate),
@@ -466,12 +466,16 @@ function SeveranceEstimatePanel({
       )}
       {isError && (
         <Text size="xs" c="dimmed">
-          {t("employees:lifecycle.terminate.severanceEstimate.unavailable")}
+          {getApiErrorMessage(estimateError, t("employees:lifecycle.terminate.severanceEstimate.unavailable"))}
         </Text>
       )}
       {data && (
         <Stack gap={4}>
           <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.severance")} value={money(data.severanceAmount)} />
+          {(data.regularBenefitsMonthlyGross ?? 0) > 0 && (
+            <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.dressedDailyGross")}
+              value={money(data.dailyGrossWage + (data.regularBenefitsMonthlyGross ?? 0) / 30)} />
+          )}
           <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.notice")} value={money(data.noticeAmount)} />
           <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.unusedLeave")} value={money(data.unusedLeaveAmount)} />
           <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.total")} value={money(data.totalAmount)} />

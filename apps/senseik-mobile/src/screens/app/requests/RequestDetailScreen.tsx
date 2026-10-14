@@ -334,7 +334,11 @@ export default function RequestDetailScreen() {
 
         <Text style={styles.sectionTitle}>{t("detail.commentsTitle")}</Text>
         {comments.length === 0 ? (
-          <EmptyState icon="chatbubble-outline" title={t("detail.commentsEmpty")} />
+          <EmptyState
+            icon="chatbubble-outline"
+            title={t("detail.commentsEmpty")}
+            message={commentingAllowed ? t("detail.commentsEmptyGuide") : undefined}
+          />
         ) : (
           comments.map((comment) => <CommentRow key={comment.id} comment={comment} />)
         )}

@@ -33,6 +33,8 @@
     "title": "Zusätzliche Bezüge",
     "subtitle": "Prämien, Provisionen und Leistungszahlungen werden brutto erfasst, der Abrechnung desselben Monats hinzugefügt und unterliegen SV und Steuer. Änderungen nur in offener Periode.",
     "add": "Bezug hinzufügen",
+    "addFormulaItem": "Formelbasierte Zahlung/Abzug hinzufügen",
+    "formulaAssignmentHint": "Diese formelbasierte Zahlungsart gilt nur für die ausgewählte Abrechnungsperiode.",
     "empty": "Keine zusätzlichen Bezüge in dieser Periode.",
     "employee": "Mitarbeitende",
     "kindLabel": "Art",
@@ -62,7 +64,10 @@
     "skipped": "{{count}} Mitarbeitende konnten nicht berechnet werden (fehlendes Profil oder Gehalt).",
     "skipReasons": {
       "wage_basis_mismatch": "Die Lohnbasis im Abrechnungsprofil passt nicht zum Zahlungsrhythmus des Gehaltsdatensatzes",
-      "net_wage_basis_unsupported": "Tages-/Stundenlöhner mit Nettolohn können noch nicht berechnet werden; bitte Bruttolohn erfassen",
+      "net_wage_basis_unsupported": "Die Lohnbasis wird von dieser Berechnungsversion nicht unterstützt",
+      "hourly_attendance_missing": "Für Stundenlöhne fehlen Anwesenheitsdaten; die monatliche Zeiterfassung vervollständigen",
+      "hourly_attendance_not_approved": "Die Zeiterfassung ist nicht genehmigt oder wurde danach geändert; prüfen und erneut genehmigen",
+      "hourly_attendance_invalid": "Die bezahlten Stunden sind ungültig; Arbeitszeit und Fehltage prüfen",
       "pay_item_formula_failed": "Die Formel einer Zahlungsart konnte nicht berechnet werden (z. B. Division durch null); bitte Formel und zugewiesenen Wert prüfen",
       "incentive_parameter_missing": "Ein Gesetzesparameter, auf den eine Förderungsdefinition verweist, wurde nicht gefunden (oder ist kein gültiger Satz); bitte Förderungsdefinition und Gesetzesparameter prüfen"
     },
@@ -300,9 +305,12 @@
     "incentive_not_approved": "Die dem Mitarbeitenden zugewiesene Förderungsdefinition ist nicht vom Steuerberater (SMMM) genehmigt; sie wurde nicht berücksichtigt",
     "incentive_duplicate_assignment": "Mehrere Förderungszuweisungen derselben Kategorie überschneiden sich im Monat; nur die zuletzt beginnende wurde verwendet",
     "incentive_profile_code_ignored": "Der Mitarbeitende hat eine SGK-Förderungszuweisung; der Förderungsgesetzescode im Profil wurde ignoriert",
-    "pay_item_deduction_capped": "Die formelbasierten Abzüge überstiegen den verbleibenden Nettobetrag; der übersteigende Teil wurde nicht abgezogen"
+    "pay_item_deduction_capped": "Die formelbasierten Abzüge überstiegen den verbleibenden Nettobetrag; der übersteigende Teil wurde nicht abgezogen",
+    "incentive_profile_assignment_required": "Der Förderungscode im Profil benötigt eine Modellzuweisung; der allgemeine 5510-Nachlass wurde nicht angewendet",
+    "incentive_sgk_status_not_eligible": "Der Versicherungsstatus des Mitarbeitenden ist für diese Beitragsförderung nicht geeignet; sie wurde nicht angewendet"
   },
   "dirtyReasons": {
+    "calculation_blocked": "Berechnung nicht abgeschlossen; fehlende Daten und Zeiterfassungsgenehmigung prüfen",
     "pay_item_changed": "Zahlungsart (formelbasierte Zahlung) geändert",
     "incentive_changed": "Förderungszuweisung oder -definition geändert"
   },
@@ -310,6 +318,31 @@
     "title": "Zahlungsarten",
     "subtitle": "Formelbasierte Bezüge (Zulagen, Prämien usw.) definieren; nach der Zuweisung an Mitarbeiter fließen sie in die Abrechnung ein.",
     "new": "Neue Zahlungsart",
+    "templates": {
+      "label": "Startvorlage",
+      "hint": "Mit einem Beispiel beginnen oder eine eigene Formel schreiben. Diese Zahlungsarten werden als separate Positionen zur Abrechnung hinzugefügt.",
+      "custom": "Eigene Formel",
+      "meal": {
+        "name": "Essenszuschuss",
+        "valueHint": "\"deger\" ist der tägliche Essensbetrag, multipliziert mit den Arbeitstagen."
+      },
+      "transport": {
+        "name": "Fahrtkostenzuschuss",
+        "valueHint": "\"deger\" ist der tägliche Fahrtkostenbetrag, multipliziert mit den Arbeitstagen."
+      },
+      "bonus": {
+        "name": "Prämie",
+        "valueHint": "\"deger\" ist ein Prozentsatz des Grundbruttolohns (z. B. 10 = 10 %)."
+      },
+      "commission": {
+        "name": "Provision",
+        "valueHint": "\"deger\" ist der Verkaufsbetrag. Den Beispielsatz von 5 % können Sie in der Formel ändern."
+      },
+      "extraBonus": {
+        "name": "Sonderzahlung",
+        "valueHint": "\"deger\" ist der Faktor des Monatsbruttolohns (z. B. 0.5 = halber Monatslohn)."
+      }
+    },
     "showInactive": "Inaktive anzeigen",
     "empty": "Noch keine Zahlungsart definiert. Beginnen Sie mit \"Neue Zahlungsart\" und legen Sie Code, Name und Formel fest; danach können Sie sie Mitarbeitern zuweisen.",
     "genericError": "Zahlungsarten konnten nicht geladen werden.",
@@ -552,7 +585,10 @@
       "draftHint": "Sie können einen unvollständigen Entwurf speichern; die Vollständigkeit wird erst bei der Genehmigung geprüft.",
       "approvalWillDrop": "Diese Definition ist genehmigt. Wenn Sie ein berechnungsrelevantes Feld (Art, Parameter, Meldecode, Monate, Datum) ändern, entfällt die Genehmigung und die Definition fließt bis zur erneuten Genehmigung nicht in die Berechnung ein.",
       "save": "Speichern",
-      "error": "Die Förderung konnte nicht gespeichert werden."
+      "error": "Die Förderung konnte nicht gespeichert werden.",
+      "maxSupportMultiplier": "Faktor der gesamten Förderungsobergrenze",
+      "maxSupportMultiplierHint": "Leer lassen für keine Gesamtobergrenze. 1 = anteiliger Bruttomindestlohn nach Beitragstagen; diese Grenze gilt unabhängig von der Beitragsbasis.",
+      "applyTemplate": "Fertige Modellparameter anwenden"
     },
     "approveModal": {
       "approveTitle": "Förderung {{code}} genehmigen",
@@ -569,7 +605,9 @@
     },
     "templates": {
       "title": "Förderung aus Vorlage hinzufügen",
-      "intro": "Fertige Vorlagen werden in Ihren Mandanten kopiert. Die Sätze sind leer (nur 5510 kommt mit dem bisherigen Verhalten genehmigt); die echten Sätze tragen Sie mit Genehmigung des Steuerberaters/Experten ein.",
+      "intro": "Fertige SGK-Modelle für 5510, 6111 und 4447 sowie zu vervollständigende Entwürfe für 4691, 5746 und 4857/30 hinzufügen. Branche, Anspruch und individuelle Laufzeit prüfen. 7103 gilt nur für 2018-2022.",
+      "reviewTitle": "Vorlagen entscheiden nicht über den Anspruch",
+      "reviewRequired": "Betriebs- und Mitarbeiterbedingungen anhand offizieller SGK/İŞKUR-Daten prüfen. Entwurfsparameter, Meldungscodes und Freigabe vor der Verwendung in der Abrechnung mit dem Lohnberater vervollständigen.",
       "preApproved": "Kommt genehmigt",
       "alreadyAdded": "Hinzugefügt",
       "add": "Hinzufügen",
@@ -577,7 +615,9 @@
       "added": "{{name}} hinzugefügt",
       "addError": "Die Vorlage konnte nicht hinzugefügt werden.",
       "loadError": "Die Vorlagen konnten nicht geladen werden.",
-      "validFromNote": "Die hinzugefügte Definition gilt ab heute; bearbeiten Sie das Startdatum, wenn Sie sie früheren Monaten zuweisen."
+      "validFromNote": "Die hinzugefügte Definition gilt ab heute; bearbeiten Sie das Startdatum, wenn Sie sie früheren Monaten zuweisen.",
+      "historical": "Historisches Modell",
+      "validUntil": "Letzter gültiger Tag: {{date}}"
     }
   },
   "incentiveAssignments": {
@@ -621,8 +661,11 @@
       "noteHint": "Optional; zur Nachverfolgung der Anspruchsvoraussetzungen (max. 500 Zeichen).",
       "unapprovedWarning": "Diese Definition ist nicht vom Steuerberater (SMMM) genehmigt: Sie kann zugewiesen werden, fließt aber nicht in die Berechnung ein; es wird nur der Meldecode geschrieben.",
       "validFromWarning": "Die Definition gilt ab {{date}}; in früheren Monaten ist die Zuweisung nicht wirksam. Passen Sie ggf. das Startdatum der Definition an.",
-      "save": "Speichern"
-    }
+      "save": "Speichern",
+      "validToWarning": "Diese Förderung endete am {{date}} und gilt nicht für den ausgewählten Monat."
+    },
+    "periodSubtitle": "Im ausgewählten Monat gültige Förderungen. Modelle wirken je nach Freigabe und Gültigkeit auf die Arbeitgeberkosten.",
+    "periodEmpty": "Keine Förderungszuweisungen in dieser Periode."
   },
   "incentiveLegacy": {
     "tab": "Alte Profilcodes",
@@ -639,7 +682,7 @@
     },
     "sharedNormalized": "Wird gemeinsam als \"{{code}}\" umgewandelt",
     "noSuggestion": "Keine passende Definition",
-    "calculationChanges": "Berechnung ändert sich: der 5-Punkte-Nachlass entfällt/ändert sich",
+    "calculationChanges": "Das ausgewählte Modell verändert die Arbeitgeberkosten. Gültige Parameter und Freigabestatus prüfen.",
     "calculationSame": "Berechnung unverändert",
     "convert": "Umwandeln",
     "empty": "Keine Förderungscodes im Profil zum Umwandeln.",
@@ -652,7 +695,7 @@
       "definitionPlaceholder": "Definition wählen",
       "noDefinitions": "Keine geeignete aktive Definition",
       "dangerTitle": "Die Berechnung ändert sich",
-      "dangerText": "Die gewählte Definition ist kein genehmigter SGK-Satznachlass: der heute über den Profilcode angewandte pauschale 5-Punkte-Arbeitgebernachlass entfällt/ändert sich, und die Arbeitgeberkosten dieser Mitarbeitenden können steigen.",
+      "dangerText": "Das ausgewählte Modell verändert die Arbeitgeberkosten. Gültige Parameter und Freigabestatus prüfen.",
       "confirm": "Ich verstehe, dass sich die Berechnung ändert",
       "fromMonth": "Startmonat",
       "fromMonthHint": "Vorschlag: erster offener Zeitraum (geschlossene Monate werden abgelehnt).",
@@ -663,6 +706,7 @@
     "result": {
       "title": "Umwandlung abgeschlossen",
       "summary": "{{created}} Zuweisungen erstellt, {{skipped}} Mitarbeitende übersprungen (überschneidende SGK-Zuweisung)."
-    }
+    },
+    "subtitle": "Profilcodes mit Förderungsmodellen verknüpfen. Andere Codes als 05510 werden nur durch eine separate Zuweisung berechnet."
   }
 }

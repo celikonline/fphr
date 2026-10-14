@@ -6,6 +6,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import {
   createIncentiveDefinition,
   getIncentiveParameterCatalog,
+  listIncentiveTemplates,
   updateIncentiveDefinition,
   type IncentiveCoverageBase,
   type IncentiveDefinition,
@@ -38,6 +39,7 @@ interface FormState {
   rate: RateState;
   coverageBase: IncentiveCoverageBase;
   capMultiplier: number | string;
+  maxSupportMultiplier: number | string;
   employerSgkRate: RateState;
   coversEmployerSgk: boolean;
   coversEmployerUnemployment: boolean;
@@ -72,6 +74,7 @@ function stateFromDefinition(item: IncentiveDefinition | null): FormState {
     rate: rateFromDto(p?.rate),
     coverageBase: p?.coverageBase ?? "actualSgkBase",
     capMultiplier: p?.capMultiplier ?? "",
+    maxSupportMultiplier: p?.maxSupportMultiplier ?? "",
     employerSgkRate: rateFromDto(p?.employerSgkRate),
     coversEmployerSgk: p?.coversEmployerSgk ?? false,
     coversEmployerUnemployment: p?.coversEmployerUnemployment ?? false,
@@ -94,6 +97,7 @@ function parametersOf(s: FormState): IncentiveParameters | null {
         rate: rateToDto(s.rate),
         coverageBase: s.coverageBase,
         capMultiplier: minimumWage && s.capMultiplier !== "" ? Number(s.capMultiplier) : null,
+        ...(s.maxSupportMultiplier === "" ? {} : { maxSupportMultiplier: Number(s.maxSupportMultiplier) }),
         employerSgkRate: s.coversEmployerSgk ? rateToDto(s.employerSgkRate) : null,
         coversEmployerSgk: s.coversEmployerSgk,
         coversEmployerUnemployment: s.coversEmployerUnemployment,
@@ -156,6 +160,12 @@ function IncentiveFormBody({ item, onClose }: { item: IncentiveDefinition | null
 
   const catalogQuery = useQuery({ queryKey: [...INCENTIVES_QUERY_KEY, "parameter-catalog"], queryFn: getIncentiveParameterCatalog, staleTime: CATALOG_STALE_MS });
   const catalog = catalogQuery.data?.legislationKeys ?? [];
+  const templatesQuery = useQuery({
+    queryKey: [...INCENTIVES_QUERY_KEY, "templates"],
+    queryFn: () => listIncentiveTemplates(),
+    enabled: Boolean(item?.templateKey),
+  });
+  const originalTemplate = templatesQuery.data?.find((template) => template.templateKey === item?.templateKey && template.parameters?.rate != null);
 
   const input = toInput(state);
   const dropsApproval = Boolean(item?.isSmmmApproved) && calculationSignature(input) !== calculationSignature(toInput(stateFromDefinition(item)));
@@ -184,6 +194,26 @@ function IncentiveFormBody({ item, onClose }: { item: IncentiveDefinition | null
       }}
     >
       <Stack gap="sm">
+        {originalTemplate && (
+          <Button
+            type="button"
+            variant="light"
+            onClick={() => {
+              const model = stateFromDefinition({
+                ...item!,
+                kind: originalTemplate.kind,
+                declarationCode: originalTemplate.declarationCode,
+                parameters: originalTemplate.parameters,
+                maxMonths: originalTemplate.maxMonths,
+                validFrom: originalTemplate.validFrom ?? state.validFrom,
+                validTo: originalTemplate.validTo,
+              });
+              patch({ ...model, code: state.code, name: state.name, lawReference: state.lawReference });
+            }}
+          >
+            {t("payroll:incentives.form.applyTemplate")}
+          </Button>
+        )}
         <TextInput
           label={t("payroll:incentives.form.code")}
           description={editing ? t("payroll:incentives.form.codeLocked") : t("payroll:incentives.form.codeHint")}
@@ -251,6 +281,15 @@ function IncentiveFormBody({ item, onClose }: { item: IncentiveDefinition | null
                 max={10}
               />
             )}
+            <NumberInput
+              label={t("payroll:incentives.form.maxSupportMultiplier")}
+              description={t("payroll:incentives.form.maxSupportMultiplierHint")}
+              value={state.maxSupportMultiplier}
+              onChange={(maxSupportMultiplier) => patch({ maxSupportMultiplier })}
+              decimalScale={4}
+              min={0}
+              max={10}
+            />
             <div>
               <Text size="sm" fw={500} mb={4}>
                 {t("payroll:incentives.form.covers")}

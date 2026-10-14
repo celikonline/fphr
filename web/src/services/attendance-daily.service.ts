@@ -63,6 +63,19 @@ export interface DailyAttendanceRow {
   /** Punch ids behind checkIn/checkOut (needed for delete); optional until the backend row carries them. */
   checkInPunchId?: string | null;
   checkOutPunchId?: string | null;
+  plannedStart?: string | null;
+  plannedEnd?: string | null;
+  punches?: DailyPunch[] | null;
+  statuses?: DailyStatus[] | null;
+}
+
+export interface DailyPunch {
+  id: string;
+  occurredAtUtc: string;
+  direction: string;
+  source: string;
+  isManual: boolean;
+  reason?: string | null;
 }
 
 /** `DailyAttendanceTotalsDto`. */
@@ -95,15 +108,15 @@ export interface EmployeeLeaveOnDate {
   isPaid: boolean;
 }
 
-/** Day list for one status tab (attendance.daily.view). */
+/** Day list for a status tab, or all employee-days when status is omitted (attendance.daily.view). */
 export async function listDaily(
   date: string,
-  status: DailyStatus,
+  status: DailyStatus | undefined,
   orgUnitId?: string,
   page = 1,
 ): Promise<PagedResult<DailyAttendanceRow>> {
   const { data } = await apiClient.get<PagedResult<DailyAttendanceRow>>(`${ATTENDANCE_BASE}/daily`, {
-    params: { date, status, orgUnitId, page },
+    params: { date, status, orgUnitId, page, pageSize: 200 },
   });
   return data;
 }

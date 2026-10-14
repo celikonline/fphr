@@ -19,6 +19,11 @@ interface FormulaEditorProps {
   amountBasis: PayItemAmountBasis;
 }
 
+interface FormulaCheckInput {
+  formula: string;
+  amountBasis: PayItemAmountBasis;
+}
+
 /**
  * Formül alanı + sunucu kataloğundan değişken/fonksiyon listesi (tıklayınca imleç konumuna ekler) + "Doğrula".
  * Doğrulama yalnız `validate-formula` ucuyla yapılır (istemcide ayrıştırıcı yok); hata konumu 1 tabanlıdır.
@@ -26,8 +31,10 @@ interface FormulaEditorProps {
 export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorProps) {
   const { t, i18n } = useTranslation(["payroll"]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [result, setResult] = useState<FormulaValidation | null>(null);
-  const [requestError, setRequestError] = useState<string | null>(null);
+  const [checked, setChecked] = useState<(FormulaCheckInput & { result: FormulaValidation }) | null>(null);
+  const [requestError, setRequestError] = useState<(FormulaCheckInput & { message: string }) | null>(null);
+  const result = checked?.formula === value && checked.amountBasis === amountBasis ? checked.result : null;
+  const currentRequestError = requestError?.formula === value && requestError.amountBasis === amountBasis ? requestError.message : null;
 
   const catalogQuery = useQuery({ queryKey: ["payroll", "pay-items", "formula-catalog"], queryFn: getFormulaCatalog, staleTime: CATALOG_STALE_MS });
   const variables = useMemo(() => catalogQuery.data?.variables ?? [], [catalogQuery.data]);
@@ -36,20 +43,20 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
   const catalogFailed = catalogQuery.isError;
 
   const validate = useMutation({
-    mutationFn: () => {
+    mutationFn: (input: FormulaCheckInput) => {
       const sampleValues: Record<string, number> = {};
       for (const variable of variables) {
         if (variable.sampleValue != null) sampleValues[variable.name] = variable.sampleValue;
       }
-      return validatePayItemFormula({ formula: value, amountBasis, sampleValues });
+      return validatePayItemFormula({ ...input, sampleValues });
     },
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       setRequestError(null);
-      setResult(data);
+      setChecked({ ...input, result: data });
     },
-    onError: (err) => {
-      setResult(null);
-      setRequestError(getApiErrorMessage(err, t("payroll:payItems.formula.validateError")));
+    onError: (err, input) => {
+      setChecked(null);
+      setRequestError({ ...input, message: getApiErrorMessage(err, t("payroll:payItems.formula.validateError")) });
     },
   });
 
@@ -59,7 +66,7 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
     const start = focused ? (element.selectionStart ?? value.length) : value.length;
     const end = focused ? (element.selectionEnd ?? value.length) : value.length;
     onChange(value.slice(0, start) + text + value.slice(end));
-    setResult(null);
+    setChecked(null);
     const caret = start + text.length;
     requestAnimationFrame(() => {
       element?.focus();
@@ -81,7 +88,7 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
         value={value}
         onChange={(event) => {
           onChange(event.currentTarget.value);
-          setResult(null);
+          setChecked(null);
         }}
         maxLength={FORMULA_MAX_LENGTH}
         rows={3}
@@ -90,7 +97,7 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
       />
 
       <Group gap="xs">
-        <Button size="xs" variant="light" onClick={() => validate.mutate()} loading={validate.isPending} disabled={value.trim().length === 0}>
+        <Button size="xs" variant="light" onClick={() => validate.mutate({ formula: value, amountBasis })} loading={validate.isPending} disabled={value.trim().length === 0}>
           {t("payroll:payItems.formula.validate")}
         </Button>
       </Group>
@@ -100,7 +107,7 @@ export function FormulaEditor({ value, onChange, amountBasis }: FormulaEditorPro
           {t("payroll:loadErrors.formulaCatalog")}
         </Alert>
       )}
-      {requestError && <Alert color="red">{requestError}</Alert>}
+      {currentRequestError && <Alert color="red">{currentRequestError}</Alert>}
 
       {result?.isValid && (
         <Alert color="green" title={t("payroll:payItems.formula.valid")}>

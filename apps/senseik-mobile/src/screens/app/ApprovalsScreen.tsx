@@ -342,7 +342,13 @@ export default function ApprovalsScreen() {
         )}
 
         {visibleTasks.length === 0 ? (
-          <EmptyState icon="checkmark-done-outline" title={t("empty")} />
+          <EmptyState
+            icon="checkmark-done-outline"
+            title={t("empty")}
+            message={t("emptyGuide")}
+            actionLabel={t("history.pill")}
+            onAction={() => navigation.navigate("ApprovalHistory")}
+          />
         ) : (
           visibleTasks.map((task) => {
             if (isSelecting) {

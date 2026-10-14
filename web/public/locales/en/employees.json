@@ -642,6 +642,7 @@
       "sgkSubCodeHint": "This reason has more than one valid SGK code - pick one.",
       "sgkSubCodeRequired": "Pick an SGK sub-code for this reason.",
       "severanceEstimate": {
+        "dressedDailyGross": "Daily gross basis for severance/notice",
         "title": "Severance/notice estimate",
         "immoralOrBadFaith": "Termination for violating rules of morality and good faith (İş K. m.25/II)",
         "severance": "Severance pay",
@@ -693,6 +694,10 @@
       "paymentMethod": "Payment method",
       "sickDays": "Sick days reduce pay",
       "externalCode": "External payroll code",
+      "regularBenefits": "Recurring benefits • monthly gross",
+      "asOfDate": "Payroll profile as of",
+      "editBenefits": "Edit benefits",
+      "regularBenefitsHint": "Enter the specialist-verified monthly gross total of meals, transport, and other recurring benefits included in the severance and notice basis. The amount applies to this payroll profile's effective dates.",
       "notes": "Notes",
       "yes": "Yes",
       "no": "No",
@@ -880,7 +885,18 @@
     "referenceDate": "Reference date",
     "start": "Start process",
     "started": "Process started.",
-    "noSets": "No active template sets."
+    "noSets": "No active template sets.",
+    "buddyTitle": "Onboarding buddy",
+    "buddy": "Assigned employee",
+    "buddyPlaceholder": "Select a buddy",
+    "buddyStart": "Start date",
+    "buddyEnd": "Planned end date",
+    "saveBuddy": "Save buddy",
+    "buddySaved": "Onboarding buddy saved.",
+    "training": "Training program",
+    "trainingPlaceholder": "Select an active training program",
+    "enrollTraining": "Enroll employee",
+    "trainingSaved": "Employee enrolled in the training program."
   },
   "employeeNotes": {
     "title": "Employee notes",

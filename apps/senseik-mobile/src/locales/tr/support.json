@@ -34,12 +34,15 @@
   },
   "tickets": {
     "empty": "Henüz bir destek talebiniz yok.",
+    "emptyGuide": "Yeni bir destek talebi oluşturmak için aşağıdaki düğmeyi kullanın.",
+    "create": "Destek talebi oluştur",
     "resolution": "Yanıt: {{resolution}}"
   },
   "help": {
     "backToList": "Listeye dön",
     "search": "Ara",
     "searchPlaceholder": "Ne aramıştınız? Örn. veri aktarımı",
-    "empty": "Bu aramayla eşleşen bir makale bulunamadı."
+    "empty": "Bu aramayla eşleşen bir makale bulunamadı.",
+    "clearSearch": "Aramayı temizle"
   }
 }

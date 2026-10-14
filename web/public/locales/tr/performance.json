@@ -39,6 +39,8 @@
     "title": "Ekip hedefleri",
     "subtitle": "Ekibinizdeki çalışanların hedeflerini görüntüleyin.",
     "empty": "Ekibinizde kayıtlı hedef yok.",
+    "emptyGuide": "İlk hedefi ekip üyesine atayarak başlayın.",
+    "emptySupport": "Yardım için destek alın",
     "col": {
       "employee": "Çalışan",
       "title": "Başlık",
@@ -62,6 +64,8 @@
     "title": "Değerlendirme döngüleri",
     "subtitle": "İçinde bulunduğunuz değerlendirme dönemlerini görüntüleyin.",
     "empty": "Şu anda size tanımlı bir değerlendirme dönemi yok.",
+    "emptyAllCycles": "Tüm dönemleri görüntüle",
+    "emptySupport": "İK veya destek ekibine ulaş",
     "dateRange": "{{start}} – {{end}}",
     "status": {
       "draft": "Taslak",

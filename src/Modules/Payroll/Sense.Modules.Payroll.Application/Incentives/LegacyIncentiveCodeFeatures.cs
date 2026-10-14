@@ -62,7 +62,7 @@ public sealed class ListLegacyIncentiveCodesHandler(
                 var suggested = Suggest(candidates, normalized);
                 return new LegacyIncentiveCodeDto(
                     g.Key, normalized, g.Select(p => p.EmployeeId).Distinct().Count(), suggested?.Id, suggested?.Code, suggested?.IsSmmmApproved,
-                    suggested is not null && !KeepsFivePoints(suggested));
+                    suggested is not null && !KeepsLegacyDiscount(suggested));
             })
             .OrderBy(x => x.NormalizedCode, StringComparer.Ordinal)
             .ThenBy(x => x.Code, StringComparer.Ordinal)
@@ -76,11 +76,14 @@ public sealed class ListLegacyIncentiveCodesHandler(
             ? null
             : candidates
                 .Where(d => d.DeclarationCode == normalizedCode)
-                .OrderByDescending(KeepsFivePoints)
+                .OrderByDescending(KeepsLegacyDiscount)
                 .ThenBy(d => d.Code, StringComparer.Ordinal)
                 .FirstOrDefault();
 
-    private static bool KeepsFivePoints(IncentiveDefinition d) => d.IsSmmmApproved && d.Kind == IncentiveKind.EmployerSgkRateDiscount;
+    private static bool KeepsLegacyDiscount(IncentiveDefinition d) =>
+        d.IsSmmmApproved && d.Kind == IncentiveKind.EmployerSgkRateDiscount
+        && d.DeclarationCode == IncentiveTemplates.Sgk5510DeclarationCode
+        && d.Parameters.Rate?.LegislationKey == IncentiveTemplates.EmployerDiscountRateKey;
 }
 
 public sealed record ConvertLegacyIncentiveCodeResult(IReadOnlyList<Guid> CreatedIds, IReadOnlyList<Guid> SkippedEmployeeIds);

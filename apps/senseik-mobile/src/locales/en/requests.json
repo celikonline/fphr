@@ -161,6 +161,7 @@
     "unknownAuthor": "Unknown",
     "commentsTitle": "Comments",
     "commentsEmpty": "No comments yet.",
+    "commentsEmptyGuide": "Use the composer below to add the first comment.",
     "commentsClosed": "This request was cancelled, so it can no longer take comments.",
     "commentPlaceholder": "Write a comment…",
     "commentSend": "Send",

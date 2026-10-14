@@ -5,11 +5,9 @@ using Sense.Shared.Kernel;
 namespace Sense.Modules.Payroll.Domain.Calculation;
 
 /// <summary>
-/// Pure gross-to-net payroll engine (11.3.7 "Hesap turnusolu") for one monthly-salaried employee, one month, full
-/// worked days (no Attendance input yet - see <see cref="PayrollCalculationInput.WorkedDays"/>), no variable pay
-/// items (FM/adjustments: P3/P4). All 4 meal benefit variants are supported (P2, 11.3.07-bordro.md "Yemek varyant
-/// kuralları"). No DB access - all statutory values come in via <see cref="PayrollLegislationSnapshot"/>, resolved by
-/// the Application layer from <c>ILegislationParameterReader</c> (ADR 0008). NET_TO_GROSS_ITER is out of scope for this slice.
+/// Pure gross-to-net engine for monthly, daily and hourly wages, partial periods, benefits, formula pay items and deductions.
+/// Hourly paid time and gross-up are resolved by Application before this calculation. All statutory values come from
+/// <see cref="PayrollLegislationSnapshot"/>; there is no database access here.
 ///
 /// Minimum-wage exemption design decision (11.3.7 "MINWAGE_EXEMPTION_GV/DV"): rather than seeding separate
 /// Payroll.MinimumWage.MonthlyIncomeTaxExemption / MonthlyStampTaxExemption parameters, both exemptions are DERIVED
@@ -29,6 +27,8 @@ public static class PayrollCalculator
             Guard.Against(!PeriodWageMath.IsSupported(w.Basis), "Wage basis must be Daily or Hourly.");
             Guard.Against(w.UnitRate <= 0m, "Wage unit rate must be positive.");
             Guard.Against(w.PaidDays is < 1 or > EmploymentProration.PayrollMonthDays, "Wage paid days must be between 1 and 30.");
+            Guard.Against(w.PaidHours is <= 0m, "Wage paid hours must be positive when supplied.");
+            Guard.Against(w.PaidHours is not null && w.Basis != WageBasis.Hourly, "Paid hours apply only to hourly wages.");
         }
 
         Guard.Against(input.AdditionalTaxableEarnings < 0m, "AdditionalTaxableEarnings cannot be negative.");
@@ -93,7 +93,17 @@ public static class PayrollCalculator
             earningsInputs["paidDays"] = traced.PaidDays.ToString(CultureInfo.InvariantCulture);
             if (traced.Basis == WageBasis.Hourly)
             {
-                earningsInputs["paidHours"] = Format(traced.PaidDays * PeriodWageMath.DailyWorkingHours);
+                earningsInputs["paidHours"] = Format(traced.PaidHours ?? traced.PaidDays * PeriodWageMath.DailyWorkingHours);
+                if (traced.PaidHours is not null) earningsInputs["paidHoursSource"] = "approvedAttendance";
+            }
+
+            if (traced.NetUnitRate is { } netRate)
+            {
+                earningsInputs["amountBasis"] = "net";
+                earningsInputs["netUnitRate"] = Format(netRate);
+                earningsInputs["netTarget"] = Format(Round(netRate * (traced.Basis == WageBasis.Hourly
+                    ? traced.PaidHours ?? traced.PaidDays * PeriodWageMath.DailyWorkingHours
+                    : traced.PaidDays)));
             }
         }
 
@@ -102,12 +112,14 @@ public static class PayrollCalculator
             earningsInputs,
             input.Wage is null
                 ? "maktu aylık ücret + fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar (varsa)"
-                : "günlük ücret x ücretli gün (saatlik: saat ücreti x 7,5 x ücretli gün) + ek vergiye tabi kazançlar (varsa)",
+                : input.Wage.PaidHours is null
+                    ? "günlük ücret x ücretli gün (saatlik: saat ücreti x 7,5 x ücretli gün) + ek vergiye tabi kazançlar (varsa)"
+                    : "günlük brüt ücret x ücretli gün (saatlik: brüt saat ücreti x ücretli saat) + ek vergiye tabi kazançlar (varsa)",
             gross, []));
 
         // Meal benefit (11.3.07-bordro.md "Yemek varyant kuralları", worked-day pro-rated):
         //  - None: no amount, no effect.
-        //  - Cash/MealCardOnly: daily-exemption split (GV: fixed daily amount; SGK: rate * daily gross minimum wage),
+        //  - Cash/MealCardOnly: daily-exemption split (GV and SGK each use their own fixed daily amount),
         //    excess above exemption joins the base; the full amount is paid in net.
         //  - InKind: fully outside both bases (informational only) and not paid in cash (employer provides the meal
         //    directly, no cash reaches the employee) - so it does not add to Net either.
@@ -129,9 +141,7 @@ public static class PayrollCalculator
         }
         else
         {
-            var dailyGrossMinimumWage = p.MinimumWageGross / input.CalendarDaysInMonth;
-            var mealSgkExemptDaily = p.MealSgkDailyExemptionRate * dailyGrossMinimumWage;
-            var mealSgkExemptTotal = Math.Min(mealTotal, mealSgkExemptDaily * days);
+            var mealSgkExemptTotal = Math.Min(mealTotal, p.MealSgkDailyExemption * days);
             mealSgkExcess = mealTotal - mealSgkExemptTotal;
             var mealGvExemptTotal = Math.Min(mealTotal, p.MealIncomeTaxDailyExemption * days);
             mealGvExcess = mealTotal - mealGvExemptTotal;
@@ -426,7 +436,7 @@ public static class PayrollCalculator
     {
         var proration = Proration(input);
         return input.Wage is { } wage
-            ? PeriodWageMath.PeriodGross(wage.Basis, wage.UnitRate, wage.PaidDays) // günlük/saatlik: brüt zaten ücretli güne göre, ikinci oranlama yok
+            ? PeriodWageMath.PeriodGross(wage.Basis, wage.UnitRate, wage.PaidDays, wage.PaidHours) // dönem brütüne ikinci oranlama uygulanmaz
             : proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
     }
 

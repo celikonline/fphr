@@ -57,7 +57,9 @@
   "errors": {
     "statusLoad": "Giriş/çıkış durumu yüklenemedi.",
     "punch": "Giriş/çıkış kaydedilemedi. Lütfen tekrar deneyin.",
-    "cameraDenied": "Kamera izni verilmedi. QR kodu okutmak için ayarlardan kamera iznini açın."
+    "cameraDenied": "Kamera izni verilmedi. QR kodu okutmak için ayarlardan kamera iznini açın.",
+    "qrLocationPermissionRequired": "Bu QR kodla işlem yapmak için konum izni gerekli. Konum iznini açıp yeniden tarayın.",
+    "qrLocationUnavailable": "Bu QR kodla işlem yapmak için konum alınamadı. Konum hazır olduğunda yeniden tarayın."
   },
   "banners": {
     "denied": "Konum izni verilmedi. Konumla giriş/çıkış için ayarlardan konum iznini açın.",
@@ -90,6 +92,8 @@
     "submit": "Talebi gönder",
     "mine": "Taleplerim",
     "empty": "Henüz talebiniz yok.",
+    "emptyGuide": "Eksik giriş veya çıkış kaydını bildirmek için yukarıdaki formu kullanın.",
+    "createAnother": "Yeni düzeltme talebi oluştur",
     "decidedAt": "Karar: {{time}}",
     "cancel": "İptal et",
     "loadError": "Talepler yüklenemedi. Lütfen tekrar deneyin.",

@@ -18,30 +18,53 @@ public sealed class TenantOrganizationBootstrapper(OrganizationDbContext db, ITe
     public async Task EnsureAsync(Guid tenantId, string companyName, CancellationToken ct)
     {
         using var scope = tenantSetter.BeginScope(tenantId);
-
-        var companyTypeId = await EnsureUnitTypesAsync(tenantId, ct).ConfigureAwait(false);
-        var calendar = await db.HolidayCalendars.FirstOrDefaultAsync(c => c.IsSystemDefined, ct).ConfigureAwait(false)
-            ?? TrHolidayCalendarSeed.AddTo(db, tenantId);
-
-        if (!await db.Companies.AnyAsync(ct).ConfigureAwait(false))
+        // The outbox worker and the first-run wizard can prepare a new tenant at the same time.
+        // Serialize each tenant's bootstrap across API/Worker processes so both callers do not
+        // observe empty tables and insert duplicate system rows or root companies.
+        // Run the explicit transaction through EF's configured retry strategy (Npgsql retries transient failures).
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            var unit = OrgUnit.Create(tenantId, companyTypeId, parentId: null, companyName.Trim());
-            if (unit.IsFailure)
+            await using var transaction = await db.Database.BeginTransactionAsync(ct).ConfigureAwait(false);
+            try
             {
-                throw new InvalidOperationException($"Failed to create the root company unit: {unit.Error}");
-            }
+                await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT pg_advisory_xact_lock(hashtextextended({tenantId.ToString()}, 0))",
+                    ct).ConfigureAwait(false);
 
-            var company = Company.Create(tenantId, unit.Value.Id, calendar.Id);
-            if (company.IsFailure)
+                var companyTypeId = await EnsureUnitTypesAsync(tenantId, ct).ConfigureAwait(false);
+                var calendar = await db.HolidayCalendars.FirstOrDefaultAsync(c => c.IsSystemDefined, ct).ConfigureAwait(false)
+                    ?? TrHolidayCalendarSeed.AddTo(db, tenantId);
+
+                if (!await db.Companies.AnyAsync(ct).ConfigureAwait(false))
+                {
+                    var unit = OrgUnit.Create(tenantId, companyTypeId, parentId: null, companyName.Trim());
+                    if (unit.IsFailure)
+                    {
+                        throw new InvalidOperationException($"Failed to create the root company unit: {unit.Error}");
+                    }
+
+                    var company = Company.Create(tenantId, unit.Value.Id, calendar.Id);
+                    if (company.IsFailure)
+                    {
+                        throw new InvalidOperationException($"Failed to create the company row: {company.Error}");
+                    }
+
+                    db.OrgUnits.Add(unit.Value);
+                    db.Companies.Add(company.Value);
+                }
+
+                await db.SaveChangesAsync(ct).ConfigureAwait(false);
+                await transaction.CommitAsync(ct).ConfigureAwait(false);
+            }
+            catch
             {
-                throw new InvalidOperationException($"Failed to create the company row: {company.Error}");
+                // SaveChanges can accept tracked entities before a surrounding transaction rolls back.
+                // Clear them so a transient retry reloads the actual persisted state.
+                db.ChangeTracker.Clear();
+                throw;
             }
-
-            db.OrgUnits.Add(unit.Value);
-            db.Companies.Add(company.Value);
-        }
-
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
 
     /// <returns>Company düzeyi birim tipinin kimliği (yoksa sistem tipleri eklenir).</returns>

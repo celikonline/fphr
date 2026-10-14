@@ -170,7 +170,15 @@ export default function NotificationsScreen() {
           }
           onEndReachedThreshold={0.4}
           onEndReached={() => void loadMore()}
-          ListEmptyComponent={<EmptyState icon="notifications-outline" title={t("empty")} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="notifications-outline"
+              title={t("empty")}
+              message={t("emptyGuide")}
+              actionLabel={t("preferences.title")}
+              onAction={() => navigation.navigate("NotificationPreferences")}
+            />
+          }
           ListFooterComponent={
             loadingMore ? <ActivityIndicator style={styles.footer} color={palette.white} /> : null
           }

@@ -28,6 +28,9 @@ public interface IEmployeeLookup
     /// <summary>The employee's org unit, or null if the employee does not exist or has no unit.</summary>
     Task<Guid?> GetOrgUnitIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 
+    /// <summary>Employee-to-unit assignment for the requested employees, omitting employees without a unit.</summary>
+    Task<IReadOnlyDictionary<Guid, Guid>> GetOrgUnitIdsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
+
     /// <summary>The employee's direct manager, or null if the employee does not exist or has no manager assigned.</summary>
     Task<Guid?> GetManagerEmployeeIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 

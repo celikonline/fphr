@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Link } from "react-router";
 import { ActionIcon, Badge, Button, Card, Group, Modal, Progress, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
-import { Plus, Users, X } from "lucide-react";
+import { LifeBuoy, Plus, Users, X } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import NoAccess from "@/components/no-access";
@@ -154,7 +155,29 @@ function TeamGoals() {
             {getApiErrorMessage(goalsQuery.error, t("performance:genericError"))}
           </Text>
         ) : (
-          <DataTable table={table} isLoading={goalsQuery.isLoading} emptyMessage={t("performance:team.empty")} />
+          <DataTable
+            table={table}
+            isLoading={goalsQuery.isLoading}
+            emptyMessage={
+              <Stack align="center" gap="sm" py="md">
+                <Text size="sm" c="dimmed" ta="center">
+                  {t("performance:team.empty")}
+                </Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  {t("performance:team.emptyGuide")}
+                </Text>
+                {canManage ? (
+                  <Button type="button" leftSection={<Plus size={16} />} onClick={() => setAssignOpen(true)}>
+                    {t("performance:team.assign.action")}
+                  </Button>
+                ) : (
+                  <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                    {t("performance:team.emptySupport")}
+                  </Button>
+                )}
+              </Stack>
+            }
+          />
         )}
       </Card>
 

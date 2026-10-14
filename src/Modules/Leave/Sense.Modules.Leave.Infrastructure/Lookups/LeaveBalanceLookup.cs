@@ -40,4 +40,17 @@ public sealed class LeaveBalanceLookup(
         var projected = await balances.ProjectAsync(profile, ruleSet.Value, cancellationToken);
         return projected.Where(b => annualTypeIds.Contains(b.LeaveTypeId)).Sum(b => b.CurrentBalance);
     }
+
+    public async Task<decimal?> GetRemainingAnnualLeaveDaysAsOfAsync(
+        Guid tenantId, Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var profile = await profiles.FindByEmployeeIdAsync(employeeId, cancellationToken);
+        if (profile is null || profile.TenantId != tenantId) return null;
+        var ruleSet = await ruleSets.GetByIdAsync(profile.RuleSetId, cancellationToken);
+        if (ruleSet.IsFailure || ruleSet.Value.TenantId != tenantId) return null;
+        var annualTypeIds = ruleSet.Value.Types.Where(t => t.Code == LeaveTypeCode.Annual).Select(t => t.Id).ToHashSet();
+        if (annualTypeIds.Count == 0) return 0m;
+        var projected = await balances.ProjectAsOfAsync(profile, ruleSet.Value, asOf, cancellationToken);
+        return projected.Where(b => annualTypeIds.Contains(b.LeaveTypeId)).Sum(b => b.CurrentBalance);
+    }
 }

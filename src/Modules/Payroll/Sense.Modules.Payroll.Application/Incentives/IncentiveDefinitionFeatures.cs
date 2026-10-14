@@ -27,13 +27,15 @@ public sealed record IncentiveParametersDto(
     bool CoversEmployerSgk,
     bool CoversEmployerUnemployment,
     bool CoversEmployeeSgk,
-    bool CoversEmployeeUnemployment)
+    bool CoversEmployeeUnemployment,
+    decimal? MaxSupportMultiplier = null)
 {
     internal IncentiveParameters ToDomain() => new()
     {
         Rate = Rate?.ToDomain(),
         CoverageBase = CoverageBase,
         CapMultiplier = CapMultiplier,
+        MaxSupportMultiplier = MaxSupportMultiplier,
         EmployerSgkRate = EmployerSgkRate?.ToDomain(),
         CoversEmployerSgk = CoversEmployerSgk,
         CoversEmployerUnemployment = CoversEmployerUnemployment,
@@ -43,7 +45,7 @@ public sealed record IncentiveParametersDto(
 
     internal static IncentiveParametersDto From(IncentiveParameters p) => new(
         IncentiveRateDto.From(p.Rate), p.CoverageBase, p.CapMultiplier, IncentiveRateDto.From(p.EmployerSgkRate),
-        p.CoversEmployerSgk, p.CoversEmployerUnemployment, p.CoversEmployeeSgk, p.CoversEmployeeUnemployment);
+        p.CoversEmployerSgk, p.CoversEmployerUnemployment, p.CoversEmployeeSgk, p.CoversEmployeeUnemployment, p.MaxSupportMultiplier);
 }
 
 public sealed record IncentiveDefinitionDto(
@@ -100,6 +102,7 @@ public static class IncentiveParameterCatalog
         LegislationParameterKeys.PayrollSgkEmployeeRate,
         LegislationParameterKeys.PayrollSgkEmployerRate,
         LegislationParameterKeys.PayrollSgkEmployerDiscountRate,
+        LegislationParameterKeys.PayrollSgkUnemploymentBeneficiaryEmployerSupportRate,
         LegislationParameterKeys.PayrollUnemploymentEmployeeRate,
         LegislationParameterKeys.PayrollUnemploymentEmployerRate,
         LegislationParameterKeys.PayrollMinimumWageGross,
@@ -169,7 +172,11 @@ public sealed record IncentiveTemplateDto(
     IncentiveKind Kind,
     string? DeclarationCode,
     bool PreApproved,
-    bool AlreadyAdded);
+    bool AlreadyAdded,
+    DateOnly? ValidFrom = null,
+    DateOnly? ValidTo = null,
+    int? MaxMonths = null,
+    IncentiveParametersDto? Parameters = null);
 
 [RequiresPermission("payroll.trace.view")]
 public sealed record ListIncentiveTemplatesQuery : IQuery<IReadOnlyList<IncentiveTemplateDto>>;
@@ -184,7 +191,8 @@ public sealed class ListIncentiveTemplatesHandler(IIncentiveDefinitionRepository
         {
             var added = await definitions.TemplateExistsAsync(template.TemplateKey, cancellationToken);
             result.Add(new IncentiveTemplateDto(
-                template.TemplateKey, template.Code, template.Name, template.LawReference, template.Kind, template.DeclarationCode, template.PreApproved, added));
+                template.TemplateKey, template.Code, template.Name, template.LawReference, template.Kind, template.DeclarationCode, template.PreApproved, added,
+                template.StartsOn, template.EndsOn, template.MaxMonths, IncentiveParametersDto.From(template.Parameters)));
         }
 
         return result;

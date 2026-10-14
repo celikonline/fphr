@@ -5,10 +5,13 @@ using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Application.Ports;
+using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -20,8 +23,8 @@ namespace Sense.Modules.Payroll.Infrastructure.Jobs;
 /// payroll profile (same <see cref="PayrollInputHashing"/> the calculation itself uses); a mismatch means something
 /// changed without going through one of the dirty-flag event handlers (PayslipDirtyFlagHandlers) or was missed, so it
 /// gets flagged directly with <see cref="PayslipDirtyFlagReasons.HashMismatch"/>. Deliberately narrow per the P3 task
-/// scope ("just salary + profile version is enough") - it does not scan Attendance/variable-pay inputs, which do not
-/// exist yet either. Mirrors LeaveBalanceRecalculationJob's per-tenant scope/transaction pattern.
+/// scope for non-hourly wages; hourly paid-time and approval inputs are also compared, using the same employment window
+/// as the calculation. Mirrors LeaveBalanceRecalculationJob's per-tenant scope/transaction pattern.
 /// </summary>
 public sealed partial class ChangeDetectionJob(IServiceScopeFactory scopes, ILogger<ChangeDetectionJob> logger)
 {
@@ -63,6 +66,7 @@ public sealed partial class ChangeDetectionJob(IServiceScopeFactory scopes, ILog
         var dirtyFlags = scope.ServiceProvider.GetRequiredService<IPayslipDirtyFlagRepository>();
         var runs = scope.ServiceProvider.GetRequiredService<IChangeDetectionRunRepository>();
         var salaryLookup = scope.ServiceProvider.GetRequiredService<IEmployeeSalaryLookup>();
+        var costCenterReader = scope.ServiceProvider.GetRequiredService<IEmployeeCostCenterReader>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IPayrollUnitOfWork>();
         var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
 
@@ -77,17 +81,34 @@ public sealed partial class ChangeDetectionJob(IServiceScopeFactory scopes, ILog
             var periodStart = new DateOnly(period.Year, period.Month, 1);
             var periodEnd = new DateOnly(period.Year, period.Month, DateTime.DaysInMonth(period.Year, period.Month));
             var payslipsInPeriod = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
+            var costCenterMapping = await costCenterReader.GetEmployeeCostCenterMappingAsync(
+                tenantId, payslipsInPeriod.Select(p => p.EmployeeId).ToList(), cancellationToken);
             var dirtyCount = 0;
             foreach (var payslip in payslipsInPeriod)
             {
                 var profile = await profiles.FindCurrentAsync(payslip.EmployeeId, periodStart, cancellationToken);
-                var salary = await salaryLookup.GetSalaryAsOfAsync(tenantId, payslip.EmployeeId, periodEnd, cancellationToken);
+                var employment = await salaryLookup.GetEmploymentDatesAsync(tenantId, payslip.EmployeeId, cancellationToken);
+                var salary = await salaryLookup.GetSalaryAsOfAsync(tenantId, payslip.EmployeeId,
+                    EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate), cancellationToken);
                 if (profile is null || salary is null)
                 {
                     continue; // nothing live to compare against - a removed profile/salary is not a "hash mismatch"
                 }
 
-                var currentHash = PayrollInputHashing.Hash(PayrollInputHashing.BuildSnapshot(profile, salary));
+                Guid? costCenterId = costCenterMapping.TryGetValue(payslip.EmployeeId, out var assignedCostCenterId)
+                    ? assignedCostCenterId
+                    : null;
+                WorkedTimeSummary? hourlyAttendance = null;
+                if (profile.WageBasis == WageBasis.Hourly)
+                {
+                    var workedTimeReader = scope.ServiceProvider.GetRequiredService<IWorkedTimeReader>();
+                    var partial = EmploymentProration.PaidDays(periodStart, periodEnd, employment?.HireDate, employment?.TerminationDate) < 30;
+                    hourlyAttendance = await workedTimeReader.GetAsync(tenantId, payslip.EmployeeId, period.Year, period.Month,
+                        partial ? EmploymentProration.EffectiveStart(periodStart, employment?.HireDate) : null,
+                        partial ? EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate) : null, cancellationToken);
+                }
+
+                var currentHash = PayrollInputHashing.Hash(PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId, hourlyAttendance));
                 if (currentHash == payslip.InputHash)
                 {
                     continue;

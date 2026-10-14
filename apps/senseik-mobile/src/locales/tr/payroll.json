@@ -11,6 +11,8 @@
   },
   "title": "Bordrom",
   "empty": "Henüz görüntülenebilir bordro pusulanız yok.",
+  "emptyGuide": "Bordronuz yayınlanmadıysa daha sonra tekrar kontrol edin. Beklediğiniz bir bordro görünmüyorsa destek alın.",
+  "getHelp": "Destek al",
   "errors": {
     "load": "Bordro pusulaları yüklenemedi. Lütfen tekrar deneyin.",
     "open": "Bordro pusulası açılamadı. Lütfen tekrar deneyin.",

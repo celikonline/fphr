@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Chip, Group, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Chip, Group, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
   getCompanyProfile,
@@ -50,9 +50,19 @@ export default function CompanyStep(props: SetupStepProps) {
 
   if (prepared.isError) {
     return (
-      <Text c="red" role="alert">
-        {t("setup:errors.load")}
-      </Text>
+      <Stack gap="sm">
+        <Text c="red" role="alert">
+          {t("setup:errors.load")}
+        </Text>
+        <Text size="sm" c="dimmed">
+          {t("setup:errors.loadHelp")}
+        </Text>
+        <Group>
+          <Button type="button" variant="light" onClick={() => void prepared.refetch()} loading={prepared.isFetching}>
+            {t("setup:actions.retry")}
+          </Button>
+        </Group>
+      </Stack>
     );
   }
   if (!prepared.data) {

@@ -36,6 +36,7 @@ export interface PayslipLine {
   netAmount: number;
   workedDays?: number | null;
   calendarDaysInMonth?: number | null;
+  costCenterId?: string | null;
 }
 
 export interface PayrollPeriodDetail extends PayrollPeriod {
@@ -204,6 +205,7 @@ export interface EmployeePayrollProfile {
   incentiveLawCode?: string | null;
   mealBenefitVariant: "none" | "cash" | "inKind" | "mealCardOnly" | "mealAndMarketCard";
   mealDailyAmount: number;
+  regularBenefitsMonthlyGross?: number;
   transportVariant: "none" | "cash" | "card" | "shuttle";
   paymentMethod: "bank" | "cash";
   sickDaysReducePay: boolean;
@@ -213,15 +215,20 @@ export interface EmployeePayrollProfile {
 
 /** The profile version in effect today (`payroll.profile.manage`), or null when the employee has none (404). */
 export async function getEmployeePayrollProfile(
-  employeeId: string
+  employeeId: string, asOf?: string
 ): Promise<EmployeePayrollProfile | null> {
   const { data } = await apiClient.get<EmployeePayrollProfile>(
     `${PAYROLL_BASE}/employees/${employeeId}/profile`,
     {
       validateStatus: (status) => status === 200 || status === 404,
+      params: asOf ? { asOf } : undefined,
     }
   );
   return data && "wageBasis" in data ? data : null;
+}
+
+export async function updateEmployeeRegularBenefits(employeeId: string, profileId: string, regularBenefitsMonthlyGross: number): Promise<void> {
+  await apiClient.patch(`${PAYROLL_BASE}/employees/${employeeId}/profile/regular-benefits`, { profileId, regularBenefitsMonthlyGross });
 }
 
 /** `GarnishmentOrderDto`: an icra/nafaka deduction order. */

@@ -4,7 +4,7 @@ namespace Sense.Modules.Attendance.Contracts;
 public enum PunchDirectionDto { In, Out, Unknown }
 
 /// <summary>Where a punch came from; serialized camelCase by the API's string enum converter.</summary>
-public enum PunchSourceDto { Manual, Import, Device, SelfService, Request, Terminal }
+public enum PunchSourceDto { Manual, Import, Device, SelfService, Request, Terminal, DeviceIntegration }
 
 /// <summary>Daily list buckets of "Günlük Puantaj" (spec 5.4); each value maps to one rule of IDailyAttendanceQuery.</summary>
 public enum DailyStatus { Incalculable, Arrived, Late, EarlyLeave, Absent, Overtime, Undertime, OnLeave }
@@ -22,11 +22,15 @@ public sealed record PunchBatchResult(int Accepted, int Ignored, int Rejected = 
 /// <summary>Progress of a queued recalculation job; <see cref="State"/> is the job's lifecycle name (queued/running/completed/failed).</summary>
 public sealed record RecalculationStatusDto(Guid JobId, string State, int Total, int Done, string? Error);
 
+/// <summary>One recorded movement shown in the selected employee's daily detail.</summary>
+public sealed record DailyPunchDto(Guid Id, DateTime OccurredAtUtc, string Direction, string Source, bool IsManual, string? Reason);
+
 /// <summary>One row of a daily attendance list; the punch ids (first in / last out of the day) let the UI offer "delete punch".</summary>
 public sealed record DailyAttendanceRowDto(
     Guid EmployeeId, string EmployeeName, string? OrgUnitName, DateOnly Date,
     TimeOnly? CheckIn, TimeOnly? CheckOut, int WorkedMinutes, int OvertimeMinutes, string[] Anomalies, string? LeaveType,
-    Guid? CheckInPunchId = null, Guid? CheckOutPunchId = null, string? IncalculableReason = null);
+    Guid? CheckInPunchId = null, Guid? CheckOutPunchId = null, string? IncalculableReason = null,
+    TimeOnly? PlannedStart = null, TimeOnly? PlannedEnd = null, DailyPunchDto[]? Punches = null, DailyStatus[]? Statuses = null);
 
 /// <summary>One day's headcounts for the dashboard trend (planned employees, arrived, late, early leave, absent, on leave).</summary>
 public sealed record DailyAttendanceTotalsDto(DateOnly Date, int Planned, int Arrived, int Late, int EarlyLeave, int Absent, int OnLeave);

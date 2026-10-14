@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import {
@@ -22,6 +24,7 @@ import {
   TextField,
 } from "@/components/ui";
 import { peopleService, type PersonListItem } from "@/services/PeopleService";
+import type { AppStackParamList } from "@/types/navigation";
 import { palette, text } from "@/theme/theme";
 
 /** Debounce delay (ms) before a search keystroke triggers a directory reload. */
@@ -88,6 +91,7 @@ function PersonRow({ person }: { person: PersonListItem }) {
 
 export default function PeopleScreen() {
   const { t } = useTranslation("people");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -158,7 +162,17 @@ export default function PeopleScreen() {
                 tintColor={palette.white}
               />
             }
-            ListEmptyComponent={<EmptyState icon="people-outline" title={t("empty")} />}
+            ListEmptyComponent={
+              <EmptyState
+                icon="people-outline"
+                title={t("empty")}
+                message={t(search.trim() ? "searchEmptyGuide" : "emptyGuide")}
+                actionLabel={t(search.trim() ? "clearSearch" : "getHelp")}
+                onAction={() =>
+                  search.trim() ? setSearch("") : navigation.navigate("Support")
+                }
+              />
+            }
           />
         )}
       </View>

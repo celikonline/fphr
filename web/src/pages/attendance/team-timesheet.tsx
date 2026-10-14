@@ -22,9 +22,11 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import { CalendarPlus, ChevronLeft, ChevronRight, Clock, Coffee, EyeOff, Moon, Pencil, Users } from "lucide-react";
+import { Link } from "react-router";
+import { CalendarPlus, ChevronLeft, ChevronRight, Clock, Coffee, EyeOff, FileUp, LifeBuoy, Moon, Pencil, Users } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { incalculableReasonText } from "@/components/attendance/incalculable-hint";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useLeaveName } from "@/components/leave/leave-shared";
@@ -124,6 +126,7 @@ interface SelectedCell {
 
 function TeamTimesheet() {
   const { t, i18n } = useTranslation(["attendance", "common"]);
+  const canImport = usePermission("attendance.timesheet.import");
   const [granularity, setGranularity] = useState<"week" | "month">("week");
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [monthStart, setMonthStart] = useState(() => monthStartOf(new Date()));
@@ -224,9 +227,19 @@ function TeamTimesheet() {
           {getAttendanceErrorMessage(query.error, t("attendance:genericError"), t)}
         </Text>
       ) : rows.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {t("attendance:teamTimesheet.empty")}
-        </Text>
+        <AttendanceEmptyState
+          title={t("attendance:teamTimesheet.empty")}
+          description={t("attendance:teamTimesheet.emptyGuide")}
+          action={canImport ? (
+            <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+              {t("attendance:openDeviceImport")}
+            </Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("attendance:contactSupport")}
+            </Button>
+          )}
+        />
       ) : (
         <>
           {/* Dar viewport (≤~576px), yalnız Hafta görünümünde: 7 kolonlu ızgara sığmaz; gün seçici + tek günlük çalışan kart listesi. Ay görünümünde (28-31 kolon) mobilde de kaydırmalı tablo kullanılır. */}

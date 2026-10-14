@@ -10,7 +10,8 @@
       "absent": "Abwesend",
       "overtime": "Überstunden",
       "undertime": "Minderarbeit",
-      "onLeave": "Im Urlaub"
+      "onLeave": "Im Urlaub",
+      "all": "Alle Mitarbeiter"
     },
     "previousDay": "Vorheriger Tag",
     "nextDay": "Nächster Tag",
@@ -45,7 +46,40 @@
     "genericError": "Es ist ein Fehler aufgetreten.",
     "prevPage": "Vorherige Seite",
     "nextPage": "Nächste Seite",
-    "minutes": "{{count}} Min."
+    "minutes": "{{count}} Min.",
+    "planned": "Geplante Schicht",
+    "statuses": "Status",
+    "summary": {
+      "arrived": "Eingestempelt",
+      "late": "Verspätet",
+      "earlyLeave": "Früher gegangen",
+      "absent": "Abwesend",
+      "onLeave": "Im Urlaub",
+      "overtime": "Überstunden"
+    },
+    "movements": "Zeitbuchungen",
+    "noMovements": "Für diesen Tag gibt es keine Zeitbuchungen.",
+    "movementTime": "Uhrzeit",
+    "source": "Quelle",
+    "deleteMovement": "Buchung mit Begründung löschen",
+    "directions": {
+      "in": "Einstempeln",
+      "out": "Ausstempeln",
+      "unknown": "Unbekannte Richtung",
+      "breakStart": "Pausenbeginn",
+      "breakEnd": "Pausenende"
+    },
+    "sources": {
+      "manual": "Manuell",
+      "import": "Import",
+      "device": "Gerät",
+      "selfService": "Selbstbedienung",
+      "request": "Antrag",
+      "terminal": "Terminal"
+    },
+    "emptyGuide": "Filter und Datum prüfen. Gerätedaten importieren, falls sie noch nicht hochgeladen wurden.",
+    "importRecords": "Gerätedaten importieren",
+    "contactSupport": "Hilfe erhalten"
   },
   "timeDashboard": {
     "title": "Zeit-Dashboard",
@@ -86,7 +120,9 @@
       "detail": "{{worked}} / {{planned}} geplante Schichttage"
     },
     "unit": "Einheit",
-    "unassigned": "Nicht zugewiesen"
+    "unassigned": "Nicht zugewiesen",
+    "emptyGuide": "Für diesen Bereich liegen noch keine Anwesenheitsdaten vor. Gerätedaten importieren oder die tägliche Anwesenheitsliste öffnen.",
+    "openDailyList": "Tägliche Anwesenheitsliste öffnen"
   },
   "monthlyMatrix": {
     "title": "Monatliche Anwesenheitsmatrix",
@@ -121,7 +157,8 @@
       "publicHoliday": "Feiertag",
       "incalculable": "Nicht berechenbar",
       "none": "Keine Daten"
-    }
+    },
+    "emptyGuide": "Datums- und Bereichsfilter prüfen. Fehlende Gerätedaten importieren."
   },
   "punchRequests": {
     "title": "Stempelanträge",
@@ -159,7 +196,9 @@
     "loadError": "Anträge konnten nicht geladen werden.",
     "allStatuses": "Alle",
     "unknownEmployee": "Unbekannter Mitarbeiter",
-    "decidedAt": "Entscheidung: {{date}}"
+    "decidedAt": "Entscheidung: {{date}}",
+    "emptyMineGuide": "Sie haben noch keine Anträge für fehlende Buchungen. Erstellen Sie einen Antrag.",
+    "emptyAllGuide": "Keine offenen oder sichtbaren Anträge. Zur Prüfung die tägliche Anwesenheitsliste öffnen."
   },
   "comingSoon": "Diese Ansicht folgt in Kürze."
 }

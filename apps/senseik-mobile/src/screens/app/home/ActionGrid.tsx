@@ -68,6 +68,8 @@ const SIDE_PADDING = 20;
 type Props = {
   /** Pending approval count - shown as the Onaylarım badge when > 0. */
   approvalsCount: number;
+  /** Attendance also owns the shift view and employee self-service check-in surfaces. */
+  attendanceEnabled?: boolean;
   onNavigate: (route: ActionRoute) => void;
 };
 
@@ -78,10 +80,15 @@ function chunkRows(items: ActionItem[]): ActionItem[][] {
 }
 
 /** "İşlemlerim": horizontally paged tile grid with page dots (mockup `.pager` + `.dots`). */
-export function ActionGrid({ approvalsCount, onNavigate }: Props) {
+export function ActionGrid({ approvalsCount, attendanceEnabled = true, onNavigate }: Props) {
   const { t } = useTranslation("home");
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
+  const pages = attendanceEnabled
+    ? ACTION_PAGES
+    : ACTION_PAGES.map((items) =>
+        items.filter((item) => item.route !== "Attendance" && item.route !== "Shift")
+      );
 
   function onScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
     setPage(Math.round(event.nativeEvent.contentOffset.x / width));
@@ -90,7 +97,7 @@ export function ActionGrid({ approvalsCount, onNavigate }: Props) {
   return (
     <View>
       <FlatList
-        data={ACTION_PAGES}
+        data={pages}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -120,7 +127,7 @@ export function ActionGrid({ approvalsCount, onNavigate }: Props) {
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        {ACTION_PAGES.map((_, index) => (
+        {pages.map((_, index) => (
           <View key={index} style={[styles.dot, index === page && styles.dotActive]} />
         ))}
       </View>

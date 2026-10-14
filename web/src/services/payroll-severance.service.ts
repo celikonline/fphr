@@ -27,6 +27,7 @@ export interface SeveranceTraceStep {
 
 /** `SeveranceEstimateDto`. */
 export interface SeveranceEstimate {
+  regularBenefitsMonthlyGross?: number;
   severanceAmount: number;
   noticeAmount: number;
   unusedLeaveAmount: number;

@@ -4,9 +4,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router";
 import {
   Archive,
   ClipboardList,
+  LifeBuoy,
   Pencil,
   Plus,
   Search,
@@ -344,9 +346,29 @@ function Candidates() {
             {getApiErrorMessage(error, t("recruitment:genericError"))}
           </Text>
         ) : !data || data.length === 0 ? (
-          <Text p="md" size="sm" c="dimmed">
-            {t("recruitment:candidates.empty")}
-          </Text>
+          <Stack align="center" gap="sm" py="xl" px="md">
+            <Text size="sm" c="dimmed" ta="center">
+              {search.trim()
+                ? t("recruitment:candidates.emptySearch")
+                : t("recruitment:candidates.empty")}
+            </Text>
+            <Text size="sm" c="dimmed" ta="center">
+              {t(search.trim() ? "recruitment:candidates.emptySearchGuide" : "recruitment:candidates.emptyGuide")}
+            </Text>
+            {search.trim() ? (
+              <Button type="button" variant="light" onClick={() => setSearch("")}>
+                {t("recruitment:candidates.clearSearch")}
+              </Button>
+            ) : canManage ? (
+              <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
+                {t("recruitment:candidates.addCandidate")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("recruitment:candidates.emptySupport")}
+              </Button>
+            )}
+          </Stack>
         ) : (
           <>
             {/* Geniş ekran: tablo */}

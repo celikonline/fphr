@@ -15,6 +15,8 @@ type Props = {
   /** Adds the tab bar's height (see `navigation/layout.ts`) to the bottom inset so content never
    * sits under the custom bottom bar. Defaults to false (stack screens with no tab bar). */
   withTabBar?: boolean;
+  /** Allows a screen's empty-state action to scroll to the relevant form or section. */
+  scrollViewRef?: React.Ref<ScrollView>;
   testID?: string;
 };
 
@@ -26,6 +28,7 @@ export function Screen({
   onRefresh,
   header,
   withTabBar = false,
+  scrollViewRef,
   testID,
 }: Props) {
   const insets = useSafeAreaInsets();
@@ -37,6 +40,7 @@ export function Screen({
         {header}
         {scroll ? (
           <ScrollView
+            ref={scrollViewRef}
             style={styles.flex}
             contentContainerStyle={{ paddingBottom: bottomPadding }}
             refreshControl={

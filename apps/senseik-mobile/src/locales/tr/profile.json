@@ -2,6 +2,8 @@
   "title": "Profilim",
   "loadError": "Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.",
   "notFound": "Çalışan kaydınız bulunmuyor.",
+  "notFoundGuide": "Hesabınız çalışan kaydıyla eşleşmiyor. Bu durumu destek ekibine bildirin.",
+  "getHelp": "Destek al",
   "groups": {
     "personal": "Kişisel",
     "contact": "İletişim",

@@ -13,6 +13,7 @@ using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
 using Sense.Modules.Payroll.Domain.Unions;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Legislation;
 using Sense.Shared.Kernel.Results;
@@ -29,6 +30,9 @@ public static class PayrollSkipReasons
     public const string WageBasisNotMonthly = "wage_basis_not_monthly";
     public const string WageBasisMismatch = "wage_basis_mismatch";
     public const string NetWageBasisUnsupported = "net_wage_basis_unsupported";
+    public const string HourlyAttendanceMissing = "hourly_attendance_missing";
+    public const string HourlyAttendanceNotApproved = "hourly_attendance_not_approved";
+    public const string HourlyAttendanceInvalid = "hourly_attendance_invalid";
     public const string NoSalaryRecord = "no_salary_record";
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
@@ -64,11 +68,15 @@ public static class PayrollWarningCodes
 
     /// <summary>An SGK-category incentive assignment replaces the payroll profile's incentive law code, which differs from the assignment's declaration code and is ignored. Details = the profile's code.</summary>
     public const string IncentiveProfileCodeIgnored = "incentive_profile_code_ignored";
+
+    /// <summary>A profile code other than 05510 has no explicit incentive model assignment; no generic discount is granted. Details = profile code.</summary>
+    public const string IncentiveProfileAssignmentRequired = "incentive_profile_assignment_required";
+    public const string IncentiveSgkStatusNotEligible = "incentive_sgk_status_not_eligible";
 }
 
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
-/// <see cref="CalculatedCount"/>) when they have no payroll profile/salary record, a non-Monthly WageBasis, a Net
-/// SalaryType, were not employed in the period, have no worked day, or their calculation failed; each skipped
+/// <see cref="CalculatedCount"/>) when their wage basis is unsupported, their salary/profile or hourly attendance is unavailable,
+/// they were not employed in the period, have no worked day, or their calculation failed; each skipped
 /// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.
 /// <see cref="Warnings"/> contains non-blocking issues like missing prior cumulative GV base for mid-year employees.</summary>
 /// <summary>One employee's figures in a deneme bordrosu.</summary>
@@ -113,7 +121,8 @@ public sealed class PayrollPeriodCalculationService(
     IPayItemDefinitionRepository payItemDefinitions,
     IEmployeeIncentiveAssignmentRepository incentiveAssignments,
     IIncentiveDefinitionRepository incentiveDefinitions,
-    ILogger<PayrollPeriodCalculationService> logger)
+    ILogger<PayrollPeriodCalculationService> logger,
+    IEmployeeCostCenterReader? costCenterReader = null)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -176,6 +185,19 @@ public sealed class PayrollPeriodCalculationService(
             else
             {
                 skipped.Add(new PayrollSkippedEmployee(employeeId, skipReason));
+                if (preview is null && (skipReason is PayrollSkipReasons.HourlyAttendanceMissing
+                    or PayrollSkipReasons.HourlyAttendanceNotApproved or PayrollSkipReasons.HourlyAttendanceInvalid
+                    || await payslips.FindByEmployeeAndPeriodAsync(employeeId, period.Id, cancellationToken) is not null))
+                {
+                    // Do not let an old payslip (or an omitted hourly employee) make the closing checklist look complete.
+                    // A successful subsequent run clears the flag; a preview must not mutate it.
+                    var blockedFlag = await dirtyFlags.FindActiveAsync(period.Id, employeeId, cancellationToken);
+                    if (blockedFlag is null)
+                        dirtyFlags.Add(PayslipDirtyFlag.Create(tenant.TenantId, period.Id, employeeId,
+                            PayslipDirtyFlagReasons.CalculationBlocked, null, clock.GetUtcNow().UtcDateTime));
+                    else
+                        blockedFlag.AddReason(PayslipDirtyFlagReasons.CalculationBlocked, null, clock.GetUtcNow().UtcDateTime);
+                }
             }
         }
 
@@ -222,7 +244,8 @@ public sealed class PayrollPeriodCalculationService(
         }
 
         // The salary in force at the period's end, not today's (a later raise must not rewrite a closed month).
-        var salary = await salaryLookup.GetSalaryAsOfAsync(tenant.TenantId, employeeId, periodEnd, cancellationToken);
+        var salary = await salaryLookup.GetSalaryAsOfAsync(tenant.TenantId, employeeId,
+            EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate), cancellationToken);
         if (salary is null)
         {
             return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
@@ -235,12 +258,6 @@ public sealed class PayrollPeriodCalculationService(
         }
 
         var isPeriodWage = profile.WageBasis != WageBasis.Monthly;
-        if (isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net)
-        {
-            // BASİTLEŞTİRME: net günlük/saatlik ücretin net→brüt çözümü (aylık NetToGrossSolver'a eşdeğer) yapılmıyor; sessizce yanlış hesap yerine atlanır.
-            return PayrollSkipReasons.NetWageBasisUnsupported;
-        }
-
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
         // girdi - bkz. ResolvePriorCumulativeGvBaseAsync (bu metodun altında).
         // TB-7 Attendance köprüsü (roadmap #23): null (no adapter wired yet, or Attendance has no data for this
@@ -296,6 +313,28 @@ public sealed class PayrollPeriodCalculationService(
             return PayrollSkipReasons.NoWorkedDays;
         }
 
+        decimal? paidHours = null;
+        if (profile.WageBasis == WageBasis.Hourly)
+        {
+            if (workedTime?.NormalHoursShortfall is not { } shortfall)
+            {
+                return PayrollSkipReasons.HourlyAttendanceMissing;
+            }
+
+            if (!workedTime.IsTimesheetApproved)
+            {
+                return PayrollSkipReasons.HourlyAttendanceNotApproved;
+            }
+
+            // Preserve the existing paid rest/leave/holiday entitlement, replace the full-day assumption on
+            // partially worked normal days with the approved actual shortfall. Missing days are deducted once.
+            paidHours = wagePaidDays * PeriodWageMath.DailyWorkingHours - shortfall;
+            if (shortfall < 0m || paidHours <= 0m)
+            {
+                return PayrollSkipReasons.HourlyAttendanceInvalid;
+            }
+        }
+
         // TB-7 Expense köprüsü (roadmap #23, faz-07 tur 1 madde 3): port boş/null dönerse 0 - bugünkü davranış sürer.
         var expensePayout = await expensePayoutReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
         var expenseReimbursement = expensePayout?.ApprovedExpenseTotal ?? 0m;
@@ -310,9 +349,10 @@ public sealed class PayrollPeriodCalculationService(
         }
 
         // Teşvik modelleri (PAY-INCENTIVE): onaylı ve bu ay etkin atamalar hesaba girer; etkin bir SGK ataması varsa profildeki kanun kodu yok sayılır
-        // (IncentiveEligible = SGK ataması yok && profil kodu dolu; vergi ataması profil kodunu etkilemez). senseik-019 2a: BASİTLEŞTİRME - gerçek teşvik
+        // (IncentiveEligible = uygun SGK statüsü && SGK ataması yok && profil kodu 05510; vergi ataması profil kodunu etkilemez). İşyerinin teşvik
         // uygunluk kontrolü (SGK'nın güncel kanun kodu listesiyle eşleşme, işyeri bazlı başvuru durumu) yapılmıyor, bkz. PayrollCalculationInput.IncentiveEligible.
-        var incentive = await incentives.ResolveAsync(employeeId, profile.IncentiveLawCode, cancellationToken);
+        var incentive = await incentives.ResolveAsync(employeeId, profile.IncentiveLawCode,
+            sgkEligible: profile.SgkStatus is SgkStatus.Normal or SgkStatus.Foreign, cancellationToken);
         if (incentive.MissingParameter is { } missingParameter)
         {
             // Parametre anahtarı loga yazılır; tutar yazılmaz.
@@ -326,22 +366,46 @@ public sealed class PayrollPeriodCalculationService(
         var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenant.TenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
 
         // Net ücret (net→brüt): a fixed-net salary is grossed up with the same calculator so the employee keeps exactly that net after the
-        // month's premiums and taxes (cumulative bracket, exemptions and disability reduction included). Solved on a full month with no
-        // additions or deductions, then the normal run prorates that gross for a partial month and adds meal/overtime/deductions as usual.
+        // month's premiums and taxes (cumulative bracket, exemptions and disability reduction included). The net target is
+        // prorated to the employed part of the month BEFORE gross-up, with the same prorated tax parameters as the final run.
         // Günlük/saatlik ücretlide grossMonthly aylık karşılıktır (günlük x 30, saatlik x 225): fazla mesai, tatil ücreti ve sendika aidatı onunla hesaplanır; dönem brütü PeriodWage ile bulunur.
-        var periodWage = isPeriodWage ? new PeriodWage(profile.WageBasis, salary.Amount, wagePaidDays) : null;
+        var unitRate = salary.Amount;
+        if (isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net)
+        {
+            var paidUnits = profile.WageBasis == WageBasis.Hourly ? paidHours!.Value : wagePaidDays;
+            var periodNetTarget = decimal.Round(salary.Amount * paidUnits, 2, MidpointRounding.AwayFromZero);
+            var grossPeriod = NetToGrossSolver.Solve(periodNetTarget, candidateGross =>
+            {
+                var candidateRate = candidateGross / paidUnits;
+                return PayrollCalculator.Calculate(new PayrollCalculationInput(
+                    GrossMonthlySalary: PeriodWageMath.MonthlyEquivalent(profile.WageBasis, candidateRate),
+                    WorkedDays: workedDays, CalendarDaysInMonth: calendarDays,
+                    MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m,
+                    PriorCumulativeGvBase: priorCumulativeGvBase, AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree,
+                    ProratedPaidDays: wagePaidDays < EmploymentProration.PayrollMonthDays ? wagePaidDays : null,
+                    Wage: new PeriodWage(profile.WageBasis, candidateRate, wagePaidDays, paidHours)), snapshot);
+            });
+            // Keep the precision of the unit rate: rounding it to cents would multiply the error by paid hours/days.
+            unitRate = grossPeriod / paidUnits;
+        }
+
+        var periodWage = isPeriodWage ? new PeriodWage(profile.WageBasis, unitRate, wagePaidDays, paidHours,
+            salary.SalaryType == EmployeeSalaryType.Net ? salary.Amount : null) : null;
         var grossMonthly = isPeriodWage
-            ? PeriodWageMath.MonthlyEquivalent(profile.WageBasis, salary.Amount)
-            : salary.SalaryType == EmployeeSalaryType.Net
-            ? NetToGrossSolver.Solve(
-                salary.Amount,
-                candidateGross => PayrollCalculator.Calculate(
-                    new PayrollCalculationInput(
-                        GrossMonthlySalary: candidateGross, WorkedDays: calendarDays, CalendarDaysInMonth: calendarDays,
-                        MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m, PriorCumulativeGvBase: priorCumulativeGvBase,
-                        AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree),
-                    snapshot))
+            ? PeriodWageMath.MonthlyEquivalent(profile.WageBasis, unitRate)
             : salary.Amount;
+        var monthlyNetTarget = decimal.Round(salary.Amount * paidDays30 / EmploymentProration.PayrollMonthDays, 2, MidpointRounding.AwayFromZero);
+        if (!isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net)
+        {
+            var ratio = paidDays30 / (decimal)EmploymentProration.PayrollMonthDays;
+            var periodGross = NetToGrossSolver.Solve(monthlyNetTarget, candidateGross => PayrollCalculator.Calculate(
+                new PayrollCalculationInput(
+                    GrossMonthlySalary: candidateGross / ratio, WorkedDays: workedDays, CalendarDaysInMonth: calendarDays,
+                    MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m, PriorCumulativeGvBase: priorCumulativeGvBase,
+                    AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree,
+                    ProratedPaidDays: paidDays30 < EmploymentProration.PayrollMonthDays ? paidDays30 : null), snapshot));
+            grossMonthly = periodGross / ratio;
+        }
 
         // senseik-019 2c: açık avans bakiyesi + aktif icra/nafaka emirleri.
         var advanceBalance = expensePayout?.OpenAdvanceBalance ?? 0m;
@@ -410,7 +474,9 @@ public sealed class PayrollPeriodCalculationService(
         {
             var baseInput = BuildInput(0m);
             var facts = new PayItemVariableFacts(
-                NetTarget: !isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net ? salary.Amount : 0m,
+                NetTarget: salary.SalaryType != EmployeeSalaryType.Net ? 0m : isPeriodWage
+                    ? decimal.Round(salary.Amount * (profile.WageBasis == WageBasis.Hourly ? paidHours!.Value : wagePaidDays), 2, MidpointRounding.AwayFromZero)
+                    : monthlyNetTarget,
                 MissingDays: missingDays,
                 SeniorityYears: PayItemVariables.SeniorityYears(employment?.HireDate, periodEnd),
                 OvertimeHours: overtime is null ? 0m : (overtime.Rate25Minutes + overtime.Rate50Minutes) / 60m);
@@ -477,7 +543,11 @@ public sealed class PayrollPeriodCalculationService(
         }
 
         var cumulativeGvBase = result.Step(PayrollTraceStepCodes.CumulativeBase).Output;
-        var snapshotDto = PayrollInputHashing.BuildSnapshot(profile, salary);
+        var costCenterMapping = costCenterReader is null
+            ? new Dictionary<Guid, Guid>()
+            : await costCenterReader.GetEmployeeCostCenterMappingAsync(tenant.TenantId, [employeeId], cancellationToken);
+        Guid? costCenterId = costCenterMapping.TryGetValue(employeeId, out var assignedCostCenterId) ? assignedCostCenterId : null;
+        var snapshotDto = PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId, workedTime);
         var inputSnapshotJson = PayrollInputHashing.Serialize(snapshotDto);
         var inputHash = PayrollInputHashing.Hash(snapshotDto);
 
@@ -486,12 +556,14 @@ public sealed class PayrollPeriodCalculationService(
         if (existing is null)
         {
             payslip = Payslip.CreateFirstVersion(
-                tenant.TenantId, employeeId, period.Id, inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost, cumulativeGvBase);
+                tenant.TenantId, employeeId, period.Id, inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost,
+                cumulativeGvBase, costCenterId, costCenterSnapshotCaptured: true);
             payslips.Add(payslip);
         }
         else
         {
-            existing.Recalculate(inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost, cumulativeGvBase);
+            existing.Recalculate(inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost,
+                cumulativeGvBase, costCenterId, costCenterSnapshotCaptured: true);
             payslip = existing;
         }
 

@@ -154,7 +154,7 @@ public sealed class IncentiveDefinitionFeaturesTests
     }
 
     [Fact]
-    public async Task FromTemplate_6111_IsAnEmptyUnapprovedDraft()
+    public async Task FromTemplate_6111_IsACompleteModelAwaitingApproval()
     {
         var handler = new CreateIncentiveFromTemplateHandler(_tenant, _definitions, _clock);
 
@@ -162,8 +162,26 @@ public sealed class IncentiveDefinitionFeaturesTests
 
         var stored = _definitions.Items.Single();
         stored.IsSmmmApproved.ShouldBeFalse();
-        stored.IsComplete.ShouldBeFalse();
-        stored.Parameters.Rate.ShouldBeNull();
+        stored.IsComplete.ShouldBeTrue();
+        stored.Parameters.Rate!.Value.ShouldBe(1m);
+        stored.DeclarationCode.ShouldBe("06111");
+        stored.Parameters.EmployerSgkRate!.LegislationKey.ShouldBe(IncentiveTemplates.EmployerSgkRateKey);
+    }
+
+    [Fact]
+    public async Task ApiParameters_KeepTheTotalSupportCapOnCreateAndRead()
+    {
+        var parameters = new IncentiveParametersDto(new IncentiveRateDto(1m, null), IncentiveCoverageBase.ActualSgkBase, null,
+            new IncentiveRateDto(0.205m, null), true, true, true, true, MaxSupportMultiplier: 1m);
+        var input = new IncentiveDefinitionInput("Tavanlı teşvik", null, "17103", IncentiveKind.EmployerShareCoverage,
+            parameters, null, new DateOnly(2022, 1, 1), new DateOnly(2022, 12, 31));
+        var created = await new CreateIncentiveDefinitionHandler(_tenant, _definitions, _clock)
+            .Handle(new CreateIncentiveDefinitionCommand("TAVANLI", input), CancellationToken.None);
+        created.IsSuccess.ShouldBeTrue();
+        _definitions.Items.Single().Parameters.MaxSupportMultiplier.ShouldBe(1m);
+        var read = await new GetIncentiveDefinitionHandler(_tenant, _definitions, _users)
+            .Handle(new GetIncentiveDefinitionQuery(created.Value), CancellationToken.None);
+        read.Value.Parameters.MaxSupportMultiplier.ShouldBe(1m);
     }
 
     [Fact]

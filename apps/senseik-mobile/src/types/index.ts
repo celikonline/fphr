@@ -19,6 +19,8 @@ export interface User {
   roles: string[];
   permissions: string[];
   tenant: MeTenant;
+  /** Disabled tenant modules from `MeDto.features.disabledModules`; absent means all are enabled. */
+  disabledModules?: string[];
 }
 
 /** Mirrors `AuthTokensDto` (Sense.Modules.Identity.Application/Dtos.cs). */

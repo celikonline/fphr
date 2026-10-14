@@ -76,4 +76,24 @@ public sealed class LeaveBalanceService(
             .Select(t => LeaveBalanceEngine.Project(t, profile.LeaveAccrualStartDate, Today, entries.Where(e => e.LeaveTypeId == t.Id).ToList()))
             .ToList();
     }
+
+    /// <summary>Projects a historical/future balance without replacing today's persisted ledger or saving changes.</summary>
+    public async Task<IReadOnlyList<LeaveBalance>> ProjectAsOfAsync(
+        EmployeeLeaveProfile profile, LeaveRuleSet ruleSet, DateOnly asOf, CancellationToken cancellationToken)
+    {
+        var entries = await ledger.ListAsync(profile.EmployeeId, null, cancellationToken);
+        var statutoryValues = await legislation.ListAsync(
+            [LegislationParameterKeys.AnnualTier1Days, LegislationParameterKeys.AnnualTier2AfterYears, LegislationParameterKeys.AnnualTier2Days,
+             LegislationParameterKeys.AnnualTier3AfterYears, LegislationParameterKeys.AnnualTier3Days, LegislationParameterKeys.AnnualYoungAgeMax,
+             LegislationParameterKeys.AnnualOldAgeMin, LegislationParameterKeys.AnnualAgeExceptionMinDays],
+            LegislationCountries.Turkey, cancellationToken);
+        var statutory = StatutoryLeaveResolver.Resolve(statutoryValues, asOf).Annual;
+        return ruleSet.Types.Where(t => t.HasBalance && !t.IsDisabled).OrderBy(t => t.SortOrder).Select(type =>
+        {
+            var preserved = entries.Where(e => e.LeaveTypeId == type.Id && !e.IsGenerated && e.EffectiveDate <= asOf).ToList();
+            var generated = LeaveBalanceEngine.Regenerate(type, profile.TenantId, profile.EmployeeId,
+                profile.LeaveAccrualStartDate, profile.BirthDate, asOf, preserved, statutory);
+            return LeaveBalanceEngine.Project(type, profile.LeaveAccrualStartDate, asOf, preserved.Concat(generated).ToList());
+        }).ToList();
+    }
 }

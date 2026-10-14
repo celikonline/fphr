@@ -67,7 +67,19 @@ export function HelpCenterCard({
           {articlesLoading ? (
             <ActivityIndicator style={styles.loading} color={palette.white} />
           ) : articles.length === 0 ? (
-            <Text style={styles.emptyText}>{t("help.empty")}</Text>
+            <>
+              <Text style={styles.emptyText}>{t("help.empty")}</Text>
+              {term.trim() ? (
+                <TouchableOpacity
+                  style={styles.emptyAction}
+                  onPress={() => onTermChange("")}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("help.clearSearch")}
+                >
+                  <Text style={styles.linkText}>{t("help.clearSearch")}</Text>
+                </TouchableOpacity>
+              ) : null}
+            </>
           ) : (
             articles.map((article, index) => (
               <TouchableOpacity
@@ -99,6 +111,11 @@ const styles = StyleSheet.create({
   emptyText: {
     ...text.bodyMuted,
     marginTop: 16,
+  },
+  emptyAction: {
+    alignSelf: "flex-start",
+    marginTop: 12,
+    paddingVertical: 8,
   },
   articleRow: {
     flexDirection: "row",

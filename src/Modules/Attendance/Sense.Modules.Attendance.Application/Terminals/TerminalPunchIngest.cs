@@ -14,7 +14,8 @@ public sealed record TerminalCredentialInput(TerminalCredentialKind? Kind, strin
 }
 
 /// <summary>Bir okutma: <see cref="Direction"/> yoksa (ya da unknown) terminalin yön moduna göre çözülür.</summary>
-public sealed record TerminalPunchItem(TerminalCredentialInput? Credential, DateTime OccurredAtUtc, PunchDirectionDto? Direction);
+public sealed record TerminalPunchItem(
+    TerminalCredentialInput? Credential, DateTime OccurredAtUtc, PunchDirectionDto? Direction, string? SourceRef = null);
 
 public enum TerminalPunchItemStatus
 {
@@ -51,10 +52,15 @@ public sealed class TerminalPunchIngest(
     /// <summary>Yalnız bu durumdaki çalışanın okutması kabul edilir (EmployeeStatus.Active; taslak/askıda/işten ayrılmış reddedilir).</summary>
     private const string ActiveEmployeeStatus = "Active";
 
+    public Task<Result<TerminalPunchBatchResultDto>> IngestAsync(
+        TerminalIdentity terminal, IReadOnlyList<TerminalPunchItem?>? items, CancellationToken cancellationToken) =>
+        IngestAsync(terminal, items, PunchSourceDto.Terminal, cancellationToken);
+
     public async Task<Result<TerminalPunchBatchResultDto>> IngestAsync(
-        TerminalIdentity terminal, IReadOnlyList<TerminalPunchItem?>? items, CancellationToken cancellationToken)
+        TerminalIdentity terminal, IReadOnlyList<TerminalPunchItem?>? items, PunchSourceDto source, CancellationToken cancellationToken)
     {
-        if (items is null || items.Count == 0 || items.Count > MaxItemsPerRequest)
+        if (items is null || items.Count == 0 || items.Count > MaxItemsPerRequest
+            || source is not (PunchSourceDto.Terminal or PunchSourceDto.DeviceIntegration))
         {
             return Error.Validation(TerminalErrors.BatchSizeInvalid, ("max", MaxItemsPerRequest));
         }
@@ -115,7 +121,7 @@ public sealed class TerminalPunchIngest(
         var results = new List<TerminalPunchItemResultDto>(items.Count);
         for (var index = 0; index < items.Count; index++)
         {
-            results.Add(await RecordAsync(terminal, index, items[index], prepared[index], owners, activeEmployees, cancellationToken).ConfigureAwait(false));
+            results.Add(await RecordAsync(terminal, index, items[index], prepared[index], owners, activeEmployees, source, cancellationToken).ConfigureAwait(false));
         }
 
         return new TerminalPunchBatchResultDto(
@@ -188,7 +194,7 @@ public sealed class TerminalPunchIngest(
     private async Task<TerminalPunchItemResultDto> RecordAsync(
         TerminalIdentity terminal, int index, TerminalPunchItem? item, Prepared prepared,
         IReadOnlyDictionary<(TerminalCredentialKind Kind, string Value), Guid> owners, IReadOnlySet<Guid> activeEmployees,
-        CancellationToken cancellationToken)
+        PunchSourceDto source, CancellationToken cancellationToken)
     {
         if (prepared.Digest is not { } digest)
         {
@@ -221,7 +227,7 @@ public sealed class TerminalPunchIngest(
 
         var input = new PunchInput(
             terminal.TenantId, employeeId, NormalizeOccurredAt(item.OccurredAtUtc), ResolveDirection(item.Direction, terminal.DirectionMode),
-            PunchSourceDto.Terminal, SourceRef: null, terminal.TerminalId, terminal.LocationId, Latitude: null, Longitude: null,
+            source, item.SourceRef, terminal.TerminalId, terminal.LocationId, Latitude: null, Longitude: null,
             IsManual: false, CreatedByUserId: null, Reason: null);
         var recorded = await recorder.RecordBatchAsync([input], cancellationToken).ConfigureAwait(false);
         if (recorded.IsFailure)

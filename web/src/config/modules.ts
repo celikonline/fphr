@@ -45,6 +45,7 @@ const MODULE_ROUTE_PREFIXES: ReadonlyArray<readonly [string, ToggleableModuleKey
   ["/app/settings/leave", "leave"],
   ["/app/attendance", "attendance"],
   ["/app/settings/rules/work-calendars", "attendance"],
+  ["/app/settings/pdks-integrations", "attendance"],
   ["/app/payroll", "payroll"],
   ["/app/recruitment", "recruitment"],
   ["/app/settings/recruitment", "recruitment"],

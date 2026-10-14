@@ -26,7 +26,8 @@ public sealed record SeveranceEstimateDto(
     int SeniorityDays,
     decimal DailyGrossWage,
     string Currency,
-    IReadOnlyList<SeveranceTraceStepDto> Steps);
+    IReadOnlyList<SeveranceTraceStepDto> Steps,
+    decimal RegularBenefitsMonthlyGross = 0m);
 
 /// <summary>
 /// Salt-okunur tahmin: mutasyon yok, outbox gerekmez (11.3.03 "İşten ayrılış sihirbazı" özet bloğu). Employee cannot
@@ -52,11 +53,20 @@ public sealed class SeveranceEstimator(
     IEmployeeSeniorityLookup seniorityLookup,
     ILeaveBalanceLookup leaveBalanceLookup,
     ILegislationParameterReader legislation,
-    TimeProvider clock)
+    TimeProvider clock,
+    IPayrollPeriodRepository periods,
+    IPayslipRepository payslips,
+    IEmployeeDisabilityLookup disabilityLookup,
+    IEmployeePayrollProfileRepository profiles)
 {
     public async Task<Result<SeveranceEstimateDto>> EstimateAsync(
         Guid tenantId, Guid employeeId, DateOnly terminationDate, SeveranceCauseCategory causeCategory, CancellationToken cancellationToken)
     {
+        if (!Enum.IsDefined(causeCategory))
+        {
+            return Error.Validation(PayrollDomainErrors.SeveranceEstimateCauseInvalid);
+        }
+
         // A hypothetical exit date must not precede the hire date nor lie more than ~1 year ahead (nonsense estimates such as year 2100).
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var employment = await salaryLookup.GetEmploymentDatesAsync(tenantId, employeeId, cancellationToken);
@@ -66,49 +76,100 @@ public sealed class SeveranceEstimator(
             return Error.Validation(PayrollDomainErrors.SeveranceTerminationDateInvalid);
         }
 
-        var salary = await salaryLookup.GetCurrentSalaryAsync(tenantId, employeeId, cancellationToken);
+        var salary = await salaryLookup.GetSalaryAsOfAsync(tenantId, employeeId, terminationDate, cancellationToken);
         if (salary is null)
         {
             return Error.Validation(PayrollDomainErrors.SeveranceEstimateSalaryMissing);
         }
 
+        if (salary.Amount <= 0m || !Enum.IsDefined(salary.PayFrequency) || !Enum.IsDefined(salary.SalaryType)
+            || !string.Equals(salary.Currency, "TRY", StringComparison.OrdinalIgnoreCase))
+        {
+            return Error.Validation(PayrollDomainErrors.SeveranceEstimateSalaryUnsupported);
+        }
+
         var seniorityDays = await seniorityLookup.GetCountedSeniorityDaysAsync(
             tenantId, employeeId, EmployeeSeniorityPurpose.Severance, terminationDate, cancellationToken);
-        var unusedLeaveDays = await leaveBalanceLookup.GetRemainingAnnualLeaveDaysAsync(tenantId, employeeId, cancellationToken) ?? 0m;
+        var leaveBalance = await leaveBalanceLookup.GetRemainingAnnualLeaveDaysAsOfAsync(tenantId, employeeId, terminationDate, cancellationToken);
+        if (leaveBalance is null)
+        {
+            return Error.Rule(PayrollDomainErrors.SeveranceEstimateLeaveBalanceMissing);
+        }
 
-        var dailyGrossWage = DailyGrossWage(salary);
+        var unusedLeaveDays = Math.Max(0m, leaveBalance.Value);
+
+        var dailyGrossWage = DailyWage(salary);
         SeveranceLegislationSnapshot snapshot;
+        decimal priorCumulativeBase = 0m;
         try
         {
             snapshot = await SeveranceLegislationSnapshotResolver.ResolveAsync(legislation, terminationDate, cancellationToken);
+            if (salary.SalaryType == EmployeeSalaryType.Net)
+            {
+                var payrollSnapshot = await PayrollLegislationSnapshotResolver.ResolveAsync(legislation, terminationDate, cancellationToken);
+                priorCumulativeBase = await PriorCumulativeTaxBase.ReadAsync(periods, payslips, employeeId, terminationDate, cancellationToken);
+                var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
+                var grossMonthly = NetToGrossSolver.Solve(dailyGrossWage * EmploymentProration.PayrollMonthDays,
+                    gross => PayrollCalculator.Calculate(new PayrollCalculationInput(
+                        GrossMonthlySalary: gross, WorkedDays: EmploymentProration.PayrollMonthDays,
+                        CalendarDaysInMonth: DateTime.DaysInMonth(terminationDate.Year, terminationDate.Month),
+                        MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m,
+                        PriorCumulativeGvBase: priorCumulativeBase, AsOfDate: terminationDate, DisabilityDegree: (int)disabilityDegree), payrollSnapshot));
+                dailyGrossWage = grossMonthly / EmploymentProration.PayrollMonthDays;
+            }
         }
         catch (LegislationParameterMissingException ex)
         {
             return LegislationMissingError.From(ex);
         }
 
-        var input = new SeveranceInput(seniorityDays, causeCategory, dailyGrossWage, unusedLeaveDays);
+        var profile = await profiles.FindCurrentAsync(employeeId, terminationDate, cancellationToken);
+        if (profile is not null && (profile.EmployeeId != employeeId || profile.TenantId != tenantId))
+            return Error.NotFound(PayrollDomainErrors.ProfileNotFound);
+        var regularBenefits = profile?.RegularBenefitsMonthlyGross ?? 0m;
+        var input = new SeveranceInput(seniorityDays, causeCategory, dailyGrossWage, unusedLeaveDays, regularBenefits);
         var result = SeveranceCalculator.Calculate(input, snapshot);
+
+        var wageInputs = new Dictionary<string, string>
+        {
+            ["salaryAmount"] = salary.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["salaryType"] = salary.SalaryType.ToString(),
+            ["payFrequency"] = salary.PayFrequency.ToString(),
+            ["salaryEffectiveFrom"] = salary.EffectiveFrom.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            ["asOfDate"] = terminationDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            ["priorCumulativeGvBase"] = priorCumulativeBase.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["regularBenefitsMonthlyGross"] = regularBenefits.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["dressedDailyGrossWage"] = (dailyGrossWage + regularBenefits / 30m).ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+        var steps = new List<SeveranceTraceStepDto>
+        {
+            new(1, "WAGE_BASIS", "payroll.severance.trace.wage_basis", wageInputs,
+                salary.SalaryType == EmployeeSalaryType.Net ? "çıkış tarihindeki net ücretin dönem parametreleriyle brütleştirilmesi / 30" : "çıkış tarihindeki ücretin günlük brüt karşılığı",
+                decimal.Round(dailyGrossWage, 6, MidpointRounding.AwayFromZero))
+        };
+        if (profile is not null)
+        {
+            wageInputs["payrollProfileId"] = profile.Id.ToString();
+            wageInputs["profileValidFrom"] = profile.ValidFrom.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        steps.AddRange(result.Steps.Select(s => new SeveranceTraceStepDto(s.Order + 1, s.Code, s.TitleKey, s.Inputs, s.Formula, s.Output)));
 
         return new SeveranceEstimateDto(
             result.SeveranceAmount, result.NoticeAmount, result.UnusedLeaveAmount, result.TotalAmount,
             seniorityDays, dailyGrossWage, salary.Currency,
-            result.Steps.Select(s => new SeveranceTraceStepDto(s.Order, s.Code, s.TitleKey, s.Inputs, s.Formula, s.Output)).ToList());
+            steps, regularBenefits);
     }
 
     /// <summary>
-    /// Daily basis for the estimate, derived from the employee's current salary record's pay frequency. TODO
-    /// (net-to-gross, out of this slice's scope): a Net-typed record is used as-is - the law's basis is the last
-    /// *gross* wage, so a Net record understates the estimate; flagged rather than silently wrong-but-unmentioned,
-    /// mirrors PayrollCalculationInput's own documented simplifications (full-worked-month, WageBasis=Monthly only).
+    /// Daily equivalent before gross-up, from the salary in force on the exit date. The hourly conversion shares the payroll basis.
     /// </summary>
-    private static decimal DailyGrossWage(EmployeeCurrentSalary salary) => salary.PayFrequency switch
+    private static decimal DailyWage(EmployeeCurrentSalary salary) => salary.PayFrequency switch
     {
         EmployeePayFrequency.Daily => salary.Amount,
         EmployeePayFrequency.Weekly => salary.Amount / 7m,
         EmployeePayFrequency.Monthly => salary.Amount / 30m,
         EmployeePayFrequency.Yearly => salary.Amount / 360m,
-        EmployeePayFrequency.Hourly => salary.Amount * 8m,
-        _ => salary.Amount / 30m,
+        EmployeePayFrequency.Hourly => salary.Amount * PeriodWageMath.DailyWorkingHours,
+        _ => throw new NotSupportedException($"Unsupported pay frequency '{salary.PayFrequency}'."),
     };
 }

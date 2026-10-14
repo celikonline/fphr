@@ -70,6 +70,7 @@ export interface OrgUnit {
   locationId: string | null;
   sortOrder: number;
   isActive: boolean;
+  costCenterId?: string | null;
 }
 
 export interface OrgUnitCreateInput {
@@ -101,6 +102,11 @@ export async function createUnit(input: OrgUnitCreateInput): Promise<OrgUnit> {
 
 export async function updateUnit(id: string, input: OrgUnitUpdateInput): Promise<OrgUnit> {
   const { data } = await apiClient.put<OrgUnit>(`${UNITS}/${id}`, input);
+  return data;
+}
+
+export async function setUnitCostCenter(id: string, costCenterId: string | null): Promise<OrgUnit> {
+  const { data } = await apiClient.put<OrgUnit>(`${UNITS}/${id}/cost-center`, { costCenterId });
   return data;
 }
 

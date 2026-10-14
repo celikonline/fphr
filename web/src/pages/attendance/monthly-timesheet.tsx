@@ -15,16 +15,20 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { Link } from "react-router";
 import {
   CalendarCheck,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  FileUp,
+  LifeBuoy,
   Lock,
 } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { toast } from "@/hooks/use-toast";
@@ -77,6 +81,7 @@ function MonthlyTimesheet() {
   const { t, i18n } = useTranslation(["attendance", "common"]);
   const queryClient = useQueryClient();
   const canApprove = usePermission(APPROVE_PERMISSION);
+  const canImport = usePermission("attendance.timesheet.import");
   const [monthStart, setMonthStart] = useState(() => monthStartOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
@@ -224,9 +229,19 @@ function MonthlyTimesheet() {
           {getAttendanceErrorMessage(monthly.error, t("attendance:genericError"), t)}
         </Text>
       ) : rows.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {t("attendance:monthlyTimesheet.empty")}
-        </Text>
+        <AttendanceEmptyState
+          title={t("attendance:monthlyTimesheet.empty")}
+          description={t("attendance:monthlyTimesheet.emptyGuide")}
+          action={canImport ? (
+            <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+              {t("attendance:openDeviceImport")}
+            </Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("attendance:contactSupport")}
+            </Button>
+          )}
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table withTableBorder withColumnBorders verticalSpacing="xs" miw={1100}>

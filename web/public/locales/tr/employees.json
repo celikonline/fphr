@@ -642,6 +642,7 @@
       "sgkSubCodeHint": "Bu neden birden fazla geçerli SGK koduna sahip; aralarından birini seçin.",
       "sgkSubCodeRequired": "Bu neden için bir SGK alt kodu seçmelisiniz.",
       "severanceEstimate": {
+        "dressedDailyGross": "Kıdem/ihbar günlük brüt tabanı",
         "title": "Kıdem/ihbar tazminatı tahmini",
         "immoralOrBadFaith": "Ahlak ve iyiniyet kurallarına aykırılık nedeniyle fesih (İş K. m.25/II)",
         "severance": "Kıdem tazminatı",
@@ -693,6 +694,10 @@
       "paymentMethod": "Ödeme yöntemi",
       "sickDays": "Hastalık günleri ücreti düşürür",
       "externalCode": "Dış bordro kodu",
+      "regularBenefits": "Düzenli yan haklar • aylık brüt",
+      "asOfDate": "Bordro profili tarihi",
+      "editBenefits": "Yan hakları düzenle",
+      "regularBenefitsHint": "Kıdem ve ihbar tabanına dahil edilecek yemek, yol ve diğer düzenli yan hakların uzman tarafından doğrulanmış aylık brüt toplamını girin. Tutar, bu bordro profilinin geçerlilik tarihleri için kullanılır.",
       "notes": "Notlar",
       "yes": "Evet",
       "no": "Hayır",
@@ -880,7 +885,18 @@
     "referenceDate": "Referans tarihi",
     "start": "Süreci başlat",
     "started": "Süreç başlatıldı.",
-    "noSets": "Aktif şablon seti yok."
+    "noSets": "Aktif şablon seti yok.",
+    "buddyTitle": "İşe uyum eşlikçisi",
+    "buddy": "Eşlik edecek çalışan",
+    "buddyPlaceholder": "Eşlikçi seçin",
+    "buddyStart": "Başlangıç tarihi",
+    "buddyEnd": "Planlanan bitiş tarihi",
+    "saveBuddy": "Eşlikçiyi kaydet",
+    "buddySaved": "İşe uyum eşlikçisi kaydedildi.",
+    "training": "Eğitim programı",
+    "trainingPlaceholder": "Aktif eğitim programı seçin",
+    "enrollTraining": "Çalışanı eğitime kaydet",
+    "trainingSaved": "Çalışan eğitim programına kaydedildi."
   },
   "employeeNotes": {
     "title": "Çalışan notları",

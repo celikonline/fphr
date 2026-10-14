@@ -27,7 +27,8 @@
     "sharedFiles": "Ortak dosyalar",
     "platformTenants": "Şirketler (Platform)",
     "comingSoon": "Yakında",
-    "sidebarSearchPlaceholder": "Menüde ara…"
+    "sidebarSearchPlaceholder": "Menüde ara…",
+    "platformMaintenance": "Yönetim ve Bakım"
   },
   "navGroups": {
     "humanResources": "İnsan Kaynakları",
@@ -76,18 +77,53 @@
     "analytics": "Analitik",
     "workflowInbox": "Onay kutusu",
     "companyCalendar": "Etkinlik takvimi",
-    "dailyList": "Günlük puantaj listesi",
+    "dailyList": "Günlük puantaj",
     "timeDashboard": "Zaman panosu",
     "shiftDefinitions": "Vardiya tanımları",
     "rotations": "Vardiya rotasyonları",
     "monthlyMatrix": "Aylık puantaj matrisi",
     "punchRequests": "Kayıt talepleri",
     "terminals": "PDKS terminalleri",
+    "pdksCenter": "PDKS Yönetim Merkezi",
     "payslipImport": "Dış bordro PDF yükleme",
     "payItems": "Ödeme türleri",
     "incentives": "Teşvikler"
   },
+  "pdksCenter": {
+    "eyebrow": "PDKS • PUANTAJ • VARDİYA",
+    "title": "PDKS Yönetim Merkezi",
+    "subtitle": "Devam takibini, puantajı, vardiya planlarını ve cihaz bağlantılarını tek ekrandan yönetin.",
+    "availableTools": "{{count}} kullanılabilir işlem",
+    "accessHint": "Ekranlar erişim yetkinize göre listelenir.",
+    "sections": {
+      "operations": "Günlük operasyon",
+      "timesheets": "Puantaj ve kayıt talepleri",
+      "planning": "Vardiya ve planlama",
+      "devices": "Çalışan işlemleri ve cihazlar"
+    },
+    "descriptions": {
+      "dailyList": "Günlük giriş ve devam durumlarını izleyin.",
+      "timeDashboard": "Devam, geç kalma ve fazla mesai özetlerini inceleyin.",
+      "liveBoard": "Anlık giriş ve çıkış durumlarını görüntüleyin.",
+      "timesheet": "Kendi puantajınızı ve çalışma saatlerinizi görün.",
+      "teamTimesheet": "Ekibinizin puantaj kayıtlarını yönetin.",
+      "monthlyTimesheet": "Aylık puantaj kayıtlarını inceleyip tamamlayın.",
+      "monthlyMatrix": "Aylık devam kayıtlarını matris görünümünde inceleyin.",
+      "punchRequests": "Eksik veya hatalı giriş çıkış kayıtlarını talep edin.",
+      "shifts": "Kendi vardiya takviminizi görüntüleyin.",
+      "shiftPlan": "Çalışanların vardiya planını düzenleyin.",
+      "shiftDefinitions": "Vardiya saatlerini ve kurallarını tanımlayın.",
+      "rotations": "Tekrarlayan vardiya döngülerini yapılandırın.",
+      "selfCheckIn": "Desteklenen yöntemlerle giriş veya çıkış yapın.",
+      "deviceLogImport": "PDKS cihaz kayıtlarını içe aktarın.",
+      "terminals": "Terminalleri, grupları ve çalışan eşleşmelerini yönetin.",
+      "pdksIntegrations": "Cihaz protokolleri ve bağlantı ayarlarını görüntüleyin."
+    }
+  },
   "settings": {
+    "attendanceSection": "PDKS ve puantaj",
+    "pdksIntegrations": "PDKS cihaz entegrasyonları",
+    "pdksIntegrationsDesc": "ZKTeco, Hikvision ve Suprema cihazları için bağlantı ve çalışan eşlemesi",
     "company": "Şirket ve organizasyon",
     "structure": "Şirket yapısı",
     "structureDesc": "Hiyerarşi seviyeleri, birimler ve birim yetkilendirme",
@@ -171,5 +207,50 @@
     "menu": "Menü",
     "apps": "Uygulamalar",
     "settings": "Ayarlar"
+  },
+  "platformMaintenance": {
+    "title": "Yönetim ve Bakım",
+    "subtitle": "Platform işletimi için planlanan bakım, yedekleme ve görev yönetimi alanı.",
+    "planned": "Planlandı",
+    "backupTitle": "Yedekleme ve kurtarma",
+    "backupDesc": "PostgreSQL ve dosya depolama yedeklerini zamanla, çalıştır, doğrula ve saklama durumunu izle. Geri yükleme işlemi onaylı kurtarma akışıyla yürütülür.",
+    "jobsTitle": "Zamanlanmış görevler",
+    "jobsDesc": "Kayıtlı görevlerin kapsamı, cron planı ve son/sonraki çalışması. Bu sürüm salt okunurdur.",
+    "maintenanceTitle": "Bakım penceresi",
+    "maintenanceDesc": "Bakım zamanını planla, etkilenecek servisleri ve kullanıcı bildirimlerini belirle; bakım modunun başlangıç ve bitişini denetle.",
+    "supportTitle": "Destek ve tanılama",
+    "supportDesc": "Servis sağlık özetini, hata kimliklerini ve maskelenmiş operasyon kayıtlarını görüntüle; destek erişimini denetim iziyle yönet.",
+    "securityTitle": "Erişim ve denetim",
+    "securityDesc": "Platform rolü ve ayrı aksiyon izinleri, hassas işlemler için onay adımı ve aktör/hedef/sonuç bilgilerini içeren değiştirilemez denetim kaydı.",
+    "scopeTitle": "Uygulama kapsamı",
+    "scopeDesc": "Servis sağlığı ve zamanlanmış görev kataloğu canlı veriden gösterilir. Yedekleme, görev tetikleme ve bakım aksiyonları backend güvenlik kontrolleri tamamlandıkça açılacaktır.",
+    "overviewTitle": "Canlı servis durumu",
+    "overviewDesc": "Bağımlılık sağlığı ve Hangfire kuyruk sayaçları; 60 saniyede bir yenilenir.",
+    "jobListTitle": "Zamanlanmış görev kataloğu",
+    "jobListDesc": "Uygulamanın izinli görevlerinden bulunan yinelenen işler. Payload ve hata ayrıntıları gösterilmez.",
+    "available": "Kullanılabilir",
+    "loadError": "Operasyon bilgileri alınamadı",
+    "loadErrorDesc": "Yetkinizi ve API erişimini kontrol edin; kısa süre sonra yeniden deneyin.",
+    "noJobs": "Kayıtlı yinelenen görev bulunamadı.",
+    "counters": {
+      "servers": "Çalışan sunucu",
+      "enqueued": "Kuyrukta",
+      "scheduled": "Planlandı",
+      "processing": "Çalışıyor",
+      "failed": "Başarısız"
+    },
+    "columns": {
+      "job": "Görev",
+      "tenant": "Şirket kimliği",
+      "cron": "Zaman planı",
+      "lastRun": "Son çalışma",
+      "nextRun": "Sonraki çalışma",
+      "state": "Son durum"
+    },
+    "status": {
+      "healthy": "Sağlıklı",
+      "degraded": "Kısıtlı",
+      "unhealthy": "Sağlıksız"
+    }
   }
 }

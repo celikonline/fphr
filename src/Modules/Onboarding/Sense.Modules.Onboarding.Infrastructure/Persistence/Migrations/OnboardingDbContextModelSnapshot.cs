@@ -19,7 +19,7 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("onboarding")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -133,6 +133,65 @@ namespace Sense.Modules.Onboarding.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_employee_tasks_tenant_id_employee_id_template_set_id");
 
                     b.ToTable("employee_tasks", "onboarding");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Onboarding.Domain.Tasks.OnboardingBuddyAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BuddyEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("buddy_employee_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_buddy_assignments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_buddy_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "BuddyEmployeeId")
+                        .HasDatabaseName("ix_buddy_assignments_tenant_id_buddy_employee_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_buddy_assignments_tenant_id_employee_id");
+
+                    b.ToTable("buddy_assignments", "onboarding");
                 });
 
             modelBuilder.Entity("Sense.Modules.Onboarding.Domain.Tasks.OnboardingCategory", b =>

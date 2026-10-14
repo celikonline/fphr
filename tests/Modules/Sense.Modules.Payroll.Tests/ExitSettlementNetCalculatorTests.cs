@@ -14,7 +14,7 @@ public sealed class ExitSettlementNetCalculatorTests
         [new TaxBracket(100_000m, 0.15m), new TaxBracket(200_000m, 0.20m), new TaxBracket(500_000m, 0.27m), new TaxBracket(null, 0.35m)],
         SgkFloor: 0m, SgkCeiling: 100_000m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m,
         SgkEmployerRate: 0m, UnemploymentEmployerRate: 0m, SgkEmployerDiscountRate: 0m, StampTaxRate: 0.00759m,
-        MinimumWageGross: 0m, MealIncomeTaxDailyExemption: 0m, MealSgkDailyExemptionRate: 0m, MealMarketCardExemptionApplies: false,
+        MinimumWageGross: 0m, MealIncomeTaxDailyExemption: 0m, MealSgkDailyExemption: 0m, MealMarketCardExemptionApplies: false,
         DisabilityMonthlyTaxReductionDegree1: 0m, DisabilityMonthlyTaxReductionDegree2: 0m, DisabilityMonthlyTaxReductionDegree3: 0m,
         AsOf: new DateOnly(2026, 8, 17));
 

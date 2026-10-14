@@ -65,7 +65,10 @@ i18n
       loadPath: "/locales/{{lng}}/{{ns}}.json",
     },
     detection: {
-      order: ["localStorage", "navigator"],
+      // Use only a saved user choice. Browser language detection used to cache its result as if
+      // the user had selected it, which made English override the Turkish default on later visits.
+      order: ["localStorage"],
+      lookupLocalStorage: "senseik.language",
       caches: ["localStorage"],
     },
   });

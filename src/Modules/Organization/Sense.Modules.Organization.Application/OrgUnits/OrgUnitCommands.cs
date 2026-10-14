@@ -3,6 +3,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.CostCenters;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -228,5 +229,30 @@ public sealed class DeactivateOrgUnitHandler(
 
         var result = existing.Value.Deactivate();
         return result.IsFailure ? result.Error : Result.Success();
+    }
+}
+
+/// <summary>Sets or clears the org unit's default cost center. Employees may override this value individually.</summary>
+[RequiresPermission("organization.units.update")]
+public sealed record SetOrgUnitCostCenterCommand(Guid OrgUnitId, Guid? CostCenterId) : ICommand<OrgUnitDto>;
+
+public sealed class SetOrgUnitCostCenterHandler(
+    IOrgUnitRepository units,
+    ICostCenterRepository costCenters) : ICommandHandler<SetOrgUnitCostCenterCommand, OrgUnitDto>
+{
+    public async Task<Result<OrgUnitDto>> Handle(SetOrgUnitCostCenterCommand command, CancellationToken cancellationToken)
+    {
+        var found = await units.GetByIdAsync(command.OrgUnitId, cancellationToken);
+        if (found.IsFailure) return Error.NotFound(OrganizationErrors.OrgUnitNotFound);
+
+        if (command.CostCenterId is { } costCenterId)
+        {
+            var center = await costCenters.GetByIdAsync(costCenterId, cancellationToken);
+            if (center.IsFailure || !center.Value.IsActive) return Error.NotFound(OrganizationDomainErrors.CostCenterNotFound);
+        }
+
+        found.Value.AssignCostCenter(command.CostCenterId);
+        return new OrgUnitDto(found.Value.Id, found.Value.TypeId, found.Value.ParentId, found.Value.Name,
+            found.Value.ManagerEmployeeId, found.Value.LocationId, found.Value.SortOrder, found.Value.IsActive, found.Value.CostCenterId);
     }
 }

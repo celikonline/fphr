@@ -14,6 +14,7 @@ public sealed record RenameCostCenterRequest(string Name);
 
 /// <summary>Request to activate/deactivate a cost center.</summary>
 public sealed record SetCostCenterActiveRequest(bool IsActive);
+public sealed record SetEmployeeCostCenterOverrideRequest(Guid? CostCenterId);
 
 /// <summary>
 /// Cost center catalog management (S-4, roadmap Faz 2 item #2: "önce dar tasarla" - a tenant-scoped
@@ -51,4 +52,16 @@ public sealed class CostCentersController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> SetActive(Guid id, [FromBody] SetCostCenterActiveRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new SetCostCenterActiveCommand(id, request.IsActive), ct));
+
+    /// <summary>Returns an employee's effective cost center and its inheritance/override source.</summary>
+    [HttpGet("employees/{employeeId:guid}/assignment")]
+    [ProducesResponseType<EmployeeCostCenterAssignmentDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEmployeeAssignment(Guid employeeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeCostCenterAssignmentQuery(employeeId), ct));
+
+    /// <summary>Sets an employee-specific override; send null to restore inheritance from the org-unit hierarchy.</summary>
+    [HttpPut("employees/{employeeId:guid}/assignment")]
+    [ProducesResponseType<EmployeeCostCenterAssignmentDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetEmployeeAssignment(Guid employeeId, [FromBody] SetEmployeeCostCenterOverrideRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetEmployeeCostCenterOverrideCommand(employeeId, request.CostCenterId), ct));
 }

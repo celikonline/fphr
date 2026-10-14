@@ -29,7 +29,8 @@ public sealed record EmployeePayrollProfileDto(
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
     string? Notes,
-    decimal TransportDailyAmount = 0m);
+    decimal TransportDailyAmount = 0m,
+    decimal RegularBenefitsMonthlyGross = 0m);
 
 internal static class EmployeePayrollProfileMapper
 {
@@ -37,7 +38,8 @@ internal static class EmployeePayrollProfileMapper
         profile.Id, profile.EmployeeId, profile.SgkWorkplaceCompanyId, profile.SgkWorkplaceLocationId,
         profile.ValidFrom, profile.ValidTo, profile.WageBasis, profile.SgkStatus, profile.IncentiveLawCode,
         profile.MealBenefitVariant, profile.MealDailyAmount, profile.TransportVariant, profile.PaymentMethod,
-        profile.BankAccountId, profile.SickDaysReducePay, profile.ExternalPayrollCode, profile.Notes, profile.TransportDailyAmount);
+        profile.BankAccountId, profile.SickDaysReducePay, profile.ExternalPayrollCode, profile.Notes, profile.TransportDailyAmount,
+        profile.RegularBenefitsMonthlyGross);
 }
 
 /// <summary>Every dated version of an employee's payroll profile, newest ValidFrom first.</summary>
@@ -103,7 +105,27 @@ public sealed class CreateEmployeePayrollProfileHandler(ITenantContext tenant, I
 }
 
 [RequiresPermission("payroll.profile.manage")]
-public sealed record UpdateEmployeePayrollProfileCommand(Guid ProfileId, EmployeePayrollProfileData Data) : ICommand;
+public sealed record UpdateEmployeePayrollProfileCommand(Guid ProfileId, EmployeePayrollProfileData Data, bool PreserveRegularBenefits = false) : ICommand;
+
+[RequiresPermission("payroll.profile.manage")]
+public sealed record UpdateEmployeeRegularBenefitsCommand(Guid EmployeeId, Guid ProfileId, decimal RegularBenefitsMonthlyGross) : ICommand;
+
+public sealed class UpdateEmployeeRegularBenefitsHandler(
+    ITenantContext tenant, IEmployeePayrollProfileRepository profiles, PayslipDirtyFlagService flagging)
+    : ICommandHandler<UpdateEmployeeRegularBenefitsCommand>
+{
+    public async Task<Result> Handle(UpdateEmployeeRegularBenefitsCommand command, CancellationToken cancellationToken)
+    {
+        var profile = await profiles.FindByIdAsync(command.ProfileId, cancellationToken);
+        if (profile is null || profile.EmployeeId != command.EmployeeId || profile.TenantId != tenant.TenantId)
+            return Error.NotFound(PayrollDomainErrors.ProfileNotFound);
+        var updated = profile.SetRegularBenefitsMonthlyGross(command.RegularBenefitsMonthlyGross);
+        if (updated.IsFailure) return updated.Error;
+        if (updated.Value)
+            await flagging.FlagAsync(tenant.TenantId, profile.EmployeeId, profile.ValidFrom, PayslipDirtyFlagReasons.ProfileChanged, null, cancellationToken);
+        return Result.Success();
+    }
+}
 
 public sealed class UpdateEmployeePayrollProfileHandler(ITenantContext tenant, IEmployeePayrollProfileRepository profiles, PayslipDirtyFlagService flagging)
     : ICommandHandler<UpdateEmployeePayrollProfileCommand>
@@ -121,7 +143,10 @@ public sealed class UpdateEmployeePayrollProfileHandler(ITenantContext tenant, I
             return Error.Conflict(PayrollDomainErrors.ProfileOverlap);
         }
 
-        var updated = profile.Update(command.Data);
+        var data = command.PreserveRegularBenefits
+            ? command.Data with { RegularBenefitsMonthlyGross = profile.RegularBenefitsMonthlyGross }
+            : command.Data;
+        var updated = profile.Update(data);
         if (updated.IsFailure)
         {
             return updated.Error;

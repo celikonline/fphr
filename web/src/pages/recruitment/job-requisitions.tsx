@@ -4,7 +4,8 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Plus, Send, X } from "lucide-react";
+import { ClipboardList, LifeBuoy, Plus, Send, X } from "lucide-react";
+import { Link } from "react-router";
 import {
   ActionIcon,
   Badge,
@@ -230,9 +231,23 @@ function JobRequisitions() {
             {getApiErrorMessage(error, t("recruitment:genericError"))}
           </Text>
         ) : !data || data.length === 0 ? (
-          <Text p="md" size="sm" c="dimmed">
-            {t("recruitment:requisitions.empty")}
-          </Text>
+          <Stack align="center" gap="sm" py="xl" px="md">
+            <Text size="sm" c="dimmed" ta="center">
+              {t("recruitment:requisitions.empty")}
+            </Text>
+            <Text size="sm" c="dimmed" ta="center">
+              {t("recruitment:requisitions.emptyGuide")}
+            </Text>
+            {canManage ? (
+              <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
+                {t("recruitment:requisitions.addRequisition")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("recruitment:requisitions.emptySupport")}
+              </Button>
+            )}
+          </Stack>
         ) : (
           <>
             {/* Geniş ekran: tablo */}

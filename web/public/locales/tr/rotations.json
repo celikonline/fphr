@@ -51,5 +51,10 @@
   },
   "shiftsRequired": "Tüm çalışma adımlarına vardiya seçin.",
   "endBeforeStart": "Bitiş tarihi başlangıçtan önce olamaz.",
-  "offsetTooLarge": "Kaydırma döngü uzunluğundan küçük olmalı."
+  "offsetTooLarge": "Kaydırma döngü uzunluğundan küçük olmalı.",
+  "noPatternsGuide": "Çalışanlara dönüşümlü vardiya atamadan önce bir vardiya kalıbı oluşturun.",
+  "assignNoPatterns": "Atama yapmak için önce vardiya kalıbı oluşturun.",
+  "assignNoPatternsGuide": "Kalıp oluşturma ekranına geçerek çalışma ve izin günlerini tanımlayın.",
+  "createPatternFirst": "Kalıp oluşturma ekranını aç",
+  "contactSupport": "Yardım için destek al"
 }

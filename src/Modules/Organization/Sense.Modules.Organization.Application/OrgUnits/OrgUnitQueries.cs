@@ -23,7 +23,7 @@ public sealed class ListOrgUnitsHandler(IOrgUnitRepository units) : IQueryHandle
     }
 
     internal static OrgUnitDto ToDto(OrgUnit u) =>
-        new(u.Id, u.TypeId, u.ParentId, u.Name, u.ManagerEmployeeId, u.LocationId, u.SortOrder, u.IsActive);
+        new(u.Id, u.TypeId, u.ParentId, u.Name, u.ManagerEmployeeId, u.LocationId, u.SortOrder, u.IsActive, u.CostCenterId);
 }
 
 /// <summary>Full org unit tree for the current tenant, server-built from the flat active list (see OrgUnitTreeBuilder).</summary>

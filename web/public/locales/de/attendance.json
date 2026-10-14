@@ -42,7 +42,9 @@
       "lastPunch": "Letzte Stempelung",
       "lastSeen": "Zuletzt gesehen",
       "never": "Nie gesehen",
-      "empty": "Keine registrierten Terminals."
+      "empty": "Keine registrierten Terminals.",
+      "emptyGuide": "Ein Zeiterfassungsterminal registrieren, um die Live-Ansicht zu verwenden.",
+      "openTerminals": "Terminal hinzufügen"
     },
     "lastPunch": "Letzte Stempelung",
     "sources": {
@@ -52,7 +54,8 @@
       "selfService": "Selbstbedienung",
       "request": "Antrag",
       "terminal": "Terminal"
-    }
+    },
+    "emptyGuide": "Für diesen Bereich liegen keine Live-Anwesenheitsdaten vor. Gerätedaten importieren oder die tägliche Anwesenheit prüfen."
   },
   "empty": "Für diesen Zeitraum gibt es keine Einträge.",
   "genericError": "Etwas ist schiefgelaufen.",
@@ -63,7 +66,11 @@
     "timesheetSubtitle": "Ihre erfassten Kommen-/Gehen-Zeiten und die Monatsübersicht.",
     "dailyListTitle": "Tageseinträge",
     "shiftTitle": "Meine Schichten",
-    "shiftSubtitle": "Ihr zugewiesener Schichtplan."
+    "shiftSubtitle": "Ihr zugewiesener Schichtplan.",
+    "emptyGuide": "Für diesen Zeitraum gibt es noch keine Zeiterfassung. Ein- oder ausstempeln oder eine fehlende Buchung beantragen.",
+    "openCheckIn": "Ein- oder ausstempeln",
+    "openPunchRequest": "Fehlende Buchung beantragen",
+    "contactSupport": "Hilfe erhalten"
   },
   "summary": {
     "workedDays": "Gearbeitete Tage",
@@ -109,7 +116,9 @@
     "night": "Nachtschicht",
     "break": "Pause",
     "note": "Notiz",
-    "empty": "Für diesen Zeitraum liegen keine Schichteinträge vor."
+    "empty": "Für diesen Zeitraum liegen keine Schichteinträge vor.",
+    "emptyGuide": "Ihre Schichten erscheinen hier nach Veröffentlichung des Plans. Teilen Sie Ihre Verfügbarkeit mit Ihrer Führungskraft.",
+    "contactSupport": "Hilfe erhalten"
   },
   "weekDay": {
     "monday": "Montag",
@@ -202,7 +211,8 @@
       "confirmMessage": "Die Zeiterfassungen von {{count}} Mitarbeitenden, die für {{month}} auf Freigabe warten, werden freigegeben. Vor der Freigabe wird die Prüfung „Arbeit trotz Urlaub“ erneut ausgeführt. Fortfahren?",
       "done": "{{count}} Zeiterfassungen freigegeben.",
       "nothing": "Es gab keine Zeiterfassungen zur Freigabe."
-    }
+    },
+    "emptyGuide": "Datums- und Bereichsfilter prüfen. Gerätedaten importieren, falls sie noch nicht hochgeladen wurden."
   },
   "teamTimesheet": {
     "title": "Team-Zeiterfassung",
@@ -239,7 +249,8 @@
     "breakApplied": "Pause: {{m}} Min.",
     "nightMinutes": "Nacht: {{m}} Min.",
     "dailyLimitExceeded": "11-Stunden-Tagesgrenze überschritten (Art. 63)",
-    "nightLimitExceeded": "7,5-Stunden-Nachtarbeitsgrenze überschritten (Art. 69)"
+    "nightLimitExceeded": "7,5-Stunden-Nachtarbeitsgrenze überschritten (Art. 69)",
+    "emptyGuide": "Für die ausgewählte Woche oder den Bereich wurden keine Anwesenheitsdaten gefunden. Beginnen Sie mit dem Import der Gerätedaten."
   },
   "shiftLock": {
     "scheduledLockDate": "Geplantes Sperrdatum"
@@ -294,7 +305,11 @@
     "totalPeople": "{{count}} Personen",
     "bulkDone": "{{count}} Zellen aktualisiert.",
     "bulkSkipped": "{{count}} Zellen übersprungen (gesperrte Periode oder veröffentlichte Schicht).",
-    "lockedEditHint": "Die Periode ist gesperrt; Schichten können nicht bearbeitet werden."
+    "lockedEditHint": "Die Periode ist gesperrt; Schichten können nicht bearbeitet werden.",
+    "emptyGuide": "Zur Planung die Mitarbeiter anzeigen oder den Bereichsfilter ändern.",
+    "unassignedEmptyGuide": "Für die ausgewählte Woche gibt es keine Mitarbeiter ohne Schicht.",
+    "showAllEmployees": "Alle Mitarbeiter anzeigen",
+    "openEmployees": "Mitarbeiter anzeigen"
   },
   "myAvailability": {
     "title": "Meine Verfügbarkeit",
@@ -321,7 +336,8 @@
     "noteLabel": "Notiz",
     "noteTooLong": "Die Notiz darf höchstens 500 Zeichen lang sein.",
     "submit": "Einreichen",
-    "submitted": "Verfügbarkeitseintrag angelegt."
+    "submitted": "Verfügbarkeitseintrag angelegt.",
+    "emptyGuide": "Eine Verfügbarkeit hinzufügen, um passende Tage und Zeiten mitzuteilen."
   },
   "deviceLogImport": {
     "title": "PDKS-Geräteprotokoll importieren",
@@ -408,5 +424,8 @@
     "noPlan": "Ungeplante Stempelung (kein Schichtplan für diesen Tag)",
     "nightShiftOverlap": "Nachtschicht-Überschneidung (Stempelung liegt nahe an beiden Tagen)",
     "ambiguousShift": "Mehrdeutige Schicht (Stempelung passt zu mehreren Schichten)"
-  }
+  },
+  "openDeviceImport": "Gerätedaten importieren",
+  "openDailyList": "Tägliche Anwesenheitsliste anzeigen",
+  "contactSupport": "Hilfe erhalten"
 }

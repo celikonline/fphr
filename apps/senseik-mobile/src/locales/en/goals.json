@@ -2,6 +2,8 @@
   "title": "My goals",
   "loadError": "Goals could not be loaded. Please try again.",
   "empty": "You have no goals yet.",
+  "emptyGuide": "Ask your manager about a goal assignment or contact support.",
+  "getHelp": "Get help",
   "invalidTitle": "Invalid value",
   "invalidProgress": "Progress must be a whole number between 0 and 100.",
   "saveError": "Progress could not be updated. Please try again.",

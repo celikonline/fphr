@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ActionIcon,
   Badge,
+  Button,
   Group,
   Skeleton,
   Stack,
@@ -12,10 +13,12 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Lock } from "lucide-react";
+import { Link } from "react-router";
+import { ChevronLeft, ChevronRight, FileSpreadsheet, FileUp, LifeBuoy, Lock } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import MatrixLegend, { MatrixChip } from "@/components/attendance/matrix-legend";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
@@ -43,6 +46,7 @@ export default function MonthlyMatrixPage() {
 
 function MonthlyMatrixView() {
   const { t, i18n } = useTranslation(["attendance-daily", "attendance"]);
+  const canImport = usePermission("attendance.timesheet.import");
   const [monthStart, setMonthStart] = useState(() => monthStartOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
 
@@ -136,9 +140,19 @@ function MonthlyMatrixView() {
           {getApiErrorMessage(matrix.error, t("attendance:genericError"))}
         </Text>
       ) : rows.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          {t("attendance-daily:monthlyMatrix.empty")}
-        </Text>
+        <AttendanceEmptyState
+          title={t("attendance-daily:monthlyMatrix.empty")}
+          description={t("attendance-daily:monthlyMatrix.emptyGuide")}
+          action={canImport ? (
+            <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+              {t("attendance:openDeviceImport")}
+            </Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("attendance:contactSupport")}
+            </Button>
+          )}
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table

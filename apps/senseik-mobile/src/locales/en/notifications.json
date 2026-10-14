@@ -4,12 +4,15 @@
   "markAllRead": "Mark all as read",
   "markAllReadError": "Notifications could not be marked as read. Please try again.",
   "empty": "You have no notifications.",
+  "emptyGuide": "You can review your notification preferences or check again later.",
   "preferences": {
     "title": "Notification preferences",
     "subtitle": "Choose which notifications you get by email and in the app.",
     "loadError": "Notification preferences could not be loaded. Please try again.",
     "saveError": "The notification preference could not be saved. Please try again.",
     "empty": "No configurable notifications.",
+    "emptyGuide": "No notification rules are available to edit for this account.",
+    "getHelp": "Get help",
     "mandatory": "Cannot be turned off"
   },
   "templates": {

@@ -29,8 +29,8 @@ public sealed class PayrollCalculatorGoldenSetTests
     private const decimal UnemploymentEmployerRate = 0.02m;
     private const decimal SgkEmployerDiscountRate = 0.05m;
     private const decimal StampTaxRate = 0.00759m;
-    private const decimal MealIncomeTaxDailyExemption = 240.00m;
-    private const decimal MealSgkDailyExemptionRate = 0.2365m;
+    private const decimal MealIncomeTaxDailyExemption = 300m;
+    private const decimal MealSgkDailyExemption =  158m;
 
     /// <summary>Current draft (LegislationParameterSeed id 39): the meal+market card variant is NOT exempt.</summary>
     private const bool MealMarketCardExemptionApplies = false;
@@ -61,7 +61,7 @@ public sealed class PayrollCalculatorGoldenSetTests
         StampTaxRate,
         MinimumWageGross,
         MealIncomeTaxDailyExemption,
-        MealSgkDailyExemptionRate,
+        MealSgkDailyExemption,
         MealMarketCardExemptionApplies,
         DisabilityMonthlyTaxReductionDegree1,
         DisabilityMonthlyTaxReductionDegree2,
@@ -145,10 +145,8 @@ public sealed class PayrollCalculatorGoldenSetTests
     [Fact]
     public void MidRangeSalary_CashMealWithinExemption_LeavesBasesUnchangedButIncreasesNet()
     {
-        // Same gross as the mid-range case. Meal cash = 200/day * 30 days = 6,000, comfortably inside both the SGK
-        // exemption (23.65% * daily gross min wage(1,000) * 30 days = 7,095) and the GV exemption (240/day * 30 = 7,200)
-        // - "fully within exemption" per the P1 golden-set scope (excess-above-exemption cases are not tested here).
-        const decimal mealDailyAmount = 200m;
+        // 150/day is below BOTH exemptions supplied by this fixture (SGK 158/day and GV 300/day).
+        const decimal mealDailyAmount = 150m;
         var noMealInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
         var withMealInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.Cash, mealDailyAmount, 0m, AsOf);
 
@@ -160,10 +158,10 @@ public sealed class PayrollCalculatorGoldenSetTests
         withMeal.Step(PayrollTraceStepCodes.IncomeTax).Output.ShouldBe(noMeal.Step(PayrollTraceStepCodes.IncomeTax).Output);
         withMeal.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBe(noMeal.Step(PayrollTraceStepCodes.StampTax).Output);
 
-        // Fully-exempt meal cash is paid net, on top of the no-meal NET: 200 * 30 = 6,000.
+        // Fully-exempt meal cash is paid net, on top of the no-meal NET: 150 * 30 = 4,500.
         var mealTotal = mealDailyAmount * WorkedDays;
         withMeal.NetAmount.ShouldBe(noMeal.NetAmount + mealTotal);
-        withMeal.NetAmount.ShouldBe(152_434.70m);
+        withMeal.NetAmount.ShouldBe(150_934.70m);
     }
 
     [Fact]

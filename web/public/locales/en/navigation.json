@@ -27,7 +27,8 @@
     "sharedFiles": "Shared files",
     "platformTenants": "Companies (Platform)",
     "comingSoon": "Coming soon",
-    "sidebarSearchPlaceholder": "Search menu…"
+    "sidebarSearchPlaceholder": "Search menu…",
+    "platformMaintenance": "Administration & Maintenance"
   },
   "navGroups": {
     "humanResources": "Human Resources",
@@ -76,18 +77,53 @@
     "analytics": "Analytics",
     "workflowInbox": "Approval inbox",
     "companyCalendar": "Event calendar",
-    "dailyList": "Daily attendance list",
+    "dailyList": "Daily attendance",
     "timeDashboard": "Time dashboard",
     "shiftDefinitions": "Shift definitions",
     "rotations": "Shift rotations",
     "monthlyMatrix": "Monthly attendance matrix",
     "punchRequests": "Punch requests",
     "terminals": "Time clock terminals",
+    "pdksCenter": "PDKS Management Center",
     "payslipImport": "External payslip PDF upload",
     "payItems": "Pay item types",
     "incentives": "Incentives"
   },
+  "pdksCenter": {
+    "eyebrow": "PDKS • ATTENDANCE • SHIFTS",
+    "title": "PDKS Management Center",
+    "subtitle": "Manage attendance, timesheets, shift plans, and device connections from one place.",
+    "availableTools": "{{count}} available actions",
+    "accessHint": "The links shown depend on your access.",
+    "sections": {
+      "operations": "Daily operations",
+      "timesheets": "Timesheets and punch requests",
+      "planning": "Shifts and planning",
+      "devices": "Employee tools and devices"
+    },
+    "descriptions": {
+      "dailyList": "Monitor daily attendance and arrival status.",
+      "timeDashboard": "Review attendance, lateness, and overtime summaries.",
+      "liveBoard": "View live clock-in and clock-out status.",
+      "timesheet": "View your timesheet and working hours.",
+      "teamTimesheet": "Manage your team's timesheet records.",
+      "monthlyTimesheet": "Review and complete monthly timesheets.",
+      "monthlyMatrix": "Review monthly attendance in a matrix view.",
+      "punchRequests": "Request corrections to missing or incorrect punches.",
+      "shifts": "View your shift calendar.",
+      "shiftPlan": "Plan employee shifts.",
+      "shiftDefinitions": "Define shift hours and rules.",
+      "rotations": "Configure repeating shift cycles.",
+      "selfCheckIn": "Clock in or out using supported methods.",
+      "deviceLogImport": "Import records from PDKS devices.",
+      "terminals": "Manage terminals, groups, and employee mappings.",
+      "pdksIntegrations": "View device protocols and connection settings."
+    }
+  },
   "settings": {
+    "attendanceSection": "Attendance devices",
+    "pdksIntegrations": "PDKS device integrations",
+    "pdksIntegrationsDesc": "Connection and employee mapping for ZKTeco, Hikvision, and Suprema devices",
     "company": "Company and organization",
     "structure": "Company structure",
     "structureDesc": "Hierarchy levels, units and unit authorization",
@@ -171,5 +207,50 @@
     "menu": "Menu",
     "apps": "Apps",
     "settings": "Settings"
+  },
+  "platformMaintenance": {
+    "title": "Administration & Maintenance",
+    "subtitle": "Planned operations area for platform maintenance, backups, and scheduled jobs.",
+    "planned": "Planned",
+    "backupTitle": "Backup and recovery",
+    "backupDesc": "Schedule, run, and verify PostgreSQL and file storage backups; monitor retention. Restores follow an approved recovery workflow.",
+    "jobsTitle": "Scheduled jobs",
+    "jobsDesc": "Registered jobs, their cron schedule, and last/next run. This release is read-only.",
+    "maintenanceTitle": "Maintenance window",
+    "maintenanceDesc": "Schedule maintenance, identify affected services and user notices, and control maintenance mode start and end.",
+    "supportTitle": "Support and diagnostics",
+    "supportDesc": "Review service health, error identifiers, and redacted operational events; manage support access with an audit trail.",
+    "securityTitle": "Access and audit",
+    "securityDesc": "Platform roles and granular action permissions, approval for sensitive actions, and an immutable actor/target/outcome audit trail.",
+    "scopeTitle": "Implementation scope",
+    "scopeDesc": "Service health and the scheduled job catalog use live data. Backup, job trigger, and maintenance actions will be enabled as backend security controls are completed.",
+    "overviewTitle": "Live service status",
+    "overviewDesc": "Dependency health and Hangfire queue counters; refreshed every 60 seconds.",
+    "jobListTitle": "Scheduled job catalog",
+    "jobListDesc": "Recurring jobs found in the application allowlist. Payloads and exception details are hidden.",
+    "available": "Available",
+    "loadError": "Could not load operations data",
+    "loadErrorDesc": "Check your access and API connection, then try again shortly.",
+    "noJobs": "No recurring jobs were found.",
+    "counters": {
+      "servers": "Worker servers",
+      "enqueued": "Enqueued",
+      "scheduled": "Scheduled",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
+    "columns": {
+      "job": "Job",
+      "tenant": "Tenant ID",
+      "cron": "Schedule",
+      "lastRun": "Last run",
+      "nextRun": "Next run",
+      "state": "Last state"
+    },
+    "status": {
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "unhealthy": "Unhealthy"
+    }
   }
 }

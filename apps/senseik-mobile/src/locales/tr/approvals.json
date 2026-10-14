@@ -2,6 +2,7 @@
   "title": "Onaylarım",
   "loadError": "Onay kutusu yüklenemedi. Lütfen tekrar deneyin.",
   "empty": "Onay bekleyen talep yok",
+  "emptyGuide": "Onay bekleyen yeni talepler bu listede görünür. Önceki kararlarınızı geçmişte inceleyebilirsiniz.",
   "filters": {
     "all": "Tümü",
     "leave": "İzin",
@@ -55,6 +56,8 @@
     "title": "Geçmiş",
     "loadError": "Geçmiş yüklenemedi. Lütfen tekrar deneyin.",
     "empty": "Karar verdiğiniz talep yok",
+    "emptyGuide": "Onay kutusuna dönerek bekleyen talepleri görüntüleyin.",
+    "inbox": "Onay kutusuna dön",
     "outcome": {
       "approved": "Onaylandı",
       "rejected": "Reddedildi"

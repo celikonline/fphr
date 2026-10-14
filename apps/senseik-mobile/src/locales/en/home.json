@@ -22,6 +22,8 @@
   "balances": {
     "loadError": "Leave balances could not be loaded. Please try again.",
     "empty": "No balance records",
+    "emptyGuide": "View your leave balance and requests in My Leave.",
+    "openLeave": "Open My Leave",
     "a11y": "Leave balances",
     "available_one": "{{value}} day available",
     "available_other": "{{value}} days available",

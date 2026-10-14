@@ -23,6 +23,7 @@ export interface IncentiveParameters {
   rate?: IncentiveRate | null;
   coverageBase?: IncentiveCoverageBase | null;
   capMultiplier?: number | null;
+  maxSupportMultiplier?: number | null;
   employerSgkRate?: IncentiveRate | null;
   coversEmployerSgk?: boolean | null;
   coversEmployerUnemployment?: boolean | null;
@@ -80,6 +81,10 @@ export interface IncentiveTemplate {
   declarationCode?: string | null;
   preApproved?: boolean | null;
   alreadyAdded?: boolean | null;
+  validFrom?: string | null;
+  validTo?: string | null;
+  maxMonths?: number | null;
+  parameters?: IncentiveParameters | null;
 }
 
 export interface LegislationKeyValue {
@@ -165,6 +170,11 @@ export interface IncentiveAssignment {
   toYear?: number | null;
   toMonth?: number | null;
   note?: string | null;
+  isDefinitionActive?: boolean | null;
+  /** YYYY-MM-DD */
+  definitionValidFrom?: string | null;
+  /** YYYY-MM-DD */
+  definitionValidTo?: string | null;
 }
 
 /** Exactly one of `employeeId` / `periodId` is required by the server. */

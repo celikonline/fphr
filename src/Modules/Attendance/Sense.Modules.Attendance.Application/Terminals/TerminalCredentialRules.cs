@@ -16,7 +16,7 @@ public static class TerminalCredentialErrors
     /// <summary>PIN yalnız rakamlardan oluşmalı ve <see cref="TerminalCredentialRules.PinMinLength"/>–<see cref="TerminalCredentialRules.PinMaxLength"/> haneli olmalı.</summary>
     public const string PinInvalid = "attendance.terminal_credential.pin_invalid";
 
-    /// <summary>Kart numarası/dış kimlik en çok <see cref="TerminalCredentialRules.ValueMaxLength"/> karakter.</summary>
+    /// <summary>Kart ya da dış kimlik biçimi/geçerli uzunlukta değil.</summary>
     public const string ValueTooLong = "attendance.terminal_credential.value_too_long";
 
     /// <summary>İçe aktarmada tür sütunu Kart / PIN / Harici değil (hücre değeri iletiye yazılmaz: yanlış sütuna yazılmış bir PIN sızmasın).</summary>
@@ -57,12 +57,15 @@ public static class TerminalCredentialRules
     public const int PinMinLength = 6;
     public const int PinMaxLength = 8;
     public const int ValueMaxLength = 64;
+    public const int ExternalIdMaxLength = EmployeeTerminalCredential.ValueMaxLength;
 
     /// <summary>Kırpılmış ham değerin biçim hatası (hata kodu) ya da geçerliyse null.</summary>
     public static string? FormatError(TerminalCredentialKind kind, string trimmedValue) => kind switch
     {
         TerminalCredentialKind.Pin => IsPin(trimmedValue) ? null : TerminalCredentialErrors.PinInvalid,
-        _ => trimmedValue.Length > ValueMaxLength ? TerminalCredentialErrors.ValueTooLong : null,
+        TerminalCredentialKind.Card => trimmedValue.Length > ValueMaxLength ? TerminalCredentialErrors.ValueTooLong : null,
+        TerminalCredentialKind.ExternalId => trimmedValue.Length > ExternalIdMaxLength ? TerminalCredentialErrors.ValueTooLong : null,
+        _ => TerminalCredentialErrors.KindInvalid,
     };
 
     /// <summary>

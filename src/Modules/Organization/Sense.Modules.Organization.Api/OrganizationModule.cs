@@ -60,6 +60,7 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IHolidayCalendarEntryRepository, HolidayCalendarEntryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<ICostCenterRepository, CostCenterRepository>();
+        services.AddScoped<IEmployeeCostCenterOverrideRepository, EmployeeCostCenterOverrideRepository>();
 
         // Yeni kiracı Organization varsayılanları (wizard "hazırla" komutu); olay işleyicisi Worker'da kayıtlıdır.
         services.AddOrganizationTenantBootstrap();

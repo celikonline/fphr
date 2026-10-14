@@ -4,6 +4,10 @@
   "search": "Ara",
   "searchPlaceholder": "İsim, unvan veya birim ara",
   "empty": "Kayıt bulunamadı.",
+  "emptyGuide": "Görüntüleyebileceğiniz çalışan kaydı yok. Erişim konusunda yardıma ihtiyacınız varsa destek ekibine ulaşın.",
+  "searchEmptyGuide": "Bu aramayla eşleşen kişi yok. Farklı bir ad veya birim deneyin.",
+  "clearSearch": "Aramayı temizle",
+  "getHelp": "Destek al",
   "callA11y": "{{name}} - telefon ile ara",
   "emailA11y": "{{name}} - e-posta gönder"
 }

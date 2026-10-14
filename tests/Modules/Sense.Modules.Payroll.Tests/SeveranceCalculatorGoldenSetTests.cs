@@ -12,6 +12,25 @@ namespace Sense.Modules.Payroll.Tests;
 /// </summary>
 public sealed class SeveranceCalculatorGoldenSetTests
 {
+    [Fact]
+    public void RecurringBenefits_IncreaseSeveranceAndNotice_ButNotUnusedLeavePay()
+    {
+        var input = new SeveranceInput(365, SeveranceCauseCategory.EmployerNoticeBased, 1_000m, 10m, RegularBenefitsMonthlyGross: 3_000m);
+        var result = SeveranceCalculator.Calculate(input, Snapshot);
+        result.SeveranceAmount.ShouldBe(33_000m);
+        result.NoticeAmount.ShouldBe(30_800m); // (1,000 + 3,000/30) * 4 weeks * 7 days
+        result.UnusedLeaveAmount.ShouldBe(10_000m);
+    }
+
+    [Fact]
+    public void TheSeveranceCeiling_AppliesAfterRecurringBenefitsAreIncluded()
+    {
+        var input = new SeveranceInput(365, SeveranceCauseCategory.EmployerNoticeBased, 1_000m, 10m, RegularBenefitsMonthlyGross: 30_000m);
+        var result = SeveranceCalculator.Calculate(input, Snapshot);
+        result.SeveranceAmount.ShouldBe(55_000m);
+        result.NoticeAmount.ShouldBe(56_000m); // notice is not capped by the severance ceiling
+        result.UnusedLeaveAmount.ShouldBe(10_000m);
+    }
     private const decimal CeilingGross = 55_000.00m;
     private const decimal DailyGrossWage = 1_000.00m;
 

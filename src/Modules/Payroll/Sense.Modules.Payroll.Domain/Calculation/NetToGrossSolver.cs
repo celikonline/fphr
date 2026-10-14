@@ -14,7 +14,7 @@ public static class NetToGrossSolver
     private const decimal Tolerance = 0.005m;
     private const int MaxIterations = 80;
 
-    /// <summary>Upper bound of the search as a multiple of the net; even the top bracket plus premiums leaves well over a third net.</summary>
+    /// <summary>Initial upper bound as a multiple of the net; expanded when a premium floor requires a larger gross.</summary>
     private const decimal UpperBoundFactor = 4m;
 
     /// <summary>
@@ -27,6 +27,7 @@ public static class NetToGrossSolver
 
         var low = targetNet;
         var high = targetNet * UpperBoundFactor;
+        high = FindUpperBound(high, targetNet, gross => SalaryNet(calculate(gross)));
         for (var i = 0; i < MaxIterations && high - low > Tolerance; i++)
         {
             var mid = (low + high) / 2m;
@@ -54,6 +55,7 @@ public static class NetToGrossSolver
         var target = SalaryNet(calculate(0m)) + netExtra;
         var low = netExtra;
         var high = netExtra * UpperBoundFactor;
+        high = FindUpperBound(high, target, gross => SalaryNet(calculate(gross)));
         for (var i = 0; i < MaxIterations && high - low > Tolerance; i++)
         {
             var mid = (low + high) / 2m;
@@ -68,6 +70,20 @@ public static class NetToGrossSolver
         }
 
         return decimal.Round((low + high) / 2m, 2, MidpointRounding.AwayFromZero);
+    }
+
+    private static decimal FindUpperBound(decimal high, decimal target, Func<decimal, decimal> net)
+    {
+        // A short hourly period can have a statutory premium floor above four times its target net.
+        // Expand the bracket instead of returning an unconverged, understated gross.
+        for (var i = 0; i < MaxIterations; i++)
+        {
+            if (net(high) >= target) return high;
+            if (high > decimal.MaxValue / 2m) break;
+            high *= 2m;
+        }
+
+        throw new InvalidOperationException("The net wage target could not be bracketed.");
     }
 
     /// <summary>Salary net of a calculation: gross minus the employee's premiums and the taxes payable, read from the NET step's inputs.</summary>

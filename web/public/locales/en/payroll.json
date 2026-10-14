@@ -33,6 +33,8 @@
     "title": "Extra earnings",
     "subtitle": "Bonus, commission and performance payments are entered gross, added to the same month's payroll and subject to SGK and tax. They only change while the period is open.",
     "add": "Add earning",
+    "addFormulaItem": "Add formula-based earning/deduction",
+    "formulaAssignmentHint": "This formula-based pay item applies only to the selected payroll period.",
     "empty": "No extra earnings in this period.",
     "employee": "Employee",
     "kindLabel": "Type",
@@ -62,7 +64,10 @@
     "skipped": "{{count}} employees could not be calculated (missing profile or salary).",
     "skipReasons": {
       "wage_basis_mismatch": "The payroll profile wage basis does not match the salary record pay frequency",
-      "net_wage_basis_unsupported": "Daily/hourly employees with a net wage cannot be calculated yet; enter a gross wage",
+      "net_wage_basis_unsupported": "The wage basis is unsupported by this calculation version",
+      "hourly_attendance_missing": "Hourly payroll needs attendance data; complete the monthly timesheet",
+      "hourly_attendance_not_approved": "The timesheet is unapproved or changed after approval; review and approve it again",
+      "hourly_attendance_invalid": "Paid hours are invalid; check worked time and missing days",
       "pay_item_formula_failed": "A pay item formula could not be evaluated (for example a division by zero); check the formula and the assigned value",
       "incentive_parameter_missing": "A legislation parameter an incentive definition refers to could not be found (or is not a valid rate); check the incentive definition and the legislation parameters"
     },
@@ -300,9 +305,12 @@
     "incentive_not_approved": "The incentive definition assigned to the employee is not approved by the SMMM; it was left out of the calculation",
     "incentive_duplicate_assignment": "More than one incentive assignment of the same category overlaps the month; only the latest-starting one was used",
     "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored",
-    "pay_item_deduction_capped": "The formula deductions exceeded the remaining net; the excess was not taken"
+    "pay_item_deduction_capped": "The formula deductions exceeded the remaining net; the excess was not taken",
+    "incentive_profile_assignment_required": "The profile incentive code requires a model assignment; the general 5510 discount was not applied",
+    "incentive_sgk_status_not_eligible": "The employee's insurance status is not eligible for this premium incentive; it was not applied"
   },
   "dirtyReasons": {
+    "calculation_blocked": "Calculation could not finish; check missing data and timesheet approval",
     "pay_item_changed": "Pay item (formula-based payment) changed",
     "incentive_changed": "Incentive assignment or definition changed"
   },
@@ -310,6 +318,31 @@
     "title": "Pay item types",
     "subtitle": "Define formula-based earnings (allowances, bonuses, etc.); once assigned to employees they are added to payroll.",
     "new": "New pay item",
+    "templates": {
+      "label": "Starting template",
+      "hint": "Start from an example or write your own formula. These types are added to payroll as separate payment lines.",
+      "custom": "My own formula",
+      "meal": {
+        "name": "Meal allowance",
+        "valueHint": "\"deger\" is the daily meal amount, multiplied by worked days."
+      },
+      "transport": {
+        "name": "Transport allowance",
+        "valueHint": "\"deger\" is the daily transport amount, multiplied by worked days."
+      },
+      "bonus": {
+        "name": "Bonus",
+        "valueHint": "\"deger\" is a percentage of base gross pay (e.g. 10 = 10%)."
+      },
+      "commission": {
+        "name": "Commission",
+        "valueHint": "\"deger\" is the sales amount. You can change the example's 5% rate in the formula."
+      },
+      "extraBonus": {
+        "name": "Extra bonus",
+        "valueHint": "\"deger\" is the monthly gross wage multiplier (e.g. 0.5 = half a month's wage)."
+      }
+    },
     "showInactive": "Show inactive",
     "empty": "No pay items defined yet. Start with \"New pay item\" by defining a code, a name and a formula; then you can assign it to employees.",
     "genericError": "Pay items could not be loaded.",
@@ -552,7 +585,10 @@
       "draftHint": "You can save an incomplete draft; completeness is only checked on approval.",
       "approvalWillDrop": "This definition is approved. Changing a calculation field (type, parameters, declaration code, months, dates) will drop the approval and the definition stays out of the calculation until it is approved again.",
       "save": "Save",
-      "error": "The incentive could not be saved."
+      "error": "The incentive could not be saved.",
+      "maxSupportMultiplier": "Total support cap multiplier",
+      "maxSupportMultiplierHint": "Leave blank for no total support cap. 1 = gross minimum wage prorated by premium days; this is separate from the premium base cap.",
+      "applyTemplate": "Apply ready model parameters"
     },
     "approveModal": {
       "approveTitle": "Approve incentive {{code}}",
@@ -569,7 +605,9 @@
     },
     "templates": {
       "title": "Add incentive from template",
-      "intro": "Ready templates are copied to your tenant. Rates come empty (only 5510 comes approved, with the existing behavior); you enter the real rates with accountant/expert approval.",
+      "intro": "Add ready SGK models for 5510, 6111 and 4447, plus drafts to complete for 4691, 5746 and 4857/30. Check sector, eligibility and employee duration. 7103 applies only to 2018-2022.",
+      "reviewTitle": "Templates do not determine eligibility",
+      "reviewRequired": "Verify workplace and employee conditions against official SGK/İŞKUR records. Complete draft parameters, declaration codes and approval with your payroll advisor before using them in payroll.",
       "preApproved": "Comes approved",
       "alreadyAdded": "Added",
       "add": "Add",
@@ -577,7 +615,9 @@
       "added": "{{name}} added",
       "addError": "The template could not be added.",
       "loadError": "Templates could not be loaded.",
-      "validFromNote": "The added definition is valid from today; edit its start date if you will assign it to earlier months."
+      "validFromNote": "The added definition is valid from today; edit its start date if you will assign it to earlier months.",
+      "historical": "Historical model",
+      "validUntil": "Last valid date: {{date}}"
     }
   },
   "incentiveAssignments": {
@@ -621,8 +661,11 @@
       "noteHint": "Optional; use it to track eligibility conditions (max 500 characters).",
       "unapprovedWarning": "This definition is not SMMM approved: it can be assigned but is not included in the calculation; only the declaration code is written.",
       "validFromWarning": "The definition is valid from {{date}}; the assignment is not effective in earlier months. Edit the definition's start date if needed.",
-      "save": "Save"
-    }
+      "save": "Save",
+      "validToWarning": "This incentive expired on {{date}} and cannot apply to the selected month."
+    },
+    "periodSubtitle": "Incentives effective in the selected month. Models affect employer cost according to approval and validity.",
+    "periodEmpty": "No incentive assignments in this period."
   },
   "incentiveLegacy": {
     "tab": "Legacy profile codes",
@@ -639,7 +682,7 @@
     },
     "sharedNormalized": "Converted together as \"{{code}}\"",
     "noSuggestion": "No matching definition",
-    "calculationChanges": "Calculation changes: the 5-point discount is lost/changed",
+    "calculationChanges": "The selected model changes employer cost. Check the effective parameters and approval status.",
     "calculationSame": "Calculation unchanged",
     "convert": "Convert",
     "empty": "No profile incentive codes to convert.",
@@ -652,7 +695,7 @@
       "definitionPlaceholder": "Select a definition",
       "noDefinitions": "No suitable active definition",
       "dangerTitle": "The calculation will change",
-      "dangerText": "The selected definition is not an approved SGK rate discount: the flat 5-point employer discount applied today through the profile code will be lost/changed and the employer cost of these employees may increase.",
+      "dangerText": "The selected model changes employer cost. Check the effective parameters and approval status.",
       "confirm": "I understand the calculation will change",
       "fromMonth": "Start month",
       "fromMonthHint": "Suggested: first open period (closed months are rejected).",
@@ -663,6 +706,7 @@
     "result": {
       "title": "Conversion completed",
       "summary": "{{created}} assignments created, {{skipped}} employees skipped (overlapping SGK assignment)."
-    }
+    },
+    "subtitle": "Link profile codes to incentive models. Codes other than 05510 affect calculation only through a separate incentive assignment."
   }
 }

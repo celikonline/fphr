@@ -124,6 +124,16 @@ ve `organization.*.view` (HRSpecialist/Manager/Timekeeper/Finance/Recruiter/Payr
 ExternalAccountant/Auditor'ın zaten sahip olduğu joker) bu iki anahtarı **otomatik** kapsıyor —
 `SystemRoleDefinitions.cs`'e ayrı ekleme gerekmedi (yalnız-ekleme kısıtı zaten korunmuş oldu).
 
+### Birim varsayılanı ve çalışan istisnası
+
+Maliyet merkezi kataloğu artık organizasyon birimi varsayılanı ve çalışan istisnasıyla bordroya bağlanır:
+
+- `PUT /organization/units/{id}/cost-center` — `{ costCenterId: guid | null }`; birimin doğrudan maliyet merkezini atar veya temizler. Birimde atama yoksa çözümleme üst hiyerarşide devam eder.
+- `GET /organization/cost-centers/employees/{employeeId}/assignment` — çalışanın istisnasını, birimden devraldığı değeri ve efektif değeri döndürür.
+- `PUT /organization/cost-centers/employees/{employeeId}/assignment` — `{ costCenterId: guid | null }`; birim değerini çalışana özel merkezle geçersiz kılar. `null`, istisnayı kaldırıp birimden devralmayı geri getirir.
+
+Çözümleme sırası: çalışan istisnası → çalışanın birimi → en yakın üst birimdeki atama. Bordro hesaplanırken çözümlenen merkez `Payslip` üzerinde saklanır; açık dönemlerin değişiklik algılama işi atama değişikliğini bordro girdisi farkı olarak görebilir. Atamalar etkin tarihli değildir; yeni değer bordro yeniden hesaplanırken kullanılır.
+
 ## Web
 
 `web/src/services/company.service.ts`: `getCompanyProfile`/`updateCompanyProfile`/`setCompanyLogo`
@@ -153,5 +163,4 @@ sonuç sözlüğünde **yok** — çağıran her istediği id'nin geri geleceği
 ## Bilinen açık işler (bu fazın kapsamı dışında bırakıldı, not düşüldü)
 - Logo için kalıcı görüntüleme URL'i (Documents.Contracts lookup).
 - Çoklu şirket (`JointEmploymentGroupCode`) senaryosunda `PrimaryCompanyResolver`'ın genişletilmesi.
-- Maliyet merkezi — birim/pozisyon bazlı atama (etkin tarihli) henüz yok; roadmap G-2-06/08, Faz 7 ile
-  ortak, atama dilimi yazılmadan PO kararı bekliyor (bkz. PANO backlog).
+- Maliyet merkezi — organizasyon birimi varsayılanı ve çalışan istisnası artık var; pozisyon bazlı ve etkin tarihli atamalar henüz yok.

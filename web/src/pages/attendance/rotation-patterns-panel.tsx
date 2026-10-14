@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Card, Group, NumberInput, SegmentedControl, Select, Stack, Table, Text, TextInput } from "@mantine/core";
+import { Link } from "react-router";
+import { LifeBuoy } from "lucide-react";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { listShiftDefinitions } from "@/services/attendance-shift-definitions.service";
@@ -50,6 +53,14 @@ export default function RotationPatternsPanel({ canManage }: Props) {
     return list.map((s, dayOffset) => ({ ...s, dayOffset }));
   }
 
+  function startNewPattern() {
+    setCode("");
+    setName("");
+    setPreset("custom");
+    setSteps([]);
+    setEditing(true);
+  }
+
   const save = useMutation({
     mutationFn: () => saveRotation(null, { code: code.trim(), name: name.trim(), preset, cycleLengthDays: steps.length, steps: toRequestSteps(steps) }),
     onSuccess: () => {
@@ -62,16 +73,10 @@ export default function RotationPatternsPanel({ canManage }: Props) {
 
   return (
     <Stack gap="md">
-      {canManage && !editing && (
+      {canManage && !editing && (patterns.isLoading || (patterns.data?.length ?? 0) > 0) && (
         <Group>
           <Button
-            onClick={() => {
-              setCode("");
-              setName("");
-              setPreset("custom");
-              setSteps([]);
-              setEditing(true);
-            }}
+            onClick={startNewPattern}
           >
             {t("rotations:newPattern")}
           </Button>
@@ -146,9 +151,17 @@ export default function RotationPatternsPanel({ canManage }: Props) {
         </Card>
       )}
       {(patterns.data ?? []).length === 0 && !patterns.isLoading ? (
-        <Text c="dimmed" size="sm">
-          {t("rotations:noPatterns")}
-        </Text>
+        <AttendanceEmptyState
+          title={t("rotations:noPatterns")}
+          description={t("rotations:noPatternsGuide")}
+          action={canManage ? (
+            <Button onClick={startNewPattern}>{t("rotations:newPattern")}</Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("rotations:contactSupport")}
+            </Button>
+          )}
+        />
       ) : (
         <Table>
           <Table.Thead>

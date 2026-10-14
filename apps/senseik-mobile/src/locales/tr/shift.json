@@ -2,20 +2,49 @@
   "title": "Vardiyam",
   "loadError": "Vardiya bilgileri yüklenemedi. Lütfen tekrar deneyin.",
   "employeeLabel": "Çalışan #{{id}}",
-  "previousWeek": "Önceki hafta",
-  "nextWeek": "Sonraki hafta",
+  "previousMonth": "Önceki ay",
+  "nextMonth": "Sonraki ay",
+  "calendar": {
+    "shift": "vardiya var"
+  },
+  "export": {
+    "button": "Bu ayı Excel'e aktar",
+    "title": "Vardiya takvimini paylaş",
+    "sheetName": "Vardiyalar",
+    "unavailable": "Bu cihazda dosya paylaşımı kullanılamıyor.",
+    "error": "Excel dosyası oluşturulamadı. Lütfen tekrar deneyin.",
+    "columns": {
+      "date": "Tarih",
+      "start": "Başlangıç",
+      "end": "Bitiş",
+      "breakMinutes": "Mola (dk)",
+      "night": "Gece vardiyası",
+      "note": "Not",
+      "yes": "Evet",
+      "no": "Hayır"
+    }
+  },
   "night": "Gece",
   "allDay": "Tüm gün",
   "sections": {
-    "myWeek": "Bu haftaki vardiyalarım",
+    "myMonth": "Vardiyalarım",
     "team": "Ekip vardiyaları",
     "unavailable": "Müsait değilim",
     "myAvailability": "Müsaitlik kayıtlarım"
   },
   "empty": {
+    "mineGuide": "Vardiya planınız yayınlandığında burada görünür. İsterseniz çalışamayacağınız tarihi bildirin.",
+    "teamGuide": "Bu görünümde erişebildiğiniz başka yayınlanmış ekip vardiyası yok.",
+    "showMonth": "Ayın tüm vardiyalarını göster",
+    "changeMonth": "Başka bir ay seç",
+    "goToAvailability": "Müsaitlik bildir",
     "week": {
       "mine": "Bu hafta için yayınlanmış vardiyanız yok.",
       "team": "Bu hafta için görüntüleyebileceğiniz ekip vardiyası yok."
+    },
+    "month": {
+      "mine": "Bu ay için yayınlanmış vardiyanız yok.",
+      "team": "Bu ay için görüntüleyebileceğiniz ekip vardiyası yok."
     },
     "day": {
       "mine": "Bu gün için vardiyanız yok.",
@@ -23,6 +52,11 @@
     }
   },
   "availability": {
+    "empty": {
+      "title": "Henüz müsaitlik kaydınız yok",
+      "message": "Çalışamayacağınız günü yukarıdaki formdan bildirebilirsiniz.",
+      "action": "Müsaitlik formuna git"
+    },
     "kinds": {
       "unavailable": "Bugün çalışmak istemiyorum",
       "weeklyRestRequest": "Haftalık iznimi kullanmak istiyorum"

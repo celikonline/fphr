@@ -22,7 +22,10 @@
     "active": "Active",
     "inactive": "Inactive",
     "empty": "No shift definitions yet.",
-    "flexHours": "{{minutes}} min (flexible)"
+    "flexHours": "{{minutes}} min (flexible)",
+    "emptyGuide": "Create a shift definition before assigning shifts to employees.",
+    "createFirst": "Create the first shift",
+    "contactSupport": "Get help"
   },
   "form": {
     "code": "Code",

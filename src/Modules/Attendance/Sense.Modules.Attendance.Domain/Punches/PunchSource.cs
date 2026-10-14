@@ -20,4 +20,7 @@ public enum PunchSource
 
     /// <summary>Kayıtlı terminalden gelen okutma (Z5.1).</summary>
     Terminal = 5,
+
+    /// <summary>Üretici protokol adaptöründen alınan çevrimiçi PDKS cihaz okutması.</summary>
+    DeviceIntegration = 6,
 }

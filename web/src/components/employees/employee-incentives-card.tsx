@@ -25,11 +25,17 @@ export function useEmployeeIncentiveAssignments(employeeId: string, enabled = tr
   });
 }
 
-/** True when an SGK-category assignment (every kind but the income tax relief) covers the given month. */
+/** True when an effective SGK assignment from an active, date-valid definition covers the given month. */
 export function hasEffectiveSgkAssignment(assignments: IncentiveAssignment[] | undefined, now: Date): boolean {
   const current = now.getFullYear() * 12 + now.getMonth();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const monthStart = `${now.getFullYear()}-${month}-01`;
+  const lastDay = String(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()).padStart(2, "0");
+  const monthEnd = `${now.getFullYear()}-${month}-${lastDay}`;
   return (assignments ?? []).some((item) => {
-    if (item.kind === "incomeTaxWithholdingRelief") return false;
+    if (item.kind === "incomeTaxWithholdingRelief" || item.isDefinitionActive !== true) return false;
+    if (!item.definitionValidFrom || item.definitionValidFrom > monthEnd) return false;
+    if (item.definitionValidTo && item.definitionValidTo < monthStart) return false;
     const from = item.fromYear * 12 + item.fromMonth - 1;
     const to = item.toYear != null && item.toMonth != null ? item.toYear * 12 + item.toMonth - 1 : Number.POSITIVE_INFINITY;
     return from <= current && current <= to;

@@ -18,6 +18,55 @@ public sealed class IncentiveCalculatorTests
     private static readonly PayrollLegislationSnapshot Snapshot = IncentiveTestKit.Snapshot;
     private const string DiscountKey = "Payroll.Sgk.EmployerDiscountRate";
 
+    [Theory]
+    [InlineData(50_000, 30, 18_750)]
+    [InlineData(200_000, 30, 33_030)]
+    [InlineData(200_000, 15, 16_515)]
+    public void ManufacturingSupport_CapsTheTotalAmountInsteadOfThePremiumBase(decimal salary, int days, decimal expected)
+    {
+        var effect = new IncentiveEffectInput("SGK_17103", IncentiveKind.EmployerShareCoverage, new ResolvedRate(1m, "Incentive.SGK_17103.Rate"),
+            IncentiveCoverageBase.ActualSgkBase, EmployerSgkRate: new ResolvedRate(0.205m, "Incentive.SGK_17103.EmployerSgkRate"),
+            CoversEmployerSgk: true, CoversEmployerUnemployment: true, CoversEmployeeSgk: true, CoversEmployeeUnemployment: true,
+            MaxSupportMultiplier: 1m);
+        var input = Plain(salary) with { WorkedDays = days, ProratedPaidDays = days, Incentives = [effect] };
+        var result = PayrollCalculator.Calculate(input, Snapshot);
+        var plain = PayrollCalculator.Calculate(input with { Incentives = null }, Snapshot);
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Output.ShouldBe(expected);
+        result.EmployerCost.ShouldBe(plain.EmployerCost - expected);
+        result.NetAmount.ShouldBe(plain.NetAmount);
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Inputs.ShouldContainKey("supportCap");
+    }
+
+    [Fact]
+    public void OtherSectorSupport_CoversOnlyTheMinimumWagePremiums()
+    {
+        var effect = Coverage(IncentiveCoverageBase.MinimumWage, employerSgkRate: 0.205m, employerUnemp: true, employeeSgk: true, employeeUnemp: true, code: "SGK_27103");
+        var result = PayrollCalculator.Calculate(With(Plain(200_000m), effect), Snapshot);
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Output.ShouldBe(12_386.25m); // 33,030 x 37.5%, not 33,030.
+    }
+
+    [Fact]
+    public void Model6111_CoversTheCurrentEmployerSgkPremiumWithoutChangingNetPay()
+    {
+        var current = Snapshot with { SgkEmployerRate = 0.2175m, SgkEmployerDiscountRate = 0.02m };
+        var effect = Coverage(IncentiveCoverageBase.ActualSgkBase, cap: null, employerSgkRate: 0.2175m, code: "SGK_6111");
+        var result = PayrollCalculator.Calculate(With(Plain(50_000m), effect), current);
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Output.ShouldBe(10_875m);
+        result.EmployerCost.ShouldBe(51_000m); // only employer unemployment remains.
+        result.NetAmount.ShouldBe(PayrollCalculator.Calculate(Plain(50_000m), current).NetAmount);
+    }
+
+    [Fact]
+    public void Model15921_CoversLongTermHealthAndOnePointShortTermButNotUnemployment()
+    {
+        var current = Snapshot with { SgkEmployerRate = 0.2175m, SgkEmployerDiscountRate = 0.02m };
+        var effect = Coverage(IncentiveCoverageBase.MinimumWage, employerSgkRate: 0.205m, employeeSgk: true, code: "SGK_15921");
+        var result = PayrollCalculator.Calculate(With(Plain(33_030m), effect), current);
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Output.ShouldBe(11_395.35m); // 33,030 x 34.5%.
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Inputs.ShouldNotContainKey("employerUnempCovered");
+        result.Step(PayrollTraceStepCodes.EmployerIncentive).Inputs.ShouldNotContainKey("employeeUnempCovered");
+    }
+
     private static PayrollCalculationInput Plain(decimal salary) => IncentiveTestKit.Plain(salary);
 
     private static IncentiveEffectInput Discount(decimal rate, string key = DiscountKey, string code = "SGK_5510_MD81") =>

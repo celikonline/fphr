@@ -18,7 +18,7 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("payroll")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -835,6 +835,14 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnName("acknowledgement_history")
                         .HasDefaultValueSql("'[]'::jsonb");
 
+                    b.Property<Guid?>("CostCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_center_id");
+
+                    b.Property<bool>("CostCenterSnapshotCaptured")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cost_center_snapshot_captured");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1347,6 +1355,13 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("payment_method");
 
+                    b.Property<decimal>("RegularBenefitsMonthlyGross")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("regular_benefits_monthly_gross");
+
                     b.Property<string>("SgkStatus")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1767,6 +1782,10 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 
                             b1.Property<bool>("CoversEmployerUnemployment")
                                 .HasJsonPropertyName("coversEmployerUnemployment");
+
+                            b1.Property<decimal?>("MaxSupportMultiplier")
+                                .HasPrecision(18, 4)
+                                .HasJsonPropertyName("maxSupportMultiplier");
 
                             b1.HasKey("IncentiveDefinitionId");
 

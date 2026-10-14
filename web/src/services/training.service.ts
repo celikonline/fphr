@@ -99,6 +99,11 @@ export async function listEnrollments(trainingProgramId: string): Promise<Enroll
   return data;
 }
 
+export async function listEmployeeEnrollments(employeeId: string): Promise<Enrollment[]> {
+  const { data } = await apiClient.get<Enrollment[]>(`${BASE}/enrollments`, { params: { employeeId } });
+  return data;
+}
+
 export async function getMyTrainings(): Promise<MyTraining[]> {
   const { data } = await apiClient.get<MyTraining[]>(`${BASE}/enrollments/my`);
   return data;

@@ -9,7 +9,7 @@ namespace Sense.Modules.Attendance.Application.Daily;
 
 /// <summary>GET v1/attendance/daily (spec 5.4).</summary>
 [RequiresPermission(AttendancePermissions.DailyViewKey)]
-public sealed record ListDailyAttendanceQuery(DateOnly Date, DailyStatus Status, Guid? OrgUnitId, bool IncludeSubUnits, int Page, int PageSize)
+public sealed record ListDailyAttendanceQuery(DateOnly Date, DailyStatus? Status, Guid? OrgUnitId, bool IncludeSubUnits, int Page, int PageSize)
     : IQuery<PagedResult<DailyAttendanceRowDto>>;
 
 public sealed class ListDailyAttendanceHandler(ITenantContext tenant, IDailyAttendanceQuery query)

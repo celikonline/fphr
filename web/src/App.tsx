@@ -29,6 +29,7 @@ const EmployeeListPage = lazy(() => import("@/pages/employees/employee-list"));
 const OrgChartPage = lazy(() => import("@/pages/employees/org-chart"));
 const EmployeeCardPage = lazy(() => import("@/pages/employees/employee-card"));
 const SettingsHomePage = lazy(() => import("@/pages/settings/settings-home"));
+const PdksIntegrationsPage = lazy(() => import("@/pages/settings/pdks-integrations"));
 const CompanyStructurePage = lazy(() => import("@/pages/settings/company-structure"));
 const HolidayCalendarsPage = lazy(() => import("@/pages/settings/holiday-calendars"));
 const AccessSettingsPage = lazy(() => import("@/pages/settings/access-settings"));
@@ -91,6 +92,7 @@ const RotationsPage = lazy(() => import("@/pages/attendance/rotations"));
 const MonthlyMatrixPage = lazy(() => import("@/pages/attendance/monthly-matrix"));
 const PunchRequestsPage = lazy(() => import("@/pages/attendance/punch-requests"));
 const TerminalsPage = lazy(() => import("@/pages/attendance/terminals"));
+const PDKSManagementCenterPage = lazy(() => import("@/pages/attendance/management-center"));
 const DelegationsPage = lazy(() => import("@/pages/settings/delegations"));
 const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
@@ -109,6 +111,7 @@ const PayslipImportPage = lazy(() => import("@/pages/payroll/payslip-import"));
 const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
 const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
 const PlatformTenantsPage = lazy(() => import("@/pages/platform/tenants"));
+const PlatformMaintenancePage = lazy(() => import("@/pages/platform/maintenance"));
 const SetupWizardPage = lazy(() => import("@/pages/setup/setup-wizard"));
 const PayItemsPage = lazy(() => import("@/pages/payroll/pay-items"));
 const IncentivesPage = lazy(() => import("@/pages/payroll/incentives"));
@@ -202,6 +205,8 @@ export default function App() {
             <Route path="attendance/monthly-matrix" element={<MonthlyMatrixPage />} />
             <Route path="attendance/punch-requests" element={<PunchRequestsPage />} />
             <Route path="attendance/terminals" element={<TerminalsPage />} />
+            <Route path="attendance/management" element={<PDKSManagementCenterPage />} />
+            <Route path="settings/pdks-integrations" element={<PdksIntegrationsPage />} />
             <Route path="settings/delegations" element={<DelegationsPage />} />
 
             <Route path="performance/goals" element={<MyGoalsPage />} />
@@ -271,6 +276,7 @@ export default function App() {
 
             {/* Platform (süper admin): rota izni navigation.ts girdisinden (ROUTE_ACCESS) gelir, sayfa ayrıca kendini de korur */}
             <Route path="platform/tenants" element={<PlatformTenantsPage />} />
+            <Route path="platform/maintenance" element={<PlatformMaintenancePage />} />
 
             {/* İlk kurulum sihirbazı: SetupGuard (app-layout) kurulumu bitmemiş Owner'ı buraya yönlendirir */}
             <Route path="setup" element={<SetupWizardPage />} />

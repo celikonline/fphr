@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/auth/BrandMark";
 import { LogoutConfirmSheet } from "@/components/auth/LogoutConfirmSheet";
-import { Avatar, ErrorBanner, IconCircleButton, Screen, SectionHeader } from "@/components/ui";
+import { Avatar, EmptyState, ErrorBanner, IconCircleButton, Screen, SectionHeader } from "@/components/ui";
 import { leaveService, type LeaveBalanceItem } from "@/services/LeaveService";
 import { approvalsService } from "@/services/ApprovalsService";
 import { notificationsService } from "@/services/NotificationsService";
@@ -250,7 +250,13 @@ export default function DashboardScreen() {
       ) : balances === null ? (
         <ActivityIndicator style={styles.balanceLoading} color={palette.white} />
       ) : balances.length === 0 ? (
-        <Text style={styles.emptyBalances}>{t("balances.empty")}</Text>
+        <EmptyState
+          icon="wallet-outline"
+          title={t("balances.empty")}
+          message={t("balances.emptyGuide")}
+          actionLabel={t("balances.openLeave")}
+          onAction={() => navigation.navigate("Leave")}
+        />
       ) : (
         <BalanceCarousel items={balances} onPressItem={() => navigation.navigate("Leave")} />
       )}
@@ -258,6 +264,7 @@ export default function DashboardScreen() {
       <SectionHeader title={t("sections.actions")} />
       <ActionGrid
         approvalsCount={approvalsCount}
+        attendanceEnabled={!user?.disabledModules?.includes("attendance")}
         onNavigate={(route) => navigation.navigate(route)}
       />
 
@@ -356,10 +363,5 @@ const styles = StyleSheet.create({
   },
   balanceLoading: {
     paddingVertical: 24,
-  },
-  emptyBalances: {
-    ...text.bodyMuted,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
   },
 });

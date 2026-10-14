@@ -159,6 +159,21 @@ public sealed class CostCenterRepository(OrganizationDbContext context) : ICostC
         await context.CostCenters.AnyAsync(c => c.Code == code, cancellationToken);
 }
 
+public sealed class EmployeeCostCenterOverrideRepository(OrganizationDbContext context) : IEmployeeCostCenterOverrideRepository
+{
+    public Task<EmployeeCostCenterOverride?> FindByEmployeeIdAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        context.EmployeeCostCenterOverrides.FirstOrDefaultAsync(x => x.EmployeeId == employeeId, cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeCostCenterOverride>> ListByEmployeeIdsAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default) =>
+        employeeIds.Count == 0
+            ? []
+            : await context.EmployeeCostCenterOverrides.Where(x => employeeIds.Contains(x.EmployeeId)).ToListAsync(cancellationToken);
+
+    public void Add(EmployeeCostCenterOverride assignment) => context.EmployeeCostCenterOverrides.Add(assignment);
+
+    public void Remove(EmployeeCostCenterOverride assignment) => context.EmployeeCostCenterOverrides.Remove(assignment);
+}
+
 /// <summary>EF Core-backed OrgUnitApprovalPolicyAssignment repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
 public sealed class OrgUnitApprovalPolicyAssignmentRepository(OrganizationDbContext context) : IOrgUnitApprovalPolicyAssignmentRepository
 {

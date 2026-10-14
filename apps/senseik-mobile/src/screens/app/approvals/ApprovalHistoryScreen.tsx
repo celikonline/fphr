@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { activeLocale } from "@/lib/formatters";
@@ -27,6 +29,7 @@ import {
 } from "./approvalFilters";
 import { ApprovalTypeSelect } from "./ApprovalTypeSelect";
 import { approvalCardHeading, approvalDetailRows } from "./approvalPresentation";
+import type { AppStackParamList } from "@/types/navigation";
 
 const PAGE_SIZE = 20;
 
@@ -100,6 +103,7 @@ function HistoryCard({ item }: HistoryCardProps) {
 /** FG-008: "Onaylarım" > "Geçmiş" - çağıranın kendi kararları, karar tarihine göre en yeniden eskiye, tür filtresiyle. */
 export default function ApprovalHistoryScreen() {
   const { t } = useTranslation("approvals");
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [items, setItems] = useState<ApprovalHistoryItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -193,7 +197,13 @@ export default function ApprovalHistoryScreen() {
             onEndReachedThreshold={0.4}
             onEndReached={() => void loadMore()}
             ListEmptyComponent={
-              <EmptyState icon="checkmark-done-outline" title={t("history.empty")} />
+              <EmptyState
+                icon="checkmark-done-outline"
+                title={t("history.empty")}
+                message={t("history.emptyGuide")}
+                actionLabel={t("history.inbox")}
+                onAction={() => navigation.navigate("Approvals")}
+              />
             }
             ListFooterComponent={
               loadingMore ? <ActivityIndicator style={styles.footer} color={palette.white} /> : null

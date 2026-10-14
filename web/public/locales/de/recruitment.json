@@ -48,7 +48,9 @@
     "access": "Zugriff",
     "accessHint": "Verwalten Sie, welche Benutzer über den Eigentümer und die einstellende Führungskraft hinaus auf diese Ausschreibung zugreifen können.",
     "accessEmpty": "Kein zusätzlicher Zugriff über den Eigentümer und die einstellende Führungskraft hinaus gewährt.",
-    "accessSaved": "Zugriffsliste aktualisiert."
+    "accessSaved": "Zugriffsliste aktualisiert.",
+    "emptyGuide": "Eine Ausschreibung für eine offene Stelle erstellen, um die Personalsuche zu starten.",
+    "emptySupport": "Personalabteilung oder Support kontaktieren"
   },
   "postingDetail": {
     "careerLink": {
@@ -113,7 +115,12 @@
       "actionLabel": "Bewerbungen",
       "drawerTitle": "{{name}} – Bewerbungen",
       "empty": "Diese Person hat noch keine Bewerbungen."
-    }
+    },
+    "emptyGuide": "Den ersten Kandidaten hinzufügen, um Bewerbungen zu verfolgen.",
+    "emptySearch": "Keine Kandidaten entsprechen Ihrer Suche.",
+    "emptySearchGuide": "Einen anderen Namen oder eine andere E-Mail-Adresse versuchen oder die Suche löschen.",
+    "clearSearch": "Suche löschen",
+    "emptySupport": "Personalabteilung oder Support kontaktieren"
   },
   "applications": {
     "title": "Bewerbungen",
@@ -169,7 +176,9 @@
     "createSuccess": "Personalanforderung angelegt.",
     "submitSuccess": "Personalanforderung zur Genehmigung eingereicht.",
     "cancelSuccess": "Personalanforderung storniert.",
-    "empty": "Noch keine Personalanforderungen vorhanden."
+    "empty": "Noch keine Personalanforderungen vorhanden.",
+    "emptyGuide": "Einen Einstellungsantrag für eine neue Stelle oder eine Nachbesetzung erstellen.",
+    "emptySupport": "Personalabteilung oder Support kontaktieren"
   },
   "formTemplates": {
     "title": "Formularvorlagen",

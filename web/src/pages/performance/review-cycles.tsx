@@ -17,7 +17,8 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { CalendarRange, Plus, Trash2 } from "lucide-react";
+import { Link } from "react-router";
+import { ArrowRight, CalendarRange, LifeBuoy, Plus, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
@@ -81,6 +82,7 @@ function ReviewCycles() {
   const { t } = useTranslation(["performance", "common"]);
   const canMine = usePermission("performance.my.reviews");
   const canManageView = usePermission("performance.reviews.view");
+  const [activeTab, setActiveTab] = useState<string | null>("mine");
 
   return (
     <div className="w-full space-y-6 p-4 md:p-10">
@@ -92,13 +94,13 @@ function ReviewCycles() {
       </div>
 
       {canMine && canManageView ? (
-        <Tabs defaultValue="mine" keepMounted={false}>
+        <Tabs value={activeTab} onChange={setActiveTab} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="mine">{t("performance:reviewCycles.tabs.mine")}</Tabs.Tab>
             <Tabs.Tab value="all">{t("performance:reviewCycles.tabs.all")}</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="mine" pt="md">
-            <MyReviewCycles />
+            <MyReviewCycles onShowAll={() => setActiveTab("all")} />
           </Tabs.Panel>
           <Tabs.Panel value="all" pt="md">
             <AdminReviewCycles />
@@ -113,7 +115,7 @@ function ReviewCycles() {
   );
 }
 
-function MyReviewCycles() {
+function MyReviewCycles({ onShowAll }: { onShowAll?: () => void }) {
   const { t, i18n } = useTranslation(["performance", "common"]);
   const cyclesQuery = useQuery({ queryKey: ["performance", "review-cycles", "me"], queryFn: getMyReviewCycles });
 
@@ -137,9 +139,20 @@ function MyReviewCycles() {
   if (!cyclesQuery.data || cyclesQuery.data.length === 0) {
     return (
       <Card withBorder padding="lg">
-        <Text size="sm" c="dimmed" ta="center">
-          {t("performance:reviewCycles.empty")}
-        </Text>
+        <Stack align="center" gap="sm">
+          <Text size="sm" c="dimmed" ta="center">
+            {t("performance:reviewCycles.empty")}
+          </Text>
+          {onShowAll ? (
+            <Button type="button" variant="light" rightSection={<ArrowRight size={16} />} onClick={onShowAll}>
+              {t("performance:reviewCycles.emptyAllCycles")}
+            </Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("performance:reviewCycles.emptySupport")}
+            </Button>
+          )}
+        </Stack>
       </Card>
     );
   }
@@ -242,9 +255,20 @@ function AdminReviewCycles() {
         </Text>
       ) : !cyclesQuery.data || cyclesQuery.data.length === 0 ? (
         <Card withBorder padding="lg">
-          <Text size="sm" c="dimmed" ta="center">
-            {t("performance:reviewCycles.admin.empty")}
-          </Text>
+          <Stack align="center" gap="sm">
+            <Text size="sm" c="dimmed" ta="center">
+              {t("performance:reviewCycles.admin.empty")}
+            </Text>
+            {canManage ? (
+              <Button type="button" leftSection={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
+                {t("performance:reviewCycles.admin.create")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("performance:reviewCycles.emptySupport")}
+              </Button>
+            )}
+          </Stack>
         </Card>
       ) : (
         <Stack gap="md">

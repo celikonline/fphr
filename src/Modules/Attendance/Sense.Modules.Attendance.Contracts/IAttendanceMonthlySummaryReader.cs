@@ -8,10 +8,15 @@ namespace Sense.Modules.Attendance.Contracts;
 /// <see cref="OvertimeHours"/> is the sum of worked-minus-planned minutes on days worked more than planned.
 /// <see cref="PublicHolidayDaysWorked"/> counts official-holiday dates with recorded work and <see cref="WeeklyRestDaysWorked"/> Sundays worked that are not
 /// scheduled working days (4857 md.46/47: each earns one extra day's pay); <see cref="IsPeriodLocked"/> reflects the month's <c>ShiftPlanLock</c> (Attendance's only period-lock concept).
+/// NormalHoursShortfall uses net working minutes (breaks excluded), or an explicit manual override, on partially worked
+/// ordinary scheduled days. It excludes whole-day absences, overtime, approved leave and holiday/rest-day earnings.
+/// IsTimesheetApproved requires the employee's monthly approval, resolved anomalies and no AttendanceDay changes after approval;
+/// a shift-plan lock alone is not an approval.
 /// </summary>
 public sealed record AttendanceMonthlySummary(
     Guid EmployeeId, decimal WorkedDays, decimal WorkedHours, decimal MissingDays, decimal OvertimeHours, bool IsPeriodLocked,
-    int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0);
+    int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0,
+    decimal? NormalHoursShortfall = null, bool IsTimesheetApproved = false);
 
 /// <summary>
 /// Cross-module read port (Payroll consumes this instead of guessing worked/missing days from its own data). An

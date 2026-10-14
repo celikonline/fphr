@@ -27,15 +27,19 @@ public sealed class SeveranceEstimateHandlerTests
         var salary = Substitute.For<IEmployeeSalaryLookup>();
         salary.GetEmploymentDatesAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EmployeeEmploymentDates?>(new EmployeeEmploymentDates(HireDate, null)));
-        salary.GetCurrentSalaryAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
+        salary.GetSalaryAsOfAsync(TenantId, EmployeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EmployeeCurrentSalary?>(new EmployeeCurrentSalary(60_000m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, HireDate)));
         var seniority = Substitute.For<IEmployeeSeniorityLookup>();
         seniority.GetCountedSeniorityDaysAsync(TenantId, EmployeeId, Arg.Any<EmployeeSeniorityPurpose>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(400));
         var leave = Substitute.For<ILeaveBalanceLookup>();
+        leave.GetRemainingAnnualLeaveDaysAsOfAsync(TenantId, EmployeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<decimal?>(0m));
 
         // A reader with no rows: every parameter is "missing".
         reader ??= Substitute.For<ILegislationParameterReader>();
-        return new GetSeveranceEstimateHandler(tenant, new SeveranceEstimator(salary, seniority, leave, reader, TimeProvider.System));
+        return new GetSeveranceEstimateHandler(tenant, new SeveranceEstimator(salary, seniority, leave, reader, TimeProvider.System,
+            Substitute.For<IPayrollPeriodRepository>(), Substitute.For<IPayslipRepository>(), Substitute.For<IEmployeeDisabilityLookup>(),
+            Substitute.For<IEmployeePayrollProfileRepository>()));
     }
 
     [Fact]

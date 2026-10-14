@@ -44,6 +44,8 @@
     "closeSuccess": "İlan kapatıldı.",
     "archiveSuccess": "İlan arşivlendi.",
     "empty": "Henüz ilan yok.",
+    "emptyGuide": "Bir pozisyon için ilan oluşturarak işe alım sürecini başlatın.",
+    "emptySupport": "İK veya destek ekibine ulaş",
     "viewDetail": "İlanı görüntüle",
     "access": "Erişim",
     "accessHint": "Bu ilana, sahibi ve işe alım müdürü dışında kimlerin erişebileceğini yönetin.",
@@ -91,6 +93,11 @@
     "createSuccess": "Aday eklendi.",
     "updateSuccess": "Aday güncellendi.",
     "empty": "Henüz aday yok.",
+    "emptyGuide": "Başvuruları izlemek için ilk adayı ekleyin.",
+    "emptySearch": "Aramanızla eşleşen aday yok.",
+    "emptySearchGuide": "Farklı bir ad veya e-posta arayın ya da aramayı temizleyin.",
+    "clearSearch": "Aramayı temizle",
+    "emptySupport": "İK veya destek ekibine ulaş",
     "editCandidate": "Adayı düzenle",
     "tags": "Etiketler",
     "editTags": "Etiketleri düzenle",
@@ -169,7 +176,9 @@
     "createSuccess": "Talep formu oluşturuldu.",
     "submitSuccess": "Talep formu onaya gönderildi.",
     "cancelSuccess": "Talep formu iptal edildi.",
-    "empty": "Henüz talep formu yok."
+    "empty": "Henüz işe alım talebi yok.",
+    "emptyGuide": "Yeni pozisyon veya yedek çalışan ihtiyacı için işe alım talebi oluşturun.",
+    "emptySupport": "İK veya destek ekibine ulaş"
   },
   "formTemplates": {
     "title": "Form Şablonları",

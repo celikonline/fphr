@@ -2,6 +2,8 @@
   "title": "My profile",
   "loadError": "Profile details could not be loaded. Please try again.",
   "notFound": "You have no employee record.",
+  "notFoundGuide": "Your account is not linked to an employee record. Contact support about this.",
+  "getHelp": "Contact support",
   "groups": {
     "personal": "Personal",
     "contact": "Contact",

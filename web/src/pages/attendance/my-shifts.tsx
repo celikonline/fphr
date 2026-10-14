@@ -2,10 +2,12 @@ import { type FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Badge, Button, Card, Group, Modal, SegmentedControl, Skeleton, Stack, Switch, Text, Textarea, Title, Tooltip } from "@mantine/core";
-import { CalendarOff, CalendarRange, ChevronLeft, ChevronRight, Moon, Plus } from "lucide-react";
+import { CalendarOff, CalendarRange, ChevronLeft, ChevronRight, LifeBuoy, Moon, Plus } from "lucide-react";
+import { Link } from "react-router";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "@/hooks/use-toast";
@@ -140,9 +142,19 @@ function MyShifts() {
             {getApiErrorMessage(query.error, t("attendance:genericError"))}
           </Text>
         ) : sortedShifts.length === 0 ? (
-          <Text size="sm" c="dimmed">
-            {t("attendance:shift.empty")}
-          </Text>
+          <AttendanceEmptyState
+            title={t("attendance:shift.empty")}
+            description={t("attendance:shift.emptyGuide")}
+            action={canReportAvailability ? (
+              <Button leftSection={<Plus size={16} />} onClick={() => setReporting(true)}>
+                {t("attendance:myAvailability.addButton")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("attendance:shift.contactSupport")}
+              </Button>
+            )}
+          />
         ) : (
           <Stack gap="xs">
             {sortedShifts.map((shift) => (
@@ -162,9 +174,11 @@ function MyShifts() {
             <Title order={2} size="h4" className="flex items-center gap-2">
               <CalendarOff className="h-5 w-5" /> {t("attendance:myAvailability.title")}
             </Title>
-            <Button size="xs" leftSection={<Plus className="h-4 w-4" />} onClick={() => setReporting(true)}>
-              {t("attendance:myAvailability.addButton")}
-            </Button>
+            {activeAvailability.length > 0 && (
+              <Button size="xs" leftSection={<Plus className="h-4 w-4" />} onClick={() => setReporting(true)}>
+                {t("attendance:myAvailability.addButton")}
+              </Button>
+            )}
           </Group>
 
           <Card withBorder padding="lg">
@@ -178,9 +192,11 @@ function MyShifts() {
                 {getApiErrorMessage(availabilityQuery.error, t("attendance:genericError"))}
               </Text>
             ) : activeAvailability.length === 0 ? (
-              <Text size="sm" c="dimmed">
-                {t("attendance:myAvailability.empty")}
-              </Text>
+              <AttendanceEmptyState
+                title={t("attendance:myAvailability.empty")}
+                description={t("attendance:myAvailability.emptyGuide")}
+                action={<Button variant="light" leftSection={<Plus size={16} />} onClick={() => setReporting(true)}>{t("attendance:myAvailability.addButton")}</Button>}
+              />
             ) : (
               <Stack gap="xs">
                 {activeAvailability.map((entry) => (

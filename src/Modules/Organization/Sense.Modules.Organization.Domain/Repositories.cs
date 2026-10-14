@@ -80,6 +80,18 @@ public interface ICostCenterRepository
     Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Optional employee-level override of the cost center inherited from the org-unit hierarchy.</summary>
+public interface IEmployeeCostCenterOverrideRepository
+{
+    Task<EmployeeCostCenterOverride?> FindByEmployeeIdAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<EmployeeCostCenterOverride>> ListByEmployeeIdsAsync(IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
+
+    void Add(EmployeeCostCenterOverride assignment);
+
+    void Remove(EmployeeCostCenterOverride assignment);
+}
+
 /// <summary>Company aggregate repository.</summary>
 public interface ICompanyRepository
 {

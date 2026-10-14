@@ -46,6 +46,7 @@ public static class PunchTime
         PunchSource.SelfService => AttendanceDaySource.SelfService,
         PunchSource.Request => AttendanceDaySource.Request,
         PunchSource.Terminal => AttendanceDaySource.Terminal,
+        PunchSource.DeviceIntegration => AttendanceDaySource.DeviceIntegration,
         _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
     };
 
@@ -57,6 +58,7 @@ public static class PunchTime
         AttendanceDaySource.SelfService => PunchSource.SelfService,
         AttendanceDaySource.Request => PunchSource.Request,
         AttendanceDaySource.Terminal => PunchSource.Terminal,
+        AttendanceDaySource.DeviceIntegration => PunchSource.DeviceIntegration,
         _ => throw new ArgumentOutOfRangeException(nameof(source), source, null),
     };
 }

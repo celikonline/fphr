@@ -23,7 +23,7 @@ public sealed class DailyAttendanceController : ApiControllerBase
     [HttpGet]
     [ProducesResponseType<PagedResult<DailyAttendanceRowDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(
-        [FromQuery] DateOnly date, [FromQuery] DailyStatus status, [FromQuery] Guid? orgUnitId, [FromQuery] bool includeSubUnits = false,
+        [FromQuery] DateOnly date, [FromQuery] DailyStatus? status, [FromQuery] Guid? orgUnitId, [FromQuery] bool includeSubUnits = false,
         [FromQuery] int page = 1, [FromQuery] int pageSize = DefaultPageSize, CancellationToken ct = default) =>
         FromResult(await Dispatcher.Query(new ListDailyAttendanceQuery(date, status, orgUnitId, includeSubUnits, page, pageSize), ct));
 

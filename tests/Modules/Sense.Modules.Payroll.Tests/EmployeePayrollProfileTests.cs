@@ -8,6 +8,29 @@ namespace Sense.Modules.Payroll.Tests;
 /// <summary>Domain-only tests for <see cref="EmployeePayrollProfile"/> (Faz 3 P2, 11.3.07-bordro.md "Bordro parametresi").</summary>
 public sealed class EmployeePayrollProfileTests
 {
+    [Fact]
+    public void UpdatingRecurringBenefits_PreservesOtherProfileFields_AndNormalizesToCents()
+    {
+        var profile = EmployeePayrollProfile.Create(TenantId, EmployeeId,
+            Data(mealVariant: MealBenefitVariant.Cash, mealDailyAmount: 150m)).Value;
+        var from = profile.ValidFrom;
+        profile.SetRegularBenefitsMonthlyGross(1_234.565m).Value.ShouldBeTrue();
+        profile.RegularBenefitsMonthlyGross.ShouldBe(1_234.57m);
+        profile.MealDailyAmount.ShouldBe(150m);
+        profile.SgkWorkplaceCompanyId.ShouldBe(SgkWorkplaceCompanyId);
+        profile.ValidFrom.ShouldBe(from);
+        profile.SetRegularBenefitsMonthlyGross(1_234.57m).Value.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void NegativeRecurringBenefits_AreRejectedByCreateAndUpdate()
+    {
+        EmployeePayrollProfile.Create(TenantId, EmployeeId, Data() with { RegularBenefitsMonthlyGross = -1m })
+            .Error.Code.ShouldBe(PayrollDomainErrors.ProfileRegularBenefitsInvalid);
+        var profile = EmployeePayrollProfile.Create(TenantId, EmployeeId, Data()).Value;
+        profile.SetRegularBenefitsMonthlyGross(-1m).Error.Code.ShouldBe(PayrollDomainErrors.ProfileRegularBenefitsInvalid);
+        profile.RegularBenefitsMonthlyGross.ShouldBe(0m);
+    }
     private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid EmployeeId = Guid.NewGuid();
     private static readonly Guid SgkWorkplaceCompanyId = Guid.NewGuid();

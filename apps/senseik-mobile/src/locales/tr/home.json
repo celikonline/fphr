@@ -22,6 +22,8 @@
   "balances": {
     "loadError": "İzin bakiyeleri yüklenemedi. Lütfen tekrar deneyin.",
     "empty": "Bakiye kaydı yok",
+    "emptyGuide": "İzin bakiyenizi ve taleplerinizi İzinlerim bölümünden görüntüleyebilirsiniz.",
+    "openLeave": "İzinlerime git",
     "a11y": "İzin bakiyeleri",
     "available_one": "{{value}} gün kullanılabilir",
     "available_other": "{{value}} gün kullanılabilir",

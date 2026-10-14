@@ -642,6 +642,7 @@
       "sgkSubCodeHint": "Dieser Grund hat mehr als einen gültigen SGK-Code - wählen Sie einen aus.",
       "sgkSubCodeRequired": "Wählen Sie für diesen Grund einen SGK-Untercode aus.",
       "severanceEstimate": {
+        "dressedDailyGross": "Tägliche Bruttobasis für Abfindung/Kündigungsentschädigung",
         "title": "Abfindungs-/Kündigungsfristvergütung (Schätzung)",
         "immoralOrBadFaith": "Kündigung wegen Verstoßes gegen Sitte und Treu und Glauben (İş K. m.25/II)",
         "severance": "Abfindung",
@@ -693,6 +694,10 @@
       "paymentMethod": "Zahlungsweise",
       "sickDays": "Krankheitstage mindern das Entgelt",
       "externalCode": "Externer Lohncode",
+      "regularBenefits": "Regelmäßige Zusatzleistungen • Monatsbrutto",
+      "asOfDate": "Abrechnungsprofil zum Datum",
+      "editBenefits": "Zusatzleistungen bearbeiten",
+      "regularBenefitsHint": "Den fachlich geprüften monatlichen Bruttogesamtbetrag für Verpflegung, Fahrtkosten und weitere regelmäßige Zusatzleistungen der Abfindungs- und Kündigungsentschädigungsbasis eingeben. Der Betrag gilt für den Gültigkeitszeitraum dieses Abrechnungsprofils.",
       "notes": "Notizen",
       "yes": "Ja",
       "no": "Nein",
@@ -880,7 +885,18 @@
     "referenceDate": "Stichtag",
     "start": "Prozess starten",
     "started": "Prozess gestartet.",
-    "noSets": "Keine aktiven Vorlagensets."
+    "noSets": "Keine aktiven Vorlagensets.",
+    "buddyTitle": "Onboarding-Begleitung",
+    "buddy": "Zugewiesene Person",
+    "buddyPlaceholder": "Begleitperson auswählen",
+    "buddyStart": "Startdatum",
+    "buddyEnd": "Geplantes Enddatum",
+    "saveBuddy": "Begleitung speichern",
+    "buddySaved": "Onboarding-Begleitung gespeichert.",
+    "training": "Schulungsprogramm",
+    "trainingPlaceholder": "Aktives Schulungsprogramm auswählen",
+    "enrollTraining": "Mitarbeiter anmelden",
+    "trainingSaved": "Mitarbeiter zum Schulungsprogramm angemeldet."
   },
   "employeeNotes": {
     "title": "Mitarbeiternotizen",

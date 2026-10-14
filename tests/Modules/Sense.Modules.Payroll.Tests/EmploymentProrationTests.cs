@@ -97,7 +97,7 @@ public sealed class EmploymentProrationTests
         ],
         SgkFloor: 30_000m, SgkCeiling: 225_000m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m,
         SgkEmployerRate: 0.205m, UnemploymentEmployerRate: 0.02m, SgkEmployerDiscountRate: 0.05m, StampTaxRate: 0.00759m,
-        MinimumWageGross: 30_000m, MealIncomeTaxDailyExemption: 240m, MealSgkDailyExemptionRate: 0.2365m,
+        MinimumWageGross: 30_000m, MealIncomeTaxDailyExemption: 300m, MealSgkDailyExemption:  158m,
         MealMarketCardExemptionApplies: false, DisabilityMonthlyTaxReductionDegree1: 6_900m,
         DisabilityMonthlyTaxReductionDegree2: 4_000m, DisabilityMonthlyTaxReductionDegree3: 1_700m, AsOf: SepStart);
 }
@@ -115,7 +115,7 @@ public sealed class MinimumWage2026Tests
             ],
             SgkFloor: 33_030m, SgkCeiling: 247_725m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m,
             SgkEmployerRate: 0.205m, UnemploymentEmployerRate: 0.02m, SgkEmployerDiscountRate: 0.05m, StampTaxRate: 0.00759m,
-            MinimumWageGross: 33_030m, MealIncomeTaxDailyExemption: 240m, MealSgkDailyExemptionRate: 0.2365m,
+            MinimumWageGross: 33_030m, MealIncomeTaxDailyExemption: 300m, MealSgkDailyExemption:  158m,
             MealMarketCardExemptionApplies: false, DisabilityMonthlyTaxReductionDegree1: 6_900m,
             DisabilityMonthlyTaxReductionDegree2: 4_000m, DisabilityMonthlyTaxReductionDegree3: 1_700m, AsOf: new DateOnly(2026, 1, 1));
 

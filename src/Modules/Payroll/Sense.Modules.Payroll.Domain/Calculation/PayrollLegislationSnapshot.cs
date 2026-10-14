@@ -22,7 +22,7 @@ public sealed record PayrollLegislationSnapshot(
     decimal MinimumWageGross,
     decimal MealIncomeTaxDailyExemption,
     /// <summary>Fraction of the daily gross minimum wage that is SGK-exempt for cash/meal-card meal benefits.</summary>
-    decimal MealSgkDailyExemptionRate,
+    decimal MealSgkDailyExemption,
     /// <summary>Whether the meal+market card variant gets the same exemption as Cash/MealCardOnly (11.3.07-bordro.md "Meal.MarketCard.ExemptionApplies"; current draft: false, fully taxed).</summary>
     bool MealMarketCardExemptionApplies,
     /// <summary>GVK md.31 engelli çalışan gelir vergisi matrah indirimi - I. derece (en ağır) aylık tutarı; senseik-019 2a/2b.</summary>

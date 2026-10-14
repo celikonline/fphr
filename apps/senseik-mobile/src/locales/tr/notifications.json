@@ -4,12 +4,15 @@
   "markAllRead": "Tümünü okundu yap",
   "markAllReadError": "Bildirimler okundu olarak işaretlenemedi. Lütfen tekrar deneyin.",
   "empty": "Bildiriminiz yok.",
+  "emptyGuide": "Bildirim tercihlerinizi düzenleyebilir veya daha sonra tekrar kontrol edebilirsiniz.",
   "preferences": {
     "title": "Bildirim tercihleri",
     "subtitle": "Hangi bildirimleri e-posta ile ve uygulama içinde alacağınızı seçin.",
     "loadError": "Bildirim tercihleri yüklenemedi. Lütfen tekrar deneyin.",
     "saveError": "Bildirim tercihi kaydedilemedi. Lütfen tekrar deneyin.",
     "empty": "Ayarlanabilir bildirim yok.",
+    "emptyGuide": "Bu hesap için düzenlenebilecek bir bildirim kuralı tanımlanmamış.",
+    "getHelp": "Destek al",
     "mandatory": "Kapatılamaz"
   },
   "templates": {

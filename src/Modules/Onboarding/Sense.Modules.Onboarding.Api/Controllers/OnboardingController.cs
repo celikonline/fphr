@@ -22,6 +22,7 @@ public sealed record StartProcessRequest(Guid TemplateSetId, DateOnly ReferenceD
 public sealed record MaterializeTasksRequest(OnboardingStage Stage, DateOnly ReferenceDate);
 
 public sealed record WaiveTaskRequest(string Reason);
+public sealed record SaveOnboardingBuddyRequest(Guid BuddyEmployeeId, DateOnly StartDate, DateOnly? EndDate);
 
 /// <summary>İşe alış / işten çıkış görev şablonları ve çalışan görev listeleri.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -109,6 +110,16 @@ public sealed class OnboardingController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<OnboardingCategoryProgressDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> CategoryProgress(Guid employeeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetEmployeeCategoryProgressQuery(employeeId), ct));
+
+    [HttpGet("employees/{employeeId:guid}/buddy")]
+    [ProducesResponseType<OnboardingBuddyAssignmentDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetBuddy(Guid employeeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetOnboardingBuddyQuery(employeeId), ct));
+
+    [HttpPut("employees/{employeeId:guid}/buddy")]
+    [ProducesResponseType<OnboardingBuddyAssignmentDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SaveBuddy(Guid employeeId, [FromBody] SaveOnboardingBuddyRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SaveOnboardingBuddyCommand(employeeId, request.BuddyEmployeeId, request.StartDate, request.EndDate), ct));
 
     /// <summary>Every pending task across the tenant, soonest due first.</summary>
     [HttpGet("tasks/pending")]

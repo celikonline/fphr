@@ -33,6 +33,7 @@ public sealed class AttendanceWorkedTimeCharacterizationTests
         var adapter = new AttendanceWorkedTimeReaderAdapter(summaries);
         var result = await adapter.GetAsync(TenantId, employeeId, 2026, 8, null, null, TestContext.Current.CancellationToken);
 
-        result.ShouldBe(new WorkedTimeSummary(WorkedDays: 8, MissingDays: 13, OvertimeHours: 6.5m, PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1));
+        result.ShouldBe(new WorkedTimeSummary(WorkedDays: 8, MissingDays: 13, OvertimeHours: 6.5m, PublicHolidayDaysWorked: 0, WeeklyRestDaysWorked: 1,
+            WorkedHours: 60m));
     }
 }

@@ -42,6 +42,8 @@ public sealed class OrganizationDbContext(DbContextOptions<OrganizationDbContext
 
     public DbSet<CostCenter> CostCenters => Set<CostCenter>();
 
+    public DbSet<EmployeeCostCenterOverride> EmployeeCostCenterOverrides => Set<EmployeeCostCenterOverride>();
+
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -111,6 +113,7 @@ public sealed class OrgUnitConfiguration : IEntityTypeConfiguration<OrgUnit>
         b.HasIndex(x => new { x.TenantId, x.TypeId });
         b.HasIndex(x => x.ManagerEmployeeId);
         b.HasIndex(x => x.LocationId);
+        b.HasIndex(x => x.CostCenterId);
 
         // Same-module, same-schema referential integrity; deliberately no navigation property on the
         // domain entity (aggregates stay independent - Type/Parent are referenced by Guid only).
@@ -121,6 +124,7 @@ public sealed class OrgUnitConfiguration : IEntityTypeConfiguration<OrgUnit>
         // and wires the FK now that the referenced table exists. Same module/schema as OrgUnit, so -
         // unlike ManagerEmployeeId (Employee.Contracts) - this gets a real DB constraint.
         b.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<CostCenter>().WithMany().HasForeignKey(x => x.CostCenterId).OnDelete(DeleteBehavior.Restrict);
 
         b.Ignore(x => x.DomainEvents);
     }
@@ -229,6 +233,19 @@ public sealed class CostCenterConfiguration : IEntityTypeConfiguration<CostCente
 
         b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
 
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class EmployeeCostCenterOverrideConfiguration : IEntityTypeConfiguration<EmployeeCostCenterOverride>
+{
+    public void Configure(EntityTypeBuilder<EmployeeCostCenterOverride> b)
+    {
+        b.ToTable("employee_cost_center_overrides");
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId }).IsUnique();
+        b.HasIndex(x => x.CostCenterId);
+        b.HasOne<CostCenter>().WithMany().HasForeignKey(x => x.CostCenterId).OnDelete(DeleteBehavior.Restrict);
         b.Ignore(x => x.DomainEvents);
     }
 }

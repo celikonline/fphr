@@ -3,6 +3,15 @@
   "subtitle": "Hiyerarşi seviyelerini düzenleyin ve her seviyenin birimlerini yönetin.",
   "holidayCalendarsTitle": "Tatil takvimleri",
   "locationsLink": "Lokasyonlar",
+  "costCenterAssignment": {
+    "title": "Masraf merkezi",
+    "override": "Çalışan maliyet merkezi",
+    "hint": "Varsayılan olarak organizasyon biriminden devralınır. Buradan farklı bir merkez seçebilirsiniz. Değişiklik sonraki bordro hesaplamasında kullanılır; hesaplanmış bordro satırlarının kaydını değiştirmez.",
+    "effective": "Bordroda kullanılacak merkez",
+    "none": "Atanmamış",
+    "saveFailed": "Maliyet merkezi güncellenemedi.",
+    "loadFailed": "Maliyet merkezi bilgisi yüklenemedi."
+  },
   "clearSelection": "Seçimi temizle",
   "searchPerson": "İsim veya e-posta ile ara...",
   "levels": {
@@ -42,6 +51,10 @@
     "noLocation": "Lokasyon yok",
     "locationHint": "Opsiyonel. Şubenin fiziksel lokasyonu (adres ve ülke Lokasyonlar ekranında tutulur).",
     "unknownLocation": "Pasif lokasyon",
+    "costCenter": "Maliyet merkezi",
+    "costCenterHint": "Çalışanlar varsayılan olarak en yakın üst birimin maliyet merkezini devralır. Bu birimde atama yoksa üst hiyerarşiye bakılır.",
+    "inheritCostCenter": "Üst birimden devral",
+    "inactiveCostCenter": "Pasif",
     "count_one": "{{count}} birim",
     "count_other": "{{count}} birim",
     "searchPlaceholder": "Birim ara...",

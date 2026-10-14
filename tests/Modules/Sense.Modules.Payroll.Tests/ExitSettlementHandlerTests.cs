@@ -49,18 +49,20 @@ public sealed class ExitSettlementHandlerTests
         var salary = Substitute.For<IEmployeeSalaryLookup>();
         salary.GetEmploymentDatesAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EmployeeEmploymentDates?>(new EmployeeEmploymentDates(HireDate, null)));
-        salary.GetCurrentSalaryAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
+        salary.GetSalaryAsOfAsync(TenantId, EmployeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<EmployeeCurrentSalary?>(new EmployeeCurrentSalary(60_000m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, HireDate)));
         var seniority = Substitute.For<IEmployeeSeniorityLookup>();
         seniority.GetCountedSeniorityDaysAsync(TenantId, EmployeeId, Arg.Any<EmployeeSeniorityPurpose>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(400));
         var leave = Substitute.For<ILeaveBalanceLookup>();
-        leave.GetRemainingAnnualLeaveDaysAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<decimal?>(10m));
+        leave.GetRemainingAnnualLeaveDaysAsOfAsync(TenantId, EmployeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<decimal?>(10m));
 
         var settlements = Substitute.For<IExitSettlementRepository>();
         settlements.FindByEmployeeAndDateAsync(EmployeeId, TerminationDate, Arg.Any<CancellationToken>()).Returns(Task.FromResult(existing));
         var unitOfWork = Substitute.For<IPayrollUnitOfWork>();
-        var estimator = new SeveranceEstimator(salary, seniority, leave, Legislation(legislationPresent), TimeProvider.System);
+        var estimator = new SeveranceEstimator(salary, seniority, leave, Legislation(legislationPresent), TimeProvider.System,
+            Substitute.For<IPayrollPeriodRepository>(), Substitute.For<IPayslipRepository>(), Substitute.For<IEmployeeDisabilityLookup>(),
+            Substitute.For<IEmployeePayrollProfileRepository>());
         // Payroll's own legislation keys are absent here, so the net stays uncalculated; the net has its own tests.
         var netService = new ExitSettlementNetService(Legislation(legislationPresent), Substitute.For<IPayrollPeriodRepository>(), Substitute.For<IPayslipRepository>());
         var handler = new EmployeeTerminatedSettlementHandler(

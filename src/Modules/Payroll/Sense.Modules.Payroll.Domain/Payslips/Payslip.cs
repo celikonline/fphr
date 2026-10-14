@@ -19,7 +19,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
 
     private Payslip(
         Guid id, Guid tenantId, Guid employeeId, Guid payrollPeriodId, string inputSnapshot, string inputHash,
-        int version, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase)
+        int version, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase, Guid? costCenterId, bool costCenterSnapshotCaptured)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
@@ -31,6 +31,8 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
         NetAmount = netAmount;
         EmployerCost = employerCost;
         CumulativeGvBase = cumulativeGvBase;
+        CostCenterId = costCenterId;
+        CostCenterSnapshotCaptured = costCenterSnapshotCaptured;
     }
 
     public Guid EmployeeId { get; private set; }
@@ -56,24 +58,32 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
     /// (aynı takvim yılı içindeyse; Ocak'ta veya önceki ay hiç hesaplanmadıysa 0'dan başlanır).</summary>
     public decimal CumulativeGvBase { get; private set; }
 
+    /// <summary>Resolved cost center at the time this payslip version was calculated; null can mean unassigned.</summary>
+    public Guid? CostCenterId { get; private set; }
+
+    /// <summary>Distinguishes a captured null assignment from legacy payslips created before this snapshot existed.</summary>
+    public bool CostCenterSnapshotCaptured { get; private set; }
+
     /// <summary>When the bank's dekont (receipt) confirmed this payment matched by IBAN and amount; null until matched. A
     /// recalculation invalidates it, since the figures it was matched against no longer hold.</summary>
     public DateTimeOffset? PaymentConfirmedAt { get; private set; }
 
     public static Payslip CreateFirstVersion(
         Guid tenantId, Guid employeeId, Guid payrollPeriodId, string inputSnapshot, string inputHash,
-        decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m)
+        decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m,
+        Guid? costCenterId = null, bool costCenterSnapshotCaptured = false)
     {
         Guard.NotDefault(tenantId);
         Guard.NotDefault(employeeId);
         Guard.NotDefault(payrollPeriodId);
         return new Payslip(
             Guid.NewGuid(), tenantId, employeeId, payrollPeriodId, Guard.NotEmpty(inputSnapshot), Guard.NotEmpty(inputHash),
-            version: 1, grossAmount, netAmount, employerCost, cumulativeGvBase);
+            version: 1, grossAmount, netAmount, employerCost, cumulativeGvBase, costCenterId, costCenterSnapshotCaptured);
     }
 
     /// <summary>Recompute with new figures (P3 "Değişenleri yeniden hesapla"): bumps <see cref="Version"/>.</summary>
-    public void Recalculate(string inputSnapshot, string inputHash, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m)
+    public void Recalculate(string inputSnapshot, string inputHash, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m,
+        Guid? costCenterId = null, bool costCenterSnapshotCaptured = false)
     {
         InputSnapshot = Guard.NotEmpty(inputSnapshot);
         InputHash = Guard.NotEmpty(inputHash);
@@ -81,6 +91,8 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
         NetAmount = netAmount;
         EmployerCost = employerCost;
         CumulativeGvBase = cumulativeGvBase;
+        CostCenterId = costCenterId;
+        CostCenterSnapshotCaptured = costCenterSnapshotCaptured;
         PaymentConfirmedAt = null;
         ResetPublication();
         Version++;

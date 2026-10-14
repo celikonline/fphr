@@ -42,7 +42,8 @@ public sealed class ListPayrollPeriodsHandler(IPayrollPeriodRepository periods) 
 /// which reads the calculation trace instead). <paramref name="WorkedDays"/>/<paramref name="CalendarDaysInMonth"/>
 /// (faz-07 tur 2 madde 6, G-7-11 eki, positional append - existing callers unaffected) come from the persisted
 /// DAYS trace step (<see cref="PayslipTraceSteps.ExtractDays"/>); both null when the payslip has no trace yet.</summary>
-public sealed record PayslipLineDto(Guid EmployeeId, string EmployeeName, decimal GrossAmount, decimal NetAmount, int? WorkedDays = null, int? CalendarDaysInMonth = null);
+public sealed record PayslipLineDto(Guid EmployeeId, string EmployeeName, decimal GrossAmount, decimal NetAmount,
+    int? WorkedDays = null, int? CalendarDaysInMonth = null, Guid? CostCenterId = null);
 
 public sealed record PayrollPeriodDetailDto(Guid Id, int Year, int Month, PayrollPeriodStatus Status, IReadOnlyList<PayslipLineDto> Payslips);
 
@@ -77,7 +78,9 @@ public sealed class GetPayrollPeriodHandler(
                 cancellationToken);
 
             periodPayslips = periodPayslips
-                .Where(p => costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
+                .Where(p => p.CostCenterSnapshotCaptured
+                    ? p.CostCenterId == query.CostCenterId.Value
+                    : costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
                 .ToList();
         }
 
@@ -91,7 +94,7 @@ public sealed class GetPayrollPeriodHandler(
             var name = contact is null ? p.EmployeeId.ToString() : $"{contact.FirstName} {contact.LastName}".Trim();
             var trace = await traces.FindLatestByPayslipIdAsync(p.Id, cancellationToken);
             var (workedDays, calendarDaysInMonth) = PayslipTraceSteps.ExtractDays(trace?.StepsJson);
-            lines.Add(new PayslipLineDto(p.EmployeeId, name, p.GrossAmount, p.NetAmount, workedDays, calendarDaysInMonth));
+            lines.Add(new PayslipLineDto(p.EmployeeId, name, p.GrossAmount, p.NetAmount, workedDays, calendarDaysInMonth, p.CostCenterId));
         }
 
         return new PayrollPeriodDetailDto(period.Id, period.Year, period.Month, period.Status, lines);
@@ -340,7 +343,9 @@ public sealed class ExportPayrollPeriodHandler(
                 cancellationToken);
 
             periodPayslips = periodPayslips
-                .Where(p => costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
+                .Where(p => p.CostCenterSnapshotCaptured
+                    ? p.CostCenterId == query.CostCenterId.Value
+                    : costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
                 .ToList();
         }
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))

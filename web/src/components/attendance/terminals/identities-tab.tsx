@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -12,11 +13,11 @@ import {
   Skeleton,
   Stack,
   Table,
-  Text,
 } from "@mantine/core";
-import { FileSpreadsheet, Plus } from "lucide-react";
+import { FileSpreadsheet, LifeBuoy, Plus } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { usePermission } from "@/components/permission-guard";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import CredentialImportDialog from "@/components/attendance/terminals/credential-import-dialog";
 import { DataTransferPermissions } from "@/services/data-transfer.service";
 import { toast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
   const [kind, setKind] = useState<TerminalCredentialKind>("card");
   const [value, setValue] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const credentialInput = useRef<HTMLInputElement>(null);
   const canImport = usePermission(DataTransferPermissions.Run);
   const listKey = ["attendance", "terminal-identities", employee?.id];
 
@@ -95,6 +97,7 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
               data={TERMINAL_CREDENTIAL_KINDS.map((k) => ({ value: k, label: t(`terminals:credentialKind.${k}`) }))}
             />
             <PasswordInput
+              ref={credentialInput}
               label={t("terminals:credential.value")}
               description={t("terminals:credential.valueHint")}
               value={value}
@@ -119,9 +122,19 @@ export default function TerminalIdentitiesTab({ canManage }: { canManage: boolea
       {employee &&
         identities.data &&
         (identities.data.length === 0 ? (
-          <Text c="dimmed" size="sm">
-            {t("terminals:credential.empty")}
-          </Text>
+          <AttendanceEmptyState
+            title={t("terminals:credential.empty")}
+            description={t("terminals:credential.emptyGuide")}
+            action={canManage ? (
+              <Button variant="light" leftSection={<Plus size={16} />} onClick={() => credentialInput.current?.focus()}>
+                {t("terminals:credential.focusAdd")}
+              </Button>
+            ) : (
+              <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+                {t("terminals:contactSupport")}
+              </Button>
+            )}
+          />
         ) : (
           <Table verticalSpacing="sm">
             <Table.Thead>

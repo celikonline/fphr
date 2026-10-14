@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Identity.Domain;
@@ -84,6 +85,7 @@ public sealed class CreateTenantHandler(
     ICurrentUser currentUser,
     IIdentityUnitOfWork unitOfWork,
     IIntegrationEventOutbox outbox,
+    ILogger<CreateTenantHandler> logger,
     IOptions<IdentityOptions> options,
     TimeProvider clock) : ICommandHandler<CreateTenantCommand, CreateTenantResult>
 {
@@ -171,14 +173,28 @@ public sealed class CreateTenantHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        var invitationSent = false;
         if (invitation is not null && rawToken is not null && command.License is null)
         {
-            await mailer.SendInvitationAsync(owner.Email, owner.FullName, tenant.Name, links.InviteAccept(rawToken), invitation.ExpiresAt, cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                await mailer.SendInvitationAsync(owner.Email, owner.FullName, tenant.Name, links.InviteAccept(rawToken), invitation.ExpiresAt, cancellationToken)
+                    .ConfigureAwait(false);
+                invitationSent = true;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // The tenant and invitation are already committed. Keep the tenant usable and return
+                // the one-time URL to the authorized platform operator so they can deliver it manually.
+                logger.LogWarning("Owner invitation email failed for tenant {TenantId} ({FailureType}); returning a manual invitation URL.",
+                    tenant.Id, ex.GetType().Name);
+            }
         }
 
-        return new CreateTenantResult(tenant.Id, tenant.Slug, owner.Id, invitation is not null && command.License is null,
-            command.License is not null && rawToken is not null ? links.InviteAccept(rawToken) : null);
+        var invitationUrl = rawToken is not null && (command.License is not null || (invitation is not null && !invitationSent))
+            ? links.InviteAccept(rawToken)
+            : null;
+        return new CreateTenantResult(tenant.Id, tenant.Slug, owner.Id, invitationSent, invitationUrl);
     }
 
     private Invitation AddOwnerInvitation(Guid tenantId, User owner, Guid invitedBy, DateTime now, IdentityOptions cfg, out string rawToken)

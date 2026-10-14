@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
-import { ActionIcon, Alert, Badge, Group, Loader, Pagination, Tabs, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { ChevronLeft, ChevronRight, ClipboardList, FileUp, LifeBuoy } from "lucide-react";
+import { ActionIcon, Alert, Badge, Button, Group, Loader, Pagination, Paper, SimpleGrid, Tabs, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { Link } from "react-router";
 import DailyGrid from "@/components/attendance/daily-grid";
+import AttendanceEmptyState from "@/components/attendance/attendance-empty-state";
 import NoAccess from "@/components/no-access";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { usePermission } from "@/components/permission-guard";
@@ -23,7 +25,7 @@ const STATUSES: readonly DailyStatus[] = [
 const DAILY_KEY = ["attendance-daily"] as const;
 const DAILY_PATH = "/app/attendance/daily";
 
-/** Günlük puantaj listesi (/app/attendance/daily/:status?date=): durum sekmeleri, sayaç rozetleri, elle kayıt ekle/sil. */
+/** Günlük puantaj çalışma alanı (/app/attendance/daily/:status?date=): filtreler, durum özeti, hareket detayı ve manuel düzeltmeler. */
 export default function DailyListPage() {
   const { t } = useTranslation(["attendance-daily"]);
   const { status: statusParam } = useParams();
@@ -32,8 +34,10 @@ export default function DailyListPage() {
   const queryClient = useQueryClient();
   const canView = usePermission("attendance.daily.view");
   const canManage = usePermission("attendance.punch.manage");
+  const canImport = usePermission("attendance.timesheet.import");
 
-  const status = STATUSES.find((s) => s === statusParam);
+  const status = statusParam === "all" ? "all" : STATUSES.find((s) => s === statusParam);
+  const selectedStatus = status === "all" ? undefined : status;
   const date = searchParams.get("date") || toDateOnly(new Date());
   const orgUnitId = searchParams.get("orgUnitId");
   const page = Number(searchParams.get("page")) || 1;
@@ -41,7 +45,7 @@ export default function DailyListPage() {
 
   const list = useQuery({
     queryKey: [...DAILY_KEY, "list", date, status, unit, page],
-    queryFn: () => listDaily(date, status as DailyStatus, unit, page),
+    queryFn: () => listDaily(date, selectedStatus, unit, page),
     enabled: canView && status !== undefined,
   });
   const counts = useQuery({
@@ -58,7 +62,7 @@ export default function DailyListPage() {
   });
 
   if (!canView) return <NoAccess />;
-  if (!status) return <Navigate to={`${DAILY_PATH}/arrived`} replace />;
+  if (!status) return <Navigate to={`${DAILY_PATH}/all`} replace />;
 
   function updateParams(changes: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams);
@@ -71,7 +75,7 @@ export default function DailyListPage() {
   const changeDate = (value: string) => updateParams({ date: value, page: null });
 
   return (
-    <div className="max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="w-full space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <ClipboardList size={24} /> {t("attendance-daily:dailyList.title")}
@@ -106,6 +110,22 @@ export default function DailyListPage() {
         </Group>
       </Group>
 
+      <SimpleGrid cols={{ base: 2, sm: 3, lg: 6 }} spacing="sm">
+        {([
+          ["arrived", counts.data?.arrived],
+          ["late", counts.data?.late],
+          ["earlyLeave", counts.data?.earlyLeave],
+          ["absent", counts.data?.absent],
+          ["onLeave", counts.data?.onLeave],
+          ["overtime", counts.data?.overtime],
+        ] as const).map(([key, value]) => (
+          <Paper key={key} withBorder radius="md" p="sm">
+            <Text size="xs" c="dimmed">{t(`attendance-daily:dailyList.summary.${key}`)}</Text>
+            <Text fw={700} size="lg">{value ?? "—"}</Text>
+          </Paper>
+        ))}
+      </SimpleGrid>
+
       <Tabs
         value={status}
         onChange={(value) => {
@@ -116,6 +136,9 @@ export default function DailyListPage() {
         }}
       >
         <Tabs.List>
+          <Tabs.Tab value="all" rightSection={counts.data ? <Badge size="sm" variant="light" circle>{list.data?.totalCount ?? "—"}</Badge> : null}>
+            {t("attendance-daily:dailyList.status.all")}
+          </Tabs.Tab>
           {STATUSES.map((s) => (
             <Tabs.Tab
               key={s}
@@ -135,7 +158,19 @@ export default function DailyListPage() {
         <Alert color="red">{getApiErrorMessage(list.error, t("attendance-daily:dailyList.loadError"))}</Alert>
       )}
       {list.data && list.data.items.length === 0 && (
-        <Text c="dimmed" size="sm">{t("attendance-daily:dailyList.empty")}</Text>
+        <AttendanceEmptyState
+          title={t("attendance-daily:dailyList.empty")}
+          description={t("attendance-daily:dailyList.emptyGuide")}
+          action={canImport ? (
+            <Button component={Link} to="/app/attendance/device-logs/import" leftSection={<FileUp size={16} />}>
+              {t("attendance-daily:dailyList.importRecords")}
+            </Button>
+          ) : (
+            <Button component={Link} to="/app/support" variant="light" leftSection={<LifeBuoy size={16} />}>
+              {t("attendance-daily:dailyList.contactSupport")}
+            </Button>
+          )}
+        />
       )}
       {list.data && list.data.items.length > 0 && (
         <>

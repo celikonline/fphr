@@ -12,12 +12,14 @@
     "back": "Geri",
     "next": "Kaydet ve devam et",
     "skip": "Bu adımı geç",
+    "retry": "Yeniden dene",
     "finish": "Kurulumu tamamla",
     "finishing": "Tamamlanıyor..."
   },
   "errors": {
     "generic": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
-    "load": "Bilgiler yüklenemedi.",
+    "load": "Şirket hazırlığı tamamlanamadı.",
+    "loadHelp": "İK yöneticisi olarak yeniden deneyebilirsiniz. Altyapı hazırlığı güvenli biçimde tekrarlanır.",
     "nameRequired": "Şirket adı zorunludur.",
     "finish": "Kurulum tamamlanamadı. Lütfen tekrar deneyin."
   },

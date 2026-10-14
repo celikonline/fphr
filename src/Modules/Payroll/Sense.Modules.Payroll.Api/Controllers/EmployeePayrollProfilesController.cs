@@ -27,7 +27,11 @@ public sealed record PayrollProfileRequest(
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
     string? Notes,
-    decimal TransportDailyAmount = 0m);
+    decimal TransportDailyAmount = 0m,
+    decimal? RegularBenefitsMonthlyGross = null);
+
+public sealed record RegularBenefitsRequest(Guid ProfileId,
+    [System.ComponentModel.DataAnnotations.Required] decimal? RegularBenefitsMonthlyGross);
 
 /// <summary>
 /// Employee card > Ücret sekmesi > "Bordro parametreleri" (11.3.07 P2): the employee's dated
@@ -50,6 +54,10 @@ public sealed class EmployeePayrollProfilesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<EmployeePayrollProfileDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHistory(Guid employeeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListEmployeePayrollProfilesQuery(employeeId), ct));
+
+    [HttpPatch("regular-benefits")]
+    public async Task<IActionResult> UpdateRegularBenefits(Guid employeeId, [FromBody] RegularBenefitsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateEmployeeRegularBenefitsCommand(employeeId, request.ProfileId, request.RegularBenefitsMonthlyGross!.Value), ct));
 
     /// <summary>APHB/e-Bildirge pre-fill data (senseik-010/F-03): SGK işyeri sicil no, meslek kodu, teşvik kodu -
     /// the export itself is out of scope, this only surfaces the stored values.</summary>
@@ -81,10 +89,12 @@ public sealed class EmployeePayrollProfilesController : ApiControllerBase
             request.SickDaysReducePay,
             request.ExternalPayrollCode,
             request.Notes,
-            request.TransportDailyAmount);
+            request.TransportDailyAmount,
+            request.RegularBenefitsMonthlyGross ?? 0m);
 
         return request.ProfileId is { } profileId
-            ? FromResult(await Dispatcher.Send(new UpdateEmployeePayrollProfileCommand(profileId, data), ct))
+            ? FromResult(await Dispatcher.Send(new UpdateEmployeePayrollProfileCommand(profileId, data,
+                PreserveRegularBenefits: request.RegularBenefitsMonthlyGross is null), ct))
             : FromResult(await Dispatcher.Send(new CreateEmployeePayrollProfileCommand(employeeId, data), ct));
     }
 }

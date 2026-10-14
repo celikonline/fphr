@@ -28,7 +28,8 @@
     "loadFailed": "Could not load terminals.",
     "codeRequired": "Code and name are required.",
     "statusFailed": "Could not change the status.",
-    "suspicious": "Suspicious PIN attempts: {{date}}"
+    "suspicious": "Suspicious PIN attempts: {{date}}",
+    "emptyGuide": "Register a terminal to start receiving device records."
   },
   "presence": {
     "online": "Online",
@@ -64,7 +65,9 @@
     "deleted": "Group deleted.",
     "deleteFailed": "Could not delete the group.",
     "loadFailed": "Could not load groups.",
-    "deleteYes": "Yes, delete"
+    "deleteYes": "Yes, delete",
+    "emptyGuide": "Create your first terminal group to manage terminals together.",
+    "focusCreate": "Go to group creation"
   },
   "credential": {
     "employee": "Employee",
@@ -90,11 +93,51 @@
     "importTitle": "Import credentials from Excel",
     "downloadTemplate": "Download template",
     "pepperMissing": "Credential import is not configured in this environment (server key missing). Contact your administrator.",
-    "uploadFailed": "Could not upload the file."
+    "uploadFailed": "Could not upload the file.",
+    "emptyGuide": "Use the form above to add the employee’s card or PIN details.",
+    "focusAdd": "Go to credential form"
   },
   "credentialKind": {
     "card": "Card",
     "pin": "PIN",
     "externalId": "External ID"
+  },
+  "contactSupport": "Get help",
+  "integration": {
+    "title": "PDKS device integrations",
+    "subtitle": "Send device events securely into HR attendance records.",
+    "bridgeTitle": "A local connector is required",
+    "bridgeDescription": "A device or vendor platform reads events on its network and forwards the original payload to the endpoint below over HTTPS. Requests must use the terminal's X-Terminal-Key. This screen does not reveal a terminal key again.",
+    "endpoint": "Event ingestion endpoint",
+    "copy": "Copy endpoint",
+    "copied": "Copied",
+    "authHint": "Replace provider with zkteco, hikvision, or suprema. Store the X-Terminal-Key created for each terminal as a secret in the connector.",
+    "providers": {
+      "zkteco": {
+        "name": "ZKTeco",
+        "description": "Attendance PUSH/ADMS ATTLOG rows. The user code, device time, and event state are read.",
+        "format": "PIN\\t2026-10-14 08:55:00\\t0\\t1\\t0"
+      },
+      "hikvision": {
+        "name": "Hikvision",
+        "description": "ISAPI access event XML. employeeNoString and time are required; attendanceStatus is optional.",
+        "format": "<AcsEvent><employeeNoString>0042</employeeNoString><time>…</time></AcsEvent>"
+      },
+      "suprema": {
+        "name": "Suprema BioStar 2",
+        "description": "BioStar event/T&A JSON rows. User, timestamp, and an optional direction field are mapped.",
+        "format": "{ records: [{ user_id, datetime, tna_key }] }"
+      }
+    },
+    "setupTitle": "Setup",
+    "steps": {
+      "terminal": "Register the device in the Terminals tab. Give it a unique terminal code and copy the generated API key to a secure place; it is shown only once.",
+      "mapping": "In Employee credentials, map each device user to an employee with the External ID credential type.",
+      "gateway": "Configure the local connector with the provider name and terminal API key; send data over HTTPS.",
+      "timezone": "Timestamps without a time-zone offset use the company's configured time zone. If direction is absent, the terminal direction mode is used."
+    },
+    "mappingLabel": "External ID format:",
+    "mappingExample": "Example: for terminal code ZK-LOBBY-01 and device PIN 0042, assign zkteco:ZK-LOBBY-01:0042 to the employee.",
+    "manageTerminals": "Open terminals and employee credentials"
   }
 }

@@ -25,14 +25,15 @@ public static class LegislationParameterSeed
     private const string Md41 = "4857 s. İş Kanunu md.41 (RG 10.06.2003/25134)";
 
     /// <summary>
-    /// Payroll (Faz 3 P1, 11.3.07-bordro.md): draft 2026 rates/brackets, explicitly unverified - "taslak, mali
-    /// müşavirle doğrulanmalı" per the spec's own caveat on every payroll rate. Structurally correct and
-    /// parameter-driven (nothing hardcoded in Sense.Modules.Payroll code); replace via a new dated row, never in place.
+    /// Payroll values below were checked against SGK, GİB, ÇSGB and Resmî Gazete primary sources on 2026-10-14.
+    /// Incentive eligibility remains case-specific and is not certified by a seeded rate.
     /// </summary>
-    private const string PayrollDraft2026 = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)";
+    private const string PayrollVerified2026 = "2026-10-14 resmi kaynak kontrolü";
 
     /// <summary>2026 asgari ücret (brüt 33.030 TL / net 28.075,50 TL), 01.01.2026 - ÇSGB duyurusu (senseik QA teslim testi bulgu 7 ile doğrulandı).</summary>
     private const string MinWage2026Source = "2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf";
+    private const string Sgk2026RatesSource = "5510 md.81, 7566 s.K. (01.01.2026); SGK işveren prim oranları: https://www.sgk.gov.tr/Content/Post/c7812ea8-5087-413f-aeb5-d3c1d153e11a/Isveren-Prim-Oranlari-2026-01-13-04-52-38";
+    private const string Sgk2026IncentivesSource = "SGK 2026/1 Genelgesi; https://sgk.gov.tr/Content/Post/c52f99f0-da6c-4029-9b9a-a0d6f96a6a42/Guncel-Sigorta-Primi-Tesvik-Destek-ve-Indirimleri-2026-08-04-10-29-55";
 
     private const string SeveranceCeilingGenelge = "Hazine ve Maliye Bakanlığı Mali ve Sosyal Haklar Genelgesi (kıdem tazminatı tavanı, 6 ayda bir); kaynak: https://www.csgb.gov.tr/%C4%B1statistikler/calisma-hayati-%C4%B1statistikleri/kidem-tazminati-tavan-miktari/";
 
@@ -63,32 +64,32 @@ public static class LegislationParameterSeed
         P(23, "Overtime.CompTimeExpiryMonths", 6m, Law4857, null, Md41 + " - serbest zaman 6 ay içinde kullanılır"),
         P(24, "Overtime.ConsentRevocationNoticeDays", 30m, Regulation2017, null, "Fazla Çalışma Yönetmeliği md.9 (RG 25.08.2017/30165) - onay 30 gün önceden yazılı bildirimle geri alınır"),
 
-        // Payroll (Faz 3 P1) - see PayrollDraft2026 doc comment above.
+        // Payroll rates are parameterized and linked to official sources; incentive eligibility remains employer-specific.
         P(25, "Payroll.MinimumWage.Gross", 33030.00m, Payroll2026, null, MinWage2026Source + " - aylık brüt asgari ücret"),
         P(26, "Payroll.Sgk.Floor", 33030.00m, Payroll2026, null, "5510 s. Kanun md.82; " + MinWage2026Source + " - SGK prim matrahı alt sınırı (asgari ücrete eşit)"),
-        P(27, "Payroll.Sgk.Ceiling", 247725.00m, Payroll2026, null, "5510 s. Kanun md.82; " + MinWage2026Source + " - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı = 247.725 TL)"),
+        P(27, "Payroll.Sgk.Ceiling", 297270.00m, Payroll2026, null, "5510 md.82, 7566 s.K. - 2026 SGK tavanı asgari ücretin 9 katı; " + MinWage2026Source),
         P(28, "Payroll.Sgk.EmployeeRate", 0.14m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işçi hissesi (malullük/yaşlılık/ölüm + genel sağlık) %14"),
         P(29, "Payroll.Unemployment.EmployeeRate", 0.01m, Payroll2026, null, "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işçi payı %1"),
-        P(30, "Payroll.Sgk.EmployerRate", 0.205m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işveren hissesi (indirimsiz) %20,5"),
+        P(30, "Payroll.Sgk.EmployerRate", 0.2175m, Payroll2026, null, Sgk2026RatesSource + " - indirimsiz işveren SGK oranı %21,75 (işsizlik hariç)"),
         P(31, "Payroll.Unemployment.EmployerRate", 0.02m, Payroll2026, null, "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işveren payı %2"),
-        P(32, "Payroll.Sgk.EmployerDiscountRate", 0.05m, Payroll2026, null, "5510 s. Kanun md.81 - 5 puanlık SGK işveren teşviki oranı (uygunluk hesabı henüz uygulanmıyor, TODO P2+)"),
+        P(32, "Payroll.Sgk.EmployerDiscountRate", 0.02m, Payroll2026, null, Sgk2026IncentivesSource + " - genel sektör 2 puan indirimi; imalat 5 puan modeli ayrı atanır"),
         P(33, "Payroll.StampTax.Rate", 0.00759m, Payroll2026, null, "488 s. Damga Vergisi Kanunu (1) sayılı tablo IV/1-b - ücretlerde binde 7,59"),
-        P(34, "Payroll.Meal.IncomeTax.DailyExemption", 240.00m, Payroll2026, null, PayrollDraft2026 + " - nakit/yalnız yemek kartı günlük gelir vergisi istisnası"),
-        P(35, "Payroll.Meal.Sgk.DailyExemptionRate", 0.2365m, Payroll2026, null, PayrollDraft2026 + " - SGK Genelgesi yaklaşımı: günlük brüt asgari ücretin %23,65'i SGK'dan istisna"),
+        P(34, "Payroll.Meal.IncomeTax.DailyExemption", 300.00m, Payroll2026, null, "193 s. GVK md.23/8 ve 2026 gelir vergisi tarifesi; GİB: https://usak.gib.gov.tr/vergi-konulari/1_bireysel/11_ucret_geliri/11 - nakit/yemek kartı günlük GV istisnası"),
+        P(35, "Payroll.Meal.Sgk.DailyExemption", 158.00m, Payroll2026, null, "SGK 2026 prime esas kazanç miktarları: https://www.sgk.gov.tr/Content/Post/2e0c9e1a-2cfe-4456-af10-49d3de0c58ba/Prime-Esas-Kazanc-Miktarlari-2026-01-14-10-35-39 - fiilen çalışılan gün başına SGK yemek istisnası 158 TL"),
         PJson(36, "Payroll.IncomeTax.Brackets", Payroll2026, null,
             """[{"upperBound":190000,"rate":0.15},{"upperBound":400000,"rate":0.20},{"upperBound":1500000,"rate":0.27},{"upperBound":5300000,"rate":0.35},{"upperBound":null,"rate":0.40}]""",
-            "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; kaynak: https://www.memurlar.net/haber/1155986/2026-gelir-vergisi-dilimlerini-gosteren-teblig-r-g-de-yayimlandi.html"),
+            "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; GİB: https://gib.gov.tr/mevzuat/kanun/433/madde/6937"),
 
         // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"): approximated with total
         // active tenant headcount (no iş kolu/business-line grouping in the codebase yet - see JobSecurityEvaluator).
         P(37, "JobSecurity.MinHeadcount", 30m, Law4857, null, "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: 30 ve üzeri işçi çalıştıran işyeri (yaklaşık, iş kolu gruplaması hariç)"),
         P(38, "JobSecurity.MinSeniorityMonths", 6m, Law4857, null, "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: en az 6 aylık kıdem"),
 
-        // Payroll (Faz 3 P2, 11.3.07-bordro.md "Yemek varyant kuralları") - see PayrollDraft2026 doc comment above.
-        P(39, "Payroll.Meal.MarketCard.ExemptionApplies", 0m, Payroll2026, null, PayrollDraft2026 + " - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"),
+        // Payroll (Faz 3 P2, 11.3.07-bordro.md "Yemek varyant kuralları").
+        P(39, "Payroll.Meal.MarketCard.ExemptionApplies", 0m, Payroll2026, null, PayrollVerified2026 + " - market harcamasına açık kartın yemek istisnası kapsamına girdiği kabul edilmez; kart türü/harcama kısıtı doğrulanmalı"),
 
         // Severance/notice estimate (senseik-011, F-06 "İşten ayrılış sihirbazı"): kıdem tazminatı tavanı 6 ayda bir
-        // güncellenir (taslak değer - mali müşavirle doğrulanmalı, PayrollDraft2026 ile aynı çekince). İhbar tablosu
+        // güncellenir. İhbar tablosu
         // İş K. m.17'nin kıdem/hafta eşiklerini gün cinsinden kodlar (183/548/1095 gün ~ 6 ay/1,5 yıl/3 yıl).
         P(40, "Severance.CeilingGross", 64948.77m, Payroll2026, new DateOnly(2026, 6, 30), SeveranceCeilingGenelge + " - 01.01.2026-30.06.2026 kıdem tazminatı tavanı 64.948,77 TL (bir hizmet yılı için azami brüt tutar, İş K. m.14)"),
         P(46, "Severance.CeilingGross", 73729.87m, new DateOnly(2026, 7, 1), null, SeveranceCeilingGenelge + " - 01.07.2026-31.12.2026 kıdem tazminatı tavanı 73.729,87 TL"),
@@ -100,10 +101,11 @@ public static class LegislationParameterSeed
         P(42, "Leave.Breastfeeding.HoursPerDay", 1.5m, Law4857, null, Md74 + "/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"),
 
         // Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi) - taslak aylık tutarlar,
-        // her yıl GİB tarafından güncellenir; PayrollDraft2026 doc comment'teki gibi mali müşavirle doğrulanmalı.
-        P(43, "Payroll.Disability.MonthlyTaxReduction.Degree1", 6900.00m, Payroll2026, null, "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, " + PayrollDraft2026),
-        P(44, "Payroll.Disability.MonthlyTaxReduction.Degree2", 4000.00m, Payroll2026, null, "193 s. GVK md.31 - II. derece engellilik indirimi, " + PayrollDraft2026),
-        P(45, "Payroll.Disability.MonthlyTaxReduction.Degree3", 1700.00m, Payroll2026, null, "193 s. GVK md.31 - III. derece engellilik indirimi, " + PayrollDraft2026),
+        // her yıl GİB tarafından güncellenir.
+        P(43, "Payroll.Disability.MonthlyTaxReduction.Degree1", 12000.00m, Payroll2026, null, "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"),
+        P(44, "Payroll.Disability.MonthlyTaxReduction.Degree2", 7000.00m, Payroll2026, null, "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"),
+        P(45, "Payroll.Disability.MonthlyTaxReduction.Degree3", 3000.00m, Payroll2026, null, "193 s. GVK md.31; 332 Seri No.lu Tebliğ - GİB 2026 engellilik indirimi: https://gib.gov.tr/vergi-konulari/1_bireysel/8_engelliler_icin_vergi_avantajlari/8"),
+        P(47, "Payroll.Sgk.UnemploymentBeneficiaryEmployerSupportRate", 0.205m, Payroll2026, null, "4447 md.50/5 - uzun vadeli ve GSS işveren payları (%19,5) + kısa vadeli %1; " + Sgk2026RatesSource),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

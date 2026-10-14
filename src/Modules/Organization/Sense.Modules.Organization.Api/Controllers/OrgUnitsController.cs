@@ -26,6 +26,7 @@ public sealed record UpdateOrgUnitRequest(
 
 /// <summary>Desired own approval policy per request type; request types left out stay unchanged, a null policy clears.</summary>
 public sealed record SetOrgUnitApprovalPoliciesRequest(IReadOnlyList<OrgUnitApprovalPolicyAssignmentInput> Assignments);
+public sealed record SetOrgUnitCostCenterRequest(Guid? CostCenterId);
 
 /// <summary>Org unit tree management: dynamic hierarchy levels replace a fixed Department level (Faz 0 madde 4).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -60,6 +61,12 @@ public sealed class OrgUnitsController : ApiControllerBase
         FromResult(await Dispatcher.Send(
             new UpdateOrgUnitCommand(id, request.Name, request.ParentId, request.ManagerEmployeeId, request.LocationId, request.SortOrder),
             ct));
+
+    /// <summary>Sets or clears the default cost center inherited by employees in this unit.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/cost-center")]
+    [ProducesResponseType<OrgUnitDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetCostCenter(Guid id, [FromBody] SetOrgUnitCostCenterRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetOrgUnitCostCenterCommand(id, request.CostCenterId), ct));
 
     /// <summary>Own and effective (inherited) approval policy of the unit for every unit-assignable request type.</summary>
     [HttpGet(ApiRoutes.IdParam + "/approval-policies")]
