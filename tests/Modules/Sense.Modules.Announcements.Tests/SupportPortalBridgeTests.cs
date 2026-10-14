@@ -172,7 +172,25 @@ public sealed class SupportPortalBridgeTests
             "Test subject", "Test body", SupportTicketCategory.General).Value).ToArray();
         foreach (var ticket in tickets) ticket.AttachExternalRef($"fp-support:{Guid.NewGuid()}");
         var remote = tickets[0].ExternalRef![11..];
-        var recorder = new RecordingHandler($$$"""{"results":[{"id":"{{{remote}}}","number":"FP-1","status":"in_progress","commentsTruncated":true,"comments":[{"id":"public-1","body":"Public answer from agent","visibility":"public","createdAt":"2026-10-14T10:00:00Z","author":{"name":"Support"}},{"id":"private-1","body":"Private note","visibility":"internal","createdAt":"2026-10-14T10:00:00Z"}]}],"total":1,"page":1,"pageSize":20}""");
+        var response = JsonSerializer.Serialize(new
+        {
+            results = new[]
+            {
+                new
+                {
+                    id = remote, number = "FP-1", status = "in_progress", commentsTruncated = true,
+                    comments = new[]
+                    {
+                        new { id = "public-1", body = "Public answer from agent", visibility = "public",
+                            createdAt = "2026-10-14T10:00:00Z", author = new { name = "Support" } },
+                        new { id = "private-1", body = "Private note", visibility = "internal",
+                            createdAt = "2026-10-14T10:00:00Z", author = new { name = "Support" } }
+                    }
+                }
+            },
+            total = 1, page = 1, pageSize = 20
+        });
+        var recorder = new RecordingHandler(response);
         using var recordedClient = new HttpClient(recorder);
         var bridge = new SupportPortalBridge(recordedClient, Options());
         var result = await bridge.ListAsync(tickets, CancellationToken.None);
