@@ -12,7 +12,8 @@ namespace Sense.Modules.Announcements.Application.Support;
 [RequiresPermission("announcements.my.support_tickets")]
 public sealed record ListMySupportTicketsQuery : IQuery<IReadOnlyList<SupportTicketDto>>;
 
-public sealed class ListMySupportTicketsHandler(ITenantContext tenant, ICurrentUser currentUser, ISupportTicketRepository tickets)
+public sealed class ListMySupportTicketsHandler(ITenantContext tenant, ICurrentUser currentUser, ISupportTicketRepository tickets,
+    ISupportPortalBridge? bridge = null)
     : IQueryHandler<ListMySupportTicketsQuery, IReadOnlyList<SupportTicketDto>>
 {
     public async Task<Result<IReadOnlyList<SupportTicketDto>>> Handle(ListMySupportTicketsQuery query, CancellationToken cancellationToken)
@@ -24,7 +25,11 @@ public sealed class ListMySupportTicketsHandler(ITenantContext tenant, ICurrentU
         }
 
         var list = await tickets.ListByRequesterAsync(tenant.TenantId, userId, cancellationToken);
-        IReadOnlyList<SupportTicketDto> dtos = list.Select(ToDto).ToList();
+        var portal = bridge?.Enabled == true ? await bridge.ListAsync(list, cancellationToken) : null;
+        IReadOnlyList<SupportTicketDto> dtos = list.Select(t => ToDto(t) with
+        {
+            Portal = portal is not null && portal.TryGetValue(t.Id, out var state) ? state : null
+        }).ToList();
         return Result.Success(dtos);
     }
 
@@ -56,7 +61,8 @@ public sealed class ListSupportTicketsHandler(ITenantContext tenant, ISupportTic
 public sealed record GetSupportTicketQuery(Guid TicketId) : IQuery<SupportTicketDto>;
 
 public sealed class GetSupportTicketHandler(
-    ITenantContext tenant, ICurrentUser currentUser, IPermissionService permissions, ISupportTicketRepository tickets)
+    ITenantContext tenant, ICurrentUser currentUser, IPermissionService permissions, ISupportTicketRepository tickets,
+    ISupportPortalBridge? bridge = null)
     : IQueryHandler<GetSupportTicketQuery, SupportTicketDto>
 {
     public async Task<Result<SupportTicketDto>> Handle(GetSupportTicketQuery query, CancellationToken cancellationToken)
@@ -77,6 +83,9 @@ public sealed class GetSupportTicketHandler(
             return Error.NotFound(AnnouncementsErrors.TicketNotFound);
         }
 
-        return ListMySupportTicketsHandler.ToDto(ticket);
+        return ListMySupportTicketsHandler.ToDto(ticket) with
+        {
+            Portal = bridge?.Enabled == true ? await bridge.ReadAsync(ticket, cancellationToken) : null
+        };
     }
 }

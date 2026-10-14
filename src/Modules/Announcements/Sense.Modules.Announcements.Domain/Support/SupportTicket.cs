@@ -70,6 +70,10 @@ public sealed class SupportTicket : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Destek ekibi yanıtladı: talep "Answered" olur, çalışan görürse tekrar yazabilir (yeniden Open'a dönmez — basit v1 akışı).</summary>
     public Result Respond(string resolution)
     {
+        if (ExternalRef?.StartsWith("fp-support:", StringComparison.Ordinal) == true)
+        {
+            return Error.Conflict("support_ticket.portal_managed");
+        }
         if (Status == SupportTicketStatus.Closed)
         {
             return Error.Conflict(SupportDomainErrors.AlreadyClosed);
@@ -88,6 +92,10 @@ public sealed class SupportTicket : TenantAggregateRoot<Guid>, IAuditLogged
 
     public Result Close()
     {
+        if (ExternalRef?.StartsWith("fp-support:", StringComparison.Ordinal) == true)
+        {
+            return Error.Conflict("support_ticket.portal_managed");
+        }
         if (Status == SupportTicketStatus.Closed)
         {
             return Error.Conflict(SupportDomainErrors.AlreadyClosed);

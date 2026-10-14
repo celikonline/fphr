@@ -96,3 +96,40 @@ public sealed class CloseSupportTicketHandler(ITenantContext tenant, ISupportTic
         return ticket is null ? Error.NotFound(AnnouncementsErrors.TicketNotFound) : ticket.Close();
     }
 }
+
+[RequiresPermission("announcements.my.support_tickets")]
+public sealed record AddSupportTicketCommentCommand(Guid TicketId, string Body, Guid IdempotencyKey) : ICommand;
+
+public sealed class AddSupportTicketCommentValidator : AbstractValidator<AddSupportTicketCommentCommand>
+{
+    public AddSupportTicketCommentValidator()
+    {
+        RuleFor(x => x.Body).NotEmpty().MaximumLength(AnnouncementsLimits.BodyMaxLength);
+        RuleFor(x => x.IdempotencyKey).NotEmpty();
+    }
+}
+
+public sealed class AddSupportTicketCommentHandler(ITenantContext tenant, ICurrentUser currentUser,
+    ISupportTicketRepository tickets, ISupportPortalBridge bridge) : ICommandHandler<AddSupportTicketCommentCommand>
+{
+    public async Task<Result> Handle(AddSupportTicketCommentCommand command, CancellationToken cancellationToken)
+    {
+        var ticket = await tickets.GetByIdAsync(tenant.TenantId, command.TicketId, cancellationToken);
+        if (ticket is null || currentUser.UserId != ticket.RequestedByUserId)
+            return Error.NotFound(AnnouncementsErrors.TicketNotFound);
+        if (!bridge.Enabled || ticket.ExternalRef?.StartsWith("fp-support:", StringComparison.Ordinal) != true)
+            return Error.Conflict("support_ticket.portal_pending");
+        if (command.IdempotencyKey == Guid.Empty || string.IsNullOrWhiteSpace(command.Body)
+            || command.Body.Length > AnnouncementsLimits.BodyMaxLength)
+            return Error.Validation(SupportDomainErrors.BodyRequired);
+        try
+        {
+            await bridge.AddCommentAsync(ticket, command.Body, command.IdempotencyKey, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return Error.Conflict("support_ticket.portal_unavailable");
+        }
+    }
+}

@@ -47,6 +47,33 @@
       "closed": "Kapandı"
     },
     "resolution": "Yanıt",
-    "createdAt": "Oluşturulma"
+    "createdAt": "Oluşturulma",
+    "loadError": "Talepler yüklenemedi. Yeniden deniyoruz.",
+    "messages": "Mesaj geçmişi",
+    "supportTeam": "Destek ekibi",
+    "reply": "Takip yanıtınız",
+    "sendReply": "Yanıt gönder",
+    "replySuccess": "Yanıtınız gönderildi.",
+    "replyError": "Yanıt gönderilemedi. Metniniz korundu; yeniden deneyebilirsiniz.",
+    "portalStatus": {
+      "new": "Yeni",
+      "triaged": "Değerlendirildi",
+      "in_progress": "Çözüm üzerinde çalışılıyor",
+      "waiting_requester": "Yanıtınız bekleniyor",
+      "waiting_internal": "İç ekip bekleniyor",
+      "resolved": "Çözüldü",
+      "closed": "Kapandı",
+      "cancelled": "İptal edildi"
+    },
+    "syncState": {
+      "pending": "Destek portalına aktarım bekleniyor.",
+      "unavailable": "Destek portalına şu anda ulaşılamıyor. Yerel talebiniz kayıtlı; yeniden deniyoruz."
+    },
+    "sources": {
+      "customer_agent": "AI müşteri agentı",
+      "external_agent": "PO onaylı çözüm"
+    },
+    "fullConversation": "Tüm konuşmayı göster",
+    "historyError": "Konuşma geçmişi yüklenemedi. Yeniden deneyebilirsiniz."
   }
 }

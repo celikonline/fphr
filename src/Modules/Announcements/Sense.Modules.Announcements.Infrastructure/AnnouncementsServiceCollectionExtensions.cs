@@ -22,6 +22,10 @@ public static class AnnouncementsServiceCollectionExtensions
     public static IServiceCollection AddAnnouncementsCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<SupportOptions>().Bind(configuration.GetSection(SupportOptions.Section));
+        services.AddSingleton(new SupportPortalOptions(configuration));
+        services.AddHttpClient<ISupportPortalBridge, SupportPortalBridge>(client => client.Timeout = TimeSpan.FromSeconds(15))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .RemoveAllLoggers();
 
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
         services.AddScoped<IAnnouncementReadRecordRepository, AnnouncementReadRecordRepository>();

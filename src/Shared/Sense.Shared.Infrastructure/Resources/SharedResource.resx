@@ -2100,4 +2100,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="employee.personnel_number.manage" xml:space="preserve"><value>Sicil aralıklarını ve atama kurallarını yönetme</value></data>
   <data name="import.column.employee.legacySourceSystem" xml:space="preserve"><value>Eski kaynak sistem</value></data>
   <data name="import.column.employee.legacyPersonnelNumber" xml:space="preserve"><value>Eski sicil numarası</value></data>
+  <data name="support_ticket.portal_pending" xml:space="preserve"><value>Talep destek portalına aktarılıyor. Yanıt göndermek için aktarımın tamamlanmasını bekleyin.</value></data>
+  <data name="support_ticket.portal_unavailable" xml:space="preserve"><value>Destek portalına şu anda ulaşılamıyor. Yanıtınızı daha sonra yeniden gönderebilirsiniz.</value></data>
+  <data name="support_ticket.portal_managed" xml:space="preserve"><value>Bu talep merkezi destek portalında yönetiliyor. Yanıtlama ve kapatma işlemlerini destek portalından yapın.</value></data>
 </root>

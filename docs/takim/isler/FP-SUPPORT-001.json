@@ -1,0 +1,24 @@
+{
+  "id": "FP-SUPPORT-001",
+  "baslik": "FPHR destek taleplerini merkezi FP Support Portal'a bağla",
+  "durum": "tamamlandi",
+  "sahip": "takim-gelistirici-dotnet + takim-gelistirici-node",
+  "dal": "a/fp-support-integration",
+  "kabul": [
+    "Mevcut yerel destek talebi ve SupportTicketCreated outbox olayı korunur; worker merkezi portala idempotent gönderir ve ExternalRef kaydeder.",
+    "Tenant ve requester kapsamı doğrulanmış yerel talep kimliğinden türetilir; yetkisiz talep için merkezi HTTP çağrısı yapılmaz.",
+    "Merkezi statü ve yalnız açık yorumlar mevcut destek ekranında takip edilir; hata halinde yerel talep görünür kalır.",
+    "Müşteri takip yanıtları sahiplik denetimi ve sabit idempotency UUID ile gönderilir; anahtar tarayıcıya veya loglara taşınmaz.",
+    "Şema migration'ı ve takım yapılandırması değiştirilmez; mevcut yerel yönetim ve yardım merkezi korunur.",
+    "Argümansız takım test kapısı geliştirici ve bağımsız gözden geçirici tarafından çalıştırılır; sonuçlar ve ortam engelleri açıkça kaydedilir."
+  ],
+  "birlestirme_kapisi": "test kapısı YEŞİL + kanıt GEÇERLİ + gözden geçirici ONAY; korumalı dala birleştirme yapılmaz",
+  "riskli_alan": false,
+  "kanit": {
+    "gelistirici": "Announcements 112/112; web 68/68; API/Worker build 0 hata; tsc/eslint/vite/PWA başarılı",
+    "gozdenGecirme": "ONAY; bağımsız Announcements 112/112 ve web 29/29",
+    "ortamSiniri": "Formal takım betikleri MODULE_NOT_FOUND; gerçek kontroller tam depo kapısı olarak sunulmaz",
+    "handoff": "docs/takim/handoff/FP-SUPPORT-001.md"
+  },
+  "handoff": "docs/takim/handoff/FP-SUPPORT-001.md"
+}

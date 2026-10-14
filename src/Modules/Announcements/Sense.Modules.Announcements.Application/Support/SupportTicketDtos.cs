@@ -14,4 +14,5 @@ public sealed record SupportTicketDto(
     string? Resolution,
     DateTime? AnsweredAt,
     DateTime? ClosedAt,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    PortalSupportTicketDto? Portal = null);

@@ -47,6 +47,33 @@
       "closed": "Closed"
     },
     "resolution": "Response",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "loadError": "Tickets could not be loaded. Retrying.",
+    "messages": "Message history",
+    "supportTeam": "Support team",
+    "reply": "Your follow-up reply",
+    "sendReply": "Send reply",
+    "replySuccess": "Your reply was sent.",
+    "replyError": "Your reply could not be sent. Your text is preserved; you can retry.",
+    "portalStatus": {
+      "new": "New",
+      "triaged": "Triaged",
+      "in_progress": "In progress",
+      "waiting_requester": "Awaiting your reply",
+      "waiting_internal": "Awaiting internal team",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "syncState": {
+      "pending": "Awaiting transfer to the support portal.",
+      "unavailable": "The support portal is currently unavailable. Your local ticket is saved; retrying."
+    },
+    "sources": {
+      "customer_agent": "AI customer agent",
+      "external_agent": "PO approved solution"
+    },
+    "fullConversation": "View full conversation",
+    "historyError": "Conversation history could not be loaded. You can retry."
   }
 }

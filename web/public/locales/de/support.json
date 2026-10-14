@@ -47,6 +47,33 @@
       "closed": "Geschlossen"
     },
     "resolution": "Antwort",
-    "createdAt": "Erstellt"
+    "createdAt": "Erstellt",
+    "loadError": "Anfragen konnten nicht geladen werden. Ein neuer Versuch folgt.",
+    "messages": "Nachrichtenverlauf",
+    "supportTeam": "Supportteam",
+    "reply": "Ihre Rückmeldung",
+    "sendReply": "Antwort senden",
+    "replySuccess": "Ihre Antwort wurde gesendet.",
+    "replyError": "Ihre Antwort konnte nicht gesendet werden. Ihr Text bleibt erhalten; Sie können es erneut versuchen.",
+    "portalStatus": {
+      "new": "Neu",
+      "triaged": "Bewertet",
+      "in_progress": "In Bearbeitung",
+      "waiting_requester": "Ihre Antwort wird erwartet",
+      "waiting_internal": "Internes Team wird erwartet",
+      "resolved": "Gelöst",
+      "closed": "Geschlossen",
+      "cancelled": "Abgebrochen"
+    },
+    "syncState": {
+      "pending": "Übertragung an das Supportportal ausstehend.",
+      "unavailable": "Das Supportportal ist derzeit nicht erreichbar. Ihre lokale Anfrage ist gespeichert; ein neuer Versuch folgt."
+    },
+    "sources": {
+      "customer_agent": "KI-Kundenagent",
+      "external_agent": "Vom PO genehmigte Lösung"
+    },
+    "fullConversation": "Gesamten Verlauf anzeigen",
+    "historyError": "Der Gesprächsverlauf konnte nicht geladen werden. Sie können es erneut versuchen."
   }
 }

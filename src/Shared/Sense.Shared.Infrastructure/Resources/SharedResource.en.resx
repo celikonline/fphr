@@ -2091,4 +2091,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="employee.personnel_number.manage" xml:space="preserve"><value>Manage personnel number ranges and assignment rules</value></data>
   <data name="import.column.employee.legacySourceSystem" xml:space="preserve"><value>Legacy source system</value></data>
   <data name="import.column.employee.legacyPersonnelNumber" xml:space="preserve"><value>Legacy personnel number</value></data>
+  <data name="support_ticket.portal_pending" xml:space="preserve"><value>This ticket is being sent to the support portal. Wait for the transfer to finish before sending a reply.</value></data>
+  <data name="support_ticket.portal_unavailable" xml:space="preserve"><value>The support portal is currently unavailable. You can try sending your reply again later.</value></data>
+  <data name="support_ticket.portal_managed" xml:space="preserve"><value>This ticket is managed in the central support portal. Reply to or close it in the support portal.</value></data>
 </root>

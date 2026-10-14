@@ -11,6 +11,7 @@ namespace Sense.Modules.Announcements.Api.Controllers;
 public sealed record CreateSupportTicketRequest(string Subject, string Body, SupportTicketCategory Category, string? SourceRoute);
 
 public sealed record RespondToSupportTicketRequest(string Resolution);
+public sealed record AddSupportTicketCommentRequest(string Body);
 
 /// <summary>
 /// "Yardım Merkezi + Desteğe bağlan" (11.3.13, roadmap #69). Makale arama/okuma izin gerektirmez (herhangi bir
@@ -59,6 +60,12 @@ public sealed class SupportController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Respond(Guid id, [FromBody] RespondToSupportTicketRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new RespondToSupportTicketCommand(id, request.Resolution), ct));
+
+    [HttpPost("tickets/{id:guid}/comments")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> AddComment(Guid id, [FromBody] AddSupportTicketCommentRequest request,
+        [FromHeader(Name = "Idempotency-Key")] Guid idempotencyKey, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AddSupportTicketCommentCommand(id, request.Body, idempotencyKey), ct));
 
     [HttpPost("tickets/{id:guid}/close")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
