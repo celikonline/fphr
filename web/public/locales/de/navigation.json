@@ -37,7 +37,9 @@
     "expensePayroll": "Spesen und Lohn",
     "performance": "Performance",
     "recruitment": "Recruiting",
-    "employeeExperience": "Mitarbeitererlebnis"
+    "employeeExperience": "Mitarbeitererlebnis",
+    "insights": "Analysen und Daten",
+    "otherModules": "Weitere Module"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
@@ -48,6 +50,7 @@
     "searchPlaceholder": "Apps suchen…",
     "noResults": "Keine Apps entsprechen Ihrer Suche.",
     "viewAll": "Alle Apps",
+    "comingSoon": "Demnächst",
     "subtitle": "Apps, die Sie heute nutzen können, und solche, die bald kommen.",
     "orgChart": "Organigramm",
     "dataTransfer": "Datentransfer-Center",

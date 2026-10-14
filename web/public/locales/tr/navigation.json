@@ -37,7 +37,9 @@
     "expensePayroll": "Harcama ve Bordro",
     "performance": "Performans",
     "recruitment": "İşe Alım",
-    "employeeExperience": "Çalışan Deneyimi"
+    "employeeExperience": "Çalışan Deneyimi",
+    "insights": "Analiz ve Veri",
+    "otherModules": "Diğer Modüller"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
@@ -48,6 +50,7 @@
     "searchPlaceholder": "Uygulama ara…",
     "noResults": "Aramanızla eşleşen uygulama yok.",
     "viewAll": "Tüm uygulamalar",
+    "comingSoon": "Yakında",
     "subtitle": "Kullanabileceğiniz ve yakında gelecek uygulamalar.",
     "orgChart": "Organizasyon şeması",
     "dataTransfer": "Veri aktarım merkezi",

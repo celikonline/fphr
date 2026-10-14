@@ -617,6 +617,67 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
   },
 ];
 
+/** App hub groups. Keeps the full module catalog readable while reusing the existing navigation labels. */
+export const APP_LAUNCHER_SECTIONS = [
+  {
+    key: "humanResources",
+    labelKey: "navGroups.humanResources",
+    itemKeys: ["orgChart", "onboarding", "assets", "ohs"],
+  },
+  {
+    key: "timeManagement",
+    labelKey: "navGroups.timeManagement",
+    itemKeys: [
+      "pdksCenter",
+      "timesheet",
+      "selfCheckIn",
+      "shifts",
+      "teamTimesheet",
+      "monthlyTimesheet",
+      "shiftPlan",
+      "liveBoard",
+      "deviceLogImport",
+      "dailyList",
+      "timeDashboard",
+      "shiftDefinitions",
+      "rotations",
+      "monthlyMatrix",
+      "punchRequests",
+      "terminals",
+    ],
+  },
+  { key: "leave", labelKey: "navGroups.leave", itemKeys: ["overtime"] },
+  {
+    key: "expensePayroll",
+    labelKey: "navGroups.expensePayroll",
+    itemKeys: [
+      "expenses",
+      "expensePaymentsAdmin",
+      "payrollCenter",
+      "payroll",
+      "payslipImport",
+      "payItems",
+      "incentives",
+    ],
+  },
+  {
+    key: "performance",
+    labelKey: "navGroups.performance",
+    itemKeys: ["performance", "performanceReviewCycles", "performanceTeamGoals"],
+  },
+  {
+    key: "recruitment",
+    labelKey: "navGroups.recruitment",
+    itemKeys: ["recruitment", "recruitmentCandidates", "recruitmentRequisitions"],
+  },
+  {
+    key: "employeeExperience",
+    labelKey: "navGroups.employeeExperience",
+    itemKeys: ["workflowInbox", "announcements", "companyCalendar", "training", "messages"],
+  },
+  { key: "insights", labelKey: "navGroups.insights", itemKeys: ["analytics", "dataTransfer"] },
+] as const;
+
 export interface SettingsLink {
   key: string;
   /** i18n keys in the "navigation" namespace. */

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Badge, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import { AppWindow, Search } from "lucide-react";
-import { APP_LAUNCHER_ITEMS, navIconColor } from "@/config/navigation";
+import { APP_LAUNCHER_ITEMS, APP_LAUNCHER_SECTIONS, navIconColor } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import classes from "./apps.module.css";
 
@@ -17,9 +17,18 @@ export default function AppsPage() {
   const [query, setQuery] = useState("");
 
   const needle = query.trim().toLocaleLowerCase("tr");
-  const matches = (labelKey: string) => needle === "" || t(labelKey).toLocaleLowerCase("tr").includes(needle);
+  const matches = (labelKey: string) =>
+    needle === "" || t(labelKey).toLocaleLowerCase("tr").includes(needle);
   const activeApps = visibleApps.filter((item) => matches(item.labelKey));
   const plannedApps = PLANNED_APPS.filter((item) => matches(item.labelKey));
+  const groupedApps = APP_LAUNCHER_SECTIONS.map((section) => ({
+    ...section,
+    apps: activeApps.filter((item) => section.itemKeys.some((key) => key === item.key)),
+  })).filter((section) => section.apps.length > 0);
+  const ungroupedApps = activeApps.filter(
+    (item) =>
+      !APP_LAUNCHER_SECTIONS.some((section) => section.itemKeys.some((key) => key === item.key))
+  );
 
   return (
     <Stack gap="lg" className="max-w-5xl p-6 md:p-10">
@@ -45,45 +54,95 @@ export default function AppsPage() {
         <Text c="dimmed">{t("navigation:apps.noResults")}</Text>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {activeApps.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card
-              key={item.key}
-              component={Link}
-              to={item.path}
-              withBorder
-              padding="lg"
-              h="100%"
-              className={classes.appCard}
-            >
-              <Stack align="center" gap="sm" ta="center">
-                <Icon size={32} color={navIconColor(item)} />
-                <Text size="sm" fw={500}>
-                  {t(item.labelKey)}
-                </Text>
-              </Stack>
-            </Card>
-          );
-        })}
-        {plannedApps.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card key={item.key} aria-disabled withBorder padding="lg" h="100%" opacity={0.6}>
-              <Stack align="center" gap="sm" ta="center">
-                <Icon size={32} color="var(--mantine-color-dimmed)" />
-                <Text size="sm" fw={500}>
-                  {t(item.labelKey)}
-                </Text>
-                <Badge variant="outline" color="gray" tt="none">
-                  {t("navigation:phase", { phase: item.phase })}
-                </Badge>
-              </Stack>
-            </Card>
-          );
-        })}
-      </div>
+      {groupedApps.map((section) => (
+        <Stack key={section.key} gap="sm">
+          <Title order={2} fz="lg">
+            {t(`navigation:${section.labelKey}`)}
+          </Title>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {section.apps.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Card
+                  key={item.key}
+                  component={Link}
+                  to={item.path}
+                  withBorder
+                  padding="md"
+                  h="100%"
+                  className={classes.appCard}
+                >
+                  <Group align="center" gap="sm" wrap="nowrap">
+                    <Icon size={22} color={navIconColor(item)} />
+                    <Text size="sm" fw={500} lh={1.3}>
+                      {t(item.labelKey)}
+                    </Text>
+                  </Group>
+                </Card>
+              );
+            })}
+          </div>
+        </Stack>
+      ))}
+
+      {ungroupedApps.length > 0 && (
+        <Stack gap="sm">
+          <Title order={2} fz="lg">
+            {t("navigation:navGroups.otherModules")}
+          </Title>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {ungroupedApps.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Card
+                  key={item.key}
+                  component={Link}
+                  to={item.path}
+                  withBorder
+                  padding="md"
+                  h="100%"
+                  className={classes.appCard}
+                >
+                  <Group align="center" gap="sm" wrap="nowrap">
+                    <Icon size={22} color={navIconColor(item)} />
+                    <Text size="sm" fw={500} lh={1.3}>
+                      {t(item.labelKey)}
+                    </Text>
+                  </Group>
+                </Card>
+              );
+            })}
+          </div>
+        </Stack>
+      )}
+
+      {plannedApps.length > 0 && (
+        <Stack gap="sm">
+          <Title order={2} fz="lg">
+            {t("navigation:apps.comingSoon")}
+          </Title>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {plannedApps.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Card key={item.key} aria-disabled withBorder padding="md" h="100%" opacity={0.6}>
+                  <Group align="center" gap="sm" wrap="nowrap">
+                    <Icon size={22} color="var(--mantine-color-dimmed)" />
+                    <Stack gap={4}>
+                      <Text size="sm" fw={500}>
+                        {t(item.labelKey)}
+                      </Text>
+                      <Badge variant="outline" color="gray" tt="none">
+                        {t("navigation:phase", { phase: item.phase })}
+                      </Badge>
+                    </Stack>
+                  </Group>
+                </Card>
+              );
+            })}
+          </div>
+        </Stack>
+      )}
     </Stack>
   );
 }

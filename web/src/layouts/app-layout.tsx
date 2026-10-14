@@ -5,13 +5,11 @@ import {
   ActionIcon,
   Alert,
   Avatar,
-  Badge,
   Box,
   Button,
   Group,
   Indicator,
   Menu,
-  Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -31,7 +29,7 @@ import {
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
-import { APP_LAUNCHER_ITEMS, NAV_ITEMS, navIconColor } from "@/config/navigation";
+import { NAV_ITEMS } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
@@ -42,8 +40,6 @@ import ModuleRouteGuard from "@/components/module-disabled";
 import { NavList } from "./sidebar-nav";
 import classes from "./app-layout.module.css";
 
-const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
-const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
 const SETTINGS_ITEMS = NAV_ITEMS.filter((item) => item.key === "settings");
 // The hub is always reachable; show its shortcut only when an enabled request flow is available.
 const CREATE_ITEMS = [
@@ -173,62 +169,21 @@ function SidebarToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: 
 /** Compact app launcher beside the brand. */
 function AppsLauncher() {
   const { t } = useTranslation(["navigation"]);
-  const allowed = useVisibleItems(ACTIVE_APPS);
 
   return (
-    <Menu position="bottom-start" width={320}>
-      <Tooltip label={t("navigation:nav.apps")}>
-        <Menu.Target>
-          <ActionIcon
-            variant="subtle" size={32} radius="sm" aria-label={t("navigation:nav.apps")}
-            className={classes.headerAction}
-          >
-            <Grip size={18} />
-          </ActionIcon>
-        </Menu.Target>
-      </Tooltip>
-      <Menu.Dropdown p="xs">
-        <Menu.Label>{t("navigation:nav.apps")}</Menu.Label>
-        <Menu.Divider />
-        <div className="grid grid-cols-3 gap-1">
-          {allowed.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Menu.Item key={item.key} component={Link} to={item.path} p="xs">
-                <Stack gap={4} align="center" ta="center">
-                  <Icon size={20} color={navIconColor(item)} />
-                  <Text size="xs" lh={1.2}>
-                    {t(item.labelKey)}
-                  </Text>
-                </Stack>
-              </Menu.Item>
-            );
-          })}
-          {PLANNED_APPS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Menu.Item key={item.key} disabled p="xs">
-                <Stack gap={4} align="center" ta="center">
-                  <Icon size={20} color="var(--mantine-color-dimmed)" />
-                  <Text size="xs" lh={1.2}>
-                    {t(item.labelKey)}
-                  </Text>
-                  <Badge size="xs" variant="outline" color="gray" tt="none">
-                    {t("navigation:phase", { phase: item.phase })}
-                  </Badge>
-                </Stack>
-              </Menu.Item>
-            );
-          })}
-        </div>
-        <Menu.Divider />
-        <Menu.Item component={Link} to="/app/apps">
-          <Text size="sm" ta="center">
-            {t("navigation:apps.viewAll")}
-          </Text>
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+    <Tooltip label={t("navigation:nav.apps")} position="bottom">
+      <ActionIcon
+        component={Link}
+        to="/app/apps"
+        variant="subtle"
+        size={32}
+        radius="sm"
+        aria-label={t("navigation:nav.apps")}
+        className={classes.headerAction}
+      >
+        <Grip size={18} />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
