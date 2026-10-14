@@ -16,7 +16,7 @@ namespace Sense.Modules.Employee.Tests;
 /// <summary>
 /// senseik-058: PUT /employees/{id} used to rebuild EmployeeInfo without SicilNumarasi / Nationality / ForeignIdNumber /
 /// PassportNumber / SgkOccupationCode, so every save (web section edit, mobile, integrations) silently wiped them
-/// (Nationality fell back to Turkish). Pins the "keep when absent, persist when sent, empty string clears" contract
+/// (Nationality fell back to Turkish). Pins field preservation and clearing, with an immutable assigned personnel number,
 /// through the same path the handler uses (command.ToInfo(existing) -> Employee.UpdateInfo) - no database needed.
 /// </summary>
 public sealed class EmployeeUpdateFieldPreservationTests
@@ -64,20 +64,20 @@ public sealed class EmployeeUpdateFieldPreservationTests
     }
 
     [Fact]
-    public void Update_WithTheNewFields_PersistsEachOfThem()
+    public void Update_WithOtherNewFields_PreservesAssignedSicil()
     {
         var e = ForeignEmployee();
 
         Apply(e, BlindUpdate(e) with
         {
-            SicilNumarasi = " SCL-002 ",
+            SicilNumarasi = " SCL-001 ",
             Nationality = Nationality.Turkish,
             ForeignIdNumber = "99123456741",
             PassportNumber = "P7654321",
             SgkOccupationCode = "7212.03",
         });
 
-        e.SicilNumarasi.ShouldBe("SCL-002");
+        e.SicilNumarasi.ShouldBe("SCL-001");
         e.Nationality.ShouldBe(Nationality.Turkish);
         e.ForeignIdNumber.ShouldBe("99123456741");
         e.PassportNumber.ShouldBe("P7654321");
@@ -87,13 +87,16 @@ public sealed class EmployeeUpdateFieldPreservationTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void Update_WithEmptyString_ClearsTheTextField(string empty)
+    public void Update_WithEmptyString_RejectsClearingAssignedSicilButAllowsOtherTextFields(string empty)
     {
         var e = ForeignEmployee();
 
-        Apply(e, BlindUpdate(e) with { SicilNumarasi = empty, PassportNumber = empty, SgkOccupationCode = empty });
+        var rejected = e.UpdateInfo((BlindUpdate(e) with { SicilNumarasi = empty, PassportNumber = empty }).ToInfo(e));
+        rejected.Error.Code.ShouldBe("Employee.PersonnelNumber.Immutable");
+        e.PassportNumber.ShouldBe("P1234567");
+        Apply(e, BlindUpdate(e) with { PassportNumber = empty, SgkOccupationCode = empty });
 
-        e.SicilNumarasi.ShouldBeNull();
+        e.SicilNumarasi.ShouldBe("SCL-001");
         e.PassportNumber.ShouldBeNull();
         e.SgkOccupationCode.ShouldBeNull();
         e.ForeignIdNumber.ShouldBe("99123456740");

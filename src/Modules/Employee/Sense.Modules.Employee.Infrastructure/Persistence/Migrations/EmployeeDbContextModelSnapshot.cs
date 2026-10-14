@@ -928,6 +928,215 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("employment_periods", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.LegacyPersonnelNumber", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("PersonnelNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("personnel_number");
+
+                    b.Property<string>("SourceSystem")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("source_system");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_legacy_personnel_numbers");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_legacy_personnel_numbers_employee_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_legacy_personnel_numbers_tenant_id");
+
+                    b.HasIndex("TenantId", "SourceSystem", "PersonnelNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_legacy_personnel_numbers_tenant_id_source_system_personnel_");
+
+                    b.ToTable("legacy_personnel_numbers", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.PersonnelNumberRange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AssignmentMode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("assignment_mode");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("EndNumber")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("end_number");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("LastAssignedNumber")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("last_assigned_number");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("StartNumber")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("start_number");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_personnel_number_ranges");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_personnel_number_ranges_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personnel_number_ranges_tenant_id_code");
+
+                    b.ToTable("personnel_number_ranges", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.PersonnelNumberRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("operation");
+
+                    b.Property<Guid?>("PersonnelAreaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("personnel_area_id");
+
+                    b.Property<Guid>("RangeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("range_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_personnel_number_rules");
+
+                    b.HasIndex("RangeId")
+                        .HasDatabaseName("ix_personnel_number_rules_range_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_personnel_number_rules_tenant_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Operation")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personnel_number_rules_tenant_id_company_id_operation")
+                        .HasFilter("is_active AND personnel_area_id IS NULL");
+
+                    b.HasIndex("TenantId", "CompanyId", "Operation", "PersonnelAreaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personnel_number_rules_tenant_id_company_id_operation_perso")
+                        .HasFilter("is_active AND personnel_area_id IS NOT NULL");
+
+                    b.ToTable("personnel_number_rules", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1444,6 +1653,26 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_employment_periods_employees_employee_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.LegacyPersonnelNumber", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_legacy_personnel_numbers_employees_employee_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.PersonnelNumberRule", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.PersonnelNumberRange", null)
+                        .WithMany()
+                        .HasForeignKey("RangeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_personnel_number_rules_personnel_number_ranges_range_id");
                 });
 
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>

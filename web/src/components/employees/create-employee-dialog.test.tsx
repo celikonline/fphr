@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
@@ -13,6 +13,9 @@ import CreateEmployeeDialog from "./create-employee-dialog";
 import { toast } from "@/hooks/use-toast";
 import { createEmployee } from "@/services/employees.service";
 import { inviteEmployee } from "@/services/invitations.service";
+import { getPersonnelNumberAssignment } from "@/services/personnel-numbers.service";
+vi.mock("@/services/personnel-numbers.service", async (importOriginal) => ({ ...await importOriginal<typeof import("@/services/personnel-numbers.service")>(), getPersonnelNumberAssignment: vi.fn() }));
+beforeEach(() => { vi.mocked(getPersonnelNumberAssignment).mockReset().mockResolvedValue({ configured: false }); });
 
 // N-2 (ik-surec-testi-bulgu-raporu-2026-09-20): a duplicate work e-mail must be reported on the "İş e-postası"
 // field, not only in the toast that disappears after a few seconds.
@@ -88,6 +91,62 @@ function renderDialog(canInvite = true) {
 }
 
 describe("CreateEmployeeDialog", () => {
+  it("blocks hiring while assignment cannot be resolved and allows retry", async () => {
+    vi.mocked(getPersonnelNumberAssignment).mockRejectedValue(new Error("offline"));
+    renderDialog();
+    expect(await screen.findByRole("button", { name: trEmployees.personnelNumbers.retry })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: trCommon.save })).toBeDisabled();
+    expect(createEmployee).not.toHaveBeenCalled();
+    vi.mocked(getPersonnelNumberAssignment).mockResolvedValue({ configured: false });
+    await userEvent.click(screen.getByRole("button", { name: trEmployees.personnelNumbers.retry }));
+    await waitFor(() => expect(screen.getByRole("button", { name: trCommon.save })).toBeEnabled());
+  });
+  it("internal assignment omits any manually supplied number", async () => {
+    vi.mocked(getPersonnelNumberAssignment).mockResolvedValue({ configured: true, assignmentMode: "internal", nextNumber: "10000001" });
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-1" } as never);
+    renderDialog(false);
+    const user = userEvent.setup();
+    await screen.findByText(/10000001/);
+    expect(screen.queryByLabelText(trEmployees.personnelNumbers.number)).not.toBeInTheDocument();
+    await user.type(document.getElementById("new-emp-firstName")!, "Ayşe");
+    await user.type(document.getElementById("new-emp-lastName")!, "Demir");
+    await user.click(screen.getByRole("button", { name: trCommon.save }));
+    await waitFor(() => expect(createEmployee).toHaveBeenCalledWith(expect.objectContaining({ sicilNumarasi: undefined })));
+  });
+  it("external assignment validates the fixed range and preserves leading zeroes", async () => {
+    vi.mocked(getPersonnelNumberAssignment).mockResolvedValue({ configured: true, assignmentMode: "external", startNumber: "00000001", endNumber: "00000999" });
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-1" } as never);
+    renderDialog(false);
+    const user = userEvent.setup();
+    const sicil = await screen.findByLabelText(new RegExp(trEmployees.personnelNumbers.number));
+    await user.type(document.getElementById("new-emp-firstName")!, "Ayşe");
+    await user.type(document.getElementById("new-emp-lastName")!, "Demir");
+    await user.type(sicil, "00001000");
+    await user.click(screen.getByRole("button", { name: trCommon.save }));
+    expect(createEmployee).not.toHaveBeenCalled();
+    await user.clear(sicil); await user.type(sicil, "00000123");
+    await user.click(screen.getByRole("button", { name: trCommon.save }));
+    await waitFor(() => expect(createEmployee).toHaveBeenCalledWith(expect.objectContaining({ sicilNumarasi: "00000123" })));
+  });
+  it("exhausted internal range blocks saving", async () => {
+    vi.mocked(getPersonnelNumberAssignment).mockResolvedValue({ configured: true, assignmentMode: "internal" });
+    renderDialog();
+    await screen.findByText(trEmployees.personnelNumbers.exhausted);
+    expect(screen.getByRole("button", { name: trCommon.save })).toBeDisabled();
+  });
+  it("refreshes assignment after save-and-new and blocks an exhausted next hire", async () => {
+    vi.mocked(getPersonnelNumberAssignment).mockResolvedValueOnce({ configured: true, assignmentMode: "internal", nextNumber: "99999999" }).mockResolvedValue({ configured: true, assignmentMode: "internal" });
+    vi.mocked(createEmployee).mockResolvedValue({ id: "emp-last" } as never);
+    renderDialog(false); const user = userEvent.setup();
+    await screen.findByText(/99999999/);
+    await user.type(document.getElementById("new-emp-firstName")!, "Ayşe");
+    await user.type(document.getElementById("new-emp-lastName")!, "Demir");
+    await user.click(screen.getByRole("button", { name: trCommon.saveAndNew }));
+    await screen.findByText(trEmployees.personnelNumbers.exhausted);
+    expect(getPersonnelNumberAssignment).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("button", { name: trCommon.save })).toBeDisabled();
+    expect(createEmployee).toHaveBeenCalledTimes(1);
+  });
   it("shows a duplicate work e-mail on the work e-mail field and clears it once edited", async () => {
     vi.mocked(createEmployee).mockRejectedValueOnce(
       conflict("employee.work_email_taken", DUPLICATE_MESSAGE)

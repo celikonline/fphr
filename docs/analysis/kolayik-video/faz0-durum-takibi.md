@@ -1,8 +1,21 @@
 # Faz 0 Durum Takibi
 
+## 2026-10-14 — Sicil aktarımı genişletmesi (✅ Tamamlandı)
+
+`employee.master` aktarımına harici/dahili aralık ve şirket/personel alanı kuralı,
+`legacySourceSystem` / `legacyPersonnelNumber` kolonları ve kaynak sistem + eski
+sicil referansının tekillik/kimlik çelişkisi kontrolü eklendi. TCKN ile mevcut kayıt
+eşleştirmesi korunur. Dahili aktarımda yeni ana sicil, harici aktarımda dosyadaki
+uygun sicil kullanılır; mevcut atanmış ana sicil değişmez. İşlem kilidi,
+AllOrNothing geri alma ve SkipInvalidRows hataları bağımsız doğrulandı:
+Employee **424/424**, DataTransfer **56/56**, web **29/29**; atlanan test yok.
+Migration: `20261014155317_AddPersonnelNumberManagement`.
+Sözleşme ve kullanım:
+[sap-hcm-sicil-yonetimi.md](../../implementation/sap-hcm-sicil-yonetimi.md).
+
 Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) satır 39-51 (kalem #1-13).
 
-**Son güncelleme:** 2026-09-18
+**Son güncelleme:** 2026-10-14
 **Nasıl güncellenir:** Bir kalem tamamlandığında/ilerlediğinde durumu ve kanıt satırlarını güncelle, "Son güncelleme" tarihini değiştir. Durumlar: ❌ Başlanmadı · 🟡 Kısmi · ✅ Bitti.
 
 ## Durum tablosu

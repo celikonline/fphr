@@ -344,7 +344,12 @@
       "clearAll": "Clear",
       "period": "Period",
       "periodHint": "Leave, overtime, payslip, asset and payment lists are filtered by this period; other data is shown as of today.",
-      "presets": { "last12Months": "Last 12 months", "thisYear": "This year", "allTime": "All time", "custom": "Custom" },
+      "presets": {
+        "last12Months": "Last 12 months",
+        "thisYear": "This year",
+        "allTime": "All time",
+        "custom": "Custom"
+      },
       "from": "From",
       "to": "To",
       "invalidPeriod": "The end cannot be before the start.",
@@ -940,5 +945,20 @@
       "type": "Only PDF, PNG, JPG, TXT, DOCX and XLSX files can be attached."
     },
     "truncated": "Showing the first {{count}} notes."
+  },
+  "personnelNumbers": {
+    "title": "Personnel number",
+    "number": "Personnel number",
+    "unconfigured": "Personnel number rules have not been configured. Existing manual entry is available.",
+    "automatic": "Assigned automatically on save. Preview: {{next}} (may change at save time).",
+    "exhausted": "The number range is exhausted. Configure a new range before saving.",
+    "invalid": "Enter an 8-digit personnel number within the assigned range.",
+    "loadError": "Could not load the assignment rule. Retry before saving.",
+    "retry": "Retry",
+    "sourceSystem": "Legacy source system",
+    "legacyNumber": "Legacy personnel number",
+    "references": "Legacy personnel numbers",
+    "immutable": "The main personnel number is permanent, retained on company transfer and never reused.",
+    "assign": "Assign personnel number"
   }
 }

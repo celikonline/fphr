@@ -117,6 +117,10 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var contractType = Enum<ContractType>(row, EmployeeImportColumns.ContractType, errors);
         var employmentType = Enum<EmploymentType>(row, EmployeeImportColumns.EmploymentType, errors);
         var sicilNumarasi = Text(row, EmployeeImportColumns.SicilNumarasi);
+        var legacySource = Text(row, EmployeeImportColumns.LegacySourceSystem);
+        var legacyNumber = Text(row, EmployeeImportColumns.LegacyPersonnelNumber);
+        if ((legacySource is null) != (legacyNumber is null) || legacySource?.Length > 100 || legacyNumber?.Length > 100) errors.Add(new ImportRowError(EmployeeImportColumns.LegacyPersonnelNumber, "Employee.PersonnelNumber.InvalidLegacy"));
+        if (existing?.SicilNumarasi is { } assigned && sicilNumarasi is not null && assigned != sicilNumarasi) errors.Add(new ImportRowError(EmployeeImportColumns.SicilNumarasi, "Employee.PersonnelNumber.Immutable"));
         CheckLength(errors, EmployeeImportColumns.SicilNumarasi, sicilNumarasi, EmployeeLimits.SicilNumarasiMaxLength);
         var nationality = Enum<Nationality>(row, EmployeeImportColumns.Nationality, errors);
         var foreignIdNumber = Text(row, EmployeeImportColumns.ForeignIdNumber);
@@ -184,7 +188,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
             (setManager && managerId != existing.ManagerEmployeeId) ||
             salary is not null ||
             bank is not null ||
-            customFieldValues.Count > 0;
+            customFieldValues.Count > 0 || legacySource is not null;
 
         if (setManager)
         {
@@ -194,7 +198,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         return new EmployeeImportValidation(
             new EmployeeImportPlan(
                 row.RowNumber, nationalId, existing, newId, info, setOrgUnit, orgUnitId, setManager, managerId, hasChanges,
-                Salary: salary, CustomFieldValues: customFieldValues, Bank: bank),
+                Salary: salary, CustomFieldValues: customFieldValues, Bank: bank, LegacySourceSystem: legacySource, LegacyPersonnelNumber: legacyNumber),
             nationalId,
             existing?.Id,
             []);

@@ -28,7 +28,8 @@ namespace Sense.Modules.Employee.Application.Employees;
 /// senseik-058: <see cref="SicilNumarasi"/>, <see cref="Nationality"/>, <see cref="ForeignIdNumber"/>,
 /// <see cref="PassportNumber"/> and <see cref="SgkOccupationCode"/> are "keep when absent" fields: a null value means the
 /// client did not send it (older web build, mobile, integrations) and the stored value is preserved - it is never wiped
-/// (<see cref="ToInfo(EmployeeEntity)"/>). An explicit clear is an empty/whitespace string for the text fields (the domain
+/// (<see cref="ToInfo(EmployeeEntity)"/>). An assigned SicilNumarasi is immutable; it cannot be changed or cleared.
+/// An explicit clear is an empty/whitespace string for the other text fields (the domain
 /// normalizes it to null); <see cref="Nationality"/> is never empty, so it can only be changed, not cleared.
 /// </para>
 /// </summary>
@@ -113,7 +114,8 @@ public sealed class UpdateEmployeeHandler(
     EmployeeSensitiveAccess sensitiveAccess,
     IIntegrationEventOutbox outbox,
     CareerService career,
-    EmployeeDetailBuilder details) : ICommandHandler<UpdateEmployeeCommand, EmployeeDetailDto>
+    EmployeeDetailBuilder details,
+    IPersonnelNumberService? personnelNumbers = null) : ICommandHandler<UpdateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(UpdateEmployeeCommand command, CancellationToken cancellationToken)
     {
@@ -136,6 +138,12 @@ public sealed class UpdateEmployeeHandler(
             return checkedRefs.Error;
         }
 
+        if (employee.SicilNumarasi is null && personnelNumbers is not null)
+        {
+            var assigned = await personnelNumbers.AssignAsync(command.OrgUnitId, PersonnelNumberOperation.Hire, info.SicilNumarasi, cancellationToken);
+            if (assigned.IsFailure) return assigned.Error;
+            info = info with { SicilNumarasi = assigned.Value };
+        }
         var orgUnitChanged = command.OrgUnitId != employee.OrgUnitId;
         var managerChanged = command.ManagerEmployeeId != employee.ManagerEmployeeId;
         var placementChanged = orgUnitChanged || managerChanged || command.EmploymentType != employee.EmploymentType;

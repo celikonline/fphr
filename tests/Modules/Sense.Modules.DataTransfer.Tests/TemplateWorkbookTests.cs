@@ -33,7 +33,7 @@ public sealed class TemplateWorkbookTests
 
         var headers = data.Row(1).CellsUsed().Select(c => c.GetString()).ToList();
         headers.ShouldBe([
-            "Ad", "Soyad", "Kimlik numarası", "Sicil numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
+            "Ad", "Soyad", "Kimlik numarası", "Sicil numarası", "Eski kaynak sistem", "Eski sicil numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
             "İzne esas hak ediş tarihi", "Cinsiyet", "Medeni durum", "Çocuk sayısı", "Eğitim durumu", "Son mezuniyet derecesi", "Askerlik durumu",
             "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu",
             "Uyruk", "Yabancı kimlik numarası", "Pasaport numarası", "SGK meslek kodu", "Sözleşme türü", "Çalışma şekli",
@@ -43,7 +43,7 @@ public sealed class TemplateWorkbookTests
 
         var keys = data.Row(2).CellsUsed().Select(c => c.GetString()).ToList();
         keys.ShouldBe([
-            "firstName", "lastName", "nationalId", "sicilNumarasi", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
+            "firstName", "lastName", "nationalId", "sicilNumarasi", "legacySourceSystem", "legacyPersonnelNumber", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
             "leaveAccrualStartDate", "gender", "maritalStatus", "childCount", "educationStatus", "highestEducationLevel", "militaryStatus",
             "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode",
             "nationality", "foreignIdNumber", "passportNumber", "sgkOccupationCode", "contractType", "employmentType",

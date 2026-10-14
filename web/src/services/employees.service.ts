@@ -107,6 +107,8 @@ export interface CustomFieldValue {
 
 /** Sensitive fields (nationalId when unmasked, militaryStatus, disabilityDegree, bloodType) are null/masked without employee.sensitive.view. */
 export interface EmployeeDetail {
+  sicilNumarasi?: string | null;
+  legacyPersonnelNumbers?: { sourceSystem: string; personnelNumber: string }[];
   id: string;
   firstName: string;
   lastName: string;

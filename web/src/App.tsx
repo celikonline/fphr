@@ -42,6 +42,7 @@ const ApprovalFlowsPage = lazy(() => import("@/pages/settings/approval-flows"));
 const CustomFieldsPage = lazy(() => import("@/pages/settings/custom-fields"));
 const TerminationReasonsPage = lazy(() => import("@/pages/settings/termination-reasons"));
 const CostCentersPage = lazy(() => import("@/pages/settings/cost-centers"));
+const PersonnelNumbersPage = lazy(() => import("@/pages/settings/personnel-numbers"));
 const SubcontractorsPage = lazy(() => import("@/pages/settings/subcontractors"));
 const DocumentTypesPage = lazy(() => import("@/pages/settings/document-types"));
 const MissingDocumentsReportPage = lazy(() => import("@/pages/settings/missing-documents-report"));
@@ -240,6 +241,7 @@ export default function App() {
               element={<TerminationReasonsPage />}
             />
             <Route path="settings/company/cost-centers" element={<CostCentersPage />} />
+            <Route path="settings/company/personnel-numbers" element={<PersonnelNumbersPage />} />
             <Route path="settings/company/subcontractors" element={<SubcontractorsPage />} />
             <Route path="settings/company/document-types" element={<DocumentTypesPage />} />
             <Route

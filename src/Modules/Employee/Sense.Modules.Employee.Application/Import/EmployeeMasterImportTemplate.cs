@@ -41,6 +41,8 @@ public static class EmployeeImportColumns
     public const string EmploymentType = "employmentType";
 
     // senseik-009/F-02 (Sicil numarası + uyruk) and senseik-010/F-03 (SGK meslek kodu) fields.
+    public const string LegacySourceSystem = "legacySourceSystem";
+    public const string LegacyPersonnelNumber = "legacyPersonnelNumber";
     public const string SicilNumarasi = "sicilNumarasi";
     public const string Nationality = "nationality";
     public const string ForeignIdNumber = "foreignIdNumber";
@@ -111,6 +113,8 @@ public sealed class EmployeeMasterImportTemplate(
             // senseik-009/F-02: dual-key transition - offered, not yet a match key (NationalId stays the match key
             // until a tenant has assigned sicil numarası to its whole workforce; see IEmployeeLookup remarks).
             Static(EmployeeImportColumns.SicilNumarasi, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.LegacySourceSystem, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.LegacyPersonnelNumber, ImportColumnDataType.Text),
             Static(EmployeeImportColumns.WorkEmail, ImportColumnDataType.Email),
             Static(EmployeeImportColumns.PersonalEmail, ImportColumnDataType.Email),
             Static(EmployeeImportColumns.WorkPhone, ImportColumnDataType.Phone),

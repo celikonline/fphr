@@ -8,6 +8,8 @@ public static class EmployeePermissions
     private const string Module = "employee";
     private const string Group = "Özlük";
 
+    public const string PersonnelNumberManageKey = "employee.personnel_number.manage";
+    public static readonly Permission PersonnelNumberManage = new(PersonnelNumberManageKey, Module, "Sicil Numarası Yönetimi", Group, "Sicil aralıkları ve şirket atama kurallarını yönetme");
     public const string EmployeesReadKey = "employee.employees.read";
     public const string EmployeesCreateKey = "employee.employees.create";
     public const string EmployeesUpdateKey = "employee.employees.update";
@@ -151,6 +153,6 @@ public static class EmployeePermissions
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
             BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, UnionView, UnionManage, SubcontractorManage, ProfileSelfEdit,
             NotesView, NotesManage,
-            MyTeam,
+            MyTeam, PersonnelNumberManage,
         ];
 }

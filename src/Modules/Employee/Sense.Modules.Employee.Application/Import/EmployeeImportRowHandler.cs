@@ -34,11 +34,19 @@ public sealed class EmployeeImportRowHandler(
     CareerService career,
     ICustomFieldDefinitionRepository customFields,
     EmployeeSensitiveAccess sensitiveAccess,
-    IIbanProtector ibanProtector) : IImportRowHandler
+    IIbanProtector ibanProtector,
+    IPersonnelNumberService? personnelNumbers = null) : IImportRowHandler
 {
     public string TemplateCode => EmployeeImportColumns.TemplateCode;
 
     public async Task<ImportBatchResult> ProcessAsync(ImportBatch batch, CancellationToken cancellationToken = default)
+    {
+        if (personnelNumbers is null) return await ProcessCoreAsync(batch, cancellationToken);
+        ImportBatchResult? result = null;
+        await personnelNumbers.ExecuteImportAsync(async ct => { result = await ProcessCoreAsync(batch, ct); if (!result.Applied) personnelNumbers.DiscardImportChanges(); }, cancellationToken);
+        return result!;
+    }
+    private async Task<ImportBatchResult> ProcessCoreAsync(ImportBatch batch, CancellationToken cancellationToken)
     {
         var snapshot = await LoadSnapshotAsync(cancellationToken).ConfigureAwait(false);
         var validator = new EmployeeImportRowValidator(batch.Mode, snapshot);
@@ -63,7 +71,42 @@ public sealed class EmployeeImportRowHandler(
             return NotApplied(batch, results, plans);
         }
 
+        if (personnelNumbers is not null)
+        {
+            var accepted = new List<EmployeeImportPlan>();
+            var assignedNumbers = new HashSet<string>(StringComparer.Ordinal);
+            var legacyKeys = new Dictionary<(string, string), Guid>();
+            foreach (var plan in plans)
+            {
+                if (plan.LegacySourceSystem is { } source && plan.LegacyPersonnelNumber is { } legacy)
+                {
+                    var check = await personnelNumbers.CheckLegacyAsync(plan.NewId, source, legacy, cancellationToken);
+                    if (check.IsFailure || (legacyKeys.TryGetValue((source, legacy), out var mappedId) && mappedId != plan.NewId))
+                    { results[plan.RowNumber] = Failed(plan, "Employee.PersonnelNumber.LegacyConflict"); continue; }
+                }
+                var effective = plan;
+                if (plan.Existing?.SicilNumarasi is null)
+                {
+                    var assigned = await personnelNumbers.AssignAsync(plan.OrgUnitId ?? plan.Existing?.OrgUnitId, PersonnelNumberOperation.Import, plan.Info.SicilNumarasi, cancellationToken);
+                    if (assigned.IsFailure) { results[plan.RowNumber] = Failed(plan, assigned.Error.Code); continue; }
+                    if (assigned.Value is { } number && !assignedNumbers.Add(number)) { results[plan.RowNumber] = Failed(plan, "Employee.PersonnelNumber.AlreadyAssigned"); continue; }
+                    effective = plan with { Info = plan.Info with { SicilNumarasi = assigned.Value }, HasChanges = plan.HasChanges || assigned.Value != plan.Info.SicilNumarasi };
+                }
+                if (plan.LegacySourceSystem is { } acceptedSource && plan.LegacyPersonnelNumber is { } acceptedLegacy) legacyKeys[(acceptedSource, acceptedLegacy)] = plan.NewId;
+                accepted.Add(effective);
+            }
+            if (batch.FailurePolicy == ImportFailurePolicy.AllOrNothing && results.Count > 0) return NotApplied(batch, results, plans);
+            plans = accepted;
+        }
         var applied = await ApplyAsync(plans, results, snapshot.Placement, cancellationToken).ConfigureAwait(false);
+        if (personnelNumbers is not null)
+        {
+            foreach (var plan in plans.Where(p => p.LegacySourceSystem is not null && p.LegacyPersonnelNumber is not null && results[p.RowNumber].Outcome is ImportRowOutcome.Inserted or ImportRowOutcome.Updated))
+            {
+                var mapped = await personnelNumbers.AddLegacyAsync(plan.NewId, plan.LegacySourceSystem!, plan.LegacyPersonnelNumber!, cancellationToken);
+                if (mapped.IsFailure) results[plan.RowNumber] = Failed(plan, mapped.Error.Code);
+            }
+        }
         if (batch.FailurePolicy == ImportFailurePolicy.AllOrNothing && results.Values.Any(r => r.Outcome == ImportRowOutcome.Error))
         {
             return NotApplied(batch, results, plans.Where(p => results[p.RowNumber].Outcome != ImportRowOutcome.Error).ToList());
@@ -230,6 +273,7 @@ public sealed class EmployeeImportRowHandler(
     {
         foreach (var plan in validPlans)
         {
+            if (results.TryGetValue(plan.RowNumber, out var result) && result.Outcome == ImportRowOutcome.Error) continue;
             results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Skipped, plan.NationalId, plan.Existing?.Id, []);
         }
 
@@ -254,7 +298,9 @@ public sealed record EmployeeImportPlan(
     bool HasChanges,
     SalaryRecordData? Salary = null,
     IReadOnlyDictionary<Guid, string?>? CustomFieldValues = null,
-    BankAccountData? Bank = null);
+    BankAccountData? Bank = null,
+    string? LegacySourceSystem = null,
+    string? LegacyPersonnelNumber = null);
 
 public sealed record EmployeeImportValidation(EmployeeImportPlan? Plan, string? MatchKey, Guid? ExistingId, IReadOnlyList<ImportRowError> Errors);
 

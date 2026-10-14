@@ -2080,4 +2080,24 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.pay_item_deduction_basis_invalid" xml:space="preserve"><value>Kesinti türünde tutar türü 'net' olamaz; kesinti vergilerden sonra netten düşülür.</value></data>
   <data name="payroll.errors.pay_item_direction_locked" xml:space="preserve"><value>Çalışanlara atanmış bir ödeme türünün yönü (kazanç/kesinti) değiştirilemez; yeni bir ödeme türü oluşturun.</value></data>
   <data name="payroll.warning.pay_item_deduction_capped" xml:space="preserve"><value>Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi (net negatif olmaz). Kesinti tanımlarını ve atama değerlerini kontrol edin.</value></data>
+  <data name="Employee.PersonnelNumber.LegacyConflict" xml:space="preserve"><value>Kaynak sistem ve eski sicil başka bir çalışanla eşleşiyor.</value></data>
+  <data name="Employee.PersonnelNumber.RuleNotFound" xml:space="preserve"><value>Sicil atama kuralı bulunamadı.</value></data>
+  <data name="Employee.PersonnelNumber.DuplicateRange" xml:space="preserve"><value>Bu sicil aralık kodu zaten kullanılıyor.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidRange" xml:space="preserve"><value>Sicil aralığı geçersiz. Başlangıç ve bitiş 8 haneli olmalı; bitiş yalnız genişletilebilir.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidRule" xml:space="preserve"><value>Sicil atama kuralı geçersiz.</value></data>
+  <data name="Employee.PersonnelNumber.ExternalInvalid" xml:space="preserve"><value>Manuel sicil 8 haneli ve seçilen aralık içinde olmalıdır.</value></data>
+  <data name="Employee.PersonnelNumber.InternalSupplied" xml:space="preserve"><value>Otomatik sicil aralığında elle sicil verilemez.</value></data>
+  <data name="Employee.PersonnelNumber.MissingRule" xml:space="preserve"><value>Şirket ve işlem için sicil atama kuralı tanımlayın.</value></data>
+  <data name="Employee.PersonnelNumber.RangeInUse" xml:space="preserve"><value>Aralığı pasifleştirmeden önce bağlı kuralları pasifleştirin.</value></data>
+  <data name="Employee.PersonnelNumber.Exhausted" xml:space="preserve"><value>Sicil aralığı doldu. Aralığı genişletin veya yeni aralık tanımlayın.</value></data>
+  <data name="Employee.PersonnelNumber.DuplicateRule" xml:space="preserve"><value>Şirket, personel alanı ve işlem için etkin kural zaten var.</value></data>
+  <data name="Employee.PersonnelNumber.OverlappingRange" xml:space="preserve"><value>Sicil aralıkları çakışamaz; pasif aralıklar da korunur.</value></data>
+  <data name="Employee.PersonnelNumber.RangeNotFound" xml:space="preserve"><value>Aktif sicil aralığı bulunamadı.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidCompany" xml:space="preserve"><value>Şirket veya personel alanı geçersiz.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidLegacy" xml:space="preserve"><value>Eski sicil ve kaynak sistem birlikte verilmelidir; en fazla 100 karakter olabilir.</value></data>
+  <data name="Employee.PersonnelNumber.Immutable" xml:space="preserve"><value>Atanmış sicil numarası değiştirilemez veya silinemez.</value></data>
+  <data name="Employee.PersonnelNumber.AlreadyAssigned" xml:space="preserve"><value>Bu sicil numarası daha önce atanmış.</value></data>
+  <data name="employee.personnel_number.manage" xml:space="preserve"><value>Sicil aralıklarını ve atama kurallarını yönetme</value></data>
+  <data name="import.column.employee.legacySourceSystem" xml:space="preserve"><value>Eski kaynak sistem</value></data>
+  <data name="import.column.employee.legacyPersonnelNumber" xml:space="preserve"><value>Eski sicil numarası</value></data>
 </root>

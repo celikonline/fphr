@@ -55,6 +55,7 @@ public sealed class EmployeeModule : IModule
         // IIntegrationEventOutbox/ModuleUnitOfWorkResolver resolve an event's owning module by its assembly.
         services.AddModuleHandlers(EmployeeDbContext.SchemaName, typeof(EmployeeErrors).Assembly, typeof(EmployeeDbContext).Assembly, typeof(EmployeePermissions).Assembly);
 
+        services.AddScoped<IPersonnelNumberService, PersonnelNumberService>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IEmployeeReadStore, EmployeeReadStore>();
         services.AddScoped<IEmployeeCostCenterLookup, EmployeeCostCenterLookup>();

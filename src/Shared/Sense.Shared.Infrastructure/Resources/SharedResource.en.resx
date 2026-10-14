@@ -2071,4 +2071,24 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.pay_item_deduction_basis_invalid" xml:space="preserve"><value>A deduction cannot have the 'net' amount basis; a deduction is taken off the net after the taxes.</value></data>
   <data name="payroll.errors.pay_item_direction_locked" xml:space="preserve"><value>The direction (earning/deduction) of a pay item that is assigned to employees cannot be changed; create a new pay item.</value></data>
   <data name="payroll.warning.pay_item_deduction_capped" xml:space="preserve"><value>The formula deductions exceeded the net that was left; the excess was not taken (the net never goes negative). Check the deduction definitions and the assigned values.</value></data>
+  <data name="Employee.PersonnelNumber.LegacyConflict" xml:space="preserve"><value>Legacy source system and number belong to another employee.</value></data>
+  <data name="Employee.PersonnelNumber.RuleNotFound" xml:space="preserve"><value>Personnel number rule not found.</value></data>
+  <data name="Employee.PersonnelNumber.DuplicateRange" xml:space="preserve"><value>Personnel number range code already exists.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidRange" xml:space="preserve"><value>Invalid personnel number range. Use 8 digits; the end may only be extended.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidRule" xml:space="preserve"><value>Invalid personnel number rule.</value></data>
+  <data name="Employee.PersonnelNumber.ExternalInvalid" xml:space="preserve"><value>External personnel number must contain 8 digits and be within the range.</value></data>
+  <data name="Employee.PersonnelNumber.InternalSupplied" xml:space="preserve"><value>A personnel number cannot be supplied for an internal range.</value></data>
+  <data name="Employee.PersonnelNumber.MissingRule" xml:space="preserve"><value>Configure a personnel number rule for the company and operation.</value></data>
+  <data name="Employee.PersonnelNumber.RangeInUse" xml:space="preserve"><value>Deactivate associated rules before deactivating the range.</value></data>
+  <data name="Employee.PersonnelNumber.Exhausted" xml:space="preserve"><value>Personnel number range exhausted. Extend it or configure another range.</value></data>
+  <data name="Employee.PersonnelNumber.DuplicateRule" xml:space="preserve"><value>An active rule already exists for this company, personnel area and operation.</value></data>
+  <data name="Employee.PersonnelNumber.OverlappingRange" xml:space="preserve"><value>Personnel number ranges must not overlap, including inactive ranges.</value></data>
+  <data name="Employee.PersonnelNumber.RangeNotFound" xml:space="preserve"><value>Active personnel number range not found.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidCompany" xml:space="preserve"><value>Invalid company or personnel area.</value></data>
+  <data name="Employee.PersonnelNumber.InvalidLegacy" xml:space="preserve"><value>Supply both the legacy source system and personnel number, at most 100 characters each.</value></data>
+  <data name="Employee.PersonnelNumber.Immutable" xml:space="preserve"><value>An assigned personnel number cannot be changed or cleared.</value></data>
+  <data name="Employee.PersonnelNumber.AlreadyAssigned" xml:space="preserve"><value>Personnel number has already been assigned.</value></data>
+  <data name="employee.personnel_number.manage" xml:space="preserve"><value>Manage personnel number ranges and assignment rules</value></data>
+  <data name="import.column.employee.legacySourceSystem" xml:space="preserve"><value>Legacy source system</value></data>
+  <data name="import.column.employee.legacyPersonnelNumber" xml:space="preserve"><value>Legacy personnel number</value></data>
 </root>

@@ -344,7 +344,12 @@
       "clearAll": "Leeren",
       "period": "Zeitraum",
       "periodHint": "Urlaubs-, Überstunden-, Lohnabrechnungs-, Inventar- und Zahlungslisten werden nach diesem Zeitraum gefiltert; andere Daten zeigen den aktuellen Stand.",
-      "presets": { "last12Months": "Letzte 12 Monate", "thisYear": "Dieses Jahr", "allTime": "Gesamter Zeitraum", "custom": "Benutzerdefiniert" },
+      "presets": {
+        "last12Months": "Letzte 12 Monate",
+        "thisYear": "Dieses Jahr",
+        "allTime": "Gesamter Zeitraum",
+        "custom": "Benutzerdefiniert"
+      },
       "from": "Von",
       "to": "Bis",
       "invalidPeriod": "Das Ende darf nicht vor dem Beginn liegen.",
@@ -940,5 +945,20 @@
       "type": "Nur PDF-, PNG-, JPG-, TXT-, DOCX- und XLSX-Dateien können angehängt werden."
     },
     "truncated": "Die ersten {{count}} Notizen werden angezeigt."
+  },
+  "personnelNumbers": {
+    "title": "Personalnummer",
+    "number": "Personalnummer",
+    "unconfigured": "Vergaberegeln sind noch nicht eingerichtet. Die bisherige manuelle Eingabe ist verfügbar.",
+    "automatic": "Automatische Vergabe beim Speichern. Vorschau: {{next}} (kann sich beim Speichern ändern).",
+    "exhausted": "Der Nummernkreis ist ausgeschöpft. Vor dem Speichern einen neuen Nummernkreis einrichten.",
+    "invalid": "Eine achtstellige Personalnummer innerhalb des zugewiesenen Nummernkreises eingeben.",
+    "loadError": "Die Vergaberegel konnte nicht geladen werden. Vor dem Speichern erneut versuchen.",
+    "retry": "Erneut versuchen",
+    "sourceSystem": "Altes Quellsystem",
+    "legacyNumber": "Alte Personalnummer",
+    "references": "Personalnummern aus Altsystemen",
+    "immutable": "Die Personalnummer ist unveränderlich, bleibt bei einem Unternehmenswechsel erhalten und wird nicht erneut vergeben.",
+    "assign": "Personalnummer vergeben"
   }
 }

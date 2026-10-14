@@ -21,6 +21,8 @@ import {
 } from "./employee-form";
 import OrgUnitSelect from "./org-unit-select";
 import EmployeePicker, { type PickedEmployee } from "./employee-picker";
+import { PersonnelNumberFields, usePersonnelNumberAssignment } from "./personnel-number-fields";
+import { acceptsPersonnelNumber } from "@/services/personnel-numbers.service";
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -52,6 +54,11 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   const canInvite = usePermission("identity.users.invite");
   const [sendCredentials, setSendCredentials] = useState(true);
   const [saveAndNew, setSaveAndNew] = useState(false);
+  const [sicil, setSicil] = useState("");
+  const [sicilError, setSicilError] = useState<string>();
+  const assignment = usePersonnelNumberAssignment(orgUnitId, open);
+  const assignmentBlocked = assignment.isPending || assignment.isFetching || assignment.isError || !assignment.data ||
+    (assignment.data.configured && assignment.data.assignmentMode === "internal" && !assignment.data.nextNumber);
 
   const { clearDraft } = useFormDraft<CreateEmployeeDraft>({
     storageKey: DRAFT_STORAGE_KEY,
@@ -71,11 +78,14 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
     setManager(null);
     setErrors({});
     setSendCredentials(true);
+    setSicil("");
+    setSicilError(undefined);
   }
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const employee = await createEmployee({ ...generalValuesToInput(values), orgUnitId, managerEmployeeId: manager?.id ?? null });
+      const employee = await createEmployee({ ...generalValuesToInput(values), orgUnitId, managerEmployeeId: manager?.id ?? null,
+        sicilNumarasi: assignment.data?.assignmentMode === "internal" ? undefined : sicil.trim() || undefined });
       // The employee already exists here: an invitation failure is reported but never undoes the creation.
       // Without the invite permission or with the switch off the invite endpoint is not called at all.
       if (!canInvite || !sendCredentials) return { employee, invitation: null, inviteError: null, skipped: canInvite };
@@ -87,6 +97,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
     },
     onSuccess: ({ employee, inviteError, skipped }) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+      queryClient.invalidateQueries({ queryKey: ["personnel-numbers"] });
       toast({ variant: "success", title: t("common:success"), description: t("employees:create.success") });
       if (inviteError) {
         toast({
@@ -110,7 +121,11 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   });
 
   function submit(andNew: boolean) {
-    if (mutation.isPending) return;
+    if (mutation.isPending || assignmentBlocked) return;
+    if (assignment.data?.assignmentMode !== "internal" && !acceptsPersonnelNumber(sicil.trim(), assignment.data!)) {
+      setSicilError(t("employees:personnelNumbers.invalid"));
+      return;
+    }
     setSaveAndNew(andNew);
     const found = validateGeneral(values, t);
     setErrors(found);
@@ -157,6 +172,8 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             />
             <EmployeePicker id="new-emp-manager" label={t("employees:fields.manager")} value={manager} onChange={setManager} allowClear />
           </div>
+          <PersonnelNumberFields assignment={assignment.data} loading={assignment.isPending || assignment.isFetching} error={assignment.error} retry={() => void assignment.refetch()} value={sicil} onChange={(value) => { setSicil(value); setSicilError(undefined); }} disabled={mutation.isPending} fieldError={sicilError} />
+          {sicilError && <Text c="red" role="alert">{sicilError}</Text>}
           {canInvite && (
           <Switch
             checked={sendCredentials}
@@ -182,11 +199,11 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
               variant="light"
               onClick={() => submit(true)}
               loading={mutation.isPending && saveAndNew}
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || assignmentBlocked}
             >
               {t("common:saveAndNew")}
             </Button>
-            <Button type="submit" loading={mutation.isPending && !saveAndNew} disabled={mutation.isPending}>
+            <Button type="submit" loading={mutation.isPending && !saveAndNew} disabled={mutation.isPending || assignmentBlocked}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
           </Group>

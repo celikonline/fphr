@@ -72,7 +72,7 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// gerekirse tek satırlık ekleme (bkz. IAuditLogged.AuditedFields'ın doc comment'i).
     /// </summary>
     public static IReadOnlyList<string> AuditedFields { get; } =
-        [nameof(BirthDate), nameof(HireDate), nameof(SgkExitCode), nameof(TerminationDate), nameof(Status)];
+        [nameof(BirthDate), nameof(HireDate), nameof(SgkExitCode), nameof(TerminationDate), nameof(Status), nameof(SicilNumarasi)];
 
     private readonly List<CareerRecord> _careerRecords = [];
 
@@ -253,6 +253,7 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>True if this call transitioned the employee from Draft (no hire date) to Active (hire date set) - the caller enqueues EmployeeHired exactly once for that transition.</summary>
     public Result<bool> UpdateInfo(EmployeeInfo info)
     {
+        if (SicilNumarasi is not null && Normalize(info.SicilNumarasi) != SicilNumarasi) return Error.Rule("Employee.PersonnelNumber.Immutable");
         var wasHired = Status == EmployeeStatus.Active;
         var previousHireDate = HireDate;
 

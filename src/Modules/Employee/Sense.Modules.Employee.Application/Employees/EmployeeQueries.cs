@@ -111,7 +111,8 @@ public sealed class EmployeeDetailBuilder(
     TimeProvider clock,
     OrgPlacementLoader placementLoader,
     Domain.ISubcontractorRepository subcontractors,
-    ICostCenterLookup costCenters)
+    ICostCenterLookup costCenters,
+    IPersonnelNumberService? personnelNumbers = null)
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
@@ -218,7 +219,9 @@ public sealed class EmployeeDetailBuilder(
             e.CostCenterId,
             costCenter?.Code,
             costCenter?.Name,
-            costCenter?.IsActive);
+            costCenter?.IsActive,
+            e.SicilNumarasi,
+            personnelNumbers is null ? null : await personnelNumbers.LegacyAsync(e.Id, ct));
     }
 }
 

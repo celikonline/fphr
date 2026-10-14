@@ -24,23 +24,34 @@ public sealed class EmployeeProvisioning : IEmployeeProvisioning
     private readonly IEmployeeRepository _employees;
     private readonly IIntegrationEventOutbox _outbox;
     private readonly IEmployeeUnitOfWork _unitOfWork;
+    private readonly IPersonnelNumberService? _personnelNumbers;
 
     public EmployeeProvisioning(
         ITenantContext tenant,
         IEmployeeRepository employees,
         IIntegrationEventOutbox outbox,
-        IEmployeeUnitOfWork unitOfWork)
+        IEmployeeUnitOfWork unitOfWork,
+        IPersonnelNumberService? personnelNumbers = null)
     {
         _tenant = tenant;
         _employees = employees;
         _outbox = outbox;
         _unitOfWork = unitOfWork;
+        _personnelNumbers = personnelNumbers;
     }
 
     public async Task<Guid> CreateFromCandidateAsync(
         Guid tenantId,
         CandidateHireRequest request,
         CancellationToken cancellationToken = default)
+    {
+        if (_personnelNumbers is null) return await CreateCoreAsync(tenantId, request, cancellationToken);
+        if (_tenant.TenantId != tenantId) throw new InvalidOperationException("Employee tenant mismatch.");
+        Guid employeeId = default;
+        await _personnelNumbers.ExecuteImportAsync(async ct => { employeeId = await CreateCoreAsync(tenantId, request, ct); }, cancellationToken);
+        return employeeId;
+    }
+    private async Task<Guid> CreateCoreAsync(Guid tenantId, CandidateHireRequest request, CancellationToken cancellationToken)
     {
         // TODO: Once Employee.Domain.Employee has a SourceApplicationId field (migration required, ADR-0022 exemption),
         // uncomment this idempotency check:
@@ -62,6 +73,12 @@ public sealed class EmployeeProvisioning : IEmployeeProvisioning
             WorkPhone: request.Phone,
             HireDate: hireDate);
 
+        if (_personnelNumbers is not null)
+        {
+            var assigned = await _personnelNumbers.AssignAsync(request.OrgUnitId, PersonnelNumberOperation.Hire, null, cancellationToken);
+            if (assigned.IsFailure) throw new InvalidOperationException(assigned.Error.Code);
+            info = info with { SicilNumarasi = assigned.Value };
+        }
         var result = EmployeeEntity.Create(
             tenantId: tenantId,
             info: info,

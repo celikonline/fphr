@@ -199,7 +199,9 @@
     "orgChart": "Org chart",
     "orgChartDesc": "View the unit and employee hierarchy as a chart",
     "delegations": "Approval delegations",
-    "delegationsDesc": "Delegate approval authority for a period"
+    "delegationsDesc": "Delegate approval authority for a period",
+    "personnelNumbers": "Personnel number ranges and rules",
+    "personnelNumbersDesc": "Select internal or external ranges by company (BUKRS) and personnel area (WERKS). Main personnel numbers are unique within the tenant and permanent."
   },
   "create": {
     "label": "Create"

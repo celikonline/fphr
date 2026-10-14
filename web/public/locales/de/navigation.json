@@ -199,7 +199,9 @@
     "orgChart": "Organigramm",
     "orgChartDesc": "Einheiten- und Mitarbeiterhierarchie als Diagramm anzeigen",
     "delegations": "Genehmigungsvertretungen",
-    "delegationsDesc": "Genehmigungsbefugnis befristet delegieren"
+    "delegationsDesc": "Genehmigungsbefugnis befristet delegieren",
+    "personnelNumbers": "Personalnummernkreise und Vergaberegeln",
+    "personnelNumbersDesc": "Interne oder externe Nummernkreise nach Buchungskreis (BUKRS) und Personalbereich (WERKS) auswählen. Personalnummern sind im Mandanten eindeutig und unveränderlich."
   },
   "create": {
     "label": "Erstellen"

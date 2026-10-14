@@ -84,7 +84,9 @@ public sealed record EmployeeDetailDto(
     Guid? CostCenterId = null,
     string? CostCenterCode = null,
     string? CostCenterName = null,
-    bool? CostCenterIsActive = null);
+    bool? CostCenterIsActive = null,
+    string? SicilNumarasi = null,
+    IReadOnlyList<LegacyPersonnelNumberDto>? LegacyPersonnelNumbers = null);
 
 /// <summary>
 /// Result of the termination wizard's submit step: the updated card plus the advisory job-security warning (never

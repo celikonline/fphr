@@ -344,7 +344,12 @@
       "clearAll": "Temizle",
       "period": "Dönem",
       "periodHint": "İzin, fazla mesai, pusula, zimmet ve ödeme listeleri bu döneme göre süzülür; diğer bilgiler güncel haliyle gelir.",
-      "presets": { "last12Months": "Son 12 ay", "thisYear": "Bu yıl", "allTime": "Tüm zamanlar", "custom": "Özel" },
+      "presets": {
+        "last12Months": "Son 12 ay",
+        "thisYear": "Bu yıl",
+        "allTime": "Tüm zamanlar",
+        "custom": "Özel"
+      },
       "from": "Başlangıç",
       "to": "Bitiş",
       "invalidPeriod": "Bitiş başlangıçtan önce olamaz.",
@@ -940,5 +945,20 @@
       "type": "Yalnız PDF, PNG, JPG, TXT, DOCX ve XLSX dosyaları eklenebilir."
     },
     "truncated": "İlk {{count}} not gösteriliyor."
+  },
+  "personnelNumbers": {
+    "title": "Sicil bilgileri",
+    "number": "Sicil numarası",
+    "unconfigured": "Sicil atama kuralları henüz tanımlanmadı. Mevcut manuel sicil girişi kullanılabilir.",
+    "automatic": "Kaydedildiğinde otomatik atanacak. Öngörülen numara: {{next}} (kayıt anında değişebilir).",
+    "exhausted": "Sicil aralığı doldu. Yeni aralık tanımlanmadan kayıt yapılamaz.",
+    "invalid": "Sicil tanımlı aralık içinde 8 haneli bir sayı olmalıdır.",
+    "loadError": "Sicil atama kuralı yüklenemedi. Kayıt için tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "sourceSystem": "Eski kaynak sistem",
+    "legacyNumber": "Eski sicil",
+    "references": "Eski sistem sicilleri",
+    "immutable": "Ana sicil kalıcıdır; şirket transferinde korunur ve başka çalışana verilmez.",
+    "assign": "Sicil ata"
   }
 }

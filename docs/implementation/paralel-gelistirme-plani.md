@@ -173,3 +173,13 @@ sözleşme/handler/job/DI dosyaları, Shared Export PDF seçenekleri ve TR/EN ka
 web rapor sayfası/viewer/service ve TR/EN/DE rapor etiketleri bu işin geliştiricisine aittir.
 Mevcut ortak dosyalarda diğer oturumların değişiklikleri korunur. Ana oturum iş kartı,
 handoff ve Faz 4 durum belgesini yönetir; bağımsız gözden geçirici salt okuma yapar.
+
+## 2026-10-14 — SAP HCM sicil yönetimi dosya sahipliği
+
+Backend geliştiricisi Employee domain/application/infrastructure/API ve migration,
+Employee/etkilenen modül testleri, permission/system role ve Shared TR/EN kaynaklarını
+yönetir. Web geliştiricisi sicil servisi, ayarlar, çalışan oluşturma/kart, rota/menü,
+TR/EN/DE çeviri ve web testlerini yönetir. Ana oturum `docs/**` sahibi; bağımsız
+gözden geçirici salt okuma ile testleri tekrar çalıştırır. Mevcut cost-center ve
+organizasyon şeması değişiklikleri korunur; ortak dosyalarda yalnız ilgili eklemeler
+yapılır. Sözleşme: `sap-hcm-sicil-yonetimi.md`.

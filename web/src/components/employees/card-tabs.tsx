@@ -16,6 +16,7 @@ import { PaymentsSection } from "./payments-section";
 import { PAYROLL_CARD_TAB_PERMISSIONS, PayrollSection } from "./payroll-section";
 import { SubcontractorSection } from "./subcontractor-section";
 import { CostCenterSection } from "./cost-center-section";
+import { PersonnelNumberSection } from "./personnel-number-section";
 import { UnionSection } from "./union-section";
 import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
 import { OVERTIME_CARD_TAB_PERMISSION, OvertimeSection } from "@/components/leave/overtime-section";
@@ -44,6 +45,7 @@ function GeneralWithSubcontractor({ employee }: EmployeeCardTabProps) {
   return (
     <Stack gap="lg">
       <GeneralSection employee={employee} />
+      <PersonnelNumberSection employee={employee} />
       <CostCenterSection employee={employee} />
       <SubcontractorSection employee={employee} />
     </Stack>

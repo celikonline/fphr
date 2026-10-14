@@ -83,9 +83,9 @@ public static class SystemRoleDefinitions
     [
         new(SystemRoleCodes.Owner, DataScope.Company, [PermissionPatterns.All], []),
 
-        new(SystemRoleCodes.HR, DataScope.Company, [PermissionPatterns.All], []),
+        new(SystemRoleCodes.HR, DataScope.Company, [PermissionPatterns.All, "employee.personnel_number.manage"], []),
 
-        new(SystemRoleCodes.PayrollSpecialist, DataScope.Company, [PermissionPatterns.All], []),
+        new(SystemRoleCodes.PayrollSpecialist, DataScope.Company, [PermissionPatterns.All, "employee.personnel_number.manage"], []),
 
         // Müdür: ekip kapsamı (bağlı çalışanlar). İzin/harcama onayı Onay Kutusu'ndan, aylık puantaj onayı, vardiya
         // planlama, ekip hedefleri, mülakat formu; maaş/hassas veri yok.

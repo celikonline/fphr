@@ -1,8 +1,23 @@
 # Faz 1a Durum Takibi (PC-A: Employee / özlük)
 
+## 2026-10-14 — SAP HCM sicil yönetimi (✅ Tamamlandı)
+
+Çakışmayan sekiz haneli dahili/harici aralıklar, şirket/personel alanı atama
+kuralları, işe alım önizlemesi, değişmez sicil ve eski sistem referansları eklendi.
+Kanıt: `PersonnelNumberRange.cs`, `PersonnelNumberService.cs`,
+`PersonnelNumbersController.cs`, `EmployeeImportRowHandler.cs`;
+web `settings/personnel-numbers.tsx`, `personnel-number-section.tsx` ve
+`create-employee-dialog.tsx`. Yeni yönetim izni ve mevcut sistem rol senkronizasyonu
+bağlandı. Geliştirici ve bağımsız inceleyici: Employee **424/424**, DataTransfer
+**56/56**, web **29/29**; tip kontrolü, ESLint ve Vite/PWA derlemesi geçti.
+Mevcut eski biçimli siciller korunur; yapılandırılmamış tenant eski davranışı
+sürdürür. Ayrı eşzamanlı istihdam modeli bu değişikliğin kapsamı dışındadır.
+Sözleşme:
+[sap-hcm-sicil-yonetimi.md](../../implementation/sap-hcm-sicil-yonetimi.md).
+
 Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 1 satırları, ayrıntı [11.3.03-ozluk.md](./11.3.03-ozluk.md); iş bölümü [paralel-gelistirme-plani.md](../../implementation/paralel-gelistirme-plani.md). Faz 1'in Workflow / Notifications / Leave kalemleri (#14–#31, #42–#44) PC-B hattındadır ve burada izlenmez.
 
-**Son güncelleme:** 2026-09-16 (E5a, E5b, E6 ve E7 grid çalışması)
+**Son güncelleme:** 2026-10-14 (SAP HCM sicil yönetimi ve aktarım)
 **Nasıl güncellenir:** Kalem durumu değişince satırı koda göre güncelle, tarihi değiştir. Durumlar: ❌ Başlanmadı · 🟡 Kısmi · ✅ Bitti · ⏸ Bağımlılık bekliyor.
 
 ## PC-B için senkronizasyon noktaları

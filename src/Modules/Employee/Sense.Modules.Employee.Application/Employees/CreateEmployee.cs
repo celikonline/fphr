@@ -79,7 +79,8 @@ public sealed class CreateEmployeeHandler(
     EmployeeSensitiveAccess sensitiveAccess,
     IIntegrationEventOutbox outbox,
     CareerService career,
-    EmployeeDetailBuilder details) : ICommandHandler<CreateEmployeeCommand, EmployeeDetailDto>
+    EmployeeDetailBuilder details,
+    IPersonnelNumberService? personnelNumbers = null) : ICommandHandler<CreateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(CreateEmployeeCommand command, CancellationToken cancellationToken)
     {
@@ -95,6 +96,12 @@ public sealed class CreateEmployeeHandler(
             return checkedRefs.Error;
         }
 
+        if (personnelNumbers is not null)
+        {
+            var assigned = await personnelNumbers.AssignAsync(command.OrgUnitId, PersonnelNumberOperation.Hire, info.SicilNumarasi, cancellationToken);
+            if (assigned.IsFailure) return assigned.Error;
+            info = info with { SicilNumarasi = assigned.Value };
+        }
         var result = EmployeeEntity.Create(tenant.TenantId, info, userId: null, command.OrgUnitId, command.ManagerEmployeeId);
         if (result.IsFailure)
         {

@@ -746,6 +746,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         permissions: SETTINGS_PERMISSIONS.costCenters,
       },
       {
+        key: "personnelNumbers",
+        labelKey: "settings.personnelNumbers",
+        descriptionKey: "settings.personnelNumbersDesc",
+        path: "/app/settings/company/personnel-numbers",
+        icon: Landmark,
+        permissions: ["employee.personnel_number.manage"],
+      },
+      {
         key: "subcontractors",
         labelKey: "settings.subcontractors",
         descriptionKey: "settings.subcontractorsDesc",
