@@ -44,7 +44,10 @@ const ZOOM_STEPS = [0.5, 0.65, 0.8, 1, 1.2];
 const PRINT_WIDTH_PX = 1030;
 
 function normalize(value: string): string {
-  return value.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return value
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 /** Exported for unit testing the expand-depth semantics (H-05); not used outside this module otherwise. */
@@ -71,7 +74,8 @@ function searchTree(nodes: OrgChartNode[], needle: string) {
   const visit = (node: OrgChartNode): boolean => {
     let hit =
       normalize(node.displayName).includes(needle) ||
-      normalize(node.titleName ?? "").includes(needle);
+      normalize(node.titleName ?? "").includes(needle) ||
+      normalize(node.departmentName ?? "").includes(needle);
     if (hit) matches.add(node.id);
     let childHit = false;
     for (const child of node.children) childHit = visit(child) || childHit;
@@ -529,77 +533,95 @@ function OrgChartItem({
         data-match={isMatch || undefined}
         data-dimmed={(matches !== undefined && !isMatch) || undefined}
       >
-        <div className={classes.avatar}>
-          {canOpenCard ? (
-            <Popover
-              opened={cardOpened}
-              onChange={setCardOpened}
-              position="right-start"
-              withArrow
-              shadow="md"
-              trapFocus
-            >
-              <Popover.Target>
-                <UnstyledButton
-                  type="button"
-                  className={classes.avatarButton}
-                  aria-label={t("employees:orgChart.viewCard", { name: node.displayName })}
-                  onClick={() => setCardOpened((o) => !o)}
-                >
-                  <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
-                    {avatarInitials}
-                  </Avatar>
-                </UnstyledButton>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <OrgChartPersonCard employeeId={node.id} opened={cardOpened} />
-              </Popover.Dropdown>
-            </Popover>
-          ) : (
-            <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
-              {avatarInitials}
-            </Avatar>
-          )}
-          {hasChildren && (
-            <Tooltip label={toggleLabel} openDelay={400}>
-              <ActionIcon
-                type="button"
-                size="sm"
-                radius="xl"
-                variant="default"
-                className={classes.toggle}
-                aria-label={toggleLabel}
-                data-print-hide
-                onClick={() => onToggle(node.id)}
-              >
-                {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </ActionIcon>
-            </Tooltip>
+        <div className={classes.departmentSection}>
+          <Text component="span" className={classes.label}>
+            {t("employees:orgChart.department")}
+          </Text>
+          <Text component="span" className={classes.department}>
+            {node.departmentName || t("employees:enum.notSet")}
+          </Text>
+        </div>
+        <div className={classes.positionSection}>
+          <Text component="span" className={classes.label}>
+            {t("employees:orgChart.position")}
+          </Text>
+          <Text component="span" className={classes.title}>
+            {node.titleName || t("employees:enum.notSet")}
+          </Text>
+          {node.companyName && (
+            <Text component="span" className={classes.companyName}>
+              {node.companyName}
+            </Text>
           )}
         </div>
-        {canOpenCard ? (
-          <Anchor
-            component={Link}
-            to={`/app/employees/${node.id}`}
-            className={classes.name}
-            underline="hover"
-          >
-            {node.displayName}
-          </Anchor>
-        ) : (
-          <Text component="span" className={classes.name}>
-            {node.displayName}
-          </Text>
-        )}
-        {node.titleName && (
-          <Text component="span" className={classes.title}>
-            {node.titleName}
-          </Text>
-        )}
-        {node.departmentName && (
-          <Text component="span" className={classes.department}>
-            {node.departmentName}
-          </Text>
+        <div className={classes.personSection}>
+          <div className={classes.avatar}>
+            {canOpenCard ? (
+              <Popover
+                opened={cardOpened}
+                onChange={setCardOpened}
+                position="right-start"
+                withArrow
+                shadow="md"
+                trapFocus
+              >
+                <Popover.Target>
+                  <UnstyledButton
+                    type="button"
+                    className={classes.avatarButton}
+                    aria-label={t("employees:orgChart.viewCard", { name: node.displayName })}
+                    onClick={() => setCardOpened((o) => !o)}
+                  >
+                    <Avatar size={40} radius="xl" color={avatarColor(node.id)}>
+                      {avatarInitials}
+                    </Avatar>
+                  </UnstyledButton>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <OrgChartPersonCard employeeId={node.id} opened={cardOpened} />
+                </Popover.Dropdown>
+              </Popover>
+            ) : (
+              <Avatar size={40} radius="xl" color={avatarColor(node.id)}>
+                {avatarInitials}
+              </Avatar>
+            )}
+          </div>
+          <div className={classes.personDetails}>
+            <Text component="span" className={classes.label}>
+              {t("employees:orgChart.occupant")}
+            </Text>
+            {canOpenCard ? (
+              <Anchor
+                component={Link}
+                to={`/app/employees/${node.id}`}
+                className={classes.name}
+                underline="hover"
+              >
+                {node.displayName}
+              </Anchor>
+            ) : (
+              <Text component="span" className={classes.name}>
+                {node.displayName}
+              </Text>
+            )}
+          </div>
+        </div>
+        {hasChildren && (
+          <Tooltip label={toggleLabel} openDelay={400}>
+            <ActionIcon
+              type="button"
+              size="sm"
+              radius="xl"
+              variant="default"
+              className={classes.toggle}
+              aria-label={toggleLabel}
+              data-print-hide
+              onClick={() => onToggle(node.id)}
+            >
+              {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </ActionIcon>
+          </Tooltip>
         )}
       </div>
       {isOpen && (
