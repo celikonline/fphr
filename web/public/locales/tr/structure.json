@@ -10,7 +10,8 @@
     "effective": "Bordroda kullanılacak merkez",
     "none": "Atanmamış",
     "saveFailed": "Maliyet merkezi güncellenemedi.",
-    "loadFailed": "Maliyet merkezi bilgisi yüklenemedi."
+    "loadFailed": "Maliyet merkezi bilgisi yüklenemedi.",
+    "directPriority": "Doğrudan çalışan maliyet merkezi ataması önceliklidir. Buradaki organizasyon istisnası, doğrudan atama kaldırıldığında uygulanır."
   },
   "clearSelection": "Seçimi temizle",
   "searchPerson": "İsim veya e-posta ile ara...",

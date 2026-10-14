@@ -88,6 +88,7 @@ describe("employee cost center", () => {
   it("assigns 10200 by code and name using only the dedicated assignment request", async () => {
     const user = userEvent.setup();
     const client = renderSection();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
     expect(getCostCenters).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Düzenle" }));
     const select = screen.getByRole("combobox", { name: "Maliyet merkezi" });
@@ -103,6 +104,8 @@ describe("employee cost center", () => {
         client.getQueryData<EmployeeDetail>(["employees", "detail", "director"])?.costCenterId
       ).toBe("hr-center")
     );
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["organization", "employee-cost-center", "director"] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["payroll", "periods"] });
   });
 
   it("clears an existing assignment explicitly", async () => {

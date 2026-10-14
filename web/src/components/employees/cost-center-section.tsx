@@ -27,6 +27,8 @@ export function CostCenterSection({ employee }: { employee: EmployeeDetail }) {
     onSuccess: (updated) => {
       queryClient.setQueryData(["employees", "detail", employee.id], updated);
       void queryClient.invalidateQueries({ queryKey: ["employees"] });
+      void queryClient.invalidateQueries({ queryKey: ["organization", "employee-cost-center", employee.id] });
+      void queryClient.invalidateQueries({ queryKey: ["payroll", "periods"] });
       toast({
         variant: "success",
         title: t("common:success"),

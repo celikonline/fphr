@@ -10,7 +10,8 @@
     "effective": "Cost center used for payroll",
     "none": "Unassigned",
     "saveFailed": "The cost center could not be updated.",
-    "loadFailed": "The cost center assignment could not be loaded."
+    "loadFailed": "The cost center assignment could not be loaded.",
+    "directPriority": "The direct employee cost center assignment takes priority. This organization override applies after the direct assignment is removed."
   },
   "clearSelection": "Clear selection",
   "searchPerson": "Search by name or email...",

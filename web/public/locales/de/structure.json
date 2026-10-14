@@ -10,7 +10,8 @@
     "effective": "Für die Gehaltsabrechnung verwendete Kostenstelle",
     "none": "Nicht zugewiesen",
     "saveFailed": "Die Kostenstelle konnte nicht aktualisiert werden.",
-    "loadFailed": "Die Kostenstellenzuweisung konnte nicht geladen werden."
+    "loadFailed": "Die Kostenstellenzuweisung konnte nicht geladen werden.",
+    "directPriority": "Die direkte Kostenstellenzuordnung des Mitarbeiters hat Vorrang. Diese Organisationsausnahme gilt erst nach Aufhebung der direkten Zuordnung."
   },
   "clearSelection": "Auswahl aufheben",
   "searchPerson": "Nach Name oder E-Mail suchen...",

@@ -21,8 +21,9 @@ export interface EmployeeCostCenterAssignment {
   employeeId: string;
   orgUnitCostCenterId: string | null;
   employeeOverrideCostCenterId: string | null;
+  employeeDirectCostCenterId?: string | null;
   effectiveCostCenterId: string | null;
-  source: "employee" | "orgUnit" | "unassigned";
+  source: "employeeDirect" | "employee" | "orgUnit" | "unassigned";
 }
 
 export async function getCostCenters(includeInactive = false): Promise<CostCenter[]> {

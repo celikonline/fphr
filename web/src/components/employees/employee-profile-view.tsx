@@ -464,6 +464,9 @@ function EmployeeCostCenterCard({ employeeId }: { employeeId: string }) {
         {canManage && (
           <Info label={t("structure:costCenterAssignment.effective")}>{effectiveLabel}</Info>
         )}
+        {assignmentQuery.data?.source === "employeeDirect" && (
+          <Text size="xs" c="dimmed">{t("structure:costCenterAssignment.directPriority")}</Text>
+        )}
         {mutation.isError && <Text size="xs" c="red">{t("structure:costCenterAssignment.saveFailed")}</Text>}
         {assignmentQuery.isError && <Text size="xs" c="red">{t("structure:costCenterAssignment.loadFailed")}</Text>}
       </Stack>
