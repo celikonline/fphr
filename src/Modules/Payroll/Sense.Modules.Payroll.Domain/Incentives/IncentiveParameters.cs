@@ -40,6 +40,9 @@ public sealed record IncentiveParameters
     /// <summary>Optional cap on the total support, as a multiple of the prorated minimum wage (distinct from the premium base cap).</summary>
     public decimal? MaxSupportMultiplier { get; init; }
 
+    /// <summary>Tax relief only: maximum qualifying gross wage as a multiple of the monthly minimum wage.</summary>
+    public decimal? TaxReliefGrossCapMultiplier { get; init; }
+
     public IncentiveRate? EmployerSgkRate { get; init; }
 
     public bool CoversEmployerSgk { get; init; }
@@ -85,6 +88,11 @@ public sealed record IncentiveParameters
         if (MaxSupportMultiplier is { } supportCap && (supportCap <= 0 || supportCap > MaxCapMultiplier))
         {
             return Invalid("maxSupportMultiplier");
+        }
+
+        if (TaxReliefGrossCapMultiplier is { } taxCap && (kind != IncentiveKind.IncomeTaxWithholdingRelief || taxCap <= 0 || taxCap > 100m))
+        {
+            return Invalid("taxReliefGrossCapMultiplier");
         }
 
         return kind switch

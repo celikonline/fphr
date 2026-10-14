@@ -87,7 +87,8 @@
     "pdksCenter": "PDKS Yönetim Merkezi",
     "payslipImport": "Dış bordro PDF yükleme",
     "payItems": "Ödeme türleri",
-    "incentives": "Teşvikler"
+    "incentives": "Teşvikler",
+    "payrollCenter": "Bordro yönetim merkezi"
   },
   "pdksCenter": {
     "eyebrow": "PDKS • PUANTAJ • VARDİYA",

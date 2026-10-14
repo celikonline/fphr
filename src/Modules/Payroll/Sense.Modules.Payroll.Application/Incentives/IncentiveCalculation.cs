@@ -148,6 +148,10 @@ public sealed class IncentiveCalculation
     private async Task<(IncentiveEffectInput? Effect, string? MissingParameter)> BuildEffectAsync(IncentiveDefinition definition, CancellationToken cancellationToken)
     {
         var parameters = definition.Parameters;
+        if (definition.Kind == IncentiveKind.IncomeTaxWithholdingRelief
+            && definition.TemplateKey is IncentiveTemplates.Tr5746Gv or IncentiveTemplates.Tr4691Gv
+            && _asOf >= new DateOnly(2025, 8, 1) && parameters.TaxReliefGrossCapMultiplier != 40m)
+            return (null, $"Incentive.{definition.Code}.TaxReliefGrossCapMultiplier");
         var (rate, missingRate) = await ResolveRateAsync(parameters.Rate, $"Incentive.{definition.Code}.Rate", cancellationToken);
         if (rate is null)
         {
@@ -166,7 +170,7 @@ public sealed class IncentiveCalculation
             employerSgkRate = resolved;
         }
 
-        var effect = new IncentiveEffectInput(definition.Code, definition.Kind, rate);
+        var effect = new IncentiveEffectInput(definition.Code, definition.Kind, rate, TaxReliefGrossCapMultiplier: parameters.TaxReliefGrossCapMultiplier);
         if (definition.Kind != IncentiveKind.EmployerShareCoverage)
         {
             return (effect, null);

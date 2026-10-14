@@ -40,6 +40,7 @@ interface FormState {
   coverageBase: IncentiveCoverageBase;
   capMultiplier: number | string;
   maxSupportMultiplier: number | string;
+  taxReliefGrossCapMultiplier: number | string;
   employerSgkRate: RateState;
   coversEmployerSgk: boolean;
   coversEmployerUnemployment: boolean;
@@ -75,6 +76,7 @@ function stateFromDefinition(item: IncentiveDefinition | null): FormState {
     coverageBase: p?.coverageBase ?? "actualSgkBase",
     capMultiplier: p?.capMultiplier ?? "",
     maxSupportMultiplier: p?.maxSupportMultiplier ?? "",
+    taxReliefGrossCapMultiplier: p?.taxReliefGrossCapMultiplier ?? "",
     employerSgkRate: rateFromDto(p?.employerSgkRate),
     coversEmployerSgk: p?.coversEmployerSgk ?? false,
     coversEmployerUnemployment: p?.coversEmployerUnemployment ?? false,
@@ -105,6 +107,8 @@ function parametersOf(s: FormState): IncentiveParameters | null {
         coversEmployeeUnemployment: s.coversEmployeeUnemployment,
       };
     }
+    case "incomeTaxWithholdingRelief":
+      return { rate: rateToDto(s.rate), ...(s.taxReliefGrossCapMultiplier === "" ? {} : { taxReliefGrossCapMultiplier: Number(s.taxReliefGrossCapMultiplier) }) };
     default:
       return { rate: rateToDto(s.rate) };
   }
@@ -258,6 +262,16 @@ function IncentiveFormBody({ item, onClose }: { item: IncentiveDefinition | null
             onChange={(rate) => patch({ rate })}
             catalog={catalog}
             catalogFailed={catalogQuery.isError}
+          />
+        )}
+
+        {kind === "incomeTaxWithholdingRelief" && (
+          <NumberInput
+            label={t("payroll:incentives.form.taxReliefGrossCapMultiplier")}
+            description={t("payroll:incentives.form.taxReliefGrossCapMultiplierHint")}
+            value={state.taxReliefGrossCapMultiplier}
+            onChange={(taxReliefGrossCapMultiplier) => patch({ taxReliefGrossCapMultiplier })}
+            min={0.01} max={100} decimalScale={2}
           />
         )}
 

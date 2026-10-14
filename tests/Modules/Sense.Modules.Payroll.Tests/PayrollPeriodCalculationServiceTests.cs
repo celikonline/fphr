@@ -680,13 +680,13 @@ public sealed partial class PayrollPeriodCalculationServiceTests
         var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
         var broken = Guid.NewGuid();
         var normal = Guid.NewGuid();
-        GivenEmployee(profiles, salaryLookup, broken, Salary(0m)); // PayrollCalculator rejects a non-positive gross
+        GivenEmployee(profiles, salaryLookup, broken, Salary(0m)); // Invalid salary records are rejected before the calculation engine
         GivenEmployee(profiles, salaryLookup, normal);
 
         var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [broken, normal], CancellationToken.None);
 
         summary.CalculatedCount.ShouldBe(1);
-        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(broken, PayrollSkipReasons.CalculationFailed)]);
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(broken, PayrollSkipReasons.SalaryRecordInvalid)]);
         payslips.Received(1).Add(Arg.Any<Payslip>());
     }
 
@@ -917,7 +917,7 @@ public sealed partial class PayrollPeriodCalculationServiceTests
         var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
         var employeeId = Guid.NewGuid();
         GivenWageEmployee(profiles, salaryLookup, employeeId, WageBasis.Daily, WageSalary(EmployeePayFrequency.Daily, 2_000m), hireDate: new DateOnly(2026, 9, 16));
-        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 9, Arg.Any<CancellationToken>()).Returns(Task.FromResult<int?>(2));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 9, new DateOnly(2026, 9, 16), new DateOnly(2026, 9, 30), Arg.Any<CancellationToken>()).Returns(Task.FromResult<int?>(2));
 
         await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
 

@@ -9,11 +9,9 @@ namespace Sense.Modules.Leave.Contracts;
 public sealed record LeaveDaySummary(Guid EmployeeId, decimal PaidLeaveDays, decimal UnpaidLeaveDays, decimal SickLeaveDays);
 
 /// <summary>
-/// Leave's read port for Attendance's monthly puantaj summary (Faz 2 A5, mirrors Attendance.Contracts.IAttendanceMonthlySummaryReader's
-/// role for Payroll). Only Approved requests fully contained in [from, to] are counted - a request crossing the
-/// period boundary is not day-split (same documented simplification as ILeaveUsageReader.GetAnnualUsageAsync for
-/// year-spanning requests); this under-counts a handful of boundary-crossing requests rather than double-counting
-/// or guessing a per-day split.
+/// Leave's monthly summary read port. Approved requests intersecting the window are allocated to their
+/// counted dates, including requests spanning months. Allocations preserve the request's stored total;
+/// half-day/hourly requests retain their fractional days and custom types honor their paid setting.
 /// </summary>
 public interface ILeaveDayReader
 {

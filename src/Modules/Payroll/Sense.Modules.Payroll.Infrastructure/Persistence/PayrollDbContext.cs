@@ -420,6 +420,7 @@ public sealed class IncentiveDefinitionConfiguration : IEntityTypeConfiguration<
             p.Property(x => x.CoverageBase).HasConversion(CoverageBaseConverter).HasJsonPropertyName("coverageBase");
             p.Property(x => x.CapMultiplier).HasJsonPropertyName("capMultiplier");
             p.Property(x => x.MaxSupportMultiplier).HasJsonPropertyName("maxSupportMultiplier");
+            p.Property(x => x.TaxReliefGrossCapMultiplier).HasJsonPropertyName("taxReliefGrossCapMultiplier");
             p.Property(x => x.CoversEmployerSgk).HasJsonPropertyName("coversEmployerSgk");
             p.Property(x => x.CoversEmployerUnemployment).HasJsonPropertyName("coversEmployerUnemployment");
             p.Property(x => x.CoversEmployeeSgk).HasJsonPropertyName("coversEmployeeSgk");

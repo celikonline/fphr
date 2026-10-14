@@ -212,7 +212,9 @@
       "done": "{{count}} çalışanın puantajı onaylandı.",
       "nothing": "Onaylanacak puantaj bulunamadı."
     },
-    "emptyGuide": "Tarih ve birim filtrelerini kontrol edin. Cihaz verileri aktarılmadıysa kayıtları içe aktarın."
+    "emptyGuide": "Tarih ve birim filtrelerini kontrol edin. Cihaz verileri aktarılmadıysa kayıtları içe aktarın.",
+    "leaveOnly": "PDKS verisi yok",
+    "leaveOnlyHint": "Bu ay için yalnız izin verisi bulunuyor. Fiili çalışma ve eksik günler doğrulanmadı; bordro alternatif hesabı uyarıyla gösterilir."
   },
   "teamTimesheet": {
     "title": "Ekip puantajı",

@@ -51,6 +51,7 @@ const OhsHazardClassificationPage = lazy(
   () => import("@/pages/settings/ohs-hazard-classification")
 );
 const OhsRiskAssessmentsPage = lazy(() => import("@/pages/settings/ohs-risk-assessments"));
+const PayrollManagementCenterPage = lazy(() => import("@/pages/payroll/management-center"));
 const PayrollPeriodsPage = lazy(() => import("@/pages/payroll/periods"));
 const PayrollPeriodDetailPage = lazy(() => import("@/pages/payroll/period-detail"));
 const WorkflowInboxPage = lazy(() => import("@/pages/inbox"));
@@ -188,6 +189,7 @@ export default function App() {
             <Route path="leave/company-ledger" element={<CompanyLeaveLedgerPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
+            <Route path="payroll/management" element={<PayrollManagementCenterPage />} />
             <Route path="payroll/periods" element={<PayrollPeriodsPage />} />
             <Route path="payroll/periods/:id" element={<PayrollPeriodDetailPage />} />
             <Route path="attendance/timesheet" element={<MyTimesheetPage />} />

@@ -1787,6 +1787,10 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                                 .HasPrecision(18, 4)
                                 .HasJsonPropertyName("maxSupportMultiplier");
 
+                            b1.Property<decimal?>("TaxReliefGrossCapMultiplier")
+                                .HasPrecision(18, 4)
+                                .HasJsonPropertyName("taxReliefGrossCapMultiplier");
+
                             b1.HasKey("IncentiveDefinitionId");
 
                             b1.ToTable("payroll_incentive_definitions", "payroll");

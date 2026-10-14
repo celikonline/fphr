@@ -61,7 +61,7 @@
     "totalGross": "Total gross",
     "totalNet": "Total net",
     "totalEmployerCost": "Total employer cost",
-    "skipped": "{{count}} employees could not be calculated (missing profile or salary).",
+    "skipped": "Calculation was skipped for {{count}} employees; reasons are listed below.",
     "skipReasons": {
       "wage_basis_mismatch": "The payroll profile wage basis does not match the salary record pay frequency",
       "net_wage_basis_unsupported": "The wage basis is unsupported by this calculation version",
@@ -69,7 +69,14 @@
       "hourly_attendance_not_approved": "The timesheet is unapproved or changed after approval; review and approve it again",
       "hourly_attendance_invalid": "Paid hours are invalid; check worked time and missing days",
       "pay_item_formula_failed": "A pay item formula could not be evaluated (for example a division by zero); check the formula and the assigned value",
-      "incentive_parameter_missing": "A legislation parameter an incentive definition refers to could not be found (or is not a valid rate); check the incentive definition and the legislation parameters"
+      "incentive_parameter_missing": "A legislation parameter an incentive definition refers to could not be found (or is not a valid rate); check the incentive definition and the legislation parameters",
+      "salary_record_invalid": "Invalid salary amount, currency or pay frequency; this calculation supports TRY wages",
+      "no_payroll_profile": "No payroll profile covers this period",
+      "no_salary_record": "No salary record is effective at the period or exit date",
+      "wage_basis_not_monthly": "Unsupported wage basis; use monthly, daily or hourly wages",
+      "not_employed_in_period": "Employment dates do not overlap this period",
+      "no_worked_days": "No paid time in this period; review unpaid leave and missing days",
+      "calculation_failed": "Calculation failed; review employee inputs and calculation records"
     },
     "employee": "Employee",
     "gross": "Gross",
@@ -307,7 +314,8 @@
     "incentive_profile_code_ignored": "The employee has an SGK incentive assignment; the incentive law code on the profile was ignored",
     "pay_item_deduction_capped": "The formula deductions exceeded the remaining net; the excess was not taken",
     "incentive_profile_assignment_required": "The profile incentive code requires a model assignment; the general 5510 discount was not applied",
-    "incentive_sgk_status_not_eligible": "The employee's insurance status is not eligible for this premium incentive; it was not applied"
+    "incentive_sgk_status_not_eligible": "The employee's insurance status is not eligible for this premium incentive; it was not applied",
+    "attendance_fallback": "Attendance data is unavailable; HR absence records or a full-month assumption were used. Verify the timesheet."
   },
   "dirtyReasons": {
     "calculation_blocked": "Calculation could not finish; check missing data and timesheet approval",
@@ -341,6 +349,14 @@
       "extraBonus": {
         "name": "Extra bonus",
         "valueHint": "\"deger\" is the monthly gross wage multiplier (e.g. 0.5 = half a month's wage)."
+      },
+      "fixedDeduction": {
+        "name": "Fixed deduction",
+        "valueHint": "Amount deducted from net pay for the period (TRY)."
+      },
+      "percentageDeduction": {
+        "name": "Percentage of gross deduction",
+        "valueHint": "Percentage calculated on period gross wages and deducted from net pay."
       }
     },
     "showInactive": "Show inactive",
@@ -588,7 +604,9 @@
       "error": "The incentive could not be saved.",
       "maxSupportMultiplier": "Total support cap multiplier",
       "maxSupportMultiplierHint": "Leave blank for no total support cap. 1 = gross minimum wage prorated by premium days; this is separate from the premium base cap.",
-      "applyTemplate": "Apply ready model parameters"
+      "applyTemplate": "Apply ready model parameters",
+      "taxReliefGrossCapMultiplier": "Qualifying gross wage ceiling (minimum wage multiple)",
+      "taxReliefGrossCapMultiplierHint": "5746 and 4691 use a 40-times ceiling from 1 August 2025. Set the 5746 rate to 80%, 90% or 95% according to education; assign only for eligible wages."
     },
     "approveModal": {
       "approveTitle": "Approve incentive {{code}}",
@@ -605,7 +623,7 @@
     },
     "templates": {
       "title": "Add incentive from template",
-      "intro": "Add ready SGK models for 5510, 6111 and 4447, plus drafts to complete for 4691, 5746 and 4857/30. Check sector, eligibility and employee duration. 7103 applies only to 2018-2022.",
+      "intro": "Calculation parameters are available for 5510, 6111, 4447, 5746, 4691 and 4857/30. Check employee and workplace eligibility, education rate and validity dates, then complete accountant approval. 7103 applies only to 2018–2022 periods.",
       "reviewTitle": "Templates do not determine eligibility",
       "reviewRequired": "Verify workplace and employee conditions against official SGK/İŞKUR records. Complete draft parameters, declaration codes and approval with your payroll advisor before using them in payroll.",
       "preApproved": "Comes approved",
@@ -708,5 +726,30 @@
       "summary": "{{created}} assignments created, {{skipped}} employees skipped (overlapping SGK assignment)."
     },
     "subtitle": "Link profile codes to incentive models. Codes other than 05510 affect calculation only through a separate incentive assignment."
+  },
+  "center": {
+    "eyebrow": "Payroll workspace",
+    "title": "Payroll management center",
+    "description": "Prepare employee and salary records, review leave and timesheets, configure earnings and incentives, then calculate the period and complete closing checks.",
+    "sections": {
+      "prepare": {
+        "title": "Employees, leave and timesheets",
+        "description": "Review dated payroll profiles and salary history on employee cards, leave balances and approved working time."
+      },
+      "configure": {
+        "title": "Earnings, deductions and incentives",
+        "description": "Customize formula templates, make dated employee assignments and complete incentive eligibility and accountant approval."
+      },
+      "calculate": {
+        "title": "Calculation and closing",
+        "description": "Open a period for previews, calculation traces, previous-month comparisons, closing checklists and exports."
+      }
+    },
+    "openPeriods": "Open payroll periods",
+    "loading": "Loading periods…",
+    "periodHint": "Preview, calculation and closing checks",
+    "noOpenPeriods": "No open periods. Create a new period from the payroll periods page.",
+    "exitTitle": "Severance, notice and unused leave",
+    "exitHint": "The termination action on an employee card uses salary and leave balance at the exit date. Define the monthly gross total of regular benefits in the dated payroll profile."
   }
 }

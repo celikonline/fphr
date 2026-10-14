@@ -97,7 +97,8 @@ public sealed record MonthlyTimesheetRowDto(
     bool IsPeriodLocked,
     bool IsApproved,
     DateTime? ApprovedAt,
-    Guid? ApprovedByUserId);
+    Guid? ApprovedByUserId,
+    bool IsEstimated = false);
 
 [RequiresPermission("attendance.timesheet.view")]
 public sealed record GetMonthlyTimesheetQuery(DateOnly PeriodMonth, Guid? OrgUnitId) : IQuery<IReadOnlyList<MonthlyTimesheetRowDto>>;
@@ -147,9 +148,10 @@ public sealed class GetMonthlyTimesheetHandler(
                 leave?.UnpaidLeaveDays ?? 0,
                 leave?.SickLeaveDays ?? 0,
                 attendance?.IsPeriodLocked ?? false,
-                approval is not null,
+                approval is not null && attendance?.IsTimesheetApproved == true,
                 approval?.ApprovedAt,
-                approval?.ApprovedByUserId);
+                approval?.ApprovedByUserId,
+                attendance?.IsEstimated ?? false);
         }).ToList();
 
         return Result.Success<IReadOnlyList<MonthlyTimesheetRowDto>>(rows);

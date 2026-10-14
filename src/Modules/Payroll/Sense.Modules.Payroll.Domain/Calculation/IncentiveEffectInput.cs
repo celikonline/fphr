@@ -35,4 +35,5 @@ public sealed record IncentiveEffectInput(
     bool CoversEmployerUnemployment = false,
     bool CoversEmployeeSgk = false,
     bool CoversEmployeeUnemployment = false,
-    decimal? MaxSupportMultiplier = null);
+    decimal? MaxSupportMultiplier = null,
+    decimal? TaxReliefGrossCapMultiplier = null);

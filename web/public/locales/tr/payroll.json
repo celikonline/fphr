@@ -61,7 +61,7 @@
     "totalGross": "Toplam brüt",
     "totalNet": "Toplam net",
     "totalEmployerCost": "Toplam işveren maliyeti",
-    "skipped": "{{count}} çalışan hesaplanamadı (eksik profil veya maaş).",
+    "skipped": "{{count}} çalışanın hesabı atlandı; nedenleri aşağıda gösterilmiştir.",
     "skipReasons": {
       "wage_basis_mismatch": "Bordro profilindeki ücret esası ile maaş kaydının ödeme düzeni uyuşmuyor",
       "net_wage_basis_unsupported": "Ücret esası bu hesaplama sürümünde desteklenmiyor",
@@ -69,7 +69,14 @@
       "hourly_attendance_not_approved": "Saatlik puantaj onaylı değil veya onaydan sonra değişti; kayıtları inceleyip yeniden onaylayın",
       "hourly_attendance_invalid": "Puantajdaki ücretli saatler geçersiz; çalışma ve eksik gün kayıtlarını kontrol edin",
       "pay_item_formula_failed": "Bir ödeme türünün formülü hesaplanamadı (örn. sıfıra bölme); formülü ve atama değerini kontrol edin",
-      "incentive_parameter_missing": "Bir teşvik tanımının başvurduğu mevzuat parametresi bulunamadı (ya da geçerli bir oran değil); teşvik tanımını ve mevzuat parametrelerini kontrol edin"
+      "incentive_parameter_missing": "Bir teşvik tanımının başvurduğu mevzuat parametresi bulunamadı (ya da geçerli bir oran değil); teşvik tanımını ve mevzuat parametrelerini kontrol edin",
+      "salary_record_invalid": "Maaş tutarı, para birimi veya ödeme düzeni geçersiz; bu hesap TRY ücretlerini destekler",
+      "no_payroll_profile": "Bu dönemi kapsayan bordro profili bulunmuyor",
+      "no_salary_record": "Dönem veya ayrılış tarihinde geçerli maaş kaydı bulunmuyor",
+      "wage_basis_not_monthly": "Bu ücret esası desteklenmiyor; aylık, günlük veya saatlik esas kullanın",
+      "not_employed_in_period": "Çalışanın istihdam tarihleri bu dönemi kapsamıyor",
+      "no_worked_days": "Bu dönemde ücretli süre yok; ücretsiz izin ve eksik gün kayıtlarını kontrol edin",
+      "calculation_failed": "Hesap tamamlanamadı; çalışan girdileri ve hesap kayıtları incelenmeli"
     },
     "employee": "Çalışan",
     "gross": "Brüt",
@@ -307,7 +314,8 @@
     "incentive_profile_code_ignored": "Çalışanın SGK teşvik ataması var; profildeki teşvik kanunu kodu yok sayıldı",
     "pay_item_deduction_capped": "Formüllü kesintiler kalan neti aştı; aşan kısım kesilmedi",
     "incentive_profile_assignment_required": "Profildeki teşvik kodu için teşvik modeli ataması gerekli; genel 5510 indirimi uygulanmadı",
-    "incentive_sgk_status_not_eligible": "Çalışanın SGK statüsü bu prim teşvikine uygun değil; teşvik uygulanmadı"
+    "incentive_sgk_status_not_eligible": "Çalışanın SGK statüsü bu prim teşvikine uygun değil; teşvik uygulanmadı",
+    "attendance_fallback": "PDKS verisi bulunmadığı için İK devamsızlık kayıtları veya tam ay varsayımı kullanıldı; puantajı doğrulayın."
   },
   "dirtyReasons": {
     "calculation_blocked": "Hesaplama tamamlanamadı; eksik verileri ve puantaj onayını kontrol edin",
@@ -341,6 +349,14 @@
       "extraBonus": {
         "name": "İkramiye",
         "valueHint": "\"deger\" aylık brüt ücret çarpanıdır (ör. 0.5 = yarım maaş)."
+      },
+      "fixedDeduction": {
+        "name": "Sabit kesinti",
+        "valueHint": "Dönem için netten düşülecek tutar (TRY)."
+      },
+      "percentageDeduction": {
+        "name": "Brütün yüzdesiyle kesinti",
+        "valueHint": "Dönem brütünden hesaplanıp netten düşülecek yüzde."
       }
     },
     "showInactive": "Pasif olanları da göster",
@@ -588,7 +604,9 @@
       "error": "Teşvik kaydedilemedi.",
       "maxSupportMultiplier": "Toplam destek tavanı çarpanı",
       "maxSupportMultiplierHint": "Boşsa toplam destek tavanı yoktur. 1 = prim gününe oranlanan brüt asgari ücret; prim matrahı tavanından ayrıdır.",
-      "applyTemplate": "Hazır model parametrelerini uygula"
+      "applyTemplate": "Hazır model parametrelerini uygula",
+      "taxReliefGrossCapMultiplier": "Teşvike uygun brüt ücret sınırı (asgari ücret katı)",
+      "taxReliefGrossCapMultiplierHint": "5746 ve 4691 için 1 Ağustos 2025 itibarıyla 40 kat sınırı uygulanır. 5746 oranını eğitim durumuna göre %80, %90 veya %95 olarak düzenleyin; yalnız uygun ücret için atama yapın."
     },
     "approveModal": {
       "approveTitle": "{{code}} teşvikini onayla",
@@ -605,7 +623,7 @@
     },
     "templates": {
       "title": "Şablondan teşvik ekle",
-      "intro": "5510, 6111 ve 4447 için hazır SGK modelleri; 4691, 5746 ve 4857/30 için tamamlanması gereken taslaklar ekleyebilirsiniz. Sektör, uygunluk ve çalışan süresini kontrol edin. 7103 yalnız 2018-2022 dönemleri içindir.",
+      "intro": "5510, 6111, 4447, 5746, 4691 ve 4857/30 için hesaplama parametreleri hazırdır. Çalışan ve işyeri uygunluğunu, eğitim oranını ve geçerlilik tarihlerini kontrol edip SMMM onayını tamamlayın. 7103 yalnız 2018–2022 dönemleri içindir.",
       "reviewTitle": "Şablonlar uygunluk kararı değildir",
       "reviewRequired": "İşyeri ve çalışan koşullarını resmi SGK/İŞKUR kayıtlarında doğrulayın. Taslakların parametre, bildirge kodu ve onay bilgilerini SMMM ile tamamlamadan bordroda kullanmayın.",
       "preApproved": "Onaylı gelir",
@@ -708,5 +726,30 @@
       "summary": "{{created}} atama oluşturuldu, {{skipped}} çalışan atlandı (çakışan SGK ataması)."
     },
     "subtitle": "Profil kodlarını teşvik modellerine bağlayın. 05510 dışındaki kodlar hesaplamaya ancak ayrı bir teşvik atamasıyla katılır."
+  },
+  "center": {
+    "eyebrow": "Bordro çalışma alanı",
+    "title": "Bordro yönetim merkezi",
+    "description": "Personel ve ücret bilgilerini hazırlayın, izin ve puantajı kontrol edin, kazanç ve teşvikleri tanımlayın; dönemi hesaplayıp kapanış kontrollerini tamamlayın.",
+    "sections": {
+      "prepare": {
+        "title": "Personel, izin ve puantaj",
+        "description": "Çalışan kartındaki bordro profili ve ücret geçmişini, izin bakiyelerini ve onaylı çalışma sürelerini kontrol edin."
+      },
+      "configure": {
+        "title": "Kazanç, kesinti ve teşvikler",
+        "description": "Formül şablonlarını düzenleyin, çalışanlara tarihli atama yapın ve teşviklerin uygunluk ile SMMM onayını tamamlayın."
+      },
+      "calculate": {
+        "title": "Hesaplama ve kapanış",
+        "description": "Dönem içinden önizleme, hesap izi, önceki ay karşılaştırması, kapanış kontrol listesi ve dışa aktarma işlemlerine erişin."
+      }
+    },
+    "openPeriods": "Açık bordro dönemleri",
+    "loading": "Dönemler yükleniyor…",
+    "periodHint": "Önizleme, hesaplama ve kapanış kontrolleri",
+    "noOpenPeriods": "Açık dönem bulunmuyor. Bordro dönemleri ekranından yeni dönem açabilirsiniz.",
+    "exitTitle": "Kıdem, ihbar ve kullanılmayan izin",
+    "exitHint": "Çalışan kartındaki işten ayrılış işlemi, ayrılış tarihinin ücretini ve izin bakiyesini kullanır. Düzenli yan hakların aylık brüt toplamını tarihli bordro profilinde tanımlayın."
   }
 }

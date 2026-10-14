@@ -6,8 +6,8 @@ namespace Sense.Modules.Payroll.Application.Ports;
 /// shortfall on partially worked scheduled days. Observed overtime remains informational; approved cash overtime is read from Leave.
 /// </summary>
 public sealed record WorkedTimeSummary(
-    int WorkedDays, int MissingDays, decimal OvertimeHours, int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0,
-    decimal? NormalHoursShortfall = null, bool IsTimesheetApproved = false, decimal? WorkedHours = null);
+    int WorkedDays, decimal MissingDays, decimal OvertimeHours, int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0,
+    decimal? NormalHoursShortfall = null, bool IsTimesheetApproved = false, decimal? WorkedHours = null, decimal UnpaidLeaveDays = 0m, decimal SickLeaveDays = 0m, bool IsEstimated = false, int ExpectedWorkedDays = 0);
 
 /// <summary>
 /// Payroll's read port for the employee's monthly worked-time figures - deliberately narrow, mirrors Leave's

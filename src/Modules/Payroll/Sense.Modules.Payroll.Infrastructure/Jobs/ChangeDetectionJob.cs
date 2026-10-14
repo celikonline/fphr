@@ -86,29 +86,37 @@ public sealed partial class ChangeDetectionJob(IServiceScopeFactory scopes, ILog
             var dirtyCount = 0;
             foreach (var payslip in payslipsInPeriod)
             {
-                var profile = await profiles.FindCurrentAsync(payslip.EmployeeId, periodStart, cancellationToken);
                 var employment = await salaryLookup.GetEmploymentDatesAsync(tenantId, payslip.EmployeeId, cancellationToken);
+                var profile = await profiles.FindCurrentAsync(payslip.EmployeeId,
+                    EmploymentProration.EffectiveStart(periodStart, employment?.HireDate), cancellationToken);
                 var salary = await salaryLookup.GetSalaryAsOfAsync(tenantId, payslip.EmployeeId,
                     EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate), cancellationToken);
                 if (profile is null || salary is null)
                 {
-                    continue; // nothing live to compare against - a removed profile/salary is not a "hash mismatch"
+                    var blocked = await dirtyFlags.FindActiveAsync(period.Id, payslip.EmployeeId, cancellationToken);
+                    if (blocked is null)
+                    {
+                        dirtyFlags.Add(PayslipDirtyFlag.Create(tenantId, period.Id, payslip.EmployeeId,
+                            PayslipDirtyFlagReasons.CalculationBlocked, null, clock.GetUtcNow().UtcDateTime));
+                        dirtyCount++;
+                    }
+                    else blocked.AddReason(PayslipDirtyFlagReasons.CalculationBlocked, null, clock.GetUtcNow().UtcDateTime);
+                    continue;
                 }
 
                 Guid? costCenterId = costCenterMapping.TryGetValue(payslip.EmployeeId, out var assignedCostCenterId)
                     ? assignedCostCenterId
                     : null;
-                WorkedTimeSummary? hourlyAttendance = null;
-                if (profile.WageBasis == WageBasis.Hourly)
-                {
-                    var workedTimeReader = scope.ServiceProvider.GetRequiredService<IWorkedTimeReader>();
-                    var partial = EmploymentProration.PaidDays(periodStart, periodEnd, employment?.HireDate, employment?.TerminationDate) < 30;
-                    hourlyAttendance = await workedTimeReader.GetAsync(tenantId, payslip.EmployeeId, period.Year, period.Month,
-                        partial ? EmploymentProration.EffectiveStart(periodStart, employment?.HireDate) : null,
-                        partial ? EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate) : null, cancellationToken);
-                }
-
-                var currentHash = PayrollInputHashing.Hash(PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId, hourlyAttendance));
+                var workedTimeReader = scope.ServiceProvider.GetRequiredService<IWorkedTimeReader>();
+                var paidDays = EmploymentProration.PaidDays(periodStart, periodEnd, employment?.HireDate, employment?.TerminationDate);
+                var partial = paidDays < EmploymentProration.PayrollMonthDays;
+                var from = partial ? EmploymentProration.EffectiveStart(periodStart, employment?.HireDate) : (DateOnly?)null;
+                var to = partial ? EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate) : (DateOnly?)null;
+                var attendance = await workedTimeReader.GetAsync(tenantId, payslip.EmployeeId, period.Year, period.Month, from, to, cancellationToken);
+                var absenceReader = scope.ServiceProvider.GetRequiredService<IAbsenceDaysReader>();
+                attendance = await PayrollAttendanceFallback.ResolveAsync(absenceReader, attendance, tenantId, payslip.EmployeeId,
+                    period.Year, period.Month, paidDays, from, to, cancellationToken);
+                var currentHash = PayrollInputHashing.Hash(PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId, attendance, attendance.IsEstimated));
                 if (currentHash == payslip.InputHash)
                 {
                     continue;

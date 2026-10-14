@@ -60,20 +60,20 @@ public sealed class IncentiveTemplateTests
 
     [Theory]
     [MemberData(nameof(DraftTemplateKeys))]
-    public void OtherTemplates_HaveNoRatesOrDeclarationCode_AndAreNotPreApproved(string templateKey)
+    public void TaxTemplates_HaveRatesAndGrossCeilings_AndAreNotPreApproved(string templateKey)
     {
         var template = IncentiveTemplates.Find(templateKey)!;
 
         template.PreApproved.ShouldBeFalse();
         template.DeclarationCode.ShouldBeNull();
-        template.Parameters.Rate.ShouldBeNull();
+        template.Parameters.Rate!.Value.ShouldBe(0.80m);
+        template.Parameters.TaxReliefGrossCapMultiplier.ShouldBe(40m);
         template.Parameters.EmployerSgkRate.ShouldBeNull();
-        template.Parameters.ShouldBe(IncentiveParameters.Empty);
     }
 
     [Theory]
     [MemberData(nameof(DraftTemplateKeys))]
-    public void OtherTemplates_CreateUnapprovedIncompleteDrafts(string templateKey)
+    public void TaxTemplates_CreateCompleteDefinitionsThatStillRequireApproval(string templateKey)
     {
         var template = IncentiveTemplates.Find(templateKey)!;
 
@@ -81,7 +81,7 @@ public sealed class IncentiveTemplateTests
 
         definition.IsSmmmApproved.ShouldBeFalse();
         definition.ApprovedAt.ShouldBeNull();
-        definition.IsComplete.ShouldBeFalse();
+        definition.IsComplete.ShouldBeTrue();
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class IncentiveTemplateTests
         IncentiveTemplates.Find(IncentiveTemplates.Tr6111)!.Kind.ShouldBe(IncentiveKind.EmployerShareCoverage);
         IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md17)!.Code.ShouldBe("SGK_17103");
         IncentiveTemplates.Find(IncentiveTemplates.Tr7103Md27)!.Code.ShouldBe("SGK_27103");
-        IncentiveTemplates.Find(IncentiveTemplates.Tr5746Gv)!.Code.ShouldBe("ARGE_5746_GV_TASLAK");
+        IncentiveTemplates.Find(IncentiveTemplates.Tr5746Gv)!.Code.ShouldBe("ARGE_5746_GV");
         IncentiveTemplates.Find(IncentiveTemplates.Tr5746Gv)!.Kind.ShouldBe(IncentiveKind.IncomeTaxWithholdingRelief);
         IncentiveTemplates.All.Count.ShouldBe(11);
     }

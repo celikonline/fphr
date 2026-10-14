@@ -26,7 +26,7 @@ public sealed class LeaveOverlapChecker(IApprovedLeaveDateLookup leaveDates)
     public async Task ApplyAsync(Guid tenantId, AttendanceDay day, CancellationToken cancellationToken)
     {
         var overlap = await leaveDates.GetApprovedLeaveDatesAsync(tenantId, day.Date, day.Date, [day.EmployeeId], cancellationToken);
-        day.ApplyLeaveOverlap(overlap.Count > 0);
+        day.ApplyLeaveOverlap(Overlaps(day, overlap));
     }
 
     /// <summary>Toplu tarama (import/ay sonu kapatma): birden çok gün ve çalışan için tek bir Leave sorgusuyla hepsini işaretler/temizler.</summary>
@@ -39,13 +39,13 @@ public sealed class LeaveOverlapChecker(IApprovedLeaveDateLookup leaveDates)
 
         var employeeIds = days.Select(d => d.EmployeeId).Distinct().ToList();
         var leaveDaysResult = await leaveDates.GetApprovedLeaveDatesAsync(tenantId, from, to, employeeIds, cancellationToken);
-        var leaveSet = leaveDaysResult.Select(l => (l.EmployeeId, l.Date)).ToHashSet();
+        var byDay = leaveDaysResult.ToLookup(l => (l.EmployeeId, l.Date));
 
         var changed = 0;
         foreach (var day in days)
         {
             var before = day.Anomalies;
-            day.ApplyLeaveOverlap(leaveSet.Contains((day.EmployeeId, day.Date)));
+            day.ApplyLeaveOverlap(Overlaps(day, byDay[(day.EmployeeId, day.Date)]));
             if (day.Anomalies != before)
             {
                 changed++;
@@ -53,6 +53,17 @@ public sealed class LeaveOverlapChecker(IApprovedLeaveDateLookup leaveDates)
         }
 
         return changed;
+    }
+
+    private static bool Overlaps(AttendanceDay day, IEnumerable<ApprovedLeaveDay> leave)
+    {
+        var spans = leave.ToArray();
+        if (spans.Any(l => l.DayFraction >= 1m)) return true;
+        // Partial leave does not make the whole date non-working. Only evidence inside its time window conflicts.
+        return spans.Any(l => l.StartsAt is { } start && l.EndsAt is { } end
+            && ((day.CheckIn is { } checkIn && day.CheckOut is { } checkOut && checkIn < end && checkOut > start)
+                || (day.CheckIn is { } onlyIn && day.CheckOut is null && onlyIn >= start && onlyIn < end)
+                || (day.CheckOut is { } onlyOut && day.CheckIn is null && onlyOut > start && onlyOut <= end)));
     }
 }
 

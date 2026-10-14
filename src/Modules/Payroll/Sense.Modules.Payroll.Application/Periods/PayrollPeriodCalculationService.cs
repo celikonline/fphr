@@ -33,6 +33,7 @@ public static class PayrollSkipReasons
     public const string HourlyAttendanceMissing = "hourly_attendance_missing";
     public const string HourlyAttendanceNotApproved = "hourly_attendance_not_approved";
     public const string HourlyAttendanceInvalid = "hourly_attendance_invalid";
+    public const string SalaryRecordInvalid = "salary_record_invalid";
     public const string NoSalaryRecord = "no_salary_record";
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
@@ -51,6 +52,7 @@ public sealed record PayrollWarning(Guid EmployeeId, string Code, string? Detail
 /// <summary>Warning codes added by the pay-item (formüllü ödeme) integration.</summary>
 public static class PayrollWarningCodes
 {
+    public const string AttendanceFallback = "attendance_fallback";
     /// <summary>A pay item's formula came out negative and was set to 0; <see cref="PayrollWarning.Details"/> is the pay item code.</summary>
     public const string PayItemNegativeResult = "pay_item_negative_result";
 
@@ -185,11 +187,10 @@ public sealed class PayrollPeriodCalculationService(
             else
             {
                 skipped.Add(new PayrollSkippedEmployee(employeeId, skipReason));
-                if (preview is null && (skipReason is PayrollSkipReasons.HourlyAttendanceMissing
-                    or PayrollSkipReasons.HourlyAttendanceNotApproved or PayrollSkipReasons.HourlyAttendanceInvalid
+                if (preview is null && (skipReason is not (PayrollSkipReasons.NoWorkedDays or PayrollSkipReasons.NotEmployedInPeriod)
                     || await payslips.FindByEmployeeAndPeriodAsync(employeeId, period.Id, cancellationToken) is not null))
                 {
-                    // Do not let an old payslip (or an omitted hourly employee) make the closing checklist look complete.
+                    // Missing profiles, salaries, formulas or incentive parameters must block closing even before the first payslip exists.
                     // A successful subsequent run clears the flag; a preview must not mutate it.
                     var blockedFlag = await dirtyFlags.FindActiveAsync(period.Id, employeeId, cancellationToken);
                     if (blockedFlag is null)
@@ -251,6 +252,12 @@ public sealed class PayrollPeriodCalculationService(
             return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
         }
 
+        if (salary.Amount <= 0m || !Enum.IsDefined(salary.SalaryType) || !Enum.IsDefined(salary.PayFrequency)
+            || !string.Equals(salary.Currency, "TRY", StringComparison.OrdinalIgnoreCase))
+        {
+            return PayrollSkipReasons.SalaryRecordInvalid;
+        }
+
         // The salary record's pay frequency says what the amount means (monthly gross, daily gross or hourly gross); it must agree with the profile.
         if (!WageBasisMatchesPayFrequency(profile.WageBasis, salary.PayFrequency))
         {
@@ -271,43 +278,19 @@ public sealed class PayrollPeriodCalculationService(
                 EmploymentProration.EffectiveStart(periodStart, employment?.HireDate), EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate), cancellationToken)
             : await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken: cancellationToken);
 
-        int workedDays;
-        int missingDays;
-        if (workedTime is not null)
-        {
-            // Attendance (PDKS) already resolved a worked-day figure - use it as-is; the Leave absence bridge below
-            // is skipped entirely to avoid double-counting the same missing days from two sources (G-7-08/09, faz-07
-            // tur 2 madde 3 "Çift sayım kuralı").
-            workedDays = workedTime.WorkedDays;
-            missingDays = workedTime.MissingDays;
-        }
-        else
-        {
-            // No Attendance data this employee/period: fall back to İK's manually entered devamsızlık (Leave
-            // AbsenceRecord, Unexcused only) as the missing-day source. Both null (no Attendance, no absence data
-            // either) keeps the pre-existing full-calendar-month assumption; a null or zero absence count leaves
-            // workedDays unchanged (G-7-08 PO kararı: WorkedDays bu turda yalnız bugünkü kullanım - yemek
-            // pro-rasyonu - için, hafta tatili/resmi tatil ücret hakkına dokunmaz).
-            var unexcusedDays = await absenceDaysReader.GetUnexcusedDaysAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
-            missingDays = unexcusedDays is > 0 ? unexcusedDays.Value : 0;
-            workedDays = unexcusedDays is > 0 ? Math.Max(0, calendarDays - unexcusedDays.Value) : calendarDays;
-        }
-
-        if (isPartialMonth)
-        {
-            workedDays = Math.Min(workedDays, paidDays30);
-        }
-
-        if (workedDays <= 0)
-        {
-            // e.g. Attendance has a check-in but no worked-minutes day: PayrollCalculator requires >= 1 worked day.
-            logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: no worked days.", employeeId, period.Year, period.Month);
-            return PayrollSkipReasons.NoWorkedDays;
-        }
+        workedTime = await PayrollAttendanceFallback.ResolveAsync(absenceDaysReader, workedTime,
+            tenant.TenantId, employeeId, period.Year, period.Month, paidDays30,
+            isPartialMonth ? EmploymentProration.EffectiveStart(periodStart, employment?.HireDate) : null,
+            isPartialMonth ? EmploymentProration.EffectiveEnd(periodEnd, employment?.TerminationDate) : null, cancellationToken);
+        if (workedTime.IsEstimated && profile.WageBasis != WageBasis.Hourly)
+            warnings.Add(new PayrollWarning(employeeId, PayrollWarningCodes.AttendanceFallback));
+        var workedDays = isPartialMonth ? Math.Min(workedTime.WorkedDays, paidDays30) : workedTime.WorkedDays;
+        var missingDays = workedTime.MissingDays + workedTime.UnpaidLeaveDays
+            + (profile.SickDaysReducePay ? workedTime.SickLeaveDays : 0m);
 
         // Günlük/saatlik ücret: ücretli gün = 30 esaslı kısmi ay günü eksi eksik gün (Attendance varsa MissingDays, yoksa Leave'in mazeretsiz devamsızlığı); 0'ın altına inmez.
         var wagePaidDays = Math.Max(0, paidDays30 - missingDays);
-        if (isPeriodWage && wagePaidDays <= 0)
+        if (wagePaidDays <= 0)
         {
             logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: no paid days.", employeeId, period.Year, period.Month);
             return PayrollSkipReasons.NoWorkedDays;
@@ -394,16 +377,16 @@ public sealed class PayrollPeriodCalculationService(
         var grossMonthly = isPeriodWage
             ? PeriodWageMath.MonthlyEquivalent(profile.WageBasis, unitRate)
             : salary.Amount;
-        var monthlyNetTarget = decimal.Round(salary.Amount * paidDays30 / EmploymentProration.PayrollMonthDays, 2, MidpointRounding.AwayFromZero);
+        var monthlyNetTarget = decimal.Round(salary.Amount * wagePaidDays / EmploymentProration.PayrollMonthDays, 2, MidpointRounding.AwayFromZero);
         if (!isPeriodWage && salary.SalaryType == EmployeeSalaryType.Net)
         {
-            var ratio = paidDays30 / (decimal)EmploymentProration.PayrollMonthDays;
+            var ratio = wagePaidDays / EmploymentProration.PayrollMonthDays;
             var periodGross = NetToGrossSolver.Solve(monthlyNetTarget, candidateGross => PayrollCalculator.Calculate(
                 new PayrollCalculationInput(
                     GrossMonthlySalary: candidateGross / ratio, WorkedDays: workedDays, CalendarDaysInMonth: calendarDays,
                     MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m, PriorCumulativeGvBase: priorCumulativeGvBase,
                     AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree,
-                    ProratedPaidDays: paidDays30 < EmploymentProration.PayrollMonthDays ? paidDays30 : null), snapshot));
+                    ProratedPaidDays: wagePaidDays < EmploymentProration.PayrollMonthDays ? wagePaidDays : null), snapshot));
             grossMonthly = periodGross / ratio;
         }
 
@@ -461,9 +444,9 @@ public sealed class PayrollPeriodCalculationService(
             Incentives: incentive.Effects.Count > 0 ? incentive.Effects : null);
 
         // SGK taban/tavan ve asgari ücret istisnaları kısmi ayda kıst gün, günlük/saatlikte eksik gün düşülmüş ücretli gün kadar ölçeklenir.
-        int? ProratedDays()
+        decimal? ProratedDays()
         {
-            var scaledDays = isPeriodWage ? wagePaidDays : paidDays30;
+            var scaledDays = wagePaidDays;
             return scaledDays < EmploymentProration.PayrollMonthDays ? scaledDays : null;
         }
 
@@ -547,7 +530,8 @@ public sealed class PayrollPeriodCalculationService(
             ? new Dictionary<Guid, Guid>()
             : await costCenterReader.GetEmployeeCostCenterMappingAsync(tenant.TenantId, [employeeId], cancellationToken);
         Guid? costCenterId = costCenterMapping.TryGetValue(employeeId, out var assignedCostCenterId) ? assignedCostCenterId : null;
-        var snapshotDto = PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId, workedTime);
+        var snapshotDto = PayrollInputHashing.BuildSnapshot(profile, salary, costCenterId,
+            workedTime, attendanceFallback: workedTime.IsEstimated);
         var inputSnapshotJson = PayrollInputHashing.Serialize(snapshotDto);
         var inputHash = PayrollInputHashing.Hash(snapshotDto);
 

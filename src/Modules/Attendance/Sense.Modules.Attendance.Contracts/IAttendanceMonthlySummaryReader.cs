@@ -16,7 +16,7 @@ namespace Sense.Modules.Attendance.Contracts;
 public sealed record AttendanceMonthlySummary(
     Guid EmployeeId, decimal WorkedDays, decimal WorkedHours, decimal MissingDays, decimal OvertimeHours, bool IsPeriodLocked,
     int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0,
-    decimal? NormalHoursShortfall = null, bool IsTimesheetApproved = false);
+    decimal? NormalHoursShortfall = null, bool IsTimesheetApproved = false, decimal UnpaidLeaveDays = 0m, decimal SickLeaveDays = 0m, bool IsEstimated = false, int ExpectedWorkedDays = 0);
 
 /// <summary>
 /// Cross-module read port (Payroll consumes this instead of guessing worked/missing days from its own data). An

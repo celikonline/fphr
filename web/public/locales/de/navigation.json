@@ -87,7 +87,8 @@
     "pdksCenter": "PDKS-Verwaltungszentrum",
     "payslipImport": "Externe Gehaltsabrechnungs-PDFs hochladen",
     "payItems": "Zahlungsarten",
-    "incentives": "Förderungen"
+    "incentives": "Förderungen",
+    "payrollCenter": "Verwaltungszentrum Lohnabrechnung"
   },
   "pdksCenter": {
     "eyebrow": "PDKS • ANWESENHEIT • SCHICHTEN",

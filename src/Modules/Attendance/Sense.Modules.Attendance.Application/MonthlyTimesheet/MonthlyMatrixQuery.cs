@@ -78,8 +78,8 @@ public sealed class GetMonthlyMatrixHandler(
             .ThenBy(id => id)
             .ToList();
 
-        var approvedIds = (await approvals.ListForPeriodAsync(ordered, monthStart, cancellationToken)).Select(a => a.EmployeeId).ToHashSet();
-        var isLocked = ordered.All(approvedIds.Contains);
+        var approvalByEmployee = (await approvals.ListForPeriodAsync(ordered, monthStart, cancellationToken)).ToDictionary(a => a.EmployeeId);
+        var isLocked = ordered.All(approvalByEmployee.ContainsKey);
 
         var pageSize = Math.Clamp(query.PageSize, 1, MonthlyMatrixLimits.MaxPageSize);
         var page = Math.Max(query.Page, 1);
@@ -89,9 +89,11 @@ public sealed class GetMonthlyMatrixHandler(
             return new MonthlyMatrixDto([], isLocked);
         }
 
-        var records = (await days.ListForEmployeesAsync(pageIds, monthStart, monthEnd, cancellationToken)).ToLookup(d => d.EmployeeId);
+        var readIds = isLocked ? ordered : pageIds;
+        var records = (await days.ListForEmployeesAsync(readIds, monthStart, monthEnd, cancellationToken)).ToLookup(d => d.EmployeeId);
         var planned = (await assignments.ListForRangeAsync(monthStart, monthEnd, pageIds, cancellationToken)).ToLookup(a => a.EmployeeId);
-        var nonWorking = await nonWorkingDays.ResolveAsync(tenant.TenantId, pageIds, monthStart, monthEnd, cancellationToken);
+        var nonWorking = await nonWorkingDays.ResolveAsync(tenant.TenantId, readIds, monthStart, monthEnd, cancellationToken);
+        isLocked = isLocked && ordered.All(id => nonWorking.IsApprovalCurrent(id, approvalByEmployee[id].ApprovedAt, records[id]));
         var leaveCodes = await ResolveLeaveCodesAsync(pageIds, monthStart, monthEnd, nonWorking, cancellationToken);
         var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken)).Local);
 

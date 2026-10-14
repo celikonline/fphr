@@ -28,7 +28,8 @@ public sealed record IncentiveParametersDto(
     bool CoversEmployerUnemployment,
     bool CoversEmployeeSgk,
     bool CoversEmployeeUnemployment,
-    decimal? MaxSupportMultiplier = null)
+    decimal? MaxSupportMultiplier = null,
+    decimal? TaxReliefGrossCapMultiplier = null)
 {
     internal IncentiveParameters ToDomain() => new()
     {
@@ -36,6 +37,7 @@ public sealed record IncentiveParametersDto(
         CoverageBase = CoverageBase,
         CapMultiplier = CapMultiplier,
         MaxSupportMultiplier = MaxSupportMultiplier,
+        TaxReliefGrossCapMultiplier = TaxReliefGrossCapMultiplier,
         EmployerSgkRate = EmployerSgkRate?.ToDomain(),
         CoversEmployerSgk = CoversEmployerSgk,
         CoversEmployerUnemployment = CoversEmployerUnemployment,
@@ -45,7 +47,7 @@ public sealed record IncentiveParametersDto(
 
     internal static IncentiveParametersDto From(IncentiveParameters p) => new(
         IncentiveRateDto.From(p.Rate), p.CoverageBase, p.CapMultiplier, IncentiveRateDto.From(p.EmployerSgkRate),
-        p.CoversEmployerSgk, p.CoversEmployerUnemployment, p.CoversEmployeeSgk, p.CoversEmployeeUnemployment, p.MaxSupportMultiplier);
+        p.CoversEmployerSgk, p.CoversEmployerUnemployment, p.CoversEmployeeSgk, p.CoversEmployeeUnemployment, p.MaxSupportMultiplier, p.TaxReliefGrossCapMultiplier);
 }
 
 public sealed record IncentiveDefinitionDto(

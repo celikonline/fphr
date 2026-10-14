@@ -24,6 +24,7 @@ export interface IncentiveParameters {
   coverageBase?: IncentiveCoverageBase | null;
   capMultiplier?: number | null;
   maxSupportMultiplier?: number | null;
+  taxReliefGrossCapMultiplier?: number | null;
   employerSgkRate?: IncentiveRate | null;
   coversEmployerSgk?: boolean | null;
   coversEmployerUnemployment?: boolean | null;

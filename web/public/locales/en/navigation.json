@@ -87,7 +87,8 @@
     "pdksCenter": "PDKS Management Center",
     "payslipImport": "External payslip PDF upload",
     "payItems": "Pay item types",
-    "incentives": "Incentives"
+    "incentives": "Incentives",
+    "payrollCenter": "Payroll management center"
   },
   "pdksCenter": {
     "eyebrow": "PDKS • ATTENDANCE • SHIFTS",

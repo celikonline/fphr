@@ -8,7 +8,7 @@ namespace Sense.Modules.Payroll.Domain.PayItems;
 /// <param name="MissingDays">Days without pay or work (absence), 0 when none.</param>
 /// <param name="SeniorityYears">Whole years from the hire date to the period end; 0 when the hire date is unknown.</param>
 /// <param name="OvertimeHours">Approved cash-paid overtime hours of the month (all rates).</param>
-public sealed record PayItemVariableFacts(decimal NetTarget, int MissingDays, int SeniorityYears, decimal OvertimeHours);
+public sealed record PayItemVariableFacts(decimal NetTarget, decimal MissingDays, int SeniorityYears, decimal OvertimeHours);
 
 /// <summary>
 /// Pure builder of the variable values a pay-item formula can read (PAY-FORMULA-PLAN "İzinli değişkenler"). All values come from
@@ -66,7 +66,7 @@ public static class PayItemVariables
         return Math.Max(0, years);
     }
 
-    private static int PaidDays(PayrollCalculationInput input) =>
+    private static decimal PaidDays(PayrollCalculationInput input) =>
         input.Wage?.PaidDays
         ?? (input.ProratedPaidDays is { } days and > 0 and < EmploymentProration.PayrollMonthDays ? days : EmploymentProration.PayrollMonthDays);
 }

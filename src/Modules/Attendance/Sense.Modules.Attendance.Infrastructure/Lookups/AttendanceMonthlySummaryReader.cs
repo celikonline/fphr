@@ -37,11 +37,6 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
                 d.CreatedAt, d.ModifiedDate, d.Anomalies, d.ResolutionState })
             .ToListAsync(cancellationToken);
 
-        if (rows.Count == 0)
-        {
-            return [];
-        }
-
         var isPeriodLocked = await context.ShiftPlanLocks.AsNoTracking()
             .AnyAsync(l => l.TenantId == tenantId && l.PeriodMonth == monthStart && l.UnlockedAt == null, cancellationToken);
 
@@ -50,36 +45,45 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
             .Where(a => a.TenantId == tenantId && ids.Contains(a.EmployeeId) && a.PeriodMonth == monthStart)
             .ToDictionaryAsync(a => a.EmployeeId, a => a.ApprovedAt, cancellationToken);
         var summaries = new List<AttendanceMonthlySummary>(ids.Count);
-        foreach (var group in rows.GroupBy(r => r.EmployeeId))
+        var byEmployee = rows.ToLookup(r => r.EmployeeId);
+        foreach (var employeeId in ids)
         {
+            var group = byEmployee[employeeId].ToArray();
+            if (group.Length == 0 && !nonWorking.HasLeave(employeeId) && !approvals.ContainsKey(employeeId)) continue;
+            var isEstimated = group.Length == 0 && !approvals.ContainsKey(employeeId);
             var effectiveMinutes = group.Select(r => r.OverrideWorkedMinutes ?? r.WorkedMinutes).ToList();
             var workedDays = effectiveMinutes.Count(m => m > 0);
             var workedMinutesTotal = effectiveMinutes.Sum();
             var overtimeMinutes = group.Sum(r => Math.Max((r.OverrideWorkedMinutes ?? r.WorkedMinutes) - r.PlannedMinutes, 0));
 
-            var workingDays = await schedules.GetWorkingDaysAsync(group.Key, windowStart, windowEnd, cancellationToken);
+            var workingDays = await schedules.GetWorkingDaysAsync(employeeId, windowStart, windowEnd, cancellationToken);
             // Resmi tatil ve onaylı izin günleri çalışılması gerekmeyen gündür: kayıt yoksa eksik sayılmaz (çalışılmışsa zaten workedDays içinde).
             var workedDates = group.Where(r => (r.OverrideWorkedMinutes ?? r.WorkedMinutes) > 0).Select(r => r.Date).ToHashSet();
-            var excusedDays = workingDays.Count(d => nonWorking.Contains(group.Key, d) && !workedDates.Contains(d));
             var scheduled = workingDays.ToHashSet();
             // Unscheduled holiday/rest-day work must not hide an absence on a scheduled working day.
-            var scheduledWorkedDays = workedDates.Count(scheduled.Contains);
-            var missingDays = Math.Max(workingDays.Count - scheduledWorkedDays - excusedDays, 0);
+            var missingDays = workingDays.Where(d => !workedDates.Contains(d) && !nonWorking.IsHoliday(d))
+                .Sum(d => 1m - nonWorking.LeaveFraction(employeeId, d));
+            var calendarDates = Enumerable.Range(0, windowEnd.DayNumber - windowStart.DayNumber + 1).Select(i => windowStart.AddDays(i));
+            var unpaidLeaveDays = calendarDates.Sum(d => nonWorking.LeaveFraction(employeeId, d, paid: false, sick: false));
+            var sickLeaveDays = calendarDates.Sum(d => nonWorking.LeaveFraction(employeeId, d, paid: false, sick: true));
+            var expectedWorkedDays = workingDays.Count(d => !nonWorking.Contains(employeeId, d));
+            if (isEstimated) missingDays = 0m; // No punches or approval: absence is unknown, not an observed missing day.
             var holidayWorked = workedDates.Count(nonWorking.IsHoliday);
             var restDayWorked = workedDates.Count(d => d.DayOfWeek == DayOfWeek.Sunday && !scheduled.Contains(d) && !nonWorking.IsHoliday(d));
 
             // Whole missing days are deducted separately by Payroll. Only shortfalls on partially worked, ordinary
             // scheduled days reduce the normal paid hours; overtime and holiday/rest-day work are separate earnings.
-            var shortfallMinutes = group.Where(r => scheduled.Contains(r.Date) && !nonWorking.Contains(group.Key, r.Date)
+            var shortfallMinutes = group.Where(r => scheduled.Contains(r.Date) && !nonWorking.Contains(employeeId, r.Date)
                     && (r.OverrideWorkedMinutes ?? r.WorkedMinutes) > 0)
-                .Sum(r => Math.Max(r.PlannedMinutes - (r.OverrideWorkedMinutes ?? r.NetWorkedMinutes), 0));
-            var approved = approvals.TryGetValue(group.Key, out var approvedAt)
+                .Sum(r => Math.Max(r.PlannedMinutes * (1m - nonWorking.LeaveFraction(employeeId, r.Date)) - (r.OverrideWorkedMinutes ?? r.NetWorkedMinutes), 0m));
+            var approved = approvals.TryGetValue(employeeId, out var approvedAt)
+                && (nonWorking.LatestLeaveChange(employeeId) is not { } leaveChangedAt || leaveChangedAt <= approvedAt)
                 && group.All(r => (r.ModifiedDate ?? r.CreatedAt) <= approvedAt
                     && (r.Anomalies == AttendanceAnomaly.None || r.ResolutionState != AttendanceResolutionState.Unresolved));
 
             summaries.Add(new AttendanceMonthlySummary(
-                group.Key, workedDays, Math.Round(workedMinutesTotal / 60m, 2), missingDays, Math.Round(overtimeMinutes / 60m, 2), isPeriodLocked,
-                holidayWorked, restDayWorked, shortfallMinutes / 60m, approved));
+                employeeId, workedDays, Math.Round(workedMinutesTotal / 60m, 2), missingDays, Math.Round(overtimeMinutes / 60m, 2), isPeriodLocked,
+                holidayWorked, restDayWorked, isEstimated ? null : shortfallMinutes / 60m, approved, unpaidLeaveDays, sickLeaveDays, isEstimated, expectedWorkedDays));
         }
 
         return summaries;

@@ -13,7 +13,7 @@ namespace Sense.Modules.Payroll.Application.Periods;
 /// The live inputs one payslip calculation used, serialized for <see cref="Domain.Payslips.Payslip.InputSnapshot"/> and
 /// hashed for <see cref="Domain.Payslips.Payslip.InputHash"/> (11.3.07-bordro.md "Değişti" mechanism / ChangeDetectionRun,
 /// P3). Deliberately narrow: only the fields <see cref="Sense.Modules.Payroll.Application.Calculation.PayrollLegislationSnapshotResolver"/>-independent
-/// live salary/profile inputs and, for hourly wages, the attendance figures and approval that determine normal paid hours.
+/// live salary/profile inputs and the attendance or absence fallback figures, including approval and leave reductions.
 /// </summary>
 public sealed record PayrollInputSnapshotDto(
     Guid ProfileId,
@@ -30,7 +30,9 @@ public sealed record PayrollInputSnapshotDto(
     EmployeeSalaryType SalaryType,
     DateOnly SalaryEffectiveFrom,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? CostCenterId = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] WorkedTimeSummary? HourlyAttendance = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] WorkedTimeSummary? HourlyAttendance = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] WorkedTimeSummary? Attendance = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] bool AttendanceFallback = false);
 
 /// <summary>Builds and hashes the <see cref="PayrollInputSnapshotDto"/> - both the initial calculation (P3 §1/§4) and
 /// the periodic ChangeDetectionRun (P3 §3) call this so the two hashes are always computed the same way.</summary>
@@ -39,11 +41,12 @@ public static class PayrollInputHashing
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public static PayrollInputSnapshotDto BuildSnapshot(EmployeePayrollProfile profile, EmployeeCurrentSalary salary, Guid? costCenterId = null,
-        WorkedTimeSummary? hourlyAttendance = null) => new(
+        WorkedTimeSummary? hourlyAttendance = null, bool attendanceFallback = false) => new(
         profile.Id, profile.WageBasis, profile.SgkStatus, profile.MealBenefitVariant, profile.MealDailyAmount,
         profile.TransportVariant, profile.PaymentMethod, profile.BankAccountId, profile.SickDaysReducePay,
         salary.Amount, salary.Currency, salary.SalaryType, salary.EffectiveFrom, costCenterId,
-        profile.WageBasis == WageBasis.Hourly ? hourlyAttendance : null);
+        profile.WageBasis == WageBasis.Hourly ? hourlyAttendance : null,
+        profile.WageBasis != WageBasis.Hourly ? hourlyAttendance : null, attendanceFallback);
 
     public static string Serialize(PayrollInputSnapshotDto snapshot) => JsonSerializer.Serialize(snapshot, JsonOptions);
 

@@ -184,8 +184,16 @@ public sealed partial class IncentiveDefinition : TenantAggregateRoot<Guid>
 
     private static string? TrimNote(string? note) => string.IsNullOrWhiteSpace(note) ? null : note.Trim();
 
-    private string? MissingField() =>
-        Category == IncentiveCategory.Sgk && DeclarationCode is null ? DeclarationCodeField : Parameters.FirstMissingField(Kind);
+    private string? MissingField()
+    {
+        if (Category == IncentiveCategory.Sgk && DeclarationCode is null) return DeclarationCodeField;
+        if (Kind == IncentiveKind.IncomeTaxWithholdingRelief
+            && TemplateKey is IncentiveTemplates.Tr5746Gv or IncentiveTemplates.Tr4691Gv
+            && (ValidTo is null || ValidTo >= new DateOnly(2025, 8, 1))
+            && Parameters.TaxReliefGrossCapMultiplier != 40m)
+            return "taxReliefGrossCapMultiplier";
+        return Parameters.FirstMissingField(Kind);
+    }
 
     private bool AffectsCalculation(IncentiveDefinitionData data) =>
         data.Kind != Kind

@@ -6,10 +6,10 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// </summary>
 /// <param name="Basis">Yalnız Daily veya Hourly.</param>
 /// <param name="UnitRate">Günlük brüt ücret (Daily) ya da saat brütü (Hourly).</param>
-/// <param name="PaidDays">Ücretli gün (30 gün esası; kısmi ay ve eksik gün düşülmüş), 1..30.</param>
+/// <param name="PaidDays">Ücretli gün (30 gün esası; kısmi ay ve eksik gün düşülmüş), >0..30; kısmi gün dahil.</param>
 /// <param name="PaidHours">Onaylı puantajdan çözülen normal ücretli saat; null yalnız önceki hesap girdileriyle uyumluluk içindir.</param>
 /// <param name="NetUnitRate">Net ücret anlaşmasının orijinal günlük/saatlik tutarı; brütleştirme izinde gösterilir.</param>
-public sealed record PeriodWage(WageBasis Basis, decimal UnitRate, int PaidDays, decimal? PaidHours = null, decimal? NetUnitRate = null);
+public sealed record PeriodWage(WageBasis Basis, decimal UnitRate, decimal PaidDays, decimal? PaidHours = null, decimal? NetUnitRate = null);
 
 /// <summary>Günlük/saatlik ücretin aylık karşılığı ve dönem brütü. Saatlik ücrette onaylı puantajdan çözülen ücretli saat önceliklidir.</summary>
 public static class PeriodWageMath
@@ -32,7 +32,7 @@ public static class PeriodWageMath
     };
 
     /// <summary>Dönem brütü: günlük x ücretli gün; saatlik x 7,5 x ücretli gün.</summary>
-    public static decimal PeriodGross(WageBasis basis, decimal unitRate, int paidDays, decimal? paidHours = null) => basis switch
+    public static decimal PeriodGross(WageBasis basis, decimal unitRate, decimal paidDays, decimal? paidHours = null) => basis switch
     {
         WageBasis.Daily => decimal.Round(unitRate * paidDays, 2, MidpointRounding.AwayFromZero),
         WageBasis.Hourly => decimal.Round(unitRate * (paidHours ?? DailyWorkingHours * paidDays), 2, MidpointRounding.AwayFromZero),

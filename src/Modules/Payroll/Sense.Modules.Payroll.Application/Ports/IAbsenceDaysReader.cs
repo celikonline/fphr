@@ -12,4 +12,7 @@ public interface IAbsenceDaysReader
     /// wired) - the caller must not treat this as "0 devamsızlık", it means "we don't know", exactly like
     /// <see cref="IWorkedTimeReader"/>'s own null contract.</summary>
     Task<int?> GetUnexcusedDaysAsync(Guid tenantId, Guid employeeId, int year, int month, CancellationToken cancellationToken = default);
+
+    Task<int?> GetUnexcusedDaysAsync(Guid tenantId, Guid employeeId, int year, int month,
+        DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 }

@@ -386,7 +386,18 @@ function MonthlyRow({
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </ActionIcon>
       </Table.Td>
-      <Table.Td fw={500}>{name}</Table.Td>
+      <Table.Td fw={500}>
+        <Stack gap={3}>
+          <Text fw={500}>{name}</Text>
+          {row.isEstimated && (
+            <Tooltip label={t("attendance:monthlyTimesheet.leaveOnlyHint")}>
+              <Badge size="xs" color="gray" variant="light" w="fit-content">
+                {t("attendance:monthlyTimesheet.leaveOnly")}
+              </Badge>
+            </Tooltip>
+          )}
+        </Stack>
+      </Table.Td>
       <Table.Td ta="right">{format(row.workedDays)}</Table.Td>
       <Table.Td ta="right">{format(row.workedHours)}</Table.Td>
       <Table.Td ta="right" c={row.missingDays > 0 ? "red" : undefined}>

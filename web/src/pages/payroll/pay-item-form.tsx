@@ -69,11 +69,11 @@ function PayItemFormBody({ item, onClose, onCreated, defaultValidFrom }: { item:
     setName(t(`payroll:payItems.templates.${template.id}.name`));
     setFormula(template.formula);
     setDefaultValue("");
-    setDirection("earning");
+    setDirection(template.direction);
     setAmountBasis("gross");
-    setSgk(true);
-    setIncomeTax(true);
-    setStampTax(true);
+    setSgk(template.direction === "earning");
+    setIncomeTax(template.direction === "earning");
+    setStampTax(template.direction === "earning");
     setError(null);
   };
 

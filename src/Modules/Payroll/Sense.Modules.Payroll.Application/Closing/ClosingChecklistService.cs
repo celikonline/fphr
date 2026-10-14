@@ -98,9 +98,10 @@ public sealed class ClosingChecklistService(
                 return (bad == 0, bad == 0 ? null : bad.ToString(CultureInfo.InvariantCulture));
 
             case "EMPLOYEES_WITHOUT_PAYSLIP":
-                // The run skips employees it cannot pay (net-salary records, no salary, no worked day); this makes that visible.
+                // Use the same employment window as the payroll run, including exit-month employees.
                 var paid = (await payslips.ListByPeriodAsync(period.Id, cancellationToken)).Select(p => p.EmployeeId).ToHashSet();
-                var unpaid = (await employeeDirectory.ListActiveEmployeeIdsAsync(period.TenantId, cancellationToken)).Count(id => !paid.Contains(id));
+                var unpaid = (await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(period.TenantId,
+                    new DateOnly(period.Year, period.Month, 1), new DateOnly(period.Year, period.Month, 1).AddMonths(1).AddDays(-1), cancellationToken)).Count(id => !paid.Contains(id));
                 return (unpaid == 0, unpaid == 0 ? null : unpaid.ToString(CultureInfo.InvariantCulture));
 
             default:

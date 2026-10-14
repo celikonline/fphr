@@ -74,18 +74,33 @@ public static class IncentiveTemplates
                 CoversEmployerSgk = true, CoversEmployeeSgk = true }, false, null, MaxMonths: 10),
         Historical7103(Tr7103Md17, "SGK_17103", "7103 imalat ve bilişim istihdam teşviki (2018-2022)", "17103", IncentiveCoverageBase.ActualSgkBase),
         Historical7103(Tr7103Md27, "SGK_27103", "7103 diğer sektörler istihdam teşviki (2018-2022)", "27103", IncentiveCoverageBase.MinimumWage),
-        Draft(Tr5746Gv, "ARGE_5746_GV_TASLAK", "5746 Ar-Ge/Tasarım gelir vergisi stopaj teşviki (taslak)", "5746 sayılı Kanun md.3", IncentiveKind.IncomeTaxWithholdingRelief),
-        Draft(Tr5746Sgk, "ARGE_5746_SGK_TASLAK", "5746 Ar-Ge/Tasarım SGK işveren hissesi desteği (taslak)", "5746 sayılı Kanun md.3", IncentiveKind.EmployerShareCoverage),
-        Draft(Tr4691Gv, "TEKNOKENT_4691_GV_TASLAK", "4691 Teknoloji Geliştirme Bölgesi gelir vergisi stopaj teşviki (taslak)", "4691 sayılı Kanun geçici md.2", IncentiveKind.IncomeTaxWithholdingRelief),
-        Draft(Tr4691Sgk, "TEKNOKENT_4691_SGK_TASLAK", "4691 Teknoloji Geliştirme Bölgesi SGK işveren hissesi desteği (taslak)", "4691 sayılı Kanun geçici md.2", IncentiveKind.EmployerShareCoverage),
-        Draft(Tr4857Md30, "SGK_4857_MD30_TASLAK", "4857 md.30 engelli istihdamı işveren SGK hissesi teşviki (taslak)", "4857 sayılı Kanun md.30", IncentiveKind.EmployerShareCoverage),
+        TaxRelief(Tr5746Gv, "ARGE_5746_GV", "5746 Ar-Ge/Tasarım gelir vergisi stopaj teşviki (%80; eğitim durumuna göre düzenlenir)", "5746 md.3 / 7555", 0.80m),
+        ResearchSgk(Tr5746Sgk, "ARGE_5746_SGK", "5746 Ar-Ge/Tasarım SGK işveren hissesi desteği"),
+        TaxRelief(Tr4691Gv, "TEKNOKENT_4691_GV", "4691 Teknoloji Geliştirme Bölgesi gelir vergisi stopaj teşviki", "4691 geçici md.2 / 7555", 1m),
+        ResearchSgk(Tr4691Sgk, "TEKNOKENT_4691_SGK", "4691 Teknoloji Geliştirme Bölgesi SGK işveren hissesi desteği"),
+        new IncentiveTemplate(Tr4857Md30, "SGK_4857_MD30", "4857 md.30 engelli istihdamı işveren SGK hissesi teşviki", "4857 md.30",
+            IncentiveKind.EmployerShareCoverage, "14857", new IncentiveParameters
+            {
+                Rate = IncentiveRate.Literal(1m), CoverageBase = IncentiveCoverageBase.MinimumWage, CapMultiplier = 1m,
+                EmployerSgkRate = IncentiveRate.Key(EmployerSgkRateKey), CoversEmployerSgk = true,
+            }, false, null),
     ];
 
     public static IncentiveTemplate? Find(string? templateKey) =>
         All.FirstOrDefault(t => string.Equals(t.TemplateKey, templateKey, StringComparison.Ordinal));
 
-    private static IncentiveTemplate Draft(string key, string code, string name, string lawReference, IncentiveKind kind) =>
-        new(key, code, name, lawReference, kind, null, IncentiveParameters.Empty, PreApproved: false, null);
+    private static IncentiveTemplate TaxRelief(string key, string code, string name, string law, decimal rate) =>
+        new(key, code, name, law, IncentiveKind.IncomeTaxWithholdingRelief, null,
+            new IncentiveParameters { Rate = IncentiveRate.Literal(rate), TaxReliefGrossCapMultiplier = 40m }, false, null,
+            StartsOn: new DateOnly(2025, 8, 1), EndsOn: new DateOnly(2028, 12, 31));
+
+    private static IncentiveTemplate ResearchSgk(string key, string code, string name) =>
+        new(key, code, name, "5746 md.3 / 4691 geçici md.2", IncentiveKind.EmployerShareCoverage, "05746",
+            new IncentiveParameters
+            {
+                Rate = IncentiveRate.Literal(0.5m), CoverageBase = IncentiveCoverageBase.ActualSgkBase,
+                EmployerSgkRate = IncentiveRate.Key(EmployerSgkRateKey), CoversEmployerSgk = true,
+            }, false, null, StartsOn: new DateOnly(2008, 4, 1), EndsOn: new DateOnly(2028, 12, 31));
 
     // SGK 2018/22: 17103 caps the total support at the gross minimum wage; 27103 caps the premium base instead.
     // Both branches cover SGK and unemployment shares, and cannot extend beyond December 2022.

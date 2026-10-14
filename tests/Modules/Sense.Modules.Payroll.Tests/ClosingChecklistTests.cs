@@ -46,7 +46,7 @@ public sealed class ClosingChecklistTests
                     .Select(__ => (PayslipDirtyFlag)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(PayslipDirtyFlag))).ToList()));
 
             var directory = Substitute.For<IEmployeeDirectory>();
-            directory.ListActiveEmployeeIdsAsync(TenantId, Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IReadOnlyList<Guid>>(ActiveEmployees.ToList()));
+            directory.ListPayrollCandidateEmployeeIdsAsync(TenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IReadOnlyList<Guid>>(ActiveEmployees.ToList()));
 
             return new ClosingChecklistService(checks, payslips, flags, Legislation(), directory, new FixedClock(Now));
         }

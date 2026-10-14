@@ -142,10 +142,11 @@ internal static class IncentiveSteps
     }
 
     /// <summary>(c) INCOME_TAX_RELIEF: <c>Round(incomeTaxAfterExemption x rate)</c>; assumed to be remitted by the state, so the employee's net is unchanged.</summary>
-    public static (decimal Amount, TraceStep Step) IncomeTaxRelief(int order, IncentiveEffectInput effect, decimal incomeTaxAfterExemption, PayrollLegislationSnapshot p)
+    public static (decimal Amount, TraceStep Step) IncomeTaxRelief(int order, IncentiveEffectInput effect, decimal incomeTaxAfterExemption, PayrollLegislationSnapshot p,
+        decimal? qualifyingTax = null, decimal? qualifyingGrossCap = null)
     {
         var rate = RequireRate(effect);
-        var amount = PayrollCalculator.Round(incomeTaxAfterExemption * rate.Value);
+        var amount = PayrollCalculator.Round((qualifyingTax ?? incomeTaxAfterExemption) * rate.Value);
         var step = new TraceStep(
             order, PayrollTraceStepCodes.IncomeTaxRelief, "payroll.trace.step.income_tax_relief",
             new Dictionary<string, string>
@@ -157,6 +158,16 @@ internal static class IncentiveSteps
             $"gelir vergisi (asgari ücret istisnası sonrası) * teşvik payı ({effect.Code}); terkin varsayımı: çalışanın neti değişmez",
             amount,
             [PayrollCalculator.Ref(rate.ParameterKey, rate.Value, p)]);
+        if (qualifyingGrossCap is not null)
+        {
+            var inputs = new Dictionary<string, string>(step.Inputs)
+            {
+                ["qualifyingGrossCap"] = PayrollCalculator.Format(qualifyingGrossCap.Value),
+                ["qualifyingTaxAfterExemption"] = PayrollCalculator.Format(qualifyingTax!.Value),
+                ["taxReliefGrossCapMultiplier"] = PayrollCalculator.Format(effect.TaxReliefGrossCapMultiplier!.Value),
+            };
+            step = step with { Inputs = inputs, Formula = $"asgari ücretin {effect.TaxReliefGrossCapMultiplier} katına kadar ücretin istisna sonrası vergisi * teşvik payı ({effect.Code})" };
+        }
         return (amount, step);
     }
 

@@ -61,7 +61,7 @@
     "totalGross": "Brutto gesamt",
     "totalNet": "Netto gesamt",
     "totalEmployerCost": "Arbeitgeberkosten gesamt",
-    "skipped": "{{count}} Mitarbeitende konnten nicht berechnet werden (fehlendes Profil oder Gehalt).",
+    "skipped": "Die Berechnung wurde für {{count}} Personen übersprungen; die Gründe stehen unten.",
     "skipReasons": {
       "wage_basis_mismatch": "Die Lohnbasis im Abrechnungsprofil passt nicht zum Zahlungsrhythmus des Gehaltsdatensatzes",
       "net_wage_basis_unsupported": "Die Lohnbasis wird von dieser Berechnungsversion nicht unterstützt",
@@ -69,7 +69,14 @@
       "hourly_attendance_not_approved": "Die Zeiterfassung ist nicht genehmigt oder wurde danach geändert; prüfen und erneut genehmigen",
       "hourly_attendance_invalid": "Die bezahlten Stunden sind ungültig; Arbeitszeit und Fehltage prüfen",
       "pay_item_formula_failed": "Die Formel einer Zahlungsart konnte nicht berechnet werden (z. B. Division durch null); bitte Formel und zugewiesenen Wert prüfen",
-      "incentive_parameter_missing": "Ein Gesetzesparameter, auf den eine Förderungsdefinition verweist, wurde nicht gefunden (oder ist kein gültiger Satz); bitte Förderungsdefinition und Gesetzesparameter prüfen"
+      "incentive_parameter_missing": "Ein Gesetzesparameter, auf den eine Förderungsdefinition verweist, wurde nicht gefunden (oder ist kein gültiger Satz); bitte Förderungsdefinition und Gesetzesparameter prüfen",
+      "salary_record_invalid": "Ungültiger Gehaltsbetrag, Währung oder Zahlungsrhythmus; diese Berechnung unterstützt Löhne in TRY",
+      "no_payroll_profile": "Kein Abrechnungsprofil deckt diese Periode ab",
+      "no_salary_record": "Kein Gehaltsdatensatz zum Perioden- oder Austrittsdatum gültig",
+      "wage_basis_not_monthly": "Nicht unterstützte Lohnbasis; monatlich, täglich oder stündlich verwenden",
+      "not_employed_in_period": "Beschäftigungsdaten überschneiden sich nicht mit dieser Periode",
+      "no_worked_days": "Keine bezahlte Zeit in dieser Periode; unbezahlten Urlaub und Fehltage prüfen",
+      "calculation_failed": "Berechnung fehlgeschlagen; Personaldaten und Berechnungsprotokolle prüfen"
     },
     "employee": "Mitarbeitende",
     "gross": "Brutto",
@@ -307,7 +314,8 @@
     "incentive_profile_code_ignored": "Der Mitarbeitende hat eine SGK-Förderungszuweisung; der Förderungsgesetzescode im Profil wurde ignoriert",
     "pay_item_deduction_capped": "Die formelbasierten Abzüge überstiegen den verbleibenden Nettobetrag; der übersteigende Teil wurde nicht abgezogen",
     "incentive_profile_assignment_required": "Der Förderungscode im Profil benötigt eine Modellzuweisung; der allgemeine 5510-Nachlass wurde nicht angewendet",
-    "incentive_sgk_status_not_eligible": "Der Versicherungsstatus des Mitarbeitenden ist für diese Beitragsförderung nicht geeignet; sie wurde nicht angewendet"
+    "incentive_sgk_status_not_eligible": "Der Versicherungsstatus des Mitarbeitenden ist für diese Beitragsförderung nicht geeignet; sie wurde nicht angewendet",
+    "attendance_fallback": "Keine Zeiterfassungsdaten verfügbar; HR-Fehltage oder die Annahme eines vollen Monats wurden verwendet. Arbeitszeitnachweis prüfen."
   },
   "dirtyReasons": {
     "calculation_blocked": "Berechnung nicht abgeschlossen; fehlende Daten und Zeiterfassungsgenehmigung prüfen",
@@ -341,6 +349,14 @@
       "extraBonus": {
         "name": "Sonderzahlung",
         "valueHint": "\"deger\" ist der Faktor des Monatsbruttolohns (z. B. 0.5 = halber Monatslohn)."
+      },
+      "fixedDeduction": {
+        "name": "Fester Abzug",
+        "valueHint": "Vom Nettolohn abzuziehender Periodenbetrag (TRY)."
+      },
+      "percentageDeduction": {
+        "name": "Abzug als Bruttolohnanteil",
+        "valueHint": "Prozentsatz des Periodenbruttos, der vom Nettolohn abgezogen wird."
       }
     },
     "showInactive": "Inaktive anzeigen",
@@ -588,7 +604,9 @@
       "error": "Die Förderung konnte nicht gespeichert werden.",
       "maxSupportMultiplier": "Faktor der gesamten Förderungsobergrenze",
       "maxSupportMultiplierHint": "Leer lassen für keine Gesamtobergrenze. 1 = anteiliger Bruttomindestlohn nach Beitragstagen; diese Grenze gilt unabhängig von der Beitragsbasis.",
-      "applyTemplate": "Fertige Modellparameter anwenden"
+      "applyTemplate": "Fertige Modellparameter anwenden",
+      "taxReliefGrossCapMultiplier": "Förderfähige Bruttolohnobergrenze (Mindestlohnfaktor)",
+      "taxReliefGrossCapMultiplierHint": "Für 5746 und 4691 gilt seit 1. August 2025 die 40-fache Grenze. Den Satz für 5746 nach Bildungsstand auf 80 %, 90 % oder 95 % setzen; nur förderfähige Löhne zuordnen."
     },
     "approveModal": {
       "approveTitle": "Förderung {{code}} genehmigen",
@@ -605,7 +623,7 @@
     },
     "templates": {
       "title": "Förderung aus Vorlage hinzufügen",
-      "intro": "Fertige SGK-Modelle für 5510, 6111 und 4447 sowie zu vervollständigende Entwürfe für 4691, 5746 und 4857/30 hinzufügen. Branche, Anspruch und individuelle Laufzeit prüfen. 7103 gilt nur für 2018-2022.",
+      "intro": "Berechnungsparameter für 5510, 6111, 4447, 5746, 4691 und 4857/30 sind vorbereitet. Personal- und Betriebsberechtigung, bildungsabhängigen Satz und Gültigkeit prüfen und die Steuerberaterfreigabe abschließen. 7103 gilt nur für 2018–2022.",
       "reviewTitle": "Vorlagen entscheiden nicht über den Anspruch",
       "reviewRequired": "Betriebs- und Mitarbeiterbedingungen anhand offizieller SGK/İŞKUR-Daten prüfen. Entwurfsparameter, Meldungscodes und Freigabe vor der Verwendung in der Abrechnung mit dem Lohnberater vervollständigen.",
       "preApproved": "Kommt genehmigt",
@@ -708,5 +726,30 @@
       "summary": "{{created}} Zuweisungen erstellt, {{skipped}} Mitarbeitende übersprungen (überschneidende SGK-Zuweisung)."
     },
     "subtitle": "Profilcodes mit Förderungsmodellen verknüpfen. Andere Codes als 05510 werden nur durch eine separate Zuweisung berechnet."
+  },
+  "center": {
+    "eyebrow": "Arbeitsbereich Lohnabrechnung",
+    "title": "Verwaltungszentrum Lohnabrechnung",
+    "description": "Personal- und Gehaltsdaten vorbereiten, Urlaub und Arbeitszeiten prüfen, Bezüge und Förderungen festlegen und anschließend die Periode berechnen und abschließen.",
+    "sections": {
+      "prepare": {
+        "title": "Personal, Urlaub und Arbeitszeiten",
+        "description": "Datierte Abrechnungsprofile und Gehaltsverlauf in der Personalakte sowie Urlaubssalden und bestätigte Arbeitszeiten prüfen."
+      },
+      "configure": {
+        "title": "Bezüge, Abzüge und Förderungen",
+        "description": "Formelvorlagen anpassen, datierte Personalzuordnungen erstellen und Förderberechtigung sowie Steuerberaterfreigabe abschließen."
+      },
+      "calculate": {
+        "title": "Berechnung und Abschluss",
+        "description": "Die Periode bietet Vorschau, Berechnungsnachweise, Vormonatsvergleich, Abschlussprüfliste und Exporte."
+      }
+    },
+    "openPeriods": "Offene Abrechnungsperioden",
+    "loading": "Perioden werden geladen…",
+    "periodHint": "Vorschau, Berechnung und Abschlussprüfungen",
+    "noOpenPeriods": "Keine offene Periode. Eine neue Periode kann in der Periodenübersicht eröffnet werden.",
+    "exitTitle": "Abfindung, Kündigung und Resturlaub",
+    "exitHint": "Der Austrittsvorgang in der Personalakte verwendet Gehalt und Urlaubssaldo zum Austrittsdatum. Regelmäßige Zusatzleistungen als monatliche Bruttosumme im datierten Abrechnungsprofil hinterlegen."
   }
 }

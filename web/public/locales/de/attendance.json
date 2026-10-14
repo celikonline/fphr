@@ -212,7 +212,9 @@
       "done": "{{count}} Zeiterfassungen freigegeben.",
       "nothing": "Es gab keine Zeiterfassungen zur Freigabe."
     },
-    "emptyGuide": "Datums- und Bereichsfilter prüfen. Gerätedaten importieren, falls sie noch nicht hochgeladen wurden."
+    "emptyGuide": "Datums- und Bereichsfilter prüfen. Gerätedaten importieren, falls sie noch nicht hochgeladen wurden.",
+    "leaveOnly": "Keine Zeiterfassungsdaten",
+    "leaveOnlyHint": "Für diesen Monat liegen nur Urlaubsdaten vor. Tatsächliche Arbeit und Fehltage sind nicht bestätigt; die alternative Abrechnung zeigt einen Hinweis."
   },
   "teamTimesheet": {
     "title": "Team-Zeiterfassung",

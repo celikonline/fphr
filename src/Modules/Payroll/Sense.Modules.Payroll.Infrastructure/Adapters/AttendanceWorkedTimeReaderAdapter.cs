@@ -31,8 +31,8 @@ public sealed class AttendanceWorkedTimeReaderAdapter(IAttendanceMonthlySummaryR
         // pro-ration - see its own "tam ay varsayımı" TODO), so this rounds to the nearest whole day rather than
         // truncating (a worked half-day should not simply disappear from the count).
         var workedDays = (int)Math.Round(match.WorkedDays, MidpointRounding.AwayFromZero);
-        var missingDays = (int)Math.Round(match.MissingDays, MidpointRounding.AwayFromZero);
+        var missingDays = match.MissingDays;
         return new WorkedTimeSummary(workedDays, missingDays, match.OvertimeHours, match.PublicHolidayDaysWorked, match.WeeklyRestDaysWorked,
-            match.NormalHoursShortfall, match.IsTimesheetApproved, match.WorkedHours);
+            match.NormalHoursShortfall, match.IsTimesheetApproved, match.WorkedHours, match.UnpaidLeaveDays, match.SickLeaveDays, match.IsEstimated, match.ExpectedWorkedDays);
     }
 }

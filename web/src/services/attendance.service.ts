@@ -256,6 +256,7 @@ export async function getTeamMonth(
 
 /** `MonthlyTimesheetRowDto` ("Aylık Puantaj" ızgarası, S-11): one employee's month totals + approval state. Decimals are days/hours. */
 export interface MonthlyTimesheetRow {
+  isEstimated?: boolean;
   employeeId: string;
   employeeName: string;
   workedDays: number;

@@ -21,12 +21,12 @@ public static class PayrollCalculator
     public static PayrollCalculationResult Calculate(PayrollCalculationInput input, PayrollLegislationSnapshot p)
     {
         Guard.Against(input.GrossMonthlySalary <= 0m, "GrossMonthlySalary must be positive.");
-        Guard.Positive(input.WorkedDays, nameof(input.WorkedDays));
+        Guard.Against(input.WorkedDays < 0, "WorkedDays cannot be negative.");
         if (input.Wage is { } w)
         {
             Guard.Against(!PeriodWageMath.IsSupported(w.Basis), "Wage basis must be Daily or Hourly.");
             Guard.Against(w.UnitRate <= 0m, "Wage unit rate must be positive.");
-            Guard.Against(w.PaidDays is < 1 or > EmploymentProration.PayrollMonthDays, "Wage paid days must be between 1 and 30.");
+            Guard.Against(w.PaidDays is <= 0 or > EmploymentProration.PayrollMonthDays, "Wage paid days must be positive and at most 30.");
             Guard.Against(w.PaidHours is <= 0m, "Wage paid hours must be positive when supplied.");
             Guard.Against(w.PaidHours is not null && w.Basis != WageBasis.Hourly, "Paid hours apply only to hourly wages.");
         }
@@ -106,6 +106,9 @@ public static class PayrollCalculator
                     : traced.PaidDays)));
             }
         }
+
+        if (input.Wage is null && input.ProratedPaidDays is { } monthlyPaidDays)
+            earningsInputs["paidDays"] = Format(monthlyPaidDays);
 
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Earnings, "payroll.trace.step.earnings",
@@ -397,7 +400,23 @@ public static class PayrollCalculator
         var incomeTaxRelief = 0m;
         if (reliefEffect is not null)
         {
-            var (amount, reliefStep) = IncentiveSteps.IncomeTaxRelief(order++, reliefEffect, incomeTaxAfterExemption, p);
+            decimal? qualifyingTax = null;
+            decimal? qualifyingGrossCap = null;
+            if (reliefEffect.TaxReliefGrossCapMultiplier is { } capMultiplier)
+            {
+                Guard.Against(capMultiplier <= 0m, "Tax relief gross cap must be positive.");
+                // The statutory ceiling is on gross wages, not on tax or the tax bracket. Contributions and
+                // disability relief are deducted before calculating the capped portion's cumulative tax.
+                qualifyingGrossCap = Round(p.MinimumWageGross * capMultiplier);
+                var eligibleGross = Math.Min(Math.Max(0m, gross - payItemsGvExempt + mealGvExcess), qualifyingGrossCap.Value);
+                var eligibleBase = Math.Min(gvBaseAfterDisability, Math.Max(0m,
+                    Round(eligibleGross - sgkEmployee - unempEmployee - appliedDisabilityReduction)));
+                var eligibleTax = Round(IncomeTaxMath.Breakdown(p.IncomeTaxBrackets, input.PriorCumulativeGvBase,
+                    input.PriorCumulativeGvBase + eligibleBase).Sum(s => s.Tax));
+                qualifyingTax = Math.Min(incomeTaxAfterExemption, Math.Max(0m, eligibleTax - minWageExemptionGv));
+            }
+            var (amount, reliefStep) = IncentiveSteps.IncomeTaxRelief(order++, reliefEffect, incomeTaxAfterExemption, p,
+                qualifyingTax, qualifyingGrossCap);
             incomeTaxRelief = amount;
             steps.Add(reliefStep);
         }

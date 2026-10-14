@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Leave.Contracts;
+using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 
@@ -24,8 +25,13 @@ public sealed class ApprovedLeaveDateLookup(LeaveDbContext context) : IApprovedL
         var requests = await context.Requests.AsNoTracking()
             .Where(r => r.TenantId == tenantId && ids.Contains(r.EmployeeId) && r.Status == LeaveRequestStatus.Approved
                 && r.StartDate <= to && r.EndDate >= from)
-            .Select(r => new { r.EmployeeId, r.StartDate, r.EndDate })
+            .Select(r => new { r.EmployeeId, r.StartDate, r.EndDate, r.LeaveTypeId, r.CalculatedDays, r.StartTime, r.EndTime, r.HalfDayPeriod, ChangedAt = r.ModifiedDate ?? r.CreatedAt })
             .ToListAsync(cancellationToken);
+
+        var types = await context.LeaveTypes.AsNoTracking()
+            .Where(t => t.TenantId == tenantId)
+            .Select(t => new { t.Id, t.IsPaid, t.Code, ChangedAt = t.ModifiedDate ?? t.CreatedAt })
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
 
         var result = new List<ApprovedLeaveDay>();
         foreach (var request in requests)
@@ -34,7 +40,16 @@ public sealed class ApprovedLeaveDateLookup(LeaveDbContext context) : IApprovedL
             var end = request.EndDate > to ? to : request.EndDate;
             for (var date = start; date <= end; date = date.AddDays(1))
             {
-                result.Add(new ApprovedLeaveDay(request.EmployeeId, date));
+                var type = types.GetValueOrDefault(request.LeaveTypeId);
+                var fraction = request.StartTime is not null || request.HalfDayPeriod is not null
+                    ? Math.Clamp(request.CalculatedDays, 0m, 1m) : 1m;
+                var changedAt = type is not null && type.ChangedAt > request.ChangedAt ? type.ChangedAt : request.ChangedAt;
+                var startsAt = request.StartTime ?? (request.HalfDayPeriod is null ? null
+                    : request.HalfDayPeriod == HalfDayPeriod.Morning ? TimeOnly.MinValue : new TimeOnly(12, 0));
+                var endsAt = request.EndTime ?? (request.HalfDayPeriod is null ? null
+                    : request.HalfDayPeriod == HalfDayPeriod.Morning ? new TimeOnly(12, 0) : TimeOnly.MaxValue);
+                result.Add(new ApprovedLeaveDay(request.EmployeeId, date, type?.IsPaid ?? false, fraction,
+                    type?.Code == LeaveTypeCode.Sick, changedAt, startsAt, endsAt));
             }
         }
 

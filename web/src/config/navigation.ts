@@ -415,6 +415,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "blue",
   },
   {
+    key: "payrollCenter",
+    labelKey: "apps.payrollCenter",
+    path: "/app/payroll/management",
+    icon: Calculator,
+    permissions: ["payroll.period.recalculate", "payroll.profile.manage", "payroll.payitem.manage", "payroll.incentive.manage", "payroll.payslip.import"],
+    iconColor: "navy",
+  },
+  {
     key: "payroll",
     labelKey: "apps.payroll",
     path: "/app/payroll/periods",
@@ -1040,6 +1048,7 @@ export const NAV_SECTIONS: NavEntry[][] = [
       items: [
         requireAppItem("expenses"),
         requireAppItem("expensePaymentsAdmin"),
+        requireAppItem("payrollCenter"),
         requireAppItem("payroll"),
         requireAppItem("payslipImport"),
         requireAppItem("payItems"),

@@ -212,7 +212,9 @@
       "done": "{{count}} timesheets approved.",
       "nothing": "There were no timesheets to approve."
     },
-    "emptyGuide": "Check the date and unit filters. Import device records if they have not been uploaded yet."
+    "emptyGuide": "Check the date and unit filters. Import device records if they have not been uploaded yet.",
+    "leaveOnly": "No attendance data",
+    "leaveOnlyHint": "Only leave data is available for this month. Actual work and missing days are unverified; payroll fallback calculations display a warning."
   },
   "teamTimesheet": {
     "title": "Team timesheet",

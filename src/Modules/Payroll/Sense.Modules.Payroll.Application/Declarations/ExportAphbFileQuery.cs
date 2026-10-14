@@ -1,4 +1,5 @@
 using System.Text;
+using System.Globalization;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Incentives;
 using Sense.Modules.Payroll.Application.Periods;
@@ -74,7 +75,25 @@ public sealed class ExportAphbFileHandler(
         }
 
         var steps = PayslipTraceSteps.Parse(stepsJson);
-        var workedDays = (int)(steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.Days)?.Output ?? 0m);
+        var earnings = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.Earnings);
+        var premiumDays = earnings is null
+            ? Math.Clamp(steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.Days)?.Output ?? 0m, 0m, 30m)
+            : 30m;
+        if (earnings?.Inputs.TryGetValue("paidDays", out var paidDaysText) == true
+            && decimal.TryParse(paidDaysText, NumberStyles.Number, CultureInfo.InvariantCulture, out var paidDays))
+        {
+            premiumDays = paidDays;
+        }
+        else
+        {
+            // Older partial-month traces have no paidDays on EARNINGS. Their prorated SGK floor retains the day ratio.
+            var sgk = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.SgkBase);
+            var floor = sgk?.ParameterRefs.FirstOrDefault(r => r.Key == "Payroll.Sgk.Floor")?.Value ?? 0m;
+            if (floor > 0m && sgk?.Inputs.TryGetValue("sgkFloor", out var floorText) == true
+                && decimal.TryParse(floorText, NumberStyles.Number, CultureInfo.InvariantCulture, out var periodFloor))
+                premiumDays = decimal.Round(periodFloor / floor * 30m, 4);
+        }
+        var workedDays = (int)Math.Clamp(decimal.Ceiling(premiumDays), 0m, 30m);
         var sgkBase = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.SgkBase)?.Output ?? 0m;
         var sgkEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.SgkEmployee)?.Output ?? 0m;
         var unempEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.UnempEmployee)?.Output ?? 0m;

@@ -97,7 +97,7 @@ public sealed record PayrollCalculationInput(
     decimal AdvanceDeductionTotal = 0m,
     IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
     decimal UnionDuesAmount = 0m,
-    int? ProratedPaidDays = null,
+    decimal? ProratedPaidDays = null,
     PeriodWage? Wage = null,
     IReadOnlyList<PayItemEarning>? PayItems = null,
     IReadOnlyList<IncentiveEffectInput>? Incentives = null,

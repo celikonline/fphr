@@ -2,7 +2,7 @@ namespace Sense.Modules.Leave.Contracts;
 
 /// <summary>One employee's one approved-leave calendar day (a request's [StartDate, EndDate] span expanded into
 /// individual dates), for cross-checking against another module's day-level records.</summary>
-public sealed record ApprovedLeaveDay(Guid EmployeeId, DateOnly Date);
+public sealed record ApprovedLeaveDay(Guid EmployeeId, DateOnly Date, bool IsPaid = true, decimal DayFraction = 1m, bool IsSick = false, DateTimeOffset? ChangedAt = null, TimeOnly? StartsAt = null, TimeOnly? EndsAt = null);
 
 /// <summary>One approved-leave calendar day of a single employee with the leave type's name. <paramref name="LeaveTypeName"/>
 /// is null when the type is masked (sensitive/KVKK, hidden from the calendar, or no longer known) - same rule as Leave's
