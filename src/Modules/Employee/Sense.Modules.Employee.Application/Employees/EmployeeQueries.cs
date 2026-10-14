@@ -3,6 +3,7 @@ using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Paging;
@@ -109,7 +110,8 @@ public sealed class EmployeeDetailBuilder(
     CustomFieldValueReader customFields,
     TimeProvider clock,
     OrgPlacementLoader placementLoader,
-    Domain.ISubcontractorRepository subcontractors)
+    Domain.ISubcontractorRepository subcontractors,
+    ICostCenterLookup costCenters)
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
@@ -162,6 +164,10 @@ public sealed class EmployeeDetailBuilder(
             subcontractorName = names.GetValueOrDefault(subcontractorId);
         }
 
+        var costCenter = e.CostCenterId is { } costCenterId
+            ? await costCenters.FindAsync(tenant.TenantId, costCenterId, ct).ConfigureAwait(false)
+            : null;
+
         return new EmployeeDetailDto(
             e.Id,
             e.FirstName,
@@ -208,7 +214,11 @@ public sealed class EmployeeDetailBuilder(
             e.TerminationReasonId,
             e.TerminationType,
             e.SgkExitCode,
-            e.MentorEmployeeId);
+            e.MentorEmployeeId,
+            e.CostCenterId,
+            costCenter?.Code,
+            costCenter?.Name,
+            costCenter?.IsActive);
     }
 }
 

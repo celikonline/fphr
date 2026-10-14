@@ -2,39 +2,44 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence;
 
 namespace Sense.Modules.Organization.Infrastructure.Lookups;
 
-/// <summary>Resolves employee override first, then the nearest cost center in the employee's org-unit ancestry.</summary>
+/// <summary>Employee-owned assignment, then legacy Organization override, then nearest assigned ancestor.</summary>
 public sealed class EmployeeCostCenterReader(
-    OrganizationDbContext context,
-    IEmployeeLookup employees) : IEmployeeCostCenterReader
+    IEmployeeCostCenterLookup directAssignments,
+    OrganizationDbContext? context = null,
+    IEmployeeLookup? employees = null) : IEmployeeCostCenterReader
 {
     public async Task<IReadOnlyDictionary<Guid, Guid>> GetEmployeeCostCenterMappingAsync(
         Guid tenantId,
         IReadOnlyCollection<Guid> employeeIds,
         CancellationToken cancellationToken = default)
     {
-        if (employeeIds.Count == 0) return new Dictionary<Guid, Guid>();
+        var direct = await directAssignments.GetAsync(tenantId, employeeIds, cancellationToken);
+        if (context is null || employees is null || employeeIds.Count == 0) return direct;
+        var unresolved = employeeIds.Distinct().Except(direct.Keys).ToArray();
+        if (unresolved.Length == 0) return direct;
 
-        var requested = employeeIds.Distinct().ToArray();
-        var unitByEmployee = await employees.GetOrgUnitIdsAsync(tenantId, requested, cancellationToken);
-        var units = await context.OrgUnits.AsNoTracking()
-            .Select(u => new { u.Id, u.ParentId, u.CostCenterId })
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
-        var overrides = await context.EmployeeCostCenterOverrides.AsNoTracking()
-            .Where(x => requested.Contains(x.EmployeeId))
-            .ToDictionaryAsync(x => x.EmployeeId, x => x.CostCenterId, cancellationToken);
+        var unitByEmployee = await employees.GetOrgUnitIdsAsync(tenantId, unresolved, cancellationToken);
+        // Background callers supply the tenant explicitly; retain any soft-delete filters.
+        var units = await context.OrgUnits.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).AsNoTracking()
+            .Where(unit => unit.TenantId == tenantId)
+            .Select(unit => new { unit.Id, unit.ParentId, unit.CostCenterId })
+            .ToDictionaryAsync(unit => unit.Id, cancellationToken);
+        var overrides = await context.EmployeeCostCenterOverrides.IgnoreQueryFilters([ModuleDbContext.TenantFilter]).AsNoTracking()
+            .Where(assignment => assignment.TenantId == tenantId && unresolved.Contains(assignment.EmployeeId))
+            .ToDictionaryAsync(assignment => assignment.EmployeeId, assignment => assignment.CostCenterId, cancellationToken);
 
-        var result = new Dictionary<Guid, Guid>();
-        foreach (var employeeId in requested)
+        var result = new Dictionary<Guid, Guid>(direct);
+        foreach (var employeeId in unresolved)
         {
             if (overrides.TryGetValue(employeeId, out var overrideId))
             {
                 result[employeeId] = overrideId;
                 continue;
             }
-
             if (!unitByEmployee.TryGetValue(employeeId, out var unitId)) continue;
             var visited = new HashSet<Guid>();
             while (visited.Add(unitId) && units.TryGetValue(unitId, out var unit))
@@ -48,7 +53,6 @@ public sealed class EmployeeCostCenterReader(
                 unitId = parentId;
             }
         }
-
         return result;
     }
 }

@@ -15,6 +15,14 @@
   },
   "unknownUnit": "Unknown unit",
   "unknownEmployee": "Unknown employee",
+  "costCenter": {
+    "title": "Cost center",
+    "none": "No cost center assigned",
+    "hint": "Select this employee's cost center. Their position stays the same.",
+    "saved": "Cost center saved.",
+    "loadError": "Could not load cost centers.",
+    "retry": "Retry"
+  },
   "noUnit": "No unit",
   "phase": "Coming soon",
   "create": {
@@ -302,7 +310,10 @@
   "orgChart": {
     "title": "Organization chart",
     "subtitle": "Manager and team hierarchy.",
-    "searchPlaceholder": "Search people",
+    "searchPlaceholder": "Search departments, positions or people",
+    "department": "Department",
+    "position": "Position",
+    "occupant": "Position holder",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
     "expand": "Expand",

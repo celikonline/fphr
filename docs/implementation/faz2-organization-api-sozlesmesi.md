@@ -161,6 +161,16 @@ sonuç sözlüğünde **yok** — çağıran her istediği id'nin geri geleceği
 `ExistsActiveAsync` değişmedi. Implementasyon: `Infrastructure/Lookups/LocationLookup.cs`.
 
 ## Bilinen açık işler (bu fazın kapsamı dışında bırakıldı, not düşüldü)
+
+### Çalışana doğrudan maliyet merkezi atama (2026-10-14)
+
+- `PUT /v1/employees/{id}/cost-center`, gövde `{ "costCenterId": "<uuid>" }`; explicit null atamayı kaldırır, alanın gönderilmemesi 400 döndürür. Yanıt `EmployeeDetailDto`.
+- İzin: `employee.employees.update`; çalışan veri kapsamı uygulanır. Merkez aynı tenant'ta bulunmalıdır; yeni atama için aktif olmalıdır. Mevcut pasif atama korunabilir veya kaldırılabilir.
+- Çalışan detayına `costCenterId`, `costCenterCode`, `costCenterName`, `costCenterIsActive` eklendi. Null alanlar JSON'da atlanabilir. Genel profil PUT'u bu ilişkiyi değiştirmez.
+- Web: Çalışan kartı → Genel → Maliyet merkezi → Düzenle; katalog için mevcut `organization.cost_centers.view` izni gerekir. Yalnız aktif seçenekler ve varsa mevcut pasif atama gösterilir.
+- `IEmployeeCostCenterReader` doğrudan çalışan tercihini `Employee.Contracts.IEmployeeCostCenterLookup` portundan okur. Çözümleme önceliği: `Employee.CostCenterId` → mevcut Organization çalışan override kaydı → organizasyon zincirindeki en yakın maliyet merkezi → sözlükte bulunmama. Doğrudan tercihin null olması mevcut override/miras davranışını sürdürür; kaynaklar açık tenant kimliği ile filtrelenir.
+
+### Diğer açık işler
 - Logo için kalıcı görüntüleme URL'i (Documents.Contracts lookup).
 - Çoklu şirket (`JointEmploymentGroupCode`) senaryosunda `PrimaryCompanyResolver`'ın genişletilmesi.
 - Maliyet merkezi — organizasyon birimi varsayılanı ve çalışan istisnası artık var; pozisyon bazlı ve etkin tarihli atamalar henüz yok.

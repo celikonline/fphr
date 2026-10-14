@@ -165,6 +165,7 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
 
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => x.OrgUnitId);
+        b.HasIndex(x => new { x.TenantId, x.CostCenterId });
         b.HasIndex(x => x.ManagerEmployeeId);
         b.HasIndex(x => x.MentorEmployeeId);
         b.HasIndex(x => x.TerminationReasonId);

@@ -15,6 +15,14 @@
   },
   "unknownUnit": "Unbekannte Einheit",
   "unknownEmployee": "Unbekannte:r Mitarbeitende:r",
+  "costCenter": {
+    "title": "Kostenstelle",
+    "none": "Keine Kostenstelle zugewiesen",
+    "hint": "Wählen Sie die Kostenstelle dieser Person. Die Position bleibt unverändert.",
+    "saved": "Kostenstelle gespeichert.",
+    "loadError": "Kostenstellen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen"
+  },
   "noUnit": "Keine Einheit",
   "phase": "Demnächst",
   "create": {
@@ -302,7 +310,10 @@
   "orgChart": {
     "title": "Organigramm",
     "subtitle": "Führungs- und Teamhierarchie.",
-    "searchPlaceholder": "Personen suchen",
+    "searchPlaceholder": "Abteilungen, Positionen oder Personen suchen",
+    "department": "Abteilung",
+    "position": "Position",
+    "occupant": "Stelleninhaber:in",
     "expandAll": "Alle ausklappen",
     "collapseAll": "Alle einklappen",
     "expand": "Ausklappen",

@@ -353,6 +353,8 @@
   <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>Pasif bir birime onay süreci atanamaz.</value></data>
   <data name="organization.cost_center.not_found" xml:space="preserve"><value>Maliyet merkezi bulunamadı.</value></data>
   <data name="organization.cost_center.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı veya aktif değil.</value></data>
+  <data name="employee.cost_center.not_found" xml:space="preserve"><value>Maliyet merkezi bulunamadı.</value></data>
+  <data name="employee.cost_center.inactive" xml:space="preserve"><value>Pasif maliyet merkezine yeni çalışan atanamaz.</value></data>
   <data name="organization.cost_center.code_required" xml:space="preserve"><value>Maliyet merkezi kodu zorunludur.</value></data>
   <data name="organization.cost_center.code_too_long" xml:space="preserve"><value>Maliyet merkezi kodu en fazla 30 karakter olabilir.</value></data>
   <data name="organization.cost_center.name_required" xml:space="preserve"><value>Maliyet merkezi adı zorunludur.</value></data>

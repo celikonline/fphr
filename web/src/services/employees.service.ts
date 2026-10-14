@@ -153,6 +153,10 @@ export interface EmployeeDetail {
   /** Subcontractor the employee belongs to ("alt işveren çalışanı"); null for the tenant's own staff. */
   subcontractorId?: string | null;
   subcontractorName?: string | null;
+  costCenterId?: string | null;
+  costCenterCode?: string | null;
+  costCenterName?: string | null;
+  costCenterIsActive?: boolean | null;
   /** Set once the employee is Terminated ("İşten ayrılış sihirbazı"). */
   terminationDate?: string | null;
   terminationReasonId?: string | null;
@@ -375,6 +379,17 @@ export function toEmployeeInput(
     // as an explicit override.
     ...overrides,
   };
+}
+
+export async function assignEmployeeCostCenter(
+  employeeId: string,
+  costCenterId: string | null
+): Promise<EmployeeDetail> {
+  const { data } = await apiClient.put<EmployeeDetail>(
+    `${EMPLOYEES_BASE}/${employeeId}/cost-center`,
+    { costCenterId }
+  );
+  return data;
 }
 
 /** Minimal flat org unit (`OrgUnitDto` from `GET /v1/organization/units`) used to label/select units on employee screens. */

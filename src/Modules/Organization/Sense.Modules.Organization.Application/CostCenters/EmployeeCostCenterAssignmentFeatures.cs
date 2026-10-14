@@ -13,7 +13,8 @@ public sealed record EmployeeCostCenterAssignmentDto(
     Guid? OrgUnitCostCenterId,
     Guid? EmployeeOverrideCostCenterId,
     Guid? EffectiveCostCenterId,
-    string Source);
+    string Source,
+    Guid? EmployeeDirectCostCenterId = null);
 
 [RequiresPermission("organization.cost_centers.view")]
 public sealed record GetEmployeeCostCenterAssignmentQuery(Guid EmployeeId) : IQuery<EmployeeCostCenterAssignmentDto>, IScopedRequest
@@ -25,13 +26,14 @@ public sealed class GetEmployeeCostCenterAssignmentHandler(
     ITenantContext tenant,
     IEmployeeLookup employees,
     IOrgUnitRepository units,
-    IEmployeeCostCenterOverrideRepository overrides) : IQueryHandler<GetEmployeeCostCenterAssignmentQuery, EmployeeCostCenterAssignmentDto>
+    IEmployeeCostCenterOverrideRepository overrides,
+    IEmployeeCostCenterLookup? directAssignments = null) : IQueryHandler<GetEmployeeCostCenterAssignmentQuery, EmployeeCostCenterAssignmentDto>
 {
     public async Task<Result<EmployeeCostCenterAssignmentDto>> Handle(GetEmployeeCostCenterAssignmentQuery query, CancellationToken cancellationToken)
     {
         if (!await employees.ExistsActiveAsync(tenant.TenantId, query.EmployeeId, cancellationToken))
             return Error.NotFound(OrganizationErrors.CostCenterEmployeeNotFound);
-        return await EmployeeCostCenterAssignmentResolver.ResolveAsync(tenant.TenantId, query.EmployeeId, employees, units, overrides, cancellationToken);
+        return await EmployeeCostCenterAssignmentResolver.ResolveAsync(tenant.TenantId, query.EmployeeId, employees, units, overrides, cancellationToken, directAssignments);
     }
 }
 
@@ -46,7 +48,8 @@ public sealed class SetEmployeeCostCenterOverrideHandler(
     IEmployeeLookup employees,
     ICostCenterRepository costCenters,
     IEmployeeCostCenterOverrideRepository overrides,
-    IOrgUnitRepository units) : ICommandHandler<SetEmployeeCostCenterOverrideCommand, EmployeeCostCenterAssignmentDto>
+    IOrgUnitRepository units,
+    IEmployeeCostCenterLookup? directAssignments = null) : ICommandHandler<SetEmployeeCostCenterOverrideCommand, EmployeeCostCenterAssignmentDto>
 {
     public async Task<Result<EmployeeCostCenterAssignmentDto>> Handle(SetEmployeeCostCenterOverrideCommand command, CancellationToken cancellationToken)
     {
@@ -70,7 +73,7 @@ public sealed class SetEmployeeCostCenterOverrideHandler(
             overrides.Remove(existing);
         }
 
-        return await EmployeeCostCenterAssignmentResolver.ResolveAsync(tenant.TenantId, command.EmployeeId, employees, units, overrides, cancellationToken);
+        return await EmployeeCostCenterAssignmentResolver.ResolveAsync(tenant.TenantId, command.EmployeeId, employees, units, overrides, cancellationToken, directAssignments);
     }
 }
 
@@ -82,7 +85,8 @@ internal static class EmployeeCostCenterAssignmentResolver
         IEmployeeLookup employees,
         IOrgUnitRepository units,
         IEmployeeCostCenterOverrideRepository overrides,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IEmployeeCostCenterLookup? directAssignments = null)
     {
         var employeeOverride = await overrides.FindByEmployeeIdAsync(employeeId, cancellationToken);
         var orgUnitId = await employees.GetOrgUnitIdAsync(tenantId, employeeId, cancellationToken);
@@ -100,12 +104,15 @@ internal static class EmployeeCostCenterAssignmentResolver
             orgUnitId = result.Value.ParentId;
         }
 
+        var direct = directAssignments is null ? null : await directAssignments.GetAsync(tenantId, [employeeId], cancellationToken);
+        Guid? directId = direct is not null && direct.TryGetValue(employeeId, out var assignedDirect) ? assignedDirect : null;
         var overrideId = employeeOverride?.CostCenterId;
         return new EmployeeCostCenterAssignmentDto(
             employeeId,
             inherited,
             overrideId,
-            overrideId ?? inherited,
-            overrideId.HasValue ? "employee" : inherited.HasValue ? "orgUnit" : "unassigned");
+            directId ?? overrideId ?? inherited,
+            directId.HasValue ? "employeeDirect" : overrideId.HasValue ? "employee" : inherited.HasValue ? "orgUnit" : "unassigned",
+            directId);
     }
 }

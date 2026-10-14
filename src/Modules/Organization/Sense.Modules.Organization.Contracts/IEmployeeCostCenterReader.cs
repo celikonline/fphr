@@ -1,7 +1,7 @@
 namespace Sense.Modules.Organization.Contracts;
 
 /// <summary>
-/// Read-only cross-module lookup for employee-to-cost-center assignments. An employee override wins;
+/// Read-only cross-module lookup for employee-to-cost-center assignments. An Employee-owned direct assignment wins, followed by an Organization override;
 /// otherwise the closest assigned cost center is inherited from the employee's org-unit ancestry. Lets Payroll
 /// and other modules filter/allocate based on the employee's resolved cost center
 /// without depending on Organization's Domain or Infrastructure. Only returns employees with a

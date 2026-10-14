@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
@@ -12,8 +14,6 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Shared.Contracts.Bulk;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Controllers;
@@ -148,6 +148,12 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetEmployeeQuery(id), ct));
+
+    /// <summary>Assigns or clears the employee's cost center without changing their position or profile.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/cost-center")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AssignCostCenter(Guid id, [FromBody] EmployeeCostCenterRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AssignEmployeeCostCenterCommand(id, request.CostCenterId), ct));
 
     /// <summary>Creates an employee record.</summary>
     [HttpPost]

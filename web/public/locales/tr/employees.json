@@ -15,6 +15,14 @@
   },
   "unknownUnit": "Bilinmeyen birim",
   "unknownEmployee": "Bilinmeyen çalışan",
+  "costCenter": {
+    "title": "Maliyet merkezi",
+    "none": "Maliyet merkezi atanmamış",
+    "hint": "Bu çalışanın bağlı olduğu maliyet merkezini seçin. Pozisyon bilgisi değişmez.",
+    "saved": "Maliyet merkezi kaydedildi.",
+    "loadError": "Maliyet merkezleri yüklenemedi.",
+    "retry": "Yeniden dene"
+  },
   "noUnit": "Birim yok",
   "phase": "Yakında",
   "create": {
@@ -302,7 +310,10 @@
   "orgChart": {
     "title": "Organizasyon şeması",
     "subtitle": "Yönetici ve ekip hiyerarşisi.",
-    "searchPlaceholder": "Kişi ara",
+    "searchPlaceholder": "Bölüm, pozisyon veya kişi ara",
+    "department": "Bölüm",
+    "position": "Pozisyon",
+    "occupant": "Görevdeki kişi",
     "expandAll": "Tümünü aç",
     "collapseAll": "Tümünü kapat",
     "expand": "Aç",

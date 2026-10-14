@@ -211,6 +211,9 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Cross-module reference to Organization.OrgUnit; nullable (an employee may not be assigned to a unit yet).</summary>
     public Guid? OrgUnitId { get; private set; }
 
+    /// <summary>Cross-module identifier, validated against the tenant's cost-center catalog by Application.</summary>
+    public Guid? CostCenterId { get; private set; }
+
     /// <summary>Direct manager (another employee of the same tenant); never self, never cyclic. Denormalized from the career record in effect today.</summary>
     public Guid? ManagerEmployeeId { get; private set; }
 
@@ -613,6 +616,8 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 
     /// <summary>Links (or unlinks, with null) the subcontractor this employee works for; the Application layer checks the id exists and is active.</summary>
     public void LinkSubcontractor(Guid? subcontractorId) => SubcontractorId = subcontractorId;
+
+    public void AssignCostCenter(Guid? costCenterId) => CostCenterId = costCenterId;
 
     public void SetStatus(EmployeeStatus status)
     {

@@ -40,6 +40,10 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) satır 39-51 (kalem #1-13
 
 ## Değişiklik geçmişi
 
+- 2026-10-14 (görsel doğrulama): Aynı organizasyon şeması bileşeni örnek bölüm, pozisyon ve kişi verileriyle Chrome tarayıcısında kontrol edildi. Kart alanları ve yönetici bağlantıları görünür; aşağıdaki ilk doğrulama kaydında eksik kalan tarayıcı görsel kontrolü tamamlandı.
+
+- 2026-10-14: Organizasyon şeması kişi düğümleri kutulu kart düzenine geçirildi: bölüm ve pozisyon etiketleri üstte, görevdeki kişinin adı ve avatarı altta; varsa şirket adı da görünür. Eksik bölüm/pozisyon için yerelleştirilmiş “Belirtilmemiş” gösterilir. Arama kişi ve pozisyona ek olarak bölüm adını da kapsar. Yönetici–çalışan hiyerarşisi korunur; ayrı departman/pozisyon düğümleri oluşturulmaz. Kod: `web/src/pages/employees/org-chart.tsx`, `org-chart.module.css`; TR/EN/DE çevirileri güncellendi. Doğrulama: TypeScript, ilgili dosya ESLint ve Vite üretim derlemesi başarılı; şema/çeviri testleri Node ortamında 246/246 geçti. Varsayılan jsdom ortamı kurulu paketin `lib/api.js` dosyasını çözemediği için DOM testleri/tarayıcı görsel kontrolü yapılmadı.
+
 - 2026-09-15: İlk durum tespiti (kod tabanı taraması ile oluşturuldu).
 - 2026-09-15: Faz 0 tamamlama çalışması başladı. Web kabuğu bitti: #12 ✅; #1 Erişim ayarları sayfası, #11 Destek erişimi (impersonation onay) sayfası, #10 davet kabul sayfası ve ana sayfa widget'ları web tarafında hazır — backend uygulaması (erişim ayarı zorlaması, impersonation listesi, çalışan daveti) devam ediyor.
 - 2026-09-15: Employee backend genişletildi (ad/soyad, TCKN, iş/kişisel e-posta, iş telefonu, işe başlama/doğum tarihi, yönetici; liste filtreleri + veri kapsamı, çalışan kartı, `POST /employees/bulk/assign-manager` toplu işlem sözleşmesi, rehber, organizasyon şeması, yaklaşan doğum günleri; migration `EmployeeProfileAndManager`; yeni test projesi 29 test). Documents modülünde handler'ların hiç kaydedilmemesine yol açan assembly hatası düzeltildi. Not: mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşıyan bir senkronizasyon yolu yok (yeni kiracılar alıyor).

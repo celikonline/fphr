@@ -18,7 +18,7 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("employee")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -369,6 +369,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("contract_type");
 
+                    b.Property<Guid?>("CostCenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cost_center_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -606,6 +610,9 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_employees_user_id")
                         .HasFilter("user_id IS NOT NULL");
+
+                    b.HasIndex("TenantId", "CostCenterId")
+                        .HasDatabaseName("ix_employees_tenant_id_cost_center_id");
 
                     b.HasIndex("TenantId", "NationalId")
                         .IsUnique()
