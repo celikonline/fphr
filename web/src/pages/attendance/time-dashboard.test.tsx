@@ -6,6 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
+import { MemoryRouter } from "react-router";
 import trAttendanceDaily from "../../../public/locales/tr/attendance-daily.json";
 import TimeDashboardPage from "./time-dashboard";
 import { useAuthStore } from "@/store/auth.store";
@@ -59,7 +60,9 @@ function renderPage() {
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18next}>
         <MantineProvider>
-          <TimeDashboardPage />
+          <MemoryRouter>
+            <TimeDashboardPage />
+          </MemoryRouter>
         </MantineProvider>
       </I18nextProvider>
     </QueryClientProvider>,

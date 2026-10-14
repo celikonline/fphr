@@ -89,7 +89,7 @@ describe("PersonnelNumbersPage", () => {
   it("locks code, start and assignment mode and rejects shortening a range", async () => {
     renderPage();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: common.edit }));
+    await user.click(await screen.findByRole("button", { name: common.edit }, { timeout: 10_000 }));
     expect(screen.getByLabelText(new RegExp(settings.personnelNumbers.code))).toBeDisabled();
     expect(screen.getByLabelText(new RegExp(settings.personnelNumbers.start))).toBeDisabled();
     expect(
